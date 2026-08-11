@@ -6,7 +6,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00149", "modelo-200-page-016b-casilla-00149", "modelo-200-page-027b-casilla-00149", "modelo-200-page-034-casilla-00149", "modelo-200-page-044-casilla-00149", "modelo-200-page-049-casilla-00149"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -17,7 +16,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00150", "modelo-200-page-015-casilla-00150", "modelo-200-page-020c-casilla-00150", "modelo-200-page-027b-casilla-00150", "modelo-200-page-034-casilla-00150", "modelo-200-page-044-casilla-00150", "modelo-200-page-049-casilla-00150"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -28,7 +26,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00151", "modelo-200-page-015-casilla-00151", "modelo-200-page-027b-casilla-00151", "modelo-200-page-034-casilla-00151", "modelo-200-page-044-casilla-00151", "modelo-200-page-050-casilla-00151"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -39,7 +36,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00152", "modelo-200-page-015-casilla-00152", "modelo-200-page-028-casilla-00152", "modelo-200-page-034-casilla-00152", "modelo-200-page-045-casilla-00152", "modelo-200-page-050-casilla-00152"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -50,7 +46,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00153", "modelo-200-page-015b-casilla-00153", "modelo-200-page-028-casilla-00153", "modelo-200-page-035-casilla-00153", "modelo-200-page-045-casilla-00153", "modelo-200-page-050-casilla-00153"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -61,7 +56,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00154", "modelo-200-page-015b-casilla-00154", "modelo-200-page-028-casilla-00154", "modelo-200-page-035-casilla-00154", "modelo-200-page-045-casilla-00154", "modelo-200-page-050-casilla-00154"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -72,7 +66,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00155", "modelo-200-page-015b-casilla-00155", "modelo-200-page-028-casilla-00155", "modelo-200-page-035-casilla-00155", "modelo-200-page-045-casilla-00155", "modelo-200-page-050-casilla-00155"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -83,7 +76,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00156", "modelo-200-page-015b-casilla-00156", "modelo-200-page-028-casilla-00156", "modelo-200-page-035-casilla-00156", "modelo-200-page-045-casilla-00156", "modelo-200-page-050-casilla-00156"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -94,7 +86,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00157", "modelo-200-page-015b-casilla-00157", "modelo-200-page-028-casilla-00157", "modelo-200-page-035-casilla-00157", "modelo-200-page-045-casilla-00157", "modelo-200-page-050-casilla-00157"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -105,7 +96,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00158", "modelo-200-page-015b-casilla-00158", "modelo-200-page-028-casilla-00158", "modelo-200-page-035-casilla-00158", "modelo-200-page-045-casilla-00158", "modelo-200-page-050-casilla-00158"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -116,7 +106,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00159", "modelo-200-page-015b-casilla-00159", "modelo-200-page-028-casilla-00159", "modelo-200-page-035-casilla-00159", "modelo-200-page-045-casilla-00159", "modelo-200-page-050-casilla-00159"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -127,7 +116,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00160", "modelo-200-page-015b-casilla-00160", "modelo-200-page-028-casilla-00160", "modelo-200-page-035-casilla-00160", "modelo-200-page-045-casilla-00160", "modelo-200-page-050-casilla-00160"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -138,7 +126,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00161", "modelo-200-page-015b-casilla-00161", "modelo-200-page-028-casilla-00161", "modelo-200-page-035-casilla-00161", "modelo-200-page-045-casilla-00161", "modelo-200-page-050-casilla-00161"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -149,7 +136,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00162", "modelo-200-page-015b-casilla-00162", "modelo-200-page-028-casilla-00162", "modelo-200-page-035-casilla-00162", "modelo-200-page-045-casilla-00162", "modelo-200-page-050-casilla-00162"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -160,7 +146,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00163", "modelo-200-page-016-casilla-00163", "modelo-200-page-028-casilla-00163", "modelo-200-page-036-casilla-00163", "modelo-200-page-045-casilla-00163", "modelo-200-page-050-casilla-00163"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -171,7 +156,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00164", "modelo-200-page-015-casilla-00164", "modelo-200-page-028-casilla-00164", "modelo-200-page-036-casilla-00164", "modelo-200-page-045-casilla-00164", "modelo-200-page-050-casilla-00164"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -182,7 +166,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00165", "modelo-200-page-016-casilla-00165", "modelo-200-page-028-casilla-00165", "modelo-200-page-036-casilla-00165", "modelo-200-page-045-casilla-00165", "modelo-200-page-050-casilla-00165"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -193,7 +176,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00166", "modelo-200-page-016-casilla-00166", "modelo-200-page-028-casilla-00166", "modelo-200-page-036-casilla-00166", "modelo-200-page-045-casilla-00166", "modelo-200-page-051-casilla-00166"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -204,7 +186,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00167", "modelo-200-page-016-casilla-00167", "modelo-200-page-028-casilla-00167", "modelo-200-page-036-casilla-00167", "modelo-200-page-045-casilla-00167", "modelo-200-page-051-casilla-00167"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -215,7 +196,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00168", "modelo-200-page-015-casilla-00168", "modelo-200-page-028-casilla-00168", "modelo-200-page-036-casilla-00168", "modelo-200-page-045-casilla-00168", "modelo-200-page-051-casilla-00168"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -226,7 +206,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00169", "modelo-200-page-016-casilla-00169", "modelo-200-page-028-casilla-00169", "modelo-200-page-036-casilla-00169", "modelo-200-page-045-casilla-00169", "modelo-200-page-051-casilla-00169"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -237,7 +216,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00170", "modelo-200-page-016-casilla-00170", "modelo-200-page-028-casilla-00170", "modelo-200-page-036-casilla-00170", "modelo-200-page-045-casilla-00170", "modelo-200-page-051-casilla-00170"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -248,7 +226,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00171", "modelo-200-page-016-casilla-00171", "modelo-200-page-028-casilla-00171", "modelo-200-page-036-casilla-00171", "modelo-200-page-045-casilla-00171", "modelo-200-page-051-casilla-00171"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -259,7 +236,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00172", "modelo-200-page-015-casilla-00172", "modelo-200-page-028-casilla-00172", "modelo-200-page-036-casilla-00172", "modelo-200-page-045-casilla-00172", "modelo-200-page-051-casilla-00172"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -270,7 +246,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00173", "modelo-200-page-015-casilla-00173", "modelo-200-page-028-casilla-00173", "modelo-200-page-036-casilla-00173", "modelo-200-page-045-casilla-00173", "modelo-200-page-051-casilla-00173"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -281,7 +256,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00174", "modelo-200-page-016-casilla-00174", "modelo-200-page-028-casilla-00174", "modelo-200-page-036-casilla-00174", "modelo-200-page-045-casilla-00174", "modelo-200-page-051-casilla-00174"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -292,7 +266,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00175", "modelo-200-page-015-casilla-00175", "modelo-200-page-028-casilla-00175", "modelo-200-page-036-casilla-00175", "modelo-200-page-045-casilla-00175", "modelo-200-page-051-casilla-00175"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -303,7 +276,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00176", "modelo-200-page-015-casilla-00176", "modelo-200-page-028-casilla-00176", "modelo-200-page-036-casilla-00176", "modelo-200-page-045-casilla-00176", "modelo-200-page-051-casilla-00176"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -314,7 +286,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00177", "modelo-200-page-015-casilla-00177", "modelo-200-page-028-casilla-00177", "modelo-200-page-036-casilla-00177", "modelo-200-page-045-casilla-00177", "modelo-200-page-051-casilla-00177"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -325,7 +296,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00178", "modelo-200-page-015-casilla-00178", "modelo-200-page-028-casilla-00178", "modelo-200-page-036-casilla-00178", "modelo-200-page-045-casilla-00178", "modelo-200-page-051-casilla-00178"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -336,7 +306,6 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00179", "modelo-200-page-015-casilla-00179", "modelo-200-page-028-casilla-00179", "modelo-200-page-036-casilla-00179", "modelo-200-page-045-casilla-00179", "modelo-200-page-051-casilla-00179"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
 [[revisions."2024-y-siguientes".casillas]]
@@ -347,6 +316,5 @@ data_type = "money"
 semantic_role = "is_balance_activo_importe"
 required = false
 input_kind = "manual"
-export_refs = ["modelo-200-page-004-casilla-00180", "modelo-200-page-017-casilla-00180", "modelo-200-page-028-casilla-00180", "modelo-200-page-036-casilla-00180", "modelo-200-page-045-casilla-00180", "modelo-200-page-051-casilla-00180"]
 legal_refs = ["ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
 source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024"]
