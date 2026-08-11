@@ -112,7 +112,9 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
     )
 
     assert len(projected) == 1
-    values = tuple(field.value for field in projected[0].fields if field.value is not None)
-    assert annual_activity.iae_epigrafe in values
-    assert Decimal("1") in values
-    assert projected[0].fields[2].value is None
+    assert tuple(field.value for field in projected[0].fields) == (
+        annual_activity.iae_epigrafe,
+        Decimal("1"),
+        None,
+        Decimal("1"),
+    )
