@@ -85,6 +85,12 @@ def _manifest_casilla_failures(
             f"{prefix}: calculation-completeness manifest requires casilla.id "
             f"{manifest_casilla.casilla_id!r} but the revision does not declare it",
         ]
+    if declared.internal_only:
+        return [
+            f"{prefix}: calculation-completeness manifest includes internal-only "
+            f"casilla.id {declared.id!r}; internal calculation nodes do not identify "
+            "official filing slots and cannot enter the manifest denominator",
+        ]
     expected_identity = manifest_casilla.record_design_metadata()
     observed_identity = (declared.segmento, declared.number)
     if observed_identity != expected_identity:

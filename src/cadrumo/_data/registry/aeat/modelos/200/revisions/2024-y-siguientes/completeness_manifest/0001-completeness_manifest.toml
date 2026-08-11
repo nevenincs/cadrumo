@@ -128,11 +128,6 @@ segmento = "DP200014"
 number = "01032"
 
 [[revisions."2024-y-siguientes".completeness_manifest.casillas]]
-casilla_id = "DP200014:bin-aplicada-maxima"
-segmento = "DP200014"
-number = "DP200014:bin-aplicada-maxima"
-
-[[revisions."2024-y-siguientes".completeness_manifest.casillas]]
 casilla_id = "00670"
 segmento = "DP200015"
 number = "00670"

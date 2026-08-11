@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:e98bebd574008b7b8b76b28f528f799a0c2a2d82fe15901e91269d61bdfb3aba'
+body_hash: 'sha256:6b8176ac1b6abac0358874deb16ab635c4c37bfdd8169a7d54ecb0d91d5a543c'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -51,7 +51,7 @@ The Category-A data oversights are corrected so derivations are truthful on the 
 - [x] `W01.P02.S04` - run binding-field derivation before every casilla-keyed export scan so M720's binding-derived boxes become visible, with an M720 regression; `src/cadrumo/domain/calculations/registry/_export.py`.
 - [x] `W01.P02.S05` - normalise the completeness-manifest authoring tree to one on-disk shape and add a shape gate; `src/cadrumo/_data/registry/aeat/modelos/`.
 - [x] `W01.P02.S06` - remove the phantom constant_value source kind from its four production sites; `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`.
-- [ ] `W01.P02.S07` - reconcile the M200 multi-segment manifest internal-only inconsistency and correct the false single-segment comment; `src/cadrumo/domain/calculations/registry/_record_design_coverage.py`.
+- [x] `W01.P02.S07` - reconcile the M200 multi-segment manifest internal-only inconsistency and correct the false single-segment comment; `src/cadrumo/domain/calculations/registry/_record_design_coverage.py`.
 - [ ] `W01.P02.S08` - derive the manifest-less revision worklist from the loaded snapshots after S05, assign each modelo to the owner-ruled tranches from its registry legal domain and title (tranche 1 is IRPF, retencion and IVA including M145, tranche 2 is the informative annual declarations, tranche 3 is the remainder), and record the assignment for owner confirmation before appending one manifest-authoring step per revision to this plan; `src/cadrumo/_data/registry/aeat/modelos/`.
 
 ## Wave `W02` - canonical derivations and the blocker spine

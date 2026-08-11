@@ -288,8 +288,8 @@ def test_bundled_manifest_rejects_omitted_non_internal_closure_casilla() -> None
     )
 
 
-def test_bundled_manifest_allows_omitted_internal_only_closure_casilla() -> None:
-    """An internal-only Modelo 200 ceiling remains optional manifest authoring evidence."""
+def test_bundled_manifest_refuses_internal_only_closure_casillas() -> None:
+    """Internal calculation nodes cannot become official manifest denominator rows."""
     modelos, catalogues = _committed_registry_tree()
     modelo = next(item for item in modelos if item.id == "200")
     revision = next(iter(modelo.revisions.values()))
@@ -297,33 +297,31 @@ def test_bundled_manifest_allows_omitted_internal_only_closure_casilla() -> None
     assert manifest is not None
 
     closure = calculation_closure_casilla_ids(revision, modelo.id)
-    internal_manifest_casillas = tuple(
-        casilla
-        for casilla in revision.casillas
-        if casilla.id in closure
-        and casilla.internal_only
-        and casilla.id in {manifest_casilla.casilla_id for manifest_casilla in manifest.casillas}
-    )
-    assert internal_manifest_casillas, "bundled Modelo 200 must expose its internal-only ceiling in the manifest"
-    omitted = internal_manifest_casillas[0]
-    manifest_without_internal_ceiling = manifest.model_copy(
+    internal_closure_ids = {
+        casilla.id for casilla in revision.casillas if casilla.id in closure and casilla.internal_only
+    }
+    assert internal_closure_ids, "bundled Modelo 200 must exercise an internal-only calculation node"
+    assert internal_closure_ids.isdisjoint(manifest_casilla.casilla_id for manifest_casilla in manifest.casillas)
+    internal = next(casilla for casilla in revision.casillas if casilla.id in internal_closure_ids)
+    manifest_with_internal = manifest.model_copy(
         update={
-            "casillas": tuple(casilla for casilla in manifest.casillas if casilla.casilla_id != omitted.id),
+            "casillas": (
+                *manifest.casillas,
+                CalculationCompletenessCasilla(
+                    casilla_id=internal.id,
+                    segmento=internal.segmento,
+                    number=internal.number,
+                ),
+            ),
         },
     )
-    revision_without_internal_ceiling = revision.model_copy(
-        update={"completeness_manifest": manifest_without_internal_ceiling},
-    )
-    modelo_without_internal_ceiling = modelo.model_copy(
-        update={
-            "revisions": {
-                **modelo.revisions,
-                revision_without_internal_ceiling.id: revision_without_internal_ceiling,
-            },
-        },
+    malformed_revision = revision.model_copy(update={"completeness_manifest": manifest_with_internal})
+    malformed_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, malformed_revision.id: malformed_revision}},
     )
 
-    RegistryValidator(catalogues).validate_modelo(modelo_without_internal_ceiling)
+    with pytest.raises(RegistryValidationError, match="manifest includes internal-only"):
+        RegistryValidator(catalogues).validate_modelo(malformed_modelo)
 
 
 def test_completeness_gate_passes_when_manifest_required_subset_of_declared() -> None:

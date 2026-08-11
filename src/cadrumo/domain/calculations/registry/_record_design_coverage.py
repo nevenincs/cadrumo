@@ -347,6 +347,12 @@ def derive_calculation_completeness_casillas(
     each closure casilla declares, so it can be authored for any
     calculation-bearing modelo regardless of its casilla vocabulary.
 
+    App-internal casillas are excluded from the manifest for every modelo.
+    They may participate in the calculation closure so formulas and
+    verification predicates can consume them, but they do not identify an
+    official filing slot and therefore cannot contribute to the manifest
+    denominator.
+
     For a ``multi_segment`` modelo the result is *segment-aware*. A
     multi-segment modelo reuses the same casilla number across distinct
     record segments and its formulas reference casillas by the
@@ -409,27 +415,17 @@ def derive_calculation_completeness_casillas(
             )
         segmento = casilla.segmento
         number = casilla.number
-        if not multi_segment:
-            if casilla.internal_only:
-                # App-internal computed casilla intentionally absent from the
-                # AEAT-published structure (e.g. a regulatory ceiling materialised
-                # so verification predicates can bound an operator-elective
-                # amount). The schema validator guarantees it carries no
-                # export_refs and is formula-derived; it is not an AEAT box, so it
-                # never appears in the completeness manifest.
-                continue
-            ordered.append(DerivedDisenoCasilla(segmento=None, number=number, casilla_id=casilla.id))
-            continue
         if casilla.internal_only:
             # App-internal computed casilla intentionally absent from the
-            # AEAT-published Diseño de Registros (e.g. a regulatory
-            # ceiling materialised so verification predicates can bound
-            # an operator-elective amount). The schema validator
-            # guarantees such a casilla carries no export_refs and is
-            # formula-derived; the Diseño-presence check is skipped while
-            # the segment-carrying metadata is preserved for downstream
-            # manifest consumers.
-            ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number, casilla_id=casilla.id))
+            # AEAT-published structure (e.g. a regulatory ceiling materialised
+            # so verification predicates can bound an operator-elective
+            # amount). The schema validator guarantees it carries no
+            # export_refs and is formula-derived; it is not an AEAT box, so it
+            # never appears in the completeness manifest, regardless of whether
+            # the modelo is single- or multi-segment.
+            continue
+        if not multi_segment:
+            ordered.append(DerivedDisenoCasilla(segmento=None, number=number, casilla_id=casilla.id))
             continue
         if diseno_pairs is not None and segmento is not None and (segmento, number) not in diseno_pairs:
             raise RegistryValidationError(
