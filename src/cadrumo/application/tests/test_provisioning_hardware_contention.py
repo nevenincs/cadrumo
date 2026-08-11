@@ -317,7 +317,9 @@ def test_shortfall_unexplained_by_residents_is_attributed_to_a_peer_process() ->
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.PEER_PROCESS,)
     assert snapshot.unloadable_models == ()
-    assert snapshot.facts["peer_attributed_bytes"] > 0
+    peer_attributed_bytes = snapshot.facts["peer_attributed_bytes"]
+    assert isinstance(peer_attributed_bytes, int)
+    assert peer_attributed_bytes > 0
     assert snapshot.precondition_verdict is not None
 
 
@@ -340,7 +342,9 @@ def test_a_partially_explained_shortfall_names_both_causes_and_both_remediations
     assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT, ContentionCause.PEER_PROCESS)
     assert snapshot.resident_attributed_bytes == 3 * GIB
     assert snapshot.facts["unloadable_model_count"] == 1
-    assert snapshot.facts["peer_attributed_bytes"] > 0
+    peer_attributed_bytes = snapshot.facts["peer_attributed_bytes"]
+    assert isinstance(peer_attributed_bytes, int)
+    assert peer_attributed_bytes > 0
 
 
 def test_a_resident_cadrumo_did_not_select_is_reported_but_never_offered_for_unload() -> None:

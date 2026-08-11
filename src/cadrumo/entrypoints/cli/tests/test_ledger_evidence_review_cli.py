@@ -316,7 +316,9 @@ def test_review_show_tells_a_refused_anchor_from_one_never_offered(grounded_queu
     fields = {row["field"]: row for row in _objects(body, "fields")}
     # Positive control: the surface really emitted both rows, so neither
     # assertion below can pass over an absent field.
-    assert {"grand_total", "currency"} <= set(fields), f"rows reached the operator: {sorted(fields)}"
+    assert {"grand_total", "currency"} <= set(fields), (
+        f"rows reached the operator: {sorted(str(field) for field in fields)}"
+    )
 
     refused = fields["grand_total"]
     assert refused["anchor"] is None, "a form the document does not carry must not read as evidence"

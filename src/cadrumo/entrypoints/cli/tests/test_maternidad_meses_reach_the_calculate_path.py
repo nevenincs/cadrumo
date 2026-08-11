@@ -97,8 +97,6 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed the minimum facts an M100 work-unit applicability guard requires."""
     record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Maternidad meses arrival test profile",
         status=UserProfileStatus.ACTIVE,
@@ -271,7 +269,9 @@ def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: TestRun
     observation = _casilla_0611_observation(output)
     assert observation["formula_id"] == "renta-2024-deduccion-maternidad-0611"
     assert observation["legal_refs"] == ["ley-35-2006:art-81"]
-    assert set(observation["source_refs"]) == {
+    source_refs = observation["source_refs"]
+    assert isinstance(source_refs, list)
+    assert set(source_refs) == {
         "aeat-renta-2024-manual-parte1",
         "aeat-dr-100-2024-dictionary",
     }

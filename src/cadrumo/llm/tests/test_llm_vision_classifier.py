@@ -7,6 +7,7 @@ import json
 
 import pytest
 
+from ...application.ledger import PurchaseInvoiceEvidenceInputError
 from ...application.ledger._llm_classification import _classify_with_evidence, _ResolvedEvidence
 from ...application.ledger.tests._llm_vision_evidence_support import (
     _json_array,
@@ -18,6 +19,7 @@ from ...application.ledger.tests._llm_vision_evidence_support import (
 from ...application.ledger.tests._llm_vision_evidence_support import (
     profile as profile,
 )
+from ...application.provisioning import ProvisioningPreconditionCondition
 from ...core import ImageMediaType
 from ...core.config import load_settings
 from ...domain.categories import SpendingCategory
@@ -112,12 +114,10 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
 
     Inverted deliberately rather than deleted, so the change of posture is
     visible in the test history rather than silently disappearing from it. The
-    refusal that survives is about the RUNTIME being unreachable, which is a
-    provisioning problem with a stated fix, not a transport policy.
+    refusal that survives is about the runtime being unreachable, represented
+    by the canonical provisioning verdict rather than transport-specific prose.
     """
-    from ...domain.transactions import LLMClassifierError
-
-    with pytest.raises(LLMClassifierError, match="on-host"):
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _classify_with_evidence(
             _transaction("ev-1"),
             None,
@@ -128,11 +128,14 @@ def test_text_path_without_a_cloud_provider_now_routes_on_host() -> None:
             settings=load_settings(),
         )
 
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+    assert verdict.evidence[0].values["runtime_reachable"] is False
 
-def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestRuntimeProfile) -> None:
-    """A down/unreachable Ollama is converted to LLMClassifierError, not a raw traceback."""
-    from ...domain.transactions import LLMClassifierError
 
+def test_vision_connection_error_carries_the_runtime_precondition_verdict(profile: TestRuntimeProfile) -> None:
+    """An unreachable on-host reader carries the canonical provisioning verdict."""
     _ = profile
     evidence = _ResolvedEvidence(
         reference="ev-1",
@@ -149,7 +152,7 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestR
         spec=prompt_spec_with_saturation_fields(),
         settings=unreachable_settings,
     )
-    with pytest.raises(LLMClassifierError, match=r"model reading failed.*Fix:"):
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
         _classify_with_evidence(
             _transaction("ev-1"),
             evidence,
@@ -159,6 +162,11 @@ def test_vision_connection_error_becomes_a_typed_refusal_with_fix(profile: TestR
             vision_model=None,
             settings=unreachable_settings,
         )
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+    assert verdict.evidence[0].values["runtime_reachable"] is False
 
 
 def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfile) -> None:
