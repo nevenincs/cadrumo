@@ -66,6 +66,14 @@ class SilentLoopbackHandler(BaseHTTPRequestHandler):
         """Reject POST requests unless a suite supplies its endpoint behavior."""
         self.send_error(HTTPStatus.NOT_IMPLEMENTED)
 
+    def do_GET(self) -> None:
+        """Reject GET requests unless a suite supplies its endpoint behavior."""
+        self.send_error(HTTPStatus.NOT_IMPLEMENTED)
+
+    def do_DELETE(self) -> None:
+        """Reject DELETE requests unless a suite supplies its endpoint behavior."""
+        self.send_error(HTTPStatus.NOT_IMPLEMENTED)
+
     @override
     def log_message(self, format: str, *args: object) -> None:
         """Silence the stdlib per-request access log."""
