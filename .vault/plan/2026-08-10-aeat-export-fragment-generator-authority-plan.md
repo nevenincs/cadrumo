@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:36b32ff1c5413cc78f3b6f93881fa0b19ae05feb67dd034061e1a16662b3bbb5'
+body_hash: 'sha256:474149827606bfcd09d3be6481b87846553a2ebe4f9ebe157fc395ebe6c777ef'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -121,6 +121,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [ ] `W04.P07.S20` - Atomically generate and validate complete export trees and provenance manifests for all five explicit Modelo 303 revisions, then delete `2023-y-siguientes` and every superseded or partial manual successor tree with no alias, bridge, or fallback; `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`.
 - [ ] `W04.P07.S16` - Using one S19/S20 regenerated Modelo 303 revision, load the complete hash-verified bundled binary through `load_record_design_intermediate`, join the persisted reviewed semantic map and exact source-bound render profile, generate twice into two disjoint empty temporary registry roots, and assert identical complete member sets, bytes, provenance, and normalized loader semantics. Then run `check_generated_export_tree` independently against the committed S20 target, prove published hashes remain unchanged, and prove source, map, profile, provenance, member drift, direct-revision, single-file, and obsolete-manifest artifacts refuse. Synthetic intermediates, freshly rendered comparison targets, legacy trees, and copied target bytes are forbidden as acceptance inputs; `dev/registry/tests/`.
 - [ ] `W04.P07.S21` - Generate and validate complete Modelo 390 revision trees and provenance manifests, then delete every superseded manual export tree with no fallback; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
+- [ ] `W04.P07.S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader; `src/cadrumo/core/; src/cadrumo/application/filing/; src/cadrumo/domain/calculations/registry/`.
 
 ### Phase `W04.P08` - campaign integration and release
 
