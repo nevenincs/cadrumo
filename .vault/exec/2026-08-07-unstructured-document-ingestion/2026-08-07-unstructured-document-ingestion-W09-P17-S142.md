@@ -90,11 +90,20 @@ and failed seven assertions across three modules, four of which exist
 specifically to refuse it. Reverted; the suite is back to sixty-three green
 with no diff.
 
-WHAT THE ROW STILL ASKS FOR AND DID NOT GET: it wanted the disposition
-recorded in the ADR rather than only in an exec record, and made that a stated
-precondition on the consumer row. The gate is stronger than an ADR line for
-enforcement, but it is not a decision record, so that half is not delivered
-here.
+WHAT THE ROW STILL ASKS FOR: nothing. CORRECTED after this record was first
+written -- the claim below was wrong. It said the disposition wanted an ADR
+line it did not have, and a row was opened for that. The governing ADR already
+carries it as its sixth amendment, which renames the axis to party
+attribution, rules that non-identity attribution is deterministic co-location
+rather than more prompt, gives the context-budget reason, names the
+transposition fixture as its gate, and states the interim as a visible
+precondition. The row opened for it is closed as an error.
+
+The correction sharpens this record rather than softening it: the amendment
+says in terms that the role-evidence keys do NOT widen from two to six, and
+the change attempted here would have widened them from two to four. So it was
+ADR-refused as well as gate-refused, and reading either surface first would
+have prevented it.
 
 ## Notes
 
