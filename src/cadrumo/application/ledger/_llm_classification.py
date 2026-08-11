@@ -424,8 +424,10 @@ def _classify_with_evidence(
     Raises:
         TransactionValidationError: When the text path is taken but no
             ``text_classifier`` was resolved (no ``--llm`` provider supplied).
-        LLMClassifierError: When the on-host Ollama vision model is unreachable or
-            the configured model is not pulled.
+        PurchaseInvoiceEvidenceInputError: When the on-host reader is unavailable;
+            the error carries the provisioning probe's exact precondition verdict.
+        LLMClassifierError: When the reader call fails after its preconditions are
+            confirmed satisfied.
     """
     if evidence is not None and evidence.is_images:
         # The vision path shells out through LLMClient.complete, which records

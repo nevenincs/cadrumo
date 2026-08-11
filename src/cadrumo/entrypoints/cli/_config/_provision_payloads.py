@@ -85,7 +85,7 @@ class ProvisionPullResult(OutputSchema):
     was knowable at the start.
     """
 
-    model: str = Field(min_length=1)
+    model: str | None = Field(default=None, min_length=1)
     pulled: bool
     bytes_fetched: int | None = None
     contention: ProvisionContentionPayload | None = None
@@ -102,7 +102,7 @@ class ProvisionVerifyResult(OutputSchema):
     debugging a stalled read needs to know which they have.
     """
 
-    model: str = Field(min_length=1)
+    model: str | None = Field(default=None, min_length=1)
     ready: bool
     resident: bool = False
     answered: bool = False

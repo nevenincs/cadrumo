@@ -38,6 +38,7 @@ from ....application.ledger import (
     batch_item_identity,
 )
 from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
+from ....application.provisioning import ProvisioningPreconditionCondition
 from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
@@ -57,6 +58,7 @@ _GOOD = "facturae_32_series_and_parties_invoice.xml"
 _POISON = "adversarial_malformed.pdf"
 
 _ADDRESS = "a" * 64
+_RUNTIME_REACHABLE = ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
 
 
 @pytest.fixture
@@ -299,11 +301,11 @@ def _refused_row(name: str) -> BatchItemResult:
 _PAUSE = InferencePause(
     facts={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},
     precondition_verdict=PreconditionVerdict(
-        failed_condition_id="provisioning.ollama.runtime_reachable",
+        failed_condition_id=_RUNTIME_REACHABLE,
         evidence=(
             ConditionEvidence(
-                condition_id="provisioning.ollama.runtime_reachable",
-                evidence_id="provisioning.ollama.runtime_reachable.observation",
+                condition_id=_RUNTIME_REACHABLE,
+                evidence_id=f"{_RUNTIME_REACHABLE}.observation",
                 provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 values={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},
             ),
@@ -332,7 +334,7 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     assert codes == {"ledger.evidence.batch.work_deferred"}
     deferred_notice = _run_notices(deferred)[0]
     assert isinstance(deferred_notice.action, ResolvedPreconditionAction)
-    assert deferred_notice.action.failed_condition_id == "provisioning.ollama.runtime_reachable"
+    assert deferred_notice.action.failed_condition_id == _RUNTIME_REACHABLE
     deferred_context = deferred_notice.context
     assert deferred_context is not None, "the deferral notice carries no structured cause"
     assert deferred_context == {"paused": "1"}
@@ -340,9 +342,7 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     pause_payload = _batch_payload(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert pause_payload.inference_pause is not None
     assert pause_payload.inference_pause.facts == _PAUSE.facts
-    assert (
-        pause_payload.inference_pause.precondition_action.failed_condition_id == "provisioning.ollama.runtime_reachable"
-    )
+    assert pause_payload.inference_pause.precondition_action.failed_condition_id == _RUNTIME_REACHABLE
 
     lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
     assert "paused.facts.runtime_reachable\tfalse" in lines

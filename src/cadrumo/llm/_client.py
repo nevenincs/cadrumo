@@ -256,8 +256,7 @@ class _OnHostInferenceArena:
     the queue itself becomes an allocation that grows with load, and it runs
     against headroom that was measured *before* it waited, which is the one
     reading the contention check exists to keep fresh. A refusal is synchronous,
-    typed, and observable at the caller; the caller retries after quiesce, which
-    is the same remediation a contention refusal already names.
+    typed, and observable at the caller; the caller may retry after quiesce.
 
     Loop-agnostic on purpose. A :class:`asyncio.Semaphore` binds to the event
     loop that created it, and this process runs LLM work under several
@@ -598,9 +597,8 @@ class LLMClient:
 
         Raises:
             LLMContentionError: When the measured verdict is not admitted,
-                carrying the snapshot's own detail and its remediation --
-                which names unloading a model Cadrumo selected or closing a
-                peer application, because those are not interchangeable.
+                carrying the authority's typed precondition verdict, model, and
+                causes.
         """
         if provider_reads_off_host(provider):
             return
@@ -621,14 +619,10 @@ class LLMClient:
         )
         if snapshot.admitted:
             return
-        # The message is built from the CAUSES rather than from a free-text
-        # field on the snapshot. That field existed and was read here until the
-        # provisioning records moved to a typed precondition verdict, at which
-        # point this line raised AttributeError on the one path it exists to
-        # serve -- a refusal that had become an internal error. Causes are a
-        # closed vocabulary the authority already publishes, so reading them
-        # cannot rot the same way, and the authority still owns WHY: nothing
-        # here re-derives the comparison, the margin or the attribution.
+        verdict = snapshot.precondition_verdict
+        assert verdict is not None
+        # Keep the message derived from the authority's closed cause vocabulary;
+        # this boundary carries the result without re-deriving the decision.
         causes = ", ".join(cause.value for cause in snapshot.causes)
         raise LLMContentionError(
             message=(
@@ -636,6 +630,7 @@ class LLMClient:
                 + (f" ({causes})" if causes else "")
             ),
             context={"model": model, "causes": causes},
+            precondition_verdict=verdict,
         )
 
     @staticmethod

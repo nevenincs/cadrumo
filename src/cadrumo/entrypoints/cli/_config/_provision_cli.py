@@ -37,7 +37,7 @@ from ._provision_payloads import (
 from ._status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.provisioning import HardwareProfile
+    from ....application.provisioning import HardwareProfile, ModelSelection
 
 __all__ = ["register_provision_commands"]
 
@@ -68,7 +68,10 @@ def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload |
     )
 
 
-def _resolve_role_model(role_value: ModelRole | None, model: str | None) -> tuple[str, int] | None:
+def _resolve_role_model(
+    role_value: ModelRole | None,
+    model: str | None,
+) -> tuple[ModelSelection, str | None, int | None]:
     """Resolve an operator's ``--role``/``--model`` into a runtime id and requirement.
 
     An explicit ``--model`` is honoured as given, with the selected role's
@@ -81,11 +84,11 @@ def _resolve_role_model(role_value: ModelRole | None, model: str | None) -> tupl
     selection = select_model_for_role(role)
     assessable = selection.assessable_load
     if assessable is None:
-        return None
+        return selection, None, None
     # An explicit --model is honoured as the target, but the requirement stays
     # the selected candidate's: what the operator names does not tell us how
     # much memory it needs, and inventing a number would assess against nothing.
-    return (model, assessable[1]) if model else assessable
+    return selection, model or assessable[0], assessable[1]
 
 
 def register_provision_commands(app: typer.Typer) -> None:
@@ -233,10 +236,18 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
     """Fetch the resolved model and emit the pull envelope, exiting 2 when nothing pulled."""
     from ....application.provisioning import pull_runtime_model
 
-    resolved = _resolve_role_model(role, model)
-    if resolved is None:
-        raise typer.BadParameter(tr("cli.config.provision.no_model"))
-    target, requirement = resolved
+    selection, target, requirement = _resolve_role_model(role, model)
+    if target is None or requirement is None:
+        if selection.precondition_verdict is None:  # pragma: no cover - guarded by ModelSelection validation
+            raise AssertionError
+        result = ProvisionPullResult(
+            model=selection.runtime_id,
+            pulled=False,
+            facts=selection.facts,
+            precondition_action=resolve_cli_precondition_action(selection.precondition_verdict),
+        )
+        _emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
+        raise typer.Exit(code=2)
 
     outcome = pull_runtime_model(target, requirement)
     result = ProvisionPullResult(
@@ -260,10 +271,18 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
     """Verify the resolved model is ready and emit the envelope, exiting 2 when it is not."""
     from ....application.provisioning import verify_model_ready
 
-    resolved = _resolve_role_model(role, model)
-    if resolved is None:
-        raise typer.BadParameter(tr("cli.config.provision.no_model"))
-    target, _requirement = resolved
+    selection, target, requirement = _resolve_role_model(role, model)
+    if target is None or requirement is None:
+        if selection.precondition_verdict is None:  # pragma: no cover - guarded by ModelSelection validation
+            raise AssertionError
+        result = ProvisionVerifyResult(
+            model=selection.runtime_id,
+            ready=False,
+            facts=selection.facts,
+            precondition_action=resolve_cli_precondition_action(selection.precondition_verdict),
+        )
+        _emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
+        raise typer.Exit(code=2)
 
     outcome = verify_model_ready(target)
     result = ProvisionVerifyResult(
