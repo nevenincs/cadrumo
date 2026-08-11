@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:4150ce5395602275dca233add6fc6d6d334e5755bcd652d40c3f30f2d443c76f'
+body_hash: 'sha256:b255f71260d5a8dc1f0569af03cac79849309255d25633503d1bd51ff0b77e27'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -127,7 +127,7 @@ One small action vocabulary with total, import-asserted projections; the duplica
 - [x] `W02.P06.S18` - declare total import-asserted spine projections for the verification finding kinds and for the modelo.readiness payload's three lists (missing, missing_bindings, ledger_issues); `src/cadrumo/domain/modelos/_verification_report.py`.
 - [x] `W02.P06.S19` - declare total import-asserted spine projections for IvaLedgerAggregationIssueReason on the preflight path and for ConfirmationBlockReason beside its core enum; `src/cadrumo/application/ledger/_preflight.py`.
 - [x] `W02.P06.S20` - reconcile DiscrepancyCause (application verification schema) and VerificationDiscrepancyCause (registry verification schema) into one enum, sweep every consumer, and delete the loser in one commit, coordinating with the P09 package deletion that owns one of the two homes; `src/cadrumo/domain/calculations/registry/_schema_verification.py`.
-- [ ] `W02.P06.S21` - copy finding message_facts into Notice context on the envelope emission path so blocker codes reach the wire as data; `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`.
+- [x] `W02.P06.S21` - copy finding message_facts into Notice context on the envelope emission path so blocker codes reach the wire as data; `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`.
 
 ## Wave `W03` - the review read-model
 
