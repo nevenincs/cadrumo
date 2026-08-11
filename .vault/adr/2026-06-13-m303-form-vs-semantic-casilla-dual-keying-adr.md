@@ -17,7 +17,7 @@ related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
 modified: '2026-08-11'
-body_hash: 'sha256:fd01b271acf1b931ddabb39f612d7248d1fa5cace9fb9de9a6bcd3c4cdd46fad'
+body_hash: 'sha256:56ac3d228316c1c31ac5afbf2396bf1ab21255c03c11de0969925ea9bbbca9b5'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -221,6 +221,29 @@ The public core producer enum names semantic facts, not record labels. The regis
 
 The record occurrence supplies the repeated DP30302 context. Descriptions, labels, offsets, neighbouring fields, numeric coincidences, section order, and domain names such as `module1` cannot select semantics. A projection reference points to one existing typed row owner and exact endpoint; it is not a producer, store, calculation path, or compatibility alias. Registry and semantic-map loaders, provenance, generator, renderer dispatch, and every M303 row projector consume the same typed union atomically and reject a reference not admitted exactly once by the selected snapshot.
 
+`TaxpayerProfile.iva` represents explicit presence, not a manufactured empty IVA profile. A wholly absent IVA block is `None`. Supplying any IVA fact claims the block and requires a complete `ModeloIVAProfile`, including explicit `M303TaxTerritory`; `iva_regime_default` alone does not claim or create the block, and no path backfills common-regime territory. Non-IVA consumers may retain `None`. Every M303 schedule, calculation, applicability, snapshot, account-scrubbing, disposition, and export boundary must narrow to a complete IVA profile or refuse.
+
+### DP30301 scalar ownership
+
+The exact DP30301 identification scalars A16 through A30 close as one reviewed unit:
+
+| Anchor | Canonical owner |
+| --- | --- |
+| A16 | Required `M303TaxTerritory`, projected as the exclusively-foral boolean. |
+| A17 | The existing explicit REDEME enrolment profile fact. |
+| A18 | A required closed M303 regime-composition enum that distinguishes general, simplified, and mixed composition. |
+| A19 | A filing-instance joint-return election, never a stable taxpayer default. |
+| A20 | Explicit cash-accounting-regime enrolment on the IVA profile. |
+| A21 | A period-derived supplier-regime observation fact captured immutably in the filing snapshot. |
+| A22-A23 | The canonical `ProrrataRegister` transition option or revocation for the filing period; they are mutually exclusive and cannot be profile booleans. |
+| A24-A26 | One coupled insolvency filing fact containing the declaration aggregate, judicial-order date, and filing subtype; partial population refuses. |
+| A27 | Explicit voluntary-SII membership, distinct from generic `sii_enrolled`. |
+| A28 | The resolved exonerado-390 applicability fact owned by S51 and captured by the snapshot. |
+| A29 | The S47/S51 annual-volume result derived from canonical annual operations and official endpoint 88; it is not a `FilingProducerKey`. |
+| A30 | Explicit hydrocarbon-deposit-regime advance-payment deduction entitlement on the IVA profile. |
+
+Scalar snapshot facts use closed producer keys only where a scalar renderer consumes them. Derived A29 and row/projector facts keep their existing typed owners and cannot be promoted into duplicate profile fields or producer keys. Missing, contradictory, partial, wrong-period, or inapplicable facts refuse before target creation.
+
 Presenter tax identity, amendment kind and original AEAT receipt, resolved elections, selected secure account, and stable taxpayer/profile facts resolve only from that snapshot. The snapshot carries distinct taxpayer legal, given, surname, and full-name facts wherever official applicability needs them. Bare `name`, presenter-as-taxpayer, internal filing identifiers as receipt numbers, and operator-profile lookups are not producer fallbacks.
 
 Historical record labels are rewritten at their exact semantic-map or registry anchors. Presenter NIF spellings converge on presenter tax identity; complementaria page and numbered spellings converge on the derived complementaria fact; previous-receipt spellings converge on the validated original AEAT receipt. Name-like anchors are adjudicated individually because legal name, given name, surnames, taxpayer full name, and presenter full name are distinct facts.
@@ -242,7 +265,7 @@ Historical record labels are rewritten at their exact semantic-map or registry a
 
 ### Delivery ownership
 
-S45 owns the core closed producer vocabulary, `producer_key` schema cutover, loader-only TOML conversion, snapshot-only exhaustive resolver, exact-anchor migration, source-fact reclassification, and deletion of aliases and raw mapping surfaces. S45 also closes the S46 taxpayer-name gap atomically in the canonical snapshot owner; any name fact not yet typed remains a refusal. S46 owns the typed profile, filing-instance, presenter, disposition, and secure-account substrate. S47-S50 own the annual-summary, prorrata-activity, differentiated-sector, and simplified-regime projection implementations. S51 owns applicability and whole-export refusal. S55 adds the missing fail-closed foral and profile scalar owners through the canonical profile, snapshot, and producer vocabulary. S56 adds the one ordered evidence-bearing owner and arrival path for the six exonerado activity-code and IAE pairs. S57 owns the atomic typed projection-reference integration and deletes every regex, slot, section, offset, numeric, or neighbouring-field semantic inference it replaces. S19 may author maps only after S55-S57 land. S52 owns the five-epoch exact-anchor and exactly-once proof, importing `classify_official_boxes` for declaration instead of reproducing it.
+S45 owns the core closed producer vocabulary, `producer_key` schema cutover, loader-only TOML conversion, snapshot-only exhaustive resolver, exact-anchor migration, source-fact reclassification, and deletion of aliases and raw mapping surfaces. S45 also closes the S46 taxpayer-name gap atomically in the canonical snapshot owner; any name fact not yet typed remains a refusal. S46 owns the typed profile, filing-instance, presenter, disposition, and secure-account substrate. S47-S50 own the annual-summary, prorrata-activity, differentiated-sector, and simplified-regime projection implementations. S51 owns applicability and whole-export refusal. S55 closes every DP30301 A16-A30 scalar through the exact owner matrix above, including explicit IVA-block absence and all M303 narrowing and refusal boundaries. S56 adds the one ordered evidence-bearing owner and arrival path for the six exonerado activity-code and IAE pairs. S57 owns the atomic typed projection-reference integration and deletes every regex, slot, section, offset, numeric, or neighbouring-field semantic inference it replaces. S19 may author maps only after S55-S57 land. S52 owns the five-epoch exact-anchor and exactly-once proof, importing `classify_official_boxes` for declaration instead of reproducing it.
 
 These delivery steps own implementation, producer availability, value arrival, and acceptance evidence. This ADR decides semantic homes and projection boundaries; it does not claim those later steps are already complete.
 
@@ -261,6 +284,8 @@ Keeping the proposed simplified-regime record separate avoids converting an unac
 - The raw `ExportHeaderKey` and `Mapping[str, str]` render boundary are deleted. Producer vocabulary is a core-owned closed enum, and exact TOML strings hydrate only at the canonical loader boundary.
 - Scalar snapshot facts use only `producer_key`; repeated-row fields use only the strict core-owned `projection_ref` union and cannot be re-expressed as scalar producers, strings, literals, filler, or inferred slots.
 - Foral and profile scalars, including DP30301 A16, must arrive from canonical tax-territory and profile authority with no constant or non-foral default. The six exonerado activity-code and IAE pairs must arrive from one typed ordered evidence-bearing row owner rather than raw markers or placeholders.
+- An absent IVA block is represented only by `None`; constructing a partial or authority-free `ModeloIVAProfile` is impossible, and every M303 consumer narrows or refuses explicitly.
+- DP30301 A16-A30 resolve only through the stated profile, filing-instance, observation, prorrata, insolvency, applicability, and annual-volume owners. No scalar bag, duplicated profile boolean, or producer key may replace a derived or register-owned fact.
 - Historical header spellings, normalization helpers, aliases, operator-name fallback, taxpayer-as-presenter fallback, and internal filing-id receipt projection become hard failures rather than tolerated inputs.
 - Source and transport facts remain outside the producer vocabulary; unsupported future producer gaps remain explicit refusals until their owning steps land.
 - M202 cannot create an export artifact while its snapshot is incomplete, and M303 cannot render a layout whose producer/source/applicability inventory is incomplete.
