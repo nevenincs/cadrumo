@@ -917,10 +917,12 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
 def _notice_text_lines(notices: tuple[Notice, ...]) -> list[str]:
     lines: list[str] = []
     for notice in notices:
-        target = notice.action.action.target_command_key if notice.action is not None else "-"
+        notice_action = notice.action
+        action_reference = notice_action.action if notice_action is not None else None
+        target = action_reference.target_command_key if action_reference is not None else "-"
         bindings = (
-            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice.action.argument_bindings)
-            if notice.action is not None
+            ",".join(f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings)
+            if notice_action is not None
             else "-"
         )
         lines.append(
