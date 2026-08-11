@@ -302,8 +302,22 @@ def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> 
         assert arrivals == []
 
 
-def test_the_refusal_carries_the_authority_s_own_detail(tmp_path: Path) -> None:
-    """The error preserves the measured authority's fact without selecting an action."""
+def model_in_refusal(rendered: str) -> bool:
+    """Whether the refusal names the model, which is what makes it actionable."""
+    return _CATALOGUED_MODEL in rendered
+
+
+def test_the_refusal_names_the_authority_s_own_causes(tmp_path: Path) -> None:
+    """The error carries the authority's causes without selecting an action.
+
+    Asserted against the CAUSES rather than a rendered message, because the
+    causes are the closed vocabulary the authority publishes and the message is
+    a rendering of them. This test previously compared the error text to a
+    free-text field on the snapshot; when the provisioning records moved to a
+    typed precondition verdict that field went away, the production line
+    reading it raised AttributeError, and the refusal became an internal error
+    on the one path it exists to serve.
+    """
     resident = RuntimeResident(name=_CATALOGUED_MODEL, size_bytes=2 * _GIB, size_vram_bytes=2 * _GIB)
     starved = _profile(free_vram_bytes=256 * 1024**2, free_ram_bytes=48 * _GIB)
     snapshot = assess_model_load_contention(
@@ -321,7 +335,11 @@ def test_the_refusal_carries_the_authority_s_own_detail(tmp_path: Path) -> None:
         asyncio.run(_client(tmp_path, profile=starved, residents=(resident,)).complete(LLMRequest(prompt="hello")))
 
     assert snapshot.admitted is False
-    assert str(refusal.value) == snapshot.detail
+    assert snapshot.causes, "the authority refused without naming a cause, so there is nothing to carry"
+    rendered = str(refusal.value)
+    for cause in snapshot.causes:
+        assert cause.value in rendered, f"the refusal dropped the authority's cause {cause.value!r}: {rendered}"
+    assert model_in_refusal(rendered), f"the refusal must name the model it refused: {rendered}"
 
 
 def test_an_off_host_dispatch_is_not_headroom_checked(tmp_path: Path) -> None:

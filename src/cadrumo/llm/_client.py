@@ -621,9 +621,21 @@ class LLMClient:
         )
         if snapshot.admitted:
             return
+        # The message is built from the CAUSES rather than from a free-text
+        # field on the snapshot. That field existed and was read here until the
+        # provisioning records moved to a typed precondition verdict, at which
+        # point this line raised AttributeError on the one path it exists to
+        # serve -- a refusal that had become an internal error. Causes are a
+        # closed vocabulary the authority already publishes, so reading them
+        # cannot rot the same way, and the authority still owns WHY: nothing
+        # here re-derives the comparison, the margin or the attribution.
+        causes = ", ".join(cause.value for cause in snapshot.causes)
         raise LLMContentionError(
-            message=snapshot.detail or f"loading {model!r} was refused: this machine has no measured headroom",
-            context={"model": model, "causes": ", ".join(cause.value for cause in snapshot.causes)},
+            message=(
+                f"loading {model!r} was refused: this machine has no measured headroom"
+                + (f" ({causes})" if causes else "")
+            ),
+            context={"model": model, "causes": causes},
         )
 
     @staticmethod
