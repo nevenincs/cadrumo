@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:f32704f0121a3efbe80a68c51722af57122115e1ba6939fd19875807d81cec11'
+body_hash: 'sha256:8bf734fb7a756695653bd0144b4f53868afd75265cd1c5da01369ee91c01de6b'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -94,6 +94,7 @@ related:
   - '[[2026-08-11-cli-action-envelope-hardening-s53-domain-part1-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s54-domain-part2-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s55-domain-part3-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s56-adapters-part1-review-audit]]'
 ---
 
 # `cli-action-envelope-hardening` feature index
@@ -147,6 +148,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-11-cli-action-envelope-hardening-s53-domain-part1-review-audit` - `cli-action-envelope-hardening` audit: `S53 domain-part1 lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s54-domain-part2-review-audit` - `cli-action-envelope-hardening` audit: `S54 domain-part2 lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s55-domain-part3-review-audit` - `cli-action-envelope-hardening` audit: `S55 domain-part3 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s56-adapters-part1-review-audit` - S56 adapters-part1 lifecycle review
 
 ### exec
 
