@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-11'
-body_hash: 'sha256:1b2d79525b17b691c76a6f44367d34adf6273dd39feb7a39a221c9e22ed3dddf'
+body_hash: 'sha256:ddac78137f1a1554ed021d31d84c02efaeee1fcf3d4dcc8951861c88596826e7'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -164,7 +164,7 @@ Lands the whole tabular lane from dialect normalization through importer consump
 - [x] `W03.P08.S27` - Project rows deterministically under a confirmed mapping so the model never touches a cell value, gated by a property test asserting projected values byte-equal their source cells; `src/cadrumo/adapters/inbound/financial`.
 - [x] `W03.P08.S28` - Consume the mapping lane from the invoice-book importer including a retencion role, gated by the libro registro fixture importing fully with unknown columns reported rather than refused; `src/cadrumo/entrypoints/cli`.
 - [x] `W03.P08.S29` - Enrol the mapping lane as statement-import fallback strictly after the exact fixed-layout providers, gated by a known-bank fixture still taking the exact provider and an unknown-format fixture reaching the mapping lane; `src/cadrumo/adapters/inbound/financial`.
-- [ ] `W03.P08.S30` - Apply row-level S3 grounding to tabular rows where base, cuota and total are present, gated by a defective-row fixture surfacing a closure finding; `src/cadrumo/application/ledger`.
+- [x] `W03.P08.S30` - Apply row-level S3 grounding to tabular rows where base, cuota and total are present, gated by a defective-row fixture surfacing a closure finding; `src/cadrumo/application/ledger`.
 
 ## Wave `W04` - Measurement and gates
 
