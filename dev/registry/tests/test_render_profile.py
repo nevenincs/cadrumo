@@ -10,6 +10,7 @@ import pytest
 import rtoml
 from pydantic import ValidationError
 
+from cadrumo.core import FilingProducerKey
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
@@ -584,7 +585,10 @@ def test_singleton_mapper_projects_every_public_policy_to_an_exact_schema_shape(
     joined = JoinedRecordDesignField(
         parser_field=joined.parser_field,
         semantic_entry=joined.semantic_entry.model_copy(
-            update={"kind": CasillaFieldKind.HEADER, "header_key": "filing_year"},
+            update={
+                "kind": CasillaFieldKind.HEADER,
+                "producer_key": FilingProducerKey.PRESENTER_TAX_ID,
+            },
         ),
     )
     rule = SingletonNumericRule.model_validate(

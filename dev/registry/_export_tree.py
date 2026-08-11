@@ -620,7 +620,7 @@ def _schema_field(
                 "casilla_id": semantic_entry.casilla_id,
                 "binding": semantic_entry.binding,
                 "literal": semantic_entry.literal,
-                "header_key": semantic_entry.header_key,
+                "producer_key": semantic_entry.producer_key,
                 "draft_attribute": semantic_entry.draft_attribute,
                 "computed_key": semantic_entry.computed_key,
                 "data_type": data_type,

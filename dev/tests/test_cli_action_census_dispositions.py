@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import replace
 from pathlib import Path
 
@@ -16,10 +17,12 @@ from dev.cli_action_census_dispositions import (
     DispositionValidationError,
     ExclusionGrounding,
     checked_in_dispositions,
+    current_exception_override_observations,
     load_dispositions,
     main,
     render_dispositions,
     validate_dispositions,
+    validate_exception_override_owners,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -163,7 +166,7 @@ def test_loader_rejects_schema_drift_and_unknown_fields_at_every_scope(
     """The ledger version and every TOML scope remain closed against silent drift."""
     document = render_dispositions((_disposition(candidates[0]),))
     document = document.replace("[meta]\n", "unknown_top_level = true\n\n[meta]\n")
-    document = document.replace("schema_version = 1", "schema_version = 2\nunknown_meta = true")
+    document = document.replace("schema_version = 2", "schema_version = 3\nunknown_meta = true")
     document = document.replace(
         'reason = "The current source role was directly observed by the canonical census."',
         'reason = "The current source role was directly observed by the canonical census."\nunknown_row = true',
@@ -176,7 +179,7 @@ def test_loader_rejects_schema_drift_and_unknown_fields_at_every_scope(
     messages = invalid.value.errors
     assert messages == tuple(sorted(messages))
     assert str(invalid.value).splitlines() == list(messages)
-    assert any("schema_version must be 1" in message for message in messages)
+    assert any("schema_version must be 2" in message for message in messages)
     assert any("unrecognized top-level field(s): unknown_top_level" in message for message in messages)
     assert any("[meta]: unrecognized field(s): unknown_meta" in message for message in messages)
     assert any("unrecognized field(s): unknown_row" in message for message in messages)
@@ -233,6 +236,121 @@ def test_excluded_rows_require_symbol_function_and_grounded_reason(
     non_excluded_with_grounding = replace(excluded, role=DispositionRole.PRODUCER)
     with pytest.raises(DispositionValidationError, match="only excluded dispositions may carry exclusion grounding"):
         validate_dispositions((source,), (non_excluded_with_grounding,))
+
+
+def test_checked_in_exception_override_owners_cover_each_live_physical_observation() -> None:
+    """The current tree proves every override shape joins one open scoped Step."""
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    observations = validate_exception_override_owners(rows)
+    owner_rows = tuple(row for row in rows if row.migration_step is not None)
+    observed_fingerprints = Counter((observation.key, observation.fingerprint) for observation in observations)
+    ledger_fingerprints = Counter(
+        (row.key, fingerprint) for row in owner_rows for fingerprint in row.exception_observations
+    )
+
+    assert {observation.key for observation in observations} == {row.key for row in owner_rows}
+    assert observed_fingerprints == ledger_fingerprints
+    assert any(observation.form == "cooperative_mro" and observation.mro_proven for observation in observations)
+    assert any(observation.role.value == "mutator" for observation in observations)
+    assert all(observation.action_field == "suggestion" for observation in observations)
+    assert current_exception_override_observations() == observations
+
+
+@pytest.mark.parametrize(
+    ("migration_step", "observations", "message"),
+    (
+        (None, (), "lacks migration_step"),
+        ("S999", ("forwarder|cooperative_mro|suggestion|suggestion|1",), "unknown or ambiguous Step"),
+        ("S24", ("forwarder|cooperative_mro|suggestion|suggestion|1",), "closed migration Step"),
+        ("S50", ("forwarder|cooperative_mro|suggestion|suggestion|1",), "does not scope exception override"),
+    ),
+)
+def test_current_owner_gate_rejects_missing_unknown_closed_and_scope_drift(
+    migration_step: str | None,
+    observations: tuple[str, ...],
+    message: str,
+) -> None:
+    """Mutating real checked-in ownership cannot conceal a plan-linkage defect."""
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
+    changed = tuple(
+        replace(row, migration_step=migration_step, exception_observations=observations) if row == target else row
+        for row in rows
+    )
+
+    with pytest.raises(DispositionValidationError, match=message):
+        validate_exception_override_owners(changed)
+
+
+def test_current_owner_gate_rejects_multiple_adjudicated_owners() -> None:
+    """One current observation has one ledger owner, rather than a scope-derived fallback."""
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
+
+    with pytest.raises(DispositionValidationError, match="2 adjudicated owners"):
+        validate_exception_override_owners((*rows, target))
+
+
+def test_current_owner_gate_rejects_an_excluded_live_override_owner() -> None:
+    """A real live override cannot be relabelled as a grounded non-producer."""
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
+    excluded = replace(
+        target,
+        role=DispositionRole.EXCLUDED,
+        exclusion=ExclusionGrounding(
+            symbol=target.key.alias,
+            enclosing_function=target.key.enclosing_symbol,
+        ),
+    )
+    changed = tuple(excluded if row == target else row for row in rows)
+
+    with pytest.raises(DispositionValidationError, match="requires producer or transformer disposition role"):
+        validate_exception_override_owners(changed)
+
+
+@pytest.mark.parametrize("kind", ("missing", "extra", "duplicate"))
+def test_current_owner_gate_rejects_observation_entry_drift(kind: str) -> None:
+    """Every source-derived physical fingerprint has one exact ledger entry."""
+    rows = load_dispositions(DEFAULT_DISPOSITIONS_PATH)
+    target = next(row for row in rows if row.key.path == "src/cadrumo/domain/justificante/_errors.py")
+    if kind == "missing":
+        fingerprints: tuple[str, ...] = ()
+    elif kind == "extra":
+        fingerprints = (*target.exception_observations, "selector|constructor_keyword|suggestion|<extra>|1")
+    else:
+        fingerprints = (*target.exception_observations, target.exception_observations[0])
+    changed = tuple(replace(row, exception_observations=fingerprints) if row == target else row for row in rows)
+
+    with pytest.raises(DispositionValidationError, match="observation set drifted"):
+        validate_exception_override_owners(changed)
+
+
+def test_current_exception_override_census_fails_closed_on_unreadable_invalid_and_undecodable_source(
+    tmp_path: Path,
+) -> None:
+    """Filesystem source failures cannot silently shrink the live blast radius."""
+    source_root = tmp_path / "src/cadrumo"
+    source_root.mkdir(parents=True)
+
+    unreadable = source_root / "unreadable.py"
+    unreadable.mkdir()
+    with pytest.raises(DispositionValidationError, match=r"cannot read src/cadrumo/unreadable\.py:"):
+        current_exception_override_observations(root=tmp_path)
+    unreadable.rmdir()
+
+    undecodable = source_root / "undecodable.py"
+    undecodable.write_bytes(b"\xff")
+    with pytest.raises(
+        DispositionValidationError, match=r"cannot decode src/cadrumo/undecodable\.py: UnicodeDecodeError"
+    ):
+        current_exception_override_observations(root=tmp_path)
+    undecodable.unlink()
+
+    invalid = source_root / "invalid.py"
+    invalid.write_text("def invalid(:\n", encoding="utf-8")
+    with pytest.raises(DispositionValidationError, match=r"cannot parse src/cadrumo/invalid\.py: SyntaxError"):
+        current_exception_override_observations(root=tmp_path)
 
 
 def test_missing_ledger_path_fails_the_checked_in_and_cli_entrypoints(
