@@ -224,6 +224,7 @@ from ._operator_action_enums import (
     ActionConditionality,
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
+    OperatorActionAxis,
 )
 from ._operator_progress import OperatorProgress
 from ._optional_extras import (
@@ -579,6 +580,7 @@ __all__: list[str] = [
     "ObservedHeaderFact",
     "OfficialBoxStatus",
     "OfficialTipoRentaCode",
+    "OperatorActionAxis",
     "OperatorProgress",
     "OptionalExtra",
     "OrdenAnualHtmlParseError",

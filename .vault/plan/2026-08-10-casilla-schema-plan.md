@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:d79c298fff438eecf8428094e028eab0c64d3a8925c0e1bbb93c1349f5805cd1'
+body_hash: 'sha256:e134f6c3d0d6a15f136f61b9bc7f66ce2b181a09c3d9dab9ed2eaa3895009acd'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -122,7 +122,7 @@ The three-state official-box answer, truthful on the outliers.
 
 One small action vocabulary with total, import-asserted projections; the duplicate enum retired.
 
-- [ ] `W02.P06.S16` - add the OperatorActionAxis StrEnum to core seeded from the blocker-spine ADR's provisional member list, amending members as the projection mapping steps demand; `src/cadrumo/core/`.
+- [x] `W02.P06.S16` - add the OperatorActionAxis StrEnum to core seeded from the blocker-spine ADR's provisional member list, amending members as the projection mapping steps demand; `src/cadrumo/core/`.
 - [ ] `W02.P06.S17` - declare a total import-asserted spine projection for the 21 cross-period clean-state blockers; `src/cadrumo/application/calculations/_cross_period_models.py`.
 - [ ] `W02.P06.S18` - declare total import-asserted spine projections for the verification finding kinds and for the modelo.readiness payload's three lists (missing, missing_bindings, ledger_issues); `src/cadrumo/domain/modelos/_verification_report.py`.
 - [ ] `W02.P06.S19` - declare total import-asserted spine projections for IvaLedgerAggregationIssueReason on the preflight path and for ConfirmationBlockReason beside its core enum; `src/cadrumo/application/ledger/_preflight.py`.
