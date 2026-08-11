@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-11'
-body_hash: 'sha256:6fd17a3c84c76db75f3e5948ebb784464985420fce0b53ee5c3854357baf0801'
+body_hash: 'sha256:c87e794fae8c3471fd33eda7a9685ecf83eff9ea554881a05f2da2aa01d51ad1'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -92,7 +92,7 @@ Formal review follow-up is part of that queue: the P06.S22 Pagefind result contr
 - [x] `P06.S23` - Resolve casilla relevance hits at individual-record granularity and refuse file-level first-record fallback; `dev/docs/terminology/_resolution.py`.
 - [x] `P06.S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number; `dev/docs/pagefind_inject.py, docs/_static/cadrumo-docs.js, dev/docs/terminology/tests/test_casilla_projection.py`.
 - [x] `P06.S24` - Add real-behaviour search gates for M130 casilla 15 exact resolution, projection parity, localized definition completeness, and target resolvability; `dev/docs/tests/`.
-- [ ] `P06.S27` - Defer a Diseño-specific locator/parser contract until an official revision-aware source locator is available while retaining fail-closed target resolution; `dev/docs/terminology/_resolution.py`.
+- [x] `P06.S27` - Defer a Diseño-specific locator/parser contract until an official revision-aware source locator is available while retaining fail-closed target resolution; `dev/docs/terminology/_resolution.py`.
 - [x] `P06.S28` - Reconcile the Diseño source-resolution verification gate with the validated individual-locator contract before verification runs; `dev/docs/terminology/tests/test_resolution.py`.
 - [x] `P06.S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input; `dev/docs/terminology/_sweep.py, dev/docs/terminology/tests/test_sweep.py, src/cadrumo/_data/terminology/relevance/`.
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:fca8b844b577554d0c00fe386b06369cab3c11695dd00286db54f4e7c568a640'
+body_hash: 'sha256:6c08565b3a4913927cc15ccda947392100805abc8be520a9277db52dbe337d26'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -124,3 +124,13 @@ The built-site half is blocked by a peer regression, not by its own design. The 
 The deployed half is blocked by the same expired AWS session that holds the two deployment rows, and is deferred by the same operator decision.
 
 The source coverage this row established is unchanged and remains at HEAD: the concept probe and the casilla probe both assert canonical-target recall for the title and each available description on every one of the four language roots. Source coverage is not a passing gate, and this record does not present it as one.
+
+### 2026-08-12 built-site half proven; row stays open on the deployed half
+
+The first of the two blockers recorded above is cleared, and the built-site half of this row is now proven rather than merely covered.
+
+The M303 null Spanish labels are authored, so the authoritative record projection runs. Three defects in this row's own gate file then surfaced and were fixed, all from one root cause: the deploy language set already carries the source language, so English was being driven through the localized-root paths. The per-root fixture keyed builds by language while English publishes at both the default root and its own subroot, so the second build collided on a directory the first had made and every casilla probe errored before asserting anything. The command-agreement gate asserted the language flag for English, which the deploy deliberately omits. And the environment helper had gained a required argument this call site never passed.
+
+With those fixed the gate runs green: 26 passed, covering concept recall by declared terms in any language and casilla recall by declared localized terms, on each of the four language roots, driven through the real browser path against real built artefacts.
+
+The row stays OPEN on its second half. It requires the same probes re-run against the DEPLOYED roots so a CI pass cannot mask a broken live root, and deployment is deferred by operator decision with the `es`, `ca` and `hu` roots currently returning 404. A green built-site gate is precisely what this row says must not be mistaken for a live one.

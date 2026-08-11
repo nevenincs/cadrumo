@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:e7b9e5dd985976c970683be83327a79c374a90442f356ac4517ebc2caf44e617'
+body_hash: 'sha256:b9fc7900f426a248e36b21c44179df99b5730ebae7840912b16f84dcaf51d868'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -103,6 +103,24 @@ The alias-authority module argued in its docstring that its schema id must be ke
 - Re-run the built-site multilingual recall gate, the Diseño fail-closed gate and the relevance re-sweep once CLOSE-005 clears, in that order, and close P03.S08, P06.S27 and CLOSE-006 on their results.
 - Re-authenticate and publish to close P04.S12 and P04.S13; preserve the current 404 evidence until real live checks replace it.
 - Do not soften the casilla projection's refusal on a missing source-locale label. It is the only thing currently making the violation visible.
+
+## 2026-08-12 revision: CLOSE-005 cleared, and a correction to this audit
+
+**CLOSE-005's central factual claim was wrong, and the error changed what looked possible.** This audit stated the label text "has never existed in the tree". It does. It is absent from the registry fragments -- correctly, since casilla labels live only in the locale catalogues -- but the bundled official AEAT diseño de registro for `303/2026-y-siguientes`, the exact source those fragments cite, carries it. All 85 blocking casillas resolve there to exactly one field-definition row each. What this audit recorded as unreachable grounded authoring was grounded extraction from a source already in the repository.
+
+The labels are authored and the blocker is cleared. The casilla projection materialises 6,517 records. Across the docs and search gate set the count moved from 34 failures and 48 errors to 16 failures and no errors; the residue is the peer-owned set CLOSE-007 already attributed.
+
+**CLOSE-004 and CLOSE-006 revise as follows.** P06.S27 is CLOSED: its gate re-ran green at HEAD, so the row closes on a fresh run rather than a stale one. P03.S08's built-site half is PROVEN -- 26 passed, concept and casilla recall on each of the four language roots through the real browser path -- and the row stays open only on its deployed-root re-probe, which is the deployment deferral. P04.S12 and P04.S13 are unchanged. The plan stands at 36 of 39.
+
+CLOSE-006 is unchanged: the relevance mapping still keys the corrected Hungarian term by its corrupt spelling. A targeted re-sweep now runs and produces the corrected row, but the service could not confirm a reindex, so the output carries an unconfirmed-index note. Merging one concept's rows swept against an unconfirmed index into a corpus-wide artifact would degrade its provenance for a one-row fix, so it was not merged.
+
+**Three findings this pass added, each worth more than the row that surfaced it.**
+
+First, the recurring locale defect has a fourth shape: a key that is ABSENT rather than null or self-referencing. The módulo 4 to 7 unit-count keys were in this class, and unlike the null shape the scaffold drift check does report it.
+
+Second, and most important: **`scaffold` deleted 17 live Spanish values.** They are referenced through a mapping in the live CLI rather than a literal `tr()` call, so the scanner cannot see them and read them as stale. They were restored and the key set now matches HEAD exactly, but the next scaffold run will delete them again. This is a standing trap for anyone running the sanctioned command, and it is why a scaffold run should be diffed for removals rather than assumed additive.
+
+Third, this campaign's own deployment-parity gate carried three defects behind one root cause -- the deploy language set already carries the source language, so English was driven through the localized-root paths. They were invisible while the projection blocker masked the whole file. A blocker that hides a gate hides that gate's own bugs too.
 
 ## CLOSE-005 sharpened: the blocking set is 85 labels, and they are unauthored rather than unpropagated
 
