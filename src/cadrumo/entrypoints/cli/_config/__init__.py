@@ -459,22 +459,9 @@ _register_lazy_wizard_leaf(
     "create",
     help=tr(
         "cli.config.profile.create_help",
-        default="Initialize a new active profile.",
     ),
     epilog=tr(
         "cli.config.profile.create_epilog",
-        default=(
-            "Minimal freelancer profile: aeat config profile create PROFILE"
-            " --entity-type natural_person --tax-id <DNI/NIE/NIF>"
-            " --name <NAME> --surnames <SURNAMES> --activity <ACTIVITY>"
-            " --irpf-income-categories actividad_economica"
-            " --tax-residence-jurisdiction-scope common_regime"
-            " --iva-regime GENERAL --iva-m303-regime-composition general"
-            " --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled"
-            " --no-iva-voluntary-sii-enrolled"
-            " --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled"
-            " --quiet --accept-defaults"
-        ),
     ),
 )
 
@@ -484,7 +471,6 @@ _register_lazy_wizard_leaf(
     "edit",
     help=tr(
         "cli.config.profile.edit_help",
-        default="Re-run the wizard against an existing profile; updates values in place.",
     ),
 )
 
@@ -493,16 +479,15 @@ _register_lazy_wizard_leaf(
     "rename",
     help=tr(
         "cli.config.profile.rename_help",
-        default="Rename a profile by updating its display label.",
     ),
 )
 def config_profile_rename(
     ctx: typer.Context,
     source: str = typer.Argument(
         ...,
-        help=tr("cli.config.profile.rename_source_help", default="Existing profile name."),
+        help=tr("cli.config.profile.rename_source_help"),
     ),
-    target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help", default="New profile name.")),
+    target: str = typer.Argument(..., help=tr("cli.config.profile.rename_target_help")),
     output_language: _OutputLanguage | None = typer.Option(
         None,
         "--output-language",

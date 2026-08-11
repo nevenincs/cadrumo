@@ -29,12 +29,12 @@ _SCOPES_KEY = "scopes"
 
 apoderado_app = typer.Typer(
     name="apoderado",
-    help=tr("cli.config.auth.apoderado.help", default="Manage apoderado configuration"),
+    help=tr("cli.config.auth.apoderado.help"),
     no_args_is_help=True,
 )
 scopes_app = typer.Typer(
     name="scopes",
-    help=tr("cli.config.auth.apoderado.scopes.help", default="Manage apoderado scope vocabulary"),
+    help=tr("cli.config.auth.apoderado.scopes.help"),
     no_args_is_help=True,
 )
 
@@ -72,7 +72,7 @@ def _active_profile_pointer() -> ProfileBucketPointer:
 
 @scopes_app.command(
     "list",
-    help=tr("cli.config.auth.apoderado.scopes.list_help", default="List accepted apoderado scopes"),
+    help=tr("cli.config.auth.apoderado.scopes.list_help"),
 )
 def apoderado_scopes_list(
     ctx: typer.Context,
@@ -97,7 +97,7 @@ def apoderado_scopes_list(
 
 @apoderado_app.command(
     "status",
-    help=tr("cli.config.auth.apoderado.status_help", default="Show active apoderado configuration"),
+    help=tr("cli.config.auth.apoderado.status_help"),
 )
 def apoderado_status(
     ctx: typer.Context,
@@ -141,19 +141,19 @@ def apoderado_status(
 
 @apoderado_app.command(
     "configure",
-    help=tr("cli.config.auth.apoderado.configure_help", default="Set active apoderado configuration"),
+    help=tr("cli.config.auth.apoderado.configure_help"),
 )
 def apoderado_configure(
     ctx: typer.Context,
     represented_nif: str | None = typer.Option(
         None,
         "--represented-nif",
-        help=tr("cli.config.auth.apoderado.configure.represented_nif_help", default="NIF of the represented party"),
+        help=tr("cli.config.auth.apoderado.configure.represented_nif_help"),
     ),
     scope: list[str] = typer.Option(
         None,
         "--scope",
-        help=tr("cli.config.auth.apoderado.configure.scope_help", default="Scope tokens (can be repeated)"),
+        help=tr("cli.config.auth.apoderado.configure.scope_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -296,7 +296,7 @@ def _collect_apoderado_answers_interactively(
 
 @apoderado_app.command(
     "clear",
-    help=tr("cli.config.auth.apoderado.clear_help", default="Retire the apoderado configuration"),
+    help=tr("cli.config.auth.apoderado.clear_help"),
 )
 def apoderado_clear(
     ctx: typer.Context,
@@ -329,7 +329,6 @@ def apoderado_clear(
     "check",
     help=tr(
         "cli.config.auth.apoderado.check_help",
-        default="Verify against AEAT (unavailable; live reads are sealed). Use 'status' for the offline read.",
     ),
 )
 def apoderado_check(
@@ -357,8 +356,6 @@ def apoderado_check(
     # ``status`` is the offline configuration read.
     try:
         svc.check(bucket_id=pointer.bucket_id)
-    except ApoderadoLiveCheckUnavailableError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
 
 __all__ = ["apoderado_app", "register_apoderado_commands"]

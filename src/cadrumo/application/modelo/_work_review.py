@@ -7,10 +7,19 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from types import MappingProxyType
+from typing import Literal
 
-from pydantic import BaseModel, Field, field_serializer, field_validator
+from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, OfficialBoxStatus, OperatorActionAxis, Period
+from ...core import (
+    STRICT_FROZEN_CONFIG,
+    BindingSourceKind,
+    CasillaId,
+    ModeloWorkProgressState,
+    OfficialBoxStatus,
+    OperatorActionAxis,
+    Period,
+)
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...domain.calculations.registry import (
     BindingId,
@@ -144,6 +153,42 @@ class ModeloWorkReviewCasilla(BaseModel):
     blocked_by: tuple[BlockerRef, ...] = ()
 
 
+class ModeloWorkProgressDenominator(BaseModel):
+    """Identity of the revision manifest against which counts are measured."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    kind: Literal["calculation_completeness_manifest"] = "calculation_completeness_manifest"
+    registry_revision_id: RevisionId
+    source_ref: SourceRefId
+
+
+class ModeloWorkProgress(BaseModel):
+    """N-of-M progress with an explicit, registry-authored denominator."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    state: ModeloWorkProgressState
+    materialised_count: int | None = Field(default=None, ge=0)
+    target_count: int | None = Field(default=None, gt=0)
+    denominator: ModeloWorkProgressDenominator | None = None
+
+    @model_validator(mode="after")
+    def _counts_match_state(self) -> ModeloWorkProgress:
+        values = (self.materialised_count, self.target_count, self.denominator)
+        if self.state is ModeloWorkProgressState.UNDEFINED:
+            if any(value is not None for value in values):
+                raise ValueError("undefined modelo work progress cannot carry counts or a denominator")
+            return self
+        if self.materialised_count is None or self.target_count is None or self.denominator is None:
+            raise ValueError("defined modelo work progress requires both counts and its manifest denominator")
+        materialised_count = self.materialised_count
+        target_count = self.target_count
+        if materialised_count > target_count:
+            raise ValueError("materialised_count cannot exceed target_count")
+        if self.state is ModeloWorkProgressState.COMPLETE and materialised_count != target_count:
+            raise ValueError("complete modelo work progress requires every manifest casilla to materialise")
+        return self
+
+
 class ModeloWorkReview(BaseModel):
     """Frozen application-owned review record for one modelo work target."""
 
@@ -157,6 +202,7 @@ class ModeloWorkReview(BaseModel):
     calculation_revision_id: CalculationRevisionId | None
     lifecycle_state: CalculationRevisionState | None
     verification_outcome: VerificationCompletenessStatus | None
+    progress: ModeloWorkProgress
     casillas: tuple[ModeloWorkReviewCasilla, ...]
     findings: tuple[ModeloVerificationFinding, ...]
     blockers: tuple[BlockerRef, ...]
@@ -560,6 +606,41 @@ def _review_casillas(
     return tuple(_review_casilla(casilla, context) for casilla in snapshot.revision.casillas)
 
 
+def _work_progress(
+    *,
+    snapshot: RegistrySnapshot,
+    rows: tuple[ModeloWorkReviewCasilla, ...],
+    verification: VerificationReport | None,
+) -> ModeloWorkProgress:
+    manifest = snapshot.revision.completeness_manifest
+    if manifest is None:
+        return ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED)
+
+    target_ids = frozenset(item.casilla_id for item in manifest.casillas)
+    materialised_count = sum(
+        row.casilla_id in target_ids and row.realised_kind is not ModeloValueKind.EMPTY for row in rows
+    )
+    if verification is not None and verification.completeness_status is VerificationCompletenessStatus.BLOCKED:
+        state = ModeloWorkProgressState.BLOCKED
+    elif (
+        verification is not None
+        and verification.completeness_status is VerificationCompletenessStatus.COMPLETE
+        and materialised_count == len(target_ids)
+    ):
+        state = ModeloWorkProgressState.COMPLETE
+    else:
+        state = ModeloWorkProgressState.IN_PROGRESS
+    return ModeloWorkProgress(
+        state=state,
+        materialised_count=materialised_count,
+        target_count=len(target_ids),
+        denominator=ModeloWorkProgressDenominator(
+            registry_revision_id=snapshot.revision.id,
+            source_ref=manifest.source_ref,
+        ),
+    )
+
+
 def build_modelo_work_review(
     bucket_id: BucketId,
     modelo: ModeloCode,
@@ -608,6 +689,7 @@ def build_modelo_work_review(
         calculation_revision_id=None if revision is None else revision.calculation_revision_id,
         lifecycle_state=None if revision is None else revision.state,
         verification_outcome=None if verification is None else verification.completeness_status,
+        progress=_work_progress(snapshot=snapshot, rows=rows, verification=verification),
         casillas=rows,
         findings=findings,
         blockers=blockers,
@@ -619,6 +701,8 @@ __all__ = [
     "ModeloWorkBindingOrigin",
     "ModeloWorkFormulaOrigin",
     "ModeloWorkOriginAnomaly",
+    "ModeloWorkProgress",
+    "ModeloWorkProgressDenominator",
     "ModeloWorkRelationConsumption",
     "ModeloWorkReview",
     "ModeloWorkReviewCasilla",

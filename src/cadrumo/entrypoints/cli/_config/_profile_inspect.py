@@ -380,12 +380,6 @@ def _register_preflight_command(
         lines = [
             f"profile_readiness\t{'ready' if report.ready else 'missing'}\tmissing={len(report.missing)}",
             "readiness_scope\tprofile_fields_only",
-            (
-                "full_modelo_readiness_command\t"
-                f"aeat app modelo readiness --modelo {report.modelo} "
-                f"--revision-id {report.revision_id} --year {report.filing_year} "
-                f"--period {report.period.registry_token}"
-            ),
             f"profile_id\t{report.profile_id}",
             f"modelo\t{report.modelo}",
             f"revision_id\t{report.revision_id}",
@@ -405,10 +399,9 @@ def _register_preflight_command(
                 Notice(
                     severity=NoticeSeverity.WARNING,
                     code="config.profile.preflight.per_operation_axis_not_assessed",
-                    message=(
-                        f"No schema-required profile field is currently declared for Modelo {report.modelo}, so "
-                        "ready reflects only the export-identity and conditional checks, not a per-modelo "
-                        "assessment. Do not read ready as a complete check for this modelo."
+                    message=tr(
+                        "cli.config.profile.preflight.per_operation_axis_not_assessed",
+                        modelo=report.modelo,
                     ),
                     context={"modelo": report.modelo, "ready": str(report.ready)},
                 ),
@@ -555,16 +548,15 @@ def _record_validity_verdict(*, is_tombstoned: bool, blocking_count: int, issue_
     measures no longer collide.
     """
     if is_tombstoned:
-        prose = tr("cli.config.profile.show.summary_tombstoned", default="Profile record is tombstoned.")
+        prose = tr("cli.config.profile.show.summary_tombstoned")
         return prose, "record_validity\ttombstoned"
     if blocking_count:
         prose = tr(
             "cli.config.profile.show.summary_invalid",
-            default="Profile record is invalid: %{count} blocking issue(s).",
             count=blocking_count,
         )
         return prose, f"record_validity\tinvalid\tissues={blocking_count}"
-    prose = tr("cli.config.profile.show.summary_valid", default="Profile record is valid.")
+    prose = tr("cli.config.profile.show.summary_valid")
     return prose, f"record_validity\tvalid\tissues={issue_count}"
 
 

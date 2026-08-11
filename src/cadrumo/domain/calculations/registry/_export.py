@@ -199,16 +199,35 @@ def classify_official_boxes(
     therefore requires the validated source root and catalogue rather than
     silently treating an unavailable dictionary as an undefined export surface.
     """
+    addressed, has_binding_fields = _official_box_representation_channels(
+        revision,
+        source_root=source_root,
+        sources=sources,
+    )
+    return {
+        casilla.id: _official_box_status(
+            casilla.id,
+            exemption_reason=casilla.export_exemption_reason,
+            addressed=addressed,
+            has_binding_fields=has_binding_fields,
+        )
+        for casilla in revision.casillas
+    }
+
+
+def _official_box_representation_channels(
+    revision: ModeloRevision,
+    *,
+    source_root: Path | None,
+    sources: Mapping[str, SourceReference] | None,
+) -> tuple[set[CasillaId], bool]:
+    """Resolve the direct-address and binding-representation channels in layout order."""
     addressed: set[CasillaId] = set()
     has_binding_fields = False
     for layout in derive_export_layouts_from_bindings(revision):
         if layout.format is ExportLayoutFormat.FIXED_WIDTH:
             addressed.update(fixed_width_record_casilla_ids(layout.records))
-            has_binding_fields = has_binding_fields or any(
-                field.kind is CasillaFieldKind.BINDING and field.binding is not None
-                for record in layout.records
-                for field in record.fields
-            )
+            has_binding_fields = has_binding_fields or _layout_has_binding_fields(layout)
             continue
         if layout.format is ExportLayoutFormat.XML_DICTIONARY:
             addressed.update(
@@ -216,17 +235,31 @@ def classify_official_boxes(
                 for entry in xml_dictionary_entries(layout, source_root=source_root, sources=sources)
                 if entry.casilla_id is not None
             )
+    return addressed, has_binding_fields
 
-    return {
-        casilla.id: (
-            OfficialBoxStatus.ADDRESSED
-            if casilla.id in addressed
-            else OfficialBoxStatus.REPRESENTED_VIA_BINDING
-            if has_binding_fields and casilla.export_exemption_reason is ExportExemptionReason.FILED_VIA_BINDING_FIELD
-            else OfficialBoxStatus.UNDEFINED
-        )
-        for casilla in revision.casillas
-    }
+
+def _layout_has_binding_fields(layout: ExportLayoutDefinition) -> bool:
+    """Whether the resolved fixed-width layout actually files a binding field."""
+    return any(
+        field.kind is CasillaFieldKind.BINDING and field.binding is not None
+        for record in layout.records
+        for field in record.fields
+    )
+
+
+def _official_box_status(
+    casilla_id: CasillaId,
+    *,
+    exemption_reason: ExportExemptionReason | None,
+    addressed: set[CasillaId],
+    has_binding_fields: bool,
+) -> OfficialBoxStatus:
+    """Classify one casilla with direct address taking precedence over its exemption."""
+    if casilla_id in addressed:
+        return OfficialBoxStatus.ADDRESSED
+    if has_binding_fields and exemption_reason is ExportExemptionReason.FILED_VIA_BINDING_FIELD:
+        return OfficialBoxStatus.REPRESENTED_VIA_BINDING
+    return OfficialBoxStatus.UNDEFINED
 
 
 def export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:

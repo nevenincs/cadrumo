@@ -161,8 +161,6 @@ def auth_configure(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
     from .._config_payloads import AuthConfigurePayload as _AuthConfigurePayload
 
     configure_result = result
@@ -238,16 +236,13 @@ def _auth_status_summary_line(payload: dict[str, object]) -> str:
     if payload.get("authenticated") and payload.get("available"):
         return tr(
             "cli.config.auth.status_summary_ready",
-            default="Authentication is configured and a live session is available.",
         )
     if payload.get("configured"):
         return tr(
             "cli.config.auth.status_summary_configured",
-            default="Authentication is configured but no live session is available yet.",
         )
     return tr(
         "cli.config.auth.status_summary_unconfigured",
-        default="Authentication is not configured yet.",
     )
 
 
@@ -335,8 +330,6 @@ def auth_login(
             translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider or ""},
         ) from exc
-    except (AuthLoginNotEnabledError, AuthLoginPreconditionError) as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
     payload = result.model_dump(mode="json")
     envelope_result = AuthLoginPayload.model_validate_json(result.model_dump_json())
     _emit_envelope(

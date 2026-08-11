@@ -21,7 +21,6 @@ reset_app = typer.Typer(
     name="reset",
     help=tr(
         "cli.config.reset.help",
-        default="Start, inspect, or resume the durable all-profile reset.",
     ),
     no_args_is_help=True,
     cls=CadrumoTyperGroup,
@@ -54,7 +53,6 @@ _OverrideRetentionOpt = Annotated[
         "--override-retention",
         help=tr(
             "cli.config.reset.override_retention_help",
-            default="Approve deletion despite a recorded legal-retention blocker.",
         ),
     ),
 ]
@@ -64,7 +62,6 @@ _ReasonOpt = Annotated[
         "--reason",
         help=tr(
             "cli.config.reset.reason_help",
-            default="Required audit reason for a retention override.",
         ),
     ),
 ]
@@ -115,7 +112,6 @@ def _operation_lines(operation: ConfigResetOperationPayload) -> tuple[str, ...]:
     "start",
     help=tr(
         "cli.config.reset.start_help",
-        default="Start a new durable reset of every profile bucket.",
     ),
 )
 def config_reset_start(
@@ -146,7 +142,6 @@ def config_reset_start(
     "status",
     help=tr(
         "cli.config.reset.status_help",
-        default="Report reset status without changing any journal phase.",
     ),
 )
 def config_reset_status_command(
@@ -156,7 +151,6 @@ def config_reset_status_command(
         "--operation-id",
         help=tr(
             "cli.config.reset.operation_id_help",
-            default="Exact reset operation id; omit for the latest operation.",
         ),
     ),
 ) -> None:
@@ -177,7 +171,6 @@ def config_reset_status_command(
     "resume",
     help=tr(
         "cli.config.reset.resume_help",
-        default="Resume the sole incomplete reset or an exact supplied operation.",
     ),
 )
 def config_reset_resume(
@@ -187,7 +180,6 @@ def config_reset_resume(
         "--operation-id",
         help=tr(
             "cli.config.reset.operation_id_help",
-            default="Exact reset operation id; omit for the sole incomplete operation.",
         ),
     ),
     yes: _YesOpt = False,

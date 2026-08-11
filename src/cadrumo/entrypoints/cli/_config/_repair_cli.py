@@ -332,7 +332,6 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
         name="integrity",
         help=tr(
             "cli.config.repair.integrity_help",
-            default="Probe secure-object and registry integrity.",
         ),
         no_args_is_help=True,
     )
@@ -341,7 +340,6 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
         "objects",
         help=tr(
             "cli.config.repair.integrity.objects_help",
-            default="Probe persisted secure objects for duplicate keys and tag failures.",
         ),
     )
     def repair_integrity_objects(
@@ -349,7 +347,7 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
         namespace: str | None = typer.Option(
             None,
             "--namespace",
-            help=tr("cli.config.repair.integrity.objects_namespace_help", default="Limit output to one namespace."),
+            help=tr("cli.config.repair.integrity.objects_namespace_help"),
         ),
     ) -> None:
         """Report duplicate secure-object keys and unreadable encrypted rows."""
@@ -392,7 +390,6 @@ def _register_repair_integrity_commands(repair_app: typer.Typer) -> None:
         "registry",
         help=tr(
             "cli.config.repair.integrity.registry_help",
-            default="Probe calculation registry snapshot and authority integrity.",
         ),
     )
     def repair_integrity_registry(ctx: typer.Context) -> None:

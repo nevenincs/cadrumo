@@ -69,6 +69,7 @@ from ...core.hashing import sha256_hex
 from ...core.time import now
 from ...domain.iva import EUMemberState, IvaTerritorialScope
 from ._classification_assembly import DeclaredFact
+from ._preconditions import LedgerPreconditionCondition, LedgerPreconditionErrorMixin, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
     from typing import Self
@@ -103,7 +104,7 @@ def _canonical_identity_token(value: str, *, country_code: str | None) -> str | 
     return canonical_identity_token(value, country_code=country_code)
 
 
-class ConfirmedCounterpartyFactsInputError(CadrumoError):
+class ConfirmedCounterpartyFactsInputError(LedgerPreconditionErrorMixin, CadrumoError):
     """Raised when a counterparty establishment assertion is not storable."""
 
 
@@ -257,6 +258,10 @@ class ConfirmedCounterpartyFacts(BaseModel):
                 f"the identifier {tax_identifier!r} does not verify, so an establishment fact "
                 f"confirmed against it could not be found again on a later document",
                 context={"tax_identifier": tax_identifier, "country_code": country_code},
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.COUNTERPARTY_IDENTIFIER_VALID,
+                    facts={"counterparty_identifier_valid": False},
+                ),
             )
         return cls(
             counterparty_key=sha256_hex(token.encode()),

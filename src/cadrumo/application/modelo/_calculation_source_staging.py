@@ -84,6 +84,27 @@ class SourceResolutionRegistryValues:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class _ProrrataRegularizacionInputChannels:
+    """Caller-supplied source channels for the staged registry pass."""
+
+    casilla_inputs: Mapping[CasillaId, Decimal] | None
+    text_casilla_inputs: Mapping[CasillaId, str] | None
+    binding_values: Mapping[BindingId, Decimal] | None
+    enum_binding_values: Mapping[BindingId, str] | None
+    date_binding_values: Mapping[BindingId, date] | None
+    relation_values: Mapping[RelationId, Decimal] | None
+
+
+@dataclass(frozen=True, slots=True)
+class _ProrrataRegularizacionCalculationContext:
+    """Period-sensitive context forwarded to the staged registry pass."""
+
+    filing_period_date: date | None
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None
+    m303_annual_orden: M303AnnualOrdenSnapshot | None
+
+
 _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
     "iva.cuota-deducible-total",
     "iva.prorrata-volumen-con-derecho",
@@ -151,15 +172,19 @@ def resolve_prorrata_regularizacion_sources(
         registry_snapshot=registry_snapshot,
         work_unit=work_unit,
         source_resolution=source_resolution,
-        casilla_inputs=casilla_inputs,
-        text_casilla_inputs=text_casilla_inputs,
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        date_binding_values=date_binding_values,
-        relation_values=relation_values,
-        filing_period_date=filing_period_date,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-        m303_annual_orden=m303_annual_orden,
+        input_channels=_ProrrataRegularizacionInputChannels(
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs=text_casilla_inputs,
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            date_binding_values=date_binding_values,
+            relation_values=relation_values,
+        ),
+        calculation_context=_ProrrataRegularizacionCalculationContext(
+            filing_period_date=filing_period_date,
+            m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
+            m303_annual_orden=m303_annual_orden,
+        ),
     )
     prorrata_resolution = ProrrataRegularizacionSourceResolver(
         current_year_values=materialised.values,
@@ -180,15 +205,8 @@ def _materialise_prorrata_regularizacion_source_values(
     registry_snapshot: RegistrySnapshot,
     work_unit: WorkUnit,
     source_resolution: CalculationSourceResolution,
-    casilla_inputs: Mapping[CasillaId, Decimal] | None,
-    text_casilla_inputs: Mapping[CasillaId, str] | None,
-    binding_values: Mapping[BindingId, Decimal] | None,
-    enum_binding_values: Mapping[BindingId, str] | None,
-    date_binding_values: Mapping[BindingId, date] | None,
-    relation_values: Mapping[RelationId, Decimal] | None,
-    filing_period_date: date | None,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
-    m303_annual_orden: M303AnnualOrdenSnapshot | None,
+    input_channels: _ProrrataRegularizacionInputChannels,
+    calculation_context: _ProrrataRegularizacionCalculationContext,
 ) -> SourceResolutionRegistryValues:
     """Materialise the current-year registry inputs for both staged resolvers."""
     snapshot_revision = registry_snapshot.revision
@@ -196,18 +214,24 @@ def _materialise_prorrata_regularizacion_source_values(
     if missing_values is not None:
         return missing_values
 
-    caller_binding_values = dict(binding_values or {})
-    caller_relation_values = dict(relation_values or {})
+    caller_binding_values = dict(input_channels.binding_values or {})
+    caller_relation_values = dict(input_channels.relation_values or {})
     effective_binding_values = {**dict(source_resolution.binding_values), **caller_binding_values}
     return materialise_registry_values_for_source_resolution(
         registry_snapshot=registry_snapshot,
         work_unit=work_unit,
-        casilla_inputs=casilla_inputs or {},
+        casilla_inputs=input_channels.casilla_inputs or {},
         backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
         binding_values=effective_binding_values,
-        enum_binding_values={**dict(source_resolution.enum_binding_values), **dict(enum_binding_values or {})},
-        date_binding_values={**dict(source_resolution.date_binding_values), **dict(date_binding_values or {})},
-        text_casilla_inputs=text_casilla_inputs,
+        enum_binding_values={
+            **dict(source_resolution.enum_binding_values),
+            **dict(input_channels.enum_binding_values or {}),
+        },
+        date_binding_values={
+            **dict(source_resolution.date_binding_values),
+            **dict(input_channels.date_binding_values or {}),
+        },
+        text_casilla_inputs=input_channels.text_casilla_inputs,
         relation_values={**dict(source_resolution.relation_values), **caller_relation_values},
         unresolved_relation_ids=_unresolved_ids_after_overrides(
             source_resolution.unresolved_relation_ids,
@@ -221,9 +245,9 @@ def _materialise_prorrata_regularizacion_source_values(
             registry_snapshot=registry_snapshot,
             effective_binding_values=effective_binding_values,
         ),
-        filing_period_date=filing_period_date,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-        m303_annual_orden=m303_annual_orden,
+        filing_period_date=calculation_context.filing_period_date,
+        m303_regimen_simplificado_scope=calculation_context.m303_regimen_simplificado_scope,
+        m303_annual_orden=calculation_context.m303_annual_orden,
     ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
 
 

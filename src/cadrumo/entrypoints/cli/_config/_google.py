@@ -1104,12 +1104,6 @@ def google_sync_push(
                 code="config.google.sync.push.unmanifested_object",
                 message=tr(
                     "cli.config.google.sync.push_unmanifested_object_warning",
-                    default=(
-                        "{count} object(s) could not be removed after their namespace's manifest was "
-                        "withheld; they remain durable on the remote provider with no manifest that can "
-                        "enumerate or reconcile them. Investigate and remove them manually, or retry "
-                        "the push once the underlying failure is resolved."
-                    ),
                     count=str(len(cleanup_failed)),
                 ),
                 context={"namespaces": ",".join(sorted({ns for ns, _h, _err in cleanup_failed}))},

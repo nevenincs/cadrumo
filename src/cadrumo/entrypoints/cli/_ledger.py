@@ -97,12 +97,12 @@ from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
     _emit_update_result,
     _invoice_link_error_bad_parameter,
+    _ledger_cli_no_recovery,
     _ledger_transaction_validation_bad,
     _ledger_validation_bad,
     _parse_amount_magnitude,
     _parse_decimal,
     _parse_required_decimal,
-    _prefix_error_bad,
     _resolve_business_pct_with_censo,
     _resolve_id,
     _resolve_source_jurisdiction,
@@ -161,7 +161,13 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     try:
         return resolve_lineage_transaction_id(prefix, catalogue)
     except TransactionIdPrefixError as exc:
-        raise _prefix_error_bad(exc) from exc
+        from ...application.cli_exception_preconditions import CliExceptionPrecondition
+
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
+            facts={"transaction_id_resolves": False},
+        ) from None
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:

@@ -52,11 +52,12 @@ from functools import cache
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core import LLM_EXTRA, FieldRole, ModelRole, build_provenance_stamp, require_optional_extra
+from ..core import ActionEvidenceProvenance, LLM_EXTRA, FieldRole, ModelRole, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._errors import LLMConfigError, LLMValidationError
 from ._models import LLMProvider, LLMRequest
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 #: Identifier under which this capability's calls are recorded in LLM usage and
 #: run telemetry, so a mapping call is attributable separately from a read.
@@ -278,7 +279,14 @@ def build_column_role_mapping_prompt(headers: Sequence[str]) -> str:
             model to label nothing and invite it to invent columns.
     """
     if not tuple(headers):
-        raise LLMValidationError("column-role mapping was given a table with no columns")
+        raise LLMValidationError(
+            context={"column_count": 0, "column_headers_present": False},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.COLUMN_MAPPING_HEADERS_PRESENT,
+                facts={"column_count": 0, "column_headers_present": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
+        )
     catalogue = "\n".join(_role_catalogue_lines())
     observed = "\n".join(f"{index}: {header}" for index, header in enumerate(headers))
     return (
@@ -349,14 +357,41 @@ def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> Col
     """
     observed_headers = tuple(headers)
     if not observed_headers:
-        raise LLMValidationError("column-role mapping was given a table with no columns")
+        raise LLMValidationError(
+            context={"column_count": 0, "column_headers_present": False},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.COLUMN_MAPPING_HEADERS_PRESENT,
+                facts={"column_count": 0, "column_headers_present": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
+        )
     payload = _first_json_object(text)
     if payload is None:
-        raise LLMValidationError(f"no JSON object in column-role mapping reply: {text[:400]!r}")
+        raise LLMValidationError(
+            context={"column_mapping_response_parseable": False},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.COLUMN_MAPPING_RESPONSE_PARSEABLE,
+                facts={"column_mapping_response_parseable": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
+        )
     try:
         reply = ColumnRoleMappingReply.model_validate_json(payload)
     except ValueError as exc:
-        raise LLMValidationError(f"column-role mapping reply failed schema validation: {str(exc)[:200]}") from exc
+        raise LLMValidationError(
+            context={
+                "column_mapping_response_schema_valid": False,
+                "column_mapping_validation_error_type": type(exc).__name__,
+            },
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.COLUMN_MAPPING_RESPONSE_SCHEMA_VALID,
+                facts={
+                    "column_mapping_response_schema_valid": False,
+                    "column_mapping_validation_error_type": type(exc).__name__,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
+        ) from exc
 
     permitted = {role.value: role for role in permitted_column_roles()}
     roles: list[FieldRole] = [FieldRole.UNMAPPED] * len(observed_headers)

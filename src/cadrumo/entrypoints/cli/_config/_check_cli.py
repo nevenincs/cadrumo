@@ -170,7 +170,7 @@ def register(app: typer.Typer) -> None:
                 "issues": issues,
             },
         )
-        lines = [f"{tr('cli.config.check.profile_label', default='profile')}\t{profile_id or '-'}"]
+        lines = [f"{tr('cli.config.check.profile_label')}\t{profile_id or '-'}"]
         capability_label = tr("cli.config.check.capability_label")
         preflight_label = tr("cli.config.check.preflight_label")
         for cap in capabilities:
@@ -186,7 +186,7 @@ def register(app: typer.Typer) -> None:
             tail = f"\t{row['remediation']}" if row["remediation"] else ""
             lines.append(f"{preflight_label}\t{row['check']}\t{row['severity']}\t{row['detail']}{tail}")
         for issue in issues:
-            lines.append(f"{tr('cli.config.check.issue_label', default='issue')}\t{issue}")
+            lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
         _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))
         if not ok:
             raise typer.Exit(code=2)

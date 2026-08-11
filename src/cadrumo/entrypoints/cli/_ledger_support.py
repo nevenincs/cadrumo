@@ -18,6 +18,7 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...application.cli_exception_preconditions import CliExceptionPrecondition, cli_exception_no_recovery_verdict
 from ...application.ledger import (
     ledger_transaction_payload,
     ledger_transaction_review_status,
@@ -25,14 +26,20 @@ from ...application.ledger import (
     resolve_transaction_id,
 )
 from ...core.decimal import format_decimal
-from ...core.errors import resolve_error_message
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, OutputSchema
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
 from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
-from ._common import _bad, _emit_envelope, parse_decimal_amount, parse_optional_decimal_amount
+from ._common import (
+    _bad,
+    _emit_envelope,
+    attach_cli_policy_verdict,
+    parse_decimal_amount,
+    parse_optional_decimal_amount,
+)
 
 
 class _TransactionRepo(Protocol):
@@ -110,19 +117,17 @@ def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[s
     return tuple(result.transaction.transaction_id for result in results)
 
 
-def _prefix_error_bad(exc: TransactionIdPrefixError) -> typer.BadParameter:
-    """Translate a :exc:`TransactionIdPrefixError` into a localized ``_bad``.
-
-    Delegates to the shared :func:`resolve_error_message`, the same resolver
-    already used for this purpose by ``_app_live_portals_cli.py``,
-    ``_modelo_cli_support.py``, ``_modelo_maritime_cli.py``, and
-    ``_review.py``. Every raise site in
-    :func:`~application.ledger.resolve_transaction_id` sets its own
-    ``translated_message`` and ``context``, so the resolver renders the
-    correct locale-translated text for whichever invariant fired without
-    this module re-deriving that mapping from ``str(exc)`` substrings.
-    """
-    return _bad(resolve_error_message(exc))
+def _ledger_cli_no_recovery(
+    error: CadrumoError,
+    *,
+    condition: CliExceptionPrecondition,
+    facts: dict[str, str | int | bool],
+) -> CadrumoError:
+    """Attach one typed, explicit no-recovery projection without flattening the error."""
+    return attach_cli_policy_verdict(
+        error,
+        verdict=cli_exception_no_recovery_verdict(condition, facts=facts),
+    )
 
 
 def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
@@ -138,7 +143,11 @@ def _resolve_id(transaction_repository: _TransactionRepo, prefix: str) -> str:
     try:
         return resolve_transaction_id(prefix, _bucket_transaction_ids(transaction_repository))
     except TransactionIdPrefixError as exc:
-        raise _prefix_error_bad(exc) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
+            facts={"transaction_id_resolves": False},
+        ) from None
 
 
 def _invoice_link_error_bad_parameter() -> typer.BadParameter:

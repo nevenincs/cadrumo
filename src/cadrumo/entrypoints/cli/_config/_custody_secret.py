@@ -119,8 +119,6 @@ def _register_passphrase_commands(app: typer.Typer) -> None:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.passphrase.errors.store_unprovisioned",
             ) from exc
-        except SecretStoreError as exc:
-            raise _CliRefusedBoundaryError(str(exc)) from exc
 
         payload = ConfigPassphraseChangeResult(
             secret_store_dir=str(result.secret_store_dir),
@@ -269,8 +267,6 @@ def _register_recover_command(app: typer.Typer) -> None:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.recover.errors.recovery_code_rejected",
             ) from exc
-        except SecretStoreError as exc:
-            raise _CliRefusedBoundaryError(str(exc)) from exc
         payload = ConfigRecoverResult(
             recovery_path=str(result.recovery_path),
             secret_store_dir=str(result.secret_store_dir),
@@ -378,8 +374,6 @@ def _register_recovery_commands(app: typer.Typer) -> None:
         code = _resolve_recovery_code(secrets_stdin)
         try:
             result = verify_recovery_code(mnemonic=code)
-        except SecretStoreError as exc:
-            raise _CliRefusedBoundaryError(str(exc)) from exc
         payload = ConfigRecoveryVerifyResult(
             recovery_path=str(result.recovery_path),
             verified=result.verified,
@@ -430,8 +424,6 @@ def _run_recovery_enrollment(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.recovery.errors.retype_mismatch",
         ) from exc
-    except SecretStoreError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
 
     lines = (
         "recovery_enrolled\tyes",

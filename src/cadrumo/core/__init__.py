@@ -215,6 +215,7 @@ from ._model_catalogue import (
 )
 from ._modelo import NON_REGISTRY_MODELOS, OUT_OF_SCOPE_OBLIGATIONS, UNMODELED_OBLIGATIONS, Modelo
 from ._modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
+from ._modelo_work_progress_state import ModeloWorkProgressState
 from ._models import STRICT_FROZEN_CONFIG
 from ._notificacion_estado_servicio import (
     NotificacionEstadoServicio,
@@ -580,6 +581,7 @@ __all__: list[str] = [
     "ModelRuntime",
     "ModelSelectionAdvisory",
     "Modelo",
+    "ModeloWorkProgressState",
     "NoRecoveryOutcome",
     "NotificacionEstadoServicio",
     "ObjetoTributario",

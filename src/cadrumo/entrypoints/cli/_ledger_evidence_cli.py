@@ -5,11 +5,9 @@ from __future__ import annotations
 import typer
 
 from ...application.ledger import (
-    ConfirmationBlockedError,
     FindingResolution,
     InvoiceConfirmationResult,
     PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
     confirm_invoice_draft_from_evidence,
@@ -344,10 +342,7 @@ def _mint_extract_consent(
         raise _bad(
             tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"),
         )
-    try:
-        record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
-    except PurchaseInvoiceEvidenceNotFoundError as exc:
-        raise _bad(str(exc)) from exc
+    record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
     content_address = record.source_sha256
     if not content_address:
         raise _bad(
@@ -646,8 +641,6 @@ def _run_evidence_confirm(
             notes=notes,
             resolutions=resolutions,
         )
-    except ConfirmationBlockedError as exc:
-        raise _bad(str(exc)) from exc
     except InvoiceValidationError as exc:
         raise _bad(str(exc)) from exc
 

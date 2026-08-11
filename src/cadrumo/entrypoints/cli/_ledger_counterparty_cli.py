@@ -153,10 +153,7 @@ def counterparty_confirm(
     ),
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
-    from ...application.ledger import (
-        ConfirmedCounterpartyFactsInputError,
-        record_confirmed_counterparty_facts,
-    )
+    from ...application.ledger import record_confirmed_counterparty_facts
 
     if scope is None and identification_state is None:
         raise _bad(
@@ -171,21 +168,16 @@ def counterparty_confirm(
     # handed in has no window at all, because the writer preserves the ORIGINAL
     # stamp on a retry precisely so a repeat cannot look like a fresh answer.
     stamped_at = now()
-    try:
-        fact = record_confirmed_counterparty_facts(
-            bucket_id=bucket_id,
-            tax_identifier=tax_identifier,
-            territorial_scope=scope,
-            asserted_by=asserted_by,
-            identification_state=identification_state,
-            country_code=country_code,
-            note=note,
-            asserted_at=stamped_at,
-        )
-    except ConfirmedCounterpartyFactsInputError as exc:
-        raise _bad(
-            tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
-        ) from exc
+    fact = record_confirmed_counterparty_facts(
+        bucket_id=bucket_id,
+        tax_identifier=tax_identifier,
+        territorial_scope=scope,
+        asserted_by=asserted_by,
+        identification_state=identification_state,
+        country_code=country_code,
+        note=note,
+        asserted_at=stamped_at,
+    )
     recorded = fact.asserted_at == stamped_at
     notices: list[Notice] = []
     if not recorded:

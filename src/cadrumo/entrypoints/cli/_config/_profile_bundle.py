@@ -160,22 +160,18 @@ def _register_profile_sar_command(profile_app: typer.Typer) -> None:
         "subject-access-request",
         help=tr(
             "cli.config.profile.sar_help",
-            default=(
-                "Export all personal data held for a profile as a GDPR "
-                "right-of-access archive (the portable profile bundle)."
-            ),
         ),
     )
     def config_profile_subject_access_request(
         ctx: typer.Context,
         name: str | None = typer.Argument(
             None,
-            help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+            help=tr("cli.config.profile.export_name_help"),
         ),
         out: Path = typer.Option(
             ...,
             "--to",
-            help=tr("cli.config.profile.export_out_help", default="Destination path for the JSON bundle."),
+            help=tr("cli.config.profile.export_out_help"),
         ),
         output_language: OutputLanguage | None = typer.Option(
             None,
@@ -270,13 +266,6 @@ def _build_sar_catalogue_notice(
         code="config.profile.subject_access_request.data_catalogue",
         message=tr(
             "cli.config.profile.sar_catalogue_info",
-            default=(
-                "This archive holds the personal-data categories listed in the "
-                "data_categories field of this response. It is not everything held "
-                "for the profile: the categories in excluded_data_categories stay in "
-                "encrypted storage and are not in this file. Use the encrypted "
-                "recovery archive to obtain those."
-            ),
         ),
         context={
             "data_categories": ",".join(data_categories),
@@ -303,12 +292,6 @@ def _reconcile_failure_notices(
             code="config.profile.export.reconcile_incomplete",
             message=tr(
                 "cli.config.profile.export_reconcile_incomplete_warning",
-                default=(
-                    "{count} interrupted profile-bundle export(s) from an earlier run "
-                    "could not be cleared. An unencrypted staged file may remain on "
-                    "disk for each. Once the cause is resolved, use the available "
-                    "reconciliation action."
-                ),
                 count=str(len(failures)),
             ),
             action=resolve_notice_action(action=ActionReference(action_id="operator.maintenance.reconcile")),
@@ -446,32 +429,24 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
         "export",
         help=tr(
             "cli.config.profile.export_help",
-            default=(
-                "Write a passphrase-encrypted portable profile bundle to PATH; "
-                "cleartext JSON requires --cleartext-local for local/SAR use only."
-            ),
         ),
     )
     def config_profile_export(
         ctx: typer.Context,
         name: str | None = typer.Argument(
             None,
-            help=tr("cli.config.profile.export_name_help", default="Profile to export; defaults to active."),
+            help=tr("cli.config.profile.export_name_help"),
         ),
         out: Path | None = typer.Option(
             None,
             "--to",
-            help=tr("cli.config.profile.export_out_help", default="Destination path for the profile bundle."),
+            help=tr("cli.config.profile.export_out_help"),
         ),
         encrypt: bool = typer.Option(
             False,
             "--encrypt",
             help=tr(
                 "cli.config.profile.export_encrypt_help",
-                default=(
-                    "AEAD-encrypt the bundle for transfer; the passphrase is "
-                    "prompted (hidden) or read via --secrets-stdin, never argv."
-                ),
             ),
         ),
         secrets_stdin: bool = typer.Option(
@@ -484,7 +459,6 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
             "--cleartext-local",
             help=tr(
                 "cli.config.profile.export_cleartext_local_help",
-                default="Write cleartext JSON for local/SAR handling only; not safe for email, sync, or transfer.",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -580,17 +554,6 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
         code="config.profile.export.cleartext_sensitive_bundle",
         message=tr(
             "cli.config.profile.export_sensitivity_warning",
-            default=(
-                "This bundle is UNENCRYPTED and contains sensitive financial data: "
-                "the raw tax id (not redacted), names/surnames, the full ledger, "
-                "calculation revisions, and filing records. It was written to {out}. "
-                "Use it only for local/SAR handling; do not email, sync, or transfer it. "
-                "Delete it after that local/SAR handling is complete. "
-                "Select encrypted export for an AEAD-encrypted "
-                "structured transfer bundle. It is NOT a full backup: "
-                "attachment evidence bytes, authority captures, and the audit trail are "
-                "excluded. Use the encrypted recovery archive for a complete backup."
-            ),
             out=str(out),
         ),
         context={"out": str(out)},
@@ -604,13 +567,6 @@ def _build_encrypted_export_notice(out: Path) -> Notice:
         code="config.profile.export.encrypted_bundle",
         message=tr(
             "cli.config.profile.export_encrypted_info",
-            default=(
-                "This profile bundle was written to {out} with AEAD passphrase encryption. "
-                "The available import action carries its path; the passphrase is prompted "
-                "(hidden) or read via --secrets-stdin. "
-                "It carries the structured profile bundle only; use the encrypted recovery "
-                "archive for a complete backup with attachment evidence bytes and audit trail."
-            ),
             out=str(out),
         ),
         action=resolve_notice_action(
@@ -656,14 +612,13 @@ def _register_profile_import_command(
         "import",
         help=tr(
             "cli.config.profile.import_help",
-            default="Register a portable profile bundle from PATH into the active profile.",
         ),
     )
     def config_profile_import(
         ctx: typer.Context,
         path: Path | None = typer.Argument(
             None,
-            help=tr("cli.config.profile.import_path_help", default="Path to the profile bundle."),
+            help=tr("cli.config.profile.import_path_help"),
         ),
         secrets_stdin: bool = typer.Option(
             False,
@@ -800,8 +755,6 @@ def _decode_import_bundle(
             return validate_bundle_payload(raw_bundle_text)
         passphrase = _resolve_import_passphrase(secrets_stdin)
         return decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
-    except UnsupportedBundleSchemaVersionError as exc:
-        raise _CliRefusedBoundaryError(str(exc)) from exc
     except EncryptedProfileBundleError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.import_encrypted_bundle_invalid",
@@ -883,11 +836,6 @@ def _build_import_active_switch_notice(target_label: str) -> Notice:
         code="config.profile.import.active_profile_switched",
         message=tr(
             "cli.config.profile.import_active_switch_info",
-            default=(
-                "The imported profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. The available profile-login action changes "
-                "the active profile."
-            ),
             name=target_label,
         ),
         action=resolve_notice_action(

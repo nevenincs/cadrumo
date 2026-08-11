@@ -72,11 +72,11 @@ from ._common import (
 )
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
-    ledger_filter_parse_error_message,
     parse_ledger_list_filter_spec,
     project_ledger_list,
 )
 from ._ledger_review_cli import register_ledger_review_command
+from ._ledger_support import _ledger_cli_no_recovery
 from ._participation_cli import register_participation_commands
 
 ResolveTransactionId = Callable[[Any, str], str]
@@ -764,12 +764,13 @@ def _register_ledger_list_command(app: typer.Typer) -> None:
         try:
             spec = parse_ledger_list_filter_spec(resolved_filters)
         except FilterParseError as exc:
-            raise _bad(
-                ledger_filter_parse_error_message(
-                    exc,
-                    year=_ledger_list_pairing_error_year(resolved_filters, year),
-                ),
-            ) from exc
+            from ...application.cli_exception_preconditions import CliExceptionPrecondition
+
+            raise _ledger_cli_no_recovery(
+                exc,
+                condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
+                facts={"ledger_filter_valid": False, "reason": exc.reason},
+            ) from None
         projection = project_ledger_list(
             transaction_repository=transaction_repository,
             spec=spec,

@@ -5,23 +5,37 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
-from ....core import Period
-from ....domain.calculations.registry import InputKind, bundled_authority, revision_date_binding_ids
+from ....core import ModeloWorkProgressState, Period
+from ....domain.calculations.registry import CasillaObservation, InputKind, bundled_authority, revision_date_binding_ids
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     ModeloCode,
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
+    VerificationReport,
     WorkUnit,
     derive_calculation_revision_id,
+    derive_verification_report_id,
     derive_work_unit_id,
     upsert_calculation_revision,
+    upsert_verification_report,
     upsert_work_unit,
 )
 from ....domain.user_profile import UserProfileFact
 from ...user_profile import UserProfileLifecycleRepository
-from .. import ModeloWorkReview, build_modelo_work_review, calculate_modelo_revision
+from .. import (
+    ModeloWorkProgress,
+    ModeloWorkProgressDenominator,
+    ModeloWorkReview,
+    build_modelo_work_review,
+    calculate_modelo_revision,
+)
 from .._work_review import ModeloWorkOriginAnomaly
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -31,6 +45,7 @@ from ._file_flow_support import (
     M130_NET_RESULT_CASILLA,
     T0,
     Repos,
+    verify_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -107,6 +122,18 @@ def test_review_projects_resolvable_work_without_a_calculation_from_real_storage
     assert review.calculation_revision_id is None
     assert review.lifecycle_state is None
     assert review.verification_outcome is None
+    assert review.progress.state is ModeloWorkProgressState.IN_PROGRESS
+    assert review.progress.materialised_count == 0
+    manifest = authority.snapshot(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    ).revision.completeness_manifest
+    assert manifest is not None
+    assert review.progress.target_count == len(manifest.casillas)
+    assert review.progress.denominator is not None
+    assert review.progress.denominator.registry_revision_id == review.registry_revision_id
+    assert review.progress.denominator.source_ref == "aeat-dr-130-2019-v12"
     assert review.findings == ()
     assert review.blockers == ()
     assert review.casillas
@@ -116,8 +143,159 @@ def test_review_projects_resolvable_work_without_a_calculation_from_real_storage
     assert computed.origin_anomaly is ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN
 
 
+def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(
+        repos,
+        modelo=ModeloCode("189"),
+        filing_year=2025,
+        period_code="0A",
+    )
+
+    review = build_modelo_work_review(
+        work_unit.bucket_id,
+        work_unit.modelo,
+        work_unit.filing_year,
+        work_unit.period,
+        authority=bundled_authority(),
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+    )
+
+    assert review.progress.state is ModeloWorkProgressState.UNDEFINED
+    assert review.progress.materialised_count is None
+    assert review.progress.target_count is None
+    assert review.progress.denominator is None
+
+
+def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> None:
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+    snapshot = bundled_authority().snapshot(
+        str(work_unit.modelo),
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    manifest = snapshot.revision.completeness_manifest
+    assert manifest is not None
+    target = manifest.casillas[0]
+    target_definition = next(casilla for casilla in snapshot.revision.casillas if casilla.id == target.casilla_id)
+    target_value = Decimal("1")
+    casilla_values = {target.casilla_id: target_value}
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=casilla_values,
+    )
+    revision = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        observations=(
+            CasillaObservation(
+                casilla_id=target.casilla_id,
+                value=target_value,
+                legal_refs=tuple(target_definition.legal_refs),
+                source_refs=tuple(target_definition.source_refs),
+            ),
+        ),
+        created_at=T0,
+        updated_at=T0,
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
+    work_repo.save(
+        upsert_work_unit(
+            work_repo.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision_id}),
+        ),
+    )
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        casilla_id=target.casilla_id,
+        message_locale_key="application.modelo.findings.blocking_rule",
+        message_facts={"casilla_id": str(target.casilla_id)},
+        legal_refs=tuple(manifest.legal_refs),
+        source_refs=tuple(manifest.source_refs),
+    )
+    report_id = derive_verification_report_id(
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(finding,),
+        verified_by="operator-A",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=revision_id,
+        completeness_status=VerificationCompletenessStatus.BLOCKED,
+        findings=(finding,),
+        run_at=T0,
+        verified_by="operator-A",
+        granted_verificado_completo=False,
+    )
+    verification_repo.save(upsert_verification_report(verification_repo.load(), report))
+
+    review = build_modelo_work_review(
+        work_unit.bucket_id,
+        work_unit.modelo,
+        work_unit.filing_year,
+        work_unit.period,
+        authority=bundled_authority(),
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+    )
+
+    assert review.progress.state is ModeloWorkProgressState.BLOCKED
+    assert review.progress.materialised_count == 1
+    assert review.progress.target_count == len(manifest.casillas)
+
+
+def test_review_progress_schema_refuses_unnamed_or_impossible_counts() -> None:
+    denominator = ModeloWorkProgressDenominator(
+        registry_revision_id="2019-y-siguientes",
+        source_ref="aeat-dr-130-2019-v12",
+    )
+    with pytest.raises(ValidationError, match="undefined modelo work progress"):
+        ModeloWorkProgress(
+            state=ModeloWorkProgressState.UNDEFINED,
+            materialised_count=0,
+            target_count=1,
+            denominator=denominator,
+        )
+    with pytest.raises(ValidationError, match="cannot exceed"):
+        ModeloWorkProgress(
+            state=ModeloWorkProgressState.IN_PROGRESS,
+            materialised_count=2,
+            target_count=1,
+            denominator=denominator,
+        )
+
+
+def test_review_progress_fields_do_not_express_a_ratio() -> None:
+    forbidden = ("percent", "percentage", "fraction", "ratio", "pct", "coverage_rate", "completeness")
+    schema = ModeloWorkReview.model_json_schema()
+    pending: list[object] = [schema]
+    names: list[str] = []
+    while pending:
+        node = pending.pop()
+        if isinstance(node, dict):
+            properties = node.get("properties")
+            if isinstance(properties, dict):
+                names.extend(str(name) for name in properties)
+            pending.extend(node.values())
+        elif isinstance(node, list):
+            pending.extend(node)
+    joined_names = " ".join(names).casefold()
+    assert all(token not in joined_names for token in forbidden)
+    assert all(field.annotation is not float for field in ModeloWorkProgress.model_fields.values())
+
+
 def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos) -> None:
-    work_repo, calculation_repo, _, verification_repo, bucket_event_repo = repos
+    work_repo, calculation_repo, filing_repo, verification_repo, bucket_event_repo = repos
     work_unit = _persist_work_unit(repos)
     profile_repository = UserProfileLifecycleRepository(bucket_id=_BUCKET_ID)
     profile = profile_repository.load(_BUCKET_ID)
@@ -197,6 +375,31 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
     assert equal_value_income.realised_kind is ModeloValueKind.INHERITED
     assert equal_value_income.origin_anomaly is None
     assert equal_value_income.concrete_bindings[0].resolved is True
+
+    verification = verify_revision(
+        equal_value_revision.calculation_revision_id,
+        revision=equal_value_revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=bucket_event_repo,
+        clock=equal_value_revision.updated_at,
+    )
+    verified_review = build_modelo_work_review(
+        work_unit.bucket_id,
+        work_unit.modelo,
+        work_unit.filing_year,
+        work_unit.period,
+        authority=bundled_authority(),
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        verification_repository=verification_repo,
+    )
+    assert verification.completeness_status is VerificationCompletenessStatus.COMPLETE
+    assert verified_review.progress.state is ModeloWorkProgressState.COMPLETE
+    assert verified_review.progress.materialised_count == verified_review.progress.target_count
 
 
 def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(repos: Repos) -> None:

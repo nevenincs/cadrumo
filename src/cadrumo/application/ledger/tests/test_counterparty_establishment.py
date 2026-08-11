@@ -176,8 +176,13 @@ def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
     )
     assert resolution.fact is None
 
-    with pytest.raises(ConfirmedCounterpartyFactsInputError):
+    with pytest.raises(ConfirmedCounterpartyFactsInputError) as raised:
         _confirm(repository, tax_identifier="B99999999")
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "ledger.counterparty.identifier_valid"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome == "operator_decision"
 
 
 def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_country(

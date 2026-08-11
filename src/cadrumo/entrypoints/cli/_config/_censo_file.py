@@ -53,7 +53,6 @@ if TYPE_CHECKING:
 censo_app = typer.Typer(
     help=tr(
         "cli.config.profile.censo.help",
-        default="Censal artefact ingestion for the active profile.",
     ),
     no_args_is_help=True,
 )
@@ -66,10 +65,7 @@ def register_censo_commands(profile_app: typer.Typer) -> None:
 
 @censo_app.command(
     "file",
-    help=tr(
-        "cli.config.profile.censo.file_help",
-        default="Read a downloaded Certificado de Situación Censal and preview or enroll its censal facts.",
-    ),
+    help=tr("cli.config.profile.censo.file_help"),
 )
 def censo_file(
     ctx: typer.Context,
@@ -79,17 +75,13 @@ def censo_file(
         exists=True,
         dir_okay=False,
         readable=True,
-        help=tr(
-            "cli.config.profile.censo.file_option_help",
-            default="Path to the Certificado de Situación Censal PDF downloaded from Sede (procedure G313).",
-        ),
+        help=tr("cli.config.profile.censo.file_option_help"),
     ),
     apply: bool = typer.Option(
         False,
         "--apply",
         help=tr(
             "cli.config.profile.censo.apply_help",
-            default="Enroll the parsed censal facts onto the active profile (default is preview only).",
         ),
     ),
 ) -> None:
@@ -133,10 +125,6 @@ def censo_file(
     "pull",
     help=tr(
         "cli.config.profile.censo.pull_help",
-        default=(
-            "Read your identity and address from AEAT's censal record and "
-            "preview or enroll them onto the active profile."
-        ),
     ),
 )
 def censo_pull(
@@ -146,7 +134,6 @@ def censo_pull(
         "--apply",
         help=tr(
             "cli.config.profile.censo.apply_help",
-            default="Enroll the parsed censal facts onto the active profile (default is preview only).",
         ),
     ),
 ) -> None:
@@ -306,7 +293,6 @@ def _divergence_notice(
     *,
     code: str,
     locale_key: str,
-    default: str,
 ) -> Notice | None:
     """Build one divergence warning, or ``None`` when no row falls in its class.
 
@@ -322,7 +308,7 @@ def _divergence_notice(
     return Notice(
         severity=NoticeSeverity.WARNING,
         code=code,
-        message=tr(locale_key, default=default, count=len(rows), axes=axes),
+        message=tr(locale_key, count=len(rows), axes=axes),
         context={"count": str(len(rows)), "axes": axes},
     )
 
@@ -357,36 +343,24 @@ def _divergence_notices(divergences: tuple[CensoPullDivergencePayload, ...]) -> 
     they never declared.
     """
     notices: list[Notice] = []
-    for rows, code, locale_key, default in (
+    for rows, code, locale_key in (
         (
             tuple(row for row in divergences if row.profile_value is not None),
             "config.profile.censo.pull.divergences",
             "cli.config.profile.censo.pull_divergences_notice",
-            (
-                "The census authority reports {count} field(s) differently from your declared answer: {axes}. "
-                "Your answer stands; resolve each one yourself."
-            ),
         ),
         (
             tuple(row for row in divergences if _values_are_withheld(row)),
             "config.profile.censo.pull.values_withheld",
             "cli.config.profile.censo.pull_withheld_notice",
-            (
-                "The values for {count} field(s) are withheld from output: {axes}. "
-                "Compare them yourself against the census authority; this tool will not print them."
-            ),
         ),
         (
             tuple(row for row in divergences if row.profile_value is None),
             "config.profile.censo.pull.cleared",
             "cli.config.profile.censo.pull_cleared_notice",
-            (
-                "The census authority still holds a value for {count} field(s) you cleared: {axes}. "
-                "They were left empty; clearing them here does not change the authority's record."
-            ),
         ),
     ):
-        notice = _divergence_notice(rows, code=code, locale_key=locale_key, default=default)
+        notice = _divergence_notice(rows, code=code, locale_key=locale_key)
         if notice is not None:
             notices.append(notice)
     return notices
@@ -407,10 +381,6 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
                 code="config.profile.censo.pull.verified_tier",
                 message=tr(
                     "cli.config.profile.censo.pull_verified_tier_notice",
-                    default=(
-                        "These facts were read from the census authority itself, so the censo enrolment counts "
-                        "as verified."
-                    ),
                 ),
             ),
         )
@@ -421,9 +391,6 @@ def _tier_notices(*, applied: bool, adopted: tuple[CensoFactPayload, ...]) -> li
                 code="config.profile.censo.pull.preview",
                 message=tr(
                     "cli.config.profile.censo.pull_preview_notice",
-                    default=(
-                        "Preview only: nothing was written to the profile. Re-run with --apply to enroll these facts."
-                    ),
                 ),
             ),
         )

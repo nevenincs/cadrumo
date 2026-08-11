@@ -38,6 +38,9 @@ class CliExceptionPrecondition(StrEnum):
     PROFILE_IMPORT_PATH_SUPPLIED = "cli.profile.import_path.supplied"
     GOOGLE_CONFIGURATION_COMPLETE = "cli.google.configuration.complete"
     GOOGLE_MIRROR_REQUEST_COMPLETE = "cli.google.mirror_request.complete"
+    LEDGER_CENSO_RATIO_CONSISTENT = "cli.ledger.censo_ratio.consistent"
+    LEDGER_FILTER_VALID = "cli.ledger.filter.valid"
+    LEDGER_TRANSACTION_ID_RESOLVES = "cli.ledger.transaction_id.resolves"
 
 
 def cli_exception_no_recovery_verdict(

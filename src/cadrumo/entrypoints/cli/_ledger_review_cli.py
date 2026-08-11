@@ -20,8 +20,9 @@ from ...application.ledger import (
 )
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
-from ._common import _bad, _emit_envelope, _state, _tx_repo
-from ._ledger_list import ledger_filter_parse_error_message, ledger_review_query_for_spec
+from ._common import _emit_envelope, _state, _tx_repo
+from ._ledger_list import ledger_review_query_for_spec
+from ._ledger_support import _ledger_cli_no_recovery
 
 ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
@@ -53,7 +54,13 @@ def _ledger_review_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     try:
         return LedgerReviewFilterSpec.from_strings(filters)
     except FilterParseError as exc:
-        raise _bad(ledger_filter_parse_error_message(exc)) from exc
+        from ...application.cli_exception_preconditions import CliExceptionPrecondition
+
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_FILTER_VALID,
+            facts={"ledger_filter_valid": False, "reason": exc.reason},
+        ) from None
 
 
 def _ledger_review_query(

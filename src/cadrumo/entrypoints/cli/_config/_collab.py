@@ -52,7 +52,6 @@ collab_app = typer.Typer(
     name="collab",
     help=tr(
         "cli.config.collab.help",
-        default="Manage trusted recipients for review-package collaboration.",
     ),
     no_args_is_help=True,
 )
@@ -60,7 +59,6 @@ recipient_app = typer.Typer(
     name="recipient",
     help=tr(
         "cli.config.collab.recipient.help",
-        default="Record, list, and remove trusted review-package recipients.",
     ),
     no_args_is_help=True,
 )
@@ -92,7 +90,6 @@ def _validated_public_key_hex(public_key: str) -> str:
         raise typer.BadParameter(
             tr(
                 "cli.config.collab.recipient.errors.invalid_public_key",
-                default="--public-key must be exactly 64 lowercase hex characters (a raw 32-byte X25519 public key).",
             ),
         ) from exc
     return public_key_hex_from_raw_bytes(raw)
@@ -102,7 +99,6 @@ def _validated_public_key_hex(public_key: str) -> str:
     "add",
     help=tr(
         "cli.config.collab.recipient.add_help",
-        default="Register a trusted recipient's X25519 public key by fingerprint.",
     ),
 )
 def collab_recipient_add(
@@ -111,7 +107,6 @@ def collab_recipient_add(
         ...,
         help=tr(
             "cli.config.collab.recipient.recipient_id_help",
-            default="Stable operator-chosen label (e.g. 'my-accountant').",
         ),
     ),
     public_key: str = typer.Option(
@@ -119,7 +114,6 @@ def collab_recipient_add(
         "--public-key",
         help=tr(
             "cli.config.collab.recipient.public_key_help",
-            default="The recipient's raw X25519 public key, as 64 lowercase hex characters.",
         ),
     ),
     label: str = typer.Option(
@@ -127,7 +121,6 @@ def collab_recipient_add(
         "--label",
         help=tr(
             "cli.config.collab.recipient.label_help",
-            default="Optional free-text display name for the recipient.",
         ),
     ),
 ) -> None:
@@ -161,7 +154,6 @@ def collab_recipient_add(
     "list",
     help=tr(
         "cli.config.collab.recipient.list_help",
-        default="List every trusted recipient registered on the active profile.",
     ),
 )
 def collab_recipient_list(ctx: typer.Context) -> None:
@@ -189,7 +181,6 @@ def collab_recipient_list(ctx: typer.Context) -> None:
     "remove",
     help=tr(
         "cli.config.collab.recipient.remove_help",
-        default="Remove one trusted recipient by id from the active profile.",
     ),
 )
 def collab_recipient_remove(
@@ -198,7 +189,6 @@ def collab_recipient_remove(
         ...,
         help=tr(
             "cli.config.collab.recipient.recipient_id_help",
-            default="Stable operator-chosen label (e.g. 'my-accountant').",
         ),
     ),
 ) -> None:

@@ -62,7 +62,6 @@ descendiente_app = typer.Typer(
     name="descendiente",
     help=tr(
         "cli.config.profile.descendiente.help",
-        default="Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.",
     ),
     no_args_is_help=False,
     invoke_without_command=True,
@@ -235,13 +234,6 @@ def _ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
         tr(
             "cli.config.profile.descendiente.ambiguous_relacion_advisory",
             indices=ids,
-            default=(
-                "descendiente %{indices} declares meses_madre_trabajo under the unstated relación. "
-                "The manual grants the mínimo but excludes the Art. 81.1 deducción por maternidad for "
-                "a grandchild/other consanguinidad descendant, or a minor under judicial guarda y "
-                "custodia -- the stored fact cannot distinguish either from a true hijo. Confirm this "
-                "descendant is a hijo, or state the actual relación with RELACION=."
-            ),
         ),
         context={"indices": ids},
     )
@@ -515,7 +507,6 @@ def _check_count(candidate: str) -> str | None:
     "add",
     help=tr(
         "cli.config.profile.descendiente.add_help",
-        default="Add one or more descendants to the active profile.",
     ),
 )
 def descendiente_add(
@@ -531,19 +522,6 @@ def descendiente_add(
         # moment a revision moved it.
         help=tr(
             "cli.config.profile.descendiente.add_flag_help",
-            default=(
-                "NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|"
-                "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|"
-                "guarda_y_custodia_judicial]"
-                "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,FALLECIMIENTO=YYYY-MM-DD]"
-                "[,DISCAPACIDAD=0|33|65]"
-                "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
-                "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
-                "[,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N]"
-                "[,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]. "
-                "Repeatable. Run `aeat config profile descendiente` with no "
-                "subcommand to enter these guided."
-            ),
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(
@@ -629,7 +607,6 @@ def descendiente_add(
     "list",
     help=tr(
         "cli.config.profile.descendiente.list_help",
-        default="List descendants declared on the active profile.",
     ),
 )
 def descendiente_list(
@@ -651,7 +628,6 @@ def descendiente_list(
     "remove",
     help=tr(
         "cli.config.profile.descendiente.remove_help",
-        default="Remove one descendant by 0-based index from the active profile.",
     ),
 )
 def descendiente_remove(
