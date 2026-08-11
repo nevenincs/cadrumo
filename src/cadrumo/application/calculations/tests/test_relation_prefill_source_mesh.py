@@ -24,6 +24,8 @@ from ....domain.calculations.registry import (
     RegistryFoldRequirement,
     RegistryModeloObservation,
     RegistrySnapshot,
+    relation_consumption_channels,
+    relation_consumption_index,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -238,10 +240,15 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
         repository = CalculationObservationRepository()  # empty store
         snapshot = _snapshot("202", 2025, "2P")
 
-        from .._relation_prefill import _formula_relation_ids
-
         declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
-        non_formula = {r.id for r in snapshot.revision.relations} - _formula_relation_ids(snapshot)
+        consumption_index = relation_consumption_index(snapshot.revision)
+        non_formula = {
+            relation.id
+            for relation in snapshot.revision.relations
+            if not any(
+                channel.startswith("formula_") for channel in relation_consumption_channels(relation, consumption_index)
+            )
+        }
         assert non_formula, "M202 must declare at least one non-formula relation for this fixture"
         # Every M202 non-formula relation materialises a real binding slot.
         assert all(r.target_binding in declared_binding_ids for r in snapshot.revision.relations if r.id in non_formula)
@@ -287,11 +294,15 @@ def test_unresolved_bound_carry_the_taxpayer_files_is_advised(tmp_path: Path) ->
     )
 
 
-def test_formula_relation_ids_traverses_committed_m100_settlement_expression() -> None:
+def test_relation_consumption_index_traverses_committed_m100_settlement_expression() -> None:
     """The relation prefill path must retain both real M100 instalment relation leaves."""
-    from .._relation_prefill import _formula_relation_ids
-
-    formula_relation_ids = _formula_relation_ids(_snapshot("100", 2024, "0A"))
+    snapshot = _snapshot("100", 2024, "0A")
+    index = relation_consumption_index(snapshot.revision)
+    formula_relation_ids = {
+        relation.id
+        for relation in snapshot.revision.relations
+        if "formula_relation" in relation_consumption_channels(relation, index)
+    }
 
     assert {
         "renta-2024-rel-130-pagos-fraccionados",
@@ -413,9 +424,14 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
         repository = CalculationObservationRepository()  # empty store — relation cannot resolve
         snapshot = _snapshot("202", 2025, "2P")
 
-        from .._relation_prefill import _formula_relation_ids
-
-        seed_relation = next(r for r in snapshot.revision.relations if r.id not in _formula_relation_ids(snapshot))
+        consumption_index = relation_consumption_index(snapshot.revision)
+        seed_relation = next(
+            relation
+            for relation in snapshot.revision.relations
+            if not any(
+                channel.startswith("formula_") for channel in relation_consumption_channels(relation, consumption_index)
+            )
+        )
         declared_binding_ids = {binding.id for binding in snapshot.revision.bindings}
         orphan_target = "no-such-binding-orphan-xyz"
         assert orphan_target not in declared_binding_ids
