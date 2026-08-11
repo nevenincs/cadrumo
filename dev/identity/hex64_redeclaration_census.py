@@ -35,9 +35,9 @@ cannot outlive the code it excused.
 
 Usage::
 
-    python -m dev.hex64_redeclaration_census HEAD
-    python -m dev.hex64_redeclaration_census HEAD --json
-    python -m dev.hex64_redeclaration_census HEAD --kind unpatterned_length
+    python -m dev.identity.hex64_redeclaration_census HEAD
+    python -m dev.identity.hex64_redeclaration_census HEAD --json
+    python -m dev.identity.hex64_redeclaration_census HEAD --kind unpatterned_length
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Final
 
-from dev.cli_action_census import production_sources
+from dev.quality.cli_action_census import production_sources
 
 #: The canonical home. A declaration here is the definition, not a bypass.
 CANONICAL_HOME: Final[str] = "src/cadrumo/core/_hex.py"

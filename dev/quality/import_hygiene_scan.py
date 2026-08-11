@@ -19,7 +19,7 @@ surface it measures.
 
 Re-run with:
 
-    python dev/import_hygiene_scan.py [--json OUT.json] [--top N]
+    python -m dev.quality.import_hygiene_scan [--json OUT.json] [--top N]
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = "utf-8"

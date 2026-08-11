@@ -13,7 +13,7 @@ vulture's own exit codes carry the classification: ``0`` is a clean scan,
 ``2`` invalid config, or a subprocess-level failure) is a genuine tool error
 that must never be read as clean.
 
-The whitelist (``dev/vulture_whitelist.py``) already clears individually
+The whitelist (``dev/audit/vulture_whitelist.py``) already clears individually
 reviewed false positives before this module ever sees the output, so every
 finding remaining here has already passed that filter -- see the whitelist's
 own docstring for the reviewed exceptions it carries.
@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Final
 
 _UTF_8: Final[str] = "utf-8"
-_TARGETS: Final[tuple[str, ...]] = ("src/cadrumo", "dev/vulture_whitelist.py")
+_TARGETS: Final[tuple[str, ...]] = ("src/cadrumo", "dev/audit/vulture_whitelist.py")
 _FINDING_CAP: Final[int] = 40
 _VULTURE_TIMEOUT_SECONDS: Final[float] = 180.0
 

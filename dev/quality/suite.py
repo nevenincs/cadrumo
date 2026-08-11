@@ -43,6 +43,7 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         (
             "deptry",
             "src/cadrumo",
+            "dev/registry",
             "--known-first-party",
             "cadrumo",
             "--extend-exclude",

@@ -35,9 +35,9 @@ sibling censuses under ``dev/``.
 
 Usage::
 
-    python -m dev.identifier_noun_census HEAD
-    python -m dev.identifier_noun_census HEAD --json
-    python -m dev.identifier_noun_census HEAD --only-missed-by-suffix
+    python -m dev.identity.identifier_noun_census HEAD
+    python -m dev.identity.identifier_noun_census HEAD --json
+    python -m dev.identity.identifier_noun_census HEAD --only-missed-by-suffix
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ import unicodedata
 from dataclasses import asdict, dataclass
 from typing import Final
 
-from dev.cli_action_census import production_sources
+from dev.quality.cli_action_census import production_sources
 
 #: The noun vocabulary, matched against a field's DOCUMENTATION rather than its
 #: name. Deliberately Spanish: this codebase names AEAT domain concepts with

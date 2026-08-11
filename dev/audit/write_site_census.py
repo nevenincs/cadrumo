@@ -156,11 +156,11 @@ root's classification as its reason) / ``unresolved`` -- and
 
 Usage::
 
-    python -m dev.write_site_census <revision>
-    python -m dev.write_site_census <revision> --json
-    python -m dev.write_site_census <revision> --scope tests
-    python -m dev.write_site_census <revision> --vocabulary
-    python -m dev.write_site_census <revision> --vocabulary --scope tests --json
+    python -m dev.audit.write_site_census <revision>
+    python -m dev.audit.write_site_census <revision> --json
+    python -m dev.audit.write_site_census <revision> --scope tests
+    python -m dev.audit.write_site_census <revision> --vocabulary
+    python -m dev.audit.write_site_census <revision> --vocabulary --scope tests --json
 """
 
 from __future__ import annotations
@@ -176,7 +176,7 @@ from functools import cache
 from pathlib import Path, PurePosixPath
 from typing import Final
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
+REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 _UTF_8: Final[str] = "utf-8"
 
 #: The written path is the RECEIVER: ``path.write_text(...)``, ``path.mkdir()``.

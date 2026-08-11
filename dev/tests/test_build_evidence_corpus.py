@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev._build_evidence_corpus import _licence_is_clean
+from dev.corpus.build_evidence_corpus import _licence_is_clean
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -15,7 +15,7 @@ import ast
 
 import pytest
 
-from dev.write_site_census import (
+from dev.audit.write_site_census import (
     VocabularySite,
     WriteSite,
     _bindings,
@@ -39,7 +39,7 @@ from dev.write_site_census import (
 # python_functions (default "test_*") -- including one merely imported, not
 # defined here -- so a bare "test_modules" import would itself be collected
 # and run as a (fixture-less, failing) test.
-from dev.write_site_census import test_modules as _test_modules_lister
+from dev.audit.write_site_census import test_modules as _test_modules_lister
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -2478,7 +2478,7 @@ candidate_role = "command_literal"
 alias = "<command-literal>"
 action_identity = "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID; aeat app modelo work verify"
 role = "producer"
-reason = "src/cadrumo/application/modelo/_export.py:1296 export_modelo_revision: the concrete command is the 'suggestion' payload supplied to raise_if_deductible_vat_evidence_missing; it currently creates executable recovery or continuation guidance."
+reason = "src/cadrumo/application/modelo/_export.py:1296 export_modelo_revision: the concrete command is the 'suggestion' payload supplied to raise_if_deductible_iva_evidence_missing; it currently creates executable recovery or continuation guidance."
 
 [[disposition]]
 path = "src/cadrumo/application/modelo/_export.py"
@@ -2487,7 +2487,7 @@ candidate_role = "producer"
 alias = "suggestion"
 action_identity = "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID; aeat app modelo work verify"
 role = "producer"
-reason = "src/cadrumo/application/modelo/_export.py:1284 export_modelo_revision: raise_if_deductible_vat_evidence_missing supplies 'suggestion' as the current action or no-recovery value (aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID; aeat app modelo work verify) for its consumer."
+reason = "src/cadrumo/application/modelo/_export.py:1284 export_modelo_revision: raise_if_deductible_iva_evidence_missing supplies 'suggestion' as the current action or no-recovery value (aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID; aeat app modelo work verify) for its consumer."
 
 [[disposition]]
 path = "src/cadrumo/application/modelo/_filing_actions.py"
@@ -2496,7 +2496,7 @@ candidate_role = "command_literal"
 alias = "<command-literal>"
 action_identity = "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  # link BEFORE `aeat app modelo work calculate`"
 role = "producer"
-reason = "src/cadrumo/application/modelo/_filing_actions.py:395 _require_filing_preconditions: the concrete command is the 'suggestion' payload supplied to raise_if_deductible_vat_evidence_missing; it currently creates executable recovery or continuation guidance."
+reason = "src/cadrumo/application/modelo/_filing_actions.py:395 _require_filing_preconditions: the concrete command is the 'suggestion' payload supplied to raise_if_deductible_iva_evidence_missing; it currently creates executable recovery or continuation guidance."
 
 [[disposition]]
 path = "src/cadrumo/application/modelo/_filing_actions.py"
@@ -2505,7 +2505,7 @@ candidate_role = "producer"
 alias = "suggestion"
 action_identity = "aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  # link BEFORE `aeat app modelo work calculate`"
 role = "producer"
-reason = "src/cadrumo/application/modelo/_filing_actions.py:388 _require_filing_preconditions: raise_if_deductible_vat_evidence_missing supplies 'suggestion' as the current action or no-recovery value (aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  # link BEFORE `aeat app modelo work calculate`) for its consumer."
+reason = "src/cadrumo/application/modelo/_filing_actions.py:388 _require_filing_preconditions: raise_if_deductible_iva_evidence_missing supplies 'suggestion' as the current action or no-recovery value (aeat app ledger evidence add PATH; aeat app ledger attach TRANSACTION_ID --purchase-invoice-evidence-id EVIDENCE_ID  # link BEFORE `aeat app modelo work calculate`) for its consumer."
 
 [[disposition]]
 path = "src/cadrumo/application/modelo/_iva_wallet_gate.py"
@@ -2599,12 +2599,12 @@ reason = "src/cadrumo/application/modelo/_ledger_drift_gate.py:134 _drift_findin
 
 [[disposition]]
 path = "src/cadrumo/application/modelo/_ledger_evidence_gate.py"
-enclosing_symbol = "raise_if_deductible_vat_evidence_missing"
+enclosing_symbol = "raise_if_deductible_iva_evidence_missing"
 candidate_role = "producer"
 alias = "suggestion"
 action_identity = "suggestion"
 role = "transformer"
-reason = "src/cadrumo/application/modelo/_ledger_evidence_gate.py:165 raise_if_deductible_vat_evidence_missing: error_type forwards the already-owned 'suggestion' value (suggestion); this site does not select the recovery action."
+reason = "src/cadrumo/application/modelo/_ledger_evidence_gate.py:165 raise_if_deductible_iva_evidence_missing: error_type forwards the already-owned 'suggestion' value (suggestion); this site does not select the recovery action."
 
 [[disposition]]
 path = "src/cadrumo/application/modelo/_m210_agrupacion_renta.py"

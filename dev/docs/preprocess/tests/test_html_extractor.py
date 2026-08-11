@@ -184,7 +184,6 @@ def test_annex_instructions_become_atomic_citation_units() -> None:
 
     modules_2025 = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
     annex_one_point_three = next(unit for unit in modules_2025.units if unit.anchor == "#anexo-i-instruccion-3")
-    assert annex_one_point_three.title is not None
     assert "agricultores jóvenes o asalariados agrarios" in annex_one_point_three.title
     assert "pagos fraccionados" in annex_one_point_three.text
     assert "A efectos del pago fraccionado" not in annex_one_point_three.text

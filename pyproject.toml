@@ -592,7 +592,7 @@ convention = "google"
 # `git cat-file` with a fixed argv; the only interpolated value is a revision
 # the caller supplies. It must read the object store rather than the working
 # tree, so the subprocess call is the point of the module, not an incidental.
-"dev/facade_export_scan.py" = ["S603", "S607"]
+"dev/quality/facade_export_scan.py" = ["S603", "S607"]
 # The newline-pinning gate enumerates its scan corpus with a read-only
 # `git ls-files` under a fixed argv; the only interpolated values are this
 # module's own SCAN_ROOTS constants. It must read the TRACKED set rather than
@@ -833,7 +833,7 @@ convention = "google"
 "src/cadrumo/application/filing/tests/test_complementaria_repository.py" = ["D", "E501"]
 # Long import-linter diagnostic f-string and the codemod tool's usage example.
 "src/cadrumo/tests/test_importlinter_ledger.py" = ["D", "E501"]
-"dev/import_centralization_codemod.py" = ["E501"]
+"dev/quality/import_centralization_codemod.py" = ["E501"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.

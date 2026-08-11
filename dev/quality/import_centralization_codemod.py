@@ -1,7 +1,7 @@
 """Codemod: rewrite cross-package private imports onto owning facades.
 
 Rewrites production files by default, and can also (or exclusively) rewrite
-test-only files. Consumes the same AST walk as ``dev/import_hygiene_scan.py``
+test-only files. Consumes the same AST walk as ``dev/quality/import_hygiene_scan.py``
 (re-run fresh, not from a stale JSON) and, for every ``ImportFrom`` statement
 that reaches into a foreign package's private submodule where the imported
 name is resolvable from the owning package's top-level facade, rewrites the
@@ -32,9 +32,9 @@ Behavior-preserving only:
 Read-only unless ``--apply`` is passed. ``--only-file PATH`` restricts the
 rewrite to one file (useful for verifying a single batch before committing).
 
-    python dev/import_centralization_codemod.py --apply
-    python dev/import_centralization_codemod.py --apply --only-file src/cadrumo/application/modelo/_calculation_actions.py
-    python dev/import_centralization_codemod.py --apply --tests-only --only-file src/cadrumo/domain/modelos/tests/test_foo.py
+    python -m dev.quality.import_centralization_codemod --apply
+    python -m dev.quality.import_centralization_codemod --apply --only-file src/cadrumo/application/modelo/_calculation_actions.py
+    python -m dev.quality.import_centralization_codemod --apply --tests-only --only-file src/cadrumo/domain/modelos/tests/test_foo.py
 """
 
 from __future__ import annotations
@@ -47,7 +47,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = "utf-8"

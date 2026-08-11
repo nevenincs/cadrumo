@@ -3,7 +3,7 @@
 Downloads real public-domain / CC0 / CC-BY invoice images into the test evidence
 corpus and writes a provenance sidecar per file (per the fixture-provenance rule:
 ``real_corpus`` plus the source URL, licence, and sha256). Run with
-``uv run --no-sync python dev/_build_evidence_corpus.py``. This is a dev tooling
+``uv run --no-sync python -m dev.corpus.build_evidence_corpus``. This is a dev tooling
 script, not shipped or imported by ``src/cadrumo``.
 """
 
