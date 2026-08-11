@@ -4364,30 +4364,26 @@ cli:
         levonás; exclusively_non_deductible: nincs levonás; common: az általános prorrata
         százalékával); csak prorrata especial alá tartozó bucket bemeneti soraira
         értelmes.'
-      input_classification_inert: 'Az --input-classification hatástalan a(z) {ejercicio}
-        ejercicio-ra: nincs érvényben prorrata especial választás, ezért a bemenet
-        az általános százalékkal vonható le. Az ejercicio minden bemenetének osztályozása
-        a liquidacioban a LIVA art. 103.Dos.2 kötelező prorrata especial ellenőrzést
-        is engedélyezi általános szabályú keret esetén. Futtasd az ''app ledger prorrata
-        elect-especial --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint
-        irányítsd.'
+      input_classification_inert: 'A(z) --input-classification nincs hatással a(z)
+        {ejercicio} ejercicio-ra: nincs érvényben prorrata especial választás, ezért
+        a bemenet az általános százalékkal vonható le. A besorolás csak érvényes prorrata
+        especial választás mellett alkalmazható.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
       notes_help: A tranzakcióval együtt tárolt üzemeltetői megjegyzések.
       prorrata_reference_help: IVA prorrata alapjának hivatkozása.
-      prorrata_sector_help: A megkülönböztetett szektor azonosítója (LIVA 9.1.c /
-        101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy 'app ledger
-        prorrata declare-sector' paranccsal megadott szektorral.
+      prorrata_sector_help: Annak a megkülönböztetett szektornak az azonosítója (LIVA
+        9.1.c és 101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy már
+        deklarált szektorral.
       purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
       recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
         értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
         IVA-kulcs szerint összesítve
       sector_unmatched: A(z) --sector '{sector_id}' egyetlen deklarált megkülönböztetett
-        szektorral sem egyezik (LIVA 9.1.c / 101. cikk), ezért ez a bemenet a közös
-        használatú százalékkal vonható le, nem a szektor sajátjával. Futtasd az 'app
-        ledger prorrata declare-sector --sector-id {sector_id} ...' parancsot az enrutálásához,
-        vagy javítsd a címkét.
+        szektorral sem egyezik (LIVA 9.1.c és 101. cikk), ezért ez a bemenet a közös
+        használati százalékkal vonható le a szektor százaléka helyett. A szektornak
+        léteznie kell, mielőtt a bemenet hozzárendelhető.
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
@@ -4401,11 +4397,8 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: 'Meglévő, beállított felhasználásiarány-azonosító arányos
-        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet a ''aeat
-        app ledger ratios list'' vagy a ''aeat app ledger ratios eligible'' mutat;
-        létrehozás: ''aeat app ledger ratios set <category-id> <ratio>''. Nem szabad
-        szöveg.'
+      usage_ratio_help: Arányos üzleti használathoz már beállított használatiarány-azonosító;
+        a kategóriához használati aránynak kell tartoznia.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
@@ -4416,11 +4409,8 @@ cli:
       help: Üzleti/magáncélú arányosság rögzítése egy főkönyvi tranzakcióhoz.
       id_help: A kiosztandó főkönyvi tranzakció azonosítója.
       prorrata_reference_help: IVA prorrata hivatkozás ÁFA-munkafolyamatokhoz.
-      usage_ratio_help: 'Meglévő, beállított felhasználásiarány-azonosító arányos
-        üzleti használathoz. Használjon olyan kategóriaazonosítót, amelyet a ''aeat
-        app ledger ratios list'' vagy a ''aeat app ledger ratios eligible'' mutat;
-        létrehozás: ''aeat app ledger ratios set <category-id> <ratio>''. Nem szabad
-        szöveg.'
+      usage_ratio_help: Arányos üzleti használathoz már beállított használatiarány-azonosító;
+        a kategóriához használati aránynak kell tartoznia.
     app_help: Könyvelési főkönyvek és ÁFA-nyilvántartások kezelése.
     archive:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
@@ -4435,13 +4425,10 @@ cli:
       finalized_revision_stale: A bizonylat bekerült a főkönyvi sorba, de a(z) %{modelo}
         %{filing_year} %{period} modellt korábban ellenőrizték, ezért a korábbi bizonylatcsomagot
         őrzi.
-      help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
-        Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence add
-        PATH' paranccsal hozható létre.
+      help: Meglévő bizonyíték csatolása egy főkönyvi tranzakcióhoz.
       id_help: A főkönyvi tranzakció azonosítója, amelyhez bizonyítékot csatolnak.
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó vásárlásiszámla-bizonyíték
-        azonosítója; létrehozásához használja a 'aeat app ledger evidence add PATH'
-        parancsot.
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó, meglévő vásárlásiszámla-bizonyíték
+        azonosítója.
     categories:
       family_column: Kategóriacsalád
       header: ELISMERT FŐKÖNYVI KIADÁSI KATEGÓRIÁK
@@ -4517,11 +4504,10 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
-      irpf_category_help: 'IRPF-kategória azonosítója. Használja: aeat app ledger
-        categories. Nettó szakmai számlákhoz actividad_economica; nettó bérleti díjhoz
-        arrendamiento_local / arrendamiento_vivienda_afecto. Jogdíj/SGAE: a 25.4 cikk
-        szerint capital mobiliario lehet, ha az adózó nem a szerző; actividad_economica
-        csak saját számlás tevékenységhez a LIRPF 27. cikk szerint.'
+      irpf_category_help: IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
+        nettó bérleti díjhoz arrendamiento_local vagy arrendamiento_vivienda_afecto
+        tartozik. A jogdíj és a SGAE-bevétel az alapul szolgáló tevékenységtől függően
+        tőkejövedelem vagy gazdasági tevékenység lehet.
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4629,8 +4615,7 @@ cli:
       filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
         %{reason}.'
       invalid_category: 'Ismeretlen költségkategória: ''{category}''. Ismert kategóriák:
-        {known}. Futtasd: ''aeat app ledger categories'' az érvényes --category-id
-        értékekhez.'
+        {known}.'
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}. Használjon
         tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
       negative_amount: Az --amount %{raw} értéknek nem negatív összegnek kell lennie.
@@ -4640,10 +4625,9 @@ cli:
       period_year_pairing: A főkönyvi időszakszűrőkhöz időszak és év együtt szükséges.
         Teljes évhez használja a --period 0A --year %{year} kapcsolókat, vagy a --filter
         period=0A --filter year=%{year} párost.
-      unknown_category: 'Ismeretlen --category-id {category!r}. Adjon meg egyszerű
-        kategóriaazonosítót, pl. {example!r} – nem kategóriacsaládos vagy összetett
-        kulcsot. Futtassa: `aeat app ledger categories` az összes elismert azonosító
-        listázásához.'
+      unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
+        adjon meg, például {example!r}, ne kategóriacsalád-előtaggal ellátott vagy
+        összetett kulcsot.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:
@@ -4678,10 +4662,10 @@ cli:
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       file_refused: '{path} nem lett importálva: {reason}'
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
-      likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
-        a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
-        duplikátuma egy másik fájlból vagy formátumból. Tekintse meg: `aeat app ledger
-        list`.'
+      likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
+        a főkönyvben lévő tranzakcióéval, de a leírás eltér, ami ugyanazon mozgás
+        más fájlból vagy formátumból származó valószínű duplikátumát jelzi. Ezek a
+        sorok felülvizsgálatot igényelnek.'
       no_rows_imported: 'Nem importáltak bejegyzéseket: a fájl sikeresen elemzett,
         de nem tartalmazott adatsorokat. A banki CSV-nek fejlécsorral kell rendelkeznie
         (dátum, összeg, leírás oszlopokkal), amelyet legalább egy adatsor követ.'

@@ -4518,29 +4518,25 @@ cli:
         íntegra; exclusively_non_deductible sin deducción; common al porcentaje general
         de prorrata); solo relevante para operaciones soportadas en un bucket con
         prorrata especial.'
-      input_classification_inert: '--input-classification es inerte para el ejercicio
-        {ejercicio}: no se aplica ninguna elección de prorrata especial, por lo que
-        el input se deduce al porcentaje general. Clasificar todos los inputs del
-        ejercicio también habilita la comprobación de prorrata especial obligatoria
-        (LIVA art. 103.Dos.2) en la liquidación para un régimen general. Ejecuta ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo según
-        LIVA art. 106.'
+      input_classification_inert: '--input-classification no tiene efecto para el
+        ejercicio {ejercicio}: no se aplica ninguna elección de prorrata especial,
+        por lo que el input se deduce al porcentaje general. La clasificación solo
+        es operativa mientras se aplica una elección de prorrata especial.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       notes_help: Notas del operador guardadas con la transacción
       prorrata_reference_help: Referencia de prorrata de IVA
-      prorrata_sector_help: Identificador del sector diferenciado (LIVA arts. 9.1.c
-        / 101) al que pertenece este input; debe coincidir con un sector declarado
-        con 'app ledger prorrata declare-sector'.
+      prorrata_sector_help: Identificador del sector diferenciado (arts. 9.1.c y 101
+        LIVA) al que pertenece este input; debe coincidir con un sector ya declarado.
       purchase_invoice_evidence_help: Id de justificante de factura de compra
       recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
         a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
         del Modelo 303 por tipo de IVA
       sector_unmatched: --sector '{sector_id}' no coincide con ningún sector diferenciado
-        declarado (LIVA arts. 9.1.c / 101), por lo que este input se deduce al porcentaje
-        de uso comun en lugar del propio del sector. Ejecuta 'app ledger prorrata
-        declare-sector --sector-id {sector_id} ...' para enrutarlo, o corrige la etiqueta.
+        declarado (arts. 9.1.c y 101 LIVA), por lo que este input se deduce al porcentaje
+        de uso común y no al porcentaje del sector. El sector debe existir antes de
+        poder asignarle el input.
       source_jurisdiction_help: Código de país ISO 3166-1 alfa-2 (dos letras) que
         identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
         para fuente española, FR para fuente francesa). Necesario para IRNR y para
@@ -4558,10 +4554,8 @@ cli:
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
-        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
-        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
-        set <category-id> <ratio>'. No es texto libre.
+      usage_ratio_help: Identificador de una proporción de uso ya configurada para
+        uso profesional proporcional; la categoría debe tener una proporción de uso.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -4573,10 +4567,8 @@ cli:
         libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
-        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
-        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
-        set <category-id> <ratio>'. No es texto libre.
+      usage_ratio_help: Identificador de una proporción de uso ya configurada para
+        uso profesional proporcional; la categoría debe tener una proporción de uso.
     app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -4591,12 +4583,10 @@ cli:
       finalized_revision_stale: El justificante se guardó en el movimiento del libro,
         pero el Modelo %{modelo} %{filing_year} %{period} se verificó antes de que
         existiera y conserva su conjunto de justificantes anterior.
-      help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
-        un id de justificante de factura de compra con 'aeat app ledger evidence add
-        PATH'.
+      help: Adjunta evidencia existente a un movimiento del libro.
       id_help: Id del movimiento del libro al que adjuntar evidencia
-      purchase_invoice_evidence_help: Id de justificante de factura de compra que
-        soporta el movimiento; créalo con 'aeat app ledger evidence add PATH'
+      purchase_invoice_evidence_help: Identificador de evidencia de factura de compra
+        existente que respalda el movimiento.
     categories:
       family_column: familia
       header: CATEGORÍAS DE GASTO RECONOCIDAS DEL LIBRO
@@ -4669,12 +4659,11 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
-      irpf_category_help: 'Id de categoría de IRPF. Usa aeat app ledger categories.
-        Facturas profesionales cobradas netas usan actividad_economica; alquileres
-        pagados netos usan arrendamiento_local / arrendamiento_vivienda_afecto. Royalties/SGAE:
-        art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor;
-        usa actividad_economica solo para actividad por cuenta propia bajo LIRPF art.
-        27.'
+      irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
+        cobradas en neto usan actividad_economica; los alquileres pagados en neto
+        usan arrendamiento_local o arrendamiento_vivienda_afecto. Los derechos de
+        autor y los ingresos de SGAE pueden ser capital o actividad económica según
+        la actividad subyacente.
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4784,8 +4773,7 @@ cli:
       filter_parse_error: 'Falló al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
       invalid_category: 'Categoría de gasto desconocida ''{category}''. Categorías
-        conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
-        válidos de --category-id.'
+        conocidas: {known}.'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
@@ -4794,9 +4782,9 @@ cli:
       period_year_pairing: Los filtros de periodo del libro requieren periodo y ejercicio
         juntos. Para un año completo use --period 0A --year %{year}, o --filter period=0A
         --filter year=%{year}.
-      unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
-        sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
-        Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
+      unknown_category: --category-id {category!r} no reconocido. Indica un identificador
+        de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
+        prefijo de familia.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
@@ -4833,9 +4821,9 @@ cli:
       file_refused: '{path} no se importó: {reason}'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
-        una transacción que ya está en el libro pero tienen una descripción distinta:
-        un probable duplicado del mismo movimiento importado desde otro archivo o
-        formato. Revísalas con `aeat app ledger list`.'
+        una transacción ya presente en el libro, pero tienen una descripción distinta,
+        lo que indica un probable duplicado del mismo movimiento procedente de otro
+        archivo o formato. Estas filas requieren revisión.'
       no_rows_imported: 'No se importó ninguna entrada: el archivo se analizó pero
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
@@ -69004,6 +68992,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -69653,6 +69657,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -70302,6 +70322,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -70951,6 +70987,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -71091,7 +71143,8 @@ modelo:
                 - Base
             '107':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Territorio
+                común'
             '108':
               help: null
               label: Rectificativa - Otros ajustes determinados supuestos por discrepancia
@@ -71109,7 +71162,9 @@ modelo:
               label: Rectificativa - Importe de la rectificacion
             '112':
               help: null
-              label: null
+              label: Resultado - Pago a cuenta entregas de gasolinas, gasóleos y biocarburantes
+                tras ultimación del régimen de depósito distinto del aduanero (Administración
+                del Estado)
             '12':
               help: null
               label: IVA devengado otras ops inversion sujeto pasivo excl intracom
@@ -71131,16 +71186,19 @@ modelo:
                 unica
             '125':
               help: null
-              label: null
+              label: Operaciones sujetas con inversión del sujeto pasivo
             '126':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única
             '127':
               help: null
-              label: null
+              label: OSS. Operaciones sujetas y acogidas a los regímenes especiales
+                de ventanilla única
             '128':
               help: null
-              label: null
+              label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+                arts. 78 y 79 LIVA
             '13':
               help: null
               label: IVA devengado otras ops inversion sujeto pasivo excl intracom
@@ -71304,85 +71362,85 @@ modelo:
               label: RS - 4T - Resultado ([48]-[49])
             '500':
               help: null
-              label: null
+              label: Prorratas - 1 - Código CNAE
             '501':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones
             '502':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones con derecho a deducción
             '503':
               help: null
-              label: null
+              label: Prorratas - 1 - Tipo de prorrata
             '504':
               help: null
-              label: null
+              label: Prorratas - 1 - % de prorrata
             '505':
               help: null
-              label: null
+              label: Prorratas - 2 - Código CNAE
             '506':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones
             '507':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones con derecho a deducción
             '508':
               help: null
-              label: null
+              label: Prorratas - 2 - Tipo de prorrata
             '509':
               help: null
-              label: null
+              label: Prorratas - 2 - % de prorrata
             '51':
               help: null
               label: RS - Cuotas devengadas adquisiciones intracomunitarias bienes
             '510':
               help: null
-              label: null
+              label: Prorratas - 3 - Código CNAE
             '511':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones
             '512':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones con derecho a deducción
             '513':
               help: null
-              label: null
+              label: Prorratas - 3 - Tipo de prorrata
             '514':
               help: null
-              label: null
+              label: Prorratas - 3 - % de prorrata
             '515':
               help: null
-              label: null
+              label: Prorratas - 4 - Código CNAE
             '516':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones
             '517':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones con derecho a deducción
             '518':
               help: null
-              label: null
+              label: Prorratas - 4 - Tipo de prorrata
             '519':
               help: null
-              label: null
+              label: Prorratas - 4 - % de prorrata
             '52':
               help: null
               label: RS - Cuotas devengadas entregas activos fijos
             '520':
               help: null
-              label: null
+              label: Prorratas - 5 - Código CNAE
             '521':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones
             '522':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones con derecho a deducción
             '523':
               help: null
-              label: null
+              label: Prorratas - 5 - Tipo de prorrata
             '524':
               help: null
-              label: null
+              label: Prorratas - 5 - % de prorrata
             '53':
               help: null
               label: RS - Cuotas devengadas IVA devengado inversion sujeto pasivo
@@ -71433,115 +71491,147 @@ modelo:
                 del ejercicio y periodo
             '700':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Base imponible
             '701':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Cuota deducible
             '702':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes inversión - Base imponible
             '703':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes inversión - Cuota deducible
             '704':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                corrientes - Base imponible
             '705':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                corrientes - Cuota deducible
             '706':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                inversión - Base imponible
             '707':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                inversión - Cuota deducible
             '708':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Base imponible
             '709':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Cuota deducible
             '71':
               help: null
               label: Resultado final ([69]-[70]+[109])
             '710':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Base imponible
             '711':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Cuota deducible
             '712':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+                - Base impon.
             '713':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+                - Cuota deduc.
             '714':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones
+                - Base impon.
             '715':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones
+                - Cuota deduc.
             '716':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Regularización de bienes de inversión
             '717':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones
             '718':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Base imponible
             '719':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Cuota deducible
             '720':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes inversión - Base imponible
             '721':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes inversión - Cuota deducible
             '722':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                corrientes - Base imponible
             '723':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                corrientes - Cuota deducible
             '724':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                inversión - Base imponible
             '725':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                inversión - Cuota deducible
             '726':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Base imponible
             '727':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Cuota deducible
             '728':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Base imponible
             '729':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Cuota deducible
             '730':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+                - Base impon.
             '731':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+                - Cuota deduc.
             '732':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones
+                - Base impon.
             '733':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones
+                - Cuota deduc.
             '734':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Regularización de bienes de inversión
             '735':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones
             '74':
               help: null
               label: Informacion adicional - Adquisiciones criterio caja - Base imponible
@@ -71557,58 +71647,72 @@ modelo:
                 de ingreso
             '79':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Entregas de bienes inmuebles,
+                operaciones financieras y relativas al oro de inversión no habituales
             '80':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                general
             '81':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial del criterio de caja conforme art. 75 LIVA
             '83':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones exentas
+                sin derecho a deducción
             '84':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones no sujetas
+                por reglas de localización (excepto las incluidas en la casilla 126)
             '86':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                simplificado
             '88':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Total volumen de operaciones
             '89':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Álava'
             '90':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Guipuzcoa'
             '91':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Vizcaya'
             '92':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Navarra'
             '93':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Entregas intracomunitarias
+                de bienes y servicios
             '94':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Exportaciones y otras
+                operaciones exentas con derecho a deducción
             '95':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial de la agricultura, ganadería y pesca
             '96':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones realizadas
+                por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
             '97':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en Régimen
+                especial de bienes usados, objetos de arte, antigüedades y objetos
+                de colección
             '98':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial de Agencias de Viajes
             '99':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Entregas de bienes de
+                inversión
             modulos-iva-1-unidades:
               help: null
               label: 'Módulo 1 (Personal empleado): número de unidades'
@@ -71620,6 +71724,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
