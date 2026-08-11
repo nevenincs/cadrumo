@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:e7f78df4d672ad64df9d951b1fa8a76ac30cd964d2298e9b520bacb442232be5'
+body_hash: 'sha256:90cb431898269e863fc112a5fb7a85cba4bfeecff705cbb78b9f3e9a87665567'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -199,7 +199,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S55` - Prove the third domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where three migration_required rows are exclusively owned by later producer steps
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S56` - Retire recovery-authority comments from the first adapter registry shard and prove its 59 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where eight migration_required rows are exclusively owned by later producer steps
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S57` - Retire recovery-authority comments from the second adapter registry shard and prove its 63 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where 16 migration_required rows are exclusively owned by later producer steps and 2 rows are retired_or_unreachable
-- `2026-08-09-cli-action-envelope-hardening-W05-P08-S63` - Prove CadrumoError has no retired suggestion parameter or attribute and retain every unmigrated producer or consumer as a loud later-step blast radius without restoring compatibility
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S63` - Retire CadrumoError suggestion compatibility and classify the two internal bare-root validation carriers explicitly so unmigrated user-facing producers remain loud
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes
 
 ### plan
