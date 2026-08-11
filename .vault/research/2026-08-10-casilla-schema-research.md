@@ -3,9 +3,9 @@ tags:
   - '#research'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:558e12c6249c7d91f1946ca6977a8ef81c6c71b4ec2cc86f6cad44c47c72f91f'
+body_hash: 'sha256:21bbb47f272aded86a64b8daed7cb44c995888761f65e7853bb741dd4ca3dc1f'
 related:
   - "[[2026-05-21-state-read-projection-adr]]"
   - "[[2026-04-21-casilla-schema-completeness-research]]"
@@ -50,7 +50,7 @@ The root cause of three earlier rounds of moving numbers was mixing these two ba
 
 ### Gap taxonomy A - registry data oversights (no design decision needed)
 
-A-01 M720 boxes invisible to every casilla-keyed authority (layout declares 2 records with 0 inline fields; 43 binding-kind fields exist only after `derive_export_layouts_from_bindings`). A-02 dictionary parser digits-only while the casilla-id convention changed in 2024 (`src/cadrumo/domain/calculations/registry/_export_parse.py:254-260`; M100 non-numeric ids by revision 2020-2025: 0,0,0,0,30,33 - the NEWEST revisions are the divergent ones). A-03 manifest ships in four on-disk shapes (single-shape glob yields 22 of 53). A-04 phantom source kind `constant_value` at 4 production sites (`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py:639,762`, `src/cadrumo/application/state_projection.py:782`, `src/cadrumo/application/modelo/_required_binding_gate.py:41`). A-05 `_BINDING_SOURCE_TO_READINESS` dict at `_modelo_discovery_cli.py:638-655`: 21 of 27 `BindingSourceKind` members fall through to the literal "ledger source", ungated, stranded in entrypoints. A-06 M200 multi-segment manifest retains internal-only `DP200014:bin-aplicada-maxima` while a single-segment-branch comment in `_record_design_coverage.py` denies the possibility. A-07 dormant enum members (`profile_schedule`, `UNRESOLVED_BINDING`, `INVALID_WAIVER`, 2 exemption reasons). A-08 the `no-silent-under-declaration` rule cited `_OFFICIAL_SOURCE_KINDS`, which does not exist in production; the live mechanism is `ObservationSourceKind.is_official_aeat` (corrected in the rule harness as part of this feature). A-09 the 38 manifest-less revisions.
+A-01 M720 boxes invisible to every casilla-keyed authority (layout declares 2 records with 0 inline fields; 43 binding-kind fields exist only after `derive_export_layouts_from_bindings`). A-02 dictionary parser digits-only while the casilla-id convention changed in 2024 (`src/cadrumo/domain/calculations/registry/_export_parse.py:254-260`; M100 non-numeric ids by revision 2020-2025: 0,0,0,0,30,33 - the NEWEST revisions are the divergent ones). A-03 manifest ships in four on-disk shapes (single-shape glob yields 22 of 53). A-04 phantom source kind `constant_value` at 4 production sites (`src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py:639,762`, `src/cadrumo/application/state_projection.py:782`, `src/cadrumo/application/modelo/_required_binding_gate.py:41`). A-05 `_BINDING_SOURCE_TO_READINESS` dict at `_modelo_discovery_cli.py:638-655`: 21 of 27 `BindingSourceKind` members fall through to the literal "ledger source", ungated, stranded in entrypoints. A-06 M200 multi-segment manifest retains internal-only `DP200014:bin-aplicada-maxima` while a single-segment-branch comment in `_record_design_coverage.py` denies the possibility. A-07 dormant enum members (`profile_schedule`, `UNRESOLVED_BINDING`, `INVALID_WAIVER`, 2 exemption reasons). A-08 the `no-silent-under-declaration` rule cited `_OFFICIAL_SOURCE_KINDS`, which does not exist in production; the live mechanism is `ObservationSourceKind.is_official_aeat` (corrected in the rule harness as part of this feature). A-09 initially classified 38 manifest-absent revisions as authoring debt; S80 canonical-closure adjudication corrected this to 38 manifest-absent revisions, 38 zero-closure revisions, and 0 required-manifest gaps.
 
 ### Gap taxonomy B - architectural, with the honest cut
 

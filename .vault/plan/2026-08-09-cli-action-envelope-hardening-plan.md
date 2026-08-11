@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-11'
-body_hash: 'sha256:a91f87a9285bc9581163fef36eaa966dd80e9b0eaa96ef7d22d4c11b5b124bc3'
+body_hash: 'sha256:682d89a544a399658e94e893c87384b65c6c894ac8f0c7237bc159d93060a2ba'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -182,7 +182,7 @@ Migrate high-density operational guidance and prove blank-state and readiness re
 - [x] `W05.P09.S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes; `src/cadrumo/application/diagnostics.py`.
 - [x] `W05.P09.S33` - Replace every provisioning free-form detail and remediation record (DependencyStatus, ModelSelection, ContentionSnapshot, UnloadOutcome, PullOutcome, ReadinessOutcome, and RemoveOutcome) with locale-neutral typed failed-condition facts and explicit no-recovery outcomes without inventing actions, preserve the two local-model directions, and hand only the changed typed projection to S89; `src/cadrumo/application/provisioning.py`.
 - [ ] `W05.P09.S34` - Render overview text and JSON from one typed action projection; `src/cadrumo/entrypoints/cli/_overview.py`.
-- [ ] `W05.P09.S35` - Create the missing end-to-end negative JSON and text locale and recovery-retry proof for overview and provisioning action or no-recovery journeys, deriving each action against the live schema and rejecting raw command prose; `src/cadrumo/entrypoints/cli/tests/test_overview_provisioning_action_recovery.py`.
+- [x] `W05.P09.S35` - Create the missing end-to-end negative JSON and text locale and recovery-retry proof for overview and provisioning action or no-recovery journeys, deriving each action against the live schema and rejecting raw command prose; `src/cadrumo/entrypoints/cli/tests/test_overview_provisioning_action_recovery.py`.
 - [ ] `W05.P09.S66` - Migrate preflight remediation producers to typed conditions and canonical actions; `src/cadrumo/application/preflight.py`.
 
 ### Phase `W05.P10` - Remaining census-adjudicated producer clusters

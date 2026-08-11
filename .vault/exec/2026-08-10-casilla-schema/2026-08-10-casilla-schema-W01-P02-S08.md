@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:2648801893367f17f25d0fe57a2cccd7d69dbeac059ac093dec6f05cb18c3121'
+body_hash: 'sha256:df8f957b7e428d577cc9334507db2224a5838cb2497623bb8dd387e8473de875'
 step_id: 'S08'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -14,21 +14,23 @@ related:
 
 ## Scope
 
-- The 38 loaded registry revisions whose `completeness_manifest` is absent after the canonical on-disk shape migration.
-- The owner-confirmed manifest-authoring tranche assignment in the casilla-schema plan.
+- The historical population of 38 loaded registry revisions whose `completeness_manifest` was absent after the canonical on-disk shape migration.
+- The owner-confirmed tranche assignment used by the original S08 execution and its later canonical-closure disposition.
 
 ## Description
 
-- Recheck the manifest-less population through the validated production registry authority.
-- Confirm the approved 14/12/12 tranche assignment, including Modelo 270 in tranche 1.
-- Append one immutable manifest-authoring step per revision through the plan CLI in the recorded tranche order.
-- Require each appended step to ground manifest rows and manifest-level legal references against official sources, confirm casilla id-number-segment identity, and pass focused validation of its exact registry revision.
+- Recheck the manifest-absent population through the validated production registry authority.
+- Confirm the approved historical 14/12/12 tranche assignment, including Modelo 270 in tranche 1.
+- Append one manifest-authoring step per revision through the plan CLI in the recorded tranche order under the original manifest-absence predicate.
+- Preserve the historical execution while recording the later canonical-closure adjudication and retirement of the false-positive rows.
 
 ## Outcome
 
-The validated authority still reports exactly the recorded 38 manifest-less revisions. The owner confirmed 14 revisions in tranche 1, 12 in tranche 2, and 12 in tranche 3, with Modelo 270 retained in tranche 1. The plan now carries one revision-scoped manifest-authoring step per revision as `W01.P02.S42` through `W01.P02.S79`.
+The original S08 execution measured exactly 38 manifest-absent revisions. The owner confirmed 14 revisions in tranche 1, 12 in tranche 2, and 12 in tranche 3, with Modelo 270 retained in tranche 1, and S08 appended `W01.P02.S42` through `W01.P02.S79` under the then-assumed manifest-absence predicate.
 
-### Tranche 1
+Historical correction recorded 2026-08-12 by S80: production `calculation_closure_casilla_ids` adjudication measured `manifest_absent=38`, `zero_closure=38`, and `missing_required_manifest=0`. A completeness manifest is required only when the canonical calculation closure is non-empty, and the schema rejects an empty placeholder manifest. The 38 revisions below therefore require no manifest; S42-S79 were retired through the plan CLI. S08 remains checked because this record preserves what the historical execution did and the later authoritative disposition.
+
+### Historical tranche 1
 
 | Step | Modelo | Revision |
 | --- | --- | --- |
@@ -47,7 +49,7 @@ The validated authority still reports exactly the recorded 38 manifest-less revi
 | W01.P02.S54 | 379 | 2024-y-siguientes |
 | W01.P02.S55 | 380 | 2005-y-siguientes |
 
-### Tranche 2
+### Historical tranche 2
 
 | Step | Modelo | Revision |
 | --- | --- | --- |
@@ -64,7 +66,7 @@ The validated authority still reports exactly the recorded 38 manifest-less revi
 | W01.P02.S66 | 721 | 2023-y-siguientes |
 | W01.P02.S67 | 848 | 2003-y-siguientes |
 
-### Tranche 3
+### Historical tranche 3
 
 | Step | Modelo | Revision |
 | --- | --- | --- |
@@ -83,4 +85,4 @@ The validated authority still reports exactly the recorded 38 manifest-less revi
 
 ## Notes
 
-This execution modified no registry data, source code, generated artifacts, or locales, and performed no staging or commit action. Its only plan mutation was the append-only addition of the 38 manifest-authoring rows.
+The original execution modified no registry data, source code, generated artifacts, or locales, and performed no staging or commit action. Its only plan mutation was the addition of the 38 manifest-authoring rows. S80 later retired those rows after canonical-closure adjudication proved the worklist contained zero required-manifest gaps; no registry data was authored during the correction.
