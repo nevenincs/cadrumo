@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:14445f0cdbcb31b524f516da0b872d9f25befc5dab19de09cce611b2f1e152eb'
+body_hash: 'sha256:e38e7c062fc0bec2af9ca7ba2ba71f9a9a925581cb75bcb610649015912de5fd'
 step_id: 'S24'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -90,6 +90,7 @@ Direct tests changed:
 - `src/cadrumo/application/modelo/tests/test_attribution_received_advisory.py`
 - `src/cadrumo/application/modelo/tests/test_modelo_210_convenio_rate_resolution.py`
 - `src/cadrumo/application/modelo/tests/test_verification_m131_indices_generales_incompatibility_advisory.py`
+- `src/cadrumo/application/modelo/tests/test_s24_precondition_campaign.py`
 
 ## Verification
 
@@ -110,6 +111,38 @@ Additional gates:
 - The S24 precondition campaign module produced 6 passed and 1 unrelated failure: the current shared tree lacks the English locale entry `application.modelo.findings.foreign_asset_redeclaration` for `application/calculations/_foreign_asset_redeclaration.py`. It is outside S24 ownership and was not modified.
 - A broader `test_actions.py` run produced 71 passed and 1 unrelated existing failure: M100 revision replay lacked binding `renta-2024-profile-deduccion-maternidad`. The exact S24 selectors from that module passed.
 
+## Review findings and resolution
+
+Formal review identified two missing regression guarantees:
+
+- No positive test fired a single-casilla `BLOCKING` verification predicate and asserted its canonical `casilla_id`.
+- The nineteen intentional record-level production constructors were explained only in prose, so a future unattributed constructor or a stale record-level decision could pass unnoticed.
+
+The test-only repair resolves both findings:
+
+- `test_single_casilla_blocking_predicate_attributes_its_canonical_casilla` constructs and evaluates a real one-casilla blocking predicate through the production evaluator, then asserts the finding kind, severity, and canonical casilla identity.
+- `test_intentional_record_level_finding_owners_are_reasoned_and_stale_failing` uses AST only to associate production constructors with `(relative source path, enclosing function)` owners and inspect whether the `casilla_id` keyword is present. A human-authored owner-to-reason mapping supplies semantics. The gate fails for an unexpected omission, a missing/stale expected owner, an empty reason, or any expected record-level owner that gains `casilla_id`; it does not freeze a constructor total or reproduce business rules.
+
+The implementation baseline is external commit `39a457c7fb`; the prior audit and execution-record baseline is external commit `9c69ce5b7d`. This repair changes tests and this execution record only.
+
+## Review-repair verification
+
+Exact focused behavior command:
+
+```powershell
+uv run pytest -q -n0 src/cadrumo/application/modelo/tests/test_actions.py::test_single_casilla_blocking_predicate_attributes_its_canonical_casilla src/cadrumo/application/modelo/tests/test_actions.py::test_cross_casilla_invariant_finding_is_locale_neutral src/cadrumo/application/modelo/tests/test_s24_precondition_campaign.py::test_intentional_record_level_finding_owners_are_reasoned_and_stale_failing
+```
+
+Result: 3 passed in 2.69 seconds.
+
+Scoped review-repair gates:
+
+- `uv run ruff check` over the two changed test files: passed.
+- `uv run ruff format --check` over the two changed test files: 2 files already formatted.
+- `uv run basedpyright` over the two changed test files: 0 errors, 0 warnings, 0 notes.
+- Scoped `git diff --check`: passed; Git emitted only working-copy CRLF-to-LF notices.
+- The complete S24 precondition campaign produced 7 passed and 1 unrelated failure: the concurrently edited English locale still lacks `application.modelo.findings.foreign_asset_redeclaration` for `src/cadrumo/application/calculations/_foreign_asset_redeclaration.py`. Locale repair is outside this test-only review scope.
+
 ## Notes
 
 The counts in this record are inspection measurements only. The implementation and tests gate attribution semantics, not a frozen constructor tally.
@@ -117,4 +150,8 @@ The counts in this record are inspection measurements only. The implementation a
 ## Outcome
 
 S24 reached a semantic fixed point: every construction site with existing evidence for one affected target casilla now carries it, and every remaining omission is deliberately record-level with its reason recorded above. No fake, stub, mock, patch, monkeypatch, skip, xfail, mirrored business logic, or exact-count gate was introduced. No plan checkbox, source staging, or commit was performed by this execution-record step.
+## Delivery absorption
 
+During final closure, external shared-tree commit `493762a432` (`refactor(registry,provisioning): factor generic id-indexing helpers into the snapshot builder`) absorbed both review-repair test changes in `test_actions.py` and `test_s24_precondition_campaign.py` alongside unrelated registry, provisioning, locale, authentication-diagnostic, applicability-window, and CLI changes. The S24 tests are therefore delivered by `493762a432`; they are no longer part of the final working-tree closure diff. This closure contains lifecycle-document changes only.
+
+The earlier provenance remains unchanged: `39a457c7fb` is the S24 implementation baseline, and `9c69ce5b7d` is the prior audit/execution-record baseline.

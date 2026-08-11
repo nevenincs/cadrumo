@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:92cae2d6d399e53450adb5aaaff9b60212a06cab1ebc6d59775470d0357714e2'
+body_hash: 'sha256:1ddcda26b6f6bf179e9216bb03264be553226e25f7bf102eb4fd98a3fb4ba48c'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-W03-P07-S24]]"
@@ -44,3 +44,26 @@ The independent AST census confirms the execution record's current fixed point: 
 ## Verdict
 
 CHANGES REQUESTED. Production attribution is canonical and single-target wherever assigned, all 19 remaining omissions are presently defensible at record grain, and the implementation introduces no duplicate authority or compatibility surface. S24 should not close until the new BLOCKING single-casilla branch and the intentional record-level fixed point have non-tautological regression coverage.
+## Re-review 2026-08-12
+
+### blocking-predicate-positive-coverage-resolution | medium | RESOLVED - a real firing one-casilla BLOCKING predicate now proves attribution
+
+`test_single_casilla_blocking_predicate_attributes_its_canonical_casilla` constructs a valid one-casilla `all_nonzero` `VerificationPredicateDefinition`, sends it through the production `_evaluate_verification_predicates` entry point with a zero value so the BLOCKING branch fires, and asserts blocking kind, blocking severity, and the exact canonical casilla id. The existing two-casilla test continues to prove record-level `None`. The test contains no substitute evaluator, parser, registry mapper, fake, mock, patch, skip, or mirrored business rule.
+
+### record-level-fixed-point-coverage-resolution | medium | RESOLVED - the reasoned ownership gate is structural, stale-failing, and count-free
+
+`test_intentional_record_level_finding_owners_are_reasoned_and_stale_failing` walks the real production AST, derives each constructor's `(relative path, enclosing function)` owner, and observes only whether the constructor supplies the `casilla_id` keyword. The separate human-authored ownership map carries the semantic reason for every deliberate record-level owner. The gate fails on an unexpected omission, a missing or renamed owner, an empty reason, or an expected record-level owner whose constructors gain attribution. It asserts no constructor total, does not encode the number nineteen, and does not reproduce any finding producer's business semantics. The map has eighteen owners because `_missing_evidence_findings` intentionally owns two record-level constructors; this is structural evidence, not a count-based pass condition.
+
+## Re-review verification
+
+- Exact repair nodes: 3 passed in 4.83 seconds.
+- Complete `test_s24_precondition_campaign.py`: 7 passed and 1 unrelated locale-authority failure. The failing constructor is `application/calculations/_foreign_asset_redeclaration.py` and the missing catalogue leaf is `application.modelo.findings.foreign_asset_redeclaration` in English; neither belongs to the S24 attribution repair.
+- Scoped Ruff check: passed.
+- Scoped Ruff format check: 2 files already formatted.
+- Scoped BasedPyright: 0 errors, 0 warnings, 0 notes.
+- Scoped diff check over the two repair test files: passed.
+- Prohibited-test-construct review: no fake, stub, mock, patch, monkeypatch, skip, xfail, mirrored business logic, or exact-count gate was added.
+
+## Final verdict
+
+PASS. Both medium findings are resolved. The positive BLOCKING branch now has real production-path attribution proof, and every intentional record-level ownership decision is protected by a reasoned, stale-failing structural contract without freezing a tally or duplicating business semantics. The remaining full campaign failure is a separately owned English locale-catalogue gap and does not invalidate S24.
