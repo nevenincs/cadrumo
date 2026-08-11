@@ -5,11 +5,11 @@ This module owns only the separately reviewed aliases admitted to the closed
 query vocabulary the sweep runs, which produces the committed relevance
 mapping that boosts LEXICAL results.  It contains no embeddings, retrieval
 output, or runtime search code, and never did -- it outlived the semantic tier
-it was first written beside.
+it was first written beside, which is retired.
 
-The on-disk authority keeps its published ``schema_version`` string: that value
-identifies a reviewed data artefact, and renaming a schema id to tidy a
-vocabulary would invalidate the file it names.
+Its path segment and ``schema_version`` name what the artefact is rather than
+the tier it was authored next to. The rename is atomic across the loader, the
+committed JSON and the tests, so no reader ever sees the retired name.
 """
 
 from __future__ import annotations
@@ -44,13 +44,13 @@ __all__ = [
     "validate_query_alias_authority",
 ]
 
-QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION: Final = "cadrumo.docs-search.rung2-query-aliases.v1"
+QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION: Final = "cadrumo.docs-search.query-aliases.v1"
 QUERY_ALIAS_AUTHORITY_RELPATH: Final[Path] = Path(
     "src",
     "cadrumo",
     "_data",
     "terminology",
-    "rung2",
+    "query-aliases",
     "query-alias-authority.json",
 )
 
@@ -64,7 +64,7 @@ _RepositoryRelativePath = Annotated[str, StringConstraints(strip_whitespace=True
 
 
 class QueryAliasAuthorityError(TerminologyLoadError):
-    """Raised when the committed Rung-2 alias authority is unusable."""
+    """Raised when the committed alias authority is unusable."""
 
 
 class QueryAliasEntry(BaseModel):
@@ -100,11 +100,11 @@ class QueryAliasEntry(BaseModel):
 
 
 class QueryAliasAuthority(BaseModel):
-    """Versioned, ratified-only authority for additional Rung-2 aliases."""
+    """Versioned, ratified-only authority for additional search-query aliases."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
-    schema_version: Literal["cadrumo.docs-search.rung2-query-aliases.v1"]
+    schema_version: Literal["cadrumo.docs-search.query-aliases.v1"]
     authority_version: PositiveInt
     entries: tuple[QueryAliasEntry, ...] = Field(default=())
 
@@ -120,9 +120,9 @@ class QueryAliasAuthority(BaseModel):
     def _require_canonical_order_and_unique_aliases(self) -> QueryAliasAuthority:
         keys = tuple(_entry_sort_key(entry) for entry in self.entries)
         if len(keys) != len(set(keys)):
-            raise ValueError("Rung-2 query alias authority contains duplicate entries")
+            raise ValueError("query alias authority contains duplicate entries")
         if keys != tuple(sorted(keys)):
-            raise ValueError("Rung-2 query alias authority entries are not in canonical order")
+            raise ValueError("query alias authority entries are not in canonical order")
         return self
 
 
@@ -132,7 +132,7 @@ class QueryAliasAuthorityProvenance(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     source_relpath: _RepositoryRelativePath
-    schema_version: Literal["cadrumo.docs-search.rung2-query-aliases.v1"]
+    schema_version: Literal["cadrumo.docs-search.query-aliases.v1"]
     authority_version: PositiveInt
     source_sha256: _Sha256
 
@@ -143,7 +143,7 @@ class QueryAliasAuthorityProvenance(BaseModel):
 
 
 def query_alias_authority_path() -> Path:
-    """Return the bundled Rung-2 query/alias authority path."""
+    """Return the bundled query/alias authority path."""
     return bundled_path(*QUERY_ALIAS_AUTHORITY_RELPATH.parts[3:])
 
 
