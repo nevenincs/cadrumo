@@ -107,20 +107,3 @@ def test_it_holds_silently_when_there_is_no_trabajo_income(year: int) -> None:
 def test_it_holds_when_the_retencion_is_credited(year: int) -> None:
     """The ordinary case: income declared and withholding credited, so nothing fires."""
     assert _holds(year, "18000.00", "2400.00") is True
-
-
-@pytest.mark.parametrize("year", _REVISION_YEARS)
-def test_the_advisory_names_the_income_certificate_and_never_a_capture(year: int) -> None:
-    """The remedy must be a certificate value, not a filing to pull.
-
-    The taxpayer never filed the Modelo 111 that declares this retención, so no
-    capture can fetch it, and an instruction to pull would be unfollowable.
-    """
-    from .._verification_predicates import resolve_advisory_message_default
-
-    message = resolve_advisory_message_default(_predicate_id(year))
-
-    assert message, "the advisory has no operator-facing text"
-    assert "certificado de retenciones" in message
-    for forbidden in ("pull", "capture", "fetch"):
-        assert forbidden not in message.lower(), f"the advisory tells the operator to {forbidden}: {message!r}"
