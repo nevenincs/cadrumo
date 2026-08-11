@@ -636,6 +636,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         inputs=casilla_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 4, 15)},
+        m303_regimen_simplificado_scope=None,
     )
 
     # Identity threading: each bound casilla equals its binding fact value.
@@ -707,6 +708,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         inputs=casilla_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 2, 15)},
+        m303_regimen_simplificado_scope=None,
     )
 
     # The Esquema Importación registers a single destination/rate construct

@@ -145,6 +145,7 @@ def _calculated_revision(
         inputs=inputs,
         date_context={"filing_period": work_unit.period.end_date},
         binding_values=binding_values,
+        m303_regimen_simplificado_scope=None,
     )
     raw_casilla_values = dict(engine_result.values)
     raw_observations = build_typed_observations(engine_result=engine_result, snapshot=snapshot)

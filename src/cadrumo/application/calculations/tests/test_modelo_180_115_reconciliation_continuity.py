@@ -190,6 +190,7 @@ def _calculate_115(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=None,
     )
 
 
@@ -220,6 +221,7 @@ def _calculate_180(
         binding_values=binding_values,
         relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=None,
     )
     return result, len(result.values)
 

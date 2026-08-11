@@ -303,6 +303,7 @@ def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows(
             filing_year=work_unit.filing_year,
             period=work_unit.period,
         ),
+        m303_regimen_simplificado_scope=None,
     )
 
     assert revision.binding_overrides == {}

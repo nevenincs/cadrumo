@@ -375,6 +375,7 @@ def _compute_local(
         binding_values=binding_defaults,
         enum_binding_values=dict(scenario.enum_bindings),
         relation_values=relation_defaults,
+        m303_regimen_simplificado_scope=None,
     )
     return result.values
 

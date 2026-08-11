@@ -16,6 +16,7 @@ from ....core import (
     ResultDisposition,
 )
 from ....domain.deadlines import ModeloIVAProfile
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.submission import ModeloDraftStatus
 from .. import (
     FilingElectionFacts,
@@ -36,6 +37,12 @@ _ENDPOINTS = frozenset(
 )
 
 
+def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
+    return M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+
+
 def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_incomplete(tmp_path: Path) -> None:
     """All numbered endpoints cannot bypass the missing flag/nonnumbered producers."""
     period = Period.from_year_and_code(2025, "4T")
@@ -52,6 +59,7 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Exonerado refusal proof"),
         inputs=inputs,
         schema_provider=provider,
+        m303_regimen_simplificado_scope=_general_m303_scope(),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,

@@ -141,6 +141,7 @@ def test_modelo_117_126_128_136_official_form_arithmetic(case: _ModeloArithmetic
         snapshot,
         inputs=case.inputs,
         date_context={"filing_period": case.filing_period},
+        m303_regimen_simplificado_scope=None,
     )
 
     for casilla_id, expected in case.expected_values.items():

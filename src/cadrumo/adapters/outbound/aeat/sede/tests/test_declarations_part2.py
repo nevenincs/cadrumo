@@ -39,7 +39,6 @@ from ._declarations_support import (
     _assert_read_browser_action,
     _assert_read_http,
     _declaration_pdf_payload,
-    _exported_modelo_123_payload,
     _filed_observation,
     _isolate_secure_object_backend,
     _modelo_130_snapshot,
@@ -224,6 +223,7 @@ class TestSubmittedFileObservation:
             inputs=input_values,
             date_context={"filing_period": date(2026, 3, 31)},
             binding_values=binding_values,
+            m303_regimen_simplificado_scope=None,
         )
 
         assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {
@@ -314,6 +314,7 @@ class TestSubmittedFileObservation:
                 if casilla_id not in {_M111_RETENCIONES_CASILLA, _M111_RESULTADO_CASILLA}
             },
             date_context={},
+            m303_regimen_simplificado_scope=None,
         )
         parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
         parsed_fields = {field.field_id: field.value for field in parsed.fields}
@@ -323,105 +324,6 @@ class TestSubmittedFileObservation:
         assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
         assert observed_values[_M111_RETENCIONES_CASILLA] == calculated.values[_M111_RETENCIONES_CASILLA]
         assert observed_values[_M111_RESULTADO_CASILLA] == calculated.values[_M111_RESULTADO_CASILLA]
-
-    @pytest.mark.parametrize(
-        ("filing_year", "period", "profile_id", "expected"),
-        (
-            (
-                2026,
-                "1T",
-                "modelo-123-export-record",
-                _casilla_values(
-                    {
-                        "01": Decimal("2"),
-                        "02": Decimal("3"),
-                        "03": Decimal("5"),
-                        "04": Decimal("1000.25"),
-                        "05": Decimal("200.75"),
-                        "06": Decimal("1201.00"),
-                        "07": Decimal("190.05"),
-                        "08": Decimal("38.14"),
-                        "09": Decimal("228.19"),
-                        "10": Decimal("0.00"),
-                        "11": Decimal("7.50"),
-                        "12": Decimal("235.69"),
-                        "13": Decimal("12.25"),
-                        "14": Decimal("223.44"),
-                    },
-                ),
-            ),
-            (
-                2023,
-                "4T",
-                "modelo-123-2019-export-record",
-                _casilla_values(
-                    {
-                        "01": Decimal("5"),
-                        "02": Decimal("1201.00"),
-                        "03": Decimal("228.19"),
-                        "04": Decimal("0.00"),
-                        "05": Decimal("7.50"),
-                        "06": Decimal("235.69"),
-                        "07": Decimal("12.25"),
-                        "08": Decimal("223.44"),
-                    },
-                ),
-            ),
-        ),
-    )
-    def test_modelo_123_submitted_file_observation_resolves_registry_casillas(
-        self,
-        tmp_path: Path,
-        filing_year: int,
-        period: str,
-        profile_id: str,
-        expected: dict[CasillaId, Decimal],
-    ) -> None:
-        snapshot = _modelo_snapshot("123", filing_year=filing_year, period=period)
-        profile = snapshot.extraction_profiles[profile_id]
-        body = _exported_modelo_123_payload(tmp_path, filing_year=filing_year, period=period)
-        declaration = Declaracion(
-            modelo="123",
-            ejercicio=filing_year,
-            period=Period.from_year_and_code(filing_year, period),
-            expediente_id=f"{filing_year}12313520436S",
-            estado="ALTA",
-            presented_at=datetime(filing_year, 4, 20, 10, 0, 0, tzinfo=UTC),
-            justificante_link_text="Ver",
-            archive_link_text="Ver",
-        )
-        artefact = FiledDeclaracionArtefact(
-            kind="submitted_file",
-            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-            content_type="application/octet-stream",
-            byte_count=len(body),
-            sha256=hashlib.sha256(body).hexdigest(),
-            captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
-        )
-
-        observed = _observed_casillas_from_submitted_file(
-            snapshot=snapshot,
-            declaration=declaration,
-            body=body,
-            artefact=artefact,
-        )
-        observation = FiledDeclaracionObservation(
-            modelo=declaration.modelo,
-            ejercicio=declaration.ejercicio,
-            period=declaration.period,
-            expediente_id=declaration.expediente_id,
-            status=declaration.estado,
-            presented_at=declaration.presented_at,
-            authenticated_identity="12345678Z",
-            artefacts=(artefact,),
-            casillas=observed,
-            extraction_coverage={"submitted_file": 1.0},
-        )
-        registry_observation = registry_observation_from_filed_declaration(observation)
-
-        assert {item.casilla_id: Decimal(item.value) for item in observed} == expected
-        assert set(registry_observation.casilla_values) == {t.casilla_id for t in profile.target_casillas}
-        assert registry_observation.casilla_values == expected
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")

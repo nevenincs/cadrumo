@@ -1,46 +1,26 @@
-# M303 régimen simplificado de IVA módulos engine formulas (tabled
-# activities).
-#
-# Cuota devengada por operaciones corrientes: dispatches the units×coefficient
-# product through the m303_resolve_modulos_iva_cuota_devengada op, which reads
-# the epígrafe (text) plus up to three módulo unit-count casillas (the
-# highest signo count among the tabled activities, 972.1 peluquería) and the
-# registry-declared keyed-bracket coefficient table
-# (m303-modulos-iva-coeficientes-2023). An untabled epígrafe or a blank
-# epígrafe resolves to zero (see the op's docstring in _formula_runtime.py).
+# Modelo 303 simplified-regime IVA module formulas. The annual Orden projection
+# selected by filing year and revision owns the exact activity identity,
+# coefficients, and cuota-mínima percentage; this graph owns only typed inputs.
 [[revisions."2023".formulas]]
 id = "modelo-303-2023-modulos-iva-cuota-devengada"
 target_casilla_id = "modulos-iva-cuota-devengada"
 expression = { op = "m303_resolve_modulos_iva_cuota_devengada", args = [
-    { casilla_id = "modulos-iva-epigrafe" },
+    { casilla_id = "modulos-iva-orden-id" },
     { casilla_id = "modulos-iva-1-unidades" },
     { casilla_id = "modulos-iva-2-unidades" },
     { casilla_id = "modulos-iva-3-unidades" },
-    { parameter = "m303-modulos-iva-coeficientes-2023" },
+    { casilla_id = "modulos-iva-4-unidades" },
+    { casilla_id = "modulos-iva-5-unidades" },
+    { casilla_id = "modulos-iva-6-unidades" },
+    { casilla_id = "modulos-iva-7-unidades" },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-123", "orden-hfp-1172-2022:art-4"]
+legal_refs = ["ley-37-1992:art-123"]
 source_refs = ["boe-orden-hfp-1172-2022-iva-authority"]
 [[revisions."2023".formulas.source_citations]]
 source_ref = "boe-orden-hfp-1172-2022-iva-authority"
-required_text = [
-    "La cuota devengada por operaciones corrientes será la suma de las cuantías correspondientes a los módulos previstos para la actividad",
-]
+required_text = ["La cuota devengada por operaciones corrientes será la suma de las cuantías correspondientes a los módulos previstos para la actividad"]
 
-# Cuota derivada del régimen simplificado: LIVA art. 123.Dos.1 / Orden Anexo
-# I apartado 2.3 — la mayor de (a) la cuota devengada neta del 1 por ciento
-# de cuotas soportadas de difícil justificación (LIVA art. 123 permite
-# deducir siempre este forfait, a diferencia de las cuotas soportadas reales
-# por adquisiciones concretas, que dependen de hechos del contribuyente aún
-# no modelados) o (b) la cuota mínima (porcentaje de la actividad × cuota
-# devengada, Orden Anexo II). This engine omits real cuotas soportadas por
-# operaciones corrientes (adquisiciones de bienes/servicios distintos de
-# activos fijos) because those depend on operator-declared purchase facts not
-# yet captured — the internal reference intentionally reads only the
-# universally-available 1 por ciento forfait, so it may understate the true
-# net deduction the taxpayer can legitimately claim; it never over-states the
-# cuota, so it stays a safe floor-oriented reference, not a wrong-figure
-# fabrication.
 [[revisions."2023".formulas]]
 id = "modelo-303-2023-modulos-iva-cuota-derivada"
 target_casilla_id = "modulos-iva-cuota-derivada"
@@ -55,16 +35,13 @@ expression = { op = "max", args = [
     { op = "percent", args = [
         { casilla_id = "modulos-iva-cuota-devengada" },
         { op = "m303_resolve_modulos_iva_cuota_minima_pct", args = [
-            { casilla_id = "modulos-iva-epigrafe" },
-            { parameter = "m303-modulos-iva-cuota-minima-pct-2023" },
+            { casilla_id = "modulos-iva-orden-id" },
         ] },
     ] },
 ] }
 rounding = "money-2"
-legal_refs = ["ley-37-1992:art-123", "orden-hfp-1172-2022:art-4"]
+legal_refs = ["ley-37-1992:art-123"]
 source_refs = ["boe-orden-hfp-1172-2022-iva-authority"]
 [[revisions."2023".formulas.source_citations]]
 source_ref = "boe-orden-hfp-1172-2022-iva-authority"
-required_text = [
-    "La cuota derivada del régimen simplificado será la mayor de las dos cantidades siguientes",
-]
+required_text = ["La cuota derivada del régimen simplificado será la mayor de las dos cantidades siguientes"]

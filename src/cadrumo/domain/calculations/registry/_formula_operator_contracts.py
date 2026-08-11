@@ -76,8 +76,8 @@ FORMULA_OPERATOR_ARITIES: Final[dict[FormulaOperator, FormulaOperatorArity]] = {
     "m131_resolve_modulos_pequena_dimension_ignorado_flag": _BINARY,
     "m131_resolve_modulos_temporada_inicio_conflicto_flag": _BINARY,
     "m100_resolve_eo_agraria_indices_correctores": _exact(9),
-    "m303_resolve_modulos_iva_cuota_devengada": _exact(5),
-    "m303_resolve_modulos_iva_cuota_minima_pct": _BINARY,
+    "m303_resolve_modulos_iva_cuota_devengada": _exact(8),
+    "m303_resolve_modulos_iva_cuota_minima_pct": _UNARY,
 }
 
 

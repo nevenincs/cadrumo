@@ -93,7 +93,6 @@ from ...domain.calculations.registry import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
 )
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
-
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (
@@ -413,6 +412,7 @@ def verify_filed_state(
         date_context={"filing_period": _calculation_filing_date(filed_observation.period)},
         binding_values=binding_values,
         relation_values=relation_values,
+        m303_regimen_simplificado_scope=None,
     )
     casilla_ids = requested_required_casilla_ids or tuple(
         casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED

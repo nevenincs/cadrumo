@@ -12,6 +12,7 @@ from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from ....iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .. import (
     InputKind,
     ModeloDefinition,
@@ -77,6 +78,13 @@ _M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
     "2024-desde-09-y-3t": "aeat-dr-303-2024-late",
     "2025": "aeat-dr-303-2025",
     "2026-y-siguientes": "aeat-dr-303-2026",
+}
+_M303_ANNUAL_ORDEN_SOURCE_BY_REVISION = {
+    "2023": "boe-orden-hfp-1172-2022-iva-authority",
+    "2024-hasta-08-y-2t": "boe-orden-hfp-1359-2023-iva-authority",
+    "2024-desde-09-y-3t": "boe-orden-hfp-1359-2023-iva-authority",
+    "2025": "boe-orden-hac-1347-2024-iva-authority",
+    "2026-y-siguientes": "boe-orden-hac-1425-2025-iva-authority",
 }
 _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     "2009-y-siguientes": frozenset(
@@ -237,17 +245,19 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
         assert snapshot.revision.id == "2009-y-siguientes"
 
 
-def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> None:
-    """Each post-2022 design has its own primary source, never a fallback."""
+def test_modelo_303_explicit_revisions_have_exact_record_design_and_annual_orden_sources() -> None:
+    """Each post-2022 revision cites its design and filing-year Orden exactly."""
     modelo, _ = _load_modelo_303()
 
     for revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
         revision = modelo.revisions[revision_id]
         record_design_source = _M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]
+        annual_orden_source = _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION[revision_id]
 
         assert revision.source_refs == (
             record_design_source,
             "aeat-modelo-303-procedure",
+            annual_orden_source,
             "boe-modelo-303-2008-form",
         )
         assert len(revision.workbook_parity_refs) == 1
@@ -815,6 +825,9 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         inputs=bound_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 6, 30)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
     # Structural wiring: all compensation casillas must be present in the result.
@@ -990,6 +1003,9 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         inputs=bound_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 3, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
     # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
@@ -1071,6 +1087,9 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
             inputs=bound,
             binding_values=bv,
             date_context={"filing_period": date(2025, 3, 31)},
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
         )
         return r.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA]
 

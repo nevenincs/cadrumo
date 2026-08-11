@@ -555,6 +555,7 @@ def _run_modulos_engine(
         },
         text_inputs=text_inputs,
         date_context={"filing_period": snapshot.filing_period.end_date},
+        m303_regimen_simplificado_scope=None,
     )
     values = result.values
     return (

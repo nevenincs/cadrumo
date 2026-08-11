@@ -82,6 +82,7 @@ def _calculate(
             f"renta-{year}-rel-131-pagos-fraccionados": Decimal("0.00"),
         },
         date_binding_values={f"renta-{year}-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        m303_regimen_simplificado_scope=None,
     )
 
 
@@ -155,4 +156,5 @@ def test_m100_art85_casilla_0089_is_no_longer_manual_input() -> None:
             _snapshot(2025),
             inputs={"0089": Decimal("448.80")},
             date_context={"filing_period": date(2025, 12, 31)},
+            m303_regimen_simplificado_scope=None,
         )

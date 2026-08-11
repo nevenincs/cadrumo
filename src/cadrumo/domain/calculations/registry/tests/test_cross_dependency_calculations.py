@@ -528,6 +528,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
         date_context={"filing_period": _registry_filing_date(filing_year, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
+        m303_regimen_simplificado_scope=None,
     )
 
     assert snapshot.revision.id == expected_revision
@@ -652,6 +653,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
         date_context={"filing_period": _registry_filing_date(2024, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
+        m303_regimen_simplificado_scope=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -700,6 +702,7 @@ def test_modelo_100_payment_calculation_resolves_cross_model_periodic_and_annual
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        m303_regimen_simplificado_scope=None,
     )
 
     assert set(relation_values) == {
@@ -796,6 +799,7 @@ def test_modelo_184_attribution_income_folds_into_modelo_100_casilla_1577(
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values[casilla_1577] == attributed_income
@@ -830,6 +834,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
                 "modelo-130-pagos-fraccionados-anteriores": casilla_05_carry[period],
             },
             date_context={"filing_period": _registry_filing_date(filing_year, period)},
+            m303_regimen_simplificado_scope=None,
         )
 
     snapshot = registry_snapshot("100", filing_year, "0A")
@@ -872,6 +877,7 @@ def test_modelo_100_payment_calculation_consumes_real_modelo_130_quarterly_regis
         },
         enum_binding_values={"renta-2025-profile-tax-residence-ccaa": "madrid"},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
+        m303_regimen_simplificado_scope=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}

@@ -452,6 +452,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=prepared.channels.date_bindings or None,
+        m303_regimen_simplificado_scope=None,
     )
 
     replay_payloads = _build_calculation_replay_payloads(

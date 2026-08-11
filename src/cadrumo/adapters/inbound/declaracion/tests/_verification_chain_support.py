@@ -28,6 +28,7 @@ from .....domain.calculations.registry import (
 from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
+from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
@@ -159,6 +160,7 @@ def _calculate_engine_values_from_inputs(
             inputs=inputs,
             date_context={"filing_period": _period_to_date(year, period)},
             binding_values=binding_values,
+            m303_regimen_simplificado_scope=None,
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
         )
@@ -267,6 +269,7 @@ def _assert_annual_relation_closure_chain(
             inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             date_context={"filing_period": _period_to_date(year, period)},
             binding_values=binding_values,
+            m303_regimen_simplificado_scope=None,
             relation_values=relation_values,
         )
     except RegistryValidationError as exc:
@@ -385,6 +388,9 @@ def _calculate_m303_engine_values_from_inputs(
             inputs=inputs,
             date_context={"filing_period": date(year, _period_month, 1)},
             binding_values=binding_values,
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
         )
     except RegistryValidationError as exc:
         pytest.fail(

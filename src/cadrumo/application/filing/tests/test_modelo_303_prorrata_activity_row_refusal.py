@@ -18,6 +18,7 @@ from ....core import (
 )
 from ....domain.deadlines import ModeloIVAProfile
 from ....domain.filing import FilingExportError
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission import ModeloDraftStatus
 from .. import (
@@ -35,6 +36,12 @@ from ..runtime import ModeloOperatorProfile
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
+def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
+    return M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+
+
 def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_target(tmp_path: Path) -> None:
     """The typed register gate runs before the withdrawn M303 layout can mask it."""
     period = Period.from_year_and_code(2025, "4T")
@@ -49,6 +56,7 @@ def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_targ
             "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         },
         schema_provider=provider,
+        m303_regimen_simplificado_scope=_general_m303_scope(),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,

@@ -40,6 +40,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshotError,
     RegistryValidationError,
     RelationId,
+    RevisionId,
     SourceRefId,
     calculate_registry_snapshot,
     enum_consumed_binding_ids,
@@ -63,7 +64,6 @@ from ._calculation_actions import list_calculation_revisions
 from ._profile_binding import resolve_profile_sourced_bindings
 from ._registry_helpers import validate_casilla_input_ids
 from ._work_lifecycle import list_work_units
-from ...domain.calculations.registry import RevisionId
 
 _LOG = get_logger(__name__)
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
@@ -668,6 +668,7 @@ def project_modelo_100_from_m130(
             enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
             date_binding_values=merged_date_bindings or None,
+            m303_regimen_simplificado_scope=None,
         )
     except RegistryValidationError:
         _LOG.exception(

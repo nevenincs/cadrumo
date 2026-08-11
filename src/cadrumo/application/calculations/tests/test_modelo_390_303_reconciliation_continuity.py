@@ -60,7 +60,13 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....domain.iva import (
+    IvaCategory,
+    IvaFlowDirection,
+    IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
@@ -194,6 +200,9 @@ def _calculate_303_quarter(
         binding_values=binding_values,
         relation_values={},
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
 
@@ -271,6 +280,7 @@ def _calculate_390_annual(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=None,
     )
     return result, len(result.values)
 

@@ -203,6 +203,7 @@ def _calculate_202_2p(
         binding_values=binding_values,
         relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 10, 20)},
+        m303_regimen_simplificado_scope=None,
     )
     return result, len(result.values)
 

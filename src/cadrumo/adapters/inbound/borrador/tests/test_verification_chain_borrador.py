@@ -251,6 +251,7 @@ def test_verification_chain_m100_borrador_engine_recomputes_cuota_integra(year: 
             binding_values=_binding_values_for_year(year),
             enum_binding_values=_enum_binding_values_for_year(year),
             relation_values=_relation_values_for_year(year),
+            m303_regimen_simplificado_scope=None,
         )
     except RegistryValidationError as exc:
         pytest.fail(

@@ -158,6 +158,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry._errors.M303RegimenSimplificadoEvidenceRequiredError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_M303_REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry._errors.RegistrySnapshotError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_SNAPSHOT",

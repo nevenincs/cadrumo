@@ -152,7 +152,13 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import (
+    IvaCategory,
+    IvaFlowDirection,
+    IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from .. import (
     IvaLedgerObservation,
     RegistryCalculationResult,
@@ -330,6 +336,9 @@ def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2024, 3, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
 

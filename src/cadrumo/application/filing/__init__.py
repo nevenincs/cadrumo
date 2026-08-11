@@ -188,6 +188,9 @@ from ...domain.filing import (
 from ...domain.filing import (
     registry_schema_version as _registry_schema_version,
 )
+from ...domain.iva import (
+    M303RegimenSimplificadoScopeDecision as _M303RegimenSimplificadoScopeDecision,
+)
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
 from ._calculate import (
@@ -269,6 +272,7 @@ def build_draft(
     profile: _ModeloProfile,
     inputs: _ModeloInputs,
     schema_provider: _CasillaSchemaProvider,
+    m303_regimen_simplificado_scope: _M303RegimenSimplificadoScopeDecision | None,
     deadline_checker: _DeadlineChecker | None = None,
     fail_on_warning: bool = False,
 ) -> _ModeloDraft:
@@ -283,6 +287,8 @@ def build_draft(
         inputs: Raw :class:`ModeloInputs`.
         schema_provider: Registry-backed
             :class:`CasillaSchemaProvider`.
+        m303_regimen_simplificado_scope: Closed IVA-profile scope decision for
+            Modelo 303; omitted for every other modelo.
         deadline_checker: Optional
             :class:`DeadlineChecker`.
         fail_on_warning: Raise when validation produces any warning or error.
@@ -355,6 +361,7 @@ def build_draft(
             relation_values=relation_inputs or None,
             date_binding_values=date_binding_inputs or None,
             text_inputs=text_casilla_inputs or None,
+            m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
         )
     except _RegistryValidationError as exc:
         raise _ModeloBuilderError(f"registry calculation failed: {exc}") from exc

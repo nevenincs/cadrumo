@@ -594,6 +594,7 @@ def _approve_export_draft(
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
+            m303_regimen_simplificado_scope=None,
         )
         approved = approve_draft(
             draft,

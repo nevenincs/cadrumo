@@ -184,6 +184,7 @@ def test_annex_instructions_become_atomic_citation_units() -> None:
 
     modules_2025 = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
     annex_one_point_three = next(unit for unit in modules_2025.units if unit.anchor == "#anexo-i-instruccion-3")
+    assert annex_one_point_three.title is not None
     assert "agricultores jóvenes o asalariados agrarios" in annex_one_point_three.title
     assert "pagos fraccionados" in annex_one_point_three.text
     assert "A efectos del pago fraccionado" not in annex_one_point_three.text
@@ -200,21 +201,28 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "La cuota derivada del régimen simplificado será la mayor" in instructions.text
     assert "Cuotas trimestrales" not in instructions.text
 
-    autotaxis = fragments["#anexo-i-iva-721-2"]
-    assert autotaxis.title == "Actividad: Transporte por autotaxis"
-    assert "Epígrafe I.A.E.: 721.2" in autotaxis.text
-    assert "Cuota mínima por operaciones corrientes: 10\xa0%" in autotaxis.text
+    iva_table_anchors = tuple(
+        unit.anchor for unit in output.units if unit.anchor and unit.anchor.startswith("#m303-anexo-ii-iva-")
+    )
+    assert len(iva_table_anchors) == 49
+    assert len(set(iva_table_anchors)) == len(iva_table_anchors)
+    assert not any(anchor.startswith("#anexo-i-iva-") for anchor in fragments)
+
+    autotaxis = fragments["#m303-anexo-ii-iva-721-2-transporte-por-autotaxis"]
+    assert autotaxis.title == "Transporte por autotaxis"
+    assert "\n721.2\n" in autotaxis.text
+    assert "Cuota mínima por operaciones corrientes: 10 %" in autotaxis.text
     assert "Transporte de mercancías por carretera" not in autotaxis.text
 
-    freight = fragments["#anexo-i-iva-722"]
-    assert "Epígrafe I.A.E.: 722" in freight.text
-    assert "Cuota mínima por operaciones corrientes: 10\xa0%" in freight.text
-    assert "Actividad: Transporte de residuos por carretera" not in freight.text
+    freight = fragments["#m303-anexo-ii-iva-722-transporte-de-mercancias-por-carretera-excepto-residuos"]
+    assert "\n722\n" in freight.text
+    assert "Cuota mínima por operaciones corrientes: 10 %" in freight.text
+    assert "Transporte de residuos por carretera" not in freight.text
 
-    hairdressing = fragments["#anexo-i-iva-972-1"]
-    assert "Epígrafe I.A.E. 972.1" in hairdressing.text
-    assert "Cuota mínima por operaciones corrientes: 13\xa0%" in hairdressing.text
-    assert "Actividad: Salones e institutos de belleza" not in hairdressing.text
+    hairdressing = fragments["#m303-anexo-ii-iva-972-1-servicios-de-peluqueria-de-senora-y-caballero"]
+    assert "\n972.1\n" in hairdressing.text
+    assert "Cuota mínima por operaciones corrientes: 13 %" in hairdressing.text
+    assert "Salones e institutos de belleza" not in hairdressing.text
 
 
 def test_toc_and_form_boilerplate_is_stripped() -> None:

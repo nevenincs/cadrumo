@@ -73,6 +73,7 @@ def _calculate(
         enum_binding_values=enum_binding_values,
         text_inputs=text_inputs,
         date_context={"filing_period": date(_YEAR, 12, 31)},
+        m303_regimen_simplificado_scope=None,
     )
     numbers_by_id = {c.id: c.number for c in snapshot.revision.casillas}
     return {numbers_by_id[cid]: value for cid, value in result.values.items()}

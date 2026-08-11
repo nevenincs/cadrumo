@@ -251,6 +251,7 @@ def materialise_registry_values_for_source_resolution(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=effective_unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
+        m303_regimen_simplificado_scope=None,
     )
     return SourceResolutionRegistryValues(
         values=MappingProxyType(dict(engine_result.values)),
