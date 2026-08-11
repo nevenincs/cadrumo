@@ -60,25 +60,23 @@ def test_real_clean_subtree_scan_observes_zero() -> None:
     assert result.files_analyzed > 0, "a green verdict must prove files were analysed"
 
 
-def test_real_production_tree_scan_reports_measured_clones() -> None:
-    """The real production tree carries clones and must report them as AMBER debt.
+def test_real_production_tree_scan_observes_zero() -> None:
+    """The real production tree earns green only after a complete zero-clone scan.
 
-    This is the assertion the old runner inverted. The count is advisory and
-    drifts as code lands, so this pins the honest SHAPE (clones observed, with a
-    real measured count over a real analysed corpus) rather than a brittle
-    literal.
+    This is the assertion the old runner could falsely satisfy after inspecting
+    nothing. The analysed-file floor pins the honest shape: a real measured scan
+    over the full production corpus, not an empty glob reduced to zero.
     """
     _require_npx()
     result = run_duplication_scan(_REPO_ROOT)
 
-    assert result.outcome is DuplicationOutcome.CLONES
-    assert result.is_green is False, "the production tree carries clones; green here is the false-green defect"
-    assert result.clone_count > 0
+    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO
+    assert result.is_green is True
+    assert result.clone_count == 0
     assert result.files_analyzed > 1000, (
         "the production tree carries >1000 source files; a small count means a partial scan"
     )
-    assert result.groups, "a clone verdict must carry the clone records backing it"
-    assert result.duplicated_pct
+    assert result.groups == ()
 
 
 def test_real_bad_source_path_is_unavailable_not_green() -> None:
@@ -141,18 +139,17 @@ def test_real_failure_diagnostic_reaches_the_reason() -> None:
     )
 
 
-def test_health_report_duplication_dimension_is_amber_with_a_measured_count() -> None:
-    """End-to-end: the health dashboard must not render the false green.
+def test_health_report_duplication_dimension_is_green_after_observing_zero() -> None:
+    """End-to-end: a real zero-clone scan earns the health dashboard's green.
 
-    The tree carries clones, so the honest verdict is AMBER carrying the count.
-    Per the advisory clone-count policy this dimension is never RED on clones.
+    This remains a live scanner proof, not a constructed result: GREEN is valid
+    only when jscpd demonstrably inspected the product tree and observed zero.
     """
     _require_npx()
     dimension = audit_duplication(_REPO_ROOT)
 
-    assert dimension.status is not Status.GREEN, "the production tree carries clones; GREEN is the reported lie"
-    assert dimension.status is Status.AMBER
-    assert "clone cluster(s)" in dimension.headline
+    assert dimension.status is Status.GREEN
+    assert "no clones found" in dimension.headline
 
 
 def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
@@ -178,10 +175,7 @@ def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
     """
     _require_npx()
     result = run_duplication_scan(_REPO_ROOT)
-    assert result.outcome is DuplicationOutcome.CLONES, (
-        "the production tree is expected to carry advisory clone debt; "
-        "if this ever goes clean, update this test rather than deleting it"
-    )
+    assert result.outcome is not DuplicationOutcome.UNAVAILABLE, result.reason
 
     uncovered = [group.render() for group in _uncovered_groups(result.groups, _recorded_dispositions())]
 

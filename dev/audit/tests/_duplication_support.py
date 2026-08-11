@@ -56,7 +56,7 @@ def _recorded_dispositions() -> Counter[frozenset[str]]:
     """Count how many clone groups the dispositions file records per file-set."""
     dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
     dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
-    return Counter(_paths_from_where(group["where"]) for group in dispositions["group"])
+    return Counter(_paths_from_where(group["where"]) for group in dispositions.get("group", ()))
 
 
 def _uncovered_groups(groups: Sequence[CloneGroup], recorded: Counter[frozenset[str]]) -> list[CloneGroup]:
