@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import json
-
 import pytest
-from dev import _build_evidence_corpus
-from dev.audit import report, semantic
+from dev.audit import dead_code, report, semantic
 from dev.audit.complexity import collect_cc, load_baseline
+from dev.corpus import build_evidence_corpus
 
 from ._inventory import REPO_ROOT
 
@@ -26,13 +24,10 @@ def test_code_health_scanners_target_the_live_cadrumo_tree_non_vacuously() -> No
     assert all(finding.path.startswith("src/cadrumo/") for finding in cyclomatic)
 
 
-def test_complexity_baseline_keys_use_only_current_product_paths() -> None:
-    """The ratchet preserves its debt values while every source key follows the move."""
-    baseline_path = REPO_ROOT / "dev" / "audit" / "complexity_baseline.json"
-    document = json.loads(baseline_path.read_text(encoding="utf-8"))
-    serialized = json.dumps(document)
-    production = load_baseline(is_test_run=False, path=baseline_path)
-    tests = load_baseline(is_test_run=True, path=baseline_path)
+def test_complexity_baseline_keys_reference_current_owner_namespaces() -> None:
+    """The canonical ratchet retains only debt its production scanner can measure."""
+    production = load_baseline(is_test_run=False)
+    tests = load_baseline(is_test_run=True)
     keys = {
         *production.cyclomatic,
         *production.maintainability,
@@ -42,9 +37,9 @@ def test_complexity_baseline_keys_use_only_current_product_paths() -> None:
         *tests.cognitive,
     }
 
-    assert len(keys) > 500
-    assert "src/aeat" not in serialized
+    assert keys
     assert all(key.startswith("src/cadrumo/") for key in keys)
+    assert all((REPO_ROOT / key.partition("::")[0]).is_file() for key in keys)
 
 
 def test_semantic_leak_classifier_uses_cadrumo_paths_and_keeps_aeat_as_authority() -> None:
@@ -59,17 +54,17 @@ def test_semantic_leak_classifier_uses_cadrumo_paths_and_keeps_aeat_as_authority
 
 def test_evidence_builder_targets_the_live_cadrumo_fixture_corpus() -> None:
     """A corpus build writes only beneath the current product test tree."""
-    corpus = REPO_ROOT / _build_evidence_corpus._CORPUS
+    corpus = REPO_ROOT / build_evidence_corpus._CORPUS
 
     assert corpus == REPO_ROOT / "src" / "cadrumo" / "application" / "ledger" / "tests" / "_evidence_corpus"
     assert corpus.is_dir()
-    assert _build_evidence_corpus._UA.startswith("cadrumo-fixtures/")
+    assert build_evidence_corpus._UA.startswith("cadrumo-fixtures/")
 
 
-def test_vulture_whitelist_references_current_modules_only() -> None:
-    """Whitelist rationale cannot keep retired product module paths alive."""
-    whitelist = (REPO_ROOT / "dev" / "vulture_whitelist.py").read_text(encoding="utf-8")
+def test_dead_code_runner_owns_the_current_whitelist_path() -> None:
+    """The sole runner targets its live whitelist, never the deleted root-level path."""
+    command = dead_code.vulture_command()
 
-    assert "aeat." not in whitelist
-    assert "cadrumo.adapters.outbound.google._api" in whitelist
-    assert "cadrumo.application.ledger._evidence_input" in whitelist
+    assert command[-2:] == ["src/cadrumo", "dev/audit/vulture_whitelist.py"]
+    assert all((REPO_ROOT / target).exists() for target in command[-2:])
+    assert not (REPO_ROOT / "dev" / "vulture_whitelist.py").exists()

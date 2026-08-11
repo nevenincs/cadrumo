@@ -294,9 +294,11 @@ def test_changed_filing_evidence_persists_as_a_distinct_revision_without_replaci
         loaded = repo.load()
 
     assert changed.calculation_revision_id != original.calculation_revision_id
-    assert loaded.get(original.calculation_revision_id) == original
+    persisted_original = loaded.get(original.calculation_revision_id)
+    assert persisted_original is not None
+    assert persisted_original == original
     assert loaded.get(changed.calculation_revision_id) == changed
-    assert loaded.get(original.calculation_revision_id).filing_instance_evidence != changed_evidence
+    assert persisted_original.filing_instance_evidence != changed_evidence
 
 
 def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
