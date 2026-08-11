@@ -95,6 +95,7 @@ def _render(fields: tuple[ExportFieldDefinition, ...]) -> str:
         draft=_approved_registry_draft(),
         producer_values={},
         producer_snapshot=_typed_producer_snapshot(),
+        projection_values={},
         casilla_values={},
         binding_values={},
         row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),

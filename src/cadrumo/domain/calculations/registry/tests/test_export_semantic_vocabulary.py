@@ -5,7 +5,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core import FilingProducerKey
+from .....core import (
+    FilingProducerKey,
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+)
 from ..._export_field_kind import CasillaFieldKind
 from .. import (
     ExportComputedKey,
@@ -41,6 +45,17 @@ def _field_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
         ("header", {"producer_key": FilingProducerKey.PRESENTER_TAX_ID}, ExportSemanticPayloadAxis.PRODUCER_KEY),
         ("draft", {"draft_attribute": ExportDraftAttribute.FILING_YEAR}, ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE),
         ("computed", {"computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG}, ExportSemanticPayloadAxis.COMPUTED_KEY),
+        (
+            "projection",
+            {
+                "projection_ref": M303ProrrataActivityProjectionRef(
+                    slot=1,
+                    field=M303ProrrataActivityProjectionField.CNAE,
+                    casilla_id="c500",
+                ),
+            },
+            ExportSemanticPayloadAxis.PROJECTION_REF,
+        ),
     ),
 )
 def test_strict_schema_accepts_only_enum_members_from_the_canonical_vocabulary(
@@ -55,8 +70,10 @@ def test_strict_schema_accepts_only_enum_members_from_the_canonical_vocabulary(
         assert field.producer_key is FilingProducerKey.PRESENTER_TAX_ID
     elif axis is ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE:
         assert field.draft_attribute is ExportDraftAttribute.FILING_YEAR
-    else:
+    elif axis is ExportSemanticPayloadAxis.COMPUTED_KEY:
         assert field.computed_key is ExportComputedKey.ENVELOPE_CLOSING_TAG
+    else:
+        assert isinstance(field.projection_ref, M303ProrrataActivityProjectionRef)
 
 
 @pytest.mark.parametrize(
@@ -102,5 +119,6 @@ def test_payload_axis_table_is_total_over_every_field_kind() -> None:
         CasillaFieldKind.DRAFT: ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE,
         CasillaFieldKind.FILLER: None,
         CasillaFieldKind.HEADER: ExportSemanticPayloadAxis.PRODUCER_KEY,
+        CasillaFieldKind.PROJECTION: ExportSemanticPayloadAxis.PROJECTION_REF,
         CasillaFieldKind.CHECKSUM: None,
     }

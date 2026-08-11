@@ -442,6 +442,7 @@ def test_casilla_field_kind_members_have_expected_values() -> None:
     assert CasillaFieldKind.DRAFT == "draft"
     assert CasillaFieldKind.FILLER == "filler"
     assert CasillaFieldKind.HEADER == "header"
+    assert CasillaFieldKind.PROJECTION == "projection"
     assert CasillaFieldKind.CHECKSUM == "checksum"
 
 

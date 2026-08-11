@@ -520,11 +520,12 @@ def export_draft(
         raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
     if draft.status is not ModeloDraftStatus.APROBADO:
         raise FilingExportError("declaration export requires an approved draft")
+    projection_values: dict[tuple[str, int | None], object] = {}
     if draft.modelo == "303":
         m303_facts = producer_snapshot.m303_filing_facts
         if m303_facts is None or m303_facts.period != draft.period:
             raise FilingExportError("modelo 303 producer facts do not match the draft filing period")
-        validate_m303_export_applicability(
+        projection_values = validate_m303_export_applicability(
             period=draft.period,
             schema_provider=provider,
             producer_snapshot=producer_snapshot,
@@ -544,6 +545,7 @@ def export_draft(
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=provider,
+        projection_values=projection_values,
     )
     if not payload:
         raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
@@ -806,6 +808,7 @@ def _render_export_layout(
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
+    projection_values: Mapping[tuple[str, int | None], object],
 ) -> bytes:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return render_xml_dictionary_layout(
@@ -820,6 +823,7 @@ def _render_export_layout(
         draft=draft,
         headers=headers,
         producer_snapshot=producer_snapshot,
+        projection_values=projection_values,
         prior_domiciliation_election=prior_domiciliation_election,
     )
 
@@ -830,6 +834,7 @@ def _render_layout(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
+    projection_values: Mapping[tuple[str, int | None], object],
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
 ) -> bytes:
     chunks: list[bytes] = []
@@ -852,6 +857,7 @@ def _render_layout(
                 draft=draft,
                 producer_values=headers,
                 producer_snapshot=producer_snapshot,
+                projection_values=projection_values,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
                 row=row,
@@ -870,6 +876,7 @@ def render_layout(
     draft: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    projection_values: Mapping[tuple[str, int | None], object] | None = None,
 ) -> bytes:
     """Render a layout from one complete typed filing-producer snapshot."""
     return _render_layout(
@@ -877,6 +884,7 @@ def render_layout(
         draft=draft,
         headers=_filing_producer_values(producer_snapshot),
         producer_snapshot=producer_snapshot,
+        projection_values={} if projection_values is None else projection_values,
         prior_domiciliation_election=prior_domiciliation_election,
     )
 
@@ -967,6 +975,7 @@ def _render_record(
     draft: ModeloDraft,
     producer_values: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
+    projection_values: Mapping[tuple[str, int | None], object],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row: _RecordRenderRow,
@@ -979,6 +988,7 @@ def _render_record(
                 draft=draft,
                 headers=producer_values,
                 producer_snapshot=producer_snapshot,
+                projection_values=projection_values,
                 casilla_values=casilla_values,
                 binding_values=binding_values,
                 row_index=row.row_index,
@@ -998,6 +1008,7 @@ def _render_record(
             draft=draft,
             headers=producer_values,
             producer_snapshot=producer_snapshot,
+            projection_values=projection_values,
             casilla_values=casilla_values,
             binding_values=binding_values,
             row_index=row.row_index,
@@ -1024,6 +1035,7 @@ def _render_field(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
+    projection_values: Mapping[tuple[str, int | None], object],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -1035,6 +1047,7 @@ def _render_field(
         draft=draft,
         headers=headers,
         producer_snapshot=producer_snapshot,
+        projection_values=projection_values,
         casilla_values=casilla_values,
         binding_values=binding_values,
         row_index=row_index,
@@ -1048,6 +1061,7 @@ def _field_value(
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
+    projection_values: Mapping[tuple[str, int | None], object],
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
@@ -1067,6 +1081,15 @@ def _field_value(
             return _draft_value(field, draft)
         case CasillaFieldKind.COMPUTED:
             return _computed_field_value(field, draft, producer_snapshot)
+        case CasillaFieldKind.PROJECTION:
+            if field.projection_ref is None:
+                raise FilingExportValidationError(f"export field {field.id!r} must declare projection_ref")
+            key = (field.projection_ref.model_dump_json(), row_index)
+            if key not in projection_values:
+                raise FilingExportValidationError(
+                    f"export field {field.id!r} has no exact typed projection value for row {row_index!r}",
+                )
+            return projection_values[key]
         case _:
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 

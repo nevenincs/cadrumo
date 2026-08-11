@@ -352,6 +352,8 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
             "renta-2024-rel-130-pagos-fraccionados": Decimal("0"),
             "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
         },
+    m303_regimen_simplificado_scope=None,
+    m303_annual_orden=None,
     )
 
     assert resolution.binding_values["renta-2024-profile-minimo-descendientes-estatal"] == Decimal("7900.00")

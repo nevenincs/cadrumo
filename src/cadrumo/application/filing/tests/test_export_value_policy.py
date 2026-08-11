@@ -7,7 +7,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period
+from ....core import (
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
+    Period,
+)
 from ....domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -137,6 +141,7 @@ def _render_one(record: ExportRecordDefinition, value: object) -> str:
         draft=_draft(checkbox=False, year=2026),
         producer_values={},
         producer_snapshot=_typed_producer_snapshot(),
+        projection_values={},
         casilla_values={field.casilla_id: value},
         binding_values={},
         row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
@@ -160,6 +165,50 @@ def test_filing_writer_emits_exact_policy_bytes(
         )
         == expected
     )
+
+
+def test_filing_writer_dispatches_only_the_exact_typed_projection_reference() -> None:
+    ref = M303Exonerado390ActivityProjectionRef(
+        slot=1,
+        field=M303Exonerado390ActivityField.ACTIVITY_CODE,
+    )
+    field = ExportFieldDefinition(
+        id="typed-projection",
+        offset=1,
+        length=3,
+        kind="projection",
+        projection_ref=ref,
+        data_type="text",
+        required=True,
+        padding="right_space",
+        justification="left",
+        signed=False,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
+    layout = ExportLayoutDefinition(
+        id="typed-projection-layout",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+        records=(_record("typed-projection-record", field, order=0),),
+    )
+
+    assert (
+        render_layout(
+            layout,
+            draft=_draft(checkbox=False, year=2026),
+            producer_snapshot=_typed_producer_snapshot(),
+            projection_values={(ref.model_dump_json(), None): "A01"},
+        )
+        == b"A01"
+    )
+
+    with pytest.raises(FilingExportValidationError, match="no exact typed projection value"):
+        render_layout(
+            layout,
+            draft=_draft(checkbox=False, year=2026),
+            producer_snapshot=_typed_producer_snapshot(),
+        )
 
 
 @pytest.mark.parametrize("invalid", ["yes", 2, " "])

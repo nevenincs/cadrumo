@@ -113,7 +113,7 @@ class TestWorkflowStepValidation:
                 closes_on=datetime(2026, 4, 20, tzinfo=UTC).date(),
             ),
         )
-        assert step.details is not None
+        assert isinstance(step.details, WorkflowDeadlineContextDetails)
         assert step.details.modelo is Modelo.M303
         assert step.details.period == _period()
         assert step.details.kind == "deadline_context"

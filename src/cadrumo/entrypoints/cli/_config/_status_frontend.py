@@ -36,6 +36,7 @@ if TYPE_CHECKING:
         StatusProfileRow,
         StatusRecoveryView,
     )
+    from ....application.user_profile import ProfileFieldView
     from ....application.workflow import WorkflowState
     from ....core.json_contract import Notice
     from ....domain.user_profile import ProfileSchemaDefinition, UserProfileRecord
@@ -360,18 +361,11 @@ def _build_fact_rows(
             repeated fact today, so a guard written against it alone
             would be vacuous.
     """
-    from ....adapters.inbound.tui import StatusFactRow
     from ....application.user_profile import (
         build_profile_overview,
-        mask_profile_field,
         record_to_path_values,
     )
-    from ....core.i18n import tr
-    from ....domain.user_profile import (
-        UserProfileError,
-        load_user_profile_schema,
-        section_field_key,
-    )
+    from ....domain.user_profile import load_user_profile_schema
 
     if record is None:
         return ()
@@ -382,38 +376,59 @@ def _build_fact_rows(
     overview = build_profile_overview(record, schema=resolved_schema)
     views = {field.path: field for section in overview.sections for field in section.fields}
 
-    rows: list[StatusFactRow] = []
-    for path in sorted(values):
-        value = values[path]
-        view = views.get(path)
-        declared_path = section_field_key(path)
-        try:
-            field_def = resolved_schema.field(declared_path)
-        except UserProfileError:
-            label = tr("flows.status.profile.field_unavailable")
-            value = tr("flows.status.profile.value_unavailable")
-            masked = mask_profile_field(path=path, label=path, sensitivity=None)
-        else:
-            masked = mask_profile_field(
-                path=path,
-                label=field_def.description or path,
-                sensitivity=field_def.sensitivity,
-            )
-            if view is None:
-                label = tr("flows.status.profile.field_unavailable")
-                value = tr("flows.status.profile.value_unavailable")
-            else:
-                label = view.label
-                if view.row_index is not None:
-                    label = tr("flows.status.profile.repeated_field", label=label, row=view.row_index)
-                value = view.value or ""
-                if value and view.choices:
-                    value = next(
-                        (choice.label for choice in view.choices if choice.value == value),
-                        tr("flows.status.profile.value_unavailable"),
-                    )
-        rows.append(StatusFactRow(label=label, value=value, masked=masked))
-    return tuple(rows)
+    return tuple(_build_fact_row(path=path, view=views.get(path), schema=resolved_schema) for path in sorted(values))
+
+
+def _build_fact_row(
+    *,
+    path: str,
+    view: ProfileFieldView | None,
+    schema: ProfileSchemaDefinition,
+) -> StatusFactRow:
+    """Project one stored fact through its declared masking and display authorities."""
+    from ....adapters.inbound.tui import StatusFactRow
+    from ....application.user_profile import mask_profile_field
+    from ....core.i18n import tr
+    from ....domain.user_profile import UserProfileError, section_field_key
+
+    try:
+        field_def = schema.field(section_field_key(path))
+    except UserProfileError:
+        return StatusFactRow(
+            label=tr("flows.status.profile.field_unavailable"),
+            value=tr("flows.status.profile.value_unavailable"),
+            masked=mask_profile_field(path=path, label=path, sensitivity=None),
+        )
+
+    masked = mask_profile_field(
+        path=path,
+        label=field_def.description or path,
+        sensitivity=field_def.sensitivity,
+    )
+    if view is None:
+        return StatusFactRow(
+            label=tr("flows.status.profile.field_unavailable"),
+            value=tr("flows.status.profile.value_unavailable"),
+            masked=masked,
+        )
+    label, value = _status_fact_label_and_value(view)
+    return StatusFactRow(label=label, value=value, masked=masked)
+
+
+def _status_fact_label_and_value(view: ProfileFieldView) -> tuple[str, str]:
+    """Return localized display copy for one declared profile field view."""
+    from ....core.i18n import tr
+
+    label = view.label
+    if view.row_index is not None:
+        label = tr("flows.status.profile.repeated_field", label=label, row=view.row_index)
+    value = view.value or ""
+    if value and view.choices:
+        value = next(
+            (choice.label for choice in view.choices if choice.value == value),
+            tr("flows.status.profile.value_unavailable"),
+        )
+    return label, value
 
 
 __all__ = ["build_status_page_data", "present_status_tui"]

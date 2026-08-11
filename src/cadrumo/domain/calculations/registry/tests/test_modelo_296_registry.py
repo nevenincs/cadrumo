@@ -46,5 +46,7 @@ def test_modelo_296_total_copies_source_casilla() -> None:
         snapshot,
         inputs={_SOURCE_CASILLA: Decimal("500.00")},
         date_context={"filing_period": date(2024, 12, 31)},
+    m303_regimen_simplificado_scope=None,
+    m303_annual_orden=None,
     )
     assert result.values[_TARGET_CASILLA] == Decimal("500.00")

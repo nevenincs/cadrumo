@@ -254,47 +254,63 @@ def _payload_row_count(payload: bytes, *, export_format: ExportSerializationForm
     as the one row it is.
     """
     if export_format is ExportSerializationFormat.CSV:
-        try:
-            rows = tuple(csv.reader(StringIO(payload.decode(_UTF_8_ENCODING))))
-        except (UnicodeDecodeError, csv.Error) as exc:
-            raise _payload_decode_error(export_format) from exc
-        return max(len(rows) - 1, 0)
+        return _csv_payload_row_count(payload)
     if export_format is ExportSerializationFormat.JSONL:
-        try:
-            lines = payload.decode(_UTF_8_ENCODING).splitlines()
-        except UnicodeDecodeError as exc:
-            raise _payload_decode_error(export_format) from exc
-        row_count = 0
-        for line_number, line in enumerate(lines, start=1):
-            if not line.strip():
-                continue
-            try:
-                row = json.loads(line)
-            except json.JSONDecodeError as exc:
-                raise _payload_decode_error(export_format) from exc
-            if not isinstance(row, dict):
-                raise _export_field_error(_JSONL_RECORD_INVALID_REASON, line_number=line_number)
-            row_count += 1
-        return row_count
+        return _jsonl_payload_row_count(payload)
     if export_format is ExportSerializationFormat.XLSX:
-        from openpyxl import load_workbook
-        from openpyxl.utils.exceptions import InvalidFileException
-
-        try:
-            workbook = load_workbook(BytesIO(payload), read_only=True)
-            try:
-                worksheet = workbook.active
-                if worksheet is None:
-                    return 0
-                return max((worksheet.max_row or 0) - 1, 0)
-            finally:
-                workbook.close()
-        except (BadZipFile, InvalidFileException, KeyError, OSError, ParseError, ValueError) as exc:
-            raise _payload_decode_error(export_format) from exc
+        return _xlsx_payload_row_count(payload)
     raise ExportFormatError(
         translated_message=_REFUSED_EXPORT_FORMAT_MESSAGE,
         context={"export_format": str(export_format)},
     )
+
+
+def _csv_payload_row_count(payload: bytes) -> int:
+    """Count parsed CSV records after the serializer's one header record."""
+    try:
+        rows = tuple(csv.reader(StringIO(payload.decode(_UTF_8_ENCODING))))
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise _payload_decode_error(ExportSerializationFormat.CSV) from exc
+    return max(len(rows) - 1, 0)
+
+
+def _jsonl_payload_row_count(payload: bytes) -> int:
+    """Count nonblank JSON Lines object records, retaining their source line on refusal."""
+    try:
+        lines = payload.decode(_UTF_8_ENCODING).splitlines()
+    except UnicodeDecodeError as exc:
+        raise _payload_decode_error(ExportSerializationFormat.JSONL) from exc
+
+    row_count = 0
+    for line_number, line in enumerate(lines, start=1):
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError as exc:
+            raise _payload_decode_error(ExportSerializationFormat.JSONL) from exc
+        if not isinstance(row, dict):
+            raise _export_field_error(_JSONL_RECORD_INVALID_REASON, line_number=line_number)
+        row_count += 1
+    return row_count
+
+
+def _xlsx_payload_row_count(payload: bytes) -> int:
+    """Count active-sheet rows after the serializer's one header record."""
+    from openpyxl import load_workbook
+    from openpyxl.utils.exceptions import InvalidFileException
+
+    try:
+        workbook = load_workbook(BytesIO(payload), read_only=True)
+        try:
+            worksheet = workbook.active
+            if worksheet is None:
+                return 0
+            return max((worksheet.max_row or 0) - 1, 0)
+        finally:
+            workbook.close()
+    except (BadZipFile, InvalidFileException, KeyError, OSError, ParseError, ValueError) as exc:
+        raise _payload_decode_error(ExportSerializationFormat.XLSX) from exc
 
 
 def _serialize_csv(rows: tuple[dict[str, str], ...], *, fieldnames: tuple[str, ...]) -> bytes:

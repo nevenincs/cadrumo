@@ -93,6 +93,8 @@ def _calculate(inputs: dict[CasillaId, Decimal]):
             "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
         date_context={"filing_period": date(2024, 12, 31)},
+    m303_regimen_simplificado_scope=None,
+    m303_annual_orden=None,
     )
 
 

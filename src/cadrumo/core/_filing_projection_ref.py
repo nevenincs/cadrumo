@@ -164,9 +164,7 @@ class M303Exonerado390OperacionesTercerosProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_exonerado_390_operaciones_terceros"] = (
-        "m303_exonerado_390_operaciones_terceros"
-    )
+    projection_kind: Literal["m303_exonerado_390_operaciones_terceros"] = "m303_exonerado_390_operaciones_terceros"
 
 
 FilingProjectionRef = Annotated[

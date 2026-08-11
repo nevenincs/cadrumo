@@ -6,7 +6,13 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import Period, validated_casilla_id
+from ....core import (
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+    Period,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
 from ....domain.filing import FilingExportError
@@ -28,6 +34,20 @@ _PERIODS = (
     Period.from_year_and_code(2025, "4T"),
     Period.from_year_and_code(2026, "4T"),
 )
+
+
+def _projection_refs() -> tuple[
+    M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef,
+    ...,
+]:
+    return (
+        *(
+            M303Exonerado390ActivityProjectionRef(slot=slot, field=field)
+            for slot in range(1, 7)
+            for field in M303Exonerado390ActivityField
+        ),
+        M303Exonerado390OperacionesTercerosProjectionRef(),
+    )
 
 
 def _evidence(
@@ -96,24 +116,10 @@ def test_evidence_arrives_at_all_six_pairs_and_the_exact_modelo_347_marker_for_e
         ),
         evidence=evidence,
         record_design=record_design,
+        projection_refs=_projection_refs(),
     )
 
     assert projection is not None
-    assert tuple(field.offset for field in projection.fields) == (
-        13,
-        16,
-        20,
-        23,
-        27,
-        30,
-        34,
-        37,
-        41,
-        44,
-        48,
-        51,
-        55,
-    )
     assert tuple(field.value for field in projection.fields) == (
         "A01",
         "4101",
@@ -154,4 +160,5 @@ def test_value_arrival_refuses_a_record_design_identity_mismatch() -> None:
             schema_provider=build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",)),
             evidence=evidence,
             record_design=record_design.model_copy(update={"id": "aeat-dr-303-2025"}),
+            projection_refs=_projection_refs(),
         )

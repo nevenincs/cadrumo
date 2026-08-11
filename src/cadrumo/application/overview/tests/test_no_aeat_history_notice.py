@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.json_contract import NoticeSeverity
+from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from ...calculations import ObservationSourceKind
 from .. import NO_AEAT_HISTORY_NOTICE_CODE, no_aeat_history_notice
 
@@ -23,7 +23,7 @@ def test_the_notice_fires_when_no_observation_exists_at_all() -> None:
     assert notice is not None
     assert notice.severity is NoticeSeverity.INFO
     assert notice.code == NO_AEAT_HISTORY_NOTICE_CODE
-    assert notice.action is not None
+    assert isinstance(notice.action, ResolvedNoticeAction)
     assert notice.action.action.action_id == "operator.live.filed.pull_all"
     assert notice.action.action.target_command_key == "app.live.filed.pull_all"
 
