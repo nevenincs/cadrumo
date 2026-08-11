@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:2874b2c954ed887909b07ff7a6d7409a03856461d2ee9e86c003c4bfcbf88937'
+body_hash: 'sha256:5b5d1119cc9ff45206215a00e966f992260720e11f86b34895514da4233c0ab4'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -70,3 +70,13 @@ The current shared-tree local integration gate `uv run --no-sync pytest -q -m in
 The authorized real-behaviour integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` completed with `25 passed in 383.05s (0:06:23)`, exercising `en`, `es`, `ca`, and `hu` through the production local Pagefind path. This confirms the local full-record projection remains present across all four roots.
 
 The live read-only probe remains unchanged: `/docs/` returned 200, while `/docs/es/`, `/docs/ca/`, and `/docs/hu/` returned 404. AWS STS authentication remains expired, so P04.S12 remains open and no deploy or cache invalidation was attempted.
+
+### 2026-08-11 formal carry-forward
+
+This row stays OPEN by operator decision, and the deferral is recorded rather than absorbed into a green close.
+
+The committed mechanism is present and unchanged: the viewer function maps each language root to its index, the publisher syncs the complete built tree, and the publish path refuses outright when any built language is unreachable from the language entry. What is missing is proof, not code.
+
+The live acceptance property is still unsatisfied: the `es`, `ca` and `hu` roots each return HTTP 404. That evidence is preserved as-is. It cannot be advanced because the AWS session is expired and re-authentication is an operator action; without it the deployed routing and object state cannot be distinguished from the committed mechanism.
+
+Nothing here may be read as a claim that the localized roots respond. The campaign closes with this row open.

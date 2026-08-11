@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:5f9dde2a6c8d80d737810f404130e3e65c5d1ee9b1a4e3f007a10d8c6163a016'
+body_hash: 'sha256:fca8b844b577554d0c00fe386b06369cab3c11695dd00286db54f4e7c568a640'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -114,3 +114,13 @@ The locale matrix ran while parallel work advanced the branch from the recorded 
 The authorized real-behaviour integration gate `uv run --no-sync pytest -q -m integration dev/docs/tests/test_deployment_search_parity.py` completed with `25 passed in 383.05s (0:06:23)`. It exercised the production local Pagefind path for all four build languages: `en`, `es`, `ca`, and `hu`.
 
 This establishes current local per-root parity only. P03.S08 remains open because the strict language builds still have known sequence-golden divergences and the corresponding deployed roots have not been proven reachable; no live result is inferred from this local pass.
+
+### 2026-08-11 formal carry-forward
+
+This row stays OPEN, blocked on both of its halves for two different and separately owned reasons. Both are stated so neither hides behind the other.
+
+The built-site half is blocked by a peer regression, not by its own design. The gate materialises real records through the production injector and drives them through the same browser path a reader uses, which requires the authoritative record projection. That projection currently refuses: 889 Spanish casilla labels are declared with null values, every one of them M303, landed by the active M303 registry buildout on 2026-08-10 and 2026-08-11. Spanish is the mandatory source locale, so the refusal is correct behaviour and must not be softened into a skip. The gate cannot run until those labels carry real values.
+
+The deployed half is blocked by the same expired AWS session that holds the two deployment rows, and is deferred by the same operator decision.
+
+The source coverage this row established is unchanged and remains at HEAD: the concept probe and the casilla probe both assert canonical-target recall for the title and each available description on every one of the four language roots. Source coverage is not a passing gate, and this record does not present it as one.

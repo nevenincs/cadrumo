@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-06'
-modified: '2026-08-06'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:425bd6730b9413b2c8cdbc3f5e84a6b0b67247b785aff6ff60fb5f58361c3610'
+body_hash: 'sha256:9e67587283dce75dd02bbf29f8bb5e70e5a0fd508c786944dd42baeccb166b44'
 step_id: 'S13'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -50,3 +50,11 @@ The longer retry of `uv run --no-sync python -m dev.docs.build --strict docs/con
 ### 2026-08-06 current strict build sequence-golden failure
 
 The current strict retry cleared the registry legal-corpus validation after the bounded resolver and sidecar repair. It then reached the sequence-golden gate and exited with code 1 on nine divergences caused by concurrent peer changes (invoice option requirements, category ordering, profile-history ordering, ledger split behavior, and localized registry output). This is not a legal-search failure; the step remains open until a later full build is green.
+
+### 2026-08-11 formal carry-forward
+
+This row stays OPEN by operator decision. No deployment was performed, no root was mutated, no cache was invalidated, and no live URL claim is made.
+
+The source deployment configuration is ready: full Pagefind mode is pinned for every root and all four language roots are configured. The blocker is solely that the AWS session is expired, so the publish and its post-publish checks cannot run.
+
+Three checks remain unproven and are named here so the close cannot imply them: that every deployed root's entry carries the injected record corpus in that root's language, that the casilla destination page resolves live, and that the `es`, `ca` and `hu` roots respond.
