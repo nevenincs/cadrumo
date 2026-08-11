@@ -2,20 +2,32 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pydantic
 import pytest
 
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....domain.calculations.registry import IvaLedgerObservation
+from ....domain.iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaRateKind,
+)
 from .. import (
     BienesInversionIvaRegister,
+    BienesInversionSectorContribution,
     BienInversionDisposal,
     BienInversionDisposalRegime,
     BienInversionIvaRecord,
     BienInversionKind,
+    BienInversionValidationError,
     RegularizacionDireccion,
     compute_registro_regularizacion,
     compute_registro_transmisiones,
+    validate_investment_asset_reciprocity,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -29,6 +41,7 @@ def _record(identifier: str = "bi-2022-furgoneta", **overrides: object) -> BienI
         "cuota_soportada": Decimal("4200.00"),
         "prorrata_inicial_pct": Decimal("80"),
         "kind": BienInversionKind.MUEBLE,
+        "acquisition_ledger_id": f"ledger-{identifier}",
     }
     base.update(overrides)
     return BienInversionIvaRecord.model_validate(base)
@@ -95,6 +108,17 @@ def test_register_rejects_duplicate_identifiers() -> None:
         BienesInversionIvaRegister(records=(_record("dup"), _record("dup")))
 
 
+def test_register_rejects_duplicate_acquisition_ledger_ids() -> None:
+    """Each capital good owns one distinct acquisition ledger identity."""
+    with pytest.raises(pydantic.ValidationError, match="duplicate acquisition_ledger_id values"):
+        BienesInversionIvaRegister(
+            records=(
+                _record("first", acquisition_ledger_id="ledger-shared"),
+                _record("second", acquisition_ledger_id="ledger-shared"),
+            )
+        )
+
+
 def test_in_window_records_filters_by_eligibility_and_window() -> None:
     """``in_window_records`` returns only art-108-eligible, in-window goods."""
     in_window = _record("in-window", acquisition_year=2022, kind=BienInversionKind.MUEBLE)
@@ -120,6 +144,7 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("80"),
         kind=BienInversionKind.MUEBLE,
+        prorrata_sector_id="sector-services",
     )
     pending = _record(
         "bi-pending",
@@ -127,6 +152,7 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
         cuota_soportada=Decimal("9000.00"),
         prorrata_inicial_pct=Decimal("50"),
         kind=BienInversionKind.MUEBLE,
+        prorrata_sector_id="sector-rentals",
     )
     register = BienesInversionIvaRegister(records=(computed, pending))
     projection = compute_registro_regularizacion(
@@ -137,7 +163,15 @@ def test_registro_projection_folds_computed_importes_and_reports_pending() -> No
     assert projection.computed_count == 1
     assert projection.pending_percentage_count == 1
     assert projection.proposed_casilla_43 == Decimal("200.00")
+    assert projection.sector_contributions == (
+        BienesInversionSectorContribution(
+            asset_id="bi-computed",
+            prorrata_sector_id="sector-services",
+            amount=Decimal("200.00"),
+        ),
+    )
     computed_row = next(row for row in projection.rows if row.identifier == "bi-computed")
+    assert computed_row.prorrata_sector_id == "sector-services"
     assert computed_row.result is not None
     assert computed_row.result.direccion is RegularizacionDireccion.INGRESO
     pending_row = next(row for row in projection.rows if row.identifier == "bi-pending")
@@ -207,6 +241,7 @@ def test_registro_transmisiones_folds_disposed_goods_into_casilla_43() -> None:
         cuota_soportada=Decimal("10000.00"),
         prorrata_inicial_pct=Decimal("60"),
         kind=BienInversionKind.MUEBLE,
+        prorrata_sector_id="sector-muebles",
         disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
     )
     regla_segunda = _record(
@@ -215,12 +250,25 @@ def test_registro_transmisiones_folds_disposed_goods_into_casilla_43() -> None:
         cuota_soportada=Decimal("31500.00"),
         prorrata_inicial_pct=Decimal("65"),
         kind=BienInversionKind.INMUEBLE,
+        prorrata_sector_id="sector-inmuebles",
         disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.EXENTA_O_NO_SUJETA),
     )
     register = BienesInversionIvaRegister(records=(regla_primera, regla_segunda))
     projection = compute_registro_transmisiones(register, disposal_year=2024)
     assert projection.computed_count == 2
     assert projection.proposed_casilla_43 == Decimal("11932.50")
+    assert projection.sector_contributions == (
+        BienesInversionSectorContribution(
+            asset_id="bi-regla-1",
+            prorrata_sector_id="sector-muebles",
+            amount=Decimal("-2400.00"),
+        ),
+        BienesInversionSectorContribution(
+            asset_id="bi-regla-2",
+            prorrata_sector_id="sector-inmuebles",
+            amount=Decimal("14332.50"),
+        ),
+    )
     row_1 = next(r for r in projection.rows if r.identifier == "bi-regla-1")
     assert row_1.result.anos_restantes == 3
     assert row_1.result.importe == Decimal("-2400.00")
@@ -263,3 +311,90 @@ def test_registro_transmisiones_excludes_a_disposal_with_no_window_time_remainin
     assert projection.computed_count == 0
     assert projection.rows == ()
     assert projection.proposed_casilla_43 == Decimal("0.00")
+
+
+def _investment_observation(
+    *,
+    ledger_id: str = "ledger-asset-machine",
+    asset_id: str = "asset-machine",
+    transaction_date: date = date(2024, 5, 7),
+    prorrata_sector_id: str | None = "sector-services",
+) -> IvaLedgerObservation:
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=transaction_date,
+        category=IvaCategory.DOMESTIC_GENERAL,
+        rate_kind=IvaRateKind.GENERAL,
+        flow_direction=IvaFlowDirection.SOPORTADO,
+        base_amount=Decimal("10000.00"),
+        iva_amount=Decimal("2100.00"),
+        applied_rate=Decimal("0.21"),
+        prorrata_sector_id=prorrata_sector_id,
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_INVESTMENT,
+        deduction_provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator="invoice:asset-machine",
+            evidence_digest="a" * 64,
+        ),
+        investment_asset_id=asset_id,
+    )
+
+
+def test_investment_asset_reciprocity_accepts_one_real_matching_observation() -> None:
+    """The ledger acquisition, asset identity, profile, year, and sector agree."""
+    register = BienesInversionIvaRegister(
+        records=(
+            _record(
+                "asset-machine",
+                acquisition_year=2024,
+                acquisition_ledger_id="ledger-asset-machine",
+                prorrata_sector_id="sector-services",
+            ),
+        )
+    )
+
+    validate_investment_asset_reciprocity(
+        observations=(_investment_observation(),),
+        register=register,
+        ledger_profile_id="profile-a",
+        asset_profile_id="profile-a",
+        filing_year=2024,
+    )
+
+
+@pytest.mark.parametrize(
+    ("observation", "ledger_profile_id", "asset_profile_id", "filing_year", "message"),
+    (
+        (_investment_observation(ledger_id="ledger-wrong"), "profile-a", "profile-a", 2024, "not reciprocal"),
+        (_investment_observation(transaction_date=date(2025, 1, 8)), "profile-a", "profile-a", 2024, "share the filing year"),
+        (_investment_observation(prorrata_sector_id="sector-rentals"), "profile-a", "profile-a", 2024, "share the prorrata sector"),
+        (_investment_observation(), "profile-a", "profile-b", 2024, "share a secure profile"),
+    ),
+)
+def test_investment_asset_reciprocity_refuses_mismatched_edges(
+    observation: IvaLedgerObservation,
+    ledger_profile_id: str,
+    asset_profile_id: str,
+    filing_year: int,
+    message: str,
+) -> None:
+    """Every stored cross-boundary edge is exact; no identifier is inferred."""
+    register = BienesInversionIvaRegister(
+        records=(
+            _record(
+                "asset-machine",
+                acquisition_year=2024,
+                acquisition_ledger_id="ledger-asset-machine",
+                prorrata_sector_id="sector-services",
+            ),
+        )
+    )
+
+    with pytest.raises(BienInversionValidationError, match=message):
+        validate_investment_asset_reciprocity(
+            observations=(observation,),
+            register=register,
+            ledger_profile_id=ledger_profile_id,
+            asset_profile_id=asset_profile_id,
+            filing_year=filing_year,
+        )

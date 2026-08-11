@@ -22,7 +22,7 @@ by side and the rule for which one a given namespace belongs to.
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 
 from pydantic import BaseModel
@@ -35,6 +35,7 @@ from ..storage import (
     SecureObjectRepository,
     SecureObjectRevisionConflictError,
     SecureObjectWrite,
+    StorageValidationError,
     secure_object_logical_path,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
@@ -118,6 +119,18 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
 
     def load(self) -> DocumentT:
         """Load and strictly decode the document, or return its declared empty form."""
+        from ..storage.crypto import secure_object_key_digest
+
+        object_key_digest = secure_object_key_digest(self.object_key)
+        if any(
+            row.namespace == self._definition.namespace
+            and row.object_key == object_key_digest
+            and row.schema_version != self._definition.schema_version
+            for row in self._objects.iter_all_records_raw()
+        ):
+            raise StorageValidationError(
+                f"{self._definition.namespace} requires explicit schema migration before read"
+            )
         record = self._objects.load(
             self._definition.namespace,
             self.object_key,
@@ -127,6 +140,11 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         if record is None:
             return self._empty_document()
         return self._model_type.model_validate_json(record.payload)
+
+    def _validate_payloads(self, payloads: Mapping[str, bytes]) -> None:
+        """Validate all upgraded singleton bytes before the migration batch writes."""
+        for payload in payloads.values():
+            self._model_type.model_validate_json(payload)
 
     def to_secure_object_write(self, document: DocumentT) -> SecureObjectWrite:
         """Prepare the encrypted-SQL upsert without committing it.
@@ -155,6 +173,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         sentinel the write funnel treats as "this row must not exist yet", so
         the first writer of a singleton is guarded exactly like every later one.
         """
+        document = self.load()
         record = self._objects.load(
             self._definition.namespace,
             self.object_key,
@@ -163,7 +182,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
         )
         if record is None:
             return self._empty_document(), ABSENT_SECURE_OBJECT_REVISION_ID
-        return self._model_type.model_validate_json(record.payload), record.revision_id
+        return document, record.revision_id
 
     def mutate(self, mutation: Callable[[DocumentT], DocumentT], *, attempts: int = 4) -> DocumentT:
         """Apply ``mutation`` to the stored document as one guarded unit of work.

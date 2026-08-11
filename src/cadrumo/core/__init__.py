@@ -171,6 +171,7 @@ from ._irnr import (
 )
 from ._iva_category_resolution import IvaCategoryOutcome
 from ._iva_compensation_provenance import IvaCompensationStateProvenance
+from ._iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._model_catalogue import (
     ANTHROPIC_COMMERCIAL_TERMS,
@@ -513,6 +514,8 @@ __all__: list[str] = [
     "IntracomOperationType",
     "IvaCategoryOutcome",
     "IvaCompensationStateProvenance",
+    "IvaDeductionEvidenceAuthority",
+    "IvaDeductionFactKind",
     "LedgerSortField",
     "LedgerSortOrder",
     "LicenceVerification",

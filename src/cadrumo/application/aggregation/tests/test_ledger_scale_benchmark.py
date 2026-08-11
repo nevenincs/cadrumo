@@ -94,10 +94,10 @@ from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .. import (
-    aggregate_iva_ledger_observations,
     aggregate_iva_ledger_observations_from_repositories,
     aggregate_renta_ledger_expenses_from_repositories,
 )
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
