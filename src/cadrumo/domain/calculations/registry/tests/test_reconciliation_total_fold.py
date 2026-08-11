@@ -16,6 +16,8 @@ there is no stricter of two casilla ids, so any tie-break would be an invention.
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
 
 from .....core import validated_casilla_id
@@ -34,7 +36,7 @@ _SOURCE = ("aeat-dr-303-2026",)
 
 def _expectation(
     identifier: str,
-    totals: dict[str, str],
+    totals: dict[Literal["ingresar", "devolver"], str],
     *,
     computed: tuple[str, ...] = ("01",),
 ) -> VerificationExpectationDefinition:

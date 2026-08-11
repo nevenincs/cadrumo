@@ -75,7 +75,7 @@ def _block_rate_rows(label: str) -> tuple[tuple[str, str, str], ...]:
     for line in _block_devengada_lines(label):
         matched = _RATE_ROW.search(line)
         if matched is not None:
-            rows.append(matched.groups())
+            rows.append((matched.group(1), matched.group(2), matched.group(3)))
     return tuple(rows)
 
 

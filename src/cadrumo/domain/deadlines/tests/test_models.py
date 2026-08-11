@@ -112,12 +112,14 @@ class TestTaxpayerProfile:
 
     def test_modelo_iva_profile_requires_explicit_redeme_authority(self) -> None:
         with pytest.raises(ValidationError, match="redeme_enrolled"):
-            ModeloIVAProfile(
-                tax_territory=M303TaxTerritory.COMMON_REGIME,
-                regime_composition=M303RegimeComposition.GENERAL,
-                cash_accounting_regime_enrolled=False,
-                voluntary_sii_enrolled=False,
-                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ModeloIVAProfile.model_validate(
+                {
+                    "tax_territory": M303TaxTerritory.COMMON_REGIME,
+                    "regime_composition": M303RegimeComposition.GENERAL,
+                    "cash_accounting_regime_enrolled": False,
+                    "voluntary_sii_enrolled": False,
+                    "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
+                },
             )
 
     def test_mapping_projection_preserves_enrollment_and_schedule_facts(self) -> None:

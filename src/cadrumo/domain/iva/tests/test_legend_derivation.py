@@ -28,6 +28,7 @@ from .. import (
     IvaCategory,
     LegendDerivation,
     LegendDerivationOutcome,
+    RegimeLegend,
     derive_category_from_regime_legend,
     match_regime_legend,
 )
@@ -89,14 +90,14 @@ def test_a_repercutido_line_beside_the_reverse_charge_mention_is_a_contradiction
 
 
 @pytest.mark.parametrize("legend", _SILENT, ids=lambda legend: legend.provision)
-def test_a_mandated_mention_that_declares_nothing_derives_nothing(legend: object) -> None:
+def test_a_mandated_mention_that_declares_nothing_derives_nothing(legend: RegimeLegend) -> None:
     """Six of seven mentions say nothing about the category, and must stay silent.
 
     These are real, mandated mentions -- a self-billing arrangement, a special
     regime's accounting -- and the temptation is to read a category out of them
     because they are present and specific. None of them fixes one.
     """
-    phrase = legend.phrase  # type: ignore[attr-defined]
+    phrase = legend.phrase
 
     for has_line in (True, False):
         derivation = derive_category_from_regime_legend(printed_legend=phrase, has_repercutido_line=has_line)
