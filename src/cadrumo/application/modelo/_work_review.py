@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from types import MappingProxyType
@@ -14,10 +15,15 @@ from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...domain.calculations.registry import (
     BindingId,
     CasillaConstraints,
+    CasillaDefinition,
+    CasillaObservation,
+    DataBindingDefinition,
+    FormulaDefinition,
     FormulaId,
     InputKind,
     LegalRefId,
     RegistrySnapshot,
+    RelationDefinition,
     RelationId,
     RevisionId,
     SourceRefId,
@@ -156,6 +162,42 @@ class ModeloWorkReview(BaseModel):
     blockers: tuple[BlockerRef, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class _ReviewRowContext:
+    """Precomputed registry and persistence facts shared by every review row."""
+
+    revision: CalculationRevision | None
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition]
+    formulas_by_id: Mapping[FormulaId, FormulaDefinition]
+    binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]]
+    relations_by_binding: Mapping[BindingId, tuple[RelationDefinition, ...]]
+    relations: tuple[RelationDefinition, ...]
+    relation_channels: Mapping[RelationId, tuple[str, ...]]
+    persisted_decimal_bindings: Mapping[BindingId, Decimal]
+    persisted_binding_ids: frozenset[BindingId]
+    statuses: Mapping[CasillaId, OfficialBoxStatus]
+    official_references: Mapping[CasillaId, str | None]
+    blocking_findings: tuple[ModeloVerificationFinding, ...]
+
+
+def _is_work_target(
+    unit: WorkUnit,
+    *,
+    bucket_id: BucketId,
+    modelo: ModeloCode,
+    filing_year: int,
+    period: Period,
+) -> bool:
+    return all(
+        (
+            str(unit.bucket_id) == bucket_id,
+            str(unit.modelo) == modelo,
+            unit.filing_year == filing_year,
+            unit.period == period,
+        ),
+    )
+
+
 def _work_unit_for_target(
     *,
     bucket_id: BucketId,
@@ -168,10 +210,13 @@ def _work_unit_for_target(
     candidates = tuple(
         unit
         for unit in repository.load().values()
-        if str(unit.bucket_id) == bucket_id
-        and str(unit.modelo) == modelo
-        and unit.filing_year == filing_year
-        and unit.period == period
+        if _is_work_target(
+            unit,
+            bucket_id=bucket_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+        )
     )
     if not candidates:
         raise WorkUnitNotFoundError(
@@ -290,6 +335,45 @@ def _blocker_ref(finding: ModeloVerificationFinding) -> BlockerRef:
     )
 
 
+def _casilla_observation(
+    revision: CalculationRevision | None,
+    casilla_id: CasillaId,
+) -> CasillaObservation | None:
+    if revision is None:
+        return None
+    return next(
+        (item for item in revision.observations if item.casilla_id == casilla_id),
+        None,
+    )
+
+
+def _persisted_binding_values(
+    binding_ids: tuple[BindingId, ...],
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> tuple[Decimal, ...]:
+    return tuple(resolved_bindings[item] for item in binding_ids if item in resolved_bindings)
+
+
+def _classify_observed_value(
+    *,
+    observation: CasillaObservation,
+    input_kind: InputKind,
+    formula_id: FormulaId | None,
+    binding_ids: tuple[BindingId, ...],
+    resolved_bindings: Mapping[BindingId, Decimal],
+) -> tuple[ModeloValueKind, ModeloScalar, ModeloWorkOriginAnomaly | None]:
+    if formula_id is not None:
+        return ModeloValueKind.COMPUTED, observation.value, None
+    if input_kind is not InputKind.BOUND:
+        return ModeloValueKind.LITERAL, observation.value, None
+    if observation.absent_by_design:
+        return ModeloValueKind.INHERITED, observation.value, None
+    binding_values = _persisted_binding_values(binding_ids, resolved_bindings)
+    if binding_values and observation.value not in binding_values:
+        return ModeloValueKind.LITERAL, observation.value, ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE
+    return ModeloValueKind.INHERITED, observation.value, None
+
+
 def _realised_value(
     *,
     casilla_id: CasillaId,
@@ -307,27 +391,173 @@ def _realised_value(
     durable evidence of an override. An equal-value explicit input is not
     distinguishable after persistence and therefore does not claim an anomaly.
     """
-    observation = (
-        None
-        if revision is None
-        else next(
-            (item for item in revision.observations if item.casilla_id == casilla_id),
-            None,
-        )
-    )
+    observation = _casilla_observation(revision, casilla_id)
     if observation is None:
         anomaly = ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN if input_kind is InputKind.COMPUTED else None
         return ModeloValueKind.EMPTY, None, anomaly
-    if formula_id is not None:
-        return ModeloValueKind.COMPUTED, observation.value, None
-    if input_kind is InputKind.BOUND and observation.absent_by_design:
-        return ModeloValueKind.INHERITED, observation.value, None
-    binding_values = tuple(resolved_bindings[item] for item in binding_ids if item in resolved_bindings)
-    if input_kind is InputKind.BOUND and binding_values and observation.value not in binding_values:
-        return ModeloValueKind.LITERAL, observation.value, ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE
-    if input_kind is InputKind.BOUND:
-        return ModeloValueKind.INHERITED, observation.value, None
-    return ModeloValueKind.LITERAL, observation.value, None
+    return _classify_observed_value(
+        observation=observation,
+        input_kind=input_kind,
+        formula_id=formula_id,
+        binding_ids=binding_ids,
+        resolved_bindings=resolved_bindings,
+    )
+
+
+def _casilla_binding_ids(
+    casilla_id: CasillaId,
+    binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]],
+) -> tuple[BindingId, ...]:
+    return tuple(binding_id for binding_id, casilla_ids in binding_to_casillas.items() if casilla_id in casilla_ids)
+
+
+def _formula_origin(formula: FormulaDefinition | None) -> ModeloWorkFormulaOrigin | None:
+    if formula is None:
+        return None
+    return ModeloWorkFormulaOrigin(
+        formula_id=formula.id,
+        operand_refs=tuple(
+            dict.fromkeys(
+                (
+                    *expression_casilla_refs(formula.expression),
+                    *expression_binding_refs(formula.expression),
+                    *expression_relation_refs(formula.expression),
+                ),
+            ),
+        ),
+    )
+
+
+def _relation_consumptions(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    formula: FormulaDefinition | None,
+    context: _ReviewRowContext,
+) -> tuple[ModeloWorkRelationConsumption, ...]:
+    formula_relation_ids: set[RelationId] = (
+        set() if formula is None else set(expression_relation_refs(formula.expression))
+    )
+    formula_binding_ids: set[BindingId] = set() if formula is None else set(expression_binding_refs(formula.expression))
+    candidate_ids = {
+        relation.id
+        for binding_id in (*binding_ids, *formula_binding_ids)
+        for relation in context.relations_by_binding.get(binding_id, ())
+    }
+    candidate_ids.update(relation.id for relation in context.relations if relation.id in formula_relation_ids)
+    return tuple(
+        ModeloWorkRelationConsumption(
+            relation_id=relation.id,
+            channels=context.relation_channels[relation.id],
+        )
+        for relation in context.relations
+        if relation.id in candidate_ids
+    )
+
+
+def _binding_origins(
+    binding_ids: tuple[BindingId, ...],
+    context: _ReviewRowContext,
+) -> tuple[ModeloWorkBindingOrigin, ...]:
+    return tuple(
+        ModeloWorkBindingOrigin(
+            binding_id=binding_id,
+            source=context.bindings_by_id[binding_id].source,
+            resolved=binding_id in context.persisted_binding_ids,
+        )
+        for binding_id in binding_ids
+    )
+
+
+def _review_casilla(
+    casilla: CasillaDefinition,
+    context: _ReviewRowContext,
+) -> ModeloWorkReviewCasilla:
+    binding_ids = _casilla_binding_ids(casilla.id, context.binding_to_casillas)
+    formula = context.formulas_by_id.get(casilla.formula) if casilla.formula is not None else None
+    realised_kind, value, anomaly = _realised_value(
+        casilla_id=casilla.id,
+        input_kind=casilla.input_kind,
+        formula_id=casilla.formula,
+        binding_ids=binding_ids,
+        revision=context.revision,
+        resolved_bindings=context.persisted_decimal_bindings,
+    )
+    return ModeloWorkReviewCasilla(
+        casilla_id=casilla.id,
+        number=casilla.number,
+        segmento=casilla.segmento,
+        official_reference=context.official_references[casilla.id],
+        section_path=casilla.section,
+        label=casilla.label,
+        data_type=casilla.data_type,
+        constraints=casilla.constraints,
+        declared_input_kind=casilla.input_kind,
+        concrete_bindings=_binding_origins(binding_ids, context),
+        concrete_formula=_formula_origin(formula),
+        relation_consumption=_relation_consumptions(
+            binding_ids=binding_ids,
+            formula=formula,
+            context=context,
+        ),
+        realised_kind=realised_kind,
+        value=value,
+        origin_anomaly=anomaly,
+        official_box_status=context.statuses[casilla.id],
+        legal_refs=tuple(casilla.legal_refs),
+        source_refs=tuple(casilla.source_refs),
+        formula_id=casilla.formula,
+        blocked_by=tuple(
+            _blocker_ref(finding) for finding in context.blocking_findings if finding.casilla_id == casilla.id
+        ),
+    )
+
+
+def _review_row_context(
+    *,
+    snapshot: RegistrySnapshot,
+    authority: ValidatedRegistryAuthority,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+) -> _ReviewRowContext:
+    statuses = classify_official_boxes(
+        snapshot.revision,
+        source_root=authority.source_root,
+        sources=snapshot.sources,
+    )
+    consumption_index = relation_consumption_index(snapshot.revision)
+    return _ReviewRowContext(
+        revision=revision,
+        bindings_by_id={binding.id: binding for binding in snapshot.revision.bindings},
+        formulas_by_id={formula.id: formula for formula in snapshot.revision.formulas},
+        binding_to_casillas=casillas_by_binding(snapshot.revision),
+        relations_by_binding=relations_by_target_binding(snapshot.revision),
+        relations=snapshot.revision.relations,
+        relation_channels={
+            relation.id: relation_consumption_channels(relation, consumption_index)
+            for relation in snapshot.revision.relations
+        },
+        persisted_decimal_bindings=_persisted_decimal_bindings(snapshot=snapshot, revision=revision),
+        persisted_binding_ids=frozenset(() if revision is None else revision.binding_overrides),
+        statuses=statuses,
+        official_references=_official_references(snapshot, authority, statuses),
+        blocking_findings=blocking_findings,
+    )
+
+
+def _review_casillas(
+    *,
+    snapshot: RegistrySnapshot,
+    authority: ValidatedRegistryAuthority,
+    revision: CalculationRevision | None,
+    blocking_findings: tuple[ModeloVerificationFinding, ...],
+) -> tuple[ModeloWorkReviewCasilla, ...]:
+    context = _review_row_context(
+        snapshot=snapshot,
+        authority=authority,
+        revision=revision,
+        blocking_findings=blocking_findings,
+    )
+    return tuple(_review_casilla(casilla, context) for casilla in snapshot.revision.casillas)
 
 
 def build_modelo_work_review(
@@ -362,104 +592,12 @@ def build_modelo_work_review(
         finding for finding in findings if finding.severity is ModeloVerificationFindingSeverity.BLOCKING
     )
     blockers = tuple(_blocker_ref(finding) for finding in blocking_findings)
-    statuses = classify_official_boxes(
-        snapshot.revision,
-        source_root=resolved_authority.source_root,
-        sources=snapshot.sources,
+    rows = _review_casillas(
+        snapshot=snapshot,
+        authority=resolved_authority,
+        revision=revision,
+        blocking_findings=blocking_findings,
     )
-    official_references = _official_references(snapshot, resolved_authority, statuses)
-    bindings_by_id = {binding.id: binding for binding in snapshot.revision.bindings}
-    formulas_by_id = {formula.id: formula for formula in snapshot.revision.formulas}
-    binding_to_casillas = casillas_by_binding(snapshot.revision)
-    relations_by_binding = relations_by_target_binding(snapshot.revision)
-    consumption_index = relation_consumption_index(snapshot.revision)
-    persisted_decimal_bindings = _persisted_decimal_bindings(snapshot=snapshot, revision=revision)
-    persisted_binding_ids = frozenset(() if revision is None else revision.binding_overrides)
-
-    rows: list[ModeloWorkReviewCasilla] = []
-    for casilla in snapshot.revision.casillas:
-        binding_ids = tuple(
-            binding_id for binding_id, casilla_ids in binding_to_casillas.items() if casilla.id in casilla_ids
-        )
-        formula = formulas_by_id.get(casilla.formula) if casilla.formula is not None else None
-        formula_relation_ids: set[RelationId] = (
-            set() if formula is None else set(expression_relation_refs(formula.expression))
-        )
-        formula_binding_ids: set[BindingId] = (
-            set() if formula is None else set(expression_binding_refs(formula.expression))
-        )
-        relation_candidates = {
-            relation.id: relation
-            for binding_id in (*binding_ids, *formula_binding_ids)
-            for relation in relations_by_binding.get(binding_id, ())
-        }
-        relation_candidates.update(
-            {relation.id: relation for relation in snapshot.revision.relations if relation.id in formula_relation_ids}
-        )
-        consumptions: list[ModeloWorkRelationConsumption] = []
-        for relation in snapshot.revision.relations:
-            if relation.id not in relation_candidates:
-                continue
-            consumptions.append(
-                ModeloWorkRelationConsumption(
-                    relation_id=relation.id,
-                    channels=relation_consumption_channels(relation, consumption_index),
-                ),
-            )
-        realised_kind, value, anomaly = _realised_value(
-            casilla_id=casilla.id,
-            input_kind=casilla.input_kind,
-            formula_id=casilla.formula,
-            binding_ids=binding_ids,
-            revision=revision,
-            resolved_bindings=persisted_decimal_bindings,
-        )
-        rows.append(
-            ModeloWorkReviewCasilla(
-                casilla_id=casilla.id,
-                number=casilla.number,
-                segmento=casilla.segmento,
-                official_reference=official_references[casilla.id],
-                section_path=casilla.section,
-                label=casilla.label,
-                data_type=casilla.data_type,
-                constraints=casilla.constraints,
-                declared_input_kind=casilla.input_kind,
-                concrete_bindings=tuple(
-                    ModeloWorkBindingOrigin(
-                        binding_id=binding_id,
-                        source=bindings_by_id[binding_id].source,
-                        resolved=binding_id in persisted_binding_ids,
-                    )
-                    for binding_id in binding_ids
-                ),
-                concrete_formula=None
-                if formula is None
-                else ModeloWorkFormulaOrigin(
-                    formula_id=formula.id,
-                    operand_refs=tuple(
-                        dict.fromkeys(
-                            (
-                                *expression_casilla_refs(formula.expression),
-                                *expression_binding_refs(formula.expression),
-                                *expression_relation_refs(formula.expression),
-                            ),
-                        ),
-                    ),
-                ),
-                relation_consumption=tuple(consumptions),
-                realised_kind=realised_kind,
-                value=value,
-                origin_anomaly=anomaly,
-                official_box_status=statuses[casilla.id],
-                legal_refs=tuple(casilla.legal_refs),
-                source_refs=tuple(casilla.source_refs),
-                formula_id=casilla.formula,
-                blocked_by=tuple(
-                    _blocker_ref(finding) for finding in blocking_findings if finding.casilla_id == casilla.id
-                ),
-            ),
-        )
     return ModeloWorkReview(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -470,7 +608,7 @@ def build_modelo_work_review(
         calculation_revision_id=None if revision is None else revision.calculation_revision_id,
         lifecycle_state=None if revision is None else revision.state,
         verification_outcome=None if verification is None else verification.completeness_status,
-        casillas=tuple(rows),
+        casillas=rows,
         findings=findings,
         blockers=blockers,
     )
