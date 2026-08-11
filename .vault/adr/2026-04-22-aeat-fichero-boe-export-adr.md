@@ -3,8 +3,8 @@ tags:
   - "#adr"
   - "#real-pdf-import"
 date: '2026-04-22'
-modified: '2026-08-10'
-body_hash: 'sha256:be52a34cacb7ef0a2da23ed92912f3c2e96e014bf374b2ec5d8ead02c4dfb054'
+modified: '2026-08-11'
+body_hash: 'sha256:a95c9b59d35badb310ef545f4665817f81ea72d3f6119b6b2a496a179d868183'
 related:
   - "[[2026-04-17-export-first-adr]]"
   - "[[2026-04-22-citation-blocklist-adr]]"
@@ -273,3 +273,9 @@ This consolidation removes competing runtime authorities while retaining officia
 layout evidence and reviewed policy declarations in their canonical homes. Future
 fixed-width behavior changes amend the public registry codec contract; they do not
 reintroduce an adapter-owned format taxonomy.
+
+## Amendment (2026-08-11): internal M303 applicability assembly
+
+The S51 `M303ExportApplicabilityEnvelope` is an internal application assembly result, never a public command or export input. Standard export, review-package, and quickfile load the selected immutable calculation revision and its canonical profile, period, observation, ledger, register, and revision-evidence owners through one assembler. Missing applicable units refuse before any target or bytes; callers cannot inject flags, mappings, defaults, producer references, marker references, or prebuilt envelopes.
+
+S47's 23 annual-summary values resolve from `CalculationRevision.casilla_values` joined to canonical observations and evidence. Arbitrary `producer_reference` and `marker_reference` authority is deleted. A28 is immutable revision evidence assembled under S51; A29 is the derived annual-volume observation and never a `FilingProducerKey`. S50 activity/module rows are immutable revision evidence compiled from the registry-owned annual Orden authority established by S59. Export and review replay those facts; they do not author them.
