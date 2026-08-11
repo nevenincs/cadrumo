@@ -18,7 +18,15 @@ from ....application.calculations import (
 from ....core import ObservedHeaderFact, PaymentElection, Period, PriorDomiciliationElection, ResultDisposition
 from ....domain.buckets import BucketEventType
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.deadlines import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ....domain.deadlines import (
+    ChargeAccount,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
+)
 from ....domain.modelos import (
     CalculationRevisionAmendmentKind,
     ExternalEvidence,
@@ -118,6 +126,12 @@ def _typed_profile_with_charge_account(*, taxpayer_nif: str, charge_iban: str | 
         tax_id=taxpayer_nif,
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             charge_account=ChargeAccount(iban=charge_iban) if charge_iban is not None else None,
         ),
     )
@@ -191,6 +205,12 @@ def _nota_three_profile(*, taxpayer_nif: str, refund_account: RefundAccount | No
         tax_id=taxpayer_nif,
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             refund_account=refund_account,
             charge_account=ChargeAccount(iban="ES7921000813610123456789"),
         ),
@@ -452,7 +472,7 @@ def test_public_domiciliacion_without_persisted_charge_account_refuses(
                 actor="operator",
                 payment_election=PaymentElection.DOMICILIACION,
             ),
-        workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
+            workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=_taxpayer_nif, charge_iban=None),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
@@ -480,10 +500,10 @@ def test_public_cuenta_corriente_payment_election_is_capability_refused(
                 actor="operator",
                 payment_election=PaymentElection.CUENTA_CORRIENTE,
             ),
-        workflow_profile=_typed_profile_with_charge_account(
-            taxpayer_nif=_taxpayer_nif,
-            charge_iban="ES7921000813610123456789",
-        ),
+            workflow_profile=_typed_profile_with_charge_account(
+                taxpayer_nif=_taxpayer_nif,
+                charge_iban="ES7921000813610123456789",
+            ),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,

@@ -133,11 +133,7 @@ def test_current_dispositions_and_normalized_pair_round_trip_through_real_reposi
     expected_basis: str,
 ) -> None:
     """Official and local current-schema evidence persist one strict normalized envelope."""
-    source_kind = (
-        ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE
-        if source_headers
-        else ObservationSourceKind.APP_FILING
-    )
+    source_kind = ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE if source_headers else ObservationSourceKind.APP_FILING
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         prepared = repository.prepare_observation_envelope(

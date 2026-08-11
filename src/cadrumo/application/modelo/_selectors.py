@@ -33,6 +33,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG, Period, resolve_active_bucket_id
 from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...domain.calculations.registry import RevisionId
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -44,7 +45,6 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
     WorkUnitState,
 )
-from ...domain.calculations.registry import RevisionId
 
 _BucketId = Annotated[
     str,

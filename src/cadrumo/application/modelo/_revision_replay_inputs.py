@@ -248,7 +248,7 @@ def _m349_detail_row_replay_inputs(
     """Project persisted Modelo 349 detail rows into indexed binding maps.
 
     The filing runtime accepts repeating-row values as ``binding_id -> row-index
-    -> scalar``. Stored row values are the durable row source; the EU VAT NIF
+    -> scalar``. Stored row values are the durable row source; the EU IVA NIF
     subfield is normalized with the same export helper used by the row model so
     replay does not duplicate country-prefix logic.
     """

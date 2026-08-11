@@ -15,12 +15,13 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, cast, get_args, get_origin
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
-from ....core import FilingProducerKey, OBJECT_TUPLE_ADAPTER, freeze_toml, read_toml
+from ....core import OBJECT_TUPLE_ADAPTER, FilingProducerKey, FilingProjectionRef, freeze_toml, read_toml
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._export_semantics import ExportComputedKey, ExportDraftAttribute
+from ._ids import RevisionId
 from ._loader_cache import (
     BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS,
     MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS,
@@ -48,7 +49,6 @@ from ._schema import (
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
 from ._validate_revision_identity import revision_reference_identity_failures
-from ._ids import RevisionId
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
@@ -299,6 +299,17 @@ def _compile_export_semantic_field(source_path: Path, raw_field: object) -> dict
         except ValueError as exc:
             raise RegistryLoadError(
                 f"{source_path}: export field {name} {raw_value!r} is not a canonical {enum_type.__name__}",
+            ) from exc
+    raw_projection_ref = payload.get("projection_ref")
+    if raw_projection_ref is not None:
+        try:
+            payload["projection_ref"] = TypeAdapter(FilingProjectionRef).validate_python(
+                raw_projection_ref,
+                strict=False,
+            )
+        except ValidationError as exc:
+            raise RegistryLoadError(
+                f"{source_path}: export field projection_ref is not a canonical FilingProjectionRef: {exc}",
             ) from exc
     return payload
 

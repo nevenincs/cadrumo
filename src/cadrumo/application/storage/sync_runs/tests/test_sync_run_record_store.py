@@ -33,6 +33,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from .....adapters.persistence.storage import SYNC_RUN_RECORDS_NAMESPACE
 from .....core import SyncSurface
 from .....domain.buckets import BucketEventType
@@ -40,14 +41,13 @@ from .....tests.secure_sql import isolated_profile_storage_root
 from .....tests.user_profile import register_minimal_profile
 from ....user_profile import profile_create_storage_span
 from ....workflow import workflow_state_repository
+from .._persist import record_sync_run
 from .._records import (
     SyncRunCoverage,
     SyncRunRecord,
-    SyncRunRecordRepository,
     bounded_scope_description,
     coverage_of,
 )
-from .._persist import record_sync_run
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -166,6 +166,7 @@ def test_two_runs_over_one_surface_do_not_collapse(active_profile: str) -> None:
         succeeded=True,
         coverage=SyncRunCoverage(unit_count=3, divergence_count=0),
         completed_at=_COMPLETED_AT,
+        repository=SyncRunRecordRepository(),
     )
     second = record_sync_run(
         bucket_id=active_profile,
@@ -174,6 +175,7 @@ def test_two_runs_over_one_surface_do_not_collapse(active_profile: str) -> None:
         succeeded=False,
         coverage=SyncRunCoverage(unit_count=1, divergence_count=1),
         completed_at=_COMPLETED_AT + timedelta(hours=1),
+        repository=SyncRunRecordRepository(),
     )
 
     assert first.bucket_event_id != second.bucket_event_id
@@ -196,6 +198,7 @@ def test_the_record_and_its_bucket_event_land_together(active_profile: str) -> N
         succeeded=True,
         coverage=SyncRunCoverage(unit_count=42, divergence_count=1),
         completed_at=_COMPLETED_AT,
+        repository=SyncRunRecordRepository(),
     )
 
     # `.events` is a Mapping keyed by event id, not a sequence of events, so the
@@ -374,5 +377,5 @@ def test_a_naive_completion_instant_is_refused() -> None:
             succeeded=True,
             unit_count=1,
             divergence_count=0,
-            completed_at=datetime(2026, 8, 10, 9, 30),  # noqa: DTZ001 - naive on purpose
+            completed_at=datetime(2026, 8, 10, 9, 30),
         )

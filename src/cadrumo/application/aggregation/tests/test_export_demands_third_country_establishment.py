@@ -128,7 +128,7 @@ def test_a_genuine_third_country_export_still_classifies(category: IvaCategory) 
 
 
 @pytest.mark.parametrize("category", _EXPORT_FAMILIES)
-def test_an_eu_vat_number_does_not_disqualify_a_third_country_export(category: IvaCategory) -> None:
+def test_an_eu_iva_number_does_not_disqualify_a_third_country_export(category: IvaCategory) -> None:
     """Establishment decides an export; registration does not.
 
     A US-established company can hold an Irish VAT number, and art. 21 exempts

@@ -757,10 +757,10 @@ class Transaction(BaseModel):
             stored fact: one establishment cannot be recorded twice
             without the two copies eventually disagreeing.
         counterparty_identification_state: Which Member State
-            VAT-IDENTIFIES the counterparty, read from the prefix of
-            the VAT number it trades under. A different fact from
+            IVA-IDENTIFIES the counterparty, read from the prefix of
+            the IVA number it trades under. A different fact from
             establishment and never derived from it: a Spanish-established
-            acquirer can hold a German VAT number, and a German-established
+            acquirer can hold a German IVA number, and a German-established
             one can purchase under a Spanish NIF-IVA. This is the operative
             fact for the Ley 37/1992 art. 25 exemption, so the aggregation
             gate requires it non-ES when ``iva_category`` is

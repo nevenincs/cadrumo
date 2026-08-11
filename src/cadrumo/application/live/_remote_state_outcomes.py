@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-
 from ...application.auth import AuthenticatedAeatSessionResult
 from ...core import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.classification import SensitivityClass

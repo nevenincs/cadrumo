@@ -36,12 +36,19 @@ import pytest
 from .....core import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
     ProrrataActivityRowType,
+    ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
 from .....core.external_constants import UTF_8_ENCODING
-from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from .....domain.prorrata_register import (
+    ProrrataActivityRow,
+    ProrrataEspecialTransitionEvidence,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.errors import SecureObjectRevisionConflictError
 from ....persistence.storage.sql.engine import get_engine
@@ -68,6 +75,10 @@ def _populated_register() -> ProrrataRegister:
         provisional_percentage=Decimal("60"),
         provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
         authorisation_reference="AEAT-AUTH-2024-0007",
+        especial_transition=ProrrataEspecialTransitionEvidence(
+            kind=ProrrataEspecialTransitionKind.OPCION,
+            evidence_reference="modelo-303-2024-prorrata-opcion",
+        ),
     )
     interrupted = ProrrataRegisterEntry(
         ejercicio=2023,
@@ -121,6 +132,9 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert authorised.sector_id == "arrendamiento"
         assert authorised.provisional_provenance is ProrrataProvisionalProvenance.AEAT_AUTORIZADA
         assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
+        assert authorised.especial_transition is not None
+        assert authorised.especial_transition.kind is ProrrataEspecialTransitionKind.OPCION
+        assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
         assert loaded.is_sectorized is True
         sector_definition = loaded.sector_definition_for("arrendamiento")
         assert sector_definition is not None

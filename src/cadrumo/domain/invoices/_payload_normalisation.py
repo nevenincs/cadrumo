@@ -60,6 +60,16 @@ class _StringFieldRule(NamedTuple):
     absent_when_blank: bool = False
 
 
+def _normalise_eu_member_state(value: str) -> str:
+    """Return the canonical lower-case member-state code from raw input."""
+    return value.strip().lower()
+
+
+def _normalise_intracom_operation_type(value: str) -> str:
+    """Return the canonical upper-case intracom operation code from raw input."""
+    return value.strip().upper()
+
+
 _ENUM_FIELD_RULES: Final[tuple[_EnumFieldRule, ...]] = (
     _EnumFieldRule("kind", InvoiceKind, "kind must be an InvoiceKind"),
     _EnumFieldRule("payment_status", PaymentStatus, "payment_status must be a PaymentStatus"),
@@ -76,7 +86,7 @@ _ENUM_FIELD_RULES: Final[tuple[_EnumFieldRule, ...]] = (
         EUMemberState,
         "counterparty_identification_state must be an EUMemberState",
         absent_when_blank=True,
-        normalise=lambda value: value.strip().lower(),
+        normalise=_normalise_eu_member_state,
     ),
     _EnumFieldRule(
         "iva_category",
@@ -90,7 +100,7 @@ _ENUM_FIELD_RULES: Final[tuple[_EnumFieldRule, ...]] = (
         IntracomOperationType,
         "operation_type must be an IntracomOperationType",
         absent_when_blank=True,
-        normalise=lambda value: value.strip().upper(),
+        normalise=_normalise_intracom_operation_type,
     ),
     _EnumFieldRule(
         "oss_ioss_regime",

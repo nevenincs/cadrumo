@@ -39,8 +39,8 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from .._evidence_advisory import (
-    MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
-    MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND,
+    MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
+    MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
 
@@ -113,7 +113,7 @@ def test_advisory_fires_on_outgoing_business_expense_without_evidence() -> None:
     assert len(diagnostics) == 1
     diagnostic = diagnostics[0]
     assert diagnostic.reason == "missing_transaction_evidence"
-    assert diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostic.source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
     assert diagnostic.binding_id == tx.transaction_id
 
 
@@ -126,7 +126,7 @@ def test_advisory_fires_on_incoming_cuota_bearing_income_without_evidence() -> N
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1
     assert diagnostics[0].binding_id == tx.transaction_id
-    assert diagnostics[0].source_kind == MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].source_kind == MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND
 
 
 def test_deductible_row_still_fires_when_only_a_generic_attachment_is_present() -> None:
@@ -141,7 +141,7 @@ def test_deductible_row_still_fires_when_only_a_generic_attachment_is_present() 
     tx = _tx("expense-with-attachment", attachment_ids=("a" * 64,))
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1
-    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
     assert diagnostics[0].binding_id == tx.transaction_id
 
 
@@ -194,7 +194,7 @@ def test_advisory_still_fires_when_neither_invoice_id_nor_evidence_id_is_set() -
     tx = _tx("expense-with-nothing", purchase_invoice_evidence_id=None, invoice_id=None)
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1
-    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
     assert diagnostics[0].binding_id == tx.transaction_id
 
 
@@ -233,7 +233,7 @@ def test_advisory_fires_on_outgoing_with_positive_iva_and_no_explicit_category()
     tx = _tx("unclassified-expense", iva_category=None)
     diagnostics = missing_evidence_advisory_observations([tx])
     assert len(diagnostics) == 1
-    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+    assert diagnostics[0].source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
 
 
 def test_advisory_silent_without_positive_iva_quota() -> None:

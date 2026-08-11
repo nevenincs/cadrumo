@@ -34,13 +34,13 @@ from ...domain.calculations.registry import (
     NoRevisionForPeriodError,
     RegistrySnapshotError,
     RegistryValidationError,
+    RevisionId,
     ValidatedRegistryAuthority,
     select_revision_for_year,
 )
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 from ._registry_resources import authority_via_resources
-from ...domain.calculations.registry import RevisionId
 
 _log = get_logger(__name__)
 

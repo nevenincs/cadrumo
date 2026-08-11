@@ -25,7 +25,6 @@ from ....domain.iva_compensation import (
     IvaCompensationReconciliationDecision,
 )
 from ....domain.modelos import CalculationRevisionState
-from ...filing import M303ExportApplicabilityEnvelope
 from .. import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -34,7 +33,6 @@ from .. import (
 from .._export import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
-    ModeloExportError,
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
     ModeloExportUnsupportedError,
@@ -169,7 +167,7 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
         divergence="wallet_only",
         blocked=False,
         stale_wallet=False,
-        reason="wallet-only synthetic decision",
+        reason_identity="aeat_wallet_uncrosschecked",
         wallet_captured_at=decided_at,
         authority_sources=(
             IvaCompensationAuthoritySource(
@@ -327,7 +325,7 @@ def test_export_refuses_cross_bucket_revision(
     assert "work_unit_id" in exc_info.value.context
 
 
-def test_m303_export_refuses_missing_typed_applicability_before_layout(
+def test_m303_export_uses_revision_evidence_and_reaches_withdrawn_layout_refusal(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
@@ -340,85 +338,6 @@ def test_m303_export_refuses_missing_typed_applicability_before_layout(
         period="1T",
     )
     output = tmp_path / "modelo-303.txt"
-
-    with pytest.raises(ModeloExportError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=output,
-                actor="operator",
-                m303_applicability=None,
-            ),
-            workflow_profile=_profile(),
-        )
-
-    assert isinstance(exc_info.value.context, dict)
-    assert exc_info.value.context["cause"] == "modelo 303 export requires an explicit applicability envelope"
-    assert not output.exists()
-    assert not output.with_name(output.name + ".tmp").exists()
-
-
-def test_non_m303_export_refuses_m303_applicability_before_layout(
-    isolated_backend: None,
-    tmp_path: Path,
-) -> None:
-    bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-    )
-    output = tmp_path / "modelo-130.txt"
-    envelope = M303ExportApplicabilityEnvelope(
-        exonerado_390_applicable=False,
-        exonerado_390=None,
-        prorrata_activities_applicable=False,
-        prorrata_register=None,
-        differentiated_sectors_applicable=False,
-        differentiated_sectors=None,
-        regimen_simplificado_applicable=False,
-        regimen_simplificado=None,
-    )
-
-    with pytest.raises(ModeloExportError) as exc_info:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=calc_rev_id,
-                output_path=output,
-                actor="operator",
-                m303_applicability=envelope,
-            ),
-            workflow_profile=_profile(),
-        )
-
-    assert isinstance(exc_info.value.context, dict)
-    assert exc_info.value.context["cause"] == "modelo 303 applicability envelope is forbidden for non-303 exports"
-    assert not output.exists()
-    assert not output.with_name(output.name + ".tmp").exists()
-
-
-def test_m303_explicit_false_applicability_reaches_withdrawn_layout_refusal(
-    isolated_backend: None,
-    tmp_path: Path,
-) -> None:
-    bucket_id = _seed_profile()
-    _, calc_rev_id = _seed_revision(
-        bucket_id=bucket_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        modelo="303",
-        filing_year=2026,
-        period="1T",
-    )
-    output = tmp_path / "modelo-303.txt"
-    envelope = M303ExportApplicabilityEnvelope(
-        exonerado_390_applicable=False,
-        exonerado_390=None,
-        prorrata_activities_applicable=False,
-        prorrata_register=None,
-        differentiated_sectors_applicable=False,
-        differentiated_sectors=None,
-        regimen_simplificado_applicable=False,
-        regimen_simplificado=None,
-    )
 
     with pytest.raises(ModeloExportUnsupportedError):
         export_modelo_revision(
@@ -426,7 +345,6 @@ def test_m303_explicit_false_applicability_reaches_withdrawn_layout_refusal(
                 calculation_revision_id=calc_rev_id,
                 output_path=output,
                 actor="operator",
-                m303_applicability=envelope,
             ),
             workflow_profile=_profile(),
         )

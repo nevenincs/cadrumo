@@ -1,0 +1,270 @@
+"""Real source contracts for the Modelo 303 annual Orden compiler."""
+
+from __future__ import annotations
+
+import json
+from collections import Counter
+from hashlib import sha256
+from pathlib import Path
+from shutil import copyfile
+
+import pytest
+from pydantic import ValidationError
+
+from .....core.resources import bundled_path, resources
+from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from .._errors import RegistryLoadError, RegistryValidationError
+from .._loader import load_registry_tree
+from .._m303_orden_anual import (
+    check_m303_annual_orden_manifest,
+    extract_m303_annual_orden_source,
+    load_m303_annual_orden_authority,
+    resolve_m303_regimen_simplificado_snapshot,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.mark.parametrize(
+    ("ejercicio", "source_ref", "expected_digest"),
+    (
+        (
+            2023,
+            "boe-orden-hfp-1172-2022-iva-authority",
+            "1cab2ef540868ec0d5344d8e801ac6c52b5ee27c1aefb794ca7c0330df693957",
+        ),
+        (
+            2024,
+            "boe-orden-hfp-1359-2023-iva-authority",
+            "e403d33762cc7353ca3f752820df71244291217aeb35309d5e383f166cde49a5",
+        ),
+        (
+            2025,
+            "boe-orden-hac-1347-2024-iva-authority",
+            "fca55fa51ca1b68e4b8098ebfc4749e4d5f9daac880112d35085352df46c8165",
+        ),
+        (
+            2026,
+            "boe-orden-hac-1425-2025-iva-authority",
+            "7762218c63fcc914dfc5ed532d6c0daa3b21f506427c924b93eb2698527d3ac8",
+        ),
+    ),
+)
+def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
+    ejercicio: int,
+    source_ref: str,
+    expected_digest: str,
+) -> None:
+    """Each pinned BOE source supplies all 49 tables and 141 module rows."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+
+    census = extract_m303_annual_orden_source(
+        ejercicio=ejercicio,
+        source=catalogues.sources[source_ref],
+        source_root=bundled_path(),
+    )
+
+    assert len(census.activities) == 49
+    assert {activity.annex_heading for activity in census.activities} == {"ANEXO II"}
+    assert sum(len(activity.modules) for activity in census.activities) == 141
+    assert Counter(len(activity.modules) for activity in census.activities) == {
+        1: 2,
+        2: 25,
+        3: 12,
+        4: 4,
+        5: 1,
+        6: 3,
+        7: 2,
+    }
+    assert (
+        sha256(
+            json.dumps(
+                census.activities,
+                default=lambda value: value.model_dump(mode="json"),
+                ensure_ascii=True,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode(),
+        ).hexdigest()
+        == expected_digest
+    )
+
+
+def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(tmp_path: Path) -> None:
+    """A copied source whose bytes no longer match its pinned digest cannot compile."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    copied_path = tmp_path / source.corpus_path
+    copied_path.parent.mkdir(parents=True)
+    copyfile(bundled_path() / source.corpus_path, copied_path)
+    copied_path.write_bytes(copied_path.read_bytes()[:1000])
+
+    with pytest.raises(RegistryLoadError, match="digest mismatch"):
+        extract_m303_annual_orden_source(
+            ejercicio=2026,
+            source=source,
+            source_root=tmp_path,
+        )
+
+
+def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(tmp_path: Path) -> None:
+    """The committed Markdown and JSON sidecars are one inseparable generated pair."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source_path = bundled_path() / source.corpus_path
+    copied_path = tmp_path / source.corpus_path
+    copied_path.parent.mkdir(parents=True)
+    copyfile(source_path, copied_path)
+    copyfile(
+        source_path.with_name(source_path.name + ".extracted.json"),
+        copied_path.with_name(copied_path.name + ".extracted.json"),
+    )
+    markdown_path = copied_path.with_name(copied_path.name + ".extracted.md")
+    copyfile(source_path.with_name(source_path.name + ".extracted.md"), markdown_path)
+    markdown_path.write_text(markdown_path.read_text(encoding="utf-8") + "\ncorrupt", encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match="sidecar pair diverges"):
+        extract_m303_annual_orden_source(
+            ejercicio=2026,
+            source=source,
+            source_root=tmp_path,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "unknown_scope"),
+    (
+        ("schema_version", None),
+        ("source_kind", None),
+        ("status", None),
+        ("source_relpath", None),
+        ("attribution", None),
+        ("unknown_top_level", "top"),
+        ("unknown_unit", "unit"),
+    ),
+)
+def test_pinned_boe_orden_compiler_refuses_noncanonical_sidecar_shape(
+    tmp_path: Path,
+    field: str,
+    unknown_scope: str | None,
+) -> None:
+    """Copied sidecars must retain the exact canonical envelope and unit shapes."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source_path = bundled_path() / source.corpus_path
+    copied_path = tmp_path / source.corpus_path
+    copied_path.parent.mkdir(parents=True)
+    copyfile(source_path, copied_path)
+    json_source = source_path.with_name(source_path.name + ".extracted.json")
+    json_copy = copied_path.with_name(copied_path.name + ".extracted.json")
+    payload = json.loads(json_source.read_text(encoding="utf-8"))
+    if unknown_scope == "top":
+        payload[field] = "forbidden"
+    elif unknown_scope == "unit":
+        payload["units"][0][field] = "forbidden"
+    else:
+        del payload[field]
+    json_copy.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    copyfile(
+        source_path.with_name(source_path.name + ".extracted.md"),
+        copied_path.with_name(copied_path.name + ".extracted.md"),
+    )
+
+    with pytest.raises(RegistryLoadError, match="sidecar"):
+        extract_m303_annual_orden_source(
+            ejercicio=2026,
+            source=source,
+            source_root=tmp_path,
+        )
+
+
+def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> None:
+    """A reference cannot retain its Orden id while changing source provenance."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    assert resolved.orden is not None
+    payload = resolved.orden.model_dump(mode="python")
+    payload["activity_refs"][0]["source_content_digest"] = "0" * 64
+
+    with pytest.raises(ValidationError, match="exact source coordinate"):
+        type(resolved.orden).model_validate(payload)
+
+
+def test_resolved_annual_orden_snapshot_carries_source_derived_identity_and_minimum_quota() -> None:
+    """The bundled authority, not a test fixture, supplies row identity and minimum quota."""
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="4T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    )
+    assert resolved.orden is not None
+    activity = next(item for item in resolved.orden.activities if item.orden_id == "m303:2026:iva:82e3988053fc055b601e")
+
+    assert activity.cuota_minima_pct == 20
+
+
+def test_generated_directory_refuses_an_extra_toml_file(tmp_path: Path) -> None:
+    """A parallel hand-authored taxonomy cannot coexist with the generated manifest."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    directory = tmp_path / "m303_orden_anual"
+    directory.mkdir()
+    copyfile(bundled_path("registry", "aeat", "m303_orden_anual", "manifest.toml"), directory / "manifest.toml")
+    (directory / "parallel.toml").write_text("[parallel]\nenabled = true\n", encoding="utf-8")
+
+    with pytest.raises(RegistryLoadError, match=r"unexpected entries: parallel\.toml"):
+        check_m303_annual_orden_manifest(
+            manifest_path=directory / "manifest.toml",
+            source_root=bundled_path(),
+            sources=catalogues.sources,
+        )
+
+
+def test_generated_annual_orden_legal_ids_are_annex_ii_only() -> None:
+    """The retired, legally incorrect Annex-I identifier has no generated alias."""
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    compilation = load_m303_annual_orden_authority(
+        bundled_path("registry", "aeat"),
+        source_root=bundled_path(),
+        modelos=modelos,
+        sources=catalogues.sources,
+    )
+
+    assert len(compilation.legal) == 196
+    assert all(":anexo-ii-iva:" in legal_ref_id for legal_ref_id in compilation.legal)
+    assert all(":anexo-i-iva:" not in legal_ref_id for legal_ref_id in compilation.legal)
+    for source in compilation.authority.projections:
+        corpus_path = bundled_path() / catalogues.sources[source.source_ref].corpus_path
+        assert "#anexo-i-iva-" not in corpus_path.with_name(corpus_path.name + ".extracted.json").read_text(
+            encoding="utf-8",
+        )
+        assert "#anexo-i-iva-" not in corpus_path.with_name(corpus_path.name + ".extracted.md").read_text(
+            encoding="utf-8",
+        )
+
+
+def test_m303_revision_refuses_a_second_cross_year_annual_orden_source() -> None:
+    """A real revision cannot cite its own Orden plus another year's authority."""
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(item for item in modelos if item.id == "303")
+    revision = modelo.revisions["2023"]
+    contaminated_revision = revision.model_copy(
+        update={"source_refs": (*revision.source_refs, "boe-orden-hac-1425-2025-iva-authority")},
+    )
+    contaminated_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: contaminated_revision}},
+    )
+
+    with pytest.raises(RegistryValidationError, match="must cite exactly its filing-year annual Orden source"):
+        load_m303_annual_orden_authority(
+            bundled_path("registry", "aeat"),
+            source_root=bundled_path(),
+            modelos=(contaminated_modelo,),
+            sources=catalogues.sources,
+        )

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.iva_compensation import IvaCompensationDecisionReason
 from ...calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -24,6 +25,7 @@ from ._iva_wallet_engine_support import (
     _TARGET_PERIOD,
     _TARGET_YEAR,
     _TAXPAYER_NIF,
+    _filing_instance_evidence,
     _modelo_303_engine_inputs,
     _period,
     _secure_backend,
@@ -58,7 +60,7 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 clock=_DECIDED_AT,
             )
         assert not hasattr(exc_info.value, "suggestion")
-        assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.blocked"
+        assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.no_usable_authority"
 
 
 def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: Path) -> None:
@@ -115,6 +117,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=None,
+            filing_instance_evidence=_filing_instance_evidence(work_unit.period),
             filing_period_date=date(2026, 3, 31),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
@@ -129,6 +132,10 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
         assert first_decision is not None
         assert first_decision.divergence == "first_period_zero"
         assert first_decision.blocked is False
+        assert (
+            first_decision.reason_identity
+            is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED
+        )
 
         seed_iva_compensation_period(
             taxpayer_nif=taxpayer_nif,
@@ -145,6 +152,7 @@ def test_persisted_first_period_zero_refreshes_when_later_seeded_history_arrives
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
+                filing_instance_evidence=_filing_instance_evidence(work_unit.period),
                 filing_period_date=date(2026, 3, 31),
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
@@ -204,6 +212,7 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
         assert decision.selected_amount == Decimal("0")
         assert decision.local_recurrence_amount == Decimal("0")
         assert decision.blocked is False
+        assert decision.reason_identity is IvaCompensationDecisionReason.CALLER_ZERO_MATCHES_LOCAL_AUTHORITY
         assert any(
             source.amount == Decimal("0") and source.source_periods == (_period(_TARGET_YEAR, "1T"),)
             for source in decision.authority_sources

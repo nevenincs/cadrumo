@@ -50,7 +50,7 @@ _INFERRED_NOTICE: Final = "ledger.evidence.confirm.category_rate_inferred"
 _ESTABLISHMENT_NOTICE: Final = "ledger.evidence.confirm.review_undetermined_establishment"
 
 _SUPPLIER_NAME: Final = "Acme Suministros SL"
-_SUPPLIER_VAT: Final = "ESB12345674"
+_SUPPLIER_IVA: Final = "ESB12345674"
 
 
 def _ubl(*, category: str, percent: str, cuota: str, payable: str, number: str) -> str:
@@ -72,7 +72,7 @@ def _ubl(*, category: str, percent: str, cuota: str, payable: str, number: str) 
   <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
   <cac:AccountingSupplierParty><cac:Party>
     <cac:PartyName><cbc:Name>{_SUPPLIER_NAME}</cbc:Name></cac:PartyName>
-    <cac:PartyTaxScheme><cbc:CompanyID schemeID="VA">{_SUPPLIER_VAT}</cbc:CompanyID>
+    <cac:PartyTaxScheme><cbc:CompanyID schemeID="VA">{_SUPPLIER_IVA}</cbc:CompanyID>
       <cac:TaxScheme><cbc:ID>VAT</cbc:ID></cac:TaxScheme></cac:PartyTaxScheme>
   </cac:Party></cac:AccountingSupplierParty>
   <cac:AccountingCustomerParty><cac:Party>
@@ -278,7 +278,7 @@ def test_the_unread_establishment_question_reaches_the_operator_naming_the_party
     # off an output surface. Expected value derived from the documented rule (the
     # first eight hex characters of the SHA-256 digest), never read back from the
     # funnel, which would assert the code against itself.
-    assert _redacted(_SUPPLIER_VAT) in str(context["detail"])
+    assert _redacted(_SUPPLIER_IVA) in str(context["detail"])
     # The id is the review gate's own derivation, so an item raised here
     # addresses identically to one a deterministic check raised.
     assert str(context["finding_id"]).strip()

@@ -119,7 +119,7 @@ def _python_process_count(psutil: Any) -> str:
     """
     try:
         return str(sum(1 for proc in psutil.process_iter(["name"]) if (proc.info["name"] or "").startswith("python")))
-    except Exception:  # noqa: BLE001 - a diagnostic must never raise into a test
+    except Exception:
         return "?"
 
 
@@ -148,7 +148,7 @@ def format_host_load_reading(*, nodeid: str) -> str:
         logical_cpus = psutil.cpu_count(logical=True)
         memory_percent = psutil.virtual_memory().percent
         process_count = len(psutil.pids())
-    except Exception as exc:  # noqa: BLE001 - a diagnostic must never raise into a test
+    except Exception as exc:
         return f"{STAMP_PREFIX} {nodeid} unavailable reason={type(exc).__name__}"
 
     return (
@@ -175,18 +175,18 @@ def _emit(item: pytest.Item) -> None:
     line = format_host_load_reading(nodeid=item.nodeid)
     try:
         terminal = item.config.get_terminal_writer()
-    except Exception:  # noqa: BLE001 - a diagnostic must never raise into a test
+    except Exception:
         terminal = None
     if terminal is not None:
         try:
             terminal.line(line)
             terminal.flush()
             return
-        except Exception:  # noqa: BLE001, S110 - fall through to the raw descriptor
+        except Exception:  # noqa: S110 - fall through to the raw descriptor
             pass
     try:
         os.write(2, (line + "\n").encode("utf-8", errors="replace"))
-    except Exception:  # noqa: BLE001 - a diagnostic must never raise into a test
+    except Exception:
         return
 
 

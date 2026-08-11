@@ -180,10 +180,10 @@ def build_revision_validation_context(revision: ModeloRevision) -> RevisionValid
             field.id for layout in revision.export_layouts for record in layout.records for field in record.fields
         },
         exported_casillas={
-            field.casilla_id
+            field.endpoint_casilla_id
             for layout in revision.export_layouts
             for record in layout.records
             for field in record.fields
-            if field.casilla_id is not None
+            if field.endpoint_casilla_id is not None
         },
     )

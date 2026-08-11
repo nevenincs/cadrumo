@@ -235,9 +235,7 @@ def _diagnostic_action_verdict(
         argument_bindings=argument_bindings,
         missing_argument_names=missing_argument_names,
         conditionality=(
-            ActionConditionality.REQUIRES_ARGUMENTS
-            if missing_argument_names
-            else ActionConditionality.IMMEDIATE
+            ActionConditionality.REQUIRES_ARGUMENTS if missing_argument_names else ActionConditionality.IMMEDIATE
         ),
     )
 

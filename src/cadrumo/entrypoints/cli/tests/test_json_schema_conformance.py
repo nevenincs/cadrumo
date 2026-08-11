@@ -45,6 +45,7 @@ from ....core import PRODUCT_IDENTITY
 from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
 from ...schema_surface import (
     GROUP_CALLBACK_SCHEMA_KEYS,
+    RESULT_SCHEMA_MODULES,
     normalise_cli_path_to_schema_key,
 )
 
@@ -1007,24 +1008,48 @@ def test_removed_command_schema_keys_are_absent() -> None:
 # Canonical wizard-schema owner guard (fresh subprocess)
 # ---------------------------------------------------------------------
 #
-# ``config.profile.create`` / ``config.profile.edit`` are declared in
-# ``application.wizard._results`` -- below every payload package -- are imported
-# through the manifest's explicit lazy schema-owner table. This keeps command
-# startup cold while allowing the capability surface to discover the schemas at
-# their actual producer, without a CLI forwarding module.
+# ``config.profile.create`` / ``config.profile.edit`` are declared by their
+# application producer and imported through the canonical result-schema module
+# declaration. This keeps command startup cold while allowing the capability
+# surface to discover schemas at their actual producer, without a CLI
+# forwarding module.
 #
 # The in-process gates in this file CANNOT catch that: this module imports the
 # wizard package at the top to seed the registry itself (see the module header
-# import), so the two schemas are present regardless of the owner table. Only a FRESH
+# import), so the two schemas are present regardless of the canonical
+# result-schema module declaration. Only a FRESH
 # interpreter that never imports the wizard package can measure the real
 # dependency, which is why this guard runs in a subprocess. Measured: the MCP
 # surface may seed the schemas through unrelated imports; the CLI-contract/manifest
-# surface therefore needs a fresh-process guard scoped to its own lazy owner.
+# surface therefore needs a fresh-process guard scoped to its canonical declared
+# owner.
 _PROFILE_SCHEMA_KEYS = ("config.profile.create", "config.profile.edit")
-_WIZARD_SCHEMA_OWNER_MODULE = "cadrumo.application.wizard._results"
 
 
-def _probe_script(*, block_schema_owner: bool, storage_root: Path) -> str:
+def _canonical_profile_schema_owner() -> str:
+    """Derive the declared module that owns every profile schema under test."""
+    missing = sorted(set(_PROFILE_SCHEMA_KEYS) - set(SCHEMA_REGISTRY))
+    assert not missing, f"profile schemas are absent from the seeded registry: {missing}"
+
+    declared_profile_owners = frozenset(
+        module
+        for module in RESULT_SCHEMA_MODULES
+        if all(SCHEMA_REGISTRY[key].__module__ == module for key in _PROFILE_SCHEMA_KEYS)
+    )
+    assert declared_profile_owners, (
+        "no canonical result-schema module owns every profile schema under test; registered owners: "
+        f"{sorted({SCHEMA_REGISTRY[key].__module__ for key in _PROFILE_SCHEMA_KEYS})}"
+    )
+    return next(iter(declared_profile_owners))
+
+
+def _probe_script(
+    *,
+    block_schema_owner: bool,
+    profile_schema_keys: tuple[str, ...],
+    schema_owner: str,
+    storage_root: Path,
+) -> str:
     """Render the fresh-interpreter probe script that builds the CLI manifest.
 
     ``storage_root`` is the caller's own ``tmp_path``-derived directory rather
@@ -1041,7 +1066,8 @@ def _probe_script(*, block_schema_owner: bool, storage_root: Path) -> str:
             del os.environ[_k]
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = {storage_root!r}
         os.environ["CADRUMO_ACTIVE_PROFILE"] = " "
-        schema_owner = "cadrumo.application.wizard._results"
+        schema_owner = {schema_owner!r}
+        profile_schema_keys = {profile_schema_keys!r}
         if {block!r} == "block":
             class _Block:
                 def find_spec(self, name, path, target=None):
@@ -1054,16 +1080,19 @@ def _probe_script(*, block_schema_owner: bool, storage_root: Path) -> str:
         from cadrumo.core import pointer_path, read_pointer  # noqa: F401
         from cadrumo.entrypoints.cli._app_contract import command_schema_refs
 
-        # The guard must not import the wizard package itself: building the payload
-        # walk entrypoint must leave it unimported, so any later wizard import comes
-        # from the canonical owner during the walk, not from the guard seeding its own subject.
+        # The guard must not import the wizard package itself: building the
+        # contract entrypoint must leave it unimported, so any later wizard
+        # import comes from the canonical declared owner rather than from the
+        # guard seeding its own subject.
         wizard_before_walk = "cadrumo.application.wizard" in sys.modules
         commands = {ref.command for ref in command_schema_refs()}
-        present = [key for key in ("config.profile.create", "config.profile.edit") if key in commands]
+        present = [key for key in profile_schema_keys if key in commands]
         print("RESULT " + json.dumps({"present": present, "wizard_before_walk": wizard_before_walk}))
         """
         )
         .replace("{storage_root!r}", repr(str(storage_root)))
+        .replace("{profile_schema_keys!r}", repr(profile_schema_keys))
+        .replace("{schema_owner!r}", repr(schema_owner))
         .replace("{block!r}", repr("block" if block_schema_owner else "keep"))
     )
 
@@ -1076,14 +1105,20 @@ def _profile_schema_keys_in_fresh_process(
     Returns ``(present_profile_keys, wizard_package_self_seeded)``. The subprocess
     never imports the wizard package, so the canonical results module is the sole
     registrar of the two profile schemas on this surface. ``block_schema_owner``
-    simulates a failed lazy import via a meta-path finder rather than touching a
+    simulates a failed declared-module import via a meta-path finder rather than touching a
     file that every peer would see.
     """
+    schema_owner = _canonical_profile_schema_owner()
     completed = subprocess.run(
         [
             sys.executable,
             "-c",
-            _probe_script(block_schema_owner=block_schema_owner, storage_root=storage_root),
+            _probe_script(
+                block_schema_owner=block_schema_owner,
+                profile_schema_keys=_PROFILE_SCHEMA_KEYS,
+                schema_owner=schema_owner,
+                storage_root=storage_root,
+            ),
         ],
         capture_output=True,
         text=True,
@@ -1104,28 +1139,27 @@ def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner(tm
     """The wizard-owned profile schemas reach the manifest from their producer.
 
     Runs in a fresh interpreter that does NOT import the wizard package, so
-    ``application.wizard._results`` is the sole registrar of
-    ``config.profile.create`` and ``config.profile.edit`` on the ``aeat app
-    contract`` surface. The guard first
+    the declared producer module is the sole registrar of the profile schemas
+    on the ``aeat app contract`` surface. The guard first
     proves it did not self-seed the wizard package (a guard that seeds its own
     subject is the very defect it exists to catch), then that both schemas are
-    present. If the canonical owner is omitted from the lazy table, both keys
-    silently vanish and this reds, naming the owner to restore.
+    present. If the canonical declaration omits their producer module, both
+    keys silently vanish and this reds.
     """
     present, wizard_before_walk = _profile_schema_keys_in_fresh_process(
         block_schema_owner=False, storage_root=tmp_path / "storage"
     )
 
     assert not wizard_before_walk, (
-        "the guard imported the wizard package before running the payload walk, so it seeds its own "
-        "subject and can no longer prove the lazy owner is load-bearing; the CLI-contract path must reach "
-        "the profile schemas through their canonical `_results` module during the manifest walk"
+        "the guard imported the wizard package before building the contract, so it seeds its own "
+        "subject and can no longer prove the declared owner is load-bearing; the CLI-contract path must reach "
+        "the profile schemas through their canonical producer module during contract construction"
     )
     missing = sorted(key for key in _PROFILE_SCHEMA_KEYS if key not in present)
     assert not missing, (
         f"wizard-owned profile schemas absent from the CLI capability manifest: {missing}. The "
-        f"lazy schema-owner table must import `{_WIZARD_SCHEMA_OWNER_MODULE}` so the producer's "
-        "decorators register both profile verbs during manifest construction"
+        f"canonical result-schema declaration must import `{_canonical_profile_schema_owner()}` so the "
+        "producer's decorators register both profile verbs during contract construction"
     )
 
 
@@ -1135,13 +1169,12 @@ def test_missing_canonical_schema_owner_drops_both_profile_schemas(tmp_path: Pat
     Blocks the canonical owner in a fresh interpreter and confirms both keys drop
     from the CLI manifest. Without this, the guard above could pass on a registry
     seeded some other way and carry no information; this proves the explicit lazy
-    owner import is load-bearing and that the guard reds on its removal.
+    declared-owner import is load-bearing and that the guard reds on its removal.
     """
     present, _ = _profile_schema_keys_in_fresh_process(block_schema_owner=True, storage_root=tmp_path / "storage")
 
-    assert "config.profile.create" not in present, (
-        "config.profile.create survived the canonical owner's removal, so the guard cannot detect an omission"
-    )
-    assert "config.profile.edit" not in present, (
-        "config.profile.edit survived the canonical owner's removal, so the guard cannot detect an omission"
+    unexpected = sorted(set(_PROFILE_SCHEMA_KEYS) & present)
+    assert not unexpected, (
+        f"profile schemas survived the canonical owner's removal: {unexpected}; "
+        "the guard cannot detect a declared-owner omission"
     )

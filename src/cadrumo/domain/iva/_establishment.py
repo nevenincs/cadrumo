@@ -251,10 +251,10 @@ class _CarveOut(NamedTuple):
 
 
 @lru_cache(maxsize=1)
-def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
+def _territory_carve_outs() -> dict[str, _CarveOut]:
     """Return every territory whose IVA treatment its country code does not give.
 
-    Read from ``registry/aeat/iva/vat_territory_carve_outs.toml`` and verified
+    Read from ``registry/aeat/iva/territory_carve_outs.toml`` and verified
     against the bundled consolidated law at load, on the same terms the territory
     table is: an ungrounded territorial rule must not be readable at all, because
     a rule asserted by a test ships to every caller and fails afterwards in a lane
@@ -270,7 +270,7 @@ def _vat_territory_carve_outs() -> dict[str, _CarveOut]:
     """
     from ._errors import IvaCatalogueError
 
-    target = bundled_path("registry", "aeat", "iva", "vat_territory_carve_outs.toml")
+    target = bundled_path("registry", "aeat", "iva", "territory_carve_outs.toml")
     try:
         payload = tomllib.loads(target.read_text(encoding=UTF_8_ENCODING))
     except OSError as exc:
@@ -520,7 +520,7 @@ def _catalogued_country_codes() -> frozenset[str]:
         frozenset(_country_codes_by_printed_name().values())
         | _EU_MEMBER_CODES
         | {SPAIN_COUNTRY_CODE}
-        | frozenset(_vat_territory_carve_outs())
+        | frozenset(_territory_carve_outs())
     )
 
 
@@ -641,7 +641,7 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
     # whose treatment disagrees with the country it sits in or beside, so a
     # branch reading membership first would answer them all from the very
     # catalogue LIVA art. 3 overrides.
-    carve_out = _vat_territory_carve_outs().get(normalised)
+    carve_out = _territory_carve_outs().get(normalised)
     if carve_out is not None:
         if carve_out.establishes_nothing:
             return None
@@ -669,17 +669,17 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
 def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> str | None:
     """Return the alpha-2 code a printed tax IDENTIFIER names, or ``None``.
 
-    The first rung of the establishment ladder. An intra-community VAT number
-    leads with its Member State's VAT prefix, so a document printing
+    The first rung of the establishment ladder. An intra-community IVA number
+    leads with its Member State's IVA prefix, so a document printing
     ``DE811234567`` states a country in the one place a domestic invoice's
     address block often does not.
 
-    **The prefix is matched against the closed VAT prefix vocabulary, and the
+    **The prefix is matched against the closed IVA prefix vocabulary, and the
     body against that State's published VIES structure.** The prefix alone is
     not evidence: two leading letters occur in plenty of strings a reader might
     put in an identifier field, and ``FRANCISCO`` would otherwise place a party
     in France. Requiring the whole number to match the shape its own prefix
-    claims makes the rung answer only where a real VAT number was printed.
+    claims makes the rung answer only where a real IVA number was printed.
 
     **A Spanish identifier contributes nothing here, by design.** ``ES`` is
     absent from the prefix vocabulary because Spanish identifiers are checksum
@@ -699,8 +699,8 @@ def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> s
 
     Returns:
         The ISO 3166-1 alpha-2 code -- ``GR`` for a Greek ``EL`` number, since
-        the VAT prefix and the ISO code diverge there and every catalogue
-        downstream is ISO-keyed -- or ``None`` when no VAT number was printed,
+        the IVA prefix and the ISO code diverge there and every catalogue
+        downstream is ISO-keyed -- or ``None`` when no IVA number was printed,
         the prefix names no Member State, or the body does not match the shape
         its prefix claims.
     """

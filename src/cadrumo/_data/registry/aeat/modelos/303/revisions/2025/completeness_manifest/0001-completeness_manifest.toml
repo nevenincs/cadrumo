@@ -54,7 +54,6 @@ legal_refs = [
     "ley-37-1992:art-95",
     "ley-37-1992:art-99",
     "orden-eha-3786-2008:art-1",
-    "orden-hac-1347-2024:anexo-i-iva-instrucciones",
     "orden-hac-819-2024:art-unico",
     "rd-1624-1992:art-29",
     "rd-1624-1992:art-30",
@@ -327,8 +326,8 @@ number = "28"
 # internal_only casillas from the single-segment manifest, matching the export
 # gate that omits them as advisory-support figures absent from the AEAT Diseño.
 [[revisions.2025.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-epigrafe"
-number = "modulos-iva-epigrafe"
+casilla_id = "modulos-iva-orden-id"
+number = "modulos-iva-orden-id"
 
 [[revisions.2025.completeness_manifest.casillas]]
 casilla_id = "modulos-iva-1-unidades"
@@ -341,6 +340,23 @@ number = "modulos-iva-2-unidades"
 [[revisions.2025.completeness_manifest.casillas]]
 casilla_id = "modulos-iva-3-unidades"
 number = "modulos-iva-3-unidades"
+
+[[revisions.2025.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-4-unidades"
+number = "modulos-iva-4-unidades"
+
+[[revisions.2025.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-5-unidades"
+number = "modulos-iva-5-unidades"
+
+[[revisions.2025.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-6-unidades"
+number = "modulos-iva-6-unidades"
+
+[[revisions.2025.completeness_manifest.casillas]]
+casilla_id = "modulos-iva-7-unidades"
+number = "modulos-iva-7-unidades"
+
 
 # Deducción regularización cuota casillas (43 regularización bienes de inversión,
 # LIVA art. 107-110; 44 regularización prorrata por porcentaje definitivo, LIVA

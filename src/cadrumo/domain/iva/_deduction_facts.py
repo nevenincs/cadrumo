@@ -11,6 +11,7 @@ from ...core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
 )
+from ...core.identity import ContentDigest
 from ._errors import IvaValidationError
 from ._flow import IvaFlowDirection
 from ._schema import IvaCategory, IvaRateKind
@@ -23,7 +24,7 @@ class IvaDeductionClassificationProvenance(BaseModel):
 
     authority: IvaDeductionEvidenceAuthority
     source_locator: str = Field(min_length=1, max_length=512)
-    evidence_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+    evidence_digest: ContentDigest
 
 
 _DOMESTIC_DEDUCTION_CATEGORIES = frozenset(
@@ -53,6 +54,126 @@ _REQUIRED_AUTHORITY = {
     IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION: IvaDeductionEvidenceAuthority.BIENES_INVERSION_REGISTER,
 }
 
+_DOMESTIC_DEDUCTION_KINDS = frozenset(
+    {IvaDeductionFactKind.DOMESTIC_CURRENT, IvaDeductionFactKind.DOMESTIC_INVESTMENT},
+)
+_IMPORT_DEDUCTION_KINDS = frozenset(
+    {IvaDeductionFactKind.IMPORT_CURRENT, IvaDeductionFactKind.IMPORT_INVESTMENT},
+)
+_INTRA_EU_DEDUCTION_KINDS = frozenset(
+    {IvaDeductionFactKind.INTRA_EU_CURRENT, IvaDeductionFactKind.INTRA_EU_INVESTMENT},
+)
+
+
+def _validate_required_authority(
+    kind: IvaDeductionFactKind,
+    provenance: IvaDeductionClassificationProvenance,
+) -> None:
+    required_authority = _REQUIRED_AUTHORITY[kind]
+    if provenance.authority is not required_authority:
+        raise IvaValidationError(
+            f"deduction kind {kind.value!r} requires {required_authority.value!r} evidence, "
+            f"not {provenance.authority.value!r}"
+        )
+
+
+def _validate_investment_asset_identity(kind: IvaDeductionFactKind, investment_asset_id: str | None) -> None:
+    if kind.is_investment_acquisition:
+        if investment_asset_id is None:
+            raise IvaValidationError(f"deduction kind {kind.value!r} requires investment_asset_id")
+    elif investment_asset_id is not None:
+        raise IvaValidationError(f"non-investment deduction kind {kind.value!r} cannot carry investment_asset_id")
+
+
+def _validate_rectification(
+    *,
+    category: IvaCategory,
+    rate_kind: IvaRateKind,
+    flow_direction: IvaFlowDirection,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+    rectifies_ledger_id: str | None,
+) -> None:
+    if rectifies_ledger_id is None:
+        raise IvaValidationError("rectification requires rectifies_ledger_id")
+    if base_amount == Decimal("0") or iva_amount == Decimal("0"):
+        raise IvaValidationError("rectification base_amount and iva_amount must both be signed non-zero evidence")
+    rectification_flows = {
+        IvaCategory.DOMESTIC_GENERAL: IvaFlowDirection.SOPORTADO,
+        IvaCategory.DOMESTIC_REDUCED: IvaFlowDirection.SOPORTADO,
+        IvaCategory.DOMESTIC_SUPER_REDUCED: IvaFlowDirection.SOPORTADO,
+        IvaCategory.DOMESTIC_REVERSE_CHARGE: IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        IvaCategory.IMPORT_THIRD_COUNTRY: IvaFlowDirection.SOPORTADO,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+    }
+    required_flow = rectification_flows.get(category)
+    if required_flow is None or flow_direction is not required_flow:
+        raise IvaValidationError("rectification category and input IVA flow are not a closed legal pair")
+    if rate_kind is IvaRateKind.EXEMPT:
+        raise IvaValidationError("rectification of a deductible cuota cannot use the exempt rate tier")
+
+
+def _validate_non_rectification_identity(
+    *,
+    kind: IvaDeductionFactKind,
+    base_amount: Decimal,
+    iva_amount: Decimal,
+    rectifies_ledger_id: str | None,
+) -> None:
+    if rectifies_ledger_id is not None:
+        raise IvaValidationError(f"deduction kind {kind.value!r} cannot carry rectifies_ledger_id")
+    if base_amount < Decimal("0") or iva_amount < Decimal("0"):
+        raise IvaValidationError("only rectification may carry signed negative IVA evidence")
+
+
+def _validate_non_rectification_category(
+    *,
+    kind: IvaDeductionFactKind,
+    category: IvaCategory,
+    rate_kind: IvaRateKind,
+    flow_direction: IvaFlowDirection,
+) -> None:
+    if kind in _DOMESTIC_DEDUCTION_KINDS:
+        _validate_domestic_deduction_category(category, flow_direction)
+    elif kind in _IMPORT_DEDUCTION_KINDS:
+        _validate_import_deduction_category(category, flow_direction)
+    elif kind in _INTRA_EU_DEDUCTION_KINDS:
+        _validate_intra_eu_deduction_category(category, flow_direction)
+    elif kind is IvaDeductionFactKind.REAGP_COMPENSATION:
+        _validate_reagp_compensation_category(category, rate_kind, flow_direction)
+
+
+def _validate_domestic_deduction_category(category: IvaCategory, flow_direction: IvaFlowDirection) -> None:
+    if category not in _DOMESTIC_DEDUCTION_CATEGORIES or flow_direction not in {
+        IvaFlowDirection.SOPORTADO,
+        IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+    }:
+        raise IvaValidationError(
+            "domestic deduction kind requires a domestic input or recipient reverse-charge fact",
+        )
+
+
+def _validate_import_deduction_category(category: IvaCategory, flow_direction: IvaFlowDirection) -> None:
+    if category is not IvaCategory.IMPORT_THIRD_COUNTRY or flow_direction is not IvaFlowDirection.SOPORTADO:
+        raise IvaValidationError("import deduction kind requires an import soportado fact")
+
+
+def _validate_intra_eu_deduction_category(category: IvaCategory, flow_direction: IvaFlowDirection) -> None:
+    if category not in _INTRA_EU_DEDUCTION_CATEGORIES or flow_direction is not IvaFlowDirection.INVERSION_SUJETO_PASIVO:
+        raise IvaValidationError("intra-EU deduction kind requires an intra-EU recipient reverse-charge fact")
+
+
+def _validate_reagp_compensation_category(
+    category: IvaCategory,
+    rate_kind: IvaRateKind,
+    flow_direction: IvaFlowDirection,
+) -> None:
+    if category is not IvaCategory.REAGP_COMPENSATION:
+        raise IvaValidationError("REAGP compensation requires its closed compensation category")
+    if flow_direction is not IvaFlowDirection.SOPORTADO or rate_kind is not IvaRateKind.EXEMPT:
+        raise IvaValidationError("REAGP compensation requires a soportado exempt compensation fact")
+
 
 def validate_iva_deduction_fact(
     *,
@@ -67,65 +188,32 @@ def validate_iva_deduction_fact(
     rectifies_ledger_id: str | None,
 ) -> None:
     """Refuse every deduction classification combination lacking legal authority."""
-    required_authority = _REQUIRED_AUTHORITY[kind]
-    if provenance.authority is not required_authority:
-        raise IvaValidationError(
-            f"deduction kind {kind.value!r} requires {required_authority.value!r} evidence, "
-            f"not {provenance.authority.value!r}"
-        )
+    _validate_required_authority(kind, provenance)
     if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
         raise IvaValidationError("investment_goods_regularisation is emitted only by the bienes-inversion owner")
-    if kind.is_investment_acquisition:
-        if investment_asset_id is None:
-            raise IvaValidationError(f"deduction kind {kind.value!r} requires investment_asset_id")
-    elif investment_asset_id is not None:
-        raise IvaValidationError(f"non-investment deduction kind {kind.value!r} cannot carry investment_asset_id")
+    _validate_investment_asset_identity(kind, investment_asset_id)
     if kind is IvaDeductionFactKind.RECTIFICATION:
-        if rectifies_ledger_id is None:
-            raise IvaValidationError("rectification requires rectifies_ledger_id")
-        if base_amount == Decimal("0") or iva_amount == Decimal("0"):
-            raise IvaValidationError("rectification base_amount and iva_amount must both be signed non-zero evidence")
-        rectification_flows = {
-            IvaCategory.DOMESTIC_GENERAL: IvaFlowDirection.SOPORTADO,
-            IvaCategory.DOMESTIC_REDUCED: IvaFlowDirection.SOPORTADO,
-            IvaCategory.DOMESTIC_SUPER_REDUCED: IvaFlowDirection.SOPORTADO,
-            IvaCategory.DOMESTIC_REVERSE_CHARGE: IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            IvaCategory.IMPORT_THIRD_COUNTRY: IvaFlowDirection.SOPORTADO,
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-        }
-        required_flow = rectification_flows.get(category)
-        if required_flow is None or flow_direction is not required_flow:
-            raise IvaValidationError("rectification category and input IVA flow are not a closed legal pair")
-        if rate_kind is IvaRateKind.EXEMPT:
-            raise IvaValidationError("rectification of a deductible cuota cannot use the exempt rate tier")
+        _validate_rectification(
+            category=category,
+            rate_kind=rate_kind,
+            flow_direction=flow_direction,
+            base_amount=base_amount,
+            iva_amount=iva_amount,
+            rectifies_ledger_id=rectifies_ledger_id,
+        )
         return
-    if rectifies_ledger_id is not None:
-        raise IvaValidationError(f"deduction kind {kind.value!r} cannot carry rectifies_ledger_id")
-    if base_amount < Decimal("0") or iva_amount < Decimal("0"):
-        raise IvaValidationError("only rectification may carry signed negative IVA evidence")
-    if kind in {IvaDeductionFactKind.DOMESTIC_CURRENT, IvaDeductionFactKind.DOMESTIC_INVESTMENT}:
-        if category not in _DOMESTIC_DEDUCTION_CATEGORIES or flow_direction not in {
-            IvaFlowDirection.SOPORTADO,
-            IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-        }:
-            raise IvaValidationError(
-                "domestic deduction kind requires a domestic input or recipient reverse-charge fact",
-            )
-    elif kind in {IvaDeductionFactKind.IMPORT_CURRENT, IvaDeductionFactKind.IMPORT_INVESTMENT}:
-        if category is not IvaCategory.IMPORT_THIRD_COUNTRY or flow_direction is not IvaFlowDirection.SOPORTADO:
-            raise IvaValidationError("import deduction kind requires an import soportado fact")
-    elif kind in {IvaDeductionFactKind.INTRA_EU_CURRENT, IvaDeductionFactKind.INTRA_EU_INVESTMENT}:
-        if (
-            category not in _INTRA_EU_DEDUCTION_CATEGORIES
-            or flow_direction is not IvaFlowDirection.INVERSION_SUJETO_PASIVO
-        ):
-            raise IvaValidationError("intra-EU deduction kind requires an intra-EU recipient reverse-charge fact")
-    elif kind is IvaDeductionFactKind.REAGP_COMPENSATION:
-        if category is not IvaCategory.REAGP_COMPENSATION:
-            raise IvaValidationError("REAGP compensation requires its closed compensation category")
-        if flow_direction is not IvaFlowDirection.SOPORTADO or rate_kind is not IvaRateKind.EXEMPT:
-            raise IvaValidationError("REAGP compensation requires a soportado exempt compensation fact")
+    _validate_non_rectification_identity(
+        kind=kind,
+        base_amount=base_amount,
+        iva_amount=iva_amount,
+        rectifies_ledger_id=rectifies_ledger_id,
+    )
+    _validate_non_rectification_category(
+        kind=kind,
+        category=category,
+        rate_kind=rate_kind,
+        flow_direction=flow_direction,
+    )
 
 
 __all__ = ["IvaDeductionClassificationProvenance", "validate_iva_deduction_fact"]

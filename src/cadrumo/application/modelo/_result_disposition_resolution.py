@@ -59,6 +59,7 @@ from ...core.resources import resources
 from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshotError,
+    RevisionId,
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
     format_noncanonical_casilla_reference,
@@ -73,11 +74,11 @@ from ._action_errors import (
     CalculationRegistryUnavailableError,
     ModeloPaymentElectionCapabilityRefusedError,
     ModeloPaymentElectionIncompatibleError,
+    ModeloProfileReadinessError,
     ModeloRefundElectionNotEligibleError,
 )
 from ._calculation_helpers import assert_snapshot_matches_work_unit_revision
 from ._registry_resources import registry_root
-from ...domain.calculations.registry import RevisionId
 
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that
 #: declares the header but has no diseño-grounded result-disposition
@@ -375,7 +376,13 @@ def _apply_modelo_303_refund_election(
     if work_unit.modelo != Modelo.M303.value or declaration_type is not ResultDisposition.COMPENSACION:
         return declaration_type
 
-    redeme = workflow_profile.iva.redeme_enrolled
+    iva_profile = workflow_profile.iva
+    if iva_profile is None:
+        raise ModeloProfileReadinessError(
+            "Modelo 303 result disposition requires an explicitly declared IVA profile",
+            context={"modelo": Modelo.M303.value, "period": period.registry_token},
+        )
+    redeme = iva_profile.redeme_enrolled
     # Standing REDEME election: resolve eligible negative periods to devolución,
     # independent of the per-filing flag.
     if redeme and refund_disposition_available(redeme_enrolled=redeme, period=period):

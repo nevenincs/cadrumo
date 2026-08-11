@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 from ...core import Period
 from ...domain.calculations.registry import (
     ProfileKeyGrounding,
+    RevisionId,
     ValidatedRegistryAuthority,
     build_profile_grounding_index,
 )
@@ -30,7 +31,6 @@ from . import (
 )
 from ._completeness import conditional_profile_missing_required
 from ._projections import record_to_path_values
-from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ModeloRevision

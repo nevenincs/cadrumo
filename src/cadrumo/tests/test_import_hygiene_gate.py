@@ -1,6 +1,6 @@
 """Import-hygiene ratchet gate: the authoritative cross-package import boundary.
 
-Wires ``dev/import_hygiene_scan.py`` into the pytest/CI surface as the single
+Wires ``dev/quality/import_hygiene_scan.py`` into the pytest/CI surface as the single
 gate enforcing the import-centralization policy: one canonical
 top-level export per symbol; cross-package consumers import only from the
 owning package's ``__all__`` facade. Supersedes the two narrower pre-existing
@@ -13,7 +13,7 @@ named baseline entries so nothing that was previously tolerated silently
 regresses.
 
 Three ratcheting/pinned checks, backed by the checked-in
-``dev/import_hygiene_baseline.json``:
+``dev/quality/import_hygiene_baseline.json``:
 
 - **Family 1 (production cross-package private imports).** HARD ZERO (2026-07)
   for the exception this baseline was seeded to track: the
@@ -48,7 +48,7 @@ Three ratcheting/pinned checks, backed by the checked-in
   sweep lands, not as a Family-3 fix.
 
 A fourth, TEST-ONLY trio of checks backed by the checked-in
-``dev/import_hygiene_test_debt.json`` governs the remainder that
+``dev/quality/import_hygiene_test_debt.json`` governs the remainder that
 survives after every mechanically-facadable test-only site has been rewritten
 onto its owning package's public export: a private evaluator, repository
 factory, module-level cache, or constant with no sensible public-facade
@@ -87,7 +87,7 @@ from pathlib import Path
 from typing import Final, TypedDict
 
 import pytest
-from dev.import_hygiene_scan import (
+from dev.quality.import_hygiene_scan import (
     PKG_ROOT,
     discover_facades,
     find_dev_tooling_import_violations,
@@ -105,8 +105,8 @@ from ._inventory import REPO_ROOT, repo_relative
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_BASELINE_PATH: Final[Path] = REPO_ROOT / "dev" / "import_hygiene_baseline.json"
-_TEST_DEBT_PATH: Final[Path] = REPO_ROOT / "dev" / "import_hygiene_test_debt.json"
+_BASELINE_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "import_hygiene_baseline.json"
+_TEST_DEBT_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "import_hygiene_test_debt.json"
 
 
 @dataclass(frozen=True)
@@ -168,7 +168,7 @@ class _Family3Section(TypedDict):
 
 
 class _BaselineDocument(TypedDict):
-    """The checked-in ``dev/import_hygiene_baseline.json`` shape (plus a ``$schema_note`` key)."""
+    """The checked-in ``dev/quality/import_hygiene_baseline.json`` shape (plus a ``$schema_note`` key)."""
 
     production_family1_cross_package_private_imports: _Family1Section
     family2_shim_modules: _Family2Section
@@ -176,7 +176,7 @@ class _BaselineDocument(TypedDict):
 
 
 class _TestDebtDocument(TypedDict):
-    """The checked-in ``dev/import_hygiene_test_debt.json`` shape (plus a ``$schema_note`` key)."""
+    """The checked-in ``dev/quality/import_hygiene_test_debt.json`` shape (plus a ``$schema_note`` key)."""
 
     test_only_family1_underscore_reaches: _Family1Section
 
@@ -235,7 +235,7 @@ def test_production_family1_baseline_is_hard_zero() -> None:
     """
     baseline_sites = _baseline_sites(_load_baseline())
     assert baseline_sites == (), (
-        "dev/import_hygiene_baseline.json's production Family-1 'sites' must stay [] now that "
+        "dev/quality/import_hygiene_baseline.json's production Family-1 'sites' must stay [] now that "
         "the application.review <-> application.workflow cycle-break has been structurally "
         "removed; do not re-populate it to tolerate that specific exception again."
     )
@@ -317,7 +317,7 @@ def _current_test_only_underscore_sites() -> tuple[_BaselineSite, ...]:
     a Protocol boundary) and the one structural-introspection case that
     imports a submodule's own ``__all__`` rather than a symbol through it.
     Every entry here is individually reasoned in
-    ``dev/import_hygiene_test_debt.json``; this is not a bulk ceiling.
+    ``dev/quality/import_hygiene_test_debt.json``; this is not a bulk ceiling.
     """
     py_files = sorted(p for p in PKG_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
     all_sites = [site for path in py_files for site in walk_module_imports(path)]

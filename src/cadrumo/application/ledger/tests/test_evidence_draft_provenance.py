@@ -270,7 +270,7 @@ def test_provenance_naming_a_field_the_draft_lacks_is_refused() -> None:
         InvoiceDraft(
             provenance=(
                 FieldProvenance(
-                    field="vendor_vat_number",
+                    field="vendor_iva_number",
                     origin=FieldOrigin.TABULAR_MAPPED,
                     grounding=FieldGroundingOutcome.UNANCHORED,
                 ),

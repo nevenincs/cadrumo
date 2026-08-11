@@ -92,7 +92,7 @@ from ._errors import (
     AggregationValidationError,
 )
 from ._evidence_advisory import (
-    MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
+    MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     missing_evidence_advisory_observations,
 )
 from ._foreign_assets import (
@@ -149,6 +149,12 @@ from ._ledger_filing_snapshot import (
     evaluate_ledger_filing_staleness,
     row_fingerprint,
     stale_filed_revisions,
+)
+from ._m303_arrivals import (
+    M303ProrrataTransitionArrival,
+    M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
+    resolve_m303_supplier_regime_arrival,
 )
 from ._modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
@@ -264,7 +270,7 @@ __all__ = [
     "INVOICE_RETENCION_DEFECT_GUIDANCE",
     "IVA_LEDGER_COUNTERPARTY_GATE_REASONS",
     "IVA_LEDGER_MISSING_FACT_REASONS",
-    "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
+    "MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND",
     "RESERVED_SOURCE_KINDS",
     "UNDECLARED_ACTIVITY_INCOME_SOURCE_KIND",
     "AggregationCategoryCoverageError",
@@ -312,6 +318,8 @@ __all__ = [
     "LedgerRentaGastosEstimacionDirectaAggregationSourceResolver",
     "LedgerRentaGastosPagoFraccionadoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
+    "M303ProrrataTransitionArrival",
+    "M303SupplierRegimeArrival",
     "ModeloSourceResolver",
     "OperationKind347",
     "OperationKind349",
@@ -395,6 +403,8 @@ __all__ = [
     "proxy_attributed_invoice_ids",
     "resolve_invoice_devengo",
     "resolve_iva_differentiated_deduction_contributions",
+    "resolve_m303_prorrata_transition_arrival",
+    "resolve_m303_supplier_regime_arrival",
     "retencion_observation_key",
     "route_invoice_retenciones",
     "row_fingerprint",

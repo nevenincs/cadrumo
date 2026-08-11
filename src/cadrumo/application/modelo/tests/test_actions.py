@@ -259,7 +259,7 @@ def _predicate_finding(
 def _blocked_wallet_decision(
     *,
     divergence: IvaCompensationDivergence,
-    reason: str,
+    reason_identity: str,
 ) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
@@ -270,7 +270,7 @@ def _blocked_wallet_decision(
         divergence=divergence,
         blocked=True,
         stale_wallet=False,
-        reason=reason,
+        reason_identity=reason_identity,
         decided_at=_T0,
     )
 
@@ -333,6 +333,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         casilla_values={},
         created_at=_T0,
         updated_at=_T0,
+    filing_instance_evidence=None,
     )
 
 
@@ -683,7 +684,10 @@ def test_dt12_antiquity_advisory_silent_when_roles_absent() -> None:
 
 
 def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
-    decision = _blocked_wallet_decision(divergence="filed_history_only", reason="Only filed history present.")
+    decision = _blocked_wallet_decision(
+        divergence="filed_history_only",
+        reason_identity="filed_history_requires_override",
+    )
     with pytest.raises(ModeloIvaWalletReconciliationBlocked) as raised:
         _apply_iva_compensation_decision_binding(
             "303",
@@ -698,11 +702,11 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
         )
 
     exc = raised.value
-    assert exc.translated_message == "application.modelo.errors.iva_wallet_blocked"
+    assert exc.translated_message == "application.iva_wallet.decision_reason.filed_history_requires_override"
     assert exc.precondition_failure.identity == (
         "modelo.work.calculate",
         "modelo.work.calculate.iva_wallet.ready",
-        "modelo.work.calculate.iva_wallet.blocked",
+        "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
     assert not hasattr(exc, "suggestion")
 
@@ -937,6 +941,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         observations=result.observations,
         created_at=_T0,
         updated_at=_T0,
+    filing_instance_evidence=None,
     )
 
     informational_replay_inputs = _informational_casilla_replay_inputs(

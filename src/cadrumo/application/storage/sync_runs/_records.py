@@ -47,26 +47,21 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import datetime
-from typing import ClassVar, Protocol, override, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, field_validator
 
-from ....adapters.persistence.storage import (
-    SYNC_RUN_RECORDS_NAMESPACE,
-    SecureBoundRepository,
-    SensitivityClass,
-)
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import SyncSurface
 from ....core.identity import BucketId
 from ....core.time import validate_utc_aware
-from ....domain.buckets import BucketEventId
+from ....domain.buckets import BucketEvent, BucketEventId
 
 __all__ = [
     "SyncRunCoverage",
     "SyncRunCoverageSource",
     "SyncRunRecord",
-    "SyncRunRecordRepository",
+    "SyncRunRecordRepositoryProtocol",
     "bounded_scope_description",
     "coverage_of",
     "sync_run_record_key",
@@ -293,28 +288,16 @@ def sync_run_record_key(*, surface: SyncSurface, bucket_event_id: str) -> str:
     return f"sync-run:{surface.value}:{bucket_event_id}"
 
 
-class SyncRunRecordRepository(SecureBoundRepository[SyncRunRecord]):
-    """Repository over encrypted SQL-backed sync-run records.
+@runtime_checkable
+class SyncRunRecordRepositoryProtocol(Protocol):
+    """Persistence port for one sync-run record and its history event.
 
-    An ``AUDIT``-class, profile-local, structured-custody namespace holding N
-    rows per surface. The :class:`SensitivityClass` is taken from the namespace
-    declaration rather than restated, so the class a row is written under and
-    the class the namespace advertises cannot diverge.
-
-    Co-writing is not done through a wrapper method. The canonical single writer
-    is the secure-object repository's batch save, and a caller binds this
-    repository and the catalogue repository to the SAME repository instance so
-    both writes share one session scope and roll back together.
+    The concrete encrypted implementation lives in
+    :mod:`adapters.persistence.profile.sync_runs`. Application orchestration
+    supplies the record and already-derived event; the adapter owns the shared
+    secure-object transaction that makes the pair durable together.
     """
 
-    namespace: ClassVar[str] = SYNC_RUN_RECORDS_NAMESPACE.namespace
-    sensitivity: ClassVar[SensitivityClass] = SYNC_RUN_RECORDS_NAMESPACE.sensitivity
-    schema_version: ClassVar[int] = SYNC_RUN_RECORDS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = SyncRunRecord
-
-    @override
-    def extract_identifier(self, payload: SyncRunRecord) -> str:
-        return sync_run_record_key(
-            surface=payload.surface,
-            bucket_event_id=payload.bucket_event_id,
-        )
+    def save_with_bucket_event(self, record: SyncRunRecord, event: BucketEvent) -> None:
+        """Persist ``record`` and ``event`` in one atomic storage transaction."""
+        ...

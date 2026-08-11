@@ -3,7 +3,7 @@
 Exercises ``dev.audit.report`` -- the tool giving contributors monthly
 shadowing/duplication/layering reports with red/amber severity. The
 module composes the four EXISTING scanners already shipped under ``dev/``
-(``dev.import_hygiene_scan`` Family-3 for shadowing, the ``jscpd`` wrapper for
+(``dev.quality.import_hygiene_scan`` Family-3 for shadowing, the ``jscpd`` wrapper for
 duplication, ``lint-imports`` / ``.importlinter`` for layering,
 ``dev.audit.complexity`` for complexity) rather than re-implementing any of
 them; these tests confirm the composition and the shared red/amber/green
@@ -146,7 +146,7 @@ def test_audit_shadowing_red_findings_are_never_in_the_tolerated_baseline() -> N
     """
     import json
 
-    baseline_path = REPO_ROOT / "dev" / "import_hygiene_baseline.json"
+    baseline_path = REPO_ROOT / "dev" / "quality" / "import_hygiene_baseline.json"
     tolerated = {
         entry["symbol"]
         for entry in json.loads(baseline_path.read_text(encoding="utf-8"))["family3_pinned_duplicate_symbols"][

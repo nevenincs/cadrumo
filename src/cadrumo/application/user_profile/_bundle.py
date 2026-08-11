@@ -36,7 +36,6 @@ import json
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Final
 
-
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
 from ...core import STR_KEYED_MAPPING_ADAPTER
 from ...core.errors import CadrumoError

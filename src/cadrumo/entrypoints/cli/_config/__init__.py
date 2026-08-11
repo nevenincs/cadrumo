@@ -467,7 +467,13 @@ _register_lazy_wizard_leaf(
             "Minimal freelancer profile: aeat config profile create PROFILE"
             " --entity-type natural_person --tax-id <DNI/NIE/NIF>"
             " --name <NAME> --surnames <SURNAMES> --activity <ACTIVITY>"
-            " --irpf-income-categories actividad_economica --quiet --accept-defaults"
+            " --irpf-income-categories actividad_economica"
+            " --tax-residence-jurisdiction-scope common_regime"
+            " --iva-regime GENERAL --iva-m303-regime-composition general"
+            " --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled"
+            " --no-iva-voluntary-sii-enrolled"
+            " --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled"
+            " --quiet --accept-defaults"
         ),
     ),
 )

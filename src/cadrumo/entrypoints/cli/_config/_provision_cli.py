@@ -21,6 +21,8 @@ a peer application is not, and Cadrumo never touches a process it does not own.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import typer
 
 from ....core import ModelRole
@@ -35,6 +37,9 @@ from ._provision_payloads import (
     ProvisionReportResult,
     ProvisionVerifyResult,
 )
+
+if TYPE_CHECKING:
+    from ....application.provisioning import ContentionSnapshot, HardwareProfile
 
 __all__ = ["register_provision_commands"]
 
@@ -116,7 +121,7 @@ def register_provision_commands(app: typer.Typer) -> None:
 
 
 def _selected_provision_models(
-    profile: object,
+    profile: HardwareProfile,
     resident_names: list[str],
 ) -> tuple[list[ProvisionModelPayload], tuple[str, int] | None]:
     """Select a model per role, returning the payload rows and the first assessable load.
@@ -149,10 +154,10 @@ def _selected_provision_models(
 
 
 def _provision_report_lines(
-    profile: object,
+    profile: HardwareProfile,
     residents: object | None,
     models: list[ProvisionModelPayload],
-    contention: object | None,
+    contention: ContentionSnapshot | None,
 ) -> tuple[str, ...]:
     """Render the human-readable provisioning report rows."""
     lines = [

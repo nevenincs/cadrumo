@@ -37,7 +37,6 @@ from ..calculations.registry import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
-from ...domain.calculations.registry import RevisionId
 
 
 class WorkUnitState(StrEnum):

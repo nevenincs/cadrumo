@@ -39,8 +39,8 @@ from ....domain.invoices import IvaRate
 from ....domain.iva import (
     InvoiceKind,
     IvaCategory,
+    category_components,
     invoice_line_to_iva_observation,
-    iva_category_components,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -61,7 +61,7 @@ def test_a_zero_cuota_category_still_requires_its_base(category: IvaCategory, ra
     ``base=required, cuota=zero_by_law`` for is a category whose line MUST reach
     the declaration despite carrying no cuota.
     """
-    components = iva_category_components(category, InvoiceKind.ISSUED)
+    components = category_components(category, InvoiceKind.ISSUED)
 
     assert components.base.value == "required", f"{category.value} should require a base"
     assert components.cuota.value == "zero_by_law", f"{category.value} should carry no cuota by law"

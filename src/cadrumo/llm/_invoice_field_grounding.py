@@ -277,7 +277,7 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
 def _grounded_intra_community_tax_id(normalised: str) -> str | None:
     """Return *normalised* if it matches its own country's published NIF-IVA pattern.
 
-    The country is read off the number's own two-character VAT prefix, because
+    The country is read off the number's own two-character IVA prefix, because
     that is the only country signal a transcribed identifier carries -- unlike
     :func:`~domain.invoices.validate_iva_number`, which validates against a
     country declared independently on the invoice record and can therefore fall
@@ -306,10 +306,10 @@ def _grounded_tax_id(raw: str | None) -> str | None:
     character does not compute is a misread (or an invention) and must still be
     dropped. Only once that test has *rejected* the value is it offered to the
     EU structural authority, so nothing about Spanish validation is weakened --
-    a Spanish-shaped number carries no EU VAT prefix and fails there too.
+    a Spanish-shaped number carries no EU IVA prefix and fails there too.
 
     Routing every identifier through the Spanish validator alone silently
-    discarded a *correct* read of a valid foreign VAT number, which is the entire
+    discarded a *correct* read of a valid foreign IVA number, which is the entire
     Modelo 349 / intra-EU reverse-charge population: a supplier invoicing from
     Ireland or Germany reached the operator with no identifier at all.
     """

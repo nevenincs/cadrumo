@@ -68,8 +68,8 @@ from typing import cast
 
 import click
 import pytest
-from dev.cli_action_census import census
-from dev.cli_action_census_dispositions import (
+from dev.quality.cli_action_census import census
+from dev.quality.cli_action_census_dispositions import (
     DEFAULT_DISPOSITIONS_PATH,
     DispositionRole,
     DispositionValidationError,

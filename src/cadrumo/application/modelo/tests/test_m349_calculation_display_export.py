@@ -117,7 +117,7 @@ def _calculated_revision(
     *,
     period: str,
     country: str,
-    vat_id: str,
+    iva_id: str,
     name: str,
     clave: str,
     amount: Decimal,
@@ -127,7 +127,7 @@ def _calculated_revision(
     row = Modelo349OperadorRow.model_validate(
         {
             "codigo_pais": country,
-            "nif_comunitario": vat_id,
+            "nif_comunitario": iva_id,
             "razon_social": name,
             "clave_operacion": clave,
             "importe": amount,
@@ -174,6 +174,7 @@ def _calculated_revision(
         detail_rows=detail_rows,
         created_at=_CLOCK,
         updated_at=_CLOCK,
+    filing_instance_evidence=None,
     )
     calc_lines: Any = calculation_revision_lines
     calc_payload: Any = calculation_revision_payload
@@ -211,6 +212,7 @@ def _calculated_revision(
             detail_rows=detail_rows,
             created_at=_CLOCK,
             updated_at=_CLOCK,
+        filing_instance_evidence=None,
         ),
     )
 

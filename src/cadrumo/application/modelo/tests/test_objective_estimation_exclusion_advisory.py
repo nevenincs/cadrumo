@@ -74,6 +74,7 @@ def _calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         casilla_values={},
         created_at=_T0,
         updated_at=_T0,
+    filing_instance_evidence=None,
     )
 
 

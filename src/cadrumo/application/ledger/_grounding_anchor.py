@@ -179,7 +179,7 @@ def _continues_the_token(edge: str, neighbour: str) -> bool:
 
     A letter edge continues into any alphanumeric, digits included, because a
     word running into a digit is exactly how identifiers are built: ``ES``
-    against ``ESB12345674`` is a fragment of a VAT identifier, not an occurrence
+    against ``ESB12345674`` is a fragment of a IVA identifier, not an occurrence
     of the country code. The symmetric rule was tried first and refused
     ``EUR100,00``, which is how the asymmetry was found rather than reasoned.
 
@@ -206,7 +206,7 @@ def _occurs_as_a_whole_printed_token(needle: str, haystack: str) -> bool:
     enough for substring matching to be safe. That holds for an invoice number or
     a party name and fails completely for a SHORT CODE: a two-letter country code
     is a fragment of half the strings on an invoice, and ``ES`` is the worst case
-    in this domain because it prefixes every Spanish VAT identifier. A record
+    in this domain because it prefixes every Spanish IVA identifier. A record
     stating no country at all had ``ES`` anchor against ``ESB12345674`` and the
     envelope reported the document as evidence for a value the document never
     states -- which is precisely the fabrication this check exists to refuse, and

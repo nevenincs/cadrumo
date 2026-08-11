@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
@@ -41,6 +42,7 @@ from ...core.json_contract import Notice
 from ...domain.calculations.registry import RegistryValidationError
 from ._common import _emit_envelope
 from ._errors import CliOutboundPayloadBoundaryError
+from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import OutputLanguageOpt
 from ._modelo_payloads import WorkCalculateResult
 from ._modelo_rendering import (
@@ -345,6 +347,10 @@ def register_work_calculate_commands(
         sal_reserva_dotada: _SalReservaOpt = None,
         sal_capital_social: _SalCapitalOpt = None,
         autoconsumo_promotor_base: _AutoconsumoPromotorOpt = None,
+        m303_filing_evidence: Annotated[
+            Path | None,
+            typer.Option("--m303-filing-evidence", help=tr("cli.app.modelo.work.m303_filing_evidence_help")),
+        ] = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
@@ -375,6 +381,7 @@ def register_work_calculate_commands(
             sal_reserva_dotada=sal_reserva_dotada,
             sal_capital_social=sal_capital_social,
             autoconsumo_promotor_base=autoconsumo_promotor_base,
+            m303_filing_evidence=m303_filing_evidence,
             output_language=output_language,
         )
 
@@ -407,6 +414,7 @@ def _run_work_calculate(
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
+    m303_filing_evidence: Path | None,
     output_language: OutputLanguage | None,
 ) -> None:
     deps.activate_output_language(ctx, output_language)
@@ -420,6 +428,11 @@ def _run_work_calculate(
         bucket_id=bucket_id,
     )
     resolved_work_unit_id = unit.work_unit_id
+    filing_instance_evidence = m303_filing_instance_evidence_from_cli(
+        modelo=str(unit.modelo),
+        period=unit.period,
+        evidence_file=m303_filing_evidence,
+    )
     calculation_inputs = deps.calculate_input_bundle_from_cli(
         work_unit_id=resolved_work_unit_id,
         casilla=casilla,
@@ -439,6 +452,7 @@ def _run_work_calculate(
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
         autoconsumo_promotor_base=autoconsumo_promotor_base,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
     resolved_actor = deps.resolve_actor_option(actor)

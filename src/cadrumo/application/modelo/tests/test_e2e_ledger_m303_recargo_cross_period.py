@@ -225,7 +225,7 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="e2e recargo vertical fixture",
+        reason_identity="aeat_wallet_validated",
         wallet_captured_at=_FILE_AT,
         decided_at=_FILE_AT,
     )

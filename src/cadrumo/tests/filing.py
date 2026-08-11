@@ -105,6 +105,7 @@ def build_registry_filing_draft(
         ),
         inputs={**(binding_values or {}), **casilla_values},
         schema_provider=schema_provider,
+        m303_regimen_simplificado_scope=None,
     )
     if status is ModeloDraftStatus.APROBADO:
         return approve_draft(

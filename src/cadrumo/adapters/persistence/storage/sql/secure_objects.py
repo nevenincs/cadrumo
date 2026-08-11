@@ -500,7 +500,7 @@ class SecureObjectRepository:
         with session_scope(self._engine) as session:
             rows = (
                 session.execute(
-                select(SecureObjectRow.namespace).distinct().order_by(SecureObjectRow.namespace),
+                    select(SecureObjectRow.namespace).distinct().order_by(SecureObjectRow.namespace),
                 )
                 .scalars()
                 .all()
@@ -705,8 +705,7 @@ class SecureObjectRepository:
         """Validate and CAS-replace an explicit cross-namespace target set once."""
         unique_targets = tuple(dict.fromkeys(targets))
         target_by_stored_key = {
-            (target.namespace, secure_object_key_digest(target.object_key)): target
-            for target in unique_targets
+            (target.namespace, secure_object_key_digest(target.object_key)): target for target in unique_targets
         }
         stored_versions = {
             (row.namespace, row.object_key): row.schema_version
@@ -726,9 +725,7 @@ class SecureObjectRepository:
         old_targets = tuple(
             target
             for target in unique_targets
-            if (
-                record := records.get((target.namespace, target.object_key))
-            ) is not None
+            if (record := records.get((target.namespace, target.object_key))) is not None
             and stored_versions.get((target.namespace, record.object_key), target.current_version)
             < target.current_version
         )

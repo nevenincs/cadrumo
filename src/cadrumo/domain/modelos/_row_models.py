@@ -251,7 +251,7 @@ class Modelo232VinculadaRow(BaseModel):
 # falls back to its generic non-EU shape check. Modelo 349's Brexit-transition
 # filing rules (:func:`validate_m349_country_prefix_context`) still permit a
 # historical ``GB`` prefix for pre-2021 rectifications and the 2021 1M/1T
-# transition period, so the exact GB VAT structural shape (9 or 12 digits, or
+# transition period, so the exact GB IVA structural shape (9 or 12 digits, or
 # the ``GD``/``HA`` government/health-authority forms) is retained here only,
 # scoped to Modelo 349's own transition-period need.
 _M349_GB_NIF_PATTERN: re.Pattern[str] = re.compile(r"^GB(\d{9}|\d{12}|GD\d{3}|HA\d{3})$")
@@ -566,9 +566,9 @@ def _raise_m349_country_context_error(
 def m349_nif_number_for_export(nif: str, pais: str) -> str:
     """Return the BOE NIF subfield without the separate country-code prefix.
 
-    Modelo 349 operator records split the VAT identifier into ``codigo_pais``
+    Modelo 349 operator records split the IVA identifier into ``codigo_pais``
     and ``nif_comunitario`` fields. The CLI accepts and validates the full
-    prefixed VAT identifier for operator ergonomics, but the fixed-width export
+    prefixed IVA identifier for operator ergonomics, but the fixed-width export
     must write only the number part into positions 78-92.
     """
     normalized_pais = pais.upper()

@@ -27,6 +27,7 @@ from ...adapters.persistence.storage import (
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql.engine import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core import ActionArgumentSource, ActionArgumentStatus, ActionConditionality
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
 from ...tests.master_key import EphemeralMasterKeyProvider
@@ -96,10 +97,9 @@ class TestBuildIntegrityReport:
         assert report.readable_total == 8
         assert report.unreadable_total == 0
         assert report.check.status == "ok"
-        assert report.check.next_action is None or report.check.next_action == ""
-        assert report.check.dead_end is None or report.check.dead_end == ""
+        assert report.check.precondition_verdict is None
 
-    def test_undecryptable_rows_surface_fail_with_next_action(self) -> None:
+    def test_undecryptable_rows_surface_fail_with_typed_quarantine_verdict(self) -> None:
         # Two rows written under key A become undecryptable once the
         # active master key rotates to B.
         with EphemeralMasterKeyProvider(key=_KEY_A):
@@ -113,7 +113,21 @@ class TestBuildIntegrityReport:
         assert workflow.unreadable == 2
         assert report.unreadable_total == 2
         assert report.check.status == "fail"
-        assert report.check.next_action == "aeat config repair quarantine --yes"
+        verdict = report.check.precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "diagnostics.secure_objects.integrity.readable"
+        assert verdict.evidence[0].evidence_id == "diagnostics.secure_objects.integrity.observation"
+        assert verdict.evidence[0].values == {"readable_total": 8, "unreadable_total": 2}
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.diagnostics.secure_objects.quarantine"
+        assert verdict.conditionality is ActionConditionality.IMMEDIATE
+        assert len(verdict.argument_bindings) == 1
+        binding = verdict.argument_bindings[0]
+        assert binding.argument_name == "yes"
+        assert binding.status is ActionArgumentStatus.RESOLVED
+        assert binding.value is True
+        assert binding.source is ActionArgumentSource.VERDICT_CONTEXT
+        assert binding.source_key == "yes"
 
     def test_namespace_filter_restricts_scope(self) -> None:
         with EphemeralMasterKeyProvider(key=_KEY_A):

@@ -476,6 +476,118 @@ def _require_accounting(
     return row
 
 
+def _require_reached_mounted_families(
+    *,
+    live_by_subject: dict[str, LiveLeafInventoryRow],
+    family_by_identity: dict[tuple[str, str], MountedFamilyInventoryRow],
+) -> None:
+    """Reject mounted-family declarations no live canonical path reaches."""
+    reached_family_identities = frozenset(
+        (leaf.canonical_cli_path[0], leaf.canonical_cli_path[1])
+        for leaf in live_by_subject.values()
+        if len(leaf.canonical_cli_path) > 1
+    )
+    for identity, declaration in family_by_identity.items():
+        if identity not in reached_family_identities:
+            raise ValueError(f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}")
+
+
+def _reconcile_mcp_exposure(
+    *,
+    subject_leaf_key: str,
+    profile_policy: object | None,
+    mcp_exposure: McpExposureInventoryRow | None,
+    exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+) -> McpExposureInventoryRow | None:
+    """Require attributable MCP absence and enforce the profile exposure policy."""
+    mcp_exclusion = exclusions.get((subject_leaf_key, ReconciliationSurface.MCP_EXPOSURE))
+    if mcp_exposure is None:
+        if mcp_exclusion is None:
+            raise ValueError(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
+    elif mcp_exposure.exposed:
+        if mcp_exclusion is not None:
+            raise ValueError(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
+    elif mcp_exclusion is None:
+        raise ValueError(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
+
+    if isinstance(profile_policy, ProfilePolicyInventoryRow):
+        observed_exposure = mcp_exposure.exposed if mcp_exposure is not None else False
+        if profile_policy.should_expose_via_mcp != observed_exposure:
+            raise ValueError(
+                f"MCP exposure contradicts profile policy for {subject_leaf_key}: "
+                f"expected {profile_policy.should_expose_via_mcp}, observed {observed_exposure}"
+            )
+    return mcp_exposure
+
+
+def _reconciled_leaf_exclusions(
+    *,
+    subject_leaf_key: str,
+    exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+) -> tuple[ExplicitExclusionInventoryRow, ...]:
+    """Return one leaf's exclusions in stable surface order for the public report."""
+    return tuple(
+        exclusion
+        for (key, _), exclusion in sorted(exclusions.items(), key=lambda item: item[0][1].value)
+        if key == subject_leaf_key
+    )
+
+
+def _reconcile_live_leaf(
+    *,
+    subject_leaf_key: str,
+    live_leaf: LiveLeafInventoryRow,
+    result_by_subject: dict[str, ResultSchemaInventoryRow],
+    input_by_subject: dict[str, InputSchemaInventoryRow],
+    family_by_identity: dict[tuple[str, str], MountedFamilyInventoryRow],
+    policy_by_subject: dict[str, ProfilePolicyInventoryRow],
+    mcp_by_subject: dict[str, McpExposureInventoryRow],
+    exclusions: dict[tuple[str, ReconciliationSurface], ExplicitExclusionInventoryRow],
+) -> ReconciledOperatorLeaf:
+    """Account for every required projection of one live command leaf."""
+    result_schema = _require_accounting(
+        subject_leaf_key=subject_leaf_key,
+        surface=ReconciliationSurface.RESULT_SCHEMA,
+        row=result_by_subject.get(subject_leaf_key),
+        exclusions=exclusions,
+    )
+    input_schema = _require_accounting(
+        subject_leaf_key=subject_leaf_key,
+        surface=ReconciliationSurface.INPUT_SCHEMA,
+        row=input_by_subject.get(subject_leaf_key),
+        exclusions=exclusions,
+    )
+    profile_policy = _require_accounting(
+        subject_leaf_key=subject_leaf_key,
+        surface=ReconciliationSurface.PROFILE_POLICY,
+        row=policy_by_subject.get(subject_leaf_key),
+        exclusions=exclusions,
+    )
+    canonical_path = live_leaf.canonical_cli_path
+    family_identity = (canonical_path[0], canonical_path[1]) if len(canonical_path) > 1 else None
+    mounted_family = _require_accounting(
+        subject_leaf_key=subject_leaf_key,
+        surface=ReconciliationSurface.MOUNTED_FAMILY,
+        row=family_by_identity.get(family_identity) if family_identity is not None else None,
+        exclusions=exclusions,
+    )
+    mcp_exposure = _reconcile_mcp_exposure(
+        subject_leaf_key=subject_leaf_key,
+        profile_policy=profile_policy,
+        mcp_exposure=mcp_by_subject.get(subject_leaf_key),
+        exclusions=exclusions,
+    )
+    return ReconciledOperatorLeaf(
+        live_leaf=live_leaf,
+        result_schema=result_schema if isinstance(result_schema, ResultSchemaInventoryRow) else None,
+        input_schema=input_schema if isinstance(input_schema, InputSchemaInventoryRow) else None,
+        mounted_family=mounted_family if isinstance(mounted_family, MountedFamilyInventoryRow) else None,
+        profile_policy=profile_policy if isinstance(profile_policy, ProfilePolicyInventoryRow) else None,
+        mcp_exposure=mcp_exposure,
+        exclusions=_reconciled_leaf_exclusions(subject_leaf_key=subject_leaf_key, exclusions=exclusions),
+    )
+
+
 def reconcile_operator_surface_inventory(
     *,
     live_leaves: tuple[LiveLeafInventoryRow, ...],
@@ -519,81 +631,24 @@ def reconcile_operator_surface_inventory(
     )
     family_by_identity = _index_families(mounted_families)
     exclusions_by_subject_surface = _index_exclusions(exclusions, live_subjects=live_subjects)
-    reached_family_identities = frozenset(
-        (leaf.canonical_cli_path[0], leaf.canonical_cli_path[1])
-        for leaf in live_by_subject.values()
-        if len(leaf.canonical_cli_path) > 1
+    _require_reached_mounted_families(
+        live_by_subject=live_by_subject,
+        family_by_identity=family_by_identity,
     )
-    for identity, declaration in family_by_identity.items():
-        if identity not in reached_family_identities:
-            raise ValueError(f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}")
-
-    reconciled: list[ReconciledOperatorLeaf] = []
-    for subject_leaf_key, live_leaf in sorted(live_by_subject.items()):
-        result_schema = _require_accounting(
+    reconciled = tuple(
+        _reconcile_live_leaf(
             subject_leaf_key=subject_leaf_key,
-            surface=ReconciliationSurface.RESULT_SCHEMA,
-            row=result_by_subject.get(subject_leaf_key),
+            live_leaf=live_leaf,
+            result_by_subject=result_by_subject,
+            input_by_subject=input_by_subject,
+            family_by_identity=family_by_identity,
+            policy_by_subject=policy_by_subject,
+            mcp_by_subject=mcp_by_subject,
             exclusions=exclusions_by_subject_surface,
         )
-        input_schema = _require_accounting(
-            subject_leaf_key=subject_leaf_key,
-            surface=ReconciliationSurface.INPUT_SCHEMA,
-            row=input_by_subject.get(subject_leaf_key),
-            exclusions=exclusions_by_subject_surface,
-        )
-        policy = _require_accounting(
-            subject_leaf_key=subject_leaf_key,
-            surface=ReconciliationSurface.PROFILE_POLICY,
-            row=policy_by_subject.get(subject_leaf_key),
-            exclusions=exclusions_by_subject_surface,
-        )
-
-        canonical_path = live_leaf.canonical_cli_path
-        family_identity = (canonical_path[0], canonical_path[1]) if len(canonical_path) > 1 else None
-        mounted_family = _require_accounting(
-            subject_leaf_key=subject_leaf_key,
-            surface=ReconciliationSurface.MOUNTED_FAMILY,
-            row=family_by_identity.get(family_identity) if family_identity is not None else None,
-            exclusions=exclusions_by_subject_surface,
-        )
-
-        mcp_exposure = mcp_by_subject.get(subject_leaf_key)
-        mcp_exclusion = exclusions_by_subject_surface.get((subject_leaf_key, ReconciliationSurface.MCP_EXPOSURE))
-        if mcp_exposure is None:
-            if mcp_exclusion is None:
-                raise ValueError(f"missing mcp_exposure accounting for {subject_leaf_key}; explicit exclusion required")
-        elif mcp_exposure.exposed:
-            if mcp_exclusion is not None:
-                raise ValueError(f"mcp_exposure is both exposed and excluded for {subject_leaf_key}")
-        elif mcp_exclusion is None:
-            raise ValueError(f"silent MCP exclusion for {subject_leaf_key}; reason and authority required")
-
-        if isinstance(policy, ProfilePolicyInventoryRow):
-            observed_exposure = mcp_exposure.exposed if mcp_exposure is not None else False
-            if policy.should_expose_via_mcp != observed_exposure:
-                raise ValueError(
-                    f"MCP exposure contradicts profile policy for {subject_leaf_key}: "
-                    f"expected {policy.should_expose_via_mcp}, observed {observed_exposure}"
-                )
-
-        leaf_exclusions = tuple(
-            exclusion
-            for (key, _), exclusion in sorted(exclusions_by_subject_surface.items(), key=lambda item: item[0][1].value)
-            if key == subject_leaf_key
-        )
-        reconciled.append(
-            ReconciledOperatorLeaf(
-                live_leaf=live_leaf,
-                result_schema=result_schema if isinstance(result_schema, ResultSchemaInventoryRow) else None,
-                input_schema=input_schema if isinstance(input_schema, InputSchemaInventoryRow) else None,
-                mounted_family=mounted_family if isinstance(mounted_family, MountedFamilyInventoryRow) else None,
-                profile_policy=policy if isinstance(policy, ProfilePolicyInventoryRow) else None,
-                mcp_exposure=mcp_exposure,
-                exclusions=leaf_exclusions,
-            )
-        )
-    return OperatorSurfaceReconciliation(leaves=tuple(reconciled))
+        for subject_leaf_key, live_leaf in sorted(live_by_subject.items())
+    )
+    return OperatorSurfaceReconciliation(leaves=reconciled)
 
 
 def _index_reconciled_leaves(

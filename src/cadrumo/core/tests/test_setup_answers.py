@@ -259,8 +259,17 @@ def test_setup_answers_string_enum_coercion() -> None:
     from ..setup_answers import SetupAnswers
 
     # Test iva_regime coercion
-    sa_iva = SetupAnswers(tax_id="12345678A", iva_regime="GENERAL")
-    assert sa_iva.iva_regime == IVARegime.GENERAL
+    setup_answers = SetupAnswers(
+        tax_id="12345678A",
+        tax_residence_jurisdiction_scope="common_regime",
+        iva_regime="GENERAL",
+        iva_redeme_enrolled=False,
+        iva_m303_regime_composition="general",
+        iva_cash_accounting_regime_enrolled=False,
+        iva_voluntary_sii_enrolled=False,
+        iva_hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+    )
+    assert setup_answers.iva_regime == IVARegime.GENERAL
 
     # Test entity_type coercion
     sa_entity = SetupAnswers(tax_id="12345678A", entity_type="natural_person")

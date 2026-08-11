@@ -24,7 +24,7 @@ from typing import TypedDict
 from ...core import Modelo, Period
 from ...core.parsing import parse_bool as _parse_bool
 from ...core.parsing import parse_date as _parse_date_canonical
-from ...core.setup_answers import project_setup_answers
+from ...core.setup_answers import SetupAnswers, project_setup_answers
 from ._errors import ProfileError
 from ._models import (
     CrossPeriodGroupMemberRoster,
@@ -33,6 +33,8 @@ from ._models import (
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloEnrollment,
     ModeloIVAProfile,
     TaxpayerProfile,
@@ -93,15 +95,7 @@ def taxpayer_profile_from_mapping(
         third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
         bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
         monedas_virtuales_extranjero_above_threshold=typed.monedas_virtuales_extranjero_above_threshold,
-        iva=ModeloIVAProfile(
-            roi_enrolled=typed.iva_roi_enrolled,
-            oss_enrolled=typed.iva_oss_enrolled,
-            group_member_enrolled=typed.iva_group_member_enrolled,
-            group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled,
-            sii_enrolled=typed.iva_sii_enrolled,
-            redeme_enrolled=typed.iva_redeme_enrolled,
-            intracommunity_operations_exceed_50000_eur=typed.iva_intracommunity_operations_exceed_50000_eur,
-        ),
+        iva=_resolve_modelo_iva_profile(canonical, typed),
         cross_period_group_member_rosters=_parse_cross_period_group_member_rosters(canonical),
         enrollment=ModeloEnrollment(
             large_company=typed.enrollment_large_company,
@@ -292,6 +286,78 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
     which is what it used to do, while importing that same parser.
     """
     return _parse_bool(raw)
+
+
+def _resolve_m303_tax_territory(raw: str | None) -> M303TaxTerritory:
+    if raw is None or not raw.strip():
+        raise ProfileError("tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA")
+    try:
+        return M303TaxTerritory(raw.strip())
+    except ValueError as exc:
+        raise ProfileError(f"unsupported tax_residence.jurisdiction_scope {raw!r}") from exc
+
+
+_MODELO_IVA_PROFILE_PATHS = frozenset(
+    {
+        "iva.regime",
+        "iva.roi_enrolled",
+        "iva.oss_enrolled",
+        "iva.group_member_enrolled",
+        "iva.group_dominant_entity_enrolled",
+        "iva.sii_enrolled",
+        "iva.redeme_enrolled",
+        "iva.intracommunity_operations_exceed_50000_eur",
+        "iva.m303_regime_composition",
+        "iva.cash_accounting_regime_enrolled",
+        "iva.voluntary_sii_enrolled",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+    },
+)
+
+
+def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
+    """Build an IVA block only when a block-owned fact is explicitly present."""
+    if not any(canonical.get(path, "").strip() for path in _MODELO_IVA_PROFILE_PATHS):
+        return None
+    composition_raw = canonical.get("iva.m303_regime_composition")
+    if not composition_raw:
+        raise ProfileError("iva.m303_regime_composition must be explicitly declared for Modelo IVA")
+    required_bool_paths = (
+        "iva.redeme_enrolled",
+        "iva.cash_accounting_regime_enrolled",
+        "iva.voluntary_sii_enrolled",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+    )
+    missing = tuple(path for path in required_bool_paths if path not in canonical)
+    if missing:
+        raise ProfileError(f"Modelo IVA profile is incomplete; missing {', '.join(missing)}")
+    # project_setup_answers owns the established IVA booleans.  The three new
+    # DP30301 facts are read from their exact canonical selectors until that
+    # projection surface grows typed attributes for them.
+    return ModeloIVAProfile(
+        tax_territory=_resolve_m303_tax_territory(canonical.get("tax_residence.jurisdiction_scope")),
+        regime_composition=M303RegimeComposition(composition_raw),
+        roi_enrolled=typed.iva_roi_enrolled is True,
+        oss_enrolled=typed.iva_oss_enrolled is True,
+        group_member_enrolled=typed.iva_group_member_enrolled is True,
+        group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled is True,
+        sii_enrolled=typed.iva_sii_enrolled is True,
+        redeme_enrolled=_parse_required_bool(canonical, required_bool_paths[0]),
+        intracommunity_operations_exceed_50000_eur=(typed.iva_intracommunity_operations_exceed_50000_eur is True),
+        cash_accounting_regime_enrolled=_parse_required_bool(canonical, required_bool_paths[1]),
+        voluntary_sii_enrolled=_parse_required_bool(canonical, required_bool_paths[2]),
+        hydrocarbon_deposit_advance_payment_deduction_entitled=_parse_required_bool(
+            canonical,
+            required_bool_paths[3],
+        ),
+    )
+
+
+def _parse_required_bool(canonical: Mapping[str, str], path: str) -> bool:
+    value = _parse_bool(canonical[path])
+    if value is None:
+        raise ProfileError(f"{path} must be an explicit boolean")
+    return value
 
 
 def _parse_date(raw: str | None) -> date | None:

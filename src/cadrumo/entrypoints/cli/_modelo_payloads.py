@@ -106,7 +106,6 @@ from ._payloads_modelo_reconcile import (
     ModeloReconciliationDiffPayload,
     WorkCompareTaxationResult,
 )
-from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloExportResult as _AppModeloExportResult

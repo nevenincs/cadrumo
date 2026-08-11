@@ -13,8 +13,8 @@ from ...application.modelo import QuickfileResult, QuickfileStage, QuickfileStag
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core import Period
 from ...core.json_contract import OutputSchema, register_schema
-from ._modelo_payloads import ModeloExportPayload
 from ...domain.calculations.registry import RevisionId
+from ._modelo_payloads import ModeloExportPayload
 
 
 class QuickfileStageOutcomePayload(OutputSchema):

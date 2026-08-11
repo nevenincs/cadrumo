@@ -142,6 +142,7 @@ class TestResultSummaryNarrowing:
             casilla_values={},
             created_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
             updated_at=datetime(2026, 1, 10, 10, 0, tzinfo=UTC),
+        filing_instance_evidence=None,
         )
 
     def test_cadrumo_error_from_get_work_unit_returns_none(self) -> None:

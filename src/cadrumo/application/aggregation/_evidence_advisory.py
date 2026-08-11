@@ -60,12 +60,12 @@ _EVIDENCE_EXPECTING_BUSINESS_STATES: frozenset[BusinessClassification] = frozens
 
 #: Diagnostic ``source_kind`` for missing supplier evidence on positive
 #: deductible input IVA. Verification treats this as filing-grade blocking.
-MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND = "deductible_vat_evidence"
+MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND = "deductible_iva_evidence"
 
 #: Diagnostic ``source_kind`` for missing linked evidence on positive output IVA.
 #: The current transaction model cannot yet distinguish all valid issued-invoice
 #: evidence paths, so verification keeps this visible but non-blocking.
-MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND = "output_vat_evidence"
+MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND = "output_iva_evidence"
 
 
 def _positive_iva_quota(transaction: Transaction) -> bool:
@@ -173,13 +173,13 @@ def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirec
     return None if _row_has_linked_evidence(transaction) else flow
 
 
-def transaction_missing_deductible_vat_evidence(transaction: Transaction) -> bool:
+def transaction_missing_deductible_iva_evidence(transaction: Transaction) -> bool:
     """Return whether ``transaction`` claims deductible IVA without evidence."""
     flow = _transaction_missing_evidence_flow(transaction)
     return flow is not None and is_deducible_flow(flow)
 
 
-def transaction_missing_output_vat_evidence(transaction: Transaction) -> bool:
+def transaction_missing_output_iva_evidence(transaction: Transaction) -> bool:
     """Return whether ``transaction`` declares output IVA without linked evidence."""
     flow = _transaction_missing_evidence_flow(transaction)
     return flow is not None and is_devengada_flow(flow) and not is_deducible_flow(flow)
@@ -248,8 +248,8 @@ def missing_evidence_advisory_observations(
             diagnostics.append(
                 _missing_evidence_diagnostic(
                     transaction,
-                    role="deductible VAT",
-                    source_kind=MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
+                    role="deductible IVA",
+                    source_kind=MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
                     gap=(
                         "carries no purchase invoice evidence; LIVA art. 97 lists the "
                         "documents that establish the right to deduct, and a generic "
@@ -262,8 +262,8 @@ def missing_evidence_advisory_observations(
             diagnostics.append(
                 _missing_evidence_diagnostic(
                     transaction,
-                    role="output VAT",
-                    source_kind=MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND,
+                    role="output IVA",
+                    source_kind=MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND,
                     gap=(
                         "carries no linked evidence (no purchase invoice and no "
                         "attachment); attach the supporting document before filing"
@@ -274,9 +274,9 @@ def missing_evidence_advisory_observations(
 
 
 __all__ = [
-    "MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND",
-    "MISSING_OUTPUT_VAT_EVIDENCE_SOURCE_KIND",
+    "MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND",
+    "MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND",
     "missing_evidence_advisory_observations",
-    "transaction_missing_deductible_vat_evidence",
-    "transaction_missing_output_vat_evidence",
+    "transaction_missing_deductible_iva_evidence",
+    "transaction_missing_output_iva_evidence",
 ]

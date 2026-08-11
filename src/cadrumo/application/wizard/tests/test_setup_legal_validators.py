@@ -24,8 +24,8 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....core import RentaDeclaracionType
+from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
 from ....domain.contribuyente import SituacionFamiliar
 from ...flows import (
     SECTION_VERDICT_PREFIX,

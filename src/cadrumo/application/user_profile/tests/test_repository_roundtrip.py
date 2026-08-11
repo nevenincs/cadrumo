@@ -25,7 +25,6 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -72,7 +71,7 @@ def _populated_record() -> UserProfileRecord:
     updated = datetime(2024, 6, 15, 14, 32, 17, tzinfo=UTC)
     return UserProfileRecord(
         schema_id="cadrumo.user_profile",
-        schema_version=2,
+        schema_version=5,
         profile_id=_PROFILE_UUID,
         display_name="Persona Prueba - 2024 IRPF",
         status=UserProfileStatus.ACTIVE,
@@ -99,12 +98,6 @@ def _populated_record() -> UserProfileRecord:
                 value=False,
                 source="manual_cli",
             ),
-            UserProfileFact(
-                path="tax_residence.state_attribution_ratio",
-                value=Decimal("5550.00"),
-                source="aeat_censo_read",
-                valid_from=date(2024, 1, 1),
-            ),
         ),
         created_at=created,
         updated_at=updated,
@@ -129,13 +122,12 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
     assert loaded_record.profile_id == _PROFILE_UUID
     assert loaded_record.display_name == "Persona Prueba - 2024 IRPF"
     assert loaded_record.profile_id != loaded_record.display_name
-    assert len(loaded_record.facts) == 5
+    assert len(loaded_record.facts) == 4
     assert tuple(f.path for f in loaded_record.facts) == (
         "identity.name",
         "identity.surnames",
         "contact.postcode",
         "contact.fiscal_address_is_habitual_vivienda",
-        "tax_residence.state_attribution_ratio",
     )
     # Every path and provenance token above is one the schema declares, so
     # this record is a shape the profile can really hold. The fixture used
@@ -146,12 +138,10 @@ def test_user_profile_value_and_snapshot_survive_encrypted_storage_roundtrip(
         "manual_cli",
         "modelo_036_import",
         "manual_cli",
-        "aeat_censo_read",
     )
-    # The Decimal fact survives JSON round-trip strictly.
-    assert loaded_record.facts[-1].value == Decimal("5550.00")
-    assert loaded_record.facts[-1].valid_from == date(2024, 1, 1)
-    assert loaded_record.schema_version == 2
+    assert loaded_record.facts[-1].value is False
+    assert loaded_record.facts[2].valid_from == date(2023, 1, 1)
+    assert loaded_record.schema_version == 5
 
     original_snapshot = UserProfileSnapshot.from_profile(loaded_record)
     snapshots.save(original_snapshot)

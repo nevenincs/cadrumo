@@ -88,7 +88,7 @@ from ._action_errors import (
 from ._iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
-from ._ledger_evidence_gate import raise_if_deductible_vat_evidence_missing
+from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
 from ._preconditions import build_modelo_work_file_unverified_revision_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._required_binding_gate import (
@@ -449,7 +449,7 @@ def _require_filing_preconditions(
 ) -> None:
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 
-    raise_if_deductible_vat_evidence_missing(
+    raise_if_deductible_iva_evidence_missing(
         target,
         error_type=ModeloFilingEvidenceMissingError,
     )

@@ -446,23 +446,14 @@ application:
         both_missing_detail: Sem a Cl@ve azonosító (CADRUMO_CLAVE_MOVIL_DNI_NIE),
           sem az aktív profil adóazonosítója nincs beállítva. Mindkettőt ugyanarra
           a DNI/NIE-re állítsa be.
-        both_missing_next_action: Szerkessze az aktív profilt a `aeat config profile
-          edit NÉV --tax-id DNI/NIE` paranccsal, és ugyanezt a DNI/NIE-t állítsa be
-          a Cl@ve Móvilhoz.
         clave_identity_missing_detail: A Cl@ve azonosító (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           nincs beállítva, ezért nem hasonlítható össze az aktív profil adóazonosítójával.
           Állítsa be.
-        clave_identity_missing_next_action: Konfigurálja a Cl@ve Móvil DNI/NIE-t úgy,
-          hogy egyezzen az aktív profil adóazonosítójával.
         mismatch_detail: A Cl@ve azonosító DNI/NIE (%{clave_identity}) nem egyezik
           az aktív profil adóazonosítójával (%{profile_tax_id}). Az élő AEAT hozzáférés
           blokkolva.
-        mismatch_next_action: Váltson arra a profilra, amelynek adóazonosítója egyezik
-          a Cl@ve Móvil DNI/NIE-vel, vagy javítsa a helytelen értéket.
         profile_tax_id_missing_detail: Az aktív profilnak nincs adóazonosítója, ezért
           nem hasonlítható össze a Cl@ve azonosítóval. Állítsa be a profil adóazonosítóját.
-        profile_tax_id_missing_next_action: Szerkessze az aktív profilt a `aeat config
-          profile edit NÉV --tax-id DNI/NIE` paranccsal a hitelesítés előtt.
       errors:
         certificate_file_required: A tanúsítvány-szolgáltató tanúsítványfájlt igényel.
           Futtassa a `aeat config auth configure --provider certificate --file ÚTVONAL`
@@ -776,6 +767,43 @@ application:
       errors:
         build_failed: 'a számlavarázsló elutasította: %{detail}'
         field_errors: 'a számlavarázsló %{field_count} mezőt utasított el: %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: A legutóbbi érvényes AEAT-tárcamegfigyelés lett
+        kiválasztva; nem volt elérhető helyi ismétlődés az összevetéshez.
+      aeat_wallet_validated: A legutóbbi érvényes AEAT-tárcamegfigyelés egyezik a
+        Modelo 303 korábbi kompenzációjának helyi ismétlődésével.
+      caller_zero_matches_local_authority: A hívó által megadott nulla egyezik a tartósan
+        tárolt helyi nullaforrással.
+      filed_history_requires_override: Az AEAT-tárca bizonyítéka nem érhető el; a
+        bevallási előzményből származó ismétlődés automatikus kimenet előtt az adózó
+        kifejezett felülbírálását igényli.
+      filed_history_zero: A rögzített Modelo 303 bevallási előzmény nulla továbbvihető
+        kompenzációt igazol.
+      first_period_zero_activity_start_uncontrasted: 'NEM ELLENŐRZÖTT: Az első időszaki
+        nulla az operátor által megadott tevékenységkezdési dátumon alapul; a Cadrumo
+        ezt a dátumot nem tudja ellenőrizni az AEAT jelenlegi censo-adataival.'
+      first_period_zero_aeat_wallet: Az AEAT-tárca nulla korábbi kompenzációt igazol
+        az első nyilvántartott IVA-időszakra.
+      first_period_zero_local_recurrence: Egy rögzített helyi nulla igazolja, hogy
+        az első nyilvántartott IVA-időszakhoz nincs korábbi kompenzáció.
+      local_evidence_unreadable: Létezik korábbi Modelo 303 rekord, de nem olvasható
+        korábbi kompenzáció bizonyítékaként, és nincs elérhető AEAT-tárcamegfigyelés.
+      local_recurrence_requires_override: Az AEAT-tárca nem érhető el; a helyi ismétlődés
+        automatikus kimenet előtt az adózó kifejezett felülbírálását igényli.
+      local_recurrence_zero: A helyi Modelo 303 ismétlődés nulla továbbvihető kompenzációt
+        igazol.
+      no_usable_authority: Nincs elérhető AEAT-tárcamegfigyelés vagy használható helyi
+        ismétlődés a Modelo 303 korábbi kompenzációjához.
+      stale_wallet_local_recurrence_requires_override: Az AEAT-tárcamegfigyelés elavult;
+        a helyi ismétlődés automatikus kimenet előtt az adózó kifejezett felülbírálását
+        igényli.
+      stale_wallet_no_local_recurrence: Az AEAT-tárcamegfigyelés elavult, és nincs
+        elérhető helyi ismétlődési tartalék.
+      taxpayer_override: Az adózó kifejezett felülbírálása lett kiválasztva; a külön
+        rögzített kezelői magyarázat tartalmazza a bizonyíték alapját.
+      wallet_local_recurrence_divergence: Az AEAT-tárca és a helyi ismétlődés eltér;
+        automatikus kimenet előtt felülvizsgálat szükséges.
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -952,11 +980,6 @@ application:
         a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
-      calculation_revision_id_is_discarded_work_unit: A megadott számítási revízióazonosító,
-        %{calculation_revision_id}, a selejtezett %{work_unit_id} munkaegységet azonosítja.
-        Nem számítható ki.
-      calculation_revision_id_is_work_unit: A megadott számítási revízióazonosító,
-        %{calculation_revision_id}, a(z) %{work_unit_id} munkaegységet azonosítja.
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
       calculation_revision_parent_work_unit_discarded: A(z) %{calculation_revision_id}
@@ -969,7 +992,7 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
         maradt.
-      deductible_vat_evidence_missing: 'A levonhato afat tartalmazo konyvelesi sorokhoz
+      deductible_iva_evidence_missing: 'A levonhato afat tartalmazo konyvelesi sorokhoz
         kapcsolt bejovo szamla szukseges. Kapcsold a szamlat a sorhoz, majd futtasd
         ujra a work verify parancsot: az ellenorzes nem fejezodik be, amig egy levonhato
         sorhoz nincs szamla, igy a piszkozat nyitva marad es atveszi a bizonylatot.'
@@ -984,11 +1007,6 @@ application:
         ledger-pillanatkép hivatkozást; exportálás előtt ellenőrizze újra a revíziót.
       export_no_active_bucket: Nincs aktív profil bucket; a modellrevízió exportálása
         előtt futtassa a `aeat config profile create NÉV` parancsot.
-      export_operator_name_missing: 'Az exportáláshoz szükség van az operátor nevére
-        az aktív profilban; hiányzó profiladatok: %{missing}.'
-      export_operator_profile_missing: 'Az exportáláshoz a bevalló azonosítása szükséges
-        az aktív profilból, de nincs megőrzött profil; add meg a következőt az exportálás
-        előtt: %{requirements}.'
       export_output_path_invalid: 'Az exportálási kimeneti útvonal érvénytelen: {output_path}
         ({reason}).'
       export_period_unmappable: A(z) %{work_unit_id} munkaegység %{period} időszakot
@@ -1040,10 +1058,6 @@ application:
         van a Modelo 303 esetén: ez az első időszak, és a nulla korábbi kompenzáció
         mögött nincs bizonyíték. Töltse fel kifejezetten a nyitóegyenleget, vagy töltse
         le a tárcát az AEAT-tól, hogy a nulla kimondott legyen, ne feltételezett.'
-      iva_wallet_local_evidence_found_but_unreadable: 'Az IVA-tárca egyeztetése blokkolva
-        van a Modelo 303 esetén: helyben létezik korábbi kompenzációs rekord, de nem
-        volt olvasható. Töltse le újra a tárcát az AEAT-tól, vagy töltse fel újra
-        a kompenzációs előzményt, hogy a korábbi egyenleg megállapítható legyen.'
       iva_wallet_not_seeded: A Modelo 303 számításához feltöltött IVA-kompenzáció
         előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
         előzményt.
@@ -1166,260 +1180,6 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
-    findings:
-      art20_reduccion_next_action: Ellenőrizze, hogy a nem munkából származó egyéb
-        jövedelme a mentes jövedelem nélkül az adóévben nem haladja-e meg a 6500 EUR-t;
-        ha nem, akkor a 20. cikk LIRPF szerinti munkajövedelem-csökkentést tüntesse
-        fel az általános csökkentési rovatban (ley-35-2006:art-20).
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: a(z) %{rnt_id} rovat (munkából
-        származó nettó jövedelem) = %{rnt_value} a 20. cikk szerinti csökkentési sávon
-        belül van (19747,50 alatt), de a(z) %{reduccion_id} rovat (általános munkajövedelem-csökkentés)
-        nulla. Ha a nem munkából származó egyéb jövedelme a mentes jövedelem nélkül
-        nem haladja meg a 6500-at, akkor a 20. cikk LIRPF szerinti munkajövedelem-csökkentés
-        alkalmazható.'
-      art52_reduccion_individual_sublimit_next_action: Erősítse meg, hogy a hozzájárulást
-        munkavállalói hozzájárulás fedezi-e foglalkoztatói nyugdíjtervhez (0426 rovat)
-        vagy munkáltatói hozzájárulás (0427 rovat); ha nem, az 52. cikk LIRPF szerinti
-        csökkentés 1500 EUR-ra korlátozódik, nem a 10000 EUR-s együttes határra (ley-35-2006:art-52).
-      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
-        a(z) %{reduccion_id} rovat (szociális előtakarékossági csökkentés) = %{reduccion_value}
-        meghaladja az 52. cikk szerinti egyéni alsó határt, %{sublimit} EUR-t, de
-        nincs bejelentve sem munkavállalói hozzájárulás foglalkoztatói nyugdíjtervhez,
-        sem munkáltatói hozzájárulás. Erősítse meg, hogy a csökkentést munkáltatóhoz
-        kötött hozzájárulás fedezi, amely jogosult a 8500 EUR-s növelésre; különben
-        a határ %{sublimit}.'
-      attribution_received_uncaptured: 'az M100 hozzárendelési rendszerének %{casilla_id}
-        rovata hozzárendelt adóalapot vall be (modelo=100 year=%{filing_year} value=%{casilla_value}
-        EUR), de egyetlen attribution_received tény sem támasztja alá erre az adóévre:
-        a bevallott jövedelemnek nincs rögzített eredete.'
-      attribution_received_uncaptured_next_action: Rögzítse az attribution_received
-        tényeket (az entitás NIF-je, neve, részesedési százalék, hozzárendelt adóalap,
-        adóév) az adózó profiljában, hogy a hozzárendelési rendszer bevallott jövedelme
-        a Modelo 184 szerinti eredetét hordozza.
-      attribution_received_unfolded: 'az attribution_received tények hozzárendelt
-        adóalapot jelentenek be erre az adóévre (modelo=100 year=%{filing_year} total=%{total_base}
-        EUR), de az M100 hozzárendelési rendszerének %{casilla_id} rovata üres marad:
-        a kapott részesedést rögzítették a profilban, de nem építették be a bevallásba.'
-      attribution_received_unfolded_next_action: Építse be a hozzárendelt adóalapot
-        az M100 számításának %{casilla_id} rovatába, például a(z) `aeat app modelo
-        work calculate ... --binding %{casilla_id}=%{total_base}` paranccsal, hogy
-        a hozzárendelési rendszer jövedelme bevallásra kerüljön.
-      cross_casilla_invariant_next_action: Ellenőrzés előtt győződjön meg arról, hogy
-        a(z) %{predicate_id} predikátum által megkövetelt összes casilla nullától
-        eltérő.
-      cross_casilla_invariant_violated: casillák közötti invariáns megsértve (%{predicate_id})
-      cross_period_activity_start_missing: Hiányzik a tevékenység kezdőnapja, amely
-        a(z) %{target_modelo} modell %{target_filing_year}. bevallási évének %{target_period}
-        időszakához tartozó korábbi kötelezettségek elbírálásához szükséges.
-      cross_period_dependency_unclean: 'az időszakok közötti függőség nem tiszta:
-        modelo=%{source_modelo} év=%{source_filing_year} időszak=%{source_period}
-        forrás=%{origin_code} forrásazonosítók=%{origin_ids} blokkolók=%{blocker_codes}'
-      cross_period_dependency_unclean_evidence_next_action: 'Rögzítse vagy importálja
-        a forrásfüggőség AEAT-bizonyítékát. Futtassa a következők egyikét: `%{target_capture}`,
-        `%{source_justificante_capture}`, `%{import_official_record}` vagy `%{reconcile_file}`;
-        majd futtassa újra az ellenőrzést.'
-      cross_period_first_year_fractional_suppression: A(z) %{source_modelo} modell
-        %{source_filing_year}. bevallási évének %{source_period} időszakára vonatkozó
-        függőség kívül esik a(z) %{activity_start_date} napon kezdődő tevékenységen.
-      cross_period_m111_no_retenciones: A(z) %{source_modelo} modell %{source_filing_year}.
-        bevallási évének %{source_period} időszakára vonatkozó függőséget teljesíti
-        a(z) %{profile_fact_id} levonásmentességi profiladat.
-      cross_period_modelo_not_applicable:
-        message: 'Azok a keresztidőszaki függőségek, amelyek olyan forrás modellekre
-          mutatnak, amelyeket az adózó nem nyújt be, nem alkalmazhatóként ki lettek
-          zárva: %{source_modelos}.'
-        next_action: 'A `aeat app modelo bindings list --missing` paranccsal azonosítsd
-          a retenciones bindinget. Ha alkalmazható, add meg az igazolás összeget --binding
-          KULCS=ÉRTÉK formában: a binding azonosítója az egyetlen egyenlőségjel bal
-          oldalán áll, az összeg pedig a jobb oldalán. Erősítsd meg a profil IRPF
-          becslési rendszerét, ha egy kölcsönösen kizáró részletfizetési modell lett
-          kizárva.'
-      cross_period_non_official_local_chain:
-        message: 'az időszakok közötti átvitel egy ugyanabban az adóévben helyileg
-          benyújtott korábbi időszakot használt külső AEAT-bizonyíték nélkül: modelo=%{source_modelo}
-          év=%{source_filing_year} időszak=%{source_period} forrás=%{origin_code}.
-          Az adóéven belüli lánc helyi exportálásra elfogadott, de az átvitt érték
-          helyileg igazolt (app_filing), nem az AEAT által igazolt; nyújtsa be minden
-          időszakot az AEAT-nál külsőleg.'
-        next_action: Exportálja és nyújtsa be minden időszakot az AEAT-nál külsőleg,
-          majd frissítse a helyi láncot hivatalos bizonyítékkal; használja a `aeat
-          app live justificante pull` parancsot, ha van élő hozzáférés, vagy a `aeat
-          app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
-          --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
-          WORK_UNIT_ID --file PATH` parancsot a már rendelkezésre álló bizonyítékhoz.
-      cross_period_operator_declared_suppression: 'az időszakok közötti függőség korábbi
-        kötelezettség hiányában kizárva (tevékenység megkezdése előtt): modelo=%{source_modelo}
-        év=%{source_filing_year} időszak=%{source_period} forrás=%{origin_code}. Az
-        időszak szigorúan megelőzi a kezelő által megadott %{activity_start_date}
-        tevékenységkezdési dátumot, amelyet még nem erősített meg AEAT-censo pillanatkép.'
-      cross_period_operator_declared_suppression_next_action: Ellenőrizze, hogy a
-        rögzített tevékenységkezdési dátum helyes. Amint elérhető az élő AEAT-censo
-        lekérdezés, a dátum ellenőrzésre kerül, és ez a figyelmeztetés megszűnik.
-      cross_period_zero_value_previous_filing: A(z) %{source_modelo} modell %{source_filing_year}.
-        bevallási évének %{source_period} időszakára benyújtott nulla értékű korábbi
-        bevallás teljesíti a(z) %{target_modelo} modell %{target_period} időszakának
-        függőségét.
-      cuota_less_ledger_row_base_missing: A(z) %{transaction_id} főkönyvi művelet
-        %{iva_category_code} IVA-kategóriát használ, de nincs adóalapja.
-      dt12a_reduccion_antiquity_next_action: Erősítse meg, hogy több mint két év telt
-        el a nyugdíjtervhez történő első befizetés óta, kivéve, ha az ellátás rokkantság
-        miatt jár (ley-35-2006:dt-12).
-      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: a(z)
-        %{reduccion_id} rovat (munkajövedelem-csökkentés) = %{reduccion_value} alkalmazott
-        csökkentést tükröz. Ha ez egy DT 12a LIRPF szerinti nyugdíjterv tőke-visszaváltást
-        tartalmaz, erősítse meg, hogy több mint két év telt el az első befizetés óta;
-        a két éves régiségi követelmény csak rokkantsági ellátások esetén mentesül.'
-      dt12a_reduccion_next_action: Adja meg a --rescate-plan-pensiones-capital ÖSSZEG
-        --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
-        ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
-        (ley-35-2006:dt-12).
-      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: a(z) %{ingreso_id} rovat
-        = %{ingreso_value}, de a(z) %{reduccion_id} rovat (munkajövedelem-csökkentés)
-        nulla. Ha ez a jövedelem 2006. december 31. előtti hozzájárulásokkal rendelkező
-        nyugdíjterv tőke-visszaváltását tartalmazza, a DT 12a LIRPF szerinti 40%-os
-        csökkentés alkalmazható lehet.'
-      foreign_asset_redeclaration: A(z) %{modelo_code} modell %{group_code} csoportjának
-        %{position_key} pozíciója %{prior_value_eur} EUR-ról %{current_value_eur}
-        EUR-ra nőtt, és meghaladja az ismételt bevallás %{redeclaration_increase_threshold_eur}
-        EUR összegű növekedési küszöbét.
-      iva_wallet_next_action: Ellenőrzés vagy exportálás előtt tekintse át az IVA-tárca
-        egyeztetési döntést ehhez a Modelo 303-hoz.
-      iva_wallet_precondition_failed: A(z) %{condition_id} IVA-egyenlegfeltétel nem
-        teljesül a(z) %{scenario_id} esetben.
-      ledger_snapshot_drift: 'A(z) %{modelo} modell %{filing_year}. bevallási évének
-        %{period} időszakához tartozó főkönyvi pillanatkép a számítás után megváltozott:
-        %{changed_count} módosított és %{removed_count} eltávolított sor a(z) %{anchored}
-        rögzített sorból.'
-      m210_agrupacion_renta_invalid: A(z) %{modelo_id} modell jövedelemcsoportosítása
-        érvénytelen a(z) %{period_code} időszakban (%{error_type}).
-      m210_baseline_tipo_deferred:
-        next_action: 'A csomagolt korpusz nem közöl alapkulcsot ehhez: tipo_renta=%{tipo_renta}.
-          Add meg a következőt a vonatkozó egyezményes kulcs érvényesítéséhez: %{requirements},
-          vagy várd meg, amíg az alapkorpusz felveszi ezt a sort.'
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolország-%{country_code}
-        (%{document_id}) egyezményi adókulcs alkalmazásra került a tipo_renta=%{tipo_renta_code}
-        értékhez. Az egyezményes kedvezmény csak az adott államban illetőséggel rendelkező
-        tényleges haszonhúzó számára áll rendelkezésre, aki teljesíti az egyezmény
-        kedvezménykorlátozási (LOB) feltételeit; a típus alkalmazása előtt ellenőrizze
-        a jogosultságot.'
-      m210_convenio_lob_advisory_next_action: Ellenőrizze, hogy az adózó teljesíti
-        a Convenio Spanyolország-%{cc} (%{document_id}) tényleges haszonhúzói és kedvezménykorlátozási
-        (LOB) feltételeit, mielőtt az egyezményi adókulcsot alkalmazza; tekintse át
-        az egyezmény konkrét cikkelyét, ne csak az OECD Modellegyezmény általános
-        LOB koncepcióját.
-      m210_convenio_rate_missing:
-        next_action: 'Hozzon létre egy Spanyolország-{cc} egyezményi sort a tipo_renta={tipo_renta}
-          értékhez a registry/aeat/treaties/ alatt, vagy törölje a következőt: {requirements},
-          hogy visszatérjen a TRLIRNR 25. cikke szerinti baseline-hoz.'
-      m210_rate_unavailable: A Modelo 210 adókulcsa nem oldható fel (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: 'A(z) %{filing_year}. bevallási
-        év %{period_code} időszakának közösségen belüli összegei nem egyeznek: Modelo
-        303=%{m303_total}, Modelo 349=%{m349_total}, eltérés=%{gap}.'
-      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
-        a(z) %{casilla_id} rovat nulla, de van jogosult leszármazottak (súlyozott
-        szám %{weighted_count}) a madridi levonáshoz. Az automatikus kiváltás zárt
-        együtt adózó/házas egységeknél, mert a családi jövedelemhatár nem értékelhető;
-        erősítse meg kézileg a jogosultságot.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Erősítse meg, hogy
-        a családi egység adóalapja a vonatkozó határon belül van, és ha jogosult,
-        töltse ki kézzel az 1039 rovatot (madrid-dl-1-2010:art-4, art-18).
-      missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
-        revízió bemeneti adataiból.
-      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
-        általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595)
-        nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum
-        alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen
-        hiányosság.
-      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
-        általános adóköteles alap (C500) pozitív, de az önadózás eredő kvótája (C595)
-        nulla; erősítse meg, hogy ez jogszerű nulla (a személyi és családi minimum
-        alatti alap, vagy levonásokkal teljesen ellentételezve), nem pedig modellezetlen
-        hiányosság.
-      modelo_123_2024_base_total_implica_retenciones_total: A teljes adóalap pozitív,
-        de a teljes forrásadó (retenciones) nulla; ellenőrizze a forrásadó meghatározását.
-      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: mentesülön az M130
-        benyújtása alól ebben a negyedévben, mert az évben felhalmozott forrásadó-előleg
-        és számla előleg a bruttó bevétel legalább 70%-át teszi ki.'
-      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Az
-        adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés
-        (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2
-        százalék).
-      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: Az
-        adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés
-        (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2
-        százalék).
-      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: Az
-        adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés
-        (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2
-        százalék).
-      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: Az
-        adatbázis-tevékenységek nettó jövedelme (C01) pozitív, de az adatbázis-részletfizetés
-        (C02) nulla; ellenőrizze a 02. rubrikát a vonatkozó százalékkal (minimum 2
-        százalék).
-      modelo_151_base_liquidable_implica_cuota_integra: Az általános adóalap (base
-        liquidable general) pozitív, de a teljes adó (cuota íntegra general) nulla;
-        ellenőrizze az adó meghatározását.
-      modelo_200_base_imponible_determinada_cuando_resultado_positivo: A számviteli
-        eredmény pozitív, de az adóalap (C552) nulla; ellenőrizze az adóalap meghatározását.
-      modelo_200_bin_stock_cierre_reconcilia_roll_forward: A negatív adóalap záró
-        egyenlege (C671) nem egyezik a göngyölítéssel (nyitó C670 mínusz a tárgyidőszakban
-        felhasznált C547 plusz a tárgyidőszakban keletkezett negatív adóalap); ellenőrizze
-        a jövőbeli időszakokra átvitt egyenleget.
-      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: A számviteli
-        eredmény pozitív, de az előzetes adóalap (base imponible previa) nulla; ellenőrizze
-        az adóalap meghatározását.
-      modelo_202_modality_incomplete: A Modelo 202 módozata hiányos; a(z) %{profile_fact_id}
-        profiladatot fel kell oldani.
-      modelo_210_2025_inmobiliaria_implica_base_imponible: A jövedelem típusa inmobiliaria,
-        de az adóalap nulla; ellenőrizze az imputált ingatlanjövedelem adóalapjának
-        meghatározását (értékbecslés, együttható, beszámítási napok).
-      modelo_210_2025_rendimientos_integros_implica_base_imponible: A bruttó jövedelem
-        (rendimientos íntegros) pozitív, de az adóalap (base imponible) nulla; ellenőrizze
-        az adóalap meghatározását.
-      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: A megadott jövedelemtípus
-        ue_residente (EU/EGT kedvezményes kulcs), de az adózó adóügyi illetősége szerinti
-        ország nem EU vagy EGT tagállam; a benyújtás előtt ellenőrizze a 19 százalékos
-        kedvezményes kulcsra való jogosultságot, vagy válassza az általános 24 százalékos
-        kulcsot.
-      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: A
-        teljes levonható ÁFA (cuota-deducible-total) pozitív, de a Diseño de Registros
-        minden hivatalos számozott rovata (29 belföldi folyó, 33 import, 37 közösségen
-        belüli beszerzés) továbbra is nulla. A számítás nem tölti ki automatikusan
-        a hivatalos számozott rovatokat; a benyújtás előtt vezesse át az összeget
-        a megfelelő rovatokba.
-      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: A
-        teljes felszámított ÁFA (cuota-devengada-total) pozitív, de a Diseño de Registros
-        minden hivatalos számozott rovata (03 4%, 06 10%, 09 21%, 11 közösségen belüli,
-        13 fordított adózás) továbbra is nulla. A számítás nem tölti ki automatikusan
-        a hivatalos számozott rovatokat; a benyújtás előtt vezesse át az összeget
-        a megfelelő rovatokba.
-      modelo_714_cuota_integra_implica_total_cuota_integra: A teljes adó (cuota íntegra)
-        pozitív, de az összesített teljes adó (total cuota íntegra) nulla; ellenőrizze
-        az összesített adó átírását.
-      objective_estimation_exclusion_threshold_exceeded: A(z) %{modelo_id} modell
-        %{filing_year}. bevallási évében a(z) %{profile_field_id} profiladat %{declared}
-        értéke meghaladja a(z) %{parameter_id} paraméter %{threshold} küszöbét.
-      oss_evidence_missing: A Modelo 369 OSS-forrása deklarált, de nem áll rendelkezésre
-        tartós OSS-bizonyíték.
-      oss_source_unrouted: 'OSS-megfigyelések maradtak a számítási hozzárendeléseken
-        kívül: %{source_ref_count} azonosított és %{unidentified_source_count} azonosítatlan
-        forrás.'
-      pulled_filing_casilla_mismatch: 'A benyújtott %{casilla_number} casilla eltér
-        a %{filing_year}. bevallási év %{period_code} időszakára számított értéktől:
-        számított=%{computed_value}, benyújtott=%{filed_value}, típus=%{mismatch_kind}.'
-      registry_advisory_predicate_fired: A(z) %{predicate_id} registry-tájékoztató
-        predikátum erre az ellenőrzésre vonatkozik.
-      registry_snapshot_unresolved: 'a registry-pillanatkép nem oldható fel: modelo=%{modelo}
-        filing_year=%{filing_year} period=%{period}'
-      representante_fiscal_required:
-        next_action: 'Jelöljön ki egy spanyolországi adóügyi képviselőt a következő
-          beállításával: {requirements}, az `aeat config profile edit` paranccsal.
-          A TRLIRNR 10. cikke előírja, hogy az EGT-n kívüli IRNR-bevallók képviselőt
-          jelöljenek ki az AEAT-tal folytatott kommunikációhoz.'
-      transaction_evidence_missing_deductible: Egy levonható IVA-forrásból hiányzik
-        a szükséges műveleti bizonyíték (forrás=%{source_kind_code}, ok=%{diagnostic_reason_code}).
-      transaction_evidence_missing_output: Egy kimenő IVA-forráshoz nincs műveleti
-        bizonyíték csatolva (forrás=%{source_kind_code}, ok=%{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -2314,6 +2074,8 @@ cli:
         elect_general_help: 'Válaszd a prorrata general rezsimet egy ejercicio-ra
           (LIVA art. 104): egyetlen levonási százalék vonatkozik minden levonható
           cuota-ra.'
+        evidence_reference_help: A tárgyidőszaki különleges arányosítási választás
+          vagy visszavonás bizonyítékának hivatkozása.
         general_percentage_help: Ideiglenes levonási százalék 0-100 (LIVA art. 104.Uno
           + 105.Uno).
         group_help: 'Időszakok közötti IVA prorrata nyilvántartás: válaszd ki a rezsimet
@@ -2335,6 +2097,8 @@ cli:
           forrással engedélyezett.
         reference_required: A {provenance!r} forrás (LIVA art. 105.Dos / 105.Tres)
           megköveteli a --reference kapcsolót.
+        revoke_especial_help: Vond vissza a különleges arányosítást egy ejercicio
+          esetén egy előző évi különleges állapot után (LIVA 103. cikk Dos.1).
         sector_help: A bejegyzés által lefedett megkülönböztetett szektor azonosítója;
           hagyd el a teljes tevékenységre vonatkozó bejegyzéshez.
         sector_id_help: Stabil szektorazonosító, amelyre a nyilvántartási bejegyzések
@@ -3026,7 +2790,6 @@ cli:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
           szűrve.
-        next_action: 'Tekintse meg az ellenőrzési jelentést: %{command}'
         verification_report_id_help: Stabil 64 karakteres SHA-256 azonosító az ellenőrzési
           jelentéshez.
         view_help: Egy ellenőrzési jelentés megjelenítése azonosító alapján.
@@ -3200,8 +2963,6 @@ cli:
           Importált külső bizonyítékot (justificante / CSV-nyilvántartás / élő rögzítés)
           kell tartalmaznia.
         history_help: Egy munkaegység minden életciklus-eseményének megjelenítése.
-        history_next_action_summary: Tekintse át ennek a munkaegységnek a jelenlegi
-          állapotát.
         history_work_unit_id_help: Annak a munkaegységnek az azonosítója, amelynek
           életciklusát meg szeretné tekinteni.
         id_selector_ambiguous: 'A megjelenített {selector} munkaazonosító több aktív
@@ -3231,10 +2992,6 @@ cli:
           érték: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
-        list_no_active_work_summary: Nincs aktív munkaegység, amellyel folytatható
-          a folyamat.
-        list_selection_required_summary: A folytatáshoz válasszon ki egy munkaegységet.
-        list_single_status_summary: Egy munkaegység áll rendelkezésre megtekintésre.
         m184_socio_handoff_message: 'Jövedelem-hozzárendelési rendszer (régimen de
           atribución de rentas): a(z) %{nif} tag (%{nombre}) %{importe} EUR hozzárendelt
           adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
@@ -3244,6 +3001,8 @@ cli:
           %{casilla} rovatába (LIRPF 86-89. cikk).'
         m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
+        m303_filing_evidence_help: A teljes, típusos Modelo 303 bevallási bizonyíték
+          JSON-dokumentumának elérési útja.
         missing_binding_guidance: '%{base} Adja meg az értéket a --binding KEY=VALUE
           kapcsolóval ezen a parancson, vagy futtassa: `%{discover}` az összes hiányzó
           kötés listázásához.'
@@ -3439,19 +3198,12 @@ cli:
         state_label_presentado: Beadva
         state_label_presentado_supersedido: Felülírt beadás
         state_label_verificado_completo: Teljesen ellenőrizve
-        status_calculate_summary: Ez az aktív munkaegység kiszámítható.
-        status_discarded_summary: Ez a munkaegység el van vetve, ezért a számítás
-          nem érhető el.
         status_help: Egy munkaegység metaadatainak megjelenítése.
         verify_help: Tervezet számítási revízió hitelesítése a hitelesített-teljes
           szerződéssel szemben.
         verify_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
           számítási revízió már ellenőrzött; a meglévő ellenőrzési jelentés változatlanul
           lett visszaadva.'
-        verify_next_action_granted_summary: Az ellenőrzés sikeres. Exportálja a benyújtási
-          dokumentumot.
-        verify_next_action_incomplete_summary: Az ellenőrzés blokkoló tételeket talált.
-          Oldja meg őket, számolja újra, majd futtassa újra az ellenőrzést.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
         wizard_help: Végigvezet a munkaegység hiányzó kézi mezőin, majd kiszámítja
@@ -3475,6 +3227,15 @@ cli:
       app_help: 'Futtassa a teljes helyi modell beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
+      errors:
+        m303_evidence_forbidden: A 303-as modell bevallási példányához tartozó bizonyíték
+          más modellhez nem használható.
+        m303_filing_evidence_invalid: A(z) {path} helyen lévő Modelo 303 bevallási
+          bizonyíték dokumentum nem olvasható vagy érvénytelen.
+        m303_filing_evidence_period_mismatch: A Modelo 303 bevallási bizonyíték időszaka
+          nem egyezik a kiválasztott munkaidőszakkal.
+        m303_filing_evidence_required: A Modelo 303 számításhoz előzetesen teljes
+          bevallási bizonyíték JSON-dokumentum szükséges.
   common:
     errors:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
@@ -3970,6 +3731,9 @@ cli:
       create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
         PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>
         --surnames <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
+        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
+        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Új aktív profil inicializálása.
       delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutató
@@ -4457,11 +4221,6 @@ cli:
       state_label: Állapot
       target_browser: böngésző
       target_label: Cél
-    dead_end:
-      registry_bundled: 'Belső hiba: a nyilvántartás a csomagba van bundlelve és nem
-        javítható manuálisan.'
-      registry_integrity_internal: Belső alkalmazáshiba; nem az Ön profiljával kapcsolatos,
-        és Ön nem tudja maga javítani.
     errors:
       header: 'LLM futtatási hibák:'
       help: A közelmúltbeli sikertelen helyi LLM-futtatásokat szolgáltató és hibatípus
@@ -4491,8 +4250,6 @@ cli:
         antigravity, codex).
       since_help: Alsó, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.
       until_help: Felső, záró ISO-dátumhatár (ÉÉÉÉ-HH-NN) az LLM-futtatási rekordokra.
-    next_action:
-      inspect_registry_toml: Vizsgálja meg a nyilvántartás TOML-forrásait a hiba azonosításához.
     repair:
       audience_internal: belső alkalmazáshiba
       auth_label: Hitelesítés
@@ -4502,8 +4259,6 @@ cli:
       finding_optional: opcionális
       finding_required: kötelező
       logs_label: Naplók
-      next_label: Következő
-      note_label: Megjegyzés
       overall_label: Összesítés
       profile_label: Profil
       python_label: Python
@@ -4604,9 +4359,6 @@ cli:
   help:
     invalid_value: Érvénytelen érték
     invalid_value_for: 'Érvénytelen érték ehhez: %{parameter}'
-    missing_argument: Hiányzó argumentum
-    missing_option: Hiányzó beállítás
-    missing_parameter: Hiányzó paraméter
     not_valid_integer: nem érvényes egész szám.
     panel:
       arguments: Argumentumok
@@ -7270,22 +7022,8 @@ errors:
         bucket kiválasztása előtt érhető el.
       cold_bootstrap_explicit_database_refused: A hidegindítási tároló nem kerülheti
         meg a megadott adatbázis-útvonalat.
-      no_active_session: Nincs aktív bucket-munkamenet. Futtassa az aeat config login
-        NÉV parancsot a profil feloldásához.
-      no_detail: Nem jelentetett részletes készültségi problémát.
       not_ready: 'A tárolási futtatókörnyezet nem áll készen profil-kötött tároláshoz:
         %{details}'
-      route_bucket_mismatch: Az adatbázis-útvonal nem egyezik az aktív bucket-munkamenettel.
-      route_not_active_bucket: Az adatbázis-útvonal nincs aktív profil bucket-hez
-        csatolva.
-      session_changed: Az aktív bucket-munkamenet megváltozott. Oldja fel újra a célprofilt.
-      session_expired: Az aktív bucket-munkamenet lejárt. Futtassa az aeat config
-        login NÉV parancsot a profil újraaktiválásához.
-      session_sealed: Az aktív bucket-munkamenet le van zárva. Futtassa az aeat config
-        login NÉV parancsot a profil újraaktiválásához.
-      unsecured_backend: Az aktív bucket-munkamenet a nem biztonságos háttérrendszert
-        használja. A gyártási profil-kötött tároláshoz fájl- vagy kulcstár-felügyelet
-        szükséges.
     stored_data_validation_boundary: Egy tárolt profil vagy munkafolyamat-rekord már
       nem egyezik a várt sémával; a lemezen lévő adatok eltértek a jelenlegi formátumtól.
       Diagnosztikához és helyreállításhoz futtasd aeat config repair.
@@ -7378,7 +7116,6 @@ flows:
       certificate: Tanúsítvány
       certificate_active: Aktív tanúsítvány
       certificate_done: 'Azonosítás: %{provider}; aktív tanúsítvány: %{name}.'
-      certificate_incomplete: 'Azonosítás: %{provider}; %{reason} Futtasd: %{next_action}'
       export: Másolat exportálása
       export_destination: A célfájl elérési útja
       export_done: 'A titkosított másolat ide került: %{destination}.'
@@ -65821,6 +65558,258 @@ modelo:
           iva-resultado-regimen-general:
             help: null
             label: Általános rendszer eredménye
+          m303-deducciones-sector-1-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-total:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-total:
+            help: null
+            label: null
+          m303-exonerado-390-107:
+            help: null
+            label: null
+          m303-exonerado-390-125:
+            help: null
+            label: null
+          m303-exonerado-390-126:
+            help: null
+            label: null
+          m303-exonerado-390-127:
+            help: null
+            label: null
+          m303-exonerado-390-128:
+            help: null
+            label: null
+          m303-exonerado-390-79:
+            help: null
+            label: null
+          m303-exonerado-390-80:
+            help: null
+            label: null
+          m303-exonerado-390-81:
+            help: null
+            label: null
+          m303-exonerado-390-83:
+            help: null
+            label: null
+          m303-exonerado-390-84:
+            help: null
+            label: null
+          m303-exonerado-390-86:
+            help: null
+            label: null
+          m303-exonerado-390-88:
+            help: null
+            label: null
+          m303-exonerado-390-89:
+            help: null
+            label: null
+          m303-exonerado-390-90:
+            help: null
+            label: null
+          m303-exonerado-390-91:
+            help: null
+            label: null
+          m303-exonerado-390-92:
+            help: null
+            label: null
+          m303-exonerado-390-93:
+            help: null
+            label: null
+          m303-exonerado-390-94:
+            help: null
+            label: null
+          m303-exonerado-390-95:
+            help: null
+            label: null
+          m303-exonerado-390-96:
+            help: null
+            label: null
+          m303-exonerado-390-97:
+            help: null
+            label: null
+          m303-exonerado-390-98:
+            help: null
+            label: null
+          m303-exonerado-390-99:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-tipo:
+            help: null
+            label: null
       construct:
         modelo-303-iva-autoliquidacion:
           field:
@@ -66259,6 +66248,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -66284,6 +66276,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -66442,10 +66446,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -66493,7 +66572,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -66506,6 +66693,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -66523,7 +66764,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -66650,6 +66891,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -66675,6 +66919,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -66833,10 +67089,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -66884,7 +67215,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -66897,6 +67336,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -66914,7 +67407,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -67041,6 +67534,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -67066,6 +67562,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -67224,10 +67732,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -67275,7 +67858,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -67288,6 +67979,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -67305,7 +68050,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -67432,6 +68177,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -67457,6 +68205,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -67615,10 +68375,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -67666,7 +68501,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -67679,6 +68622,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -67696,7 +68693,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -67843,6 +68840,9 @@ modelo:
                 után keletkezett ÁFA alapja.'
               label: Közösségen belüli termék- és szolgáltatásbeszerzések után keletkezett
                 ÁFA - alap
+            '107':
+              help: null
+              label: null
             '108':
               help: '108. mező: helyesbítő bevallás egyéb korrekciói a közigazgatási
                 állásponttal való eltérés meghatározott eseteiben.'
@@ -67888,6 +68888,18 @@ modelo:
                 alá tartozó adóköteles ügyletekről.'
               label: Kiegészítő információ - egyablakos különös rendszerek alá tartozó
                 adóköteles ügyletek
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
             '13':
               help: '13. mező: Közösségen belüli ügyleteken kívüli egyéb fordított
                 adózású ügyletek után keletkezett ÁFA összege.'
@@ -68081,16 +69093,91 @@ modelo:
               help: '50. mező: egyszerűsített rendszer 4T eredménye, a 48. mező mínusz
                 a 49. mező.'
               label: Egyszerűsített rendszer, 4T - eredmény ([48] - [49])
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: '51. mező: egyszerűsített rendszerben Közösségen belüli termékbeszerzések
                 után keletkezett ÁFA.'
               label: Egyszerűsített rendszer - Közösségen belüli termékbeszerzések
                 után keletkezett ÁFA
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
               help: '52. mező: egyszerűsített rendszerben tárgyi eszközök értékesítése
                 után keletkezett ÁFA.'
               label: Egyszerűsített rendszer - tárgyi eszközök értékesítése után keletkezett
                 ÁFA
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
             '53':
               help: '53. mező: egyszerűsített rendszerben fordított adózás alá tartozó
                 ügyletekből keletkezett ÁFA.'
@@ -68153,7 +69240,115 @@ modelo:
                 összegek.'
               label: Eredmény - ugyanazon év és időszak korábbi önbevallásaiból fizetendő
                 eredmények
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -68173,6 +69368,60 @@ modelo:
                 import ÁFA.'
               label: Eredmény - Vámhatóság által megállapított, befizetésre váró import
                 ÁFA
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
             modulos-iva-1-unidades:
               help: null
               label: null
@@ -68188,7 +69437,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -69993,39 +71242,6 @@ profile:
           label: Az adóügyi cím az állandó lakóhely
         postcode:
           label: Irányítószám
-      filing_export:
-        aeat_seal:
-          label: AEAT-pecsét
-        bank_address:
-          label: Bank címe
-        bank_city:
-          label: Bank városa
-        bank_country_code:
-          label: Bank országkódja
-        bank_name:
-          label: Bank neve
-        charge_iban:
-          label: Terhelesi IBAN
-        declaration_type:
-          label: Bevallás típusa
-        iban:
-          label: IBAN
-        period_end_date:
-          label: Bevallási időszak vége
-        period_start_date:
-          label: Bevallási időszak kezdete
-        presenter_tax_id:
-          label: Benyújtó adóazonosítója
-        previous_receipt:
-          label: Korábbi justificante hivatkozása
-        program_version:
-          label: Programverzió
-        rental_reduccion_art_23_2_tier_2024:
-          label: Bérbeadási kedvezmény sávja (23.2. cikk, 2024)
-        sepa_marca:
-          label: SEPA-jelölés
-        swift_bic:
-          label: SWIFT-BIC
       identity:
         email:
           label: Kapcsolattartó e-mail
@@ -70085,14 +71301,20 @@ profile:
       iva:
         autoconsumo_promotor_base:
           label: Ingatlanfejlesztői önadóztatás adóalapja
+        cash_accounting_regime_enrolled:
+          label: Pénzforgalmi rendszerbeli tagság
         does_intracomunitario:
           label: Közösségen belüli ügyletek
         group_dominant_entity_enrolled:
           label: IVA-csoport domináns tagja (353-as nyomtatvány)
         group_member_enrolled:
           label: IVA-csoporttag (322-es nyomtatvány)
+        hydrocarbon_deposit_advance_payment_deduction_entitled:
+          label: Szénhidrogén-adóraktári előleglevonási jogosultság
         intracommunity_operations_exceed_50000_eur:
           label: Közösségen belüli ügyletek 50.000 EUR felett
+        m303_regime_composition:
+          label: A Modelo 303 rendszerösszetétele
         oss_enrolled:
           label: OSS/IOSS-regisztráció
         redeme_enrolled:
@@ -70103,6 +71325,8 @@ profile:
           label: ROI/VIES-regisztráció
         sii_enrolled:
           label: SII-regisztráció
+        voluntary_sii_enrolled:
+          label: Önkéntes SII-tagság
       maritime_worker:
         pending_eu_clearance:
           label: EU állami támogatási jóváhagyásra vár
@@ -70206,8 +71430,6 @@ profile:
           label: Lakóhely szerinti autonóm közösség
         jurisdiction_scope:
           label: Területi adórendszer
-        state_attribution_ratio:
-          label: Államra jutó arány
       taxpayer_type:
         country_of_fiscal_residence:
           label: Adóügyi illetőség országa
@@ -70281,8 +71503,6 @@ profile:
         title: Censo és bejelentkezés
       contact:
         title: Kapcsolat és adóügyi cím
-      filing_export:
-        title: Bevallási és exportálási kontextus
       identity:
         title: Azonosítás
       irpf:
@@ -70828,12 +72048,19 @@ wizard:
         help: A munkavállaló kiküldött-adózásba lépésének dátuma (ÉÉÉÉ-HH-NN). Csak
           akkor, ha az irpf-special-regime értéke "impatriado". RIRPF 116. cikkely.
           Az adózási rend a 6. naptári év végén jár le.
+      iva-cash-accounting-regime-enrolled:
+        help: Az IVA pénzforgalmi különös szabályozásába való bejelentkezés megadása.
       iva-group-dominant-entity-enrolled:
         help: IVA-csoport dominans szervezetekent bejelentkezett
       iva-group-member-enrolled:
         help: IVA-csoport tag szervezetekent bejelentkezett
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: A szénhidrogén-adóraktári rendszer előlegeinek levonására való jogosultság
+          megadása.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
+      iva-m303-regime-composition:
+        help: 'A Modelo 303 rendszerösszetétele: általános, egyszerűsített vagy vegyes.'
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
       iva-redeme-enrolled:
@@ -70844,6 +72071,8 @@ wizard:
         help: ROI-ba bejelentkezett
       iva-sii-enrolled:
         help: Az adózó be van-e jegyezve az SII-be
+      iva-voluntary-sii-enrolled:
+        help: Az önkéntes SII-tagság megadása, elkülönítve a kötelező bekerülési okoktól.
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
       legal-name:
@@ -70955,6 +72184,9 @@ wizard:
         help: Adóazonosító (NIF/CIF/DNI/NIE) az aktív profilhoz
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Bejelentett területi rendszer: közös terület vagy a még nem támogatott
+          forális terület.'
       taxation-type:
         help: 'Jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
@@ -70994,10 +72226,14 @@ wizard:
       lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
       a következővel: .'
     iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Bejelentkezett az IVA pénzforgalmi különös szabályozásába?
       iva-group-dominant-entity-enrolled:
         prompt: IVA-csoport dominans szervezetekent bejelentkezett
       iva-group-member-enrolled:
         prompt: IVA-csoport tag szervezetekent bejelentkezett
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Jogosult levonni a szénhidrogén-adóraktári rendszer előlegeit?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
@@ -71010,6 +72246,17 @@ wizard:
         prompt: ROI-ba bejelentkezett
       iva-sii-enrolled:
         prompt: SII-be bejelentkezett (azonnali információszolgáltatás)
+      iva-voluntary-sii-enrolled:
+        prompt: Önkéntesen csatlakozott az SII-hez?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Csak általános rendszer
+          mixed:
+            label: Vegyes rendszer
+          simplified:
+            label: Csak egyszerűsített rendszer
+        prompt: Milyen rendszerösszetételt jelent be a Modelo 303?
       title: IVA
     notes:
       notes:
@@ -71130,6 +72377,7 @@ wizard:
             description: Modul-alapú egyszerűsített IVA a jogosult tevékenységekhez
               (az objektív becsléshez kapcsolódik).
             label: Egyszerűsített adózási rend
+        prompt: Melyik IVA-rendszer alkalmazandó?
       legal-name:
         help: Jogi személyeknél ez az exportfejlécekben használt adózási név. Különbözik
           a helyi megjelenítési névtől.
@@ -71218,6 +72466,13 @@ wizard:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
         prompt: Adóügyi illetékességi autonóm közösség
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Közös adóterület
+          foral_unsupported:
+            label: Forális terület (még nem támogatott)
+        prompt: Melyik területi adórendszer vonatkozik erre a profilra?
       title: Adóügyi illetőség
     review:
       registered-non-official-suffix: ' (censal tanúsítványból - az AEAT által nem

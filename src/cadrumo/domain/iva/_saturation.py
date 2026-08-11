@@ -95,7 +95,7 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
     ),
     IvaCategory.INTRA_COMMUNITY_SUPPLY: (
         "potential intra-community supply: no Spanish rate is derivable here; "
-        "verify the customer VAT ID, cross-border transport, and reporting "
+        "verify the customer IVA ID, cross-border transport, and reporting "
         "evidence before treating it as exempt"
     ),
     IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: (
@@ -106,7 +106,7 @@ _NON_DERIVABLE_REASONS: dict[IvaCategory, str] = {
     IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY: (
         "potential intra-community service supply: no Spanish rate is "
         "derivable here because art. 69.Uno.1.o locates the service where the "
-        "recipient is established; verify the customer VAT ID and that no "
+        "recipient is established; verify the customer IVA ID and that no "
         "art. 70 regla especial brings the service back into the TAI"
     ),
     IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: (

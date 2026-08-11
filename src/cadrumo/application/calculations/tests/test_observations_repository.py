@@ -140,7 +140,7 @@ def _make_decision(*, taxpayer_nif: str) -> IvaCompensationReconciliationDecisio
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="Test decision",
+        reason_identity="aeat_wallet_validated",
         decided_at=datetime(2024, 4, 1, tzinfo=UTC),
     )
 
@@ -201,7 +201,7 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="Hashed-key path test.",
+        reason_identity="aeat_wallet_validated",
         decided_at=decided_at,
     )
 

@@ -111,6 +111,7 @@ def _revision(
         updated_at=_CLOCK,
         verified_at=_CLOCK if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
+    filing_instance_evidence=None,
     )
 
 
@@ -303,6 +304,7 @@ def test_revision_replay_inputs_project_m720_row_binding_values_into_draft_rows(
             filing_year=work_unit.filing_year,
             period=work_unit.period,
         ),
+        m303_regimen_simplificado_scope=None,
     )
 
     assert revision.binding_overrides == {}

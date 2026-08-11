@@ -10,7 +10,7 @@ import pytest
 
 from ....core import ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.iva_compensation import IvaCompensationOverride
+from ....domain.iva_compensation import IvaCompensationOverride, IvaCompensationReconciliationDecision
 from ...calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
@@ -196,7 +196,10 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 clock=_DECIDED_AT,
             )
         assert not hasattr(exc_info.value, "suggestion")
-        assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.blocked"
+        assert (
+            exc_info.value.precondition_failure.scenario_id
+            == "modelo.work.calculate.iva_wallet.filed_history_requires_override"
+        )
         assert len(calc_repo.load()) == 0
 
 
@@ -641,6 +644,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
         )
 
     assert replayed is not None
+    assert isinstance(replayed, IvaCompensationReconciliationDecision)
     assert replayed.selected_amount is None
     assert replayed.local_recurrence_amount is None
     assert replayed.divergence == "missing"
@@ -662,7 +666,7 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_
             repository=CalculationObservationRepository(),
             override=IvaCompensationOverride(
                 amount=Decimal("42"),
-                reason="Taxpayer reviewed the prior IVA compensation evidence.",
+                operator_explanation="Taxpayer reviewed the prior IVA compensation evidence.",
                 evidence_locator="observation-envelope:taxpayer-attestation",
                 recorded_at=_DECIDED_AT,
             ),

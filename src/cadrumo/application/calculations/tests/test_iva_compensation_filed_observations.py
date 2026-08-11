@@ -9,7 +9,7 @@ import pytest
 
 from ....adapters.outbound.aeat.sede import ObservedCasillaValue
 from ....adapters.outbound.aeat.sede._errors import SedeValidationError
-from ....core import CasillaValueKind, ObservedHeaderFact, Period
+from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import (
     IvaCompensationCasillaReferenceError,
@@ -78,6 +78,7 @@ def _history_state_from_filed_observation(observation: object):
     return iva_compensation_state_from_observation_envelope(
         envelope,
         taxpayer_nif=observation.authenticated_identity,
+        provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         expediente_id=observation.expediente_id,
         status=observation.status,
         source_observation_key=(
@@ -231,6 +232,7 @@ def test_iva_compensation_history_refuses_a_non_303_envelope() -> None:
         iva_compensation_state_from_observation_envelope(
             envelope,
             taxpayer_nif=observation.authenticated_identity,
+            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             expediente_id=observation.expediente_id,
             status=observation.status,
             source_observation_key="130:2024:4T:test",

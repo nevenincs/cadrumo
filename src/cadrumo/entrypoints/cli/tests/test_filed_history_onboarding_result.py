@@ -127,8 +127,12 @@ def test_the_reached_and_captured_tallies_are_separately_expressible() -> None:
     zero however much it reached. One field for both would make a truncated dry
     run indistinguishable from one that walked nothing.
     """
-    preview = FiledHistoryOnboardingResult(
-        **{**json.loads(_populated().model_dump_json()), "captured_count": 0, "reached_count": 4},
+    preview = FiledHistoryOnboardingResult.model_validate(
+        {
+            **_populated().model_dump(mode="json"),
+            "captured_count": 0,
+            "reached_count": 4,
+        },
     )
     assert preview.captured_count == 0
     assert preview.reached_count == 4

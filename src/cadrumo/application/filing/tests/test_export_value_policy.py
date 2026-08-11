@@ -68,7 +68,7 @@ def _record(record_id: str, field: ExportFieldDefinition, *, order: int) -> Expo
     )
 
 
-def _draft(*, checkbox: object, year: object):
+def _draft(*, checkbox: bool | None, year: int | str):
     period = Period.from_year_and_code(2026, "1T")
     stamped = datetime(2026, 8, 10, tzinfo=UTC)
     return ModeloDraft(
@@ -147,7 +147,11 @@ def _render_one(record: ExportRecordDefinition, value: object) -> str:
     ("checkbox", "year", "expected"),
     [(False, 2026, b"026"), (True, "2026", b"126"), (None, 2000, b"000")],
 )
-def test_filing_writer_emits_exact_policy_bytes(checkbox: object, year: object, expected: bytes) -> None:
+def test_filing_writer_emits_exact_policy_bytes(
+    checkbox: bool | None,
+    year: int | str,
+    expected: bytes,
+) -> None:
     assert (
         render_layout(
             _two_record_layout(),

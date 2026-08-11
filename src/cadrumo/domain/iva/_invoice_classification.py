@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, IvaDeductionFactKind
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
 # inside ``classify_invoice_line_for_iva``
@@ -50,6 +50,7 @@ from ...core import STRICT_FROZEN_CONFIG
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
 from ._classification import InvoiceKind, domestic_categories_by_rate_kind
+from ._deduction_facts import IvaDeductionClassificationProvenance
 from ._flow import (
     IvaFlowDirection,
     IvaSettlementSide,
@@ -214,6 +215,10 @@ def invoice_line_to_iva_observation(
     base_amount: Decimal,
     iva_amount: Decimal,
     recargo_amount: Decimal = Decimal("0"),
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    deduction_provenance: IvaDeductionClassificationProvenance | None = None,
+    investment_asset_id: str | None = None,
+    rectifies_ledger_id: str | None = None,
 ) -> IvaLedgerObservation:
     """Build an :class:`IvaLedgerObservation` from invoice line metadata.
 
@@ -245,6 +250,13 @@ def invoice_line_to_iva_observation(
             (LIVA art. 161), or zero when none was. Routed to the Modelo 303
             recargo cuota casilla for the line's rate tier via the
             ``recargo_amount_sum`` fact.
+        deduction_fact_kind: Exact evidence-grounded deduction family for a
+            received line. Output lines must leave it unset.
+        deduction_provenance: Immutable authority for the received line's
+            deduction family. Output lines must leave it unset.
+        investment_asset_id: Reciprocal investment-register identity when the
+            deduction family is an investment acquisition.
+        rectifies_ledger_id: Corrected ledger identity for a rectification.
 
     Returns:
         An :class:`IvaLedgerObservation` with the full classification
@@ -274,6 +286,10 @@ def invoice_line_to_iva_observation(
         base_amount=base_amount,
         iva_amount=iva_amount,
         recargo_amount=recargo_amount,
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
+        investment_asset_id=investment_asset_id,
+        rectifies_ledger_id=rectifies_ledger_id,
         # applied_rate was previously left unset, on the reasoning that an
         # invoice line carries a rate SLOT rather than a number, so filling it
         # would mean re-deriving the rate from the TIER -- answering "what does

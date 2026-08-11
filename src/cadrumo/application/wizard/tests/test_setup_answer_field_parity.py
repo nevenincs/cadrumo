@@ -20,6 +20,7 @@ import pytest
 
 from ....core.setup_answers import SETUP_ANSWER_FIELDS, SetupAnswers, project_setup_answers
 from .._catalogue import SETUP_FLOW
+from .._models import WizardQuestion
 from .._persistence import project_answers
 
 pytestmark = [
@@ -78,7 +79,7 @@ def test_both_projections_agree_on_a_populated_record() -> None:
     would make the two implementations agree for the wrong reason.
     """
     values = {
-        question.profile_key: _non_default_token(question.answer_type, question.default)
+        question.profile_key: _non_default_token(question)
         for question in _QUESTIONS
         if question.profile_key is not None
     }
@@ -139,8 +140,10 @@ def test_the_table_reads_the_modelo_130_exemption_flag_the_wizard_never_asked_fo
     assert from_catalogue.professional_income_withholding_ge_70pct is False
 
 
-def _non_default_token(answer_type: type, default: str | None) -> str:
+def _non_default_token(question: WizardQuestion) -> str:
     """Return a token that is valid for the type and differs from ``default``."""
-    if answer_type is bool:
-        return "false" if default == "true" else "true"
+    if question.answer_type is bool:
+        return "false" if question.default == "true" else "true"
+    if question.choices:
+        return next(choice.value for choice in question.choices if choice.value != question.default)
     return "sample"

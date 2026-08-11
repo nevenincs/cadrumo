@@ -29,8 +29,7 @@ from typing import TYPE_CHECKING
 from ...core import CasillaId
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
-from ...domain.calculations.registry import LegalRefId, SourceRefId
-from ...domain.calculations.registry import RevisionId
+from ...domain.calculations.registry import LegalRefId, RevisionId, SourceRefId
 
 if TYPE_CHECKING:
     from ...application.modelo import (

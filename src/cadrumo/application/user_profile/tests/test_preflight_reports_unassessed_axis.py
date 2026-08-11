@@ -128,9 +128,9 @@ def test_the_shipped_schema_assesses_nothing_for_a_real_modelo() -> None:
     universally empty - see
     ``test_preflight_modelo_100_per_operation_axis_now_contributes`` in
     ``test_services.py`` for the modelo 100 positive case. This test still
-    holds for modelo 303 specifically: both grounded modelo 303 fields
-    (``iva.autoconsumo_promotor_base``, ``tax_residence.state_attribution_ratio``)
-    are conditionally-required, not schema-`required=true`, so the
+    holds for modelo 303 specifically: the remaining authorable binding field
+    (``iva.autoconsumo_promotor_base``) is conditionally required, while state
+    attribution is a derived selector rather than an authorable profile field, so the
     required+prefix walk still selects nothing for modelo 303 and a profile
     declaring nothing is reported ``ready`` while nothing schema-required was
     examined. This asserts the flag exposes that, and is paired with the

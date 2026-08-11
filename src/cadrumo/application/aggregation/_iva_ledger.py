@@ -46,7 +46,6 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -86,11 +85,11 @@ from ...domain.iva import (
     ProrrataInputError,
     ProrrataReference,
     StatedCountryCodeStatus,
+    category_components,
     category_cuota_is_zero_by_law,
     deductible_percentage_for,
     derive_flow_for_classification,
     domestic_categories_by_rate_kind,
-    iva_category_components,
     rate_kinds_for_declared_rate,
     rate_table_covers_any_positive_tier,
     stated_country_code_status,
@@ -192,11 +191,11 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
     INVALID_PRORRATA_REFERENCE = "invalid_prorrata_reference"
     UNSUPPORTED_IVA_CATEGORY = "unsupported_iva_category"
-    # Ley 37/1992 art. 25 exempts on the acquirer's VAT IDENTIFICATION in
+    # Ley 37/1992 art. 25 exempts on the acquirer's IVA IDENTIFICATION in
     # another Member State, not on where it is established, so these two read
     # `counterparty_identification_state`. Keyed on establishment they landed in
     # money in BOTH directions: a Spanish-established acquirer holding a German
-    # VAT number was refused an exemption art. 25 grants, and a
+    # IVA number was refused an exemption art. 25 grants, and a
     # German-established acquirer purchasing under a Spanish NIF-IVA had a
     # domestic supply zero-rated. Absent identification refuses here rather than
     # falling back to the country -- that fallback IS the defect.
@@ -522,9 +521,8 @@ def aggregate_iva_ledger_observations_from_repositories(
     """
     if transaction_repository is None:
         concrete_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
-        concrete_repository.migrate_iva_deduction_authority(asset_profile_id=bucket_id)
+        investment_asset_register = concrete_repository.migrate_iva_deduction_authority(asset_profile_id=bucket_id)
         repository: TransactionCatalogueRepositoryProtocol = concrete_repository
-        investment_asset_register = BienesInversionIvaRegisterRepository(bucket_id=bucket_id).load()
         investment_asset_profile_id = bucket_id
     else:
         repository = transaction_repository
@@ -1091,10 +1089,7 @@ def resolve_iva_differentiated_deduction_contributions(
     ledger_ids = tuple(row.ledger_id for row in rows)
     if len(ledger_ids) != len(set(ledger_ids)):
         raise ValueError("differentiated deduction observations contain duplicate ledger identity")
-    if any(
-        row.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
-        for row in rows
-    ):
+    if any(row.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION for row in rows):
         raise ValueError("investment-goods regularisation is owned only by the bienes-inversion register")
     by_sector = {item.sector_id: item for item in apportionment.sector_apportionments}
     if len(by_sector) != len(apportionment.sector_apportionments):
@@ -1118,8 +1113,7 @@ def resolve_iva_differentiated_deduction_contributions(
             if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
                 continue
             selected = tuple(
-                row for row in rows
-                if row.prorrata_sector_id == sector_id and row.deduction_fact_kind is kind
+                row for row in rows if row.prorrata_sector_id == sector_id and row.deduction_fact_kind is kind
             )
             apportioned = _apportioned_deducible_cuota(
                 revision,
@@ -1182,9 +1176,7 @@ def _active_prorrata_apportionment(
                 reason = "is inactive for the filing year"
             else:
                 reason = "has no resolved provisional percentage"
-            raise AggregationValidationError(
-                t(f"differentiated sector {sector_id!r} {reason}")
-            )
+            raise AggregationValidationError(t(f"differentiated sector {sector_id!r} {reason}"))
         sector_apportionments_list.append(
             IvaLedgerSectorApportionment(
                 sector_id=sector_id,
@@ -1500,7 +1492,7 @@ def _declared_category_issue(
     )
     if d5_issue is not None:
         return d5_issue
-    components = iva_category_components(explicit_category, invoice_kind)
+    components = category_components(explicit_category, invoice_kind)
     if components.applicability is IvaKindApplicability.DOES_NOT_ARISE:
         # The row's own note names the category that IS this side's
         # counterpart, so the refusal can say what the operator probably
@@ -2039,7 +2031,7 @@ def _validate_intracom_export_counterparty(
       ``EUMemberState``.
 
     The two rules read DIFFERENT facts, deliberately. Ley 37/1992 art. 25
-    exempts on the acquirer holding a VAT identification assigned by another
+    exempts on the acquirer holding a IVA identification assigned by another
     Member State and says nothing about where it has its sede, so the
     intra-community rule reads identification and establishment does not enter
     it at all. The export rule is the one genuinely about place -- an export
@@ -2048,7 +2040,7 @@ def _validate_intracom_export_counterparty(
     Absent identification refuses rather than falling back to
     ``eu_member_state``. That fallback is precisely the defect this shape
     replaced: it read an address fact as a registration fact, over-declaring a
-    Spanish-established acquirer holding a German VAT number and silently
+    Spanish-established acquirer holding a German IVA number and silently
     under-declaring a German-established acquirer purchasing under a Spanish
     NIF-IVA.
     """
@@ -2060,8 +2052,8 @@ def _validate_intracom_export_counterparty(
                 detail=tr(
                     "aggregation.iva_ledger.errors.missing_counterparty_identification_state",
                     default=(
-                        "An intra-community supply is exempt on the acquirer's VAT identification in "
-                        "another Member State. Record which Member State VAT-identifies this "
+                        "An intra-community supply is exempt on the acquirer's IVA identification in "
+                        "another Member State. Record which Member State IVA-identifies this "
                         "counterparty; its country of establishment cannot answer this."
                     ),
                 ),
@@ -2073,7 +2065,7 @@ def _validate_intracom_export_counterparty(
                 detail=tr(
                     "aggregation.iva_ledger.errors.domestic_identification_on_intra_community_transaction",
                     default=(
-                        "A counterparty purchasing under a Spanish VAT identification is not an "
+                        "A counterparty purchasing under a Spanish IVA identification is not an "
                         "intra-community acquirer, whatever its country of establishment."
                     ),
                 ),
@@ -2107,7 +2099,7 @@ def _validate_intracom_export_counterparty(
                     default=(
                         "An export is exempt because the operation leaves the Union, so it turns on where "
                         "the counterparty is ESTABLISHED. Record the counterparty's country; an absent or "
-                        "unassigned code establishes nothing, and its VAT identification cannot answer this."
+                        "unassigned code establishes nothing, and its IVA identification cannot answer this."
                     ),
                 ),
             )

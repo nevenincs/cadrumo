@@ -83,7 +83,7 @@ class TestForeignCounterpartyTaxIdsSurviveGrounding:
     """
 
     @pytest.mark.parametrize(
-        "vat_number",
+        "iva_number",
         [
             pytest.param("IE9825613K", id="ireland"),
             pytest.param("DE811569869", id="germany"),
@@ -92,8 +92,8 @@ class TestForeignCounterpartyTaxIdsSurviveGrounding:
             pytest.param("XI123456789", id="northern-ireland"),
         ],
     )
-    def test_a_structurally_valid_eu_vat_number_is_kept(self, vat_number: str) -> None:
-        assert _grounded_tax_id(vat_number) == vat_number
+    def test_a_structurally_valid_eu_iva_number_is_kept(self, iva_number: str) -> None:
+        assert _grounded_tax_id(iva_number) == iva_number
 
     def test_separators_an_operator_or_document_prints_are_normalised_away(self) -> None:
         """A VAT number printed with spaces or dots still grounds, in canonical form."""
@@ -134,7 +134,7 @@ class TestGroundingStillRefusesWhatItCannotVerify:
     def test_a_number_matching_no_published_pattern_is_dropped(self, candidate: str) -> None:
         assert _grounded_tax_id(candidate) is None
 
-    def test_a_greek_number_under_its_iso_code_rather_than_its_vat_prefix_is_dropped(self) -> None:
+    def test_a_greek_number_under_its_iso_code_rather_than_its_iva_prefix_is_dropped(self) -> None:
         """Greece's VAT prefix is ``EL``; a ``GR``-prefixed number is not a VAT number."""
         assert _grounded_tax_id("GR123456789") is None
         assert _grounded_tax_id("EL123456789") == "EL123456789"

@@ -30,13 +30,22 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import BindingId
+from ....domain.deadlines import M303RegimeComposition
 from ....domain.filing import ModeloInputs
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.submission import ModeloDraftStatus
 from .. import build_draft, build_runtime_schema_provider
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
+
+
+def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
+    return M303RegimenSimplificadoScopeDecision(
+        regime_composition=M303RegimeComposition.GENERAL,
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -112,6 +121,7 @@ def _build_modelo_303_1t_draft():
         profile=ModeloOperatorProfile(tax_id=_TAX_ID, display_name="Conditional-trace regression"),
         inputs=_modelo_303_1t_inputs(),
         schema_provider=schema_provider,
+        m303_regimen_simplificado_scope=_general_m303_scope(),
     ), schema_provider
 
 

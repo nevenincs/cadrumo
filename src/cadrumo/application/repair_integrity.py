@@ -57,11 +57,24 @@ from ..adapters.persistence.storage import (
 from ..adapters.persistence.storage.sql.secure_objects import (
     SecureObjectDecryptabilityRow,
 )
-from ..core import STRICT_FROZEN_CONFIG, Hex64Str
+from ..core import (
+    STRICT_FROZEN_CONFIG,
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Hex64Str,
+)
 from ..core.errors import CoreError
 from ..core.hashing import content_hash_hex
 from ..core.logging import get_logger
 from .diagnostics import DiagnosticCheck
+from .operator_actions import (
+    ActionArgumentBinding,
+    ActionReference,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 
 _log = get_logger(__name__)
 
@@ -121,8 +134,8 @@ class RepairIntegrityReport(BaseModel):
 
     ``namespaces`` carries one :class:`SecureObjectNamespaceIntegrity` per
     probed namespace. ``check`` is the aggregate :class:`DiagnosticCheck` row
-    used by repair renderers; failing reports carry the quarantine command as
-    the next action.
+    used by repair renderers; failing reports carry a typed quarantine
+    precondition verdict.
 
     See Also:
         :func:`build_repair_integrity_report`
@@ -187,9 +200,8 @@ def _aggregate_integrity(
 ) -> DiagnosticCheck:
     """Render the cross-namespace summary as one :class:`DiagnosticCheck` row.
 
-    The check honours the exhaustiveness lock: ``fail`` / ``warn`` rows
-    MUST carry exactly one of ``next_action`` / ``dead_end``; ``ok`` rows
-    MUST carry neither.
+    The check honours the typed diagnostic contract: ``fail`` / ``warn`` rows
+    MUST carry a precondition verdict; ``ok`` rows MUST carry neither.
     """
     readable = sum(item.readable for item in integrity)
     unreadable = sum(item.unreadable for item in integrity)
@@ -208,7 +220,31 @@ def _aggregate_integrity(
         name="secure_objects.integrity",
         status="fail",
         summary=f"{unreadable} undecryptable row(s) in: {impacted}",
-        next_action="aeat config repair quarantine --yes",
+        precondition_verdict=PreconditionVerdict(
+            failed_condition_id="diagnostics.secure_objects.integrity.readable",
+            evidence=(
+                ConditionEvidence(
+                    condition_id="diagnostics.secure_objects.integrity.readable",
+                    evidence_id="diagnostics.secure_objects.integrity.observation",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    values={
+                        "readable_total": readable,
+                        "unreadable_total": unreadable,
+                    },
+                ),
+            ),
+            action=ActionReference(action_id="operator.diagnostics.secure_objects.quarantine"),
+            argument_bindings=(
+                ActionArgumentBinding(
+                    argument_name="yes",
+                    status=ActionArgumentStatus.RESOLVED,
+                    value=True,
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="yes",
+                ),
+            ),
+            conditionality=ActionConditionality.IMMEDIATE,
+        ),
     )
 
 

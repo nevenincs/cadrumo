@@ -429,7 +429,8 @@ def _authority_decision_row(decision: _IvaCompensationReconciliationDecision) ->
         divergence=decision.divergence,
         blocked=decision.blocked,
         stale_wallet=decision.stale_wallet,
-        reason=decision.reason,
+        reason_identity=decision.reason_identity,
+        operator_explanation=decision.operator_explanation,
         wallet_captured_at=decision.wallet_captured_at,
         decided_at=decision.decided_at,
         authority_sources=tuple(_authority_source_text(source) for source in decision.authority_sources),
@@ -515,7 +516,7 @@ def _decimal_text(value: Decimal | None) -> str | None:
 
 
 def _taxpayer_ref(taxpayer_nif: str | None) -> str:
-    """Pseudonymise a filing subject's NIF into a CLI-safe reference.
+    r"""Pseudonymise a filing subject's NIF into a CLI-safe reference.
 
     ``None`` is a legitimate domain value: a carry-forward lot inherits its
     subject from the source period state, which may itself declare none. The

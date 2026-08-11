@@ -90,7 +90,7 @@ def test_non_domestic_categories_surface_not_derivable() -> None:
         assert resolution.reason != "", category
 
 
-def test_eu_vat_non_derivable_reasons_are_advisory_not_filing_certainty() -> None:
+def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> None:
     """EU VAT / reverse-charge reasons must not read like legal filing certainty."""
     cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
         (

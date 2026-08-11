@@ -52,6 +52,7 @@ from ._ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
+from ._m303_orden_anual import M303AnnualOrdenAuthority
 from ._period_selector_match import selector_period_matches_request
 from ._schema_governance import (
     validate_attribution_names_somebody,
@@ -1455,6 +1456,7 @@ class RegistryCatalogues(RegistryModel):
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
+    m303_annual_orden: M303AnnualOrdenAuthority = Field(default_factory=M303AnnualOrdenAuthority.empty)
 
 
 class RegistrySnapshot(RegistryModel):
@@ -1478,6 +1480,7 @@ class RegistrySnapshot(RegistryModel):
     constructs: Mapping[ConstructId, ConstructDefinition]
     dependency_classifications: Mapping[DependencyClassificationId, DependencyClassificationDefinition]
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
+    m303_annual_orden: M303AnnualOrdenAuthority = Field(default_factory=M303AnnualOrdenAuthority.empty)
 
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:

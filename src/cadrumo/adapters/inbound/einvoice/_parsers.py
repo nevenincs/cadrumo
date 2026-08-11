@@ -7,10 +7,10 @@ loading are off and size and depth are bounded before any field is read.
 
 Three behaviours here are deliberate and each closes a diagnosed defect.
 
-**The VAT number is selected as the party tax identifier**, not the first
+**The IVA number is selected as the party tax identifier**, not the first
 identifier in the tree. ZUGFeRD is a Franco-German format and its supplier
 block routinely carries a French SIRET or a German Steuernummer alongside the
-VAT id; taking the first one produced 22 of the 34 wrong fields measured
+IVA id; taking the first one produced 22 of the 34 wrong fields measured
 corpus-wide, with zero missing fields -- the parser was finding every field and
 choosing the wrong one.
 
@@ -36,10 +36,10 @@ from ._xml import EInvoiceXmlParseError, parse_hardened_xml
 
 __all__ = ["ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
 
-# Tax-scheme identifiers that mark an element as carrying a VAT number rather
+# Tax-scheme identifiers that mark an element as carrying an IVA number rather
 # than some other national registration. EN16931 uses schemeID="VA"; Facturae
 # names the person-type/residence explicitly.
-_VAT_SCHEME_TOKENS = frozenset({"va", "vat", "vatid"})
+_IVA_SCHEME_TOKENS = frozenset({"va", "vat", "vatid"})
 
 # EN16931 UNTDID 5305 tax-category codes -> IvaCategory member values. Mapped
 # from the DOCUMENT'S OWN stated code: this is a capability only a structured
@@ -377,7 +377,7 @@ def _cii_country_code(party: Element) -> str | None:
 
     Scoped to the address element rather than searched across the party subtree.
     A CII party also carries ``ram:SpecifiedTaxRegistration``, whose id opens
-    with the two letters of a country for every EU VAT number, so a descendant
+    with the two letters of a country for every EU IVA number, so a descendant
     walk for a two-letter code would read a tax-scheme prefix as the party's
     place of establishment -- a value that is usually right and silently wrong
     exactly where a party is registered somewhere it is not established.
@@ -405,11 +405,11 @@ def _decimal(raw: str | None) -> Decimal | None:
     return coerce_decimal(raw)
 
 
-def _vat_id(party: Element) -> str | None:
-    """Return the party's VAT number, never a SIRET or Steuernummer.
+def _iva_id(party: Element) -> str | None:
+    """Return the party's IVA number, never a SIRET or Steuernummer.
 
-    Prefers an element explicitly scheme-tagged as VAT. Falls back to a value
-    carrying a two-letter country prefix, which is the EU VAT-id shape and
+    Prefers an element explicitly scheme-tagged as ``VAT``. Falls back to a value
+    carrying a two-letter country prefix, which is the EU IVA-id shape and
     which a SIRET (9 or 14 bare digits) and a Steuernummer (bare digits and
     slashes) both fail. Returns ``None`` rather than the first identifier when
     neither test passes -- an absent id is recoverable, a wrong one is not.
@@ -423,7 +423,7 @@ def _vat_id(party: Element) -> str | None:
         if name not in {"ID", "CompanyID", "TaxNumber", "RegistrationNumber", "Value"}:
             continue
         scheme = (node.get("schemeID") or node.get("schemeAgencyID") or "").strip().lower()
-        if scheme in _VAT_SCHEME_TOKENS:
+        if scheme in _IVA_SCHEME_TOKENS:
             return text
         candidates.append(text)
     for text in candidates:
@@ -468,7 +468,7 @@ def _apply_cii_parties(root: Element, parsed: ParsedEInvoice) -> None:
         found = _find_all(root, party_name)
         if not found:
             continue
-        setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
+        setattr(parsed, f"{target}_tax_id", _iva_id(found[0]))
         # A direct child: the party subtree also carries a contact's
         # PersonName and may carry a SpecifiedLegalOrganization trading
         # name, neither of which is the party's own stated name.
@@ -570,7 +570,7 @@ def _apply_ubl_parties(root: Element, parsed: ParsedEInvoice) -> None:
     for party_tag, target in (("AccountingSupplierParty", "supplier"), ("AccountingCustomerParty", "customer")):
         found = _find_all(root, party_tag)
         if found:
-            setattr(parsed, f"{target}_tax_id", _vat_id(found[0]))
+            setattr(parsed, f"{target}_tax_id", _iva_id(found[0]))
             setattr(parsed, f"{target}_name", _ubl_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _ubl_postal_code(found[0]))
             setattr(parsed, f"{target}_country_code", _ubl_country_code(found[0]))
@@ -681,7 +681,7 @@ def _apply_facturae_parties(root: Element, parsed: ParsedEInvoice) -> None:
         found = _find_all(root, party_tag)
         if found:
             # Facturae states the fiscal identifier in TaxIdentificationNumber,
-            # which IS the VAT number; no SIRET/Steuernummer ambiguity here.
+            # which IS the IVA number; no SIRET/Steuernummer ambiguity here.
             setattr(parsed, f"{target}_tax_id", _first_text(found[0], "TaxIdentificationNumber"))
             setattr(parsed, f"{target}_name", _facturae_party_name(found[0]))
             setattr(parsed, f"{target}_postal_code", _facturae_postal_code(found[0]))

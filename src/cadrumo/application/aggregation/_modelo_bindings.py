@@ -287,6 +287,7 @@ class LedgerIvaAggregationSourceResolver:
             context=context,
             period=aggregation_period,
             transaction_binding_values=binding_values,
+            ledger_observations=aggregation.observations,
             invoice_repository=self._invoice_repository,
             prorrata_apportionment=aggregation.prorrata_apportionment,
         )
@@ -1235,6 +1236,7 @@ def _raise_if_invoice_iva_would_be_silent(
     context: CalculationSourceContext,
     period: Period,
     transaction_binding_values: Mapping[BindingId, Decimal],
+    ledger_observations: Sequence[IvaLedgerObservation] = (),
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None,
 ) -> _InvoiceIvaSilenceReport:
@@ -1282,8 +1284,36 @@ def _raise_if_invoice_iva_would_be_silent(
     screened = _screened_invoice_iva_observations(
         context=context,
         period=period,
+        ledger_observations=ledger_observations,
         invoice_repository=invoice_repository,
     )
+    if screened.deduction_authority_missing:
+        missing_invoice_ids = tuple(
+            sorted(invoice.invoice_id for invoice in screened.deduction_authority_missing)
+        )
+        raise AggregationValidationError(
+            t("errors.error.error_modelo_aggregation_binding"),
+            context={
+                "reason": "invoice_deduction_authority_missing_from_transaction_ledger",
+                "modelo": str(context.modelo),
+                "filing_year": str(context.filing_year),
+                "period": context.period.registry_token,
+                "source_kind": "ledger_iva_aggregation",
+                "invoice_ids": missing_invoice_ids[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT],
+                "invoice_count": str(len(missing_invoice_ids)),
+            },
+            precondition_verdict=aggregation_no_recovery_verdict(
+                AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
+                facts={
+                    "modelo": str(context.modelo),
+                    "filing_year": str(context.filing_year),
+                    "period": context.period.registry_token,
+                    "source_kind": "ledger_iva_aggregation",
+                    "invoice_count": len(missing_invoice_ids),
+                    "missing_binding_count": 0,
+                },
+            ),
+        )
     if not screened.observations:
         return _InvoiceIvaSilenceReport(
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
@@ -1396,14 +1426,14 @@ def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
 
     The same coupling the bank-transaction path gates, and reading the same two
     facts it reads -- which are NOT one fact. Ley 37/1992 art. 25 exempts an
-    intra-community supply on the acquirer holding a VAT IDENTIFICATION assigned
+    intra-community supply on the acquirer holding a IVA IDENTIFICATION assigned
     by another Member State, so that arm reads
     ``counterparty_identification_state``. The export arm is the one genuinely
     about place -- an export leaves the Union -- so it keeps reading the
     counterparty's country of establishment.
 
     Reading the country for BOTH was a defect that landed in money in both
-    directions: a Spanish-established acquirer holding a German VAT number had
+    directions: a Spanish-established acquirer holding a German IVA number had
     its exempt supply withheld from casilla 59 (over-declaration), and a
     German-established acquirer purchasing under a Spanish NIF-IVA had a
     domestic supply routed there (silent under-declaration). Absent
@@ -1486,6 +1516,8 @@ def _declared_category_base_only_observation(
         line: The line being projected.
         devengo_date: The date the observation is declared on.
         recargo_amount: Recargo attributable to this line, already resolved.
+        deduction_authority: Exact frozen transaction-ledger authority linked
+            to a received invoice, or ``None`` for an issued invoice.
         category: The invoice's own declared category, already read and
             confirmed non-``None`` by the caller -- it is what keyed the
             ``_DECLARED_CATEGORY_BASE_ONLY_FLOWS`` lookup that selected
@@ -1527,6 +1559,7 @@ def _invoice_line_iva_observation(
     line_index: int,
     devengo_date: date,
     recargo_amount: Decimal,
+    deduction_authority: IvaLedgerObservation | None = None,
 ) -> IvaLedgerObservation | None:
     """Project one invoice line into the observation the screen declares from.
 
@@ -1557,6 +1590,8 @@ def _invoice_line_iva_observation(
         line_index: Position of the line, folded into the observation id.
         devengo_date: The date the observation is declared on.
         recargo_amount: Recargo attributable to this line, already resolved.
+        deduction_authority: Exact frozen transaction-ledger authority linked
+            to a received invoice, or ``None`` for an issued invoice.
 
     Returns:
         The observation to declare from, or ``None`` when the line routes
@@ -1572,6 +1607,18 @@ def _invoice_line_iva_observation(
             base_amount=line.subtotal,
             iva_amount=line.iva_amount,
             recargo_amount=recargo_amount,
+            deduction_fact_kind=(
+                deduction_authority.deduction_fact_kind if deduction_authority is not None else None
+            ),
+            deduction_provenance=(
+                deduction_authority.deduction_provenance if deduction_authority is not None else None
+            ),
+            investment_asset_id=(
+                deduction_authority.investment_asset_id if deduction_authority is not None else None
+            ),
+            rectifies_ledger_id=(
+                deduction_authority.rectifies_ledger_id if deduction_authority is not None else None
+            ),
         )
     category = invoice.iva_category
     declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
@@ -1616,6 +1663,18 @@ def _invoice_line_iva_observation(
             base_amount=line.subtotal,
             iva_amount=line.iva_amount,
             recargo_amount=recargo_amount,
+            deduction_fact_kind=(
+                deduction_authority.deduction_fact_kind if deduction_authority is not None else None
+            ),
+            deduction_provenance=(
+                deduction_authority.deduction_provenance if deduction_authority is not None else None
+            ),
+            investment_asset_id=(
+                deduction_authority.investment_asset_id if deduction_authority is not None else None
+            ),
+            rectifies_ledger_id=(
+                deduction_authority.rectifies_ledger_id if deduction_authority is not None else None
+            ),
         )
     if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there
@@ -1947,6 +2006,7 @@ class _ScreenedInvoiceIva:
     compared: tuple[Invoice, ...] = ()
     category_counterparty_mismatches: tuple[Invoice, ...] = ()
     reverse_charge_underivable: tuple[Invoice, ...] = ()
+    deduction_authority_missing: tuple[Invoice, ...] = ()
     recargo_rate_divergences: tuple[_RecargoRateDivergence, ...] = ()
     #: The catalogue could not be READ, as distinct from holding no invoices.
     #: Without this the two are the same value downstream, and the silence guard
@@ -1983,6 +2043,7 @@ def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
     period: Period,
+    ledger_observations: Sequence[IvaLedgerObservation] = (),
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
 ) -> _ScreenedInvoiceIva:
     try:
@@ -2002,6 +2063,7 @@ def _screened_invoice_iva_observations(
     compared_invoices: list[Invoice] = []
     category_counterparty_mismatches: list[Invoice] = []
     reverse_charge_underivable: list[Invoice] = []
+    deduction_authority_missing: list[Invoice] = []
     recargo_rate_divergences: list[_RecargoRateDivergence] = []
     for invoice in catalogue.values():
         if not _screened_invoice_in_period(invoice, context=context, period=period):
@@ -2022,9 +2084,22 @@ def _screened_invoice_iva_observations(
         if divergence is not None:
             recargo_rate_divergences.append(divergence)
         recargo_line_index = _sole_recargo_bearing_line_index(invoice)
+        deduction_authority = _linked_invoice_deduction_authority(
+            invoice,
+            ledger_observations=ledger_observations,
+        )
+        if (
+            invoice.kind is InvoiceKind.RECEIVED
+            and any(line.iva_amount > Decimal("0") for line in invoice.lines)
+            and deduction_authority is None
+        ):
+            deduction_authority_missing.append(invoice)
+            continue
         contributed = False
         for line_index, line in enumerate(invoice.lines):
             if not _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
+                continue
+            if invoice.kind is InvoiceKind.RECEIVED and line.iva_amount == Decimal("0"):
                 continue
             observation = _invoice_line_iva_observation(
                 invoice=invoice,
@@ -2034,6 +2109,7 @@ def _screened_invoice_iva_observations(
                 recargo_amount=(
                     invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
                 ),
+                deduction_authority=deduction_authority,
             )
             if observation is None:
                 continue
@@ -2054,8 +2130,55 @@ def _screened_invoice_iva_observations(
         compared=tuple(compared_invoices),
         category_counterparty_mismatches=tuple(category_counterparty_mismatches),
         reverse_charge_underivable=tuple(reverse_charge_underivable),
+        deduction_authority_missing=tuple(deduction_authority_missing),
         recargo_rate_divergences=tuple(recargo_rate_divergences),
     )
+
+
+def _linked_invoice_deduction_authority(
+    invoice: Invoice,
+    *,
+    ledger_observations: Sequence[IvaLedgerObservation],
+) -> IvaLedgerObservation | None:
+    """Return one exact linked ledger authority for a received invoice.
+
+    Invoice amounts are evidence for the silence comparison, but the invoice
+    aggregate does not own the current/investment/import/rectification decision.
+    That authority lives on the frozen transaction-ledger observation. Every
+    linked observation must therefore agree on the complete deduction identity;
+    absence or disagreement is ambiguity and remains unprojected.
+    """
+    if invoice.kind is not InvoiceKind.RECEIVED:
+        return None
+    linked_ids = frozenset(invoice.linked_transaction_ids)
+    authorities = tuple(
+        observation
+        for observation in ledger_observations
+        if observation.ledger_id in linked_ids
+        and observation.deduction_fact_kind is not None
+        and observation.deduction_provenance is not None
+    )
+    if not authorities:
+        return None
+    first = authorities[0]
+    identity = (
+        first.deduction_fact_kind,
+        first.deduction_provenance,
+        first.investment_asset_id,
+        first.rectifies_ledger_id,
+    )
+    if any(
+        (
+            observation.deduction_fact_kind,
+            observation.deduction_provenance,
+            observation.investment_asset_id,
+            observation.rectifies_ledger_id,
+        )
+        != identity
+        for observation in authorities[1:]
+    ):
+        return None
+    return first
 
 
 def _sole_recargo_bearing_line_index(invoice: Invoice) -> int | None:

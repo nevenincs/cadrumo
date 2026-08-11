@@ -99,6 +99,6 @@ def test_the_bundled_table_is_free_of_rings() -> None:
     correct on synthetic input while refusing the real one, and the real table
     is the only one that ships.
     """
-    from .._establishment import _vat_territory_carve_outs
+    from .._establishment import _territory_carve_outs
 
-    assert _vat_territory_carve_outs()["MC"].assimilated_to == "FR"
+    assert _territory_carve_outs()["MC"].assimilated_to == "FR"

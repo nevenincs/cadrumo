@@ -873,9 +873,7 @@ def validate_investment_asset_reciprocity(
     if ledger_profile_id != asset_profile_id:
         raise BienInversionValidationError("investment ledger and asset register must share a secure profile")
     records_by_id = {record.identifier: record for record in register.records}
-    applicable_asset_ids = {
-        record.identifier for record in register.records if record.acquisition_year == filing_year
-    }
+    applicable_asset_ids = {record.identifier for record in register.records if record.acquisition_year == filing_year}
     seen_assets: set[str] = set()
     for observation in observations:
         kind = observation.deduction_fact_kind

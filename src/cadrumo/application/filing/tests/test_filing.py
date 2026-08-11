@@ -14,7 +14,6 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....core.resources import resources
-
 from ....domain.filing import (
     CasillaSchemaProvider,
     ModeloBuilderError,
@@ -187,6 +186,7 @@ def _draft(
             _M130_CASILLA_18: Decimal("0"),
         },
         schema_provider=schema_provider or _schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
 
@@ -243,6 +243,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_130() -> None:
             _M130_CASILLA_18: Decimal("0"),
         },
         schema_provider=_modelo_130_unscoped_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -299,6 +300,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_111() -> None:
             _M111_CASILLA_29: Decimal("40.00"),
         },
         schema_provider=_unscoped_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -329,6 +331,7 @@ def test_build_draft_blocks_negative_modelo_111_retenciones() -> None:
             _M111_CASILLA_29: Decimal("40.00"),
         },
         schema_provider=_unscoped_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     assert draft.status is ModeloDraftStatus.BORRADOR
@@ -348,6 +351,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_115() -> None:
             _M115_CASILLA_04: Decimal("10.00"),
         },
         schema_provider=_unscoped_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -377,6 +381,7 @@ def test_build_draft_uses_registry_snapshot_for_modelo_123() -> None:
             _M123_CASILLA_13: Decimal("12.25"),
         },
         schema_provider=_unscoped_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -408,6 +413,7 @@ def test_build_draft_preserves_modelo_131_structured_binding_values() -> None:
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
         schema_provider=_period_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -433,6 +439,7 @@ def test_build_draft_preserves_modelo_131_repeating_activity_binding_values() ->
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2", "2": "3"},
         },
         schema_provider=_period_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     rows = {(value.binding_id, value.row_index): value.value for value in draft.binding_values}
@@ -459,6 +466,7 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
             "modelo-131.page1.693-705.justificante-anterior": "1234567890123",
         },
         schema_provider=_period_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
 
     binding_values = {value.binding_id: value.value for value in draft.binding_values}
@@ -585,6 +593,7 @@ def test_approve_draft_uses_registry_schema_fingerprint() -> None:
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
+        m303_regimen_simplificado_scope=None,
     )
 
     approved = approve_draft(
@@ -703,6 +712,7 @@ def test_approve_modelo_111_draft_uses_registry_schema_fingerprint() -> None:
             _M111_CASILLA_29: Decimal("40.00"),
         },
         schema_provider=schema_provider,
+        m303_regimen_simplificado_scope=None,
     )
 
     approved = approve_draft(
@@ -734,6 +744,7 @@ def test_approve_modelo_115_draft_uses_registry_schema_fingerprint() -> None:
             _M115_CASILLA_04: Decimal("10.00"),
         },
         schema_provider=schema_provider,
+        m303_regimen_simplificado_scope=None,
     )
 
     approved = approve_draft(
@@ -772,6 +783,7 @@ def test_approve_modelo_123_draft_uses_registry_schema_fingerprint() -> None:
             _M123_CASILLA_13: Decimal("12.25"),
         },
         schema_provider=schema_provider,
+        m303_regimen_simplificado_scope=None,
     )
 
     approved = approve_draft(

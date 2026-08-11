@@ -391,7 +391,9 @@ class IvaWalletAuthorityDecisionPayload(OutputSchema):
     divergence: str
     blocked: bool
     stale_wallet: bool
+    reason_identity: str
     reason: str
+    operator_explanation: str | None
     wallet_captured_at: datetime | None
     decided_at: datetime
     authority_sources: list[str]

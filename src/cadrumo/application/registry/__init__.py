@@ -93,7 +93,6 @@ from ...domain.calculations.registry import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
 )
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
-
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (

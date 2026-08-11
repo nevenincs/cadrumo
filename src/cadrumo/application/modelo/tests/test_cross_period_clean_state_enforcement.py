@@ -227,6 +227,7 @@ def _seed_verified_revision(
         updated_at=_CLOCK,
         verified_at=_CLOCK,
         verified_by="operator-test",
+    filing_instance_evidence=None,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -292,6 +293,7 @@ def _seed_draft_revision(
         casilla_values=resolved_casilla_values,
         created_at=_CLOCK,
         updated_at=_CLOCK,
+    filing_instance_evidence=None,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -683,6 +685,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
             )
 
     failure = exc_info.value.precondition_failure
+    assert failure is not None
     blocker_codes = str(failure.verdict.evidence[0].values["blocker_codes"]).split("|")
     assert "incomplete_group_member_coverage" in blocker_codes
     assert "missing_expected_group_member_roster" not in blocker_codes
@@ -743,6 +746,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
             )
 
     failure = exc_info.value.precondition_failure
+    assert failure is not None
     blocker_codes = str(failure.verdict.evidence[0].values["blocker_codes"]).split("|")
     assert "incomplete_group_member_coverage" in blocker_codes
     assert "missing_expected_group_member_roster" not in blocker_codes

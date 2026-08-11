@@ -114,6 +114,7 @@ def _individual_declaration_canonical() -> dict[str, str]:
         "surnames": "Doe",
         # -- residence --
         "fiscal-residency": "resident_irpf",
+        "tax-residence-jurisdiction-scope": "common_regime",
         "tax-residence-ccaa": "madrid",
         "address-postcode": "28001",
         # -- actividad --
@@ -123,6 +124,7 @@ def _individual_declaration_canonical() -> dict[str, str]:
         "incn-prior-12-months": "",
         # -- IVA --
         "iva-regime": "GENERAL",
+        "iva-m303-regime-composition": "general",
         "iva-roi-enrolled": "false",
         "iva-oss-enrolled": "false",
         "iva-group-member-enrolled": "false",
@@ -130,6 +132,9 @@ def _individual_declaration_canonical() -> dict[str, str]:
         "iva-sii-enrolled": "false",
         "iva-redeme-enrolled": "false",
         "iva-intracommunity-operations-exceed-50000-eur": "false",
+        "iva-cash-accounting-regime-enrolled": "false",
+        "iva-voluntary-sii-enrolled": "false",
+        "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
         # -- enrollment --
         "enrollment-large-company": "false",
         "enrollment-public-administration-budget-gt-6000000": "false",
@@ -276,12 +281,12 @@ def test_scripted_walk_visits_joint_taxation_spouse_questions() -> None:
     assert answers.spouse_tax_id == "87654321X"
 
 
-def test_select_widget_default_is_set_during_runtime() -> None:
+def test_iva_regime_has_no_implicit_runtime_default() -> None:
     """Smoke check that SELECT defaults survive the flow."""
 
     iva_question = next(q for section in SETUP_FLOW.sections for q in section.questions if q.id == "iva-regime")
     assert iva_question.widget is WizardWidget.SELECT
-    assert iva_question.default == "GENERAL"
+    assert iva_question.default is None
 
 
 def _non_interactive_canonical(explicit: dict[str, str]) -> dict[str, str]:
@@ -301,6 +306,7 @@ _LEGAL_ENTITY_FLAGS: dict[str, str] = {
     "legal-entity-form": "sl",
     "tax-id": "B66012345",
     "activity": "consultoria",
+    "tax-residence-jurisdiction-scope": "common_regime",
 }
 
 
@@ -354,6 +360,7 @@ def test_explicit_flag_forces_a_gated_question_visible() -> None:
         "irpf-income-categories": "capital_inmobiliario",
         "tax-id": "12345678Z",
         "activity": "explicitly supplied",
+        "tax-residence-jurisdiction-scope": "common_regime",
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
@@ -370,6 +377,7 @@ def test_landlord_without_activity_flag_is_not_asked_for_activity() -> None:
         "entity-type": "natural_person",
         "irpf-income-categories": "capital_inmobiliario",
         "tax-id": "12345678Z",
+        "tax-residence-jurisdiction-scope": "common_regime",
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
@@ -387,6 +395,7 @@ def test_direct_estimation_profile_is_not_asked_for_modulos_annual_facts() -> No
         "tax-id": "12345678Z",
         "activity": "direct activity",
         "irpf-estimation-regime": "directa_normal",
+        "tax-residence-jurisdiction-scope": "common_regime",
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)
@@ -410,6 +419,7 @@ def test_objetiva_profile_collects_modulos_annual_facts() -> None:
         "objective-estimation-modulos-module-1-units": "2.50",
         "objective-estimation-modulos-module-2-units": "85",
         "objective-estimation-modulos-module-3-units": "12000.75",
+        "tax-residence-jurisdiction-scope": "common_regime",
     }
     canonical = _non_interactive_canonical(flags)
     explicit = frozenset(flags)

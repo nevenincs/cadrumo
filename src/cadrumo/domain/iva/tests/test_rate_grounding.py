@@ -14,12 +14,14 @@ import pytest
 
 from ....core import normalise_corpus_text
 from ....core.resources import bundled_path
+from ...calculations.registry import load_registry_tree
 from .. import EUMemberState, IvaRateKind, IvaRateNotFoundError, load_iva_rate_table, lookup_rate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_EPRS_SOURCE = "eu-eprs-vat-rates-2025-07-01"
-_YOUR_EUROPE_SOURCE = "eu-your-europe-vat-rates-2026-07-13"
+_EPRS_SOURCE = "eu-eprs-iva-rates-2025-07-01"
+_YOUR_EUROPE_SOURCE = "eu-your-europe-iva-rates-2026-07-13"
+_RETIRED_IDENTITY_STEM = re.compile(r"(^|[._:/-])vat([._:/-]|$)", re.IGNORECASE)
 _YOUR_EUROPE_CODES = {EUMemberState.GR: "EL"}
 _COUNTRY_NAMES = {
     EUMemberState.AT: "austria",
@@ -113,6 +115,23 @@ def test_every_shipped_rate_resolves_registry_legal_and_source_evidence() -> Non
     assert all(rate.source_refs for rate in rates if rate.member_state is not EUMemberState.ES)
 
 
+def test_rate_source_registry_identities_use_the_canonical_iva_stem() -> None:
+    """The registry and bundled corpus paths must not revive the English tax stem."""
+    table = load_iva_rate_table()
+    referenced_source_ids = {
+        source_id for member_rates in table.values() for rate in member_rates for source_id in rate.source_refs
+    }
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+
+    violations = [
+        identity
+        for source_id in sorted(referenced_source_ids)
+        for identity in (source_id, catalogues.sources[source_id].corpus_path)
+        if _RETIRED_IDENTITY_STEM.search(identity)
+    ]
+    assert violations == []
+
+
 def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
     """Each foreign percentage is present in its reviewed official source artifact."""
     table = load_iva_rate_table()
@@ -122,17 +141,17 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
         if member_state is not EUMemberState.ES
         for rate in member_rates
     )
-    corpus = bundled_path("corpus", "eu_official", "vat")
-    eprs_text = _pdf_text(corpus / "eprs-vat-rates-eu-2025-07-01.pdf")
+    corpus = bundled_path("corpus", "eu_official", "iva")
+    eprs_text = _pdf_text(corpus / "eprs-iva-rates-eu-2025-07-01.pdf")
     eprs_table = eprs_text.split("table 3", maxsplit=1)[1].split(
         "data source: taxes in europe database",
         maxsplit=1,
     )[0]
-    your_europe = corpus / "your-europe-vat-rates-2026-07-13.html"
-    estonia_text = _html_text(corpus / "estonia-vat-rate-change-2025.html")
-    finland_text = _html_text(corpus / "finland-vat-rate-change-2026.html")
-    lithuania_text = _html_text(corpus / "lithuania-vat-rate-change-2026.html")
-    romania_text = _pdf_text(corpus / "romania-vat-rate-change-2025.pdf")
+    your_europe = corpus / "your-europe-iva-rates-2026-07-13.html"
+    estonia_text = _html_text(corpus / "estonia-iva-rate-change-2025.html")
+    finland_text = _html_text(corpus / "finland-iva-rate-change-2026.html")
+    lithuania_text = _html_text(corpus / "lithuania-iva-rate-change-2026.html")
+    romania_text = _pdf_text(corpus / "romania-iva-rate-change-2025.pdf")
 
     proven: set[tuple[EUMemberState, IvaRateKind, date]] = set()
     for rate in foreign_rates:
@@ -151,21 +170,21 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
             else:
                 assert pct in evidence.group("reduced").split("/")
             initial_source_proven = True
-        if "ee-emta-vat-rate-change-2025" in rate.source_refs:
+        if "ee-emta-iva-rate-change-2025" in rate.source_refs:
             assert "from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%" in estonia_text
             assert pct in {"22", "24"}
             initial_source_proven = True
-        if "fi-vero-vat-rate-change-2026" in rate.source_refs:
+        if "fi-vero-iva-rate-change-2026" in rate.source_refs:
             assert "up to 31 december 2025, the reduced rate was 14%" in finland_text
             assert "reduced vat rate 13,5%" in finland_text
             assert pct in {"14", "13.5"}
             initial_source_proven = True
-        if "lt-vmi-vat-rate-change-2026" in rate.source_refs:
+        if "lt-vmi-iva-rate-change-2026" in rate.source_refs:
             assert "iki 2025-12-31 lengvatinis 9 proc." in lithuania_text
             assert "nuo 2026-01-01 lengvatinis 12 proc." in lithuania_text
             assert pct in {"9", "12"}
             initial_source_proven = True
-        if "ro-anaf-vat-rate-change-2025" in rate.source_refs:
+        if "ro-anaf-iva-rate-change-2025" in rate.source_refs:
             assert "01 august 2025 19% la 21%, iar cota redusa de tva este 11%" in romania_text
             assert "de la 9% la 11%" in romania_text
             assert pct in {"19", "21", "9", "11"}

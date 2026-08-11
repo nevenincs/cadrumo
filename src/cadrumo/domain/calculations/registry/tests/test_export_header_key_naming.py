@@ -176,7 +176,7 @@ def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozense
     The live contract is the closed producer vocabulary: the canonical token
     must be admitted and the legacy English alias must not be.
     """
-    from cadrumo.core import FilingProducerKey
+    from .....core import FilingProducerKey
 
     assert english_stem_offenders(head_tokens) == (("presenter_tax_id", "presenter_nif"),)
     producer_keys = {member.value for member in FilingProducerKey}

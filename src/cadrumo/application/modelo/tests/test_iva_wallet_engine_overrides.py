@@ -67,7 +67,9 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             repository=observation_repo,
             override=IvaCompensationOverride(
                 amount=Decimal("1200.00"),
-                reason="Operator reviewed filed-history evidence while direct wallet/cartera was unavailable.",
+                operator_explanation=(
+                    "Operator reviewed filed-history evidence while direct wallet/cartera was unavailable."
+                ),
                 evidence_locator="operator-review:modelo-303-2026-2T-filed-history",
                 recorded_at=_DECIDED_AT,
             ),

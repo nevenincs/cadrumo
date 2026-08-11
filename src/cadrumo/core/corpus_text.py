@@ -198,32 +198,51 @@ def _title_matches_anchor(title: str, target: str) -> bool:
     title_key = _canonical_anchor(title)
     if not title_key:
         return False
-    if title_key == target:
-        return True
-    if _title_heading_matches_anchor(title, target):
-        return True
-    if target.isdigit():
-        return title_key == target or (
-            title_key.startswith(target) and len(title_key) > len(target) and not title_key[len(target)].isdigit()
-        )
+    return (
+        title_key == target
+        or _title_heading_matches_anchor(title, target)
+        or _numeric_title_matches_anchor(title_key, target)
+        or _prefixed_title_matches_anchor(title_key, target)
+        or _article_number_matches_anchor(title_key, target)
+    )
+
+
+def _numeric_title_matches_anchor(title_key: str, target: str) -> bool:
+    """Match a bare numeric anchor without widening it to a longer number."""
+    return target.isdigit() and (
+        title_key == target
+        or (title_key.startswith(target) and len(title_key) > len(target) and not title_key[len(target)].isdigit())
+    )
+
+
+def _prefixed_title_matches_anchor(title_key: str, target: str) -> bool:
+    """Apply every recognised anchor-prefix expansion in its declared order."""
     for prefix, replacement in _ANCHOR_PREFIXES.items():
         if target.startswith(prefix):
             expanded = replacement + target.removeprefix(prefix)
-            if expanded.startswith("articulo"):
-                if not expanded.removeprefix("articulo").isdigit():
-                    if title_key.startswith(expanded):
-                        return True
-                    continue
-                if _is_exact_article_title_match(title_key, expanded):
-                    return True
-            elif expanded.startswith("anexo"):
-                if title_key == expanded:
-                    return True
-            elif expanded.startswith("apartado") and expanded.removeprefix("apartado").isdigit():
-                if title_key == expanded.removeprefix("apartado"):
-                    return True
-            elif title_key.startswith(expanded):
+            if _expanded_anchor_matches_title(title_key, expanded):
                 return True
+    return False
+
+
+def _expanded_anchor_matches_title(title_key: str, expanded_anchor: str) -> bool:
+    """Match one normalized prefix expansion against a structural title key."""
+    if expanded_anchor.startswith("articulo"):
+        suffix = expanded_anchor.removeprefix("articulo")
+        return (
+            _is_exact_article_title_match(title_key, expanded_anchor)
+            if suffix.isdigit()
+            else title_key.startswith(expanded_anchor)
+        )
+    if expanded_anchor.startswith("anexo"):
+        return title_key == expanded_anchor
+    if expanded_anchor.startswith("apartado") and expanded_anchor.removeprefix("apartado").isdigit():
+        return title_key == expanded_anchor.removeprefix("apartado")
+    return title_key.startswith(expanded_anchor)
+
+
+def _article_number_matches_anchor(title_key: str, target: str) -> bool:
+    """Match the shared canonical article number after all stricter routes fail."""
     anchor_article = _ARTICLE_ANCHOR_RE.match(target)
     title_article = _ARTICLE_TITLE_RE.match(title_key)
     return (

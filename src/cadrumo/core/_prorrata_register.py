@@ -60,6 +60,19 @@ class ProrrataRegisterRegime(StrEnum):
     NINGUNA = "ninguna"
 
 
+class ProrrataEspecialTransitionKind(StrEnum):
+    """Modelo 303 facts that change the voluntary prorrata-especial state.
+
+    A current ``ESPECIAL`` regime may simply continue from a prior ejercicio;
+    it must not be mistaken for a current-period option.  These two values
+    therefore type the separately evidenced transition that the filing surface
+    projects, rather than the regime itself.
+    """
+
+    OPCION = "opcion"
+    REVOCACION = "revocacion"
+
+
 class ProrrataActivityRowType(StrEnum):
     """Official Modelo 303 type token for one per-activity prorrata row.
 
@@ -136,6 +149,7 @@ class SectorDiferenciadoLetra(StrEnum):
 
 __all__ = [
     "ProrrataActivityRowType",
+    "ProrrataEspecialTransitionKind",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "SectorDiferenciadoLetra",

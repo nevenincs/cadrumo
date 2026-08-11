@@ -87,13 +87,13 @@ class MetaExecuteResult(BaseModel):
 #: Curated outcome-vocabulary aliases folded into a command's search document.
 #: This is INDEX text only, never the
 #: model-facing tool description (the English-boundary): it lets an outcome-phrased
-#: query ("file my quarterly VAT", "do my taxes") reach the composite ``quickfile``
+#: query ("file my quarterly IVA", "do my taxes") reach the composite ``quickfile``
 #: chain that literal-verb tokens miss. English plus the Spanish outcome nouns the
 #: CLI help uses (``presentar``, ``declaración``, ``trimestral``, ``autoliquidación``).
 _COMMAND_ALIASES: dict[str, str] = {
     "quickfile": (
         "file my taxes do my taxes file my return file quarterly taxes "
-        "submit quarterly VAT IVA tax return declaration "
+        "submit quarterly IVA IVA tax return declaration "
         "presentar la declaración trimestral autoliquidación de impuestos "
         "one command full filing chain"
     ),

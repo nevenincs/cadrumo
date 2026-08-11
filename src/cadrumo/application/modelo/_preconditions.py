@@ -72,9 +72,19 @@ def _profile(
     )
 
 
+_IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
+    "filed_history_requires_override",
+    "local_evidence_unreadable",
+    "local_recurrence_requires_override",
+    "no_usable_authority",
+    "stale_wallet_local_recurrence_requires_override",
+    "stale_wallet_no_local_recurrence",
+    "wallet_local_recurrence_divergence",
+)
+
 _IVA_WALLET_CALCULATE_SCENARIOS = (
     "backend_casilla_conflict",
-    "blocked",
+    *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
     "caller_binding_conflict",
     "caller_casilla_conflict",
     "first_period_zero_ungrounded",
@@ -90,7 +100,7 @@ _IVA_WALLET_CALCULATE_SCENARIOS = (
 
 _IVA_WALLET_REVISION_SCENARIOS = (
     "amount_mismatch",
-    "blocked",
+    *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
     "first_period_zero_ungrounded",
     "not_seeded",
     "registry_snapshot_unavailable",
@@ -246,8 +256,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.file",
-        "modelo.work.file.deductible_vat_evidence.present",
-        "modelo.work.file.deductible_vat_evidence.missing",
+        "modelo.work.file.deductible_iva_evidence.present",
+        "modelo.work.file.deductible_iva_evidence.missing",
     ),
     _profile(
         "modelo.work.file",
@@ -266,8 +276,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.export",
-        "modelo.export.deductible_vat_evidence.present",
-        "modelo.export.deductible_vat_evidence.missing",
+        "modelo.export.deductible_iva_evidence.present",
+        "modelo.export.deductible_iva_evidence.missing",
     ),
     _profile(
         "modelo.work.verify",
@@ -287,8 +297,8 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
-        "modelo.work.verify.deductible_vat_evidence.present",
-        "modelo.work.verify.deductible_vat_evidence.missing",
+        "modelo.work.verify.deductible_iva_evidence.present",
+        "modelo.work.verify.deductible_iva_evidence.missing",
     ),
     _profile(
         "modelo.work.verify",

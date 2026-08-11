@@ -6,10 +6,11 @@ no seeded revisions. Each test runs the actual
 readiness -> create -> calculate -> verify -> export services in sequence.
 
 Coverage:
-- a calculable modelo (115, fed one real retención observation) runs the whole
-  chain to a written fichero-BOE file;
-- a modelo whose verify gate refuses (130 without clean cross-period evidence)
-  halts instructively at ``verify`` with ``export`` skipped and a non-zero exit.
+- a calculable modelo (115, fed one real retención observation) reaches granted
+  verification before honestly refusing its unavailable export layout;
+- a modelo whose source-backed calculation binding is absent (130 without an
+  observed prior-year filing) halts at ``calculate`` without trusting an ad-hoc
+  numeric override.
 
 The chain is build + export only: no live AEAT submission path is exercised or
 reachable (``sensitive-financial-data-secure-storage-only``).
@@ -30,8 +31,23 @@ from click.testing import Result
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.state_projection import ProjectionModeloReadiness
-from ....core import Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core.resources import resources
+from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    IvaDeductionClassificationProvenance,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
+from ....domain.modelos import (
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -41,7 +57,6 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_envelope_notices as _notices
@@ -80,7 +95,7 @@ def _invoke(args: Sequence[str], *, attempts: int = 8) -> Result:
     return result
 
 
-def _create_profile() -> None:
+def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
     result = _invoke(
         [
             "config", "profile", "create", "operator",
@@ -90,6 +105,17 @@ def _create_profile() -> None:
             "--name", "Operator",
             "--surnames", "Quickfile",
             "--activity", "design",
+            "--activity-start-date", activity_start_date,
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "directa_normal",
+            "--tax-residence-ccaa", "madrid",
+            "--tax-residence-jurisdiction-scope", "common_regime",
+            "--iva-regime", "GENERAL",
+            "--iva-m303-regime-composition", "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -125,35 +151,46 @@ def _seed_m115_retencion_observation() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _seed_m303_profile_facts() -> str:
-    from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
+def _active_bucket_id() -> str:
     from ....core import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None, "profile create must install an active-profile pointer"
-    with profile_storage_session(bucket_id):
-        repository = UserProfileLifecycleRepository(bucket_id=bucket_id)
-        record = repository.load(bucket_id)
-        additions = (
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="censo.activity_start_date", value=date(2026, 1, 1)),
-        )
-        facts_by_path = {fact.path: fact for fact in record.facts}
-        facts_by_path.update({fact.path: fact for fact in additions})
-        repository.save(
-            record.model_copy(
-                update={
-                    "facts": tuple(facts_by_path[path] for path in sorted(facts_by_path)),
-                    "updated_at": record.created_at,
-                },
-            ),
-        )
     return bucket_id
+
+
+def _write_m303_filing_evidence(path: Path) -> None:
+    period = Period.from_year_and_code(2026, "1T")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.code,
+        ),
+        scope_decision=scope,
+    )
+    evidence = FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(
+                    reference="test:quickfile:exonerado-390:not-applicable",
+                ),
+            ),
+            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=snapshot,
+            ),
+        ),
+    )
+    path.write_text(evidence.model_dump_json(), encoding="utf-8")
 
 
 def _raw_m303_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> RawTransaction:
@@ -184,6 +221,7 @@ def _m303_transaction(
     taxable_base: Decimal,
     iva_amount: Decimal,
     purchase_invoice_evidence_id: str | None = None,
+    invoice_id: str | None = None,
 ) -> Transaction:
     booked_date = date(2026, 2, 15)
     payload: dict[str, object] = {
@@ -205,6 +243,14 @@ def _m303_transaction(
     }
     if purchase_invoice_evidence_id is not None:
         payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
+        payload["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
+        payload["deduction_provenance"] = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=f"invoice:{purchase_invoice_evidence_id}",
+            evidence_digest=purchase_invoice_evidence_id,
+        )
+    if invoice_id is not None:
+        payload["invoice_id"] = invoice_id
     return Transaction.model_validate(payload)
 
 
@@ -213,7 +259,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
     from ....application.calculations import IvaWalletDecisionRepository
     from ....application.invoices import build_catalogue_invoice
     from ....application.user_profile import profile_storage_session
-    from ....domain.invoices import InvoiceCatalogue
+    from ....domain.invoices import InvoiceCatalogue, link_transaction
     from ....domain.iva import InvoiceKind
 
     purchase_invoice = build_catalogue_invoice(
@@ -240,12 +286,18 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
         taxable_base=Decimal("200.00"),
         iva_amount=Decimal("42.00"),
         purchase_invoice_evidence_id=purchase_invoice.invoice_id,
+        invoice_id=purchase_invoice.invoice_id,
+    )
+    invoice_catalogue = link_transaction(
+        InvoiceCatalogue.from_invoices((purchase_invoice,)),
+        purchase_invoice.invoice_id,
+        purchase.transaction_id,
     )
     with profile_storage_session(bucket_id):
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase)),
         )
-        InvoiceCatalogueRepository(bucket_id=bucket_id).save(InvoiceCatalogue.from_invoices((purchase_invoice,)))
+        InvoiceCatalogueRepository(bucket_id=bucket_id).save(invoice_catalogue)
         IvaWalletDecisionRepository().save_decision(
             IvaCompensationReconciliationDecision(
                 taxpayer_nif="12345678Z",
@@ -259,7 +311,7 @@ def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
                 divergence="match",
                 blocked=False,
                 stale_wallet=False,
-                reason="quickfile M303 first-period neutral balance",
+                reason_identity="first_period_zero_aeat_wallet",
                 wallet_captured_at=_IVA_WALLET_DECIDED_AT,
                 decided_at=_IVA_WALLET_DECIDED_AT,
             ),
@@ -283,12 +335,14 @@ def _stage_status(payload: dict[str, object]) -> dict[str, str]:
     return result
 
 
-def test_quickfile_runs_full_chain_to_exported_fichero(tmp_path: Path) -> None:
-    """``aeat app quickfile`` for a calculable modelo writes a fichero-BOE file.
+def test_quickfile_m115_reaches_granted_verify_before_withdrawn_export(
+    tmp_path: Path,
+) -> None:
+    """A calculable M115 reaches verify, then refuses its unavailable layout.
 
     Modelo 115 1T 2026 with one seeded retención observation is calculable, so
-    the whole chain — readiness, create, calculate, verify, export — completes in
-    one command and leaves a non-empty local artefact on disk.
+    the chain reaches granted verification. Because no complete export layout is
+    currently authored, export must refuse without writing a local artefact.
     """
 
     _create_profile()
@@ -305,18 +359,11 @@ def test_quickfile_runs_full_chain_to_exported_fichero(tmp_path: Path) -> None:
         ],
     )  # fmt: skip
 
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 1, result.output
     assert "Traceback" not in result.output
-    # The completed chain rides the shared envelope spine under the ``quickfile``
-    # command key. Its ``status`` is an exit-0 state (``success``, or ``warning``
-    # when the advisory readiness notice fires) — never ``error``; the exit code
-    # and ``completed`` flag are the authoritative success signals.
-    envelope = json.loads(result.output)
-    assert envelope["command"] == "quickfile"
-    assert envelope["status"] in {"success", "warning"}, result.output
     payload = _payload(result.output)
-    assert payload["completed"] is True, result.output
-    assert payload["stopped_at_stage"] is None
+    assert payload["completed"] is False, result.output
+    assert payload["stopped_at_stage"] == "export"
     assert payload["granted_verificado_completo"] is True
     assert payload["work_unit_id"]
     assert payload["calculation_revision_id"]
@@ -325,25 +372,26 @@ def test_quickfile_runs_full_chain_to_exported_fichero(tmp_path: Path) -> None:
     assert statuses["create"] == "ok"
     assert statuses["calculate"] == "ok"
     assert statuses["verify"] == "ok"
-    assert statuses["export"] == "ok"
+    assert statuses["export"] == "refused"
     # readiness is advisory and may be ok or warning; it must never refuse.
     assert statuses["readiness"] in {"ok", "warning"}
 
-    # The terminal stage wrote a real fichero-BOE artefact locally.
-    assert payload["export"] is not None
-    assert payload["export"]["output_path"] == str(out)
-    assert out.exists()
-    assert out.stat().st_size > 0
+    notice_text = json.dumps(_notices(result.output), sort_keys=True)
+    assert "no complete export_layouts definition" in notice_text
+    assert payload["export"] is None
+    assert not out.exists()
 
 
-def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrata_input(
+def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withdrawn_export(
     tmp_path: Path,
 ) -> None:
-    """A fully taxable M303 ledger path reaches granted verification and fichero-BOE export."""
+    """A fully taxable M303 reaches verify, then honestly refuses the withdrawn layout."""
 
     _create_profile()
-    bucket_id = _seed_m303_profile_facts()
+    bucket_id = _active_bucket_id()
     _seed_m303_ledger_and_wallet(bucket_id)
+    evidence_path = tmp_path / "m303-filing-evidence.json"
+    _write_m303_filing_evidence(evidence_path)
     out = tmp_path / "modelo-303-2026-1T.boe"
 
     result = _invoke(
@@ -351,33 +399,29 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrat
             "--format", "json",
             "app", "quickfile",
             "--modelo", "303", "--year", "2026", "--period", "1T",
+            "--m303-filing-evidence", str(evidence_path),
             "--payment-election", "ingreso",
             "--output", str(out),
         ],
     )  # fmt: skip
 
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 1, result.output
     assert "Traceback" not in result.output
     payload = _payload(result.output)
-    assert payload["completed"] is True, result.output
-    assert payload["stopped_at_stage"] is None
+    assert payload["completed"] is False, result.output
+    assert payload["stopped_at_stage"] == "export"
     assert payload["granted_verificado_completo"] is True
 
     statuses = _stage_status(payload)
     assert statuses["calculate"] == "ok"
     assert statuses["verify"] == "ok"
-    assert statuses["export"] == "ok"
+    assert statuses["export"] == "refused"
 
     notice_text = json.dumps(_notices(result.output), sort_keys=True)
     assert "prorrata" not in notice_text.lower()
-    assert payload["export"] is not None
-    assert payload["export"]["output_path"] == str(out)
-    assert payload["export"]["resolved_result_disposition"] == "I"
-    assert payload["export"]["payment_election"] == "ingreso"
-    assert payload["export"]["refund_election"] is None
-    exported = out.read_bytes()
-    assert exported
-    assert b"12345678Z" in exported
+    assert "no complete export_layouts definition" in notice_text
+    assert payload["export"] is None
+    assert not out.exists()
 
 
 def test_quickfile_help_exposes_explicit_result_elections() -> None:
@@ -388,16 +432,15 @@ def test_quickfile_help_exposes_explicit_result_elections() -> None:
     assert "--disposition" not in result.output
 
 
-def test_quickfile_stops_instructively_when_verify_refuses(tmp_path: Path) -> None:
-    """A verify refusal halts the chain at ``verify`` with ``export`` skipped.
+def test_quickfile_refuses_unobserved_previous_filing_binding(tmp_path: Path) -> None:
+    """A source-backed binding cannot be replaced by caller-supplied prose or value.
 
-    Modelo 130 1T 2025 verify refuses without clean cross-period evidence
-    (M130 -> M100 dependency). Quickfile must stop at verify, mark export
-    skipped, exit non-zero, and surface the blocking cross-period finding on the
-    notices channel — never write an export file.
+    Modelo 130 1T 2025 requires an observed Modelo 100 filing for the prior-year
+    income binding. Supplying a decimal CLI binding must not fabricate that
+    evidence: quickfile stops at calculate and never writes an export file.
     """
 
-    _create_profile()
+    _create_profile(activity_start_date="2024-01-01")
     out = tmp_path / "modelo-130.txt"
 
     result = _invoke(
@@ -415,21 +458,18 @@ def test_quickfile_stops_instructively_when_verify_refuses(tmp_path: Path) -> No
     assert "Traceback" not in result.output
     payload = _payload(result.output)
     assert payload["completed"] is False
-    assert payload["stopped_at_stage"] == "verify"
-    assert payload["granted_verificado_completo"] is False
+    assert payload["stopped_at_stage"] == "calculate", result.output
+    assert payload["granted_verificado_completo"] is None
     assert payload["export"] is None
 
     statuses = _stage_status(payload)
     assert statuses["create"] == "ok"
-    assert statuses["calculate"] == "ok"
-    assert statuses["verify"] == "refused"
+    assert statuses["calculate"] == "refused"
+    assert statuses["verify"] == "skipped"
     assert statuses["export"] == "skipped"
 
-    # The instructive stop carries the cross-period blocking finding on the shared
-    # notices channel (a non-granted verify reads as a warning; NoticeSeverity has
-    # no ERROR member), and the export artefact was never written.
-    codes = {notice["code"] for notice in _notices(result.output)}
-    assert any("cross_period" in code for code in codes), codes
+    notice_text = json.dumps(_notices(result.output), sort_keys=True)
+    assert "expected one observed filing '100'/2024/'0A', found 0" in notice_text
     assert not out.exists()
 
 

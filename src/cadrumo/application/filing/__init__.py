@@ -188,6 +188,9 @@ from ...domain.filing import (
 from ...domain.filing import (
     registry_schema_version as _registry_schema_version,
 )
+from ...domain.iva import (
+    M303RegimenSimplificadoScopeDecision as _M303RegimenSimplificadoScopeDecision,
+)
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ...domain.submission import ModeloDraftStatus as _ModeloDraftStatus
 from ._calculate import (
@@ -211,15 +214,8 @@ from ._export_parity import did_page_required, required_applicable_casilla_ids
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
-from ._m303_export_applicability import (
-    M303DifferentiatedSectorValueArrival,
-    M303Exonerado390EndpointValue,
-    M303Exonerado390ValueArrival,
-    M303ExportApplicabilityEnvelope,
-    validate_m303_export_applicability,
-)
+from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 from ._m303_regimen_simplificado import (
-    M303RegimenSimplificadoValueArrival,
     project_m303_regimen_simplificado_value_arrival,
 )
 from ._producer_snapshot import (
@@ -232,6 +228,9 @@ from ._producer_snapshot import (
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
     M202UnsupportedProducerId,
+    M303FilingFacts,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
     Modelo202ProducerProfile,
@@ -240,6 +239,7 @@ from ._producer_snapshot import (
     SelectedFilingAccount,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
+    resolve_m303_filing_facts,
 )
 from ._review import (
     ModeloApprovalStaleReason,
@@ -269,6 +269,7 @@ def build_draft(
     profile: _ModeloProfile,
     inputs: _ModeloInputs,
     schema_provider: _CasillaSchemaProvider,
+    m303_regimen_simplificado_scope: _M303RegimenSimplificadoScopeDecision | None,
     deadline_checker: _DeadlineChecker | None = None,
     fail_on_warning: bool = False,
 ) -> _ModeloDraft:
@@ -283,6 +284,8 @@ def build_draft(
         inputs: Raw :class:`ModeloInputs`.
         schema_provider: Registry-backed
             :class:`CasillaSchemaProvider`.
+        m303_regimen_simplificado_scope: Closed IVA-profile scope decision for
+            Modelo 303; omitted for every other modelo.
         deadline_checker: Optional
             :class:`DeadlineChecker`.
         fail_on_warning: Raise when validation produces any warning or error.
@@ -355,6 +358,7 @@ def build_draft(
             relation_values=relation_inputs or None,
             date_binding_values=date_binding_inputs or None,
             text_inputs=text_casilla_inputs or None,
+            m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
         )
     except _RegistryValidationError as exc:
         raise _ModeloBuilderError(f"registry calculation failed: {exc}") from exc
@@ -984,11 +988,9 @@ __all__ = [
     "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",
-    "M303DifferentiatedSectorValueArrival",
-    "M303Exonerado390EndpointValue",
-    "M303Exonerado390ValueArrival",
-    "M303ExportApplicabilityEnvelope",
-    "M303RegimenSimplificadoValueArrival",
+    "M303FilingFacts",
+    "M303InsolvencyFilingFact",
+    "M303InsolvencyFilingSubtype",
     "Modelo111ProfileFacts",
     "Modelo202ActivityFacts",
     "Modelo202ProducerProfile",
@@ -1024,12 +1026,13 @@ __all__ = [
     "list_amendments",
     "load_amendment",
     "load_default_filing_profile",
+    "project_m303_exonerado_390_value_arrival",
     "project_m303_regimen_simplificado_value_arrival",
     "refresh_review_status",
     "render_layout",
     "required_applicable_casilla_ids",
+    "resolve_m303_filing_facts",
     "summarise_calculation",
     "unapprove_draft",
-    "validate_m303_export_applicability",
     "verify_export",
 ]

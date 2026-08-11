@@ -29,6 +29,7 @@ from .. import (
     SupportRemovalDecisionDefinition,
     build_model_law_coverage_ledger,
     build_snapshot,
+    bundled_authority,
     load_modelo_file,
     load_registry_tree,
 )
@@ -74,6 +75,11 @@ def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalog
 
 @cache
 def _committed_snapshot(modelo_id: str, filing_year: int, period: str):
+    if modelo_id == "303":
+        # M303 snapshots include the compiled annual-Orden authority.  The
+        # production access point is the only source of that cross-cutting
+        # projection, so bypassing it here would produce a partial fixture.
+        return bundled_authority().snapshot(modelo_id, filing_year=filing_year, period=period)
     modelo, catalogues = _committed_modelo(modelo_id)
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=filing_year, period=period)
 

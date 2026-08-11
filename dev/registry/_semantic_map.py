@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import CasillaId, FilingProducerKey
+from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef
 from cadrumo.domain.calculations.registry import (
     BindingId,
     CasillaFieldKindValue,
@@ -73,6 +73,7 @@ class SemanticMapEntry(_StrictModel):
     producer_key: FilingProducerKey | None = None
     draft_attribute: ExportDraftAttribute | None = None
     computed_key: ExportComputedKey | None = None
+    projection_ref: FilingProjectionRef | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -86,6 +87,7 @@ class SemanticMapEntry(_StrictModel):
             ExportSemanticPayloadAxis.PRODUCER_KEY: self.producer_key,
             ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
             ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
+            ExportSemanticPayloadAxis.PROJECTION_REF: self.projection_ref,
         }
         required = export_semantic_payload_axis(self.kind)
         declared = tuple(axis for axis, value in payloads.items() if value is not None)

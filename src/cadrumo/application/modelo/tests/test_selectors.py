@@ -175,6 +175,7 @@ def _seed_revision(
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
         filed_at=created_at if state is CalculationRevisionState.PRESENTADO else None,
         filed_by="operator" if state is CalculationRevisionState.PRESENTADO else None,
+    filing_instance_evidence=None,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     return revision

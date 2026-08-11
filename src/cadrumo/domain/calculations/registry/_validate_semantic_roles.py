@@ -17,12 +17,12 @@ from collections.abc import Iterable, Mapping
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from . import _validate_semantic_role_typos as _semantic_role_typos
+from ._ids import RevisionId
 from ._schema import CasillaDefinition, ModeloDefinition
 from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, required_role_declaration_failures
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
-from ._ids import RevisionId
 
 __all__ = (
     "REQUIRED_ROLE_LABEL_PATTERNS",

@@ -298,6 +298,7 @@ def test_m202_calculation_revision_replays_to_draft_on_the_same_sanctioned_filin
             filing_year=work_unit.filing_year,
             period=work_unit.period,
         ),
+        m303_regimen_simplificado_scope=None,
     )
     draft_values = {value.casilla_id: value.value for value in draft.values}
 

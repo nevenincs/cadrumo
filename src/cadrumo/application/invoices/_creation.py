@@ -222,6 +222,49 @@ def resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
     return slot
 
 
+def _resolve_invoice_line_totals(
+    *,
+    taxable_base: Decimal,
+    lines: Sequence[InvoiceLine] | None,
+    invoice_number: str,
+    rate_slot: IvaRate,
+    iva_percentage: Decimal | None,
+) -> tuple[Decimal, Decimal, object]:
+    """Return the authoritative line payload and totals for one invoice.
+
+    Supplied lines own their own amounts and must agree with the declared base;
+    otherwise this is the sole synthesis of the one operator-supplied rate line.
+    """
+    if lines:
+        if not all(isinstance(item, InvoiceLine) for item in lines):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise InvoiceValidationError("lines must be InvoiceLine records")
+        base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
+        iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
+        declared_base = round_to_cents(taxable_base)
+        if declared_base != base_total:
+            raise InvoiceValidationError(
+                f"taxable_base {declared_base} does not equal the summed line subtotals {base_total}",
+            )
+        return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
+
+    base_total = round_to_cents(taxable_base)
+    iva_amount = Decimal("0") if iva_percentage is None else round_to_cents(taxable_base * iva_percentage)
+    return (
+        base_total,
+        iva_amount,
+        [
+            {
+                "description": invoice_number or "Invoice",
+                "quantity": "1",
+                "unit_price": format(base_total, "f"),
+                "subtotal": format(base_total, "f"),
+                "iva_rate": rate_slot.value,
+                "iva_amount": format(iva_amount, "f"),
+            },
+        ],
+    )
+
+
 def build_catalogue_invoice(
     *,
     bucket_id: str | None,
@@ -310,34 +353,13 @@ def build_catalogue_invoice(
     # record a legitimate 2024 transitional-rate invoice. EXEMPT / NOT_SUBJECT
     # resolve to None and carry a zero cuota.
     pct = iva_rate_slot_percentage(rate_slot)
-    if lines:
-        # Deliberate runtime guard on a boundary sequence: the annotation does not
-        # constrain what a caller actually passes, and a foreign element would reach
-        # the totals arithmetic before anything noticed.
-        if not all(isinstance(item, InvoiceLine) for item in lines):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise InvoiceValidationError("lines must be InvoiceLine records")
-        base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
-        iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
-        declared_base = round_to_cents(taxable_base)
-        if declared_base != base_total:
-            raise InvoiceValidationError(
-                f"taxable_base {declared_base} does not equal the summed line subtotals {base_total}",
-            )
-        payload_lines = [item.model_dump(mode="json") for item in lines]
-    else:
-        iva_amount = Decimal("0") if pct is None else round_to_cents(taxable_base * pct)
-        base_total = round_to_cents(taxable_base)
-        iva_total = iva_amount
-        payload_lines = [
-            {
-                "description": invoice_number or "Invoice",
-                "quantity": "1",
-                "unit_price": format(base_total, "f"),
-                "subtotal": format(base_total, "f"),
-                "iva_rate": rate_slot.value,
-                "iva_amount": format(iva_amount, "f"),
-            },
-        ]
+    base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+        taxable_base=taxable_base,
+        lines=lines,
+        invoice_number=invoice_number,
+        rate_slot=rate_slot,
+        iva_percentage=pct,
+    )
     # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
     # while a retencion is settled outside it, which is why only the recargo
     # appears here. The model re-checks this identity exactly, so a caller that

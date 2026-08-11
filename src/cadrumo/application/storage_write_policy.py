@@ -206,6 +206,7 @@ PROFILE_BOUND_WRITE_VERB_PATHS: tuple[str, ...] = (
     "app ledger bienes-inversion declare",
     "app ledger prorrata elect-general",
     "app ledger prorrata elect-especial",
+    "app ledger prorrata revoke-especial",
     "app ledger prorrata declare-sector",
     # Rewrites the whole derived participation index via ``replace_all``. The
     # index is a rebuildable cache, but the rebuild itself is a bucket write.

@@ -707,7 +707,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations() -> None:
             divergence="wallet_missing",
             blocked=False,
             stale_wallet=False,
-            reason="test: no prior IVA compensation",
+            reason_identity="first_period_zero_aeat_wallet",
             decided_at=_IVA_WALLET_DECIDED_AT,
         )
         IvaWalletDecisionRepository().save_decision(decision)
@@ -814,7 +814,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
             divergence="wallet_missing",
             blocked=False,
             stale_wallet=False,
-            reason="test: no prior IVA compensation",
+            reason_identity="first_period_zero_aeat_wallet",
             decided_at=_IVA_WALLET_DECIDED_AT,
         )
         IvaWalletDecisionRepository().save_decision(decision)

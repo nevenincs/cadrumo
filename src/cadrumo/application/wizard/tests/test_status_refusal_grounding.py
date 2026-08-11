@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: The token the wizard refusal used to print. It is the field's declared
 #: selector, not its path, so it would survive a naive path-based check.
-_LEGACY_TAX_ID_TOKEN = "tax.id"
+_LEGACY_TAX_ID_SELECTOR = "tax.id"
 
 
 def _label(path: str) -> str:
@@ -36,7 +36,7 @@ def test_the_tax_id_field_label_differs_from_both_its_path_and_its_token() -> No
     label = _label(_TAX_ID_PATH)
 
     assert label != _TAX_ID_PATH
-    assert label != _LEGACY_TAX_ID_TOKEN
+    assert label != _LEGACY_TAX_ID_SELECTOR
 
 
 def test_the_wizard_refusal_names_the_tax_identifier_by_its_operator_label() -> None:
@@ -50,4 +50,4 @@ def test_the_wizard_refusal_carries_no_raw_identifier_for_the_field() -> None:
     rendered = _grounded_tax_id_requirement()
 
     assert _TAX_ID_PATH not in rendered
-    assert _LEGACY_TAX_ID_TOKEN not in rendered
+    assert _LEGACY_TAX_ID_SELECTOR not in rendered

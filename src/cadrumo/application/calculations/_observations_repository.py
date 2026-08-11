@@ -668,6 +668,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     history_namespace: ClassVar[str] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE.schema_version
+    history_schema_version: ClassVar[int] = IVA_WALLET_RECONCILIATION_DECISION_EVENTS_NAMESPACE.schema_version
     payload_type: ClassVar[type[BaseModel]] = IvaWalletDecisionEnvelopePayload
 
     @override
@@ -689,7 +690,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         payload = IvaWalletDecisionEnvelopePayload(decision=decision)
         latest_write = self.to_secure_object_write(payload)
         history_envelope = Envelope[IvaWalletDecisionEnvelopePayload](
-            schema_version=self.schema_version,
+            schema_version=self.history_schema_version,
             written_at=latest_write.written_at,
             classification=self.sensitivity,
             payload=payload,
@@ -698,7 +699,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
             namespace=self.history_namespace,
             object_key=iva_wallet_decision_event_key(decision),
             classification=self.sensitivity,
-            schema_version=self.schema_version,
+            schema_version=self.history_schema_version,
             written_at=history_envelope.written_at,
             payload=history_envelope.model_dump_json().encode(UTF_8_ENCODING),
         )
@@ -754,7 +755,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         for record in self._objects.list_records(
             self.history_namespace,
             expected_class=self.sensitivity,
-            max_supported_version=self.schema_version,
+            max_supported_version=self.history_schema_version,
         ):
             envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(
                 record.payload.decode(UTF_8_ENCODING),

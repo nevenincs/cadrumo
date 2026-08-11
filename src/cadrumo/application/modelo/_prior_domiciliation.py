@@ -19,6 +19,7 @@ from ...core import Modelo, ObservedHeaderFact, PriorDomiciliationElection, Resu
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
+    ExternalEvidence,
     ModeloRecord,
     ModeloRecordCatalogueRepositoryProtocol,
     WorkUnit,
@@ -66,7 +67,7 @@ def _require_evidenced_baseline_filing(
     baseline_id: str,
     work_unit: WorkUnit,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-) -> ModeloRecord:
+) -> tuple[ModeloRecord, ExternalEvidence]:
     """Return the externally attested baseline filing, or refuse.
 
     Both gates are about the same thing from opposite sides: the record must
@@ -75,7 +76,13 @@ def _require_evidenced_baseline_filing(
     the operator never asked about.
     """
     baseline = filing_repository.load().get(baseline_id)
-    if baseline is None or baseline.external_evidence is None or not baseline.aeat_accepted:
+    if baseline is None:
+        raise ModeloPriorDomiciliationElectionRefusedError(
+            "prior domiciliation cancellation/modification requires an externally evidenced baseline filing",
+            context={"baseline_filing_record_id": baseline_id},
+        )
+    baseline_evidence = baseline.external_evidence
+    if baseline_evidence is None or not baseline.aeat_accepted:
         raise ModeloPriorDomiciliationElectionRefusedError(
             "prior domiciliation cancellation/modification requires an externally evidenced baseline filing",
             context={"baseline_filing_record_id": baseline_id},
@@ -90,12 +97,13 @@ def _require_evidenced_baseline_filing(
             "prior domiciliation baseline does not match the rectificativa filing target",
             context={"baseline_filing_record_id": baseline_id},
         )
-    return baseline
+    return baseline, baseline_evidence
 
 
 def _require_official_baseline_observation(
     *,
     baseline: ModeloRecord,
+    baseline_evidence: ExternalEvidence,
     baseline_id: str,
     observation_repository: CalculationObservationRepository,
 ) -> ObservationEnvelopePayload:
@@ -115,7 +123,7 @@ def _require_official_baseline_observation(
     if (
         observation.observation.filing_year != baseline.filing_year
         or observation.observation.period != baseline.period.registry_token
-        or observation.source_metadata.get("aeat_justificante_csv") != baseline.external_evidence.reference_id
+        or observation.source_metadata.get("aeat_justificante_csv") != baseline_evidence.reference_id
     ):
         raise ModeloPriorDomiciliationElectionRefusedError(
             "official baseline observation does not match the baseline evidence reference",
@@ -195,13 +203,14 @@ def resolve_prior_domiciliation_election(
         return PriorDomiciliationElectionProjection(election=election)
 
     baseline_id = _require_rectificativa_baseline_link(work_unit=work_unit, revision=revision)
-    baseline = _require_evidenced_baseline_filing(
+    baseline, baseline_evidence = _require_evidenced_baseline_filing(
         baseline_id=baseline_id,
         work_unit=work_unit,
         filing_repository=filing_repository,
     )
     observation = _require_official_baseline_observation(
         baseline=baseline,
+        baseline_evidence=baseline_evidence,
         baseline_id=baseline_id,
         observation_repository=observation_repository,
     )
@@ -225,7 +234,7 @@ def resolve_prior_domiciliation_election(
     return PriorDomiciliationElectionProjection(
         election=election,
         baseline_filing_record_id=baseline.filing_record_id,
-        baseline_evidence_reference_id=baseline.external_evidence.reference_id,
+        baseline_evidence_reference_id=baseline_evidence.reference_id,
         baseline_result_disposition=disposition.disposition,
         baseline_source_header_locator=disposition.provenance_locator,
     )

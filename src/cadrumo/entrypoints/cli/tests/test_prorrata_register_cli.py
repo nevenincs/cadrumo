@@ -17,7 +17,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, SectorDiferenciadoLetra
+from ....core import (
+    ProrrataEspecialTransitionKind,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ....domain.prorrata_register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -70,6 +75,8 @@ def test_elect_especial_persists_especial_register_entry() -> None:
             "elect-especial",
             "--ejercicio",
             "2025",
+            "--evidence-reference",
+            "modelo-303-2025-prorrata-opcion",
             "--percentage",
             "60",
         ],
@@ -79,6 +86,10 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     assert payload["entry"]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
     assert payload["entry"]["provisional_percentage"] == "60"
     assert payload["entry"]["provisional_provenance"] == (ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value)
+    assert payload["entry"]["especial_transition"] == {
+        "kind": ProrrataEspecialTransitionKind.OPCION.value,
+        "evidence_reference": "modelo-303-2025-prorrata-opcion",
+    }
 
     # The election reaches the persisted register read back through the list
     # verb: a subsequent live aggregation would read this ESPECIAL entry and
@@ -88,6 +99,10 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     assert entries[0]["ejercicio"] == 2025
     assert entries[0]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
     assert entries[0]["provisional_percentage"] == "60"
+    assert entries[0]["especial_transition"] == {
+        "kind": ProrrataEspecialTransitionKind.OPCION.value,
+        "evidence_reference": "modelo-303-2025-prorrata-opcion",
+    }
 
 
 def test_elect_general_persists_general_register_entry() -> None:
@@ -110,6 +125,7 @@ def test_elect_general_persists_general_register_entry() -> None:
     assert len(entries) == 1
     assert entries[0]["regime"] == ProrrataRegisterRegime.GENERAL.value
     assert entries[0]["provisional_percentage"] == "75"
+    assert entries[0]["especial_transition"] is None
 
 
 def test_elect_especial_for_sector_scopes_the_entry() -> None:
@@ -123,6 +139,8 @@ def test_elect_especial_for_sector_scopes_the_entry() -> None:
             "elect-especial",
             "--ejercicio",
             "2025",
+            "--evidence-reference",
+            "modelo-303-2025-alquiler-opcion",
             "--percentage",
             "40",
             "--sector",
@@ -136,6 +154,144 @@ def test_elect_especial_for_sector_scopes_the_entry() -> None:
     assert len(entries) == 1
     assert entries[0]["sector_id"] == "alquiler"
     assert entries[0]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
+
+
+def test_elect_especial_requires_nonblank_evidence_reference() -> None:
+    missing = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert missing.exit_code != 0
+    assert "evidence-reference" in missing.output
+
+    blank = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--evidence-reference",
+            " ",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert blank.exit_code != 0
+    assert "evidence_reference" in blank.output
+
+
+def test_revoke_especial_requires_prior_state_and_persists_evidence() -> None:
+    refused = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "revoke-especial",
+            "--ejercicio",
+            "2026",
+            "--evidence-reference",
+            "modelo-303-2026-prorrata-revocacion",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert refused.exit_code != 0
+    assert "prior-year especial" in refused.output
+
+    option = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--evidence-reference",
+            "modelo-303-2025-prorrata-opcion",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert option.exit_code == 0, option.output
+
+    revoked = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "revoke-especial",
+            "--ejercicio",
+            "2026",
+            "--evidence-reference",
+            "modelo-303-2026-prorrata-revocacion",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert revoked.exit_code == 0, revoked.output
+    payload = _json(revoked)
+    assert payload["entry"]["regime"] == ProrrataRegisterRegime.GENERAL.value
+    assert payload["entry"]["especial_transition"] == {
+        "kind": ProrrataEspecialTransitionKind.REVOCACION.value,
+        "evidence_reference": "modelo-303-2026-prorrata-revocacion",
+    }
+    entries = _prorrata_entries()
+    assert len(entries) == 2
+    assert entries[1]["especial_transition"] == {
+        "kind": ProrrataEspecialTransitionKind.REVOCACION.value,
+        "evidence_reference": "modelo-303-2026-prorrata-revocacion",
+    }
+
+
+def test_especial_transitions_refuse_conflicting_evidence_references() -> None:
+    first = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--sector",
+            "retail",
+            "--evidence-reference",
+            "modelo-303-2025-retail-opcion",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert first.exit_code == 0, first.output
+
+    conflicting = _invoke(
+        [
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--sector",
+            "wholesale",
+            "--evidence-reference",
+            "modelo-303-2025-wholesale-opcion",
+            "--percentage",
+            "60",
+        ],
+    )
+    assert conflicting.exit_code != 0
+    assert "conflicting prorrata especial transition evidence references" in conflicting.output
 
 
 def test_referenced_provenance_without_reference_refuses() -> None:
@@ -337,6 +493,8 @@ def test_input_classification_with_especial_election_is_not_inert() -> None:
             "elect-especial",
             "--ejercicio",
             "2026",
+            "--evidence-reference",
+            "modelo-303-2026-prorrata-opcion",
             "--percentage",
             "60",
         ],

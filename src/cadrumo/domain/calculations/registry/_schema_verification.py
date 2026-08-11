@@ -47,7 +47,7 @@ floor at each call site, where the three could quietly disagree.
 from __future__ import annotations
 
 import re as _re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
@@ -640,6 +640,143 @@ def _predicate_argument_tokens(arguments: str) -> tuple[str, ...]:
     return tuple(token.strip().strip('"').strip("'") for token in arguments.split(",") if token.strip())
 
 
+@dataclass(frozen=True, slots=True)
+class _PredicateListCapture:
+    """The positional captures a non-homogeneous list predicate exposes."""
+
+    argument_count: int
+    casilla_indices: tuple[int, ...]
+    literal_index: int | None = None
+    profile_field_index: int | None = None
+    cutoff_index: int | None = None
+
+
+_LIST_PREDICATE_CAPTURES: Mapping[VerificationPredicateSyntax, _PredicateListCapture] = MappingProxyType(
+    {
+        VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA: _PredicateListCapture(
+            argument_count=3,
+            casilla_indices=(0, 2),
+            literal_index=1,
+        ),
+        VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD: _PredicateListCapture(
+            argument_count=3,
+            casilla_indices=(0,),
+            literal_index=1,
+            profile_field_index=2,
+        ),
+        VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR: _PredicateListCapture(
+            argument_count=4,
+            casilla_indices=(0, 2, 3),
+            literal_index=1,
+        ),
+        VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF: _PredicateListCapture(
+            argument_count=4,
+            casilla_indices=(0, 1, 2),
+            cutoff_index=3,
+        ),
+    },
+)
+
+
+def _parse_list_predicate(
+    operator: VerificationPredicateOperator,
+    stripped: str,
+    syntax: VerificationPredicateSyntax,
+) -> ParsedVerificationPredicate | None:
+    """Parse a bracketed predicate list, preserving wrong-arity evidence."""
+    match = _PREDICATE_LIST_PATTERN.match(stripped)
+    if match is None:
+        return None
+    arguments = _predicate_argument_tokens(match.group("arguments"))
+    capture = _LIST_PREDICATE_CAPTURES.get(syntax)
+    if capture is None:
+        return ParsedVerificationPredicate(operator=operator, arguments=arguments, casilla_ids=arguments)
+    if len(arguments) != capture.argument_count:
+        return ParsedVerificationPredicate(operator=operator, arguments=arguments)
+    literal = arguments[capture.literal_index] if capture.literal_index is not None else ""
+    profile_field = arguments[capture.profile_field_index] if capture.profile_field_index is not None else ""
+    cutoff = arguments[capture.cutoff_index] if capture.cutoff_index is not None else ""
+    return ParsedVerificationPredicate(
+        operator=operator,
+        arguments=arguments,
+        casilla_ids=tuple(arguments[index] for index in capture.casilla_indices),
+        literal=literal,
+        profile_field=profile_field,
+        cutoff=cutoff,
+    )
+
+
+def _parse_ratio_predicate(
+    operator: VerificationPredicateOperator,
+    stripped: str,
+    _syntax: VerificationPredicateSyntax,
+) -> ParsedVerificationPredicate | None:
+    """Parse a numerator, denominator, threshold predicate expression."""
+    match = _RATIO_PATTERN.match(stripped)
+    if match is None:
+        return None
+    numerator = match.group("numerator")
+    denominator = match.group("denominator")
+    threshold = match.group("threshold")
+    return ParsedVerificationPredicate(
+        operator=operator,
+        arguments=(numerator, denominator, threshold),
+        casilla_ids=(numerator, denominator),
+        threshold=threshold,
+    )
+
+
+def _parse_profile_field_required_predicate(
+    operator: VerificationPredicateOperator,
+    stripped: str,
+    _syntax: VerificationPredicateSyntax,
+) -> ParsedVerificationPredicate | None:
+    """Parse a profile-field applicability predicate expression."""
+    match = _PROFILE_FIELD_REQUIRED_PATTERN.match(stripped)
+    if match is None:
+        return None
+    field = match.group("field")
+    applicability_filter = match.group("filter")
+    return ParsedVerificationPredicate(
+        operator=operator,
+        arguments=(field, applicability_filter),
+        profile_field=field,
+        applicability_filter=applicability_filter,
+    )
+
+
+def _parse_profile_flag_enabled_predicate(
+    operator: VerificationPredicateOperator,
+    stripped: str,
+    _syntax: VerificationPredicateSyntax,
+) -> ParsedVerificationPredicate | None:
+    """Parse a profile-flag advisory predicate expression."""
+    match = _PROFILE_FLAG_ENABLED_PATTERN.match(stripped)
+    if match is None:
+        return None
+    field = match.group("field")
+    return ParsedVerificationPredicate(operator=operator, arguments=(field,), profile_field=field)
+
+
+_PredicateExpressionParser = Callable[
+    [VerificationPredicateOperator, str, VerificationPredicateSyntax],
+    ParsedVerificationPredicate | None,
+]
+
+_PREDICATE_EXPRESSION_PARSERS: Mapping[VerificationPredicateSyntax, _PredicateExpressionParser] = MappingProxyType(
+    {
+        VerificationPredicateSyntax.CASILLA_LIST: _parse_list_predicate,
+        VerificationPredicateSyntax.RATIO: _parse_ratio_predicate,
+        VerificationPredicateSyntax.PROFILE_FIELD_REQUIRED: _parse_profile_field_required_predicate,
+        VerificationPredicateSyntax.PROFILE_FLAG_ENABLED: _parse_profile_flag_enabled_predicate,
+        VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA: _parse_list_predicate,
+        VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD: _parse_list_predicate,
+        VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR: _parse_list_predicate,
+        VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF: _parse_list_predicate,
+    },
+)
+
+
 def parse_verification_predicate_expression(expression: str) -> ParsedVerificationPredicate | None:
     """Parse one runtime-supported verification-predicate DSL expression.
 
@@ -656,85 +793,10 @@ def parse_verification_predicate_expression(expression: str) -> ParsedVerificati
         return None
     specification = VERIFICATION_PREDICATE_SPECIFICATIONS[operator]
     stripped = expression.strip()
-    if specification.syntax is VerificationPredicateSyntax.CASILLA_LIST:
-        match = _PREDICATE_LIST_PATTERN.match(stripped)
-        if match is None:
-            return None
-        arguments = _predicate_argument_tokens(match.group("arguments"))
-        return ParsedVerificationPredicate(operator=operator, arguments=arguments, casilla_ids=arguments)
-    if specification.syntax is VerificationPredicateSyntax.RATIO:
-        match = _RATIO_PATTERN.match(stripped)
-        if match is None:
-            return None
-        numerator = match.group("numerator")
-        denominator = match.group("denominator")
-        threshold = match.group("threshold")
-        return ParsedVerificationPredicate(
-            operator=operator,
-            arguments=(numerator, denominator, threshold),
-            casilla_ids=(numerator, denominator),
-            threshold=threshold,
-        )
-    if specification.syntax is VerificationPredicateSyntax.PROFILE_FIELD_REQUIRED:
-        match = _PROFILE_FIELD_REQUIRED_PATTERN.match(stripped)
-        if match is None:
-            return None
-        field = match.group("field")
-        applicability_filter = match.group("filter")
-        return ParsedVerificationPredicate(
-            operator=operator,
-            arguments=(field, applicability_filter),
-            profile_field=field,
-            applicability_filter=applicability_filter,
-        )
-    if specification.syntax is VerificationPredicateSyntax.PROFILE_FLAG_ENABLED:
-        match = _PROFILE_FLAG_ENABLED_PATTERN.match(stripped)
-        if match is None:
-            return None
-        field = match.group("field")
-        return ParsedVerificationPredicate(operator=operator, arguments=(field,), profile_field=field)
-    match = _PREDICATE_LIST_PATTERN.match(stripped)
-    if match is None:
-        return None
-    arguments = _predicate_argument_tokens(match.group("arguments"))
-    if specification.syntax is VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA:
-        if len(arguments) != 3:
-            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
-        return ParsedVerificationPredicate(
-            operator=operator,
-            arguments=arguments,
-            casilla_ids=(arguments[0], arguments[2]),
-            literal=arguments[1],
-        )
-    if specification.syntax is VerificationPredicateSyntax.CASILLA_LITERAL_PROFILE_FIELD:
-        if len(arguments) != 3:
-            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
-        return ParsedVerificationPredicate(
-            operator=operator,
-            arguments=arguments,
-            casilla_ids=(arguments[0],),
-            literal=arguments[1],
-            profile_field=arguments[2],
-        )
-    if specification.syntax is VerificationPredicateSyntax.CASILLA_LITERAL_CASILLA_PAIR:
-        if len(arguments) != 4:
-            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
-        return ParsedVerificationPredicate(
-            operator=operator,
-            arguments=arguments,
-            casilla_ids=(arguments[0], arguments[2], arguments[3]),
-            literal=arguments[1],
-        )
-    if specification.syntax is VerificationPredicateSyntax.CASILLA_TRIPLE_CUTOFF:
-        if len(arguments) != 4:
-            return ParsedVerificationPredicate(operator=operator, arguments=arguments)
-        return ParsedVerificationPredicate(
-            operator=operator,
-            arguments=arguments,
-            casilla_ids=arguments[:3],
-            cutoff=arguments[3],
-        )
-    raise AssertionError(f"unsupported verification predicate syntax {specification.syntax!r}")
+    parser = _PREDICATE_EXPRESSION_PARSERS.get(specification.syntax)
+    if parser is None:
+        raise AssertionError(f"unsupported verification predicate syntax {specification.syntax!r}")
+    return parser(operator, stripped, specification.syntax)
 
 
 class VerificationPredicateDefinition(RegistryModel):

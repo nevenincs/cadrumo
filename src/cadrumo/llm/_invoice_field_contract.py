@@ -338,13 +338,13 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
     InvoiceFieldContract(
         field_name="iva_rate",
         form=InvoiceFieldForm.PERCENTAGE_RATE,
-        concept="the VAT/IVA percentage the tax was charged at",
+        concept="the IVA percentage the tax was charged at",
         form_instruction="the bare number, without a percent sign",
     ),
     InvoiceFieldContract(
         field_name="iva_amount",
         form=InvoiceFieldForm.MONETARY_AMOUNT,
-        concept="the VAT/IVA tax amount",
+        concept="the IVA tax amount",
         form_instruction="digits only, keeping the printed decimal separator; no currency sign",
     ),
     InvoiceFieldContract(
@@ -371,7 +371,7 @@ INVOICE_FIELD_CONTRACTS: tuple[InvoiceFieldContract, ...] = (
     InvoiceFieldContract(
         field_name="regime_legend",
         form=InvoiceFieldForm.FREE_TEXT,
-        concept="a printed statement that a special VAT/IVA regime applies to this operation",
+        concept="a printed statement that a special IVA regime applies to this operation",
         form_instruction="copy the phrase exactly as printed if one appears; otherwise null",
     ),
     InvoiceFieldContract(

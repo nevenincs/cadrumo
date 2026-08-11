@@ -1,0 +1,19 @@
+# The universal statutory one-percent difficult-justification deduction.
+# Annual module coefficients and cuota-minima percentages live only in the
+# source-pinned M303 annual Orden projection.
+[[revisions."2024-desde-09-y-3t".parameters]]
+id = "m303-modulos-iva-dificil-justificacion-forfait"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".parameters.values]]
+value = "1"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024-desde-09-y-3t".parameters.source_citations]]
+source_ref = "boe-orden-hfp-1359-2023-iva-authority"
+required_text = ["será deducible el 1 por ciento del importe de la cuota devengada por operaciones corrientes, en concepto de cuotas soportadas de difícil justificación"]

@@ -80,6 +80,21 @@ class _WorkbookHeader:
     content_index: int | None
 
 
+@dataclass
+class _WorkbookSheetRows:
+    """Parsed workbook rows retained until their sheet-level shape is known."""
+
+    fields: list[RecordDesignField] = field(default_factory=list)
+    total_positions: int | None = None
+    variable_bodies: list[RecordDesignVariableBodyMarker] = field(default_factory=list)
+    relative_suffixes: list[RecordDesignRelativeSuffixMarker] = field(default_factory=list)
+    variable_totals: list[RecordDesignVariableTotalMarker] = field(default_factory=list)
+    variable_body_marker_rows: list[int] = field(default_factory=list)
+    relative_suffix_marker_rows: list[int] = field(default_factory=list)
+    variable_total_marker_rows: list[int] = field(default_factory=list)
+    mixed_total_rows: list[int] = field(default_factory=list)
+
+
 def extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
     """Return fixed-width field rows from a supported official record-design source.
 
@@ -314,205 +329,273 @@ def _extract_sheet_rows(
     # completeness derivation match against, so the raw tab whitespace
     # must not leak into that identity.
     sheet_name = sheet_name.strip()
-    fields: list[RecordDesignField] = []
-    total_positions: int | None = None
-    variable_bodies: list[RecordDesignVariableBodyMarker] = []
-    relative_suffixes: list[RecordDesignRelativeSuffixMarker] = []
-    variable_totals: list[RecordDesignVariableTotalMarker] = []
-    variable_body_marker_rows: list[int] = []
-    relative_suffix_marker_rows: list[int] = []
-    variable_total_marker_rows: list[int] = []
-    mixed_total_rows: list[int] = []
+    parsed_rows = _scan_sheet_rows(sheet_name, header, rows)
+    terminal_extent = _require_contiguous_field_geometry(sheet_name, parsed_rows.fields)
+    if parsed_rows.total_positions is not None and terminal_extent != parsed_rows.total_positions:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} declares {parsed_rows.total_positions} total positions "
+            f"but parsed fields fill {terminal_extent}",
+        )
+    variable_envelope = _variable_envelope(sheet_name, parsed_rows, terminal_extent)
+    return RecordDesignSheet(
+        name=sheet_name,
+        fields=tuple(parsed_rows.fields),
+        total_positions=parsed_rows.total_positions,
+        variable_envelope=variable_envelope,
+    )
+
+
+def _scan_sheet_rows(
+    sheet_name: str,
+    header: _WorkbookHeader,
+    rows: Iterator[tuple[int, tuple[object, ...]]],
+) -> _WorkbookSheetRows:
+    parsed_rows = _WorkbookSheetRows()
     trailing_blank_rows = 0
     for row_number, row in rows:
         values = tuple(row)
         if _is_blank_row(values):
-            if fields:
-                trailing_blank_rows += 1
-                if trailing_blank_rows >= 25:
-                    break
+            trailing_blank_rows += 1
+            if parsed_rows.fields and trailing_blank_rows >= 25:
+                break
             continue
         trailing_blank_rows = 0
-        total_label_index = _total_label_index(values)
-        if total_label_index is not None:
-            row_total = _positive_integer_after(values, total_label_index)
-            has_variable_total = any(
-                _optional_text(candidate) == "Variable" for candidate in values[total_label_index + 1 :]
+        if _consume_total_row(sheet_name, parsed_rows, row_number, values):
+            continue
+        _consume_field_row(sheet_name, parsed_rows, header, row_number, values)
+    return parsed_rows
+
+
+def _consume_total_row(
+    sheet_name: str,
+    parsed_rows: _WorkbookSheetRows,
+    row_number: int,
+    values: tuple[object, ...],
+) -> bool:
+    total_label_index = _total_label_index(values)
+    if total_label_index is None:
+        return False
+    row_total = _positive_integer_after(values, total_label_index)
+    has_variable_total = any(_optional_text(candidate) == "Variable" for candidate in values[total_label_index + 1 :])
+    if has_variable_total:
+        parsed_rows.variable_total_marker_rows.append(row_number)
+    if row_total is not None and has_variable_total:
+        parsed_rows.mixed_total_rows.append(row_number)
+    if row_total is not None:
+        if parsed_rows.total_positions is not None:
+            raise RegistryValidationError(f"record-design sheet {sheet_name!r} declares duplicate fixed totals")
+        parsed_rows.total_positions = row_total
+    elif has_variable_total:
+        parsed_rows.variable_totals.append(
+            RecordDesignVariableTotalMarker(
+                sheet=sheet_name,
+                row=row_number,
+                label="total",
+                length="Variable",
+            ),
+        )
+    return True
+
+
+def _consume_field_row(
+    sheet_name: str,
+    parsed_rows: _WorkbookSheetRows,
+    header: _WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+) -> None:
+    ordinal = _int_or_none(_cell(values, header.ordinal_index))
+    offset = _int_or_none(_cell(values, header.offset_index))
+    length = _int_or_none(_cell(values, header.length_index))
+    raw_offset = _optional_text(_cell(values, header.offset_index))
+    raw_length = _optional_text(_cell(values, header.length_index))
+    if raw_length == "Variable":
+        parsed_rows.variable_body_marker_rows.append(row_number)
+        if ordinal is not None and offset is not None:
+            parsed_rows.variable_bodies.append(
+                _variable_body_marker(sheet_name, header, row_number, values, ordinal, offset),
             )
-            if has_variable_total:
-                variable_total_marker_rows.append(row_number)
-            if row_total is not None and has_variable_total:
-                mixed_total_rows.append(row_number)
-            if row_total is not None:
-                if total_positions is not None:
-                    raise RegistryValidationError(
-                        f"record-design sheet {sheet_name!r} declares duplicate fixed totals",
-                    )
-                total_positions = row_total
-            elif has_variable_total:
-                variable_totals.append(
-                    RecordDesignVariableTotalMarker(
-                        sheet=sheet_name,
-                        row=row_number,
-                        label="total",
-                        length="Variable",
-                    ),
-                )
-            continue
-        ordinal = _int_or_none(_cell(values, header.ordinal_index))
-        offset = _int_or_none(_cell(values, header.offset_index))
-        length = _int_or_none(_cell(values, header.length_index))
-        raw_offset = _optional_text(_cell(values, header.offset_index))
-        raw_length = _optional_text(_cell(values, header.length_index))
-        if raw_length == "Variable":
-            variable_body_marker_rows.append(row_number)
-            if ordinal is None or offset is None:
-                continue
-            variable_bodies.append(
-                RecordDesignVariableBodyMarker(
-                    sheet=sheet_name,
-                    row=row_number,
-                    ordinal=ordinal,
-                    offset=offset,
-                    length="Variable",
-                    type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
-                    description=_field_description_text(
-                        values,
-                        header=header,
-                        content=_optional_header_text(values, header.content_index),
-                        sheet=sheet_name,
-                        row=row_number,
-                    ),
-                    validation=_optional_header_text(values, header.validation_index),
-                    content=_optional_header_text(values, header.content_index),
-                ),
+        return
+    if raw_offset == "***":
+        parsed_rows.relative_suffix_marker_rows.append(row_number)
+        if ordinal is not None and length is not None:
+            parsed_rows.relative_suffixes.append(
+                _relative_suffix_marker(sheet_name, header, row_number, values, ordinal, length),
             )
-            continue
-        if raw_offset == "***":
-            relative_suffix_marker_rows.append(row_number)
-            if ordinal is None or length is None:
-                continue
-            relative_suffixes.append(
-                RecordDesignRelativeSuffixMarker(
-                    sheet=sheet_name,
-                    row=row_number,
-                    ordinal=ordinal,
-                    offset="***",
-                    length=length,
-                    type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
-                    description=_field_description_text(
-                        values,
-                        header=header,
-                        content=_optional_header_text(values, header.content_index),
-                        sheet=sheet_name,
-                        row=row_number,
-                    ),
-                    validation=_optional_header_text(values, header.validation_index),
-                    content=_optional_header_text(values, header.content_index),
-                ),
-            )
-            continue
-        if ordinal is None or offset is None or length is None:
-            continue
-        type_code = _required_text(_cell(values, header.type_index), sheet_name, row_number, "type")
-        complementary = _optional_header_text(values, header.complementary_index)
-        validation = _optional_header_text(values, header.validation_index)
-        content = _optional_header_text(values, header.content_index)
-        description = _field_description_text(
+        return
+    if ordinal is None or offset is None or length is None:
+        return
+    parsed_rows.fields.append(_record_design_field(sheet_name, header, row_number, values, ordinal, offset, length))
+
+
+def _variable_body_marker(
+    sheet_name: str,
+    header: _WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+    ordinal: int,
+    offset: int,
+) -> RecordDesignVariableBodyMarker:
+    validation, content, description = _field_texts(sheet_name, header, row_number, values)
+    return RecordDesignVariableBodyMarker(
+        sheet=sheet_name,
+        row=row_number,
+        ordinal=ordinal,
+        offset=offset,
+        length="Variable",
+        type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+        description=description,
+        validation=validation,
+        content=content,
+    )
+
+
+def _relative_suffix_marker(
+    sheet_name: str,
+    header: _WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+    ordinal: int,
+    length: int,
+) -> RecordDesignRelativeSuffixMarker:
+    validation, content, description = _field_texts(sheet_name, header, row_number, values)
+    return RecordDesignRelativeSuffixMarker(
+        sheet=sheet_name,
+        row=row_number,
+        ordinal=ordinal,
+        offset="***",
+        length=length,
+        type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+        description=description,
+        validation=validation,
+        content=content,
+    )
+
+
+def _record_design_field(
+    sheet_name: str,
+    header: _WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+    ordinal: int,
+    offset: int,
+    length: int,
+) -> RecordDesignField:
+    validation, content, description = _field_texts(sheet_name, header, row_number, values)
+    return RecordDesignField(
+        sheet=sheet_name,
+        row=row_number,
+        ordinal=ordinal,
+        offset=offset,
+        length=length,
+        type_code=_required_text(_cell(values, header.type_index), sheet_name, row_number, "type"),
+        complementary=_optional_header_text(values, header.complementary_index),
+        description=description,
+        validation=validation,
+        content=content,
+    )
+
+
+def _field_texts(
+    sheet_name: str,
+    header: _WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+) -> tuple[str | None, str | None, str]:
+    validation = _optional_header_text(values, header.validation_index)
+    content = _optional_header_text(values, header.content_index)
+    return (
+        validation,
+        content,
+        _field_description_text(
             values,
             header=header,
             content=content,
             sheet=sheet_name,
             row=row_number,
-        )
-        fields.append(
-            RecordDesignField(
-                sheet=sheet_name,
-                row=row_number,
-                ordinal=ordinal,
-                offset=offset,
-                length=length,
-                type_code=type_code,
-                complementary=complementary,
-                description=description,
-                validation=validation,
-                content=content,
-            ),
-        )
-    terminal_extent = _require_contiguous_field_geometry(sheet_name, fields)
-    if total_positions is not None and terminal_extent != total_positions:
-        raise RegistryValidationError(
-            f"record-design sheet {sheet_name!r} declares {total_positions} total positions "
-            f"but parsed fields fill {terminal_extent}",
-        )
-    variable_envelope: RecordDesignVariableEnvelope | None = None
-    recognises_variable_envelope = bool(variable_body_marker_rows or mixed_total_rows)
-    if recognises_variable_envelope:
-        if mixed_total_rows:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} mixes fixed and variable totals in row {mixed_total_rows[0]}",
-            )
-        malformed_marker_rows = (set(variable_body_marker_rows) - {body.row for body in variable_bodies}) | (
-            set(relative_suffix_marker_rows) - {suffix.row for suffix in relative_suffixes}
-        )
-        if malformed_marker_rows:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} has malformed variable-envelope marker "
-                f"in row {min(malformed_marker_rows)}",
-            )
-        if len(variable_bodies) > 1:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} declares duplicate variable-body markers",
-            )
-        if len(variable_totals) > 1:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} declares duplicate variable totals",
-            )
-        if not variable_bodies or not relative_suffixes or not variable_totals:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} has an incomplete variable-envelope composition",
-            )
-        variable_body = variable_bodies[0]
-        closing = _relative_closing(sheet_name, relative_suffixes)
-        closing_parts = _relative_closing_parts(closing)
-        first_closing_part = closing_parts[0]
-        last_closing_part = closing_parts[-1]
-        variable_total = variable_totals[0]
-        if total_positions is not None or terminal_extent is None:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} mixes fixed-total and variable-envelope geometry",
-            )
-        if variable_body.offset != terminal_extent + 1:
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} variable body starts at {variable_body.offset} "
-                f"after fixed prefix extent {terminal_extent}",
-            )
-        if not (
-            max(item.row for item in fields)
-            < variable_body.row
-            < first_closing_part.row
-            <= last_closing_part.row
-            < variable_total.row
-            and max(item.ordinal for item in fields) < variable_body.ordinal < first_closing_part.ordinal
-            and first_closing_part.ordinal <= last_closing_part.ordinal
-        ):
-            raise RegistryValidationError(
-                f"record-design sheet {sheet_name!r} has misordered variable-envelope composition markers",
-            )
-        variable_envelope = RecordDesignVariableEnvelope(
-            name=sheet_name,
-            prefix_fields=tuple(fields),
-            prefix_extent=terminal_extent,
-            body=variable_body,
-            closing=closing,
-            variable_total=variable_total,
-        )
-    return RecordDesignSheet(
-        name=sheet_name,
-        fields=tuple(fields),
-        total_positions=total_positions,
-        variable_envelope=variable_envelope,
+        ),
     )
+
+
+def _variable_envelope(
+    sheet_name: str,
+    parsed_rows: _WorkbookSheetRows,
+    terminal_extent: int | None,
+) -> RecordDesignVariableEnvelope | None:
+    if not (parsed_rows.variable_body_marker_rows or parsed_rows.mixed_total_rows):
+        return None
+    if parsed_rows.mixed_total_rows:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} mixes fixed and variable totals "
+            f"in row {parsed_rows.mixed_total_rows[0]}",
+        )
+    _require_valid_variable_envelope_markers(sheet_name, parsed_rows)
+    variable_body = parsed_rows.variable_bodies[0]
+    closing = _relative_closing(sheet_name, parsed_rows.relative_suffixes)
+    closing_parts = _relative_closing_parts(closing)
+    variable_total = parsed_rows.variable_totals[0]
+    if parsed_rows.total_positions is not None or terminal_extent is None:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} mixes fixed-total and variable-envelope geometry",
+        )
+    if variable_body.offset != terminal_extent + 1:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} variable body starts at {variable_body.offset} "
+            f"after fixed prefix extent {terminal_extent}",
+        )
+    _require_ordered_variable_envelope(
+        sheet_name,
+        parsed_rows.fields,
+        variable_body,
+        closing_parts,
+        variable_total,
+    )
+    return RecordDesignVariableEnvelope(
+        name=sheet_name,
+        prefix_fields=tuple(parsed_rows.fields),
+        prefix_extent=terminal_extent,
+        body=variable_body,
+        closing=closing,
+        variable_total=variable_total,
+    )
+
+
+def _require_valid_variable_envelope_markers(sheet_name: str, parsed_rows: _WorkbookSheetRows) -> None:
+    malformed_marker_rows = (
+        set(parsed_rows.variable_body_marker_rows) - {body.row for body in parsed_rows.variable_bodies}
+    ) | (set(parsed_rows.relative_suffix_marker_rows) - {suffix.row for suffix in parsed_rows.relative_suffixes})
+    if malformed_marker_rows:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} has malformed variable-envelope marker "
+            f"in row {min(malformed_marker_rows)}",
+        )
+    if len(parsed_rows.variable_bodies) > 1:
+        raise RegistryValidationError(f"record-design sheet {sheet_name!r} declares duplicate variable-body markers")
+    if len(parsed_rows.variable_totals) > 1:
+        raise RegistryValidationError(f"record-design sheet {sheet_name!r} declares duplicate variable totals")
+    if not parsed_rows.variable_bodies or not parsed_rows.relative_suffixes or not parsed_rows.variable_totals:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} has an incomplete variable-envelope composition"
+        )
+
+
+def _require_ordered_variable_envelope(
+    sheet_name: str,
+    fields: list[RecordDesignField],
+    variable_body: RecordDesignVariableBodyMarker,
+    closing_parts: tuple[RecordDesignRelativeSuffixMarker, ...],
+    variable_total: RecordDesignVariableTotalMarker,
+) -> None:
+    first_closing_part = closing_parts[0]
+    last_closing_part = closing_parts[-1]
+    ordered_rows = max(item.row for item in fields) < variable_body.row < first_closing_part.row
+    ordered_rows = ordered_rows and first_closing_part.row <= last_closing_part.row < variable_total.row
+    ordered_ordinals = max(item.ordinal for item in fields) < variable_body.ordinal < first_closing_part.ordinal
+    ordered_ordinals = ordered_ordinals and first_closing_part.ordinal <= last_closing_part.ordinal
+    if not (ordered_rows and ordered_ordinals):
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} has misordered variable-envelope composition markers",
+        )
 
 
 def _relative_closing(

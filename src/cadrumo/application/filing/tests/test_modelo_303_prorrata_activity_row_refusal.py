@@ -16,13 +16,24 @@ from ....core import (
     RefundElection,
     ResultDisposition,
 )
-from ....domain.deadlines import ModeloIVAProfile
+from ....core.resources import resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister, compute_registro_regularizacion
+from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ....domain.filing import FilingExportError
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ....domain.modelos import M303Exonerado390FilingEvidence, M303RegimenSimplificadoFilingEvidence
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission import ModeloDraftStatus
+from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from .. import (
     FilingElectionFacts,
-    M303ExportApplicabilityEnvelope,
+    M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_draft,
@@ -33,6 +44,28 @@ from .. import (
 from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _m303_general_scope() -> M303RegimenSimplificadoScopeDecision:
+    return M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+
+
+def _regimen_evidence(period: Period) -> M303RegimenSimplificadoFilingEvidence:
+    scope = _m303_general_scope()
+    return M303RegimenSimplificadoFilingEvidence(
+        scope_decision=scope,
+        rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+        regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
+            registry_snapshot=resources().modelos.authority.snapshot(
+                "303",
+                filing_year=period.filing_year,
+                period=period.code,
+            ),
+            scope_decision=scope,
+        ),
+    )
 
 
 def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_target(tmp_path: Path) -> None:
@@ -49,7 +82,12 @@ def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_targ
             "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         },
         schema_provider=provider,
+        m303_regimen_simplificado_scope=_m303_general_scope(),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    register = ProrrataRegister(
+        entries=(ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.GENERAL),),
+    )
+    bienes_register = BienesInversionIvaRegister()
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id="12345678Z",
@@ -61,6 +99,11 @@ def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_targ
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
         model_profile=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             roi_enrolled=False,
             oss_enrolled=False,
             group_member_enrolled=False,
@@ -78,9 +121,29 @@ def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_targ
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
-    )
-    register = ProrrataRegister(
-        entries=(ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.GENERAL),),
+        m303_filing_facts=M303FilingFacts(
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(reference="test:prorrata:exonerado-390"),
+            ),
+            regimen_simplificado=_regimen_evidence(period),
+            period=period,
+            supplier_regime=M303SupplierRegimeArrival(
+                period=period,
+                recipient_of_cash_accounting_operations=False,
+            ),
+            prorrata_transition=M303ProrrataTransitionArrival(period=period),
+            prorrata_register=register,
+            differentiated_contributions=(),
+            bienes_register=bienes_register,
+            regularisation_result=compute_registro_regularizacion(
+                bienes_register,
+                regularizacion_year=period.filing_year,
+                prorrata_definitiva_by_identifier={},
+            ),
+        ),
     )
     output = tmp_path / "modelo-303-prorrata-row-refusal.txt"
 
@@ -90,16 +153,6 @@ def test_applicable_prorrata_without_all_five_rows_refuses_before_layout_or_targ
             output_path=output,
             producer_snapshot=producer_snapshot,
             schema_provider=provider,
-            m303_applicability=M303ExportApplicabilityEnvelope(
-                exonerado_390_applicable=False,
-                exonerado_390=None,
-                prorrata_activities_applicable=True,
-                prorrata_register=register,
-                differentiated_sectors_applicable=False,
-                differentiated_sectors=None,
-                regimen_simplificado_applicable=False,
-                regimen_simplificado=None,
-            ),
         )
 
     assert not output.exists()

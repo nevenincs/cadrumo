@@ -341,7 +341,7 @@ def _workflow_run(label: str) -> WorkflowResult:
         started_at=when,
         ended_at=when,
         success=True,
-        summary=f"runtime attached workflow run {label}",
+        summary_locale_key="application.workflow.steps.profile_loaded",
     )
     return WorkflowResult(
         run_id=_hex(f"workflow-run-{label}")[:16],
@@ -350,7 +350,7 @@ def _workflow_run(label: str) -> WorkflowResult:
         final_stage=WorkflowStage.DONE,
         aborted_reason=None,
         steps=(step,),
-        summary=f"runtime attached workflow run {label}",
+        summary_locale_key="application.workflow.results.completed",
     )
 
 
@@ -842,7 +842,7 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason=f"Runtime attached IVA wallet decision {label}.",
+        reason_identity="aeat_wallet_validated",
         wallet_captured_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         decided_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
     )

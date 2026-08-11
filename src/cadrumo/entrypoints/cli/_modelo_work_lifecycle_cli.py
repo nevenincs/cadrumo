@@ -35,7 +35,7 @@ from ...core.i18n import tr
 from ...core.json_contract import (
     Notice,
 )
-from ...domain.calculations.registry import RegistrySnapshotError
+from ...domain.calculations.registry import RegistrySnapshotError, RevisionId
 from ...domain.contribuyente import parse_tax_region
 from ...domain.modelos import WorkUnit
 from ._common import _emit_envelope, active_profile_label, resolve_lifecycle_continuation_notice
@@ -63,7 +63,6 @@ from ._modelo_work_options import (
     _WorkUnitIdArg,
     _YearOpt,
 )
-from ...domain.calculations.registry import RevisionId
 
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099

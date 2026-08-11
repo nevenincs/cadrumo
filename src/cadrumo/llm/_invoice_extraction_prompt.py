@@ -173,7 +173,7 @@ document shows. If the document shows nothing that assigns the identifier to tha
 party, the key is null -- which is always better than a guess.
 
 Rates:
-- VAT/IVA rates registered in Spain for this period: {iva_rates}.
+- IVA rates registered in Spain for this period: {iva_rates}.
 - Withholding (retencion) rates fixed by Spanish law: {retencion_rates}. Most \
 invoices withhold nothing; then both retencion fields are null. It is printed as \
 a deduction, so it may appear negative or in parentheses.

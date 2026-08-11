@@ -15,7 +15,15 @@ the settlement auto-seed (general / ninguna).
 
 from __future__ import annotations
 
+from ...core import ProrrataEspecialTransitionKind
 from ...core.json_contract import OutputSchema, register_schema
+
+
+class ProrrataEspecialTransitionPayload(OutputSchema):
+    """Typed option or revocation evidence emitted with a register entry."""
+
+    kind: ProrrataEspecialTransitionKind
+    evidence_reference: str
 
 
 class ProrrataEntryPayload(OutputSchema):
@@ -37,6 +45,7 @@ class ProrrataEntryPayload(OutputSchema):
     definitive_volume_con_derecho: str | None = None
     definitive_volume_sin_derecho: str | None = None
     source_observation_ref: str | None = None
+    especial_transition: ProrrataEspecialTransitionPayload | None = None
     schema_version: str
 
 
@@ -66,6 +75,11 @@ class ProrrataElectGeneralResult(ProrrataElectResult):
     """JSON envelope for ``aeat app ledger prorrata elect-general``."""
 
 
+@register_schema("ledger.prorrata.revoke_especial")
+class ProrrataRevokeEspecialResult(ProrrataElectResult):
+    """JSON envelope for ``aeat app ledger prorrata revoke-especial``."""
+
+
 @register_schema("ledger.prorrata.declare_sector")
 class ProrrataDeclareSectorResult(OutputSchema):
     """JSON envelope for ``aeat app ledger prorrata declare-sector``."""
@@ -91,6 +105,8 @@ __all__ = [
     "ProrrataElectGeneralResult",
     "ProrrataElectResult",
     "ProrrataEntryPayload",
+    "ProrrataEspecialTransitionPayload",
     "ProrrataListResult",
+    "ProrrataRevokeEspecialResult",
     "SectorDefinitionPayload",
 ]

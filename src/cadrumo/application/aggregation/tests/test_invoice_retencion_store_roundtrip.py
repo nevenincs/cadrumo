@@ -40,7 +40,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....adapters.persistence.storage import RETENCION_OBSERVATIONS_NAMESPACE
-from ....core import BindingSourceKind, Period
+from ....core import AggregationCaptureKind, BindingSourceKind, Period
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.secure_sql import isolated_runtime_profile
@@ -176,7 +176,7 @@ def test_a_dropped_field_on_disk_refuses_on_load(tmp_path: Path) -> None:
                 filing_year=_PERIOD.filing_year,
                 period=_PERIOD,
                 observation=original,
-                source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
         objects = repository.secure_object_repository
@@ -232,7 +232,7 @@ def test_a_dropped_perceptor_name_reloads_unequal_rather_than_silently_defaultin
                 filing_year=_PERIOD.filing_year,
                 period=_PERIOD,
                 observation=original,
-                source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             ),
         )
         envelope = json.loads(prepared.payload.decode("utf-8"))

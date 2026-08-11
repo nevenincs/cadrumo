@@ -72,9 +72,9 @@ from ._components import (
     IvaRetencionExpectation,
     IvaRetencionRole,
     category_bears_taxable_base,
+    category_components,
     category_cuota_is_zero_by_law,
     cuota_less_m303_categories_from_table,
-    iva_category_components,
 )
 from ._corpus import load_iva_rules_from_manual
 from ._deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
@@ -112,6 +112,7 @@ from ._flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
+from ._identification import identification_state_for_printed_tax_identifier
 from ._invoice_classification import (
     IvaInvoiceClassification,
     classify_invoice_line_for_iva,
@@ -194,8 +195,12 @@ from ._regimen_simplificado_rows import (
     ActividadAgricolaSimplificado,
     ActividadNoAgricolaSimplificado,
     ActividadOrdenAnual,
+    ActividadOrdenAnualId,
     EntradaModuloSimplificado,
     HechoActividadSimplificado,
+    IaeEpigrafe,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
     ModuloOrdenAnual,
     RegimenSimplificadoActivity,
     RegimenSimplificadoFilingRows,
@@ -241,7 +246,6 @@ from ._supply_nature import (
     match_statutory_citations,
     supply_nature_is_required,
 )
-from ._vat_identification import vat_identification_state_for_printed_tax_identifier
 from ._verify import verify_catalogue
 
 __all__ = [
@@ -262,12 +266,14 @@ __all__ = [
     "ActividadAgricolaSimplificado",
     "ActividadNoAgricolaSimplificado",
     "ActividadOrdenAnual",
+    "ActividadOrdenAnualId",
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
     "EntradaModuloSimplificado",
     "EspecialMandatoryRule",
     "HechoActividadSimplificado",
+    "IaeEpigrafe",
     "InputClassification",
     "InvoiceKind",
     "IossFilerRole",
@@ -309,6 +315,8 @@ __all__ = [
     "LegendDerivation",
     "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
+    "M303RegimenSimplificadoScope",
+    "M303RegimenSimplificadoScopeDecision",
     "ModuloOrdenAnual",
     "OssIossRegime",
     "PartyFact",
@@ -338,6 +346,7 @@ __all__ = [
     "SupplyNatureDerivationOutcome",
     "TransactionKind",
     "category_bears_taxable_base",
+    "category_components",
     "category_cuota_is_zero_by_law",
     "cite",
     "classifiable_categories",
@@ -359,13 +368,13 @@ __all__ = [
     "derive_supply_nature_from_citation",
     "domestic_categories_by_rate_kind",
     "especial_mandatory_rule",
+    "identification_state_for_printed_tax_identifier",
     "invoice_line_to_iva_observation",
     "is_deducible_flow",
     "is_devengada_flow",
     "is_especial_mandatory",
     "is_last_filing_period_of_year",
     "is_m303_annual_settlement_period",
-    "iva_category_components",
     "load_iva_catalogues",
     "load_iva_rate_table",
     "load_iva_rules_from_manual",
@@ -404,6 +413,5 @@ __all__ = [
     "validate_iva_deduction_fact",
     "validate_prorrata_reference",
     "validate_regimen_simplificado_rows",
-    "vat_identification_state_for_printed_tax_identifier",
     "verify_catalogue",
 ]

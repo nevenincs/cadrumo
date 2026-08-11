@@ -28,17 +28,16 @@ from datetime import UTC, datetime
 import pytest
 
 from ....core import Period
-from ....domain.iva_compensation import reconcile_iva_compensation_wallet
+from ....domain.iva_compensation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TAXPAYER_REF = "12345678Z"
 _DECIDED_AT = datetime(2026, 5, 19, 10, 0, 0, tzinfo=UTC)
-_NOTHING_IS_AVAILABLE = "No AEAT wallet observation or local recurrence is available"
 
 
-def _reason(*, found_but_unusable: bool) -> str:
-    """Return the sentence the decision carries for one no-authority situation."""
+def _reason(*, found_but_unusable: bool) -> IvaCompensationDecisionReason:
+    """Return the locale-neutral identity for one no-authority situation."""
     decision = reconcile_iva_compensation_wallet(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
@@ -49,7 +48,7 @@ def _reason(*, found_but_unusable: bool) -> str:
         local_evidence_found_but_unusable=found_but_unusable,
     )
     assert decision.blocked is True, "both situations must still block; only the sentence differs"
-    return decision.reason
+    return decision.reason_identity
 
 
 def test_an_unreadable_prior_record_is_not_described_as_nothing_existing() -> None:
@@ -61,10 +60,7 @@ def test_an_unreadable_prior_record_is_not_described_as_nothing_existing() -> No
     """
     reason = _reason(found_but_unusable=True)
 
-    assert _NOTHING_IS_AVAILABLE not in reason, (
-        f"a prior record exists and could not be read, and the decision still says nothing is available: {reason!r}"
-    )
-    assert "could not be read" in reason, f"the sentence does not say what happened: {reason!r}"
+    assert reason is IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE
 
 
 def test_a_genuinely_absent_prior_record_still_reads_as_nothing_available() -> None:
@@ -76,10 +72,7 @@ def test_a_genuinely_absent_prior_record_still_reads_as_nothing_available() -> N
     """
     reason = _reason(found_but_unusable=False)
 
-    assert _NOTHING_IS_AVAILABLE in reason, f"the genuinely-absent case no longer says nothing is available: {reason!r}"
-    assert "could not be read" not in reason, (
-        f"the genuinely-absent case now claims a record was found and unread: {reason!r}"
-    )
+    assert reason is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY
 
 
 def test_the_two_situations_do_not_carry_the_same_sentence() -> None:

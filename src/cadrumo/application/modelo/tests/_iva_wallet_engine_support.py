@@ -20,12 +20,23 @@ from ....domain.calculations.registry import (
     BindingId,
     RegistryModeloObservation,
     RegistrySnapshot,
+    resolve_m303_regimen_simplificado_snapshot,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines import IVARegime, M303RegimeComposition, TaxpayerProfile
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
@@ -66,6 +77,32 @@ def _period(filing_year: int, period: str) -> Period:
 
 
 _TARGET_PERIOD_VALUE = _period(_TARGET_YEAR, _TARGET_PERIOD)
+
+
+def _filing_instance_evidence(period: Period) -> FilingInstanceEvidence:
+    scope = M303RegimenSimplificadoScopeDecision(
+        regime_composition=M303RegimeComposition.GENERAL,
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    return FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(reference="test:iva-wallet:exonerado-390"),
+            ),
+            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
+                    registry_snapshot=_snapshot_303(filing_year=period.filing_year, period=period.code),
+                    scope_decision=scope,
+                ),
+            ),
+        ),
+    )
 
 
 @cache
@@ -227,6 +264,10 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 UserProfileFact(path="iva.regime", value=IVARegime.GENERAL),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="provenance.source", value=PROVENANCE_SOURCE_MANUAL_CLI),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
@@ -334,7 +375,7 @@ def _save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> Non
             divergence="match" if not blocked else "filed_history_only",
             blocked=blocked,
             stale_wallet=False,
-            reason="wallet gate decision fixture",
+            reason_identity="aeat_wallet_validated",
             wallet_captured_at=_DECIDED_AT,
             decided_at=_DECIDED_AT,
         ),

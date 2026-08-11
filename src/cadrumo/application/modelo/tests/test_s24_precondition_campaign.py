@@ -60,7 +60,7 @@ _ACTIVE_GROUPS = {
     ("_m349_ledger_guard.py", "raise_if_m349_intracom_ledger_rows_need_operator_rows"),
     ("_required_binding_gate.py", "_raise_required_bindings_missing"),
     ("_filing_actions.py", "_require_filing_preconditions"),
-    ("_ledger_evidence_gate.py", "raise_if_deductible_vat_evidence_missing"),
+    ("_ledger_evidence_gate.py", "raise_if_deductible_iva_evidence_missing"),
 }
 
 _IVA_WALLET_GROUPS = {
@@ -106,6 +106,16 @@ _RETIRED_VERIFICATION_GROUPS = {
     ("_verification_cross_period.py", "_require_cross_period_clean_state"),
     ("_verification_predicates.py", "_evaluate_verification_predicates"),
 }
+
+_IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
+    "filed_history_requires_override",
+    "local_evidence_unreadable",
+    "local_recurrence_requires_override",
+    "no_usable_authority",
+    "stale_wallet_local_recurrence_requires_override",
+    "stale_wallet_no_local_recurrence",
+    "wallet_local_recurrence_divergence",
+)
 
 _EXPECTED_PROFILE_IDENTITIES = {
     (
@@ -232,8 +242,8 @@ _EXPECTED_PROFILE_IDENTITIES = {
     ("modelo.work.file", "modelo.work.required_bindings.resolved", "modelo.work.file.required_bindings_missing"),
     (
         "modelo.work.file",
-        "modelo.work.file.deductible_vat_evidence.present",
-        "modelo.work.file.deductible_vat_evidence.missing",
+        "modelo.work.file.deductible_iva_evidence.present",
+        "modelo.work.file.deductible_iva_evidence.missing",
     ),
     (
         "modelo.work.file",
@@ -257,8 +267,8 @@ _EXPECTED_PROFILE_IDENTITIES = {
     ),
     (
         "modelo.work.verify",
-        "modelo.work.verify.deductible_vat_evidence.present",
-        "modelo.work.verify.deductible_vat_evidence.missing",
+        "modelo.work.verify.deductible_iva_evidence.present",
+        "modelo.work.verify.deductible_iva_evidence.missing",
     ),
     (
         "modelo.work.verify",
@@ -308,7 +318,7 @@ _EXPECTED_PROFILE_IDENTITIES = {
         )
         for scenario_code in (
             "backend_casilla_conflict",
-            "blocked",
+            *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
             "caller_binding_conflict",
             "caller_casilla_conflict",
             "first_period_zero_ungrounded",
@@ -331,7 +341,7 @@ _EXPECTED_PROFILE_IDENTITIES = {
         for leaf in ("modelo.work.verify", "modelo.work.file")
         for scenario_code in (
             "amount_mismatch",
-            "blocked",
+            *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
             "first_period_zero_ungrounded",
             "not_seeded",
             "registry_snapshot_unavailable",
@@ -345,8 +355,8 @@ _EXPECTED_PROFILE_IDENTITIES = {
 _RESERVED_PROFILE_IDENTITIES = {
     (
         "modelo.export",
-        "modelo.export.deductible_vat_evidence.present",
-        "modelo.export.deductible_vat_evidence.missing",
+        "modelo.export.deductible_iva_evidence.present",
+        "modelo.export.deductible_iva_evidence.missing",
     ),
     *{
         (
@@ -356,7 +366,7 @@ _RESERVED_PROFILE_IDENTITIES = {
         )
         for scenario_code in (
             "amount_mismatch",
-            "blocked",
+            *_IVA_WALLET_BLOCKED_DECISION_SCENARIOS,
             "first_period_zero_ungrounded",
             "not_seeded",
             "registry_snapshot_unavailable",
@@ -369,7 +379,7 @@ _RESERVED_PROFILE_IDENTITIES = {
 
 
 def _ledger_rows() -> list[dict[str, object]]:
-    payload = tomllib.loads((_ROOT / "dev/cli_action_census_dispositions.toml").read_text(encoding="utf-8"))
+    payload = tomllib.loads((_ROOT / "dev/quality/cli_action_census_dispositions.toml").read_text(encoding="utf-8"))
     rows = payload["disposition"]
     assert isinstance(rows, list)
     return [row for row in rows if str(row["path"]).startswith(_MODELO_PATH_PREFIX)]
@@ -412,7 +422,7 @@ def test_every_active_group_constructs_or_delegates_to_a_typed_failure() -> None
         }
         assert call_names & {
             "build_modelo_precondition_failure",
-            "raise_if_deductible_vat_evidence_missing",
+            "raise_if_deductible_iva_evidence_missing",
         }, (filename, symbol)
         assert not any(
             isinstance(node, ast.keyword) and node.arg in {"next_action", "suggestion"}

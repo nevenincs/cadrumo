@@ -217,16 +217,18 @@ def _irpf_personal_choice_values() -> tuple[list[str], list[str]]:
 ) = _irpf_personal_choice_values()
 
 
-def _iva_regime_choice_values() -> list[str]:
-    """Return the wizard choice tokens accepted by ``--iva-regime``."""
+def _setup_choice_values(question_id: str) -> list[str]:
+    """Return the canonical choice tokens declared for one setup question."""
     for section in SETUP_FLOW.sections:
         for question in section.questions:
-            if question.id == "iva-regime":
+            if question.id == question_id:
                 return [choice.value for choice in question.choices]
-    raise RuntimeError("SETUP_FLOW is missing the iva-regime question")
+    raise RuntimeError(f"SETUP_FLOW is missing the {question_id} question")
 
 
-_IVA_REGIME_CHOICE_VALUES: list[str] = _iva_regime_choice_values()
+_IVA_REGIME_CHOICE_VALUES: list[str] = _setup_choice_values("iva-regime")
+_M303_REGIME_COMPOSITION_CHOICE_VALUES: list[str] = _setup_choice_values("iva-m303-regime-composition")
+_M303_TAX_TERRITORY_CHOICE_VALUES: list[str] = _setup_choice_values("tax-residence-jurisdiction-scope")
 
 
 def _flag_name(question: WizardQuestion) -> str:
@@ -341,6 +343,12 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
         metavar=_choice_metavar(_IVA_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.iva-regime.help"),
     ),
+    "iva-m303-regime-composition": typer.Option(
+        "--iva-m303-regime-composition",
+        click_type=_choice(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
+        metavar=_choice_metavar(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.iva-m303-regime-composition.help"),
+    ),
     "iva-roi-enrolled": typer.Option(
         "--iva-roi-enrolled/--no-iva-roi-enrolled",
         help=tr("wizard.setup.flags.iva-roi-enrolled.help"),
@@ -360,6 +368,19 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
     "iva-intracommunity-operations-exceed-50000-eur": typer.Option(
         "--iva-intracommunity-operations-exceed-50000-eur/--no-iva-intracommunity-operations-exceed-50000-eur",
         help=tr("wizard.setup.flags.iva-intracommunity-operations-exceed-50000-eur.help"),
+    ),
+    "iva-cash-accounting-regime-enrolled": typer.Option(
+        "--iva-cash-accounting-regime-enrolled/--no-iva-cash-accounting-regime-enrolled",
+        help=tr("wizard.setup.flags.iva-cash-accounting-regime-enrolled.help"),
+    ),
+    "iva-voluntary-sii-enrolled": typer.Option(
+        "--iva-voluntary-sii-enrolled/--no-iva-voluntary-sii-enrolled",
+        help=tr("wizard.setup.flags.iva-voluntary-sii-enrolled.help"),
+    ),
+    "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": typer.Option(
+        "--iva-hydrocarbon-deposit-advance-payment-deduction-entitled/"
+        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        help=tr("wizard.setup.flags.iva-hydrocarbon-deposit-advance-payment-deduction-entitled.help"),
     ),
     "enrollment-large-company": typer.Option(
         "--enrollment-large-company/--no-enrollment-large-company",
@@ -445,6 +466,12 @@ _SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo] = {
             "wizard.setup.flags.tax-residence-ccaa.help",
             choices=", ".join(_CCAA_CHOICE_VALUES),
         ),
+    ),
+    "tax-residence-jurisdiction-scope": typer.Option(
+        "--tax-residence-jurisdiction-scope",
+        click_type=_choice(_M303_TAX_TERRITORY_CHOICE_VALUES),
+        metavar=_choice_metavar(_M303_TAX_TERRITORY_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.tax-residence-jurisdiction-scope.help"),
     ),
     "cloud-evidence-upload": typer.Option(
         "--cloud-evidence-upload/--no-cloud-evidence-upload",
@@ -1107,6 +1134,7 @@ def _run_full_flow(
     with span as routing_profile_id:
 
         def _persist_if_filing_baseline_survives(state: WorkflowState) -> WorkflowState:
+            values = profile_values
             if mode == "edit":
                 values = record_to_path_values(state.active_profile_record())
                 values.update({path: value for path, value in profile_values.items() if value})
@@ -1120,6 +1148,12 @@ def _run_full_flow(
                             "missing_flags": _format_missing_flags(missing_baseline),
                         },
                     )
+            from ...domain.deadlines import taxpayer_profile_from_mapping
+
+            taxpayer_profile_from_mapping(
+                values,
+                tax_id_default=values.get("identity.tax_id", ""),
+            )
             return persist_answers(
                 flow,
                 answers,

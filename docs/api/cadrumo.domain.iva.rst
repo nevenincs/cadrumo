@@ -36,5 +36,5 @@ Submodules
    cadrumo.domain.iva._schema
    cadrumo.domain.iva._sepa_marca
    cadrumo.domain.iva._supply_nature
-   cadrumo.domain.iva._vat_identification
+   cadrumo.domain.iva._identification
    cadrumo.domain.iva._verify

@@ -90,6 +90,7 @@ from ..core.identity import ProfileId
 from ..core.logging import get_logger
 from ..core.time import today_madrid
 from ..domain.calculations.registry import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
+from ..domain.calculations.registry import RevisionId
 from ..domain.deadlines import (
     DeadlineEngine,
     ObligationStatus,
@@ -117,7 +118,6 @@ from .workflow import (
     WorkflowState,
     assess_active_profile_health,
 )
-from ..domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import RegistrySnapshot

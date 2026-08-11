@@ -1,6 +1,6 @@
 """The hex-64 canonical-home gate: one primitive, no local redeclarations.
 
-Wires ``dev/hex64_redeclaration_census.py`` into the pytest surface as the
+Wires ``dev/identity/hex64_redeclaration_census.py`` into the pytest surface as the
 enforcement half of a mandate that has been stated for a long time and enforced
 never.
 
@@ -29,9 +29,9 @@ inside a drift count.
 from __future__ import annotations
 
 import pytest
-
-from dev.hex64_redeclaration_census import (
+from dev.identity.hex64_redeclaration_census import (
     CANONICAL_HOME,
+    Declaration,
     DeclarationKind,
     census,
     stale_exemptions,
@@ -47,18 +47,18 @@ _REVISION = "HEAD"
 
 
 @pytest.fixture(scope="module")
-def declarations() -> tuple:
+def declarations() -> tuple[Declaration, ...]:
     """The out-of-home hex-64 declaration ledger at ``HEAD``."""
     return census(_REVISION)
 
 
-def _worklist(items: tuple, header: str) -> str:
+def _worklist(items: tuple[Declaration, ...], header: str) -> str:
     """Render a failure as a worklist, so a red gate is actionable rather than noisy."""
     lines = "\n".join(f"  {item.rendered()}" for item in items)
     return f"{header}\n{lines}\n"
 
 
-def test_the_scanner_reaches_a_real_population(declarations: tuple) -> None:
+def test_the_scanner_reaches_a_real_population(declarations: tuple[Declaration, ...]) -> None:
     # A zero result from a broken scanner is indistinguishable from a clean
     # tree. This gate's other assertions are only meaningful if the census
     # actually walked something, so prove it reached production modules before
@@ -66,7 +66,9 @@ def test_the_scanner_reaches_a_real_population(declarations: tuple) -> None:
     assert declarations, "the census returned nothing at all, which means it did not run, not that the tree is clean"
 
 
-def test_no_module_redeclares_the_hex64_shape_outside_the_canonical_home(declarations: tuple) -> None:
+def test_no_module_redeclares_the_hex64_shape_outside_the_canonical_home(
+    declarations: tuple[Declaration, ...],
+) -> None:
     open_sites = tuple(i for i in unexempted(declarations) if i.kind is DeclarationKind.REDECLARED_PATTERN)
     assert not open_sites, _worklist(
         open_sites,
@@ -78,7 +80,7 @@ def test_no_module_redeclares_the_hex64_shape_outside_the_canonical_home(declara
     )
 
 
-def test_no_field_is_constrained_to_length_64_without_a_pattern(declarations: tuple) -> None:
+def test_no_field_is_constrained_to_length_64_without_a_pattern(declarations: tuple[Declaration, ...]) -> None:
     open_sites = tuple(i for i in unexempted(declarations) if i.kind is DeclarationKind.UNPATTERNED_LENGTH)
     assert not open_sites, _worklist(
         open_sites,
@@ -90,7 +92,7 @@ def test_no_field_is_constrained_to_length_64_without_a_pattern(declarations: tu
     )
 
 
-def test_every_allowlist_entry_answers_a_live_occurrence(declarations: tuple) -> None:
+def test_every_allowlist_entry_answers_a_live_occurrence(declarations: tuple[Declaration, ...]) -> None:
     stale = stale_exemptions(declarations)
     assert not stale, (
         "These allowlist entries no longer match any site. A stale exemption reads as a "

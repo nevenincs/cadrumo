@@ -48,7 +48,7 @@ _SUPPLIER_CIF_FAILING_CHECKSUM = "B17283945"
 #: A filer whose own identifier is a French VAT number. Nothing about a Spanish
 #: filing obligation requires the filer's stored identifier to be Spanish, and
 #: no checksum-asserting exclusion can see this one at all.
-_FOREIGN_OWN_VAT = "FR52422961982"
+_FOREIGN_OWN_IVA = "FR52422961982"
 
 
 def _resolve(candidates: tuple[IdentityCandidate, ...], *, own: str | None = _OWN_NIF):
@@ -74,7 +74,7 @@ def test_the_fixture_identifiers_still_carry_the_properties_they_are_named_for()
     with pytest.raises(IdentityError):
         validate_spanish_tax_id(_SUPPLIER_CIF_FAILING_CHECKSUM)
     with pytest.raises(IdentityError):
-        validate_spanish_tax_id(_FOREIGN_OWN_VAT)
+        validate_spanish_tax_id(_FOREIGN_OWN_IVA)
 
 
 def test_the_measured_defect_shape_never_yields_a_first_match_identifier() -> None:
@@ -238,18 +238,18 @@ def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy() ->
     resolution = _resolve(
         (
             IdentityCandidate(
-                value=_FOREIGN_OWN_VAT,
+                value=_FOREIGN_OWN_IVA,
                 country_code="FR",
                 role_evidence="printed under 'Fournisseur'",
             ),
             IdentityCandidate(value=_UNRELATED_VALID_CIF),
         ),
-        own=_FOREIGN_OWN_VAT,
+        own=_FOREIGN_OWN_IVA,
     )
 
-    assert resolution.resolved != _FOREIGN_OWN_VAT, "the filer was named as their own counterparty"
+    assert resolution.resolved != _FOREIGN_OWN_IVA, "the filer was named as their own counterparty"
     assert resolution.resolved is None
-    assert _FOREIGN_OWN_VAT not in {c.value for c in resolution.provenance.candidates}
+    assert _FOREIGN_OWN_IVA not in {c.value for c in resolution.provenance.candidates}
 
 
 def test_a_checksum_invalid_filer_identifier_still_excludes_the_filer() -> None:

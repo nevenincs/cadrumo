@@ -14,7 +14,7 @@ would settle it.
 
 Two of those authorities are absent by design rather than by omission:
 
-**Registration status needs VIES.** A printed VAT identifier establishes that
+**Registration status needs VIES.** A printed IVA identifier establishes that
 someone is acting as a taxable person, not that their number is registered and
 valid — and the registered status is what triggers the intra-community supply
 exemption. Inferring it from a printed number would zero-rate a taxable sale on
@@ -53,11 +53,11 @@ all belong to parties who are not established in Spain — and establishment for
 IVA is the sede de actividad, not tax registration. So that population refuses
 here, correctly, until the evidence question is settled.
 
-**A party's VAT identification is a THIRD thing, asked separately and demanded
+**A party's IVA identification is a THIRD thing, asked separately and demanded
 rarely.** Where a party is established and which Member State identifies it are
 two facts (:class:`~domain.iva.PartyFact`), and this module resolves them from
 different evidence on purpose: the identification from the party's own printed
-VAT number, which settles it decisively because registration is precisely what
+IVA number, which settles it decisively because registration is precisely what
 it asserts; the establishment from the country and postal evidence, which no
 registration can supply on either side. The identification is then demanded only
 where the branch the operation reaches declares it consumed — the
@@ -105,11 +105,11 @@ from ...domain.iva import (
     TransactionKind,
     classify_iva,
     domestic_categories_by_rate_kind,
+    identification_state_for_printed_tax_identifier,
     rate_kind_for_domestic_category,
     stated_country_code_status,
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
-    vat_identification_state_for_printed_tax_identifier,
 )
 
 if TYPE_CHECKING:
@@ -343,9 +343,9 @@ def _identification_state(
     *,
     asserted: EUMemberState | None,
 ) -> EUMemberState | None:
-    """Resolve which Member State VAT-identifies a party, from registration evidence.
+    """Resolve which Member State IVA-identifies a party, from registration evidence.
 
-    **The printed VAT number is decisive here and is not corroborated**, which
+    **The printed IVA number is decisive here and is not corroborated**, which
     inverts how the same evidence is treated one axis over. The identification
     state asks which State registered the party, and a number the party printed
     under that State's own VIES structure is exactly that answer — there is no
@@ -369,7 +369,7 @@ def _identification_state(
     """
     if asserted is not None:
         return asserted
-    return vat_identification_state_for_printed_tax_identifier(printed_identifier)
+    return identification_state_for_printed_tax_identifier(printed_identifier)
 
 
 def _counterparty_identification_field(direction: InvoiceKind) -> str:
@@ -415,15 +415,15 @@ def _state_for_field(
 
 
 def _identification_gap(field: str) -> MissingClassifierInput:
-    """Say why the evidence could not settle a party's VAT identification state."""
+    """Say why the evidence could not settle a party's IVA identification state."""
     return MissingClassifierInput(
         field=field,
         reason=(
             "this operation's treatment is reported against the party's NIF-IVA, and no printed "
-            "VAT number established which Member State identifies it"
+            "IVA number established which Member State identifies it"
         ),
         settled_by=(
-            "a printed intra-community VAT number for this party, or an explicit operator assertion "
+            "a printed intra-community IVA number for this party, or an explicit operator assertion "
             "of the Member State that identifies it"
         ),
     )
@@ -504,7 +504,7 @@ def _facts_consumed(
 
     The same extension of the same idea as :func:`_axis_forks_the_law`, and
     deliberately routed through the same authority rather than beside it: which
-    branches need a party's VAT identification is a fact about the law, so it is
+    branches need a party's IVA identification is a fact about the law, so it is
     ASKED of the rule table instead of restated here as a branch on the
     territorial scopes. A hand-written "EU parties need a Member State" was
     exactly that restatement, and it was wrong in a specific way — it made an
@@ -599,8 +599,8 @@ class DeclaredFacts(BaseModel):
             asserting where a party operates from has not thereby said which
             State registered it.
         customer_scope: The customer's establishment, on the same terms.
-        issuer_identification_state: Which Member State VAT-identifies the
-            issuer, where no VAT number was printed to establish it. Never
+        issuer_identification_state: Which Member State IVA-identifies the
+            issuer, where no IVA number was printed to establish it. Never
             supplies the establishment, symmetrically.
         customer_identification_state: The same for the customer.
         stated_category: The IVA treatment the document's own machine-readable
@@ -730,7 +730,7 @@ def _identification_axis_gap(
     """Demand the counterparty's NIF-IVA only where a reachable branch consumes it."""
     if counterparty_state is not None:
         return None
-    if PartyFact.VAT_IDENTIFICATION_STATE not in _facts_consumed(
+    if PartyFact.IVA_IDENTIFICATION_STATE not in _facts_consumed(
         consumption_probe,
         status_candidates=status_candidates,
         kind_candidates=kind_candidates,
@@ -826,7 +826,7 @@ def assemble_classification_criteria(
             in Madrid crosses a territorial boundary one shared code could not
             express.
         issuer_identifier: The issuer's printed tax identifier, if any. Read
-            for the VAT IDENTIFICATION state only — a separate axis from the
+            for the IVA IDENTIFICATION state only — a separate axis from the
             postal and country evidence above, which answer where the party is.
         customer_identifier: The same for the customer.
         rate_tier: The rate tier, required by the criteria model for ES-to-ES

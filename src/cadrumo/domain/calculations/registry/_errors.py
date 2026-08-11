@@ -259,6 +259,10 @@ class RegistryValidationError(RegistryError, CoreValidationError):
         )
 
 
+class M303RegimenSimplificadoEvidenceRequiredError(RegistryValidationError):
+    """M303 simplified/mixed scope needs S58's validated evidence projection."""
+
+
 class RegistrySnapshotError(RegistryError):
     """Raised when a filing-grade snapshot cannot be selected.
 

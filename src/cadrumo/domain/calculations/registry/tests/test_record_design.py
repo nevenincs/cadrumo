@@ -9,14 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.domain.calculations.registry import (
+from .. import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
     RegistryValidationError,
     extract_record_design,
     resolve_record_design_binary,
 )
-
 from .. import _record_design as record_design_module
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
@@ -33,6 +32,9 @@ from ._record_design_support import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_WorkbookCell = str | int | None
+_WorkbookRow = tuple[_WorkbookCell, ...]
+
 _MODELO_303_DESIGNS = (
     ("aeat-dr-303-2023", 406),
     ("aeat-dr-303-2024-early", 406),
@@ -45,7 +47,7 @@ _MODELO_220_DESIGNS = (
     ("aeat-dr-220-2024", 2024, "2024"),
     ("aeat-dr-220-2025", 2025, "2025"),
 )
-_M220_COMPOSITE_CLOSING_ROWS = (
+_M220_COMPOSITE_CLOSING_ROWS: tuple[_WorkbookRow, ...] = (
     (15, "***", 3, "An", "Constante", None, "</T"),
     (16, "***", 3, "An", "Modelo", None, "220"),
     (17, "***", 1, "An", "Discriminente", None, "(*)[A|E|I|0]"),
@@ -195,7 +197,7 @@ def test_workbook_declared_total_must_equal_terminal_parsed_extent(tmp_path: Pat
 
     path = tmp_path / "mismatched-total.xlsx"
     workbook = Workbook()
-    worksheet = workbook.active
+    worksheet = workbook.worksheets[0]
     worksheet.title = "Fixed"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
     worksheet.append((1, 1, 2, "An", "First"))
@@ -220,7 +222,7 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
         ("NonPositive", "Total:", 0),
     )
     for index, (sheet_name, label, declared) in enumerate(labels):
-        worksheet = workbook.active if index == 0 else workbook.create_sheet()
+        worksheet = workbook.worksheets[0] if index == 0 else workbook.create_sheet()
         worksheet.title = sheet_name
         worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
         worksheet.append((1, 1, 2, "An", "First"))
@@ -374,7 +376,7 @@ def test_workbook_total_recovery_accepts_only_official_labels_and_positive_integ
 )
 def test_variable_envelope_rejects_malformed_composition(
     tmp_path: Path,
-    rows: tuple[tuple[object, ...], ...],
+    rows: tuple[_WorkbookRow, ...],
     message: str,
 ) -> None:
     """Malformed composition markers refuse through the production workbook parser."""
@@ -382,7 +384,7 @@ def test_variable_envelope_rejects_malformed_composition(
 
     path = tmp_path / "malformed-envelope.xlsx"
     workbook = Workbook()
-    worksheet = workbook.active
+    worksheet = workbook.worksheets[0]
     worksheet.title = "VARIABLE-ENVELOPE"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
     for row in rows:
@@ -423,7 +425,7 @@ def test_variable_envelope_rejects_malformed_composition(
 )
 def test_modelo_220_composite_relative_closing_refuses_incomplete_duplicate_reordered_or_ambiguous_rows(
     tmp_path: Path,
-    closing_rows: tuple[tuple[object, ...], ...],
+    closing_rows: tuple[_WorkbookRow, ...],
     message: str,
 ) -> None:
     """The six-row contract fails closed without joining or defaulting parts."""
@@ -431,7 +433,7 @@ def test_modelo_220_composite_relative_closing_refuses_incomplete_duplicate_reor
 
     path = tmp_path / "malformed-m220-composite.xlsx"
     workbook = Workbook()
-    worksheet = workbook.active
+    worksheet = workbook.worksheets[0]
     worksheet.title = "OFFICIAL-SHAPE"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
     worksheet.append((13, 1, 328, "An", "Fixed prefix", None, None))
@@ -452,7 +454,7 @@ def test_closing_and_variable_total_without_a_body_do_not_reclassify_a_fixed_rec
 
     path = tmp_path / "partial-marker-fixed-record.xlsx"
     workbook = Workbook()
-    worksheet = workbook.active
+    worksheet = workbook.worksheets[0]
     worksheet.title = "FIXED"
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción", "Validación", "Contenido"))
     worksheet.append((1, 1, 328, "An", "Fixed record", None, None))
@@ -514,7 +516,7 @@ def test_closing_and_variable_total_without_a_body_do_not_reclassify_a_fixed_rec
 def test_workbook_refuses_noncontiguous_fixed_and_variable_prefix_geometry(
     tmp_path: Path,
     sheet_name: str,
-    rows: tuple[tuple[object, ...], ...],
+    rows: tuple[_WorkbookRow, ...],
     message: str,
 ) -> None:
     """Fixed sheets and envelope prefixes require exact source-order geometry."""
@@ -522,7 +524,7 @@ def test_workbook_refuses_noncontiguous_fixed_and_variable_prefix_geometry(
 
     path = tmp_path / f"{sheet_name}.xlsx"
     workbook = Workbook()
-    worksheet = workbook.active
+    worksheet = workbook.worksheets[0]
     worksheet.title = sheet_name
     worksheet.append(("Nº", "Posic.", "Lon", "Tipo", "Descripción"))
     for row in rows:
@@ -539,6 +541,7 @@ def _official_total_rows(
 ) -> tuple[dict[str, int], dict[str, tuple[str, str, str, int]]]:
     """Read formula and cached views to retain the binary's exact total-row evidence."""
     from openpyxl import load_workbook
+    from openpyxl.utils import get_column_letter
 
     formula_book = load_workbook(workbook_path, read_only=True, data_only=False)
     cached_book = load_workbook(workbook_path, read_only=True, data_only=True)
@@ -563,7 +566,7 @@ def _official_total_rows(
                 totals[formula_sheet.title.strip()] = cached_total
                 anchors[formula_sheet.title.strip()] = (
                     f"A{row_number}",
-                    f"{formula_sheet.cell(row=row_number, column=cached_index + 1).column_letter}{row_number}",
+                    f"{get_column_letter(cached_index + 1)}{row_number}",
                     formula_value,
                     cached_total,
                 )

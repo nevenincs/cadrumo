@@ -53,7 +53,7 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
         divergence="wallet_higher",
         blocked=True,
         stale_wallet=False,
-        reason="AEAT wallet and local recurrence diverge; review is required before automatic output.",
+        reason_identity="wallet_local_recurrence_divergence",
         wallet_captured_at=now,
         decided_at=now,
     )
@@ -77,10 +77,7 @@ def _filed_history_only_wallet_decision(
         divergence="filed_history_only",
         blocked=True,
         stale_wallet=False,
-        reason=(
-            "Direct AEAT wallet/cartera evidence is unavailable; AEAT filed-history-derived recurrence "
-            "is recorded as fallback evidence but requires explicit taxpayer override before automatic output."
-        ),
+        reason_identity="filed_history_requires_override",
         wallet_captured_at=None,
         decided_at=now,
     )
@@ -100,7 +97,7 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
         divergence="wallet_only",
         blocked=False,
         stale_wallet=False,
-        reason="synthetic wallet-only authority for Modelo 303 export",
+        reason_identity="aeat_wallet_uncrosschecked",
         wallet_captured_at=now,
         authority_sources=(
             IvaCompensationAuthoritySource(

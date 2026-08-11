@@ -12,8 +12,8 @@ from ._cross_revision_divergence import (
     iter_cross_revision_casilla_divergences,
 )
 from ._errors import RegistryValidationError
-from ._schema import ModeloDefinition
 from ._ids import RevisionId
+from ._schema import ModeloDefinition
 
 __all__ = (
     "CrossRevisionCasillaDriftSummary",

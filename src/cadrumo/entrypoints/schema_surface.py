@@ -12,6 +12,58 @@ from types import MappingProxyType
 
 from ..core.product_identity import PRODUCT_IDENTITY
 
+# The canonical, locale-neutral owner declaration for every production module
+# that registers a CLI result schema. Runtime consumers import only this tuple;
+# tests reconcile it exactly to both decorator owners and the live schema surface.
+RESULT_SCHEMA_MODULES: tuple[str, ...] = (
+    "cadrumo.application.wizard._results",
+    "cadrumo.entrypoints.cli._app_agent_workspace_payloads",
+    "cadrumo.entrypoints.cli._app_contract_payloads",
+    "cadrumo.entrypoints.cli._app_live_payloads",
+    "cadrumo.entrypoints.cli._app_maintenance_payloads",
+    "cadrumo.entrypoints.cli._app_quickfile_payloads",
+    "cadrumo.entrypoints.cli._bienes_inversion_payloads",
+    "cadrumo.entrypoints.cli._config._capabilities_payloads",
+    "cadrumo.entrypoints.cli._config._censo_payloads",
+    "cadrumo.entrypoints.cli._config._check_payloads",
+    "cadrumo.entrypoints.cli._config._collab_payloads",
+    "cadrumo.entrypoints.cli._config._google_credential_source_payloads",
+    "cadrumo.entrypoints.cli._config._google_payloads",
+    "cadrumo.entrypoints.cli._config._provision_payloads",
+    "cadrumo.entrypoints.cli._config._storage_payloads",
+    "cadrumo.entrypoints.cli._config_bucket_history_payloads",
+    "cadrumo.entrypoints.cli._config_descendiente_payloads",
+    "cadrumo.entrypoints.cli._config_payloads",
+    "cadrumo.entrypoints.cli._config_sandbox_payloads",
+    "cadrumo.entrypoints.cli._diagnostics_payloads",
+    "cadrumo.entrypoints.cli._ledger_business_payloads",
+    "cadrumo.entrypoints.cli._ledger_catalogue_invoice_payloads",
+    "cadrumo.entrypoints.cli._ledger_counterparty_payloads",
+    "cadrumo.entrypoints.cli._ledger_evidence_batch_payloads",
+    "cadrumo.entrypoints.cli._ledger_payloads",
+    "cadrumo.entrypoints.cli._ledger_ratios_payloads",
+    "cadrumo.entrypoints.cli._ledger_rule_payloads",
+    "cadrumo.entrypoints.cli._modelo_amend_wizard_payloads",
+    "cadrumo.entrypoints.cli._modelo_aux_payloads",
+    "cadrumo.entrypoints.cli._modelo_bindings_payloads",
+    "cadrumo.entrypoints.cli._modelo_iva_wallet_payloads",
+    "cadrumo.entrypoints.cli._modelo_payloads",
+    "cadrumo.entrypoints.cli._modelo_payloads_m036",
+    "cadrumo.entrypoints.cli._modelo_payloads_m145",
+    "cadrumo.entrypoints.cli._modelo_review_package_payloads",
+    "cadrumo.entrypoints.cli._modelo_support_matrix_payloads",
+    "cadrumo.entrypoints.cli._modelo_work_revision_payloads",
+    "cadrumo.entrypoints.cli._modelo_work_wizard_payloads",
+    "cadrumo.entrypoints.cli._overview_payloads",
+    "cadrumo.entrypoints.cli._payloads_modelo_reconcile",
+    "cadrumo.entrypoints.cli._prorrata_register_payloads",
+    "cadrumo.entrypoints.cli._registry_corpus_payloads",
+    "cadrumo.entrypoints.cli._registry_diff_payloads",
+    "cadrumo.entrypoints.cli._registry_payloads",
+    "cadrumo.entrypoints.cli._review_payloads",
+    "cadrumo.entrypoints.cli._root_payloads",
+)
+
 CALLBACK_SCHEMA_KEY_BY_CLI_PATH = MappingProxyType(
     {
         (): "root.status",
@@ -109,6 +161,7 @@ __all__ = [
     "CALLBACK_SCHEMA_KEY_BY_CLI_PATH",
     "CLI_PATH_BY_SCHEMA_KEY",
     "GROUP_CALLBACK_SCHEMA_KEYS",
+    "RESULT_SCHEMA_MODULES",
     "ROOT_LANDING_SCHEMA_KEYS",
     "SCHEMA_KEY_BY_CLI_PATH",
     "normalise_cli_path_to_schema_key",

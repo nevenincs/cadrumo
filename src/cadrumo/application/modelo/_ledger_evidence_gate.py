@@ -116,7 +116,7 @@ def _row_flow(row: LedgerEvidenceRow) -> IvaFlowDirection | None:
     )
 
 
-def ledger_evidence_row_missing_deductible_vat_evidence(row: LedgerEvidenceRow) -> bool:
+def ledger_evidence_row_missing_deductible_iva_evidence(row: LedgerEvidenceRow) -> bool:
     """Return whether an evidence row claims deductible IVA without linked proof."""
     lifecycle_state = _enum_or_none(TransactionLifecycleState, row.lifecycle_state)
     if lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -132,7 +132,7 @@ def ledger_evidence_row_missing_deductible_vat_evidence(row: LedgerEvidenceRow) 
     return flow is not None and is_deducible_flow(flow)
 
 
-def deductible_vat_evidence_gap_transaction_ids(revision: CalculationRevision) -> tuple[str, ...]:
+def deductible_iva_evidence_gap_transaction_ids(revision: CalculationRevision) -> tuple[str, ...]:
     """Return ledger transaction ids whose bundled evidence cannot support deduction.
 
     Args:
@@ -143,11 +143,11 @@ def deductible_vat_evidence_gap_transaction_ids(revision: CalculationRevision) -
     if evidence is None:
         return ()
     return tuple(
-        sorted(row.transaction_id for row in evidence.rows if ledger_evidence_row_missing_deductible_vat_evidence(row)),
+        sorted(row.transaction_id for row in evidence.rows if ledger_evidence_row_missing_deductible_iva_evidence(row)),
     )
 
 
-def raise_if_deductible_vat_evidence_missing(
+def raise_if_deductible_iva_evidence_missing(
     revision: CalculationRevision,
     *,
     error_type: type[ModeloError],
@@ -159,22 +159,22 @@ def raise_if_deductible_vat_evidence_missing(
             checked before the lifecycle finish line.
         error_type: Modelo error class raised when deductible IVA lacks evidence.
     """
-    transaction_ids = deductible_vat_evidence_gap_transaction_ids(revision)
+    transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
     if not transaction_ids:
         return
     error_factory = cast(Callable[..., ModeloError], error_type)
     raise error_factory(
-        translated_message="application.modelo.errors.deductible_vat_evidence_missing",
+        translated_message="application.modelo.errors.deductible_iva_evidence_missing",
         context={
             "calculation_revision_id": revision.calculation_revision_id,
             "transaction_ids": list(transaction_ids),
-            "reason": "deductible_vat_evidence_missing",
+            "reason": "deductible_iva_evidence_missing",
         },
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.file",
-            condition_id="modelo.work.file.deductible_vat_evidence.present",
-            scenario_id="modelo.work.file.deductible_vat_evidence.missing",
-            evidence_id="modelo.work.file.deductible_vat_evidence",
+            condition_id="modelo.work.file.deductible_iva_evidence.present",
+            scenario_id="modelo.work.file.deductible_iva_evidence.missing",
+            evidence_id="modelo.work.file.deductible_iva_evidence",
             evidence_values={
                 "calculation_revision_id": revision.calculation_revision_id,
                 "work_unit_id": revision.work_unit_id,
@@ -187,7 +187,7 @@ def raise_if_deductible_vat_evidence_missing(
 
 
 __all__ = [
-    "deductible_vat_evidence_gap_transaction_ids",
-    "ledger_evidence_row_missing_deductible_vat_evidence",
-    "raise_if_deductible_vat_evidence_missing",
+    "deductible_iva_evidence_gap_transaction_ids",
+    "ledger_evidence_row_missing_deductible_iva_evidence",
+    "raise_if_deductible_iva_evidence_missing",
 ]

@@ -32,6 +32,7 @@ from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Final, Literal
 from urllib.parse import urlsplit, urlunsplit
 
+from bs4 import Tag
 from pydantic import AnyHttpUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -245,7 +246,7 @@ def _parse_rows(
 
 
 def _certificate_table_rows(
-    table: object,
+    table: Tag,
     *,
     source_url: str,
     is_summary: bool,
@@ -267,12 +268,12 @@ def _certificate_table_rows(
 
 
 def _rows_from_table_body(
-    table: object,
+    table: Tag,
     *,
     header_index: dict[str, int],
     source_url: str,
     is_summary: bool,
-    summary_table_tipo: str | None,
+    summary_table_tipo: Literal["notificacion", "comunicacion"] | None,
 ) -> list[RemoteNotification]:
     """Project every populated body row of one certificate-bearing table."""
     rows: list[RemoteNotification] = []
@@ -396,9 +397,7 @@ def _split_nif_name(raw: str) -> tuple[str, str]:
     return parts[0], parts[1].strip()
 
 
-# ADAPTER-INTERNAL-ALIAS-RATIONALE-BS4-TAG: table is a bs4 Tag/NavigableString,
-# a third-party type this module intentionally does not import for typing.
-def _summary_table_tipo(table: Any) -> Literal["notificacion", "comunicacion"] | None:
+def _summary_table_tipo(table: Tag) -> Literal["notificacion", "comunicacion"] | None:
     """Return the summary category declared by the table's preceding section heading."""
     heading = table.find_previous(["h2", "h3"])
     if heading is None:

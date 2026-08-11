@@ -19,10 +19,10 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n import Translatable as tr
 from ...core.identity import ContentDigest, SubjectTaxId
 from ...core.time import UtcInstant
+from ...domain.calculations.registry import RevisionId
 from ..calculations.registry import BindingId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 from ._errors import FilingValidationError
-from ...domain.calculations.registry import RevisionId
 
 APPROVAL_BASIS_VERSION = "review-basis-v4"
 

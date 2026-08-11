@@ -19,6 +19,7 @@ from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....core.resources import resources
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
     IvaCompensationOverride,
     IvaCompensationPeriodState,
     IvaCompensationReconciliationInputError,
@@ -443,7 +444,7 @@ def test_stale_wallet_records_local_recurrence_but_blocks_automatic_output() -> 
 def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> None:
     override = IvaCompensationOverride(
         amount=Decimal("1000"),
-        reason="Operator reviewed AEAT wallet and rectificativa evidence.",
+        operator_explanation="Operator reviewed AEAT wallet and rectificativa evidence.",
         evidence_locator="operator-note:iva-wallet-review-2026-2T",
         recorded_at=_NOW,
     )
@@ -594,8 +595,7 @@ def test_first_period_zero_with_aeat_wallet_zero_is_non_blocking() -> None:
     assert decision.selected_authority == "aeat_wallet"
     assert decision.selected_amount == Decimal("0")
     assert decision.blocked is False
-    assert "art. 99.5" in decision.reason
-    assert "LIVA" in decision.reason
+    assert decision.reason_identity is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_AEAT_WALLET
 
 
 def test_first_period_zero_with_seeded_zero_local_record_is_non_blocking() -> None:
@@ -620,8 +620,7 @@ def test_first_period_zero_with_seeded_zero_local_record_is_non_blocking() -> No
     assert decision.selected_authority == "local_recurrence"
     assert decision.selected_amount == Decimal("0")
     assert decision.blocked is False
-    assert "art. 99.5" in decision.reason
-    assert "LIVA" in decision.reason
+    assert decision.reason_identity is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_LOCAL_RECURRENCE
 
 
 def test_first_period_flag_does_not_suppress_non_zero_wallet_divergence() -> None:

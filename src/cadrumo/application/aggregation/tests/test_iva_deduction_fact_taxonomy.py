@@ -219,9 +219,7 @@ def _investment_record(*, ledger_id: str, asset_id: str, sector_id: str) -> Bien
 def test_production_candidate_aggregation_requires_and_accepts_exact_reciprocal_asset_authority() -> None:
     candidate = _investment_candidate(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a")
     register = BienesInversionIvaRegister(
-        records=(
-            _investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),
-        )
+        records=(_investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),)
     )
 
     with pytest.raises(TypeError, match="investment_asset_register"):

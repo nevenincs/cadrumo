@@ -12,6 +12,8 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.deadlines import (
     IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -95,6 +97,7 @@ def _result_disposition_revision(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+    filing_instance_evidence=None,
     )
 
 
@@ -124,10 +127,28 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         return TaxpayerProfile(
             tax_id="B66012345",
             iva_regime=IVARegime.GENERAL,
-            iva=ModeloIVAProfile(redeme_enrolled=True),
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                redeme_enrolled=True,
+            ),
         )
     if kind == "ordinary":
-        return _profile()
+        return TaxpayerProfile(
+            tax_id="B66012345",
+            iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                redeme_enrolled=False,
+            ),
+        )
     raise AssertionError(f"unknown result-disposition profile kind: {kind}")
 
 
@@ -163,7 +184,7 @@ def test_resolve_modelo_result_disposition_maps_result_to_disposition(
         _resolve_result_disposition(
             modelo=modelo,
             casilla_values=casilla_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary") if modelo == "303" else _profile(),
             period=period,
         )
         == expected
@@ -215,7 +236,7 @@ def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values=casilla_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=period,
         )
         == "I"
@@ -224,7 +245,7 @@ def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values=casilla_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=period,
             payment_election=PaymentElection.DOMICILIACION,
         )
@@ -234,7 +255,7 @@ def test_positive_modelo_303_payment_election_resolves_i_or_u_and_refuses_g() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values=casilla_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=period,
             payment_election=PaymentElection.CUENTA_CORRIENTE,
         )
@@ -248,7 +269,7 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values=positive_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=positive_period,
             refund_election=RefundElection.DEVOLVER,
         )
@@ -258,7 +279,7 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values=negative_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=positive_period,
             payment_election=PaymentElection.DOMICILIACION,
         )
@@ -267,7 +288,7 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values={_M303_RESULT_CASILLA: Decimal("0.00")},
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=positive_period,
             refund_election=RefundElection.DEVOLVER,
         )
@@ -276,7 +297,7 @@ def test_incompatible_result_elections_refuse_without_changing_carry_policy() ->
         _resolve_result_disposition(
             modelo="303",
             casilla_values=negative_values,
-            profile=_profile(),
+            profile=_result_disposition_profile("ordinary"),
             period=Period.from_year_and_code(2024, "4T"),
             refund_election=RefundElection.DEVOLVER,
         )

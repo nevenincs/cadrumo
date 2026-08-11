@@ -11,8 +11,13 @@ import pytest
 
 from ....application.modelo import profile_requirements_for_binding
 from ....application.user_profile import build_profile_preflight_requirement
+from ....core import PeriodError
 from ....core.resources import resources
-from ....domain.calculations.registry import binding_profile_keys
+from ....domain.calculations.registry import (
+    RegistrySnapshotError,
+    RegistryValidationError,
+    binding_profile_keys,
+)
 from .._modelo import _date_binding_profile_requirements
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -49,13 +54,7 @@ def _an_addressable_profile_binding():
     authority = resources().modelos.authority
     for model in authority.modelos:
         for revision in model.revisions.values():
-            try:
-                candidates = [b for b in revision.bindings if binding_profile_keys(b)]
-            except Exception:
-                # A revision the registry cannot currently validate is not
-                # addressable, so it is skipped like any other unusable
-                # candidate rather than failing this search.
-                continue
+            candidates = [b for b in revision.bindings if binding_profile_keys(b)]
             if not candidates:
                 continue
             selector = revision.period_selector
@@ -69,7 +68,7 @@ def _an_addressable_profile_binding():
                             period=period.registry_token,
                         )
                         resolved = {str(b.id) for b in snapshot.revision.bindings}
-                    except Exception:
+                    except (PeriodError, RegistrySnapshotError, RegistryValidationError):
                         # This helper is a SEARCH: an unaddressable or
                         # currently-invalid combination is a candidate to skip,
                         # not a failure. An empty search fails loudly below.

@@ -104,7 +104,7 @@ class PartyFact(StrEnum):
     """The two legally distinct facts a rule may need about a party.
 
     They were one output before they were two, and the conflation had a
-    direction. A printed foreign VAT prefix was read as decisive EVIDENCE OF
+    direction. A printed foreign IVA prefix was read as decisive EVIDENCE OF
     PLACE, so a German-identified entity actually established in Spain resolved
     silently to :attr:`IvaTerritorialScope.EU_MEMBER` and fed the table as
     settled fact — while the mirror case, a non-resident holding a Spanish
@@ -123,7 +123,7 @@ class PartyFact(StrEnum):
     residency is not thereby reading it as a registration.
 
     Attributes:
-        VAT_IDENTIFICATION_STATE: The Member State under whose VAT
+        IVA_IDENTIFICATION_STATE: The Member State under whose IVA
             identification the party operates, carried as
             :class:`cadrumo.domain.iva.EUMemberState`. Registration evidence
             settles it decisively, because registration is precisely what it
@@ -134,7 +134,7 @@ class PartyFact(StrEnum):
             registration evidences it, foreign or Spanish.
     """
 
-    VAT_IDENTIFICATION_STATE = "vat_identification_state"
+    IVA_IDENTIFICATION_STATE = "iva_identification_state"
     TERRITORIAL_ESTABLISHMENT = "territorial_establishment"
 
 
@@ -259,7 +259,7 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
 
     **The two party facts are carried separately and are never derived from each
     other** (:class:`PartyFact`). The residency fields are the TERRITORIAL
-    ESTABLISHMENT fact; the identification-state fields are the VAT
+    ESTABLISHMENT fact; the identification-state fields are the IVA
     IDENTIFICATION STATE fact. A party may hold a German identification while
     being established in Spain, or a Spanish one while established abroad — both
     are ordinary, and a model that could not express them forced the reader to
@@ -276,7 +276,7 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
         kind: Kind of supply.
         direction: ``ISSUED`` or ``RECEIVED``.
         issuer_identification_state: The
-            :class:`cadrumo.domain.iva.EUMemberState` under whose VAT
+            :class:`cadrumo.domain.iva.EUMemberState` under whose IVA
             identification the issuer operates, where established. Optional
             independently of :attr:`issuer_residency`: an EU establishment does
             not supply an identification and an identification does not supply
@@ -297,11 +297,11 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
     direction: InvoiceKind = Field(description="ISSUED or RECEIVED.")
     issuer_identification_state: EUMemberState | None = Field(
         default=None,
-        description="Member State of the issuer's VAT identification; independent of its establishment.",
+        description="Member State of the issuer's IVA identification; independent of its establishment.",
     )
     customer_identification_state: EUMemberState | None = Field(
         default=None,
-        description="Member State of the customer's VAT identification; independent of its establishment.",
+        description="Member State of the customer's IVA identification; independent of its establishment.",
     )
     rate_tier: IvaRateKind | None = Field(
         default=None,
@@ -496,7 +496,7 @@ def _r05_domestic_at_rate(criteria: IvaInvoiceClassificationCriteria) -> bool:
 
 
 def _identified_in_another_member_state(state: EUMemberState | None) -> bool:
-    """Whether a party holds a VAT identification assigned by a State other than Spain.
+    """Whether a party holds a IVA identification assigned by a State other than Spain.
 
     The literal condition art. 25.Uno places on the acquirer — "que disponga de un
     número de identificación a efectos del Impuesto sobre el Valor Añadido
@@ -516,7 +516,7 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an intra-community B2B goods supply out of the peninsula (Art. 25 exempt).
 
     **The acquirer's condition is its REGISTRATION, not its place.** Art. 25.Uno
-    exempts on the acquirer holding a VAT identification assigned by another
+    exempts on the acquirer holding a IVA identification assigned by another
     Member State, and says nothing about where it has its sede — which arts. 69-70
     govern and which this row therefore does not read of the customer. Keyed on
     establishment instead, this row silently dropped every acquirer buying under a
@@ -768,7 +768,7 @@ class _IvaClassificationRule(NamedTuple):
             Every row consumes :attr:`PartyFact.TERRITORIAL_ESTABLISHMENT`,
             because every predicate reads at least one residency. Only the
             intra-community rows add
-            :attr:`PartyFact.VAT_IDENTIFICATION_STATE`, and they read it: the
+            :attr:`PartyFact.IVA_IDENTIFICATION_STATE`, and they read it: the
             goods pair because arts. 25 and 13 make the counterparty's
             registration in another Member State the operative condition, the
             services pair because their categories select a Modelo 349 clave

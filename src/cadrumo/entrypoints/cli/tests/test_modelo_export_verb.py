@@ -114,6 +114,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         state=CalculationRevisionState.BORRADOR,
         created_at=now,
         updated_at=now,
+    filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -160,6 +161,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
         updated_at=now,
         verified_at=now,
         verified_by="operator",
+    filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -289,6 +291,7 @@ def _seed_modelo_111_revisions(
                 else None,
                 filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
                 filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
+            filing_instance_evidence=None,
             ),
         )
 
@@ -370,6 +373,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
         updated_at=now,
         verified_at=now,
         verified_by="Emilio",
+    filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -669,9 +673,7 @@ def test_export_modelo_303_cli_refuses_without_typed_applicability(tmp_path: Pat
     assert result.exit_code == 5, result.output
     payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"]["context"]["cause"] == (
-        "modelo 303 export requires an explicit applicability envelope"
-    )
+    assert payload["error"]["context"]["cause"] == ("modelo 303 export requires an explicit applicability envelope")
     assert not out.exists()
     assert not out.with_name(out.name + ".tmp").exists()
     assert "Traceback" not in result.output

@@ -162,6 +162,45 @@ def _iva_selector_axes(binding: DataBindingDefinition) -> Mapping[str, object]:
     return iva_ledger_selector(binding).model_dump()
 
 
+def _partition_for_rate_box_group(
+    *,
+    members: Sequence[tuple[DataBindingDefinition, Mapping[str, object]]],
+    casillas_by_binding: Mapping[BindingId, Sequence[CasillaId]],
+    exports: Mapping[CasillaId, bool],
+) -> RateBoxPartition | None:
+    """Build one formed partition, or preserve the group for unscreened reporting.
+
+    The formation decision is deliberately delegated to
+    :func:`_unscreened_reason`: a group that has a reason must remain absent from
+    this result so :func:`rate_box_unscreened_groups` can report it instead.
+    """
+    blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
+    rated = [member for member in members if member[1].get(_APPLIED_RATES_AXIS)]
+    if not rated:
+        return None
+    if (
+        _unscreened_reason(
+            rated=rated,
+            blind=blind,
+            casillas_by_binding=casillas_by_binding,
+            exports=exports,
+        )
+        is not None
+    ):
+        return None
+    blind_binding, blind_axes = blind[0]
+    total_casilla_id = _distinct(casillas_by_binding.get(blind_binding.id, ()))[0]
+    box_casillas = _distinct(
+        casilla_id for binding, _ in rated for casilla_id in casillas_by_binding.get(binding.id, ())
+    )
+    return RateBoxPartition(
+        total_casilla_id=total_casilla_id,
+        box_casilla_ids=tuple(sorted(box_casillas)),
+        rate_kinds=_rate_kind_names(blind_axes.get("rate_kinds")),
+        fact=str(blind_axes.get("fact", "iva_amount_sum")),
+    )
+
+
 def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartition, ...]:
     """Return every two-layer rate partition the revision declares.
 
@@ -217,33 +256,13 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
 
     partitions: list[RateBoxPartition] = []
     for members in grouped.values():
-        blind = [member for member in members if not member[1].get(_APPLIED_RATES_AXIS)]
-        rated = [member for member in members if member[1].get(_APPLIED_RATES_AXIS)]
-        if len(blind) != 1 or not rated:
-            continue
-        blind_binding, blind_axes = blind[0]
-        total_casillas = _distinct(populated_casillas.get(blind_binding.id, ()))
-        box_casillas = _distinct(
-            casilla_id for binding, _ in rated for casilla_id in populated_casillas.get(binding.id, ())
+        partition = _partition_for_rate_box_group(
+            members=members,
+            casillas_by_binding=populated_casillas,
+            exports=exports,
         )
-        if len(total_casillas) != 1 or not box_casillas:
-            continue
-        total_casilla_id = total_casillas[0]
-        if exports.get(total_casilla_id, False) or total_casilla_id in box_casillas:
-            continue
-        if not any(exports.get(casilla_id, False) for casilla_id in box_casillas):
-            continue
-        rate_kinds = _rate_kind_names(blind_axes.get("rate_kinds"))
-        if not rate_kinds:
-            continue
-        partitions.append(
-            RateBoxPartition(
-                total_casilla_id=total_casilla_id,
-                box_casilla_ids=tuple(sorted(box_casillas)),
-                rate_kinds=rate_kinds,
-                fact=str(blind_axes.get("fact", "iva_amount_sum")),
-            ),
-        )
+        if partition is not None:
+            partitions.append(partition)
     return tuple(sorted(partitions, key=lambda partition: partition.total_casilla_id))
 
 

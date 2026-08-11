@@ -76,7 +76,7 @@ def test_valid_nie_forms_are_accepted(candidate: str, substituted: int) -> None:
     (
         pytest.param("x1234567l", "X1234567L", id="lowercase"),
         pytest.param("  X-1234567-L  ", "X1234567L", id="punctuation-and-padding"),
-        pytest.param("ESX1234567L", "X1234567L", id="foreign-vat-prefix"),
+        pytest.param("ESX1234567L", "X1234567L", id="foreign-iva-prefix"),
     ),
 )
 def test_valid_nie_forms_are_normalised(raw: str, expected: str) -> None:

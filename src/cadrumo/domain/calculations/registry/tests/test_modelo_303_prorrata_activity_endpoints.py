@@ -78,9 +78,61 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
     assert tuple(field.type_code for field in source_fields) == _OFFICIAL_TYPE_CODES * 5
     assert tuple(field.length for field in source_fields) == (cnae_width, 17, 17, 1, 5) * 5
     expected_offsets = (
-        (13, 16, 33, 50, 51, 56, 59, 76, 93, 94, 99, 102, 119, 136, 137, 142, 145, 162, 179, 180, 185, 188, 205, 222, 223)
+        (
+            13,
+            16,
+            33,
+            50,
+            51,
+            56,
+            59,
+            76,
+            93,
+            94,
+            99,
+            102,
+            119,
+            136,
+            137,
+            142,
+            145,
+            162,
+            179,
+            180,
+            185,
+            188,
+            205,
+            222,
+            223,
+        )
         if cnae_width == 3
-        else (13, 17, 34, 51, 52, 57, 61, 78, 95, 96, 101, 105, 122, 139, 140, 145, 149, 166, 183, 184, 189, 193, 210, 227, 228)
+        else (
+            13,
+            17,
+            34,
+            51,
+            52,
+            57,
+            61,
+            78,
+            95,
+            96,
+            101,
+            105,
+            122,
+            139,
+            140,
+            145,
+            149,
+            166,
+            183,
+            184,
+            189,
+            193,
+            210,
+            227,
+            228,
+        )
     )
     assert tuple(field.offset for field in source_fields) == expected_offsets
 
@@ -99,12 +151,19 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
     assert frozenset(str(casilla.id) for casilla in endpoints) == _ENDPOINTS
     assert len(endpoints) == 25
     assert all(casilla.input_kind is InputKind.PROJECTION_ONLY for casilla in endpoints)
-    assert all(casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings for casilla in endpoints)
+    assert all(
+        casilla.formula is None and casilla.binding is None and not casilla.alternate_bindings for casilla in endpoints
+    )
     assert all(not casilla.export_refs for casilla in endpoints)
-    assert all(frozenset(str(ref) for ref in casilla.source_refs) == {source_ref, "aeat-modelo-303-procedure"} for casilla in endpoints)
+    assert all(
+        frozenset(str(ref) for ref in casilla.source_refs) == {source_ref, "aeat-modelo-303-procedure"}
+        for casilla in endpoints
+    )
     cnae_endpoints = tuple(casilla for casilla in endpoints if casilla.section[-1] == "cnae")
     assert len(cnae_endpoints) == 5
-    assert all(casilla.constraints is not None and casilla.constraints.max_length == cnae_width for casilla in cnae_endpoints)
+    assert all(
+        casilla.constraints is not None and casilla.constraints.max_length == cnae_width for casilla in cnae_endpoints
+    )
 
 
 def test_projection_only_endpoints_reject_direct_input_and_are_not_zero_seeded() -> None:
@@ -161,9 +220,7 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
 
     assert tuple(item.slot for item in projection) == (1, 2, 3, 4, 5)
     assert tuple(
-        (str(endpoint.casilla_id), endpoint.value)
-        for item in projection
-        for endpoint in item.endpoint_values()
+        (str(endpoint.casilla_id), endpoint.value) for item in projection for endpoint in item.endpoint_values()
     ) == tuple(
         (str(500 + (slot - 1) * 5 + field_index), value)
         for slot in range(1, 6)

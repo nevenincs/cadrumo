@@ -8,17 +8,34 @@ this collection and are never persisted as a second set of scalar inputs.
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG
+from ..filing_evidence import FilingEvidenceReference
 from ._errors import IvaValidationError
 
 _Token = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
-_EvidenceReference = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
-_IaeEpigrafe = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
+ActividadOrdenAnualId = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        min_length=1,
+        max_length=160,
+        pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
+    ),
+]
+"""Canonical identifier for one annual-Orden activity row."""
+
+IaeEpigrafe = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
 _NonNegative = Annotated[Decimal, Field(ge=Decimal("0"))]
+
+
+def _require_unique_identities(identities: tuple[str, ...], message: str) -> None:
+    if len(set(identities)) != len(identities):
+        raise IvaValidationError(message)
 
 
 class ModuloOrdenAnual(BaseModel):
@@ -38,11 +55,13 @@ class ActividadOrdenAnual(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
+    orden_id: ActividadOrdenAnualId
     ejercicio: int = Field(ge=2000, le=2099)
     kind: Literal["agricola", "no_agricola"]
     activity_code: _Token
-    iae_epigrafe: _IaeEpigrafe | None = None
+    iae_epigrafe: IaeEpigrafe | None = None
     modulos: tuple[ModuloOrdenAnual, ...] = ()
+    cuota_minima_pct: _NonNegative
     applicable_fact_identities: tuple[_Token, ...] = Field(min_length=1)
     legal_refs: tuple[_Token, ...] = Field(min_length=1)
     source_refs: tuple[_Token, ...] = Field(min_length=1)
@@ -53,15 +72,32 @@ class ActividadOrdenAnual(BaseModel):
             raise IvaValidationError("a non-agricultural Orden activity requires an IAE epigraph")
         if self.kind == "agricola" and self.iae_epigrafe is not None:
             raise IvaValidationError("an agricultural Orden activity must use its official activity code")
-        identities = tuple(module.identity for module in self.modulos)
-        orders = tuple(module.order for module in self.modulos)
-        if len(set(identities)) != len(identities):
-            raise IvaValidationError("an Orden activity contains duplicate module identities")
-        if orders != tuple(range(1, len(self.modulos) + 1)):
-            raise IvaValidationError("annual Orden modules must be complete and ordered from one")
-        if len(set(self.applicable_fact_identities)) != len(self.applicable_fact_identities):
-            raise IvaValidationError("an Orden activity contains duplicate applicable fact identities")
+        _validate_orden_module_identities(self.modulos)
+        _require_unique_identities(
+            self.applicable_fact_identities,
+            "an Orden activity contains duplicate applicable fact identities",
+        )
         return self
+
+
+class M303RegimenSimplificadoScope(StrEnum):
+    """Closed M303 simplified-regime scope outcomes available before S58 evidence."""
+
+    REGIMEN_SIMPLIFICADO_NOT_CLAIMED = "regimen_simplificado_not_claimed"
+    REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED = "regimen_simplificado_evidence_required"
+
+
+class M303RegimenSimplificadoScopeDecision(BaseModel):
+    """Explicit closed scope input for the M303 simplified branch."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    scope: M303RegimenSimplificadoScope
+
+    @property
+    def is_not_claimed(self) -> bool:
+        """Whether the explicit general-regime decision excludes the branch."""
+        return self.scope is M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED
 
 
 class HechoActividadSimplificado(BaseModel):
@@ -71,7 +107,7 @@ class HechoActividadSimplificado(BaseModel):
 
     identity: _Token
     value: str | Decimal
-    evidence_reference: _EvidenceReference
+    evidence_reference: FilingEvidenceReference
 
     @field_validator("value")
     @classmethod
@@ -91,7 +127,7 @@ class EntradaModuloSimplificado(BaseModel):
     module_identity: _Token
     declared_quantity: _NonNegative
     off_form_result: _NonNegative
-    evidence_reference: _EvidenceReference
+    evidence_reference: FilingEvidenceReference
 
 
 class ActividadAgricolaSimplificado(BaseModel):
@@ -100,11 +136,12 @@ class ActividadAgricolaSimplificado(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["agricola"] = "agricola"
+    orden_id: ActividadOrdenAnualId
     ejercicio: int = Field(ge=2000, le=2099)
     activity_id: _Token
     activity_code: _Token
     facts: tuple[HechoActividadSimplificado, ...] = Field(min_length=1)
-    evidence_reference: _EvidenceReference
+    evidence_reference: FilingEvidenceReference
 
     @model_validator(mode="after")
     def _facts_are_unique(self) -> ActividadAgricolaSimplificado:
@@ -118,18 +155,20 @@ class ActividadNoAgricolaSimplificado(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     kind: Literal["no_agricola"] = "no_agricola"
+    orden_id: ActividadOrdenAnualId
     ejercicio: int = Field(ge=2000, le=2099)
     activity_id: _Token
-    iae_epigrafe: _IaeEpigrafe
+    iae_epigrafe: IaeEpigrafe
     modulos: tuple[EntradaModuloSimplificado, ...] = Field(min_length=1, max_length=7)
     facts: tuple[HechoActividadSimplificado, ...] = ()
-    evidence_reference: _EvidenceReference
+    evidence_reference: FilingEvidenceReference
 
     @model_validator(mode="after")
     def _entries_are_unique(self) -> ActividadNoAgricolaSimplificado:
-        identities = tuple(module.module_identity for module in self.modulos)
-        if len(set(identities)) != len(identities):
-            raise IvaValidationError("a filing activity contains duplicate module identities")
+        _require_unique_identities(
+            tuple(module.module_identity for module in self.modulos),
+            "a filing activity contains duplicate module identities",
+        )
         _require_unique_fact_identities(self.facts)
         return self
 
@@ -152,30 +191,47 @@ class RegimenSimplificadoFilingRows(BaseModel):
     def _collection_is_ordered_and_conflict_free(self) -> RegimenSimplificadoFilingRows:
         if any(activity.ejercicio != self.ejercicio for activity in self.activities):
             raise IvaValidationError("every simplified-regime activity must match the filing year")
-        ids = tuple(activity.activity_id for activity in self.activities)
-        if len(set(ids)) != len(ids):
-            raise IvaValidationError("simplified-regime activity identities must be unique")
-        agricultural = tuple(activity for activity in self.activities if activity.kind == "agricola")
-        non_agricultural = tuple(activity for activity in self.activities if activity.kind == "no_agricola")
+        _require_unique_identities(
+            tuple(activity.activity_id for activity in self.activities),
+            "simplified-regime activity identities must be unique",
+        )
+        agricultural, non_agricultural = _activities_by_kind(self.activities)
         if len(agricultural) > 6 or len(non_agricultural) > 6:
             raise IvaValidationError("DP30302 permits at most six activities of each kind")
         if self.activities != agricultural + non_agricultural:
             raise IvaValidationError("activities must be ordered agricultural then non-agricultural")
-        agricultural_codes = tuple(activity.activity_code for activity in agricultural)
-        epigraphs = tuple(activity.iae_epigrafe for activity in non_agricultural)
-        if len(set(agricultural_codes)) != len(agricultural_codes) or len(set(epigraphs)) != len(epigraphs):
-            raise IvaValidationError("duplicate or conflicting simplified-regime activities are forbidden")
         return self
 
     def records(self) -> tuple[tuple[RegimenSimplificadoActivity, ...], ...]:
         """Pack exactly two activities of each kind into at most three records."""
-        agricultural = tuple(activity for activity in self.activities if activity.kind == "agricola")
-        non_agricultural = tuple(activity for activity in self.activities if activity.kind == "no_agricola")
+        agricultural, non_agricultural = _activities_by_kind(self.activities)
         count = max((len(agricultural) + 1) // 2, (len(non_agricultural) + 1) // 2)
         return tuple(
             agricultural[index * 2 : index * 2 + 2] + non_agricultural[index * 2 : index * 2 + 2]
             for index in range(count)
         )
+
+
+def _validate_orden_module_identities(modulos: tuple[ModuloOrdenAnual, ...]) -> None:
+    if not 1 <= len(modulos) <= 7:
+        raise IvaValidationError("an Orden activity must declare one through seven modules")
+    if tuple(module.order for module in modulos) != tuple(range(1, len(modulos) + 1)):
+        raise IvaValidationError("an Orden activity module identities must be complete and ordered")
+    if any(module.coefficient <= 0 for module in modulos):
+        raise IvaValidationError("an Orden activity module must have a positive coefficient")
+    _require_unique_identities(
+        tuple(module.identity for module in modulos),
+        "an Orden activity contains duplicate module identities",
+    )
+
+
+def _activities_by_kind(
+    activities: tuple[RegimenSimplificadoActivity, ...],
+) -> tuple[tuple[ActividadAgricolaSimplificado, ...], tuple[ActividadNoAgricolaSimplificado, ...]]:
+    return (
+        tuple(activity for activity in activities if activity.kind == "agricola"),
+        tuple(activity for activity in activities if activity.kind == "no_agricola"),
+    )
 
 
 def validate_regimen_simplificado_rows(
@@ -192,29 +248,54 @@ def validate_regimen_simplificado_rows(
         return
     if not rows.activities:
         raise IvaValidationError("applicable regimen simplificado requires activity rows")
-    by_key = {(item.kind, item.activity_code if item.kind == "agricola" else item.iae_epigrafe): item for item in orden}
-    if len(by_key) != len(orden) or any(item.ejercicio != rows.ejercicio for item in orden):
+    by_id = _orden_by_id(orden)
+    if len(by_id) != len(orden) or any(item.ejercicio != rows.ejercicio for item in orden):
         raise IvaValidationError("annual Orden taxonomy is duplicate, conflicting, or for the wrong year")
     for row in rows.activities:
-        key = (row.kind, row.activity_code if row.kind == "agricola" else row.iae_epigrafe)
-        annual = by_key.get(key)
-        if annual is None:
-            raise IvaValidationError(f"activity {row.activity_id!r} is absent from the applicable annual Orden")
-        if row.kind == "no_agricola":
-            if row.iae_epigrafe not in censo_iae_epigraphs:
-                raise IvaValidationError(f"IAE epigraph {row.iae_epigrafe!r} conflicts with censo")
-            actual = tuple(module.module_identity for module in row.modulos)
-            expected = tuple(module.identity for module in annual.modulos)
-            if actual != expected:
-                raise IvaValidationError(
-                    f"activity {row.activity_id!r} module identities/order do not match the annual Orden",
-                )
-        actual_facts = frozenset(fact.identity for fact in row.facts)
-        expected_facts = frozenset(annual.applicable_fact_identities)
-        if actual_facts != expected_facts:
-            raise IvaValidationError(
-                f"activity {row.activity_id!r} applicable facts do not match the annual Orden",
-            )
+        _validate_regimen_simplificado_activity(row, by_id, censo_iae_epigraphs)
+
+
+def _orden_by_id(
+    orden: tuple[ActividadOrdenAnual, ...],
+) -> dict[ActividadOrdenAnualId, ActividadOrdenAnual]:
+    return {item.orden_id: item for item in orden}
+
+
+def _validate_regimen_simplificado_activity(
+    row: RegimenSimplificadoActivity,
+    orden_by_id: dict[ActividadOrdenAnualId, ActividadOrdenAnual],
+    censo_iae_epigraphs: frozenset[str],
+) -> None:
+    annual = orden_by_id.get(row.orden_id)
+    if annual is None:
+        raise IvaValidationError(f"activity {row.activity_id!r} is absent from the applicable annual Orden")
+    if annual.kind != row.kind:
+        raise IvaValidationError(f"activity {row.activity_id!r} kind conflicts with its annual Orden identity")
+    if isinstance(row, ActividadAgricolaSimplificado) and row.activity_code != annual.activity_code:
+        raise IvaValidationError(f"activity {row.activity_id!r} code conflicts with its annual Orden identity")
+    if row.kind == "no_agricola":
+        _validate_non_agricultural_activity(row, annual, censo_iae_epigraphs)
+    if frozenset(fact.identity for fact in row.facts) != frozenset(annual.applicable_fact_identities):
+        raise IvaValidationError(
+            f"activity {row.activity_id!r} applicable facts do not match the annual Orden",
+        )
+
+
+def _validate_non_agricultural_activity(
+    row: ActividadNoAgricolaSimplificado,
+    annual: ActividadOrdenAnual,
+    censo_iae_epigraphs: frozenset[str],
+) -> None:
+    if row.iae_epigrafe != annual.iae_epigrafe:
+        raise IvaValidationError(f"activity {row.activity_id!r} IAE conflicts with its annual Orden identity")
+    if row.iae_epigrafe not in censo_iae_epigraphs:
+        raise IvaValidationError(f"IAE epigraph {row.iae_epigrafe!r} conflicts with censo")
+    actual = tuple(module.module_identity for module in row.modulos)
+    expected = tuple(module.identity for module in annual.modulos)
+    if actual != expected:
+        raise IvaValidationError(
+            f"activity {row.activity_id!r} module identities/order do not match the annual Orden",
+        )
 
 
 def _require_unique_fact_identities(facts: tuple[HechoActividadSimplificado, ...]) -> None:
@@ -227,8 +308,10 @@ __all__ = [
     "ActividadAgricolaSimplificado",
     "ActividadNoAgricolaSimplificado",
     "ActividadOrdenAnual",
+    "ActividadOrdenAnualId",
     "EntradaModuloSimplificado",
     "HechoActividadSimplificado",
+    "IaeEpigrafe",
     "ModuloOrdenAnual",
     "RegimenSimplificadoActivity",
     "RegimenSimplificadoFilingRows",

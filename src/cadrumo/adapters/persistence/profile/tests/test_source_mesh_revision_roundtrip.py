@@ -122,6 +122,7 @@ def _revision(source_provenance: tuple[CalculationSourceRef, ...]) -> Calculatio
         source_provenance=source_provenance,
         created_at=_NOW,
         updated_at=_NOW,
+    filing_instance_evidence=None,
     )
 
 

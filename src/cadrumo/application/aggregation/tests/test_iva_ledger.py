@@ -282,9 +282,7 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": iva_category,
-            "deduction_fact_kind": (
-                IvaDeductionFactKind.DOMESTIC_CURRENT if carries_input_iva else None
-            ),
+            "deduction_fact_kind": (IvaDeductionFactKind.DOMESTIC_CURRENT if carries_input_iva else None),
             "deduction_provenance": (
                 IvaDeductionClassificationProvenance(
                     authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,

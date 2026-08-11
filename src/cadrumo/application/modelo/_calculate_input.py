@@ -68,6 +68,7 @@ from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
+    FilingInstanceEvidence,
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo347ContraparteRow,
@@ -173,6 +174,7 @@ class WorkCalculateInputBundle:
     relation_values: Mapping[RelationId, Decimal]
     detail_rows: tuple[ModeloDetailRow, ...]
     borrador_snapshot_id: str | None
+    filing_instance_evidence: FilingInstanceEvidence | None = None
     m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL
     shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Non-blocking advisories raised while resolving shortcut inputs.
@@ -194,6 +196,7 @@ class WorkCalculateInputBundle:
         relation_values: Mapping[RelationId, Decimal],
         detail_rows: tuple[ModeloDetailRow, ...],
         borrador_snapshot_id: str | None,
+        filing_instance_evidence: FilingInstanceEvidence | None = None,
         text_casilla_inputs: Mapping[CasillaId, str] | None = None,
         m210_official_tipo_renta_code: str | None = None,
         m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
@@ -215,6 +218,7 @@ class WorkCalculateInputBundle:
             relation_values=dict(relation_values),
             detail_rows=detail_rows,
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
+            filing_instance_evidence=filing_instance_evidence,
             m210_gross_income_source_mode=m210_gross_income_source_mode,
             shortcut_diagnostics=shortcut_diagnostics,
         )
@@ -325,6 +329,7 @@ def calculate_modelo_work_revision(
         borrador_snapshot_id=inputs.borrador_snapshot_id,
         relation_values=inputs.optional_relation_values(),
         detail_rows=inputs.detail_rows,
+        filing_instance_evidence=inputs.filing_instance_evidence,
     )
     revision = calculation.revision
     work_unit = get_work_unit(revision.work_unit_id)
@@ -345,6 +350,7 @@ def build_work_calculate_input_bundle(
     relation_overrides: Mapping[RelationId, str],
     detail_rows: tuple[ModeloDetailRow, ...],
     borrador_snapshot_id: str | None,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
     prestacion_inss_exenta: Decimal | None = None,
     rescate_plan_pensiones_capital: Decimal | None = None,
@@ -460,6 +466,7 @@ def build_work_calculate_input_bundle(
         relation_values=relation_values,
         detail_rows=detail_rows,
         borrador_snapshot_id=borrador_snapshot_id,
+        filing_instance_evidence=filing_instance_evidence,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         shortcut_diagnostics=shortcut_diagnostics,

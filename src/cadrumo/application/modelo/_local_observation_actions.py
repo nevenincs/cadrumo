@@ -38,6 +38,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
+    RevisionId,
     casilla_noncanonical_reference_targets,
     casillas_by_id,
     format_noncanonical_casilla_reference,
@@ -45,7 +46,6 @@ from ...domain.calculations.registry import (
 )
 from ..calculations import CalculationObservationRepository, ObservationSourceKind, observation_key
 from ._action_errors import ModeloLocalObservationError
-from ...domain.calculations.registry import RevisionId
 
 OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND: Final = ObservationSourceKind.OPERATOR_MANUAL
 """Non-official source kind for operator-supplied local observations."""
@@ -125,6 +125,7 @@ def record_operator_local_observation[CasillaKey](
                 "official_evidence": "false",
                 "filing_record_created": "false",
             },
+            normalize_m303_carry=False,
             replace_official_evidence=replace_official_evidence,
         ),
     )

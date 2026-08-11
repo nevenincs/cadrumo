@@ -61,9 +61,7 @@ def upgrade_transaction_catalogue_v1_payload(payload: bytes) -> bytes:
         "rectifies_ledger_id",
         "prorrata_sector_id",
     )
-    if carries_iva and (
-        inner.get("deduction_fact_kind") is None or inner.get("deduction_provenance") is None
-    ):
+    if carries_iva and (inner.get("deduction_fact_kind") is None or inner.get("deduction_provenance") is None):
         transaction_id = inner.get("transaction_id", "unknown")
         raise StorageValidationError(
             "transaction catalogue v1 backfill refused; re-import or remediate "

@@ -10,14 +10,13 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
 from ...core.identity import CalculationRevisionId, FilingRecordId
-from ...domain.calculations.registry import LegalRefId, RegistryModeloObservation, SourceRefId
+from ...domain.calculations.registry import LegalRefId, RegistryModeloObservation, RevisionId, SourceRefId
 from ...domain.modelos import (
     CalculationRevisionState,
     ExternalEvidenceKind,
     VerificationCompletenessStatus,
 )
 from ._observations_repository import ObservationSourceKind
-from ...domain.calculations.registry import RevisionId
 
 
 def _require_period_year(period: Period, filing_year: int, *, field_name: str) -> None:

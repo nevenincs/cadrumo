@@ -43,6 +43,7 @@ from ...domain.prorrata_register import (
     ProrrataProvisionalResolution,
     ProrrataRegister,
     ProrrataRegisterEntry,
+    ProrrataRegisterValidationError,
     SectorDefinition,
     resolve_provisional_percentage,
 )
@@ -76,6 +77,18 @@ class ProrrataRegisterService:
         Returns:
             The updated :class:`ProrrataRegister`.
         """
+        return self._repository.upsert_entry(entry)
+
+    def declare_especial_transition(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
+        """Persist one current-period prorrata-especial option or revocation.
+
+        The typed evidence is mandatory for this authoring path.  The register
+        model enforces its regime, same-ejercicio mutual-exclusion, reference,
+        and prior-especial lifecycle invariants during the repository's atomic
+        singleton rebuild.
+        """
+        if entry.especial_transition is None:
+            raise ProrrataRegisterValidationError("prorrata especial transition declaration requires typed evidence")
         return self._repository.upsert_entry(entry)
 
     def record_aeat_autorizada(

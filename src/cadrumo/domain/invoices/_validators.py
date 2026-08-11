@@ -140,7 +140,7 @@ def validate_iva_number(value: str, country: str) -> str:
     For an EU Member State (and Northern Ireland ``XI``) the number is matched
     against the country's published NIF-IVA structural pattern, sourced from the
     central :data:`cadrumo.core.identity.NIF_IVA_FORMATS` authority: a malformed
-    intra-community VAT number is bounced by AEAT's Modelo 349 validator, so the
+    intra-community IVA number is bounced by AEAT's Modelo 349 validator, so the
     refusal names the country and the expected format. Live VIES existence is not
     checked — only the structure. For a non-EU counterparty (no published
     pattern) the helper falls back to a generic leading-prefix plus 4-20

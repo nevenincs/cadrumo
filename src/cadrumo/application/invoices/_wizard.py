@@ -36,6 +36,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -113,6 +114,25 @@ class _WizardFieldError(Exception):
 
     field: str
     reason: str
+
+
+def _collect_wizard_field[T](
+    field_errors: list[InvoiceWizardFieldError],
+    validate: Callable[[], T],
+    *,
+    fallback: T,
+) -> T:
+    """Run one field validator while retaining its attributed refusal.
+
+    The wizard deliberately evaluates every independent input before refusing.
+    This keeps that accumulation policy in one place while each validator remains
+    the sole owner of its field-specific grammar and reason.
+    """
+    try:
+        return validate()
+    except _WizardFieldError as exc:
+        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
+        return fallback
 
 
 def _validate_counterparty_nif(raw: str, *, country: str) -> str:
@@ -408,72 +428,61 @@ def create_invoice_via_wizard(
     # field error accumulated, so this value cannot escape. Do not "fix" it to
     # None: the NIF check needs a country, and the accumulate-then-refuse shape
     # is what lets one call name every failing field instead of the first.
-    resolved_country = "ES"
-    try:
-        resolved_country = _validate_country_code(country_code)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_nif = ""
-    try:
-        resolved_nif = _validate_counterparty_nif(counterparty_nif, country=resolved_country)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_name = ""
-    try:
-        resolved_name = _validate_counterparty_name(counterparty_name)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_number = ""
-    try:
-        resolved_number = _validate_invoice_number(invoice_number)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_date: date | None = None
-    try:
-        resolved_date = _validate_invoice_date(invoice_date)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_operation_date: date | None = None
-    if operation_date is not None:
-        try:
-            resolved_operation_date = _validate_operation_date(operation_date)
-        except _WizardFieldError as exc:
-            field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_base: Decimal | None = None
-    try:
-        resolved_base = _validate_taxable_base(taxable_base)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_rate: Decimal | None = None
-    try:
-        resolved_rate = _validate_iva_rate(iva_rate)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_currency = ""
-    try:
-        resolved_currency = _validate_currency(currency)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_retention_amount: Decimal | None = None
-    try:
-        resolved_retention_amount = _validate_retention_amount(retention_amount)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
-
-    resolved_retention_rate: Decimal | None = None
-    try:
-        resolved_retention_rate = _validate_retention_rate(retention_rate)
-    except _WizardFieldError as exc:
-        field_errors.append(InvoiceWizardFieldError(field=exc.field, reason=exc.reason))
+    resolved_country = _collect_wizard_field(field_errors, lambda: _validate_country_code(country_code), fallback="ES")
+    resolved_nif = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_counterparty_nif(counterparty_nif, country=resolved_country),
+        fallback="",
+    )
+    resolved_name = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_counterparty_name(counterparty_name),
+        fallback="",
+    )
+    resolved_number = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_invoice_number(invoice_number),
+        fallback="",
+    )
+    resolved_date = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_invoice_date(invoice_date),
+        fallback=None,
+    )
+    resolved_operation_date = (
+        _collect_wizard_field(
+            field_errors,
+            lambda: _validate_operation_date(operation_date),
+            fallback=None,
+        )
+        if operation_date is not None
+        else None
+    )
+    resolved_base = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_taxable_base(taxable_base),
+        fallback=None,
+    )
+    resolved_rate = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_iva_rate(iva_rate),
+        fallback=None,
+    )
+    resolved_currency = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_currency(currency),
+        fallback="",
+    )
+    resolved_retention_amount = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_retention_amount(retention_amount),
+        fallback=None,
+    )
+    resolved_retention_rate = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_retention_rate(retention_rate),
+        fallback=None,
+    )
 
     if field_errors:
         joined = "; ".join(f"{err.field}: {err.reason}" for err in field_errors)

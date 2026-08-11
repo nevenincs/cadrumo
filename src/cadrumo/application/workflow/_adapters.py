@@ -48,6 +48,7 @@ from ...domain.deadlines import (
     TaxpayerProfile,
 )
 from ...domain.filing import CasillaSchemaProvider, ModeloDraft
+from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.submission import SubmissionEngine, SubmissionPreflightError
 from ..filing import build_draft
 from ._engine import WorkflowEngine
@@ -113,9 +114,15 @@ class ModeloDraftBuilderAdapter:
     workflow engine's signature.
     """
 
-    def __init__(self, *, schema_provider: CasillaSchemaProvider) -> None:
-        """Store the schema provider used for every subsequent build."""
+    def __init__(
+        self,
+        *,
+        schema_provider: CasillaSchemaProvider,
+        m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
+    ) -> None:
+        """Store the schema provider and already-decided M303 scope."""
         self._schema_provider: CasillaSchemaProvider = schema_provider
+        self._m303_regimen_simplificado_scope = m303_regimen_simplificado_scope
 
     def build(
         self,
@@ -140,6 +147,7 @@ class ModeloDraftBuilderAdapter:
             profile=bridged_profile,
             inputs=inputs,
             schema_provider=self._schema_provider,
+            m303_regimen_simplificado_scope=self._m303_regimen_simplificado_scope,
             fail_on_warning=fail_on_warning,
         )
         return draft

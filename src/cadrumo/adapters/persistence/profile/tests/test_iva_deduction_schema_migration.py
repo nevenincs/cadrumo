@@ -112,12 +112,16 @@ def _register() -> BienesInversionIvaRegister:
 
 
 def _transaction_payload(transaction: Transaction, *, schema_version: int) -> bytes:
-    return Envelope[Transaction](
-        schema_version=schema_version,
-        written_at=transaction.modified_at,
-        classification=SensitivityClass.FINANCIAL,
-        payload=transaction,
-    ).model_dump_json().encode("utf-8")
+    return (
+        Envelope[Transaction](
+            schema_version=schema_version,
+            written_at=transaction.modified_at,
+            classification=SensitivityClass.FINANCIAL,
+            payload=transaction,
+        )
+        .model_dump_json()
+        .encode("utf-8")
+    )
 
 
 def _index_payload(transaction_id: str, *, schema_version: int) -> bytes:
@@ -219,20 +223,19 @@ def _seed_v1_catalogue(
 
 def _stored_row_state(engine: Engine, namespace: str) -> tuple[tuple[bytes, int, str, str], ...]:
     with session_scope(engine) as session:
-        rows = session.execute(
-            select(SecureObjectRow).where(SecureObjectRow.namespace == namespace)
-        ).scalars()
-        return tuple(
-            sorted(
+        rows = session.execute(select(SecureObjectRow).where(SecureObjectRow.namespace == namespace)).scalars().all()
+        states: list[tuple[bytes, int, str, str]] = []
+        for row in rows:
+            assert row.payload_hash is not None
+            states.append(
                 (
                     bytes(row.object_key),
                     row.schema_version,
                     row.revision_id or "",
                     row.payload_hash,
                 )
-                for row in rows
             )
-        )
+        return tuple(sorted(states))
 
 
 def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path) -> None:
@@ -255,11 +258,7 @@ def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path)
         )
         bienes_repository = BienesInversionIvaRegisterRepository()
         register = BienesInversionIvaRegister(
-            records=(
-                _register().records[0].model_copy(
-                    update={"acquisition_ledger_id": transaction.transaction_id}
-                ),
-            )
+            records=(_register().records[0].model_copy(update={"acquisition_ledger_id": transaction.transaction_id}),)
         )
         legacy_register = register.model_dump(mode="json")
         legacy_register["schema_version"] = "1"
@@ -282,14 +281,11 @@ def test_atomic_v1_migration_cas_conflict_writes_no_replacements(tmp_path: Path)
                 row = session.execute(
                     select(SecureObjectRow).where(
                         SecureObjectRow.namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-                        SecureObjectRow.object_key
-                        == transaction_repository_key,
+                        SecureObjectRow.object_key == transaction_repository_key,
                     )
                 ).scalar_one()
                 row.revision_id = "f" * 64
-            state_at_conflict = _stored_row_state(
-                engine, TRANSACTION_CATALOGUE_NAMESPACE.namespace
-            )
+            state_at_conflict = _stored_row_state(engine, TRANSACTION_CATALOGUE_NAMESPACE.namespace)
             bienes_state_at_conflict = _stored_row_state(
                 engine, PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace
             )
@@ -364,11 +360,7 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
         )
         bienes_repository = BienesInversionIvaRegisterRepository()
         original_register = BienesInversionIvaRegister(
-            records=(
-                _register().records[0].model_copy(
-                    update={"acquisition_ledger_id": transaction.transaction_id}
-                ),
-            )
+            records=(_register().records[0].model_copy(update={"acquisition_ledger_id": transaction.transaction_id}),)
         )
         legacy_register = original_register.model_dump(mode="json")
         legacy_register["schema_version"] = "1"
@@ -401,9 +393,11 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
         assert len(stored_s54_rows) == 3
         assert {row.schema_version for row in stored_s54_rows} == {2}
 
-    assert loaded_transactions.transactions[transaction.transaction_id] == transaction
+    loaded = loaded_transactions.transactions[transaction.transaction_id]
+    assert loaded == transaction
     assert aggregation.observations[0].investment_asset_id == "asset-v1-001"
-    assert loaded_transactions.transactions[transaction.transaction_id].deduction_provenance.source_locator == "invoice:V1-001"
+    assert loaded.deduction_provenance is not None
+    assert loaded.deduction_provenance.source_locator == "invoice:V1-001"
     assert loaded_register == original_register
     assert loaded_register.records[0].acquisition_ledger_id == transaction.transaction_id
     assert loaded_register.records[0].prorrata_sector_id == "sector-a"
@@ -437,9 +431,7 @@ def test_v1_rows_without_authoritative_backfill_evidence_refuse_through_real_sec
             legacy_payload=_index_payload(transaction.transaction_id, schema_version=1),
         )
         with pytest.raises(StorageValidationError, match="deduction_fact_kind and deduction_provenance"):
-            transaction_repository.migrate_iva_deduction_authority(
-                asset_profile_id="s54-v1-refusal"
-            )
+            transaction_repository.migrate_iva_deduction_authority(asset_profile_id="s54-v1-refusal")
         transaction_versions = {
             row.schema_version
             for row in transaction_repository._objects.iter_all_records_raw()
@@ -495,9 +487,7 @@ def test_semantically_malformed_v1_provenance_refuses_before_every_replacement(t
         )
 
         with pytest.raises(ValueError, match="requires 'invoice_evidence' evidence"):
-            repository.migrate_iva_deduction_authority(
-                asset_profile_id="s54-v1-malformed"
-            )
+            repository.migrate_iva_deduction_authority(asset_profile_id="s54-v1-malformed")
 
         assert {
             row.schema_version
@@ -561,9 +551,7 @@ def test_reciprocal_investment_v1_migration_refuses_unlinked_then_persists_only_
 
         linked_register = BienesInversionIvaRegister(
             records=(
-                unlinked_register.records[0].model_copy(
-                    update={"acquisition_ledger_id": transaction.transaction_id}
-                ),
+                unlinked_register.records[0].model_copy(update={"acquisition_ledger_id": transaction.transaction_id}),
             )
         )
         linked_legacy = linked_register.model_dump(mode="json")

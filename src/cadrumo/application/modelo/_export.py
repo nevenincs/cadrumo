@@ -40,6 +40,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
 
@@ -65,8 +66,14 @@ from ...core import (
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
 from ...core.logging import get_logger
+from ...core.resources import resources
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
+from ...domain.bienes_inversion import (
+    BienesInversionIvaRegister,
+    RegistroRegularizacionResult,
+    compute_registro_regularizacion,
+)
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
@@ -86,6 +93,16 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.prorrata_register import ProrrataRegister
+from ..aggregation import (
+    IvaDifferentiatedDeductionContribution,
+    IvaLedgerAggregation,
+    aggregate_iva_ledger_observations_from_repositories,
+    resolve_iva_differentiated_deduction_contributions,
+    resolve_m303_prorrata_transition_arrival,
+    resolve_m303_supplier_regime_arrival,
+)
+from ..bienes_inversion import BienesInversionRegisterService
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
@@ -99,7 +116,6 @@ from ..filing import (
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
-    M303ExportApplicabilityEnvelope,
     Modelo111ProfileFacts,
     Modelo202ProducerProfile,
     PresenterIdentity,
@@ -112,8 +128,10 @@ from ..filing import (
     export_draft,
     export_layout_renderability_reason,
     filing_profile_from_taxpayer,
+    resolve_m303_filing_facts,
 )
 from ..filing.runtime import RegistrySchemaAccessor
+from ..prorrata_register import ProrrataRegisterService
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -122,7 +140,7 @@ from ._action_errors import (
     WorkUnitNotFoundError,
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
-from ._ledger_evidence_gate import deductible_vat_evidence_gap_transaction_ids
+from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._profile_export_binding import resolve_profile_export_values
@@ -130,7 +148,12 @@ from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
 from ._result_disposition_resolution import resolve_modelo_result_disposition
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import (
+    emit_modelo_bucket_event as _emit_bucket_event,
+)
+from ._revision_persistence import (
+    require_filing_instance_evidence_for_work_unit,
+)
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
@@ -256,10 +279,6 @@ class ModeloExportCommand(BaseModel):
             ``INGRESO`` retains the standard declaration type, while a supported
             Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
             sign-incompatible elections are refused by the shared resolver.
-        m303_applicability: Typed authoritative arrival envelope required for
-            Modelo 303. Other modelos must leave it absent; callers without
-            these facts receive an instructive refusal and must not synthesize
-            applicability from the taxpayer profile.
     """
 
     model_config = _STRICT_FROZEN
@@ -273,7 +292,6 @@ class ModeloExportCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
-    m303_applicability: M303ExportApplicabilityEnvelope | None = None
 
 
 class ModeloExportResult(BaseModel):
@@ -594,6 +612,11 @@ def _approve_export_draft(
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
+            m303_regimen_simplificado_scope=(
+                revision.filing_instance_evidence.m303.regimen_simplificado.scope_decision
+                if revision.filing_instance_evidence is not None
+                else None
+            ),
         )
         approved = approve_draft(
             draft,
@@ -608,6 +631,58 @@ def _approve_export_draft(
             context={"calculation_revision_id": revision.calculation_revision_id},
         ) from exc
     return period, approved
+
+
+def _resolve_m303_export_arrivals(
+    *,
+    work_unit: WorkUnit,
+    period: Period,
+    prorrata_register: ProrrataRegister,
+    iva_aggregation: IvaLedgerAggregation,
+) -> tuple[
+    tuple[IvaDifferentiatedDeductionContribution, ...],
+    BienesInversionIvaRegister,
+    RegistroRegularizacionResult,
+]:
+    """Assemble current canonical register arrivals without caller overrides."""
+    snapshot = resources().modelos.authority.snapshot(
+        Modelo.M303.value,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    if prorrata_register.is_sectorized:
+        apportionment = iva_aggregation.prorrata_apportionment
+        if apportionment is None or not apportionment.sector_apportionments:
+            raise FilingProducerSnapshotError(
+                "modelo 303 differentiated sectors require canonical sector apportionment",
+            )
+        contributions = resolve_iva_differentiated_deduction_contributions(
+            snapshot.revision,
+            iva_aggregation.observations,
+            apportionment=apportionment,
+        )
+    else:
+        contributions = ()
+
+    bienes_register = BienesInversionRegisterService().list_all()
+    definitive_by_identifier: dict[str, Decimal] = {}
+    for record in bienes_register.in_window_records(period.filing_year):
+        entry = prorrata_register.entry_for(
+            period.filing_year,
+            sector_id=record.prorrata_sector_id,
+        )
+        if entry is not None and entry.definitive_percentage is not None:
+            definitive_by_identifier[record.identifier] = entry.definitive_percentage
+    regularisation_result = compute_registro_regularizacion(
+        bienes_register,
+        regularizacion_year=period.filing_year,
+        prorrata_definitiva_by_identifier=definitive_by_identifier,
+    )
+    if regularisation_result.pending_percentage_count:
+        raise FilingProducerSnapshotError(
+            "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
+        )
+    return contributions, bienes_register, regularisation_result
 
 
 def _build_export_producer_snapshot(
@@ -641,14 +716,51 @@ def _build_export_producer_snapshot(
         )
     try:
         modelo = Modelo(str(work_unit.modelo))
+        iva_profile = workflow_profile.iva
         if modelo is Modelo.M303:
-            model_profile = workflow_profile.iva
+            model_profile = iva_profile
+            if model_profile is None:
+                raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
+            filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
+                work_unit=work_unit,
+                revision=revision,
+            )
+            assert filing_instance_evidence is not None
+            prorrata_register = ProrrataRegisterService().list_all()
+            iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=work_unit.bucket_id,
+                period=work_unit.period,
+            )
+            differentiated_contributions, bienes_register, regularisation_result = _resolve_m303_export_arrivals(
+                work_unit=work_unit,
+                period=filing_instance_evidence.m303.period,
+                prorrata_register=prorrata_register,
+                iva_aggregation=iva_aggregation,
+            )
+            m303_filing_facts = resolve_m303_filing_facts(
+                evidence=filing_instance_evidence,
+                supplier_regime=resolve_m303_supplier_regime_arrival(
+                    period=work_unit.period,
+                    iva_aggregation=iva_aggregation,
+                ),
+                prorrata_transition=resolve_m303_prorrata_transition_arrival(
+                    period=work_unit.period,
+                    prorrata_register=prorrata_register,
+                ),
+                prorrata_register=prorrata_register,
+                differentiated_contributions=differentiated_contributions,
+                bienes_register=bienes_register,
+                regularisation_result=regularisation_result,
+            )
         elif modelo is Modelo.M202:
             model_profile = Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=())
+            m303_filing_facts = None
         elif modelo is Modelo.M111:
             model_profile = Modelo111ProfileFacts(colegio_concertado=None)
+            m303_filing_facts = None
         else:
             model_profile = GeneralFilingProfileFacts()
+            m303_filing_facts = None
         return build_filing_producer_snapshot(
             modelo=modelo,
             taxpayer_tax_id=workflow_profile.tax_id,
@@ -662,8 +774,9 @@ def _build_export_producer_snapshot(
                 prior_domiciliation=prior_domiciliation_election.election,
             ),
             amendment_evidence=evidence,
-            refund_account=workflow_profile.iva.refund_account,
-            charge_account=workflow_profile.iva.charge_account,
+            refund_account=iva_profile.refund_account if iva_profile is not None else None,
+            charge_account=iva_profile.charge_account if iva_profile is not None else None,
+            m303_filing_facts=m303_filing_facts,
         )
     except (FilingProducerSnapshotError, ValueError) as exc:
         raise ModeloExportError(
@@ -840,7 +953,6 @@ def _write_export_tmp(
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=schema_provider,
-            m303_applicability=command.m303_applicability,
         )
     except filing_domain.FilingExportError as exc:
         _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
@@ -1025,7 +1137,7 @@ def export_modelo_revision(
 
     revision = _load_revision_for_export(command.calculation_revision_id, repo=cr_repo)
     _raise_if_ledger_export_evidence_missing(revision)
-    deductible_gap_transaction_ids = deductible_vat_evidence_gap_transaction_ids(revision)
+    deductible_gap_transaction_ids = deductible_iva_evidence_gap_transaction_ids(revision)
     if deductible_gap_transaction_ids:
         # Defence in depth over a state verify no longer lets form: the deductible
         # evidence gap now BLOCKS the verified-complete transition, so a revision
@@ -1034,17 +1146,17 @@ def export_modelo_revision(
         # both recoverable by re-verifying, because a blocked verify captures no
         # bundle and leaves the draft open.
         raise ModeloExportEvidenceMissingError(
-            translated_message="application.modelo.errors.deductible_vat_evidence_missing",
+            translated_message="application.modelo.errors.deductible_iva_evidence_missing",
             context={
                 "calculation_revision_id": revision.calculation_revision_id,
                 "transaction_ids": list(deductible_gap_transaction_ids),
-                "reason": "deductible_vat_evidence_missing",
+                "reason": "deductible_iva_evidence_missing",
             },
             precondition_failure=build_modelo_precondition_failure(
                 subject_leaf_key="modelo.export",
-                condition_id="modelo.export.deductible_vat_evidence.present",
-                scenario_id="modelo.export.deductible_vat_evidence.missing",
-                evidence_id="modelo.export.deductible_vat_evidence",
+                condition_id="modelo.export.deductible_iva_evidence.present",
+                scenario_id="modelo.export.deductible_iva_evidence.missing",
+                evidence_id="modelo.export.deductible_iva_evidence",
                 evidence_values={
                     "calculation_revision_id": revision.calculation_revision_id,
                     "work_unit_id": revision.work_unit_id,
@@ -1060,22 +1172,7 @@ def export_modelo_revision(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    if work_unit.modelo == Modelo.M303.value and command.m303_applicability is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "modelo 303 export requires an explicit applicability envelope",
-            },
-        )
-    if work_unit.modelo != Modelo.M303.value and command.m303_applicability is not None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "modelo 303 applicability envelope is forbidden for non-303 exports",
-            },
-        )
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",

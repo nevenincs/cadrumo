@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TypedDict
+
 import pytest
 from pydantic import ValidationError
 
@@ -20,7 +22,17 @@ from .._manifest import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _complete_inventory() -> dict[str, tuple[object, ...]]:
+class _ReconciliationInventory(TypedDict):
+    live_leaves: tuple[LiveLeafInventoryRow, ...]
+    result_schemas: tuple[ResultSchemaInventoryRow, ...]
+    input_schemas: tuple[InputSchemaInventoryRow, ...]
+    mounted_families: tuple[MountedFamilyInventoryRow, ...]
+    profile_policies: tuple[ProfilePolicyInventoryRow, ...]
+    mcp_exposures: tuple[McpExposureInventoryRow, ...]
+    exclusions: tuple[ExplicitExclusionInventoryRow, ...]
+
+
+def _complete_inventory() -> _ReconciliationInventory:
     """Return one fully accounted-for real reconciliation input shape."""
     return {
         "live_leaves": (
@@ -72,7 +84,7 @@ def _complete_inventory() -> dict[str, tuple[object, ...]]:
 
 
 def test_reconciliation_joins_all_surfaces_by_subject_and_uses_canonical_family_path() -> None:
-    report = reconcile_operator_surface_inventory(**_complete_inventory())  # type: ignore[arg-type]
+    report = reconcile_operator_surface_inventory(**_complete_inventory())
 
     assert len(report.leaves) == 1
     leaf = report.leaves[0]
@@ -105,7 +117,7 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
     )
 
     with pytest.raises(ValueError, match="silent MCP exclusion"):
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
     inventory["exclusions"] = (
         ExplicitExclusionInventoryRow(
@@ -116,7 +128,7 @@ def test_reconciliation_requires_reasoned_authoritative_mcp_exclusion() -> None:
             provenance="MCP policy projection",
         ),
     )
-    report = reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+    report = reconcile_operator_surface_inventory(**inventory)
 
     assert report.leaves[0].mcp_exposure is not None
     assert report.leaves[0].mcp_exposure.exposed is False
@@ -176,7 +188,7 @@ def test_reconciliation_accounts_for_the_root_status_callback_without_a_mounted_
         ),
     )
 
-    report = reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+    report = reconcile_operator_surface_inventory(**inventory)
 
     root_status = next(leaf for leaf in report.leaves if leaf.live_leaf.subject_leaf_key == "root.status")
     assert root_status.live_leaf.canonical_cli_path == ()
@@ -193,13 +205,13 @@ def test_reconciliation_rejects_unmatched_duplicate_and_ambiguous_identities() -
         ),
     )
     with pytest.raises(ValueError, match="unmatched result_schema identity"):
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
     result_schema = inventory["result_schemas"][0]
     inventory["result_schemas"] = (result_schema, result_schema)
     with pytest.raises(ValueError, match="duplicate result_schema identity"):
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
     first_leaf = inventory["live_leaves"][0]
@@ -214,7 +226,7 @@ def test_reconciliation_rejects_unmatched_duplicate_and_ambiguous_identities() -
         ),
     )
     with pytest.raises(ValueError, match="ambiguous CLI path"):
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
 
 def test_reconciliation_rejects_orphan_mounted_family_with_identity_and_provenance() -> None:
@@ -229,7 +241,7 @@ def test_reconciliation_rejects_orphan_mounted_family_with_identity_and_provenan
     )
 
     with pytest.raises(ValueError, match="orphan mounted family declaration") as exc_info:
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
     assert "app ghost" in str(exc_info.value)
     assert "unexpected contract declaration" in str(exc_info.value)
@@ -239,7 +251,7 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
     inventory = _complete_inventory()
     inventory["input_schemas"] = ()
     with pytest.raises(ValueError, match="missing input_schema accounting"):
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
     inventory = _complete_inventory()
     inventory["mcp_exposures"] = (
@@ -259,15 +271,17 @@ def test_reconciliation_rejects_silent_missing_surface_and_policy_exposure_contr
         ),
     )
     with pytest.raises(ValueError, match="MCP exposure contradicts profile policy"):
-        reconcile_operator_surface_inventory(**inventory)  # type: ignore[arg-type]
+        reconcile_operator_surface_inventory(**inventory)
 
 
 def test_reconciliation_rows_are_strict_models() -> None:
     with pytest.raises(ValidationError, match="tuple_type"):
-        LiveLeafInventoryRow(
-            subject_leaf_key="app.ledger.list",
-            canonical_cli_path=["app", "ledger", "list"],  # type: ignore[arg-type]
-            provenance="resolved Click command tree",
+        LiveLeafInventoryRow.model_validate(
+            {
+                "subject_leaf_key": "app.ledger.list",
+                "canonical_cli_path": ["app", "ledger", "list"],
+                "provenance": "resolved Click command tree",
+            },
         )
 
     with pytest.raises(ValidationError, match=r"only for root\.status"):

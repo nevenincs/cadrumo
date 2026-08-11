@@ -35,8 +35,8 @@ from .._classification import (
     TransactionKind,
     classify_iva,
 )
+from .._identification import identification_state_for_printed_tax_identifier
 from .._schema import EUMemberState, IvaCategory, IvaRateKind
-from .._vat_identification import vat_identification_state_for_printed_tax_identifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,28 +45,28 @@ _DATE = date(2026, 3, 10)
 #: A structurally valid German VAT number, and a Spanish CIF for the same party
 #: shape. Both are registrations; the point of every case below is that they are
 #: registrations and nothing more.
-_GERMAN_VAT_NUMBER = "DE811234567"
+_GERMAN_IVA_NUMBER = "DE811234567"
 _SPANISH_CIF = "B12345678"
 
 
 class TestRegistrationEvidenceSettlesTheIdentificationState:
     """The fact registration IS evidence of — decisively, with nothing to corroborate."""
 
-    def test_a_printed_foreign_vat_number_names_its_member_state(self) -> None:
-        assert vat_identification_state_for_printed_tax_identifier(_GERMAN_VAT_NUMBER) is EUMemberState.DE
+    def test_a_printed_foreign_iva_number_names_its_member_state(self) -> None:
+        assert identification_state_for_printed_tax_identifier(_GERMAN_IVA_NUMBER) is EUMemberState.DE
 
-    def test_a_greek_number_resolves_to_its_iso_code_not_its_vat_prefix(self) -> None:
+    def test_a_greek_number_resolves_to_its_iso_code_not_its_iva_prefix(self) -> None:
         """``EL`` leads the number while ``GR`` keys every catalogue downstream."""
-        assert vat_identification_state_for_printed_tax_identifier("EL123456789") is EUMemberState.GR
+        assert identification_state_for_printed_tax_identifier("EL123456789") is EUMemberState.GR
 
     def test_a_number_whose_body_contradicts_its_prefix_establishes_nothing(self) -> None:
         """The prefix alone is not evidence; ``FRANCISCO`` must not identify France."""
-        assert vat_identification_state_for_printed_tax_identifier("FRANCISCO") is None
+        assert identification_state_for_printed_tax_identifier("FRANCISCO") is None
 
     def test_absence_never_manufactures_a_spanish_identification(self) -> None:
         """A bare Spanish CIF prints no prefix, and silence is not a registration."""
-        assert vat_identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
-        assert vat_identification_state_for_printed_tax_identifier(None) is None
+        assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
+        assert identification_state_for_printed_tax_identifier(None) is None
 
 
 class TestNoRegistrationEvidencesEstablishment:
@@ -194,7 +194,7 @@ class TestEveryBranchDeclaresWhatItConsumes:
         the declaration equals itself.
         """
         declaring = {
-            rule.rule_id for rule in _CLASSIFICATION_RULES if PartyFact.VAT_IDENTIFICATION_STATE in rule.consumes
+            rule.rule_id for rule in _CLASSIFICATION_RULES if PartyFact.IVA_IDENTIFICATION_STATE in rule.consumes
         }
         assert declaring == {
             "R10_intra_community_supply",
@@ -230,7 +230,7 @@ class TestEveryBranchDeclaresWhatItConsumes:
             ),
         )
         assert result.matched_rule_id == "R10_intra_community_supply"
-        assert PartyFact.VAT_IDENTIFICATION_STATE in result.consumes_party_facts
+        assert PartyFact.IVA_IDENTIFICATION_STATE in result.consumes_party_facts
 
 
 class TestAnUnplacedOperationDemandsEverything:
