@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:c65e0ef18fa686a9538354a5727ba318ab1ce3fe3b105ea419d469e1d0e289e3'
+body_hash: 'sha256:16431abfaf4f72576fbf648a2caeff3bcbd46cb5c9e36d8260756e59d8eaf7bb'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -101,7 +101,7 @@ Deliver the shared answer-functions and the operator action spine as importable,
 One forward join, one reverse join, one relation grouping; duplicates retargeted in the same commits.
 
 - [x] `W02.P03.S09` - add casillas_by_binding to the registry bindings module as the exact dual of bound_casilla_binding_ids, facade-export it, and retarget the rate-box partition helper in the same commit; `src/cadrumo/domain/calculations/registry/_bindings.py`.
-- [ ] `W02.P03.S10` - replace the last-write-wins target-casilla mapping on the M390-M303 adjustment path with the canonical reverse join, covering alternate bindings with a regression; `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`.
+- [x] `W02.P03.S10` - replace the last-write-wins target-casilla mapping on the M390-M303 adjustment path with the canonical reverse join, covering alternate bindings with a regression; `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`.
 - [ ] `W02.P03.S11` - add relations_by_target_binding as the one relation grouping and retarget the two registry query loops and the relation-prefill loop in the same commit; `src/cadrumo/domain/calculations/registry/_queries.py`.
 
 ### Phase `W02.P04` - relation consumption
