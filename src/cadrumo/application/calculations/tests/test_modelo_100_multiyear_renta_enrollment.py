@@ -170,7 +170,7 @@ def _seed_taxpayer_unit_profile() -> None:
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="filing_export.declaration_type", value="1"),
+            UserProfileFact(path="renta_filing.declaration_type", value="1"),
             # Single taxpayer, no dependants: every family / guardería / descendant
             # Decimal-channel profile fact is a true zero for this persona.
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),

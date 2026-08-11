@@ -386,4 +386,6 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
     assert context is not None, "the refusal must carry its context, not just a message"
     assert context["modelo"] == "111"
     assert context["period"] == "1T"
-    assert "--retencion-observation" in (exc_info.value.suggestion or "")
+    assert not hasattr(exc_info.value, "suggestion")
+    verdict = exc_info.value.terminal_precondition_verdict
+    assert verdict is not None, "the refusal must carry its typed precondition verdict"

@@ -1159,7 +1159,7 @@ def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionC
     )
 
 
-def _support_probe(entry: _ModeloEntry, *, revision_id: str) -> LatestRevisionSupportProbe:
+def _support_probe(entry: _ModeloEntry, *, revision_id: RevisionId) -> LatestRevisionSupportProbe:
     """Project the modelo-level support entry, naming the revision it probed."""
     return LatestRevisionSupportProbe(
         probed_revision=entry.latest_revision_id,

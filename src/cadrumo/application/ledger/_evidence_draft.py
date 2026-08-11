@@ -133,6 +133,7 @@ from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoi
 from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
+    InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
     InvoiceClass,
     InvoiceLine,
@@ -174,7 +175,8 @@ from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verd
 if TYPE_CHECKING:
     from ...llm import EvidenceConsentToken, LLMProvider
     from ._confirm_establishment import ConfirmedEstablishment
-    from ._confirmation_gate import FindingResolution
+    from ._confirmation_gate import ConfirmationBlocker, FindingResolution
+    from ._confirmation_record import InvoiceConfirmationRecord
 
 __all__ = [
     "CounterpartyDraftSide",
@@ -2081,6 +2083,155 @@ def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tup
     )
 
 
+def _written_confirmation_record(
+    *,
+    bucket_id: str,
+    invoice_id: str,
+    evidence_id: str | None,
+    attachment_id: str,
+    draft: InvoiceDraft,
+    confirmed_by: str,
+    overrides: Mapping[str, object | None],
+    blockers: tuple[ConfirmationBlocker, ...],
+    resolutions: Sequence[FindingResolution],
+    settings: Settings,
+) -> InvoiceConfirmationRecord:
+    """Build and persist the confirmation record for one confirmed invoice.
+
+    Shared by the minting path and the guarded idempotent retry so both record
+    the same provenance. A retry that skipped this would leave the second
+    operator's assertion unrecorded while the first one's stood, which is the
+    provenance regression the guard exists to prevent.
+    """
+    from ._confirmation_record import build_confirmation_record, write_confirmation_record
+
+    return write_confirmation_record(
+        record=build_confirmation_record(
+            bucket_id=bucket_id,
+            invoice_id=invoice_id,
+            evidence_reference=evidence_id or attachment_id,
+            evidence_sha256=_evidence_content_address(
+                bucket_id=bucket_id,
+                evidence_id=evidence_id,
+                settings=settings,
+            ),
+            draft=draft,
+            extractor=_confirmed_extractor(draft),
+            confirmed_by=confirmed_by,
+            overrides=overrides,
+            blockers=blockers,
+            resolutions=resolutions,
+        ),
+        settings=settings,
+    )
+
+
+def _operator_value_or_reading[T](supplied: T | None, read: T) -> T:
+    """Return the operator's value when they supplied one, else the document's.
+
+    The layering rule every confirmable field follows, named once rather than
+    restated per field. Extraction is best-effort, so an explicit operator value
+    always outranks the reading; a field that quietly inverted the order would
+    prefer a misread document over the person confirming it.
+    """
+    return supplied if supplied is not None else read
+
+
+def _confirmed_currency(supplied: str | None, read: str | None) -> str:
+    """Return the ISO-4217 code the invoice is minted in.
+
+    Same override-on-extraction layering as every other field: an explicit
+    operator value wins, else the currency actually printed on the document,
+    else euro. Preferring the extracted code over the euro default is what stops
+    a foreign-currency invoice being minted at its face value in euro. Falsy
+    rather than ``None`` handling is deliberate here -- an empty printed code
+    carries no more information than an absent one.
+    """
+    return (supplied or read or DEFAULT_CURRENCY).strip().upper()
+
+
+def _confirmed_counterparty_name(supplied: str | None, read: str | None) -> str:
+    """Return the counterparty display name, refusing when neither side states one.
+
+    Unlike the tax id there is no extraction heuristic strong enough to stand
+    alone, so a document naming nobody plus an operator supplying nothing is a
+    refusal rather than an empty name reaching the catalogue.
+    """
+    resolved = (supplied or read or "").strip()
+    if not resolved:
+        raise PurchaseInvoiceEvidenceInputError(
+            "cannot confirm an invoice: the document states no counterparty name and no "
+            "--counterparty-name override was supplied",
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
+                facts={"counterparty_name_available": False},
+            ),
+        )
+    return resolved
+
+
+def _operator_restated_the_amounts(
+    *,
+    taxable_base: Decimal | None,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+) -> bool:
+    """Return whether the operator restated the invoice totals themselves.
+
+    Any one of the three is a statement about the WHOLE invoice, which is why
+    this single predicate gates both the rate tier the establishment ladder is
+    handed and the per-rate line split. Two disagreeing authorities on the same
+    figures is exactly the condition it exists to prevent, so the two decisions
+    must never drift onto separately-derived answers.
+    """
+    return taxable_base is not None or iva_rate is not None or iva_amount is not None
+
+
+def _rate_tier_the_document_charged(
+    draft: InvoiceDraft,
+    *,
+    invoice_date: date | None,
+    operator_restated_amounts: bool,
+) -> IvaRateKind | None:
+    """Return the domestic rate tier to hand the establishment ladder, or ``None``.
+
+    Resolved here and handed in, rather than left for the classification
+    apparatus to re-read: which tier a document charged is the reading stage's
+    business, and re-deciding it inside the classifier would be a second
+    authority on the same lines. Skipped when the operator restated the amounts,
+    for the same reason the per-rate split is -- their figures are the
+    authority, not the reader's -- and skipped when no date resolves, because
+    the tier is only meaningful against the rates in force on a given day.
+    """
+    if operator_restated_amounts or invoice_date is None:
+        return None
+    return domestic_rate_tier_from_the_document(draft, invoice_date=invoice_date)
+
+
+def _prior_invoices_this_document_minted(
+    store: AttachmentStore,
+    *,
+    attachment_id: str,
+    catalogue: InvoiceCatalogue,
+    candidate_invoice_id: str,
+) -> tuple[Invoice, ...]:
+    """Return the catalogue records this same document already minted, bar the candidate.
+
+    Document identity, resolved BEFORE invoice identity. The invoice id folds
+    only six resolved fields, so it cannot answer "has this document already
+    been turned into a record" -- a re-confirm resolving any of the six
+    differently hashes to a new id and mints a duplicate that inflates every
+    downstream modelo aggregation. The attachment address answers it exactly: it
+    is the SHA-256 of the bytes, and the manifest already records what this
+    document minted.
+    """
+    return tuple(
+        stored
+        for invoice_id in _invoice_ids_this_document_already_minted(store, attachment_id=attachment_id)
+        if invoice_id != candidate_invoice_id and (stored := catalogue.get(invoice_id)) is not None
+    )
+
+
 def _invoice_ids_this_document_already_minted(
     store: AttachmentStore,
     *,
@@ -2281,7 +2432,7 @@ def confirm_invoice_draft_from_evidence(
     # import time and the runtime edge is deliberate.
     from ._confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
     from ._confirmation_gate import resolved_blockers
-    from ._confirmation_record import build_confirmation_record, re_stamped_provenance, write_confirmation_record
+    from ._confirmation_record import re_stamped_provenance
 
     # The result's `establishment` annotation is a forward reference: the module
     # that owns the type reaches the review gate, which imports this one, so it
@@ -2327,13 +2478,13 @@ def confirm_invoice_draft_from_evidence(
     # Placed AFTER the blocking gate and before any resolution work, so a draft
     # whose findings are unanswered never reaches the ladder or the fact store.
     #
-    # The rate tier is resolved HERE and handed in, rather than left for the
-    # classification apparatus to re-read: which tier a document charged is the
-    # reading stage's business, and re-deciding it inside the classifier would
-    # be a second authority on the same lines. It is skipped when the operator
-    # restated the amounts, for the same reason the per-rate split is -- their
-    # figures are the authority, not the reader's.
-    operator_restated_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
+    # Gates both the rate tier the ladder is handed and the per-rate split
+    # below: their figures are the authority, not the reader's.
+    operator_restated_amounts = _operator_restated_the_amounts(
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+    )
     # Resolved without the raising variant below, which runs later. An
     # unresolvable date is reported by the assembly as a missing input beside
     # the operator's other gaps; raising here would abort before that list is
@@ -2344,10 +2495,10 @@ def confirm_invoice_draft_from_evidence(
         draft=draft,
         kind=kind,
         invoice_date=classification_date,
-        rate_tier=(
-            None
-            if operator_restated_amounts or classification_date is None
-            else domestic_rate_tier_from_the_document(draft, invoice_date=classification_date)
+        rate_tier=_rate_tier_the_document_charged(
+            draft,
+            invoice_date=classification_date,
+            operator_restated_amounts=operator_restated_amounts,
         ),
     )
     extracted_counterparty_tax_id = counterparty_side.tax_id
@@ -2381,32 +2532,19 @@ def confirm_invoice_draft_from_evidence(
     )
     _refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
     resolved_invoice_number = _require_confirmed_field(
-        invoice_number if invoice_number is not None else draft.invoice_number,
+        _operator_value_or_reading(invoice_number, draft.invoice_number),
         field="invoice_number",
     )
     assert isinstance(resolved_invoice_number, str)
     resolved_invoice_date = _resolve_confirmed_invoice_date(invoice_date, draft)
     resolved_taxable_base = _require_confirmed_field(
-        taxable_base if taxable_base is not None else draft.taxable_base,
+        _operator_value_or_reading(taxable_base, draft.taxable_base),
         field="taxable_base",
     )
     assert isinstance(resolved_taxable_base, Decimal)
-    resolved_iva_rate = iva_rate if iva_rate is not None else draft.iva_rate
-    # Same override-on-extraction layering as every other field: an explicit
-    # operator value wins, else the currency actually printed on the document,
-    # else euro. Preferring the extracted code over the euro default is what
-    # stops a foreign-currency invoice being minted at its face value in euro.
-    resolved_currency = (currency or draft.currency or DEFAULT_CURRENCY).strip().upper()
-    resolved_counterparty_name = (counterparty_name or extracted_counterparty_name or "").strip()
-    if not resolved_counterparty_name:
-        raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: the document states no counterparty name and no "
-            "--counterparty-name override was supplied",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
-                facts={"counterparty_name_available": False},
-            ),
-        )
+    resolved_iva_rate = _operator_value_or_reading(iva_rate, draft.iva_rate)
+    resolved_currency = _confirmed_currency(currency, draft.currency)
+    resolved_counterparty_name = _confirmed_counterparty_name(counterparty_name, extracted_counterparty_name)
 
     # A PRINTED cuota is evidence and outranks a recomputed one. When the
     # operator states it, the line carries that exact figure rather than
@@ -2421,14 +2559,13 @@ def confirm_invoice_draft_from_evidence(
     # The guarded-retry lookup then misses every time and the re-confirm reaches
     # the writer's duplicate-identity refusal instead of returning the existing
     # invoice unchanged (`aeat-cli-contract`).
-    operator_overrode_the_amounts = taxable_base is not None or iva_rate is not None or iva_amount is not None
     confirmed_lines = _confirmed_lines_from_the_document(
         draft=draft,
         invoice_number=resolved_invoice_number,
         taxable_base=resolved_taxable_base,
         iva_rate=resolved_iva_rate,
         iva_amount=iva_amount,
-        operator_overrode_the_amounts=operator_overrode_the_amounts,
+        operator_overrode_the_amounts=operator_restated_amounts,
     )
     # The recargo de equivalencia is a real cuota the issuer owes (LIVA art.
     # 161) and Modelo 303 sums it in its own devengado tiers. A structured
@@ -2436,13 +2573,16 @@ def confirm_invoice_draft_from_evidence(
     # inside the invoice total, so forwarding only the operator's override
     # dropped the whole figure whenever they did not retype what they were
     # confirming. An explicit override still wins, as it does on every field.
-    resolved_recargo_amount = recargo_amount if recargo_amount is not None else draft.recargo_amount
-    if operator_overrode_the_amounts:
-        # An override is a statement about the whole invoice. Keeping a
-        # document-read recargo beside operator-restated totals would leave two
-        # disagreeing authorities on the same figures, which is the reason the
-        # per-rate split is skipped on that path too.
-        resolved_recargo_amount = recargo_amount
+    #
+    # When the operator restated the totals their value stands alone, override
+    # or not: keeping a document-read recargo beside operator-restated totals
+    # would leave two disagreeing authorities on the same figures, which is the
+    # reason the per-rate split is skipped on that path too.
+    resolved_recargo_amount = (
+        recargo_amount
+        if operator_restated_amounts
+        else _operator_value_or_reading(recargo_amount, draft.recargo_amount)
+    )
     # Taken from the classification authority, and from nowhere else on this
     # path. Two rival surfaces once decided it here -- one reading the
     # document's declared tax-category code, one re-deriving a domestic
@@ -2454,7 +2594,7 @@ def confirm_invoice_draft_from_evidence(
     # absent one: an absent category asks the operator and a wrong one does not.
     #
     # The operator's explicit value still wins, as it does on every field.
-    resolved_iva_category = iva_category if iva_category is not None else establishment.category.category
+    resolved_iva_category = _operator_value_or_reading(iva_category, establishment.category.category)
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     # Built with the SAME argument set `create_catalogue_invoice` is handed below,
@@ -2489,20 +2629,11 @@ def confirm_invoice_draft_from_evidence(
     )
     attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
     catalogue = repository.load()
-    # Document identity, checked BEFORE invoice identity. The invoice id folds
-    # only six resolved fields, so it cannot answer "has this document already
-    # been turned into a record" -- a re-confirm resolving any of the six
-    # differently hashes to a new id and mints a duplicate that inflates every
-    # downstream modelo aggregation. The attachment address answers it exactly:
-    # it is the SHA-256 of the bytes, and the manifest already records what this
-    # document minted.
-    already_minted = tuple(
-        stored
-        for invoice_id in _invoice_ids_this_document_already_minted(
-            attachment_store,
-            attachment_id=resolved_attachment_id,
-        )
-        if invoice_id != candidate.invoice_id and (stored := catalogue.get(invoice_id)) is not None
+    already_minted = _prior_invoices_this_document_minted(
+        attachment_store,
+        attachment_id=resolved_attachment_id,
+        catalogue=catalogue,
+        candidate_invoice_id=candidate.invoice_id,
     )
     if already_minted:
         _refuse_a_divergent_reconfirm(
@@ -2532,23 +2663,16 @@ def confirm_invoice_draft_from_evidence(
                 attachment_id=resolved_attachment_id,
             )
         link_attachment_invoice(attachment_store, attachment_id=resolved_attachment_id, invoice_id=existing.invoice_id)
-        existing_record = write_confirmation_record(
-            record=build_confirmation_record(
-                bucket_id=bucket_id,
-                invoice_id=existing.invoice_id,
-                evidence_reference=evidence_id or resolved_attachment_id,
-                evidence_sha256=_evidence_content_address(
-                    bucket_id=bucket_id,
-                    evidence_id=evidence_id,
-                    settings=resolved_settings,
-                ),
-                draft=draft,
-                extractor=_confirmed_extractor(draft),
-                confirmed_by=confirmed_by,
-                overrides=operator_overrides,
-                blockers=blockers,
-                resolutions=resolutions,
-            ),
+        existing_record = _written_confirmation_record(
+            bucket_id=bucket_id,
+            invoice_id=existing.invoice_id,
+            evidence_id=evidence_id,
+            attachment_id=resolved_attachment_id,
+            draft=draft,
+            confirmed_by=confirmed_by,
+            overrides=operator_overrides,
+            blockers=blockers,
+            resolutions=resolutions,
             settings=resolved_settings,
         )
         return InvoiceConfirmationResult(
@@ -2586,23 +2710,16 @@ def confirm_invoice_draft_from_evidence(
         attachment_id=resolved_attachment_id,
         invoice_id=result.invoice.invoice_id,
     )
-    confirmation_record = write_confirmation_record(
-        record=build_confirmation_record(
-            bucket_id=bucket_id,
-            invoice_id=result.invoice.invoice_id,
-            evidence_reference=evidence_id or resolved_attachment_id,
-            evidence_sha256=_evidence_content_address(
-                bucket_id=bucket_id,
-                evidence_id=evidence_id,
-                settings=resolved_settings,
-            ),
-            draft=draft,
-            extractor=_confirmed_extractor(draft),
-            confirmed_by=confirmed_by,
-            overrides=operator_overrides,
-            blockers=blockers,
-            resolutions=resolutions,
-        ),
+    confirmation_record = _written_confirmation_record(
+        bucket_id=bucket_id,
+        invoice_id=result.invoice.invoice_id,
+        evidence_id=evidence_id,
+        attachment_id=resolved_attachment_id,
+        draft=draft,
+        confirmed_by=confirmed_by,
+        overrides=operator_overrides,
+        blockers=blockers,
+        resolutions=resolutions,
         settings=resolved_settings,
     )
     return InvoiceConfirmationResult(

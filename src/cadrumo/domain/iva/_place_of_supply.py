@@ -169,6 +169,64 @@ def _is_str_keyed_mapping(value: object) -> TypeGuard[Mapping[str, object]]:
     return isinstance(value, dict)
 
 
+def _year_a_table_filename_names(path: Path) -> int:
+    """Return the filing year a place-of-supply table's filename declares."""
+    try:
+        return int(path.stem)
+    except ValueError as exc:
+        raise IvaCatalogueError(f"{path}: place-of-supply filename must be a year") from exc
+
+
+def _hydrated_rule(raw_rule: object, *, path: Path, index: int) -> IvaPlaceOfSupplyRule:
+    """Hydrate one ``[[place_of_supply_rules]]`` table into its typed row.
+
+    Registry TOML stays free-form and the typed axes are hydrated here, at the
+    boundary: the model is strict, so a raw list and a raw token are both
+    refused rather than silently coerced further in.
+    """
+    if not _is_str_keyed_mapping(raw_rule):
+        raise IvaCatalogueError(f"{path}: place_of_supply_rules[{index}] must be a table")
+    # Shape only. WHETHER a row may cite nothing is the model's call, so
+    # that the legal-basis exemption is decided in one place rather than
+    # half here and half there.
+    raw_references = raw_rule.get("legal_references", [])
+    if not _is_object_list(raw_references):
+        raise IvaCatalogueError(
+            f"{path}: place_of_supply_rules[{index}] legal_references must be an array",
+        )
+    raw_nature = raw_rule.get("supply_nature")
+    try:
+        nature = SupplyNature(raw_nature) if raw_nature is not None else None
+    except ValueError as exc:
+        accepted = ", ".join(sorted(member.value for member in SupplyNature))
+        raise IvaCatalogueError(
+            f"{path}: place_of_supply_rules[{index}] supply_nature {raw_nature!r} is not one of: {accepted}",
+        ) from exc
+    return IvaPlaceOfSupplyRule.model_validate(
+        {**raw_rule, "legal_references": tuple(raw_references), "supply_nature": nature},
+    )
+
+
+def _rules_in_one_year_table(path: Path) -> dict[str, IvaPlaceOfSupplyRule]:
+    """Read one year's place-of-supply TOML into its ``rule_id``-keyed table.
+
+    A duplicate id refuses rather than last-write-wins: two rows claiming one id
+    is an authoring error, and silently keeping the later one would ground a
+    classification on a provision the author did not mean to apply.
+    """
+    payload = read_toml(path, error_factory=IvaCatalogueError)
+    raw_rules = payload.get("place_of_supply_rules")
+    if not _is_object_list(raw_rules) or not raw_rules:
+        raise IvaCatalogueError(f"{path}: missing [[place_of_supply_rules]] entries")
+    rules: dict[str, IvaPlaceOfSupplyRule] = {}
+    for index, raw_rule in enumerate(raw_rules, start=1):
+        rule = _hydrated_rule(raw_rule, path=path, index=index)
+        if rule.rule_id in rules:
+            raise IvaCatalogueError(f"{path}: duplicate place-of-supply rule {rule.rule_id!r}")
+        rules[rule.rule_id] = rule
+    return rules
+
+
 @lru_cache(maxsize=8)
 def _load_cached(
     root: str,
@@ -178,44 +236,11 @@ def _load_cached(
     years: dict[int, dict[str, IvaPlaceOfSupplyRule]] = {}
     for filename, _size, _modified_ns in fingerprint:
         path = root_path / filename
-        try:
-            year = int(path.stem)
-        except ValueError as exc:
-            raise IvaCatalogueError(f"{path}: place-of-supply filename must be a year") from exc
-        payload = read_toml(path, error_factory=IvaCatalogueError)
-        raw_rules = payload.get("place_of_supply_rules")
-        if not _is_object_list(raw_rules) or not raw_rules:
-            raise IvaCatalogueError(f"{path}: missing [[place_of_supply_rules]] entries")
-        rules: dict[str, IvaPlaceOfSupplyRule] = {}
-        for index, raw_rule in enumerate(raw_rules, start=1):
-            if not _is_str_keyed_mapping(raw_rule):
-                raise IvaCatalogueError(f"{path}: place_of_supply_rules[{index}] must be a table")
-            # Shape only. WHETHER a row may cite nothing is the model's call, so
-            # that the legal-basis exemption is decided in one place rather than
-            # half here and half there.
-            raw_references = raw_rule.get("legal_references", [])
-            if not _is_object_list(raw_references):
-                raise IvaCatalogueError(
-                    f"{path}: place_of_supply_rules[{index}] legal_references must be an array",
-                )
-            # Registry TOML stays free-form and the typed axes are hydrated here,
-            # at the boundary: the model is strict, so a raw list and a raw token
-            # are both refused rather than silently coerced further in.
-            raw_nature = raw_rule.get("supply_nature")
-            try:
-                nature = SupplyNature(raw_nature) if raw_nature is not None else None
-            except ValueError as exc:
-                accepted = ", ".join(sorted(member.value for member in SupplyNature))
-                raise IvaCatalogueError(
-                    f"{path}: place_of_supply_rules[{index}] supply_nature {raw_nature!r} is not one of: {accepted}",
-                ) from exc
-            rule = IvaPlaceOfSupplyRule.model_validate(
-                {**raw_rule, "legal_references": tuple(raw_references), "supply_nature": nature},
-            )
-            if rule.rule_id in rules:
-                raise IvaCatalogueError(f"{path}: duplicate place-of-supply rule {rule.rule_id!r}")
-            rules[rule.rule_id] = rule
-        years[year] = rules
+        # The filename is read BEFORE the file: a table named something other
+        # than a year has no year to file its rules under, and reporting the
+        # parse failure first would name the wrong defect.
+        year = _year_a_table_filename_names(path)
+        years[year] = _rules_in_one_year_table(path)
     if not years:
         raise IvaCatalogueError(f"{root_path}: no place-of-supply TOML files found")
     # Only ``legal_references`` is verified. ``establishing_reference`` is

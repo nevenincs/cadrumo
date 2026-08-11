@@ -21,6 +21,7 @@ from typing import Final
 from ....core import Modelo
 from ._ids import BindingId, ModeloId, RelationId, RevisionId
 from ._schema import RelationDefinition
+from ._ids import RevisionId
 
 #: The single M303 compensación-pendiente binding id, owned by the iva-wallet
 #: compensación decision. This is the one
@@ -82,7 +83,7 @@ IVA_WALLET_OWNED_RELATION_TARGETS: frozenset[IvaWalletRelationTarget] = frozense
 def is_iva_wallet_owned_relation_target(
     *,
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     relation_id: str,
     target_binding: str,
 ) -> bool:
@@ -93,7 +94,7 @@ def is_iva_wallet_owned_relation_target(
 def iva_wallet_owned_relation_targets_for_revision(
     *,
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     relations: Iterable[RelationDefinition],
 ) -> frozenset[IvaWalletRevisionRelationTarget]:
     """Return exact wallet-owned relation targets declared by one revision."""
@@ -112,7 +113,7 @@ def iva_wallet_owned_relation_targets_for_revision(
 def iva_wallet_owned_binding_ids_for_revision(
     *,
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     relations: Iterable[RelationDefinition],
 ) -> frozenset[BindingId]:
     """Return wallet-owned binding ids only within one exact revision coordinate."""

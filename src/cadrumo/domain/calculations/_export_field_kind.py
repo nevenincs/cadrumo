@@ -27,7 +27,7 @@ class CasillaFieldKind(StrEnum):
         COMPUTED: Field is synthesised at export time via ``computed_key``.
         DRAFT: Field is drawn from a draft attribute via ``draft_attribute``.
         FILLER: Field is a fixed-width pad with no semantic value.
-        HEADER: Field emits a record-type header value via ``header_key``.
+        HEADER: Field emits a filing fact selected by canonical ``producer_key``.
         CHECKSUM: Field carries a record-level checksum.
     """
 

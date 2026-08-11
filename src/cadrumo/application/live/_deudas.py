@@ -116,13 +116,11 @@ def _deudas_repository(
         object_key=deudas_snapshot_object_key,
         not_found_factory=lambda snapshot_id: DeudasSnapshotNotFoundError(
             "no deudas snapshot matches the requested id",
-            suggestion="aeat app live deudas list",
             translated_message="application.live.deudas.errors.snapshot_not_found",
             context={"snapshot_id": snapshot_id},
         ),
         ambiguous_prefix_factory=lambda snapshot_id, full_ids: DeudasSnapshotNotFoundError(
             "deudas snapshot prefix matches multiple snapshots",
-            suggestion="provide a longer prefix",
             translated_message="application.live.deudas.errors.snapshot_prefix_ambiguous",
             context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
         ),

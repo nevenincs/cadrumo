@@ -58,7 +58,7 @@ class SnapshotNotFoundError(CadrumoError, KeyError):
     mapping-style lookup-miss type. ``CadrumoError`` is listed first so MRO
     routes ``__init__`` through
     ``CadrumoError.__init__`` (which accepts the structured
-    ``suggestion=`` / ``context=`` kwargs) rather than ``KeyError``'s
+    ``context=`` / ``translated_message=`` kwargs) rather than ``KeyError``'s
     C-level constructor.
 
     Per-service subclasses (BorradorSnapshotNotFoundError,

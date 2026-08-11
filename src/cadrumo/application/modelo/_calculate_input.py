@@ -1106,6 +1106,142 @@ def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisor
     return ModeloAuthorizationAdvisorySummary(state=capability.state.value)
 
 
+def _supplied_option_group(
+    values: tuple[Decimal | None, ...],
+    *,
+    message: str,
+    translated_message: str,
+) -> tuple[Decimal, ...] | None:
+    """Return an all-or-nothing option group, or ``None`` when none was supplied.
+
+    Presence is tested against ``None`` and never against truthiness, because a
+    declared zero is a supplied value: a zero aportación is a fact the operator
+    stated, not an omission.
+
+    Raises:
+        ModeloCalculateShortcutInputError: When the group is partially supplied.
+    """
+    supplied = tuple(value for value in values if value is not None)
+    if not supplied:
+        return None
+    if len(supplied) != len(values):
+        raise ModeloCalculateShortcutInputError(message, translated_message=translated_message)
+    return supplied
+
+
+def _maternidad_advisories(work_unit_id: str) -> list[CalculationSourceDiagnostic]:
+    """Raise the non-blocking advisories for the maternidad-deduction casilla."""
+    maternidad_casilla_id = _maternidad_casilla_id(work_unit_id)
+    if maternidad_casilla_id is None:
+        return []
+    maternidad = _resolved_maternidad_meses(work_unit_id)
+    if maternidad is None:
+        return []
+    # The active profile's descendiente records are the SOLE authority for
+    # casilla 0611: the calculate-time `--meses-trabajo-con-hijo-menor-3`
+    # shortcut this block once reconciled against (a free-form hijo id no
+    # descendant record answered to, itself never eligibility-checked) is
+    # retired. One channel means no two-authorities refusal is possible any
+    # more, and both advisories below always evaluate against the one
+    # source rather than being gated on a second channel's absence.
+    candidates = (
+        _maternidad_ceilings_unresolved_advisory(
+            maternidad.declares_meses and not maternidad.ceilings_resolved,
+            maternidad_casilla_id,
+        ),
+        _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
+        _maternidad_cotizaciones_ceiling_advisory(
+            maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
+            maternidad_casilla_id,
+        ),
+        _maternidad_ambiguous_relacion_advisory(
+            _ambiguous_relacion_hijo_ids(work_unit_id, frozenset(hijo_id for hijo_id, _ in maternidad.pairs)),
+            maternidad_casilla_id,
+        ),
+    )
+    return [advisory for advisory in candidates if advisory is not None]
+
+
+def _pension_rescate_contributions(
+    *,
+    work_unit_id: str,
+    capital: Decimal | None,
+    aportaciones_pre_2007: Decimal | None,
+    aportaciones_totales: Decimal | None,
+    tipo: RescateType | None,
+    contingencia_year: int | None,
+    rescate_year: int | None,
+) -> tuple[dict[CasillaId, Decimal], list[CalculationSourceDiagnostic]]:
+    """Resolve the DT 12ª pension-rescate reducción and its window advisories.
+
+    A window proven CLOSED withholds the reducción rather than injecting it, so
+    the returned mapping is empty in that case while the advisory still names
+    the refusal.
+    """
+    supplied = _supplied_option_group(
+        (capital, aportaciones_pre_2007, aportaciones_totales),
+        message=(
+            "--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007, "
+            "and --rescate-plan-pensiones-aportaciones-totales must all be supplied together."
+        ),
+        translated_message="application.modelo.errors.calculate_pension_inputs_incomplete",
+    )
+    if supplied is None:
+        return {}, []
+    gross_rescate, resolved_pre_2007, resolved_totales = supplied
+    reduccion = compute_dt12_reduccion_plan_pensiones(
+        gross_rescate=gross_rescate,
+        aportaciones_pre_2007=resolved_pre_2007,
+        aportaciones_totales=resolved_totales,
+    )
+    reduccion_casilla_id = _semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
+    inject, window_advisory = _dt12_window_decision(
+        reduccion=reduccion,
+        eligibility=_dt12_window_verdict(
+            work_unit_id=work_unit_id,
+            contingencia_year=contingencia_year,
+            rescate_year=rescate_year,
+        ),
+        reduccion_casilla_id=reduccion_casilla_id,
+    )
+    advisories: list[CalculationSourceDiagnostic] = []
+    if window_advisory is not None:
+        advisories.append(window_advisory)
+    if tipo is RescateType.PARCIAL:
+        advisories.append(_dt12_parcial_guidance_advisory(reduccion_casilla_id))
+    casilla_values: dict[CasillaId, Decimal] = {}
+    if inject:
+        casilla_values[reduccion_casilla_id] = reduccion
+    return casilla_values, advisories
+
+
+def _sal_reserva_especial_contribution(
+    *,
+    work_unit_id: str,
+    beneficio_neto: Decimal | None,
+    reserva_dotada: Decimal | None,
+    capital_social: Decimal | None,
+) -> dict[CasillaId, Decimal]:
+    """Resolve the SAL reserva-especial dotación into its semantic-role casilla."""
+    supplied = _supplied_option_group(
+        (beneficio_neto, reserva_dotada, capital_social),
+        message="--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together.",
+        translated_message="application.modelo.errors.calculate_sal_inputs_incomplete",
+    )
+    if supplied is None:
+        return {}
+    resolved_neto, resolved_dotada, resolved_capital = supplied
+    return {
+        _semantic_role_casilla_id(work_unit_id, _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE): (
+            compute_sal_reserva_especial_dotacion(
+                beneficio_neto=resolved_neto,
+                reserva_dotada=resolved_dotada,
+                capital_social=resolved_capital,
+            )
+        ),
+    }
+
+
 def apply_calculation_shortcut_inputs(
     *,
     work_unit_id: str,
@@ -1163,89 +1299,28 @@ def apply_calculation_shortcut_inputs(
             prestacion_inss_exenta
         )
 
-    maternidad_casilla_id = _maternidad_casilla_id(work_unit_id)
-    maternidad = _resolved_maternidad_meses(work_unit_id) if maternidad_casilla_id is not None else None
-    if maternidad_casilla_id is not None and maternidad is not None:
-        # The active profile's descendiente records are the SOLE authority for
-        # casilla 0611: the calculate-time `--meses-trabajo-con-hijo-menor-3`
-        # shortcut this block once reconciled against (a free-form hijo id no
-        # descendant record answered to, itself never eligibility-checked) is
-        # retired. One channel means no two-authorities refusal is possible any
-        # more, and both advisories below always evaluate against the one
-        # source rather than being gated on a second channel's absence.
-        for advisory in (
-            _maternidad_ceilings_unresolved_advisory(
-                maternidad.declares_meses and not maternidad.ceilings_resolved,
-                maternidad_casilla_id,
-            ),
-            _maternidad_meses_withheld_advisory(maternidad.withheld_indices, maternidad_casilla_id),
-            _maternidad_cotizaciones_ceiling_advisory(
-                maternidad.declares_meses and maternidad.cotizaciones_ceiling_inexpressible,
-                maternidad_casilla_id,
-            ),
-            _maternidad_ambiguous_relacion_advisory(
-                _ambiguous_relacion_hijo_ids(work_unit_id, frozenset(hijo_id for hijo_id, _ in maternidad.pairs)),
-                maternidad_casilla_id,
-            ),
-        ):
-            if advisory is not None:
-                advisories.append(advisory)
+    advisories.extend(_maternidad_advisories(work_unit_id))
 
-    pension_values = (
-        rescate_plan_pensiones_capital,
-        rescate_plan_pensiones_aportaciones_pre_2007,
-        rescate_plan_pensiones_aportaciones_totales,
+    pension_casilla_values, pension_advisories = _pension_rescate_contributions(
+        work_unit_id=work_unit_id,
+        capital=rescate_plan_pensiones_capital,
+        aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
+        aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
+        tipo=rescate_plan_pensiones_tipo,
+        contingencia_year=rescate_plan_pensiones_contingencia_year,
+        rescate_year=rescate_plan_pensiones_rescate_year,
     )
-    if any(value is not None for value in pension_values):
-        if not all(value is not None for value in pension_values):
-            raise ModeloCalculateShortcutInputError(
-                "--rescate-plan-pensiones-capital, --rescate-plan-pensiones-aportaciones-pre-2007, "
-                "and --rescate-plan-pensiones-aportaciones-totales must all be supplied together.",
-                translated_message="application.modelo.errors.calculate_pension_inputs_incomplete",
-            )
-        assert rescate_plan_pensiones_capital is not None
-        assert rescate_plan_pensiones_aportaciones_pre_2007 is not None
-        assert rescate_plan_pensiones_aportaciones_totales is not None
-        reduccion = compute_dt12_reduccion_plan_pensiones(
-            gross_rescate=rescate_plan_pensiones_capital,
-            aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
-            aportaciones_totales=rescate_plan_pensiones_aportaciones_totales,
-        )
-        reduccion_casilla_id = _semantic_role_casilla_id(work_unit_id, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
-        eligibility = _dt12_window_verdict(
-            work_unit_id=work_unit_id,
-            contingencia_year=rescate_plan_pensiones_contingencia_year,
-            rescate_year=rescate_plan_pensiones_rescate_year,
-        )
-        inject, window_advisory = _dt12_window_decision(
-            reduccion=reduccion,
-            eligibility=eligibility,
-            reduccion_casilla_id=reduccion_casilla_id,
-        )
-        if inject:
-            resolved_casilla_values[reduccion_casilla_id] = reduccion
-        if window_advisory is not None:
-            advisories.append(window_advisory)
-        if rescate_plan_pensiones_tipo is RescateType.PARCIAL:
-            advisories.append(_dt12_parcial_guidance_advisory(reduccion_casilla_id))
+    resolved_casilla_values.update(pension_casilla_values)
+    advisories.extend(pension_advisories)
 
-    sal_values = (sal_beneficio_neto, sal_reserva_dotada, sal_capital_social)
-    if any(value is not None for value in sal_values):
-        if not all(value is not None for value in sal_values):
-            raise ModeloCalculateShortcutInputError(
-                "--sal-beneficio-neto, --sal-reserva-dotada, and --sal-capital-social must all be supplied together.",
-                translated_message="application.modelo.errors.calculate_sal_inputs_incomplete",
-            )
-        assert sal_beneficio_neto is not None
-        assert sal_reserva_dotada is not None
-        assert sal_capital_social is not None
-        resolved_casilla_values[_semantic_role_casilla_id(work_unit_id, _SAL_RESERVA_ESPECIAL_SEMANTIC_ROLE)] = (
-            compute_sal_reserva_especial_dotacion(
-                beneficio_neto=sal_beneficio_neto,
-                reserva_dotada=sal_reserva_dotada,
-                capital_social=sal_capital_social,
-            )
-        )
+    resolved_casilla_values.update(
+        _sal_reserva_especial_contribution(
+            work_unit_id=work_unit_id,
+            beneficio_neto=sal_beneficio_neto,
+            reserva_dotada=sal_reserva_dotada,
+            capital_social=sal_capital_social,
+        ),
+    )
 
     if autoconsumo_promotor_base is not None:
         resolved_bindings[_AUTOCONSUMO_PROMOTOR_BINDING] = autoconsumo_promotor_base

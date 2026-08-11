@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -11,8 +12,9 @@ import pytest
 
 from ....application.calculations import CalculationObservationRepository, resolve_bindings_from_local_store
 from ....application.user_profile import UserProfileLifecycleRepository, profile_storage_session
-from ....core import Period
+from ....core import Period, validated_casilla_id
 from ....core.resources import resources
+from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
@@ -190,3 +192,68 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     previous_income = calculated_payload["binding_overrides"]["irpf.previous_year_economic_activity_net_income"]
     assert Decimal(previous_income) == Decimal("0")
     assert Decimal(calculated_payload["casilla_values"]["13"]) == Decimal("100.00")
+
+
+def test_observe_local_exposes_and_executes_explicit_official_evidence_replacement(
+    runtime_profile: TestRuntimeProfile,
+) -> None:
+    """The operator can invoke the exact escape hatch named by the refusal."""
+    period = Period.from_year_and_code(2025, "1T")
+    with profile_storage_session(runtime_profile.bucket_id):
+        repository = CalculationObservationRepository()
+        repository.save(
+            repository.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2025,
+                    period=period.registry_token,
+                    observations=(
+                        CasillaObservation(
+                            casilla_id=validated_casilla_id("iva.repercutido.general"),
+                            value=Decimal("20000.00"),
+                            formula_id=None,
+                            operand_refs=(),
+                            operand_casilla_refs=(),
+                            operand_values=(),
+                            legal_refs=("ley-37-1992:art-21",),
+                            source_refs=("aeat-iva-2025",),
+                        ),
+                    ),
+                ),
+                source_kind="aeat_sede_justificante",
+                captured_at=datetime(2026, 4, 1, 9, 30, tzinfo=UTC),
+                source_metadata={
+                    "aeat_register_status": "ALTA",
+                    "aeat_expediente_id": "202530300000001Z",
+                },
+            ),
+        )
+
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "filing-record",
+            "observe-local",
+            "--modelo",
+            "303",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--set",
+            "iva.repercutido.general=21000.00",
+            "--replace-official-evidence",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = unwrap_schema_envelope(result.output)
+    assert payload["source_kind"] == "operator_manual"
+    with profile_storage_session(runtime_profile.bucket_id):
+        replaced = CalculationObservationRepository().load_observation("303", period)
+        assert replaced is not None
+        assert replaced.source_kind == "operator_manual"
+        assert replaced.observation.casilla_values["iva.repercutido.general"] == Decimal("21000.00")

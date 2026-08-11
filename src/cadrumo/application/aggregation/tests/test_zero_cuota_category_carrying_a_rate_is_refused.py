@@ -44,9 +44,9 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....domain.calculations.registry import IvaLedgerObservation
-from ....domain.iva import IvaCategory
+from ....domain.iva import IvaCategory, IvaDeductionClassificationProvenance
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -57,8 +57,8 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import aggregate_iva_ledger_observations
 from .._iva_ledger import IvaLedgerAggregationIssueReason
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -116,6 +116,16 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": category,
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT
+            if direction is TransactionDirection.OUTGOING
+            else None,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{row_id}",
+                evidence_digest="e" * 64,
+            )
+            if direction is TransactionDirection.OUTGOING
+            else None,
             "exemption_article": None,
             "art_104_tres_exclusion": None,
             "prorrata_reference": None,

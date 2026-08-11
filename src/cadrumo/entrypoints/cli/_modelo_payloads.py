@@ -106,6 +106,7 @@ from ._payloads_modelo_reconcile import (
     ModeloReconciliationDiffPayload,
     WorkCompareTaxationResult,
 )
+from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...application.modelo import ModeloExportResult as _AppModeloExportResult
@@ -260,7 +261,7 @@ class CrossPeriodDependencyInventoryItemPayload(OutputSchema):
     """One target filing that requires clean upstream filing history."""
 
     target_modelo: str
-    target_revision_id: str
+    target_revision_id: RevisionId
     target_filing_year: int
     target_period: Period
     dependency_count: int
@@ -997,8 +998,8 @@ class ModeloCompareResult(OutputSchema):
     modelo: str
     year_a: int
     year_b: int
-    year_a_revision_id: str
-    year_b_revision_id: str
+    year_a_revision_id: RevisionId
+    year_b_revision_id: RevisionId
     year_a_is_draft: bool
     year_b_is_draft: bool
     sections: list[CompareSectionPayload]
@@ -1140,7 +1141,7 @@ class ModeloReadinessResult(OutputSchema):
     operation: str = "modelo.readiness"
     profile_id: str
     modelo: str
-    revision_id: str
+    revision_id: RevisionId
     filing_year: int
     period: Period
     ready: bool

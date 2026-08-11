@@ -14,6 +14,7 @@ from ...application.state_projection import ProjectionModeloReadiness
 from ...core import Period
 from ...core.json_contract import OutputSchema, register_schema
 from ._modelo_payloads import ModeloExportPayload
+from ...domain.calculations.registry import RevisionId
 
 
 class QuickfileStageOutcomePayload(OutputSchema):
@@ -53,7 +54,7 @@ class QuickfileResultPayload(OutputSchema):
     modelo: str
     filing_year: int
     period: Period
-    registry_revision_id: str
+    registry_revision_id: RevisionId
     completed: bool
     stopped_at_stage: QuickfileStage | None = None
     readiness: ProjectionModeloReadiness | None = None

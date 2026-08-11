@@ -39,7 +39,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -128,6 +128,37 @@ def _existing_vigente_filing_record(
         if record.calculation_revision_id == calculation_revision_id and record.status is ModeloRecordStatus.VIGENTE:
             return record
     return None
+
+
+class _FilingRepositories(NamedTuple):
+    """The catalogue repositories one filing run reads and writes."""
+
+    work_units: WorkUnitCatalogueRepositoryProtocol
+    calculations: CalculationRevisionCatalogueRepositoryProtocol
+    filings: ModeloRecordCatalogueRepositoryProtocol
+    verifications: VerificationReportCatalogueRepositoryProtocol
+    observations: CalculationObservationRepository
+    bucket_events: BucketEventHistoryRepositoryProtocol
+
+
+def _resolve_filing_repositories(
+    *,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None,
+    calculation_observation_repository: CalculationObservationRepository | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> _FilingRepositories:
+    """Bind each repository to its caller-supplied override or the default profile-scoped one."""
+    return _FilingRepositories(
+        work_units=work_unit_repository or WorkUnitCatalogueRepository(),
+        calculations=calculation_repository or CalculationRevisionCatalogueRepository(),
+        filings=filing_repository or ModeloRecordCatalogueRepository(),
+        verifications=verification_repository or VerificationReportCatalogueRepository(),
+        observations=calculation_observation_repository or CalculationObservationRepository(),
+        bucket_events=bucket_event_repository or BucketEventHistoryRepository(),
+    )
 
 
 def file_modelo_revision(
@@ -252,12 +283,14 @@ def file_modelo_revision(
             Sibling local finish line that writes the fichero-BOE artefact
             without requiring this internal file marker.
     """
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    obs_repo = calculation_observation_repository or CalculationObservationRepository()
-    bv_repo: BucketEventHistoryRepositoryProtocol = bucket_event_repository or BucketEventHistoryRepository()
+    wu_repo, cr_repo, fr_repo, vr_repo, obs_repo, bv_repo = _resolve_filing_repositories(
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        filing_repository=filing_repository,
+        verification_repository=verification_repository,
+        calculation_observation_repository=calculation_observation_repository,
+        bucket_event_repository=bucket_event_repository,
+    )
     if not isinstance(prior_domiciliation_election, PriorDomiciliationElection):
         from ._action_errors import ModeloPriorDomiciliationElectionRefusedError
 

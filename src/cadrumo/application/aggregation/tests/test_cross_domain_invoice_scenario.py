@@ -54,10 +54,10 @@ from ....domain.transactions import (
 )
 from .._iva_ledger import (
     IvaLedgerAggregationIssueReason,
-    aggregate_iva_ledger_observations,
     resolve_iva_ledger_binding_values,
 )
 from .._renta_income_ledger import aggregate_renta_income_ledger
+from ._iva_authority_support import aggregate_iva_ledger_observations
 from ._renta_income_aggregation_support import _raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

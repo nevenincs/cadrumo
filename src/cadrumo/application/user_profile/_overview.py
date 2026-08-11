@@ -501,6 +501,75 @@ def resolve_profile_field_label_for_path(schema: ProfileSchemaDefinition, path: 
     return None
 
 
+def _namespace_leaves_by_instance(values: Mapping[str, str], *, prefix: str) -> dict[str, list[str]]:
+    """Discover the indexed leaves stored beneath a namespace prefix.
+
+    Both halves of the address are discovered rather than declared: the writing
+    family chooses the instance count and the leaf names alike, so the schema can
+    say only that the path is a namespace. A path whose index is not a number or
+    that carries no leaf at all is not an instance of this namespace and is
+    skipped rather than rendered as a malformed row.
+
+    Leaves keep the order the record presents them, which is the order the
+    writing family recorded them in, rather than an alphabetisation that would
+    scramble a row.
+    """
+    instances: dict[str, list[str]] = {}
+    for path in values:
+        if not path.startswith(prefix):
+            continue
+        index, _, leaf = path[len(prefix) :].partition(".")
+        if not leaf or not index.isdigit():
+            continue
+        leaves = instances.setdefault(index, [])
+        if leaf not in leaves:
+            leaves.append(leaf)
+    return instances
+
+
+def _namespace_leaf_view(
+    *,
+    prefix: str,
+    section_key: str,
+    field: ProfileFieldDefinition,
+    values: Mapping[str, str],
+    schema: ProfileSchemaDefinition,
+    index: str,
+    leaf: str,
+    detail_number: int,
+    is_censo_divergencia: bool,
+) -> ProfileFieldView:
+    """Render one indexed namespace leaf as an operator-facing row.
+
+    The leaf is named in the label because it is the only thing telling two rows
+    of one instance apart. For the ``censo.divergencia`` namespace it is
+    translated through :data:`_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS`; every other
+    namespace still shows the stored key itself, since the leaf is not prose
+    this layer may invent a translation for.
+    """
+    view = _field_view(
+        path=f"{prefix}{index}.{leaf}",
+        section_key=section_key,
+        field=field,
+        values=values,
+        label_suffix=(
+            f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS[leaf], default=leaf)})"
+            if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_KEYS
+            else f" ({tr('flows.manager.namespace_detail', number=detail_number)})"
+        ),
+        row_index=index,
+    )
+    if is_censo_divergencia and leaf == "axis" and view.value is not None:
+        # The stored value is the raw schema PATH of the field AEAT
+        # disagrees on (e.g. "contact.fiscal_address"), which no
+        # operator reads. Render the field's own label instead, so
+        # this row answers "which field" rather than "which path".
+        resolved = resolve_profile_field_label_for_path(schema, view.value)
+        if resolved is not None:
+            return view.model_copy(update={"value": resolved})
+    return view
+
+
 def _namespace_field_views(
     section_key: str,
     field: ProfileFieldDefinition,
@@ -528,42 +597,22 @@ def _namespace_field_views(
     """
     prefix = f"{section_key}.{field.key}."
     is_censo_divergencia = section_key == "censo" and field.key == "divergencia"
-    instances: dict[str, list[str]] = {}
-    for path in values:
-        if not path.startswith(prefix):
-            continue
-        index, _, leaf = path[len(prefix) :].partition(".")
-        if not leaf or not index.isdigit():
-            continue
-        leaves = instances.setdefault(index, [])
-        if leaf not in leaves:
-            leaves.append(leaf)
-    views: list[ProfileFieldView] = []
-    for index in sorted(instances, key=int):
-        for detail_number, leaf in enumerate(instances[index], start=1):
-            leaf_path = f"{prefix}{index}.{leaf}"
-            view = _field_view(
-                path=leaf_path,
-                section_key=section_key,
-                field=field,
-                values=values,
-                label_suffix=(
-                    f" ({tr(_CENSO_DIVERGENCIA_LEAF_LABEL_KEYS[leaf], default=leaf)})"
-                    if is_censo_divergencia and leaf in _CENSO_DIVERGENCIA_LEAF_LABEL_KEYS
-                    else f" ({tr('flows.manager.namespace_detail', number=detail_number)})"
-                ),
-                row_index=index,
-            )
-            if is_censo_divergencia and leaf == "axis" and view.value is not None:
-                # The stored value is the raw schema PATH of the field AEAT
-                # disagrees on (e.g. "contact.fiscal_address"), which no
-                # operator reads. Render the field's own label instead, so
-                # this row answers "which field" rather than "which path".
-                resolved = resolve_profile_field_label_for_path(schema, view.value)
-                if resolved is not None:
-                    view = view.model_copy(update={"value": resolved})
-            views.append(view)
-    return views
+    instances = _namespace_leaves_by_instance(values, prefix=prefix)
+    return [
+        _namespace_leaf_view(
+            prefix=prefix,
+            section_key=section_key,
+            field=field,
+            values=values,
+            schema=schema,
+            index=index,
+            leaf=leaf,
+            detail_number=detail_number,
+            is_censo_divergencia=is_censo_divergencia,
+        )
+        for index in sorted(instances, key=int)
+        for detail_number, leaf in enumerate(instances[index], start=1)
+    ]
 
 
 def _section_field_views(

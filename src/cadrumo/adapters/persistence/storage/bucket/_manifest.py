@@ -133,7 +133,7 @@ class BucketManifest(BaseModel):
     recovery_enrolled: bool
     idle_lock_minutes: int | None = Field(default=None, gt=0)
     session_absolute_minutes: int | None = Field(default=None, gt=0)
-    key_schedule: BucketKeySchedule = BucketKeySchedule.BUCKET_DEK_V1
+    key_schedule: BucketKeySchedule
     schema_version: int = Field(ge=1)
     status: UserProfileStatus
     """Plaintext mirror of the encrypted record's lifecycle status.

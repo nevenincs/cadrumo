@@ -29,6 +29,7 @@ from ._storage_path_definitions import (
 from .errors import NamespaceRegistryError
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
+SECURE_OBJECT_SCHEMA_VERSION_V2 = 2
 _WORKFLOW_RUN_SCHEMA_VERSION_V3 = 3
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
 SECURE_OBJECT_DEFAULT_KEY = "default"
@@ -333,7 +334,7 @@ PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinitio
     namespace="cadrumo.persistence.profile.bienes_inversion",
     owner="cadrumo.adapters.persistence.profile.bienes_inversion",
     sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V2,
     object_key_grammar="default",
     default_object_key=SECURE_OBJECT_DEFAULT_KEY,
     scope=StorageNamespaceScope.BUCKET_LOCAL,
@@ -1038,7 +1039,7 @@ TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     namespace="cadrumo.domain.transactions.bucket",
     owner="cadrumo.domain.transactions",
     sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V2,
     # One secure-object row per transaction keyed transaction:{bucket_id}:{tx_id}
     # (transaction_object_key), plus a single per-bucket membership-index row keyed
     # transaction-index:{bucket_id} (transaction_index_object_key). The unrelated

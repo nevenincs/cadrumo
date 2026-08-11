@@ -297,11 +297,9 @@ class JustificanteCaptureSnapshotRepository:
             object_key=justificante_capture_snapshot_object_key,
             not_found_factory=lambda snapshot_id: JustificanteCaptureSnapshotNotFoundError(
                 f"justificante capture snapshot {snapshot_id!r} not found in bucket {trimmed!r}",
-                suggestion="aeat app live justificante list",
             ),
             ambiguous_prefix_factory=lambda snapshot_id, _full_ids: JustificanteCaptureSnapshotNotFoundError(
                 f"justificante capture snapshot prefix {snapshot_id!r} is ambiguous",
-                suggestion="provide a longer snapshot id",
             ),
             domain_label="justificante capture",
             input_error_cls=LiveApplicationInputError,

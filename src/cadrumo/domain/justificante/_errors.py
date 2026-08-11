@@ -44,7 +44,6 @@ class PdfExtractionCoverageMixin:
         message: str | None = None,
         *,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
         missing: tuple[str, ...] = (),
         malformed: tuple[str, ...] = (),
@@ -57,8 +56,6 @@ class PdfExtractionCoverageMixin:
             message: Human-readable error message.
             context: Optional structured context forwarded to the
                 :class:`core.errors.CadrumoError` boundary.
-            suggestion: Optional copy-paste recovery hint forwarded to
-                :class:`core.errors.CadrumoError`.
             translated_message: Optional locale key rendered at the CLI
                 boundary.
             missing: Target identifiers that produced no match in the PDF text.
@@ -75,7 +72,6 @@ class PdfExtractionCoverageMixin:
         error_base.__init__(
             message,
             context=context,
-            suggestion=suggestion,
             translated_message=translated_message,
         )
         self.missing: tuple[str, ...] = missing

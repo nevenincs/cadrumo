@@ -246,14 +246,8 @@ def test_edit_patches_incn_and_new_entity_flags_onto_existing_profile() -> None:
     assert rows["taxpayer_type.legal_entity_form"] == "sl"
 
 
-def test_charge_iban_flag_persists_a_distinct_debit_authority() -> None:
-    """The real profile CLI records the U debit IBAN at its own secure fact path.
-
-    This is deliberately an edit of a pre-existing profile, matching the
-    operator path that adds a payment instruction after basic registration.
-    The reloaded taxpayer projection must expose a charge account while no
-    refund account is invented from it.
-    """
+def test_charge_iban_flag_is_rejected_after_the_profile_export_path_cutover() -> None:
+    """The real CLI cannot reintroduce the retired persisted debit path."""
     create = _create_profile(
         "charge-account-co",
         "--entity-type",
@@ -272,13 +266,8 @@ def test_charge_iban_flag_persists_a_distinct_debit_authority() -> None:
         "--charge-iban",
         "ES7921000813610123456789",
     )
-    assert edit.exit_code == 0, edit.output
+    assert edit.exit_code != 0
+    assert "--charge-iban" in edit.output
 
     rows = _profile_rows("charge-account-co")
-    assert rows["filing_export.charge_iban"] == "ES7921000813610123456789"
-    assert "filing_export.iban" not in rows
-
-    profile = _load_active_taxpayer_profile()
-    assert profile.iva.charge_account is not None
-    assert profile.iva.charge_account.iban == "ES7921000813610123456789"
-    assert profile.iva.refund_account is None
+    assert not any(path.startswith("filing_export.") for path in rows)

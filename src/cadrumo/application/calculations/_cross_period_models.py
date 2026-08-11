@@ -17,6 +17,7 @@ from ...domain.modelos import (
     VerificationCompletenessStatus,
 )
 from ._observations_repository import ObservationSourceKind
+from ...domain.calculations.registry import RevisionId
 
 
 def _require_period_year(period: Period, filing_year: int, *, field_name: str) -> None:
@@ -248,7 +249,7 @@ class CrossPeriodDependencyInventoryItem(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     target_modelo: str = Field(min_length=1, max_length=8)
-    target_revision_id: str = Field(min_length=1)
+    target_revision_id: RevisionId = Field(min_length=1)
     target_filing_year: int = Field(ge=2000, le=2099)
     target_period: Period
     dependencies: tuple[CrossPeriodDependencyRequirement, ...] = Field(min_length=1)

@@ -918,6 +918,39 @@ def _reconcile_caller_overrides(
     )
 
 
+def _resolved_m210_gross_income_mode(
+    work_unit: object,
+    *,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+    m210_official_tipo_renta_code: str | None,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    detail_rows: tuple[ModeloDetailRow, ...],
+) -> M210GrossIncomeSourceMode:
+    """Resolve the M210 gross-income source mode and refuse the overrides it forbids.
+
+    Ledger mode owns the gross-income figure, so a manual casilla override, an
+    absent or contradictory official tipo-renta selection, and operator-supplied
+    agrupacion rows are each refused here rather than silently losing to the
+    ledger projection downstream.
+    """
+    mode = _m210_gross_source_mode(work_unit, m210_gross_income_source_mode)
+    _reject_manual_m210_gross_income_override_in_ledger_mode(
+        mode=mode,
+        casilla_inputs=casilla_inputs or {},
+    )
+    _validate_m210_official_tipo_renta_selection(
+        mode=mode,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        text_casilla_inputs=text_casilla_inputs or {},
+    )
+    _reject_manual_m210_agrupacion_rows_in_ledger_mode(
+        mode=mode,
+        detail_rows=detail_rows,
+    )
+    return mode
+
+
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
@@ -977,21 +1010,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     # bucket-merge checks compare them against registry casilla ids.
     if casilla_inputs is not None:
         casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
-    resolved_m210_gross_income_source_mode = _m210_gross_source_mode(
+    resolved_m210_gross_income_source_mode = _resolved_m210_gross_income_mode(
         work_unit,
-        m210_gross_income_source_mode,
-    )
-    _reject_manual_m210_gross_income_override_in_ledger_mode(
-        mode=resolved_m210_gross_income_source_mode,
-        casilla_inputs=casilla_inputs or {},
-    )
-    _validate_m210_official_tipo_renta_selection(
-        mode=resolved_m210_gross_income_source_mode,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
-        text_casilla_inputs=text_casilla_inputs or {},
-    )
-    _reject_manual_m210_agrupacion_rows_in_ledger_mode(
-        mode=resolved_m210_gross_income_source_mode,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         detail_rows=detail_rows,
     )
 

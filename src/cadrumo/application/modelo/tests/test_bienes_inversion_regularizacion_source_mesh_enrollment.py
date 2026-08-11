@@ -79,6 +79,7 @@ def _record() -> BienInversionIvaRecord:
         cuota_soportada=Decimal("5000.00"),
         prorrata_inicial_pct=Decimal("80"),
         kind=BienInversionKind.MUEBLE,
+        acquisition_ledger_id="ledger-bi-2022-maquina",
     )
 
 

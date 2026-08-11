@@ -36,6 +36,7 @@ from ._validate_verdict import (
     shipped_verdict_location,
     stamp_bundled_verdict,
 )
+from ._ids import RevisionId
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -184,7 +185,7 @@ class ValidatedRegistryAuthority:
         filing_year: int,
         period: str,
         on: date | None = None,
-        revision_id: str | None = None,
+        revision_id: RevisionId | None = None,
     ) -> RegistrySnapshot:
         """Return a cached validated :class:`RegistrySnapshot` for one filing context."""
         key = (modelo_id, filing_year, period, on, revision_id)

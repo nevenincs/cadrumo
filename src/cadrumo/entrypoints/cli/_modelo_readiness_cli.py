@@ -33,6 +33,7 @@ from ._modelo_payloads import (
     ModeloReadinessMissingRequirementPayload,
     ModeloReadinessResult,
 )
+from ...domain.calculations.registry import RevisionId
 
 
 def register_readiness_commands(app: typer.Typer) -> None:
@@ -141,7 +142,7 @@ def _readiness_result(
     report,
     *,
     modelo: str,
-    revision_id: str,
+    revision_id: RevisionId,
     filing_year: int,
 ) -> ModeloReadinessResult:
     return ModeloReadinessResult(
@@ -194,7 +195,7 @@ def _readiness_lines(
     report,
     *,
     modelo: str,
-    revision_id: str,
+    revision_id: RevisionId,
     filing_year: int,
     period: str | None,
 ) -> list[str]:

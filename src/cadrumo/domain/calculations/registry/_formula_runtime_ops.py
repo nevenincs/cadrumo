@@ -36,6 +36,7 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 from ._schema_rounding import RegistryRoundingCode
+from ._ids import RevisionId
 
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
@@ -439,7 +440,7 @@ def _default_read_parameter_authority(root: Path, source_root: Path) -> Validate
 
 def read_parameter(
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     parameter_id: str,
     *,
     date_context: Mapping[str, date],

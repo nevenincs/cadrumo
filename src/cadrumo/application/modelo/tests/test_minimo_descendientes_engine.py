@@ -179,7 +179,7 @@ def test_ineligible_descendant_over_25_contributes_nothing() -> None:
 #: absence of a fact.
 _SINGLE_FILER_HOUSEHOLD: dict[str, object] = {
     "renta_taxpayer.marital_status": "soltero",
-    "filing_export.declaration_type": "1",
+    "renta_filing.declaration_type": "1",
 }
 
 
@@ -312,7 +312,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
                     *facts,
                     UserProfileFact(path="identity.tax_id", value="12345678Z"),
                     UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-                    UserProfileFact(path="filing_export.declaration_type", value="1"),
+                    UserProfileFact(path="renta_filing.declaration_type", value="1"),
                     UserProfileFact(path="renta_taxpayer.birth_date", value=date(1975, 6, 15)),
                     UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
                     UserProfileFact(path="renta_family.minor_children_in_unit", value=False),

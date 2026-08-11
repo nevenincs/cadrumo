@@ -75,6 +75,53 @@ def localise_help_section_headers() -> None:
 _RICH_MARKUP_TAG_RE = re.compile(r"\[/?[a-zA-Z_ ]*\]")
 
 
+#: Typer's English "Missing …" prefixes, most specific first, each paired with its
+#: catalogue key and the exact prefix to strip. The bare ``"Missing "`` fallback
+#: deliberately strips only ``"Missing"`` so the following space survives, and it
+#: MUST stay last or it would shadow the three specific spellings above it.
+_MISSING_PARAMETER_PREFIXES: tuple[tuple[str, str, str, str], ...] = (
+    ("Missing argument", "cli.help.missing_argument", "Missing argument", "Missing argument"),
+    ("Missing option", "cli.help.missing_option", "Missing option", "Missing option"),
+    ("Missing parameter", "cli.help.missing_parameter", "Missing parameter", "Missing parameter"),
+    ("Missing ", "cli.help.missing_parameter", "Missing parameter", "Missing"),
+)
+
+
+def _localised_missing_prefix(rendered: str) -> str:
+    """Swap Typer's English ``Missing …`` prefix for its localised equivalent."""
+    for match_prefix, key, default, strip_prefix in _MISSING_PARAMETER_PREFIXES:
+        if rendered.startswith(match_prefix):
+            return f"{tr(key, default=default)}{rendered.removeprefix(strip_prefix)}"
+    return rendered
+
+
+def _localised_invalid_value(rendered: str) -> str:
+    """Swap Typer's English ``Invalid value`` prefix and integer wording for the locale."""
+    if rendered.startswith("Invalid value for "):
+        prefix, separator, detail = rendered.partition(": ")
+        parameter = prefix.removeprefix("Invalid value for ")
+        rendered = (
+            f"{tr('cli.help.invalid_value_for', default='Invalid value for %{parameter}', parameter=parameter)}"
+            f"{separator}{detail}"
+        )
+    elif rendered.startswith("Invalid value"):
+        invalid_value = tr("cli.help.invalid_value", default="Invalid value")
+        rendered = f"{invalid_value}{rendered.removeprefix('Invalid value')}"
+    localised_integer = tr("cli.help.not_valid_integer", default="is not a valid integer.")
+    # Typer vendors its own Click fork whose IntParamType.name is ``int``
+    # (upstream Click uses ``integer``), so the conversion failure reads
+    # "is not a valid int."; localise both spellings. The "int." form is
+    # not a substring of the "integer." form, so the two replacements are
+    # order-independent and non-overlapping.
+    return rendered.replace(
+        "is not a valid integer.",
+        localised_integer,
+    ).replace(
+        "is not a valid int.",
+        localised_integer,
+    )
+
+
 def localise_typer_parse_error_messages() -> None:
     """Bind Typer's vendored parser-error prefixes to the active locale.
 
@@ -101,46 +148,10 @@ def localise_typer_parse_error_messages() -> None:
     write_usage = _typer_formatting.HelpFormatter.write_usage
 
     def localised_missing_parameter_format_message(self) -> str:
-        rendered = missing_parameter_format_message(self)
-        if rendered.startswith("Missing argument"):
-            missing = tr("cli.help.missing_argument", default="Missing argument")
-            return f"{missing}{rendered.removeprefix('Missing argument')}"
-        if rendered.startswith("Missing option"):
-            missing = tr("cli.help.missing_option", default="Missing option")
-            return f"{missing}{rendered.removeprefix('Missing option')}"
-        if rendered.startswith("Missing parameter"):
-            missing = tr("cli.help.missing_parameter", default="Missing parameter")
-            return f"{missing}{rendered.removeprefix('Missing parameter')}"
-        if rendered.startswith("Missing "):
-            missing = tr("cli.help.missing_parameter", default="Missing parameter")
-            return f"{missing}{rendered.removeprefix('Missing')}"
-        return rendered
+        return _localised_missing_prefix(missing_parameter_format_message(self))
 
     def localised_bad_parameter_format_message(self) -> str:
-        rendered = bad_parameter_format_message(self)
-        if rendered.startswith("Invalid value for "):
-            prefix, separator, detail = rendered.partition(": ")
-            parameter = prefix.removeprefix("Invalid value for ")
-            rendered = (
-                f"{tr('cli.help.invalid_value_for', default='Invalid value for %{parameter}', parameter=parameter)}"
-                f"{separator}{detail}"
-            )
-        elif rendered.startswith("Invalid value"):
-            invalid_value = tr("cli.help.invalid_value", default="Invalid value")
-            rendered = f"{invalid_value}{rendered.removeprefix('Invalid value')}"
-        localised_integer = tr("cli.help.not_valid_integer", default="is not a valid integer.")
-        # Typer vendors its own Click fork whose IntParamType.name is ``int``
-        # (upstream Click uses ``integer``), so the conversion failure reads
-        # "is not a valid int."; localise both spellings. The "int." form is
-        # not a substring of the "integer." form, so the two replacements are
-        # order-independent and non-overlapping.
-        return rendered.replace(
-            "is not a valid integer.",
-            localised_integer,
-        ).replace(
-            "is not a valid int.",
-            localised_integer,
-        )
+        return _localised_invalid_value(bad_parameter_format_message(self))
 
     def localised_write_usage(self, prog: str, args: str = "", prefix: str | None = None) -> None:
         return write_usage(

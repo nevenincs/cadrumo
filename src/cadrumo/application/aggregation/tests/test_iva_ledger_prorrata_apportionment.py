@@ -29,14 +29,17 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import (
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
 from ....core.resources import resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import BindingId
-from ....domain.iva import InputClassification
+from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
     BusinessClassification,
@@ -48,8 +51,9 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import aggregate_iva_ledger_observations_from_repositories
-from .._iva_ledger import resolve_iva_ledger_binding_values
+from .. import AggregationValidationError
+from .. import aggregate_iva_ledger_observations_from_repositories as _aggregate_from_repositories
+from .._iva_ledger import _active_prorrata_apportionment, resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,6 +62,33 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 _DEVENGADO_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"
 _DEDUCIBLE_BASE_BINDING: BindingId = "modelo-303-iva-soportado-interiores-base"
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
+
+
+def _deduction_authority(provider_id: str) -> dict[str, object]:
+    return {
+        "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+        "deduction_provenance": IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=f"invoice:{provider_id}",
+            evidence_digest="7" * 64,
+        ),
+    }
+
+
+def aggregate_iva_ledger_observations_from_repositories(
+    *,
+    bucket_id: str,
+    period: Period,
+    transaction_repository: TransactionCatalogueRepository,
+):
+    """Exercise the injected-repository path with its explicit S54 asset authority."""
+    return _aggregate_from_repositories(
+        bucket_id=bucket_id,
+        period=period,
+        transaction_repository=transaction_repository,
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id=bucket_id,
+    )
 
 
 def _raw_transaction(
@@ -98,6 +129,7 @@ def _fully_taxable_purchase(provider_id: str) -> Transaction:
             "taxable_base": Decimal("50.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("10.50"),
+            **_deduction_authority(provider_id),
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -123,6 +155,7 @@ def _classified_purchase(provider_id: str, classification: InputClassification) 
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("10.50"),
             "input_classification": classification,
+            **_deduction_authority(provider_id),
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -451,10 +484,13 @@ def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
         "taxable_base": Decimal("50.00"),
         "iva_rate": Decimal("0.21"),
         "iva_amount": Decimal("10.50"),
+        **_deduction_authority(provider_id),
         "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
-    if sector_id is not None:
+    if sector_id is None:
+        payload["input_classification"] = InputClassification.COMMON
+    else:
         payload["prorrata_sector_id"] = sector_id
     return Transaction.model_validate(payload)
 
@@ -630,3 +666,60 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
     # Bases stay full; devengado untouched.
     assert values[_DEDUCIBLE_BASE_BINDING] == Decimal("150.00")
     assert values[_DEVENGADO_CUOTA_BINDING] == Decimal("21.00")
+
+    sector_input = next(row for row in aggregation.observations if row.prorrata_sector_id == "comercio")
+    with pytest.raises(AggregationValidationError, match="missing explicit sector identity"):
+        resolve_iva_ledger_binding_values(
+            revision,
+            (sector_input.model_copy(update={"prorrata_sector_id": None, "input_classification": None}),),
+            prorrata_apportionment=apportionment,
+        )
+    with pytest.raises(AggregationValidationError, match="unknown sector"):
+        resolve_iva_ledger_binding_values(
+            revision,
+            (sector_input.model_copy(update={"prorrata_sector_id": "unknown"}),),
+            prorrata_apportionment=apportionment,
+        )
+
+
+@pytest.mark.parametrize(
+    ("sector_entry", "message"),
+    (
+        (None, "has no filing-year register entry"),
+        (
+            ProrrataRegisterEntry(
+                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA
+            ),
+            "is inactive for the filing year",
+        ),
+        (
+            ProrrataRegisterEntry(
+                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL
+            ),
+            "has no resolved provisional percentage",
+        ),
+    ),
+)
+def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry(
+    tmp_path: Path, sector_entry: ProrrataRegisterEntry | None, message: str
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        entries = [_sector_entry(None, Decimal("50"))]
+        if sector_entry is not None:
+            entries.append(sector_entry)
+        repository.save(
+            ProrrataRegister(
+                entries=tuple(entries),
+                sector_definitions=(
+                    SectorDefinition(
+                        sector_id="comercio", letra=SectorDiferenciadoLetra.A,
+                        member_activity_codes=("4711",),
+                    ),
+                ),
+            )
+        )
+        with pytest.raises(AggregationValidationError, match=message):
+            _active_prorrata_apportionment(
+                bucket_id=_BUCKET_ID, ejercicio=2026, prorrata_register_repository=repository
+            )

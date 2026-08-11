@@ -18,6 +18,7 @@ See Also:
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from ._ids import RevisionId
 
 if TYPE_CHECKING:
     from ._schema import RegistrySnapshot
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
 def registry_snapshot_id(
     *,
     modelo: str,
-    revision_id: str,
+    revision_id: RevisionId,
     filing_year: int,
     period: str,
 ) -> str:

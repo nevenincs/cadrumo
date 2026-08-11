@@ -14,12 +14,12 @@ integrity probe is intentionally opt-in through :class:`RegistryIntegrityReport`
 it loads the registry authority only for repair commands that ask for that
 validation.
 
-Every warn/fail :class:`DiagnosticCheck` is actionable by construction: it must
-carry a legacy local ``next_action``, an application-owned
-``precondition_verdict``, or a ``dead_end`` and the validator raises
+Every warn/fail :class:`DiagnosticCheck` carries an application-owned
+``precondition_verdict`` whose outcome is either a canonical action reference
+or an explicit no-recovery classification. The validator raises
 :class:`~application._errors.DiagnosticModelError` if a row is silent or
-ambiguous. Renderers and CLI payloads can therefore treat the repair report as a
-typed contract, not a best-effort text scan.
+ambiguous. Renderers and CLI payloads can therefore treat the repair report as
+a typed contract, not a best-effort text scan.
 
 Secure-object repair helpers return :class:`SecureObjectIntegrityReport`
 instances shared with :mod:`application.repair_integrity`. Dry-run preview
@@ -53,7 +53,15 @@ from typing import TYPE_CHECKING, Final, Literal
 from pydantic import AnyHttpUrl, BaseModel, TypeAdapter, model_validator
 
 from .. import __version__
-from ..core import STRICT_FROZEN_CONFIG, Modelo
+from ..core import (
+    STRICT_FROZEN_CONFIG,
+    ActionArgumentSource,
+    ActionArgumentStatus,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    Modelo,
+    NoRecoveryOutcome,
+)
 from ..core.async_cleanup import close_async_resources
 from ..core.config import Settings
 from ..core.errors import SiteHealthError
@@ -63,7 +71,12 @@ from ..core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ..core.resources import bundled_path
 from ..core.time import now
 from ._errors import DiagnosticModelError
-from .operator_actions import PreconditionVerdict
+from .operator_actions import (
+    ActionArgumentBinding,
+    ActionReference,
+    ConditionEvidence,
+    PreconditionVerdict,
+)
 
 # The browser adapter, the registry authority, the secure-object
 # repository, the workflow store, and the wizard-status projection are
@@ -141,9 +154,9 @@ class DiagnosticFinding(BaseModel):
 
     A bare counter (``31/40``) or a one-word verdict (``warn``) tells the
     operator *that* something is wrong but never *what*. Each finding
-    names one specific cause in operator language and, where an
-    automated route exists, the exact ``aeat ...`` command that resolves
-    it. The profile-keys check emits one finding per unset key; a
+    names one specific cause in operator language. The parent check owns the
+    typed recovery outcome, so findings never duplicate executable transport
+    prose. The profile-keys check emits one finding per unset key; a
     failing check emits one finding per concrete cause. Findings are
     explanatory children, not a replacement for the parent row's required
     recovery channel.
@@ -153,18 +166,16 @@ class DiagnosticFinding(BaseModel):
 
     summary: str
     detail: str | None = None
-    next_action: str | None = None
     requirement: Literal["required", "optional"] | None = None
 
 
 class DiagnosticCheck(BaseModel):
     """One concrete config repair check.
 
-    A failing or warning row MUST carry exactly one recovery outcome:
-    ``next_action`` for an as-yet-unmigrated local diagnostic,
-    ``precondition_verdict`` for an application-owned typed refusal, or
-    ``dead_end`` for a short explanation of why no automated route exists.
-    A row that supplies neither, or more than one, is a
+    A failing or warning row MUST carry one application-owned
+    ``precondition_verdict``. The verdict itself requires exactly one canonical
+    action reference or explicit no-recovery outcome. A row that supplies no
+    verdict is a
     :class:`pydantic.ValidationError` at construction time by raising
     :class:`~application._errors.DiagnosticModelError`. ``ok`` rows MUST
     carry neither.
@@ -182,32 +193,95 @@ class DiagnosticCheck(BaseModel):
     status: DiagnosticStatus
     summary: str
     detail: str | None = None
-    next_action: str | None = None
     precondition_verdict: PreconditionVerdict | None = None
-    dead_end: str | None = None
     audience: DiagnosticAudience = "operator"
     findings: tuple[DiagnosticFinding, ...] = ()
 
     @model_validator(mode="after")
     def _enforce_actionable_contract(self) -> DiagnosticCheck:
-        outcomes = (
-            self.next_action if self.next_action else None,
-            self.precondition_verdict,
-            self.dead_end if self.dead_end else None,
-        )
-        outcome_count = sum(outcome is not None for outcome in outcomes)
-        if outcome_count > 1:
-            raise DiagnosticModelError("DiagnosticCheck may set at most one recovery outcome")
         if self.status in {"fail", "warn"}:
-            if outcome_count == 0:
+            if self.precondition_verdict is None:
                 raise DiagnosticModelError(
-                    f"DiagnosticCheck(status={self.status!r}) must populate one of "
-                    "`next_action`, `precondition_verdict`, or `dead_end`; silent failing rows are forbidden",
+                    f"DiagnosticCheck(status={self.status!r}) must populate `precondition_verdict`; "
+                    "silent failing rows are forbidden",
                 )
         else:  # status == "ok"
-            if outcome_count != 0:
+            if self.precondition_verdict is not None:
                 raise DiagnosticModelError("DiagnosticCheck(status='ok') must not carry a recovery outcome")
         return self
+
+
+def _diagnostic_action_verdict(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    values: dict[str, str | bool | int],
+    action_id: str,
+    argument_bindings: tuple[ActionArgumentBinding, ...] = (),
+    missing_argument_names: tuple[str, ...] = (),
+) -> PreconditionVerdict:
+    """Build one diagnostics-owned actionable failed-condition verdict."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=evidence_id,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=values,
+            ),
+        ),
+        action=ActionReference(action_id=action_id),
+        argument_bindings=argument_bindings,
+        missing_argument_names=missing_argument_names,
+        conditionality=(
+            ActionConditionality.REQUIRES_ARGUMENTS
+            if missing_argument_names
+            else ActionConditionality.IMMEDIATE
+        ),
+    )
+
+
+def _diagnostic_no_recovery_verdict(
+    *,
+    condition_id: str,
+    evidence_id: str,
+    values: dict[str, str | bool | int],
+    outcome: NoRecoveryOutcome,
+) -> PreconditionVerdict:
+    """Build one explicit diagnostics-owned closed recovery outcome."""
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=evidence_id,
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=values,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=outcome,
+    )
+
+
+def _resolved_verdict_binding(argument_name: str, value: str | bool) -> ActionArgumentBinding:
+    """Bind a concrete diagnostics fact to one catalogue argument."""
+    return ActionArgumentBinding(
+        argument_name=argument_name,
+        status=ActionArgumentStatus.RESOLVED,
+        value=value,
+        source=ActionArgumentSource.VERDICT_CONTEXT,
+        source_key=argument_name,
+    )
+
+
+def _missing_verdict_binding(argument_name: str) -> ActionArgumentBinding:
+    """Declare one catalogue argument diagnostics cannot honestly supply."""
+    return ActionArgumentBinding(
+        argument_name=argument_name,
+        status=ActionArgumentStatus.MISSING,
+    )
 
 
 class SecureObjectIntegrityReport(BaseModel):
@@ -363,6 +437,7 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
     _ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
+    log_parent_exists = default_log_file_path().parent.exists()
     checks: list[DiagnosticCheck] = [
         DiagnosticCheck(
             name="environment.python",
@@ -376,9 +451,21 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
         ),
         DiagnosticCheck(
             name="logging.file",
-            status="ok" if default_log_file_path().parent.exists() else "warn",
+            status="ok" if log_parent_exists else "warn",
             summary=str(default_log_file_path()),
-            next_action=None if default_log_file_path().parent.exists() else "aeat config repair logs",
+            precondition_verdict=(
+                None
+                if log_parent_exists
+                else _diagnostic_no_recovery_verdict(
+                    condition_id="diagnostics.logging.file_parent.available",
+                    evidence_id="diagnostics.logging.file_parent.observation",
+                    values={
+                        "log_file": str(default_log_file_path()),
+                        "parent_exists": False,
+                    },
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                )
+            ),
         ),
         DiagnosticCheck(
             name="registry.load",
@@ -393,7 +480,16 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                 else tr("cli.diagnostics.summary.registry_unavailable")
             ),
             detail=registry.error,
-            dead_end=(None if registry.available else tr("cli.diagnostics.dead_end.registry_bundled")),
+            precondition_verdict=(
+                None
+                if registry.available
+                else _diagnostic_no_recovery_verdict(
+                    condition_id="diagnostics.registry.load.available",
+                    evidence_id="diagnostics.registry.load.observation",
+                    values={"available": False, "registry_root": registry.registry_root},
+                    outcome=NoRecoveryOutcome.TERMINAL,
+                )
+            ),
             audience="operator" if registry.available else "internal",
         ),
     ]
@@ -447,9 +543,16 @@ def build_config_repair_report(registry_root: Path | None = None) -> ConfigRepai
                     # exception text leaks internal plumbing; the
                     # summary + typed profile verdict already guide the operator.
                     detail=None if missing_active_bucket_session else _compact_exception(exc),
-                    next_action=(None if missing_active_bucket_session else "aeat config repair reset-progress --yes"),
                     precondition_verdict=(
-                        _required_profile_health_verdict(profile_health) if missing_active_bucket_session else None
+                        _required_profile_health_verdict(profile_health)
+                        if missing_active_bucket_session
+                        else _diagnostic_action_verdict(
+                            condition_id="diagnostics.secure_state.load.readable",
+                            evidence_id="diagnostics.secure_state.load.observation",
+                            values={"readable": False},
+                            action_id="operator.diagnostics.workflow.reset_progress",
+                            argument_bindings=(_resolved_verdict_binding("yes", True),),
+                        )
                     ),
                 ),
             )
@@ -556,9 +659,8 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
 
     Preserves :attr:`DiagnosticCheck.audience` and never reconstructs command
     prose from an application-owned :attr:`DiagnosticCheck.precondition_verdict`.
-    Operator-actionable rows and internal application defects therefore remain
-    visibly different without giving the diagnostics layer a second action
-    resolver.
+    Typed actions are resolved by the entrypoint projection; this application
+    renderer remains a diagnosis-only view.
     """
     lines = [
         f"{tr('cli.diagnostics.repair.overall_label', default='Overall')}\t{report.overall}",
@@ -590,12 +692,6 @@ def render_config_repair_text(report: ConfigRepairReport) -> str:
             lines.append(f"{tr('cli.diagnostics.repair.finding_label', default='-')}\t{tag}{finding.summary}")
             if finding.detail:
                 lines.append(f"  {tr('cli.diagnostics.repair.detail_label', default='Detail')}\t{finding.detail}")
-            if finding.next_action:
-                lines.append(f"  {tr('cli.diagnostics.repair.next_label', default='Next')}\t{finding.next_action}")
-        if check.next_action:
-            lines.append(f"{tr('cli.diagnostics.repair.next_label', default='Next')}\t{check.next_action}")
-        if check.dead_end:
-            lines.append(f"{tr('cli.diagnostics.repair.note_label', default='Note')}\t{check.dead_end}")
     return "\n".join(lines) + "\n"
 
 
@@ -703,7 +799,7 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
     """Render the ``secure_objects.integrity`` repair row.
 
     A non-zero unreadable total becomes a warn :class:`DiagnosticCheck` whose
-    ``next_action`` is the guarded ``aeat config repair quarantine --yes`` path.
+    typed verdict resolves to the guarded quarantine path.
     """
     if report.unreadable_total == 0:
         if report.readable_total == 0:
@@ -736,7 +832,16 @@ def _secure_objects_integrity_check(report: SecureObjectIntegrityReport) -> Diag
             readable=report.readable_total,
         ),
         detail=affected,
-        next_action="aeat config repair quarantine --yes",
+        precondition_verdict=_diagnostic_action_verdict(
+            condition_id="diagnostics.secure_objects.integrity.readable",
+            evidence_id="diagnostics.secure_objects.integrity.observation",
+            values={
+                "readable_total": report.readable_total,
+                "unreadable_total": report.unreadable_total,
+            },
+            action_id="operator.diagnostics.secure_objects.quarantine",
+            argument_bindings=(_resolved_verdict_binding("yes", True),),
+        ),
     )
 
 
@@ -771,7 +876,12 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             status="fail",
             summary=tr("cli.diagnostics.summary.registry_integrity_failed"),
             detail=str(exc),
-            next_action=tr("cli.diagnostics.next_action.inspect_registry_toml"),
+            precondition_verdict=_diagnostic_no_recovery_verdict(
+                condition_id="diagnostics.registry.integrity.valid",
+                evidence_id="diagnostics.registry.integrity.validation",
+                values={"registry_root": str(registry_root), "valid": False},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            ),
             audience="internal",
         )
     except Exception as exc:  # pragma: no cover - defensive: registry not loadable
@@ -780,7 +890,12 @@ def _registry_cross_domain_integrity_check(registry_root: Path) -> DiagnosticChe
             status="warn",
             summary=tr("cli.diagnostics.summary.registry_integrity_skipped"),
             detail=f"{type(exc).__name__}: {exc}",
-            dead_end=tr("cli.diagnostics.dead_end.registry_integrity_internal"),
+            precondition_verdict=_diagnostic_no_recovery_verdict(
+                condition_id="diagnostics.registry.integrity.observable",
+                evidence_id="diagnostics.registry.integrity.observation",
+                values={"observable": False, "registry_root": str(registry_root)},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            ),
             audience="internal",
         )
     return DiagnosticCheck(
@@ -851,21 +966,12 @@ def _profile_unavailable_check(health: ActiveProfileHealth) -> DiagnosticCheck:
     )
 
 
-_PROFILE_EDIT_COMMAND = "aeat config profile edit NAME"
-"""The operator command that walks the profile wizard over an existing
-profile. There is deliberately no per-key setter on the ``aeat config``
-surface, so every unset-key finding routes to this single guided
-editor; the finding's ``summary`` names the specific key to fill."""
-
-
 def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[DiagnosticFinding, ...]:
     """Return one finding per profile key the active profile leaves unset.
 
     Each finding names the canonical key path, its operator-facing label,
-    whether the key is required or optional, and the guided-editor
-    command that fills it. This is what turns a bare ``31/40`` counter
-    into an actionable list: the operator sees precisely which fields
-    are unset and the one command that walks them through filling each.
+    whether the key is required or optional. The parent readiness row owns the
+    single typed profile-editor action, avoiding per-finding transport prose.
     """
     from .user_profile import list_profile_key_records
 
@@ -897,7 +1003,6 @@ def _unset_profile_key_findings(state: WorkflowState | None) -> tuple[Diagnostic
             DiagnosticFinding(
                 summary=f"{entry.key} — {label}",
                 requirement=requirement,
-                next_action=_PROFILE_EDIT_COMMAND,
             ),
         )
     return tuple(findings)
@@ -936,13 +1041,17 @@ def _profile_check(
             name="profile.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.profile_none"),
-            next_action=(
-                None
-                if profile_health is not None
-                else "aeat config profile create NAME --tax-id <TAX_ID> --activity <ACTIVITY>"
-            ),
             precondition_verdict=(
-                _required_profile_health_verdict(profile_health) if profile_health is not None else None
+                _required_profile_health_verdict(profile_health)
+                if profile_health is not None
+                else _diagnostic_action_verdict(
+                    condition_id="diagnostics.profile.active.available",
+                    evidence_id="diagnostics.profile.active.observation",
+                    values={"active_profile_present": False},
+                    action_id="operator.profile.create",
+                    argument_bindings=(_missing_verdict_binding("profile_name"),),
+                    missing_argument_names=("profile_name",),
+                )
             ),
         )
     unset_findings = _unset_profile_key_findings(state)
@@ -995,7 +1104,21 @@ def _profile_not_ready_check(
             count=len(findings),
             fields=", ".join(finding.summary for finding in findings),
         ),
-        next_action=_PROFILE_EDIT_COMMAND,
+        precondition_verdict=_diagnostic_action_verdict(
+            condition_id="diagnostics.profile.required_fields.complete",
+            evidence_id="diagnostics.profile.required_fields.observation",
+            values={
+                "missing_required_count": len(findings),
+                "profile_name": report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
+            },
+            action_id="operator.profile.edit",
+            argument_bindings=(
+                _resolved_verdict_binding(
+                    "profile_name",
+                    report.active_profile or CLI_PROFILE_ID_PLACEHOLDER,
+                ),
+            ),
+        ),
         findings=findings,
     )
 
@@ -1058,7 +1181,17 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
             name="auth.readiness",
             status="warn",
             summary=tr("cli.diagnostics.summary.auth_none"),
-            next_action="aeat config auth configure --provider certificate --file PATH",
+            precondition_verdict=_diagnostic_action_verdict(
+                condition_id="diagnostics.auth.provider.configured",
+                evidence_id="diagnostics.auth.provider.observation",
+                values={"configured": False},
+                action_id="operator.auth.configure",
+                argument_bindings=(
+                    _missing_verdict_binding("file"),
+                    _resolved_verdict_binding("provider", "certificate"),
+                ),
+                missing_argument_names=("file",),
+            ),
         )
     if not report.login_ready:
         return DiagnosticCheck(
@@ -1069,7 +1202,13 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
                 default="Authentication provider %{provider} has no ready session",
                 provider=report.auth_provider,
             ),
-            next_action=f"aeat config auth test --provider {report.auth_provider}",
+            precondition_verdict=_diagnostic_action_verdict(
+                condition_id="diagnostics.auth.session.ready",
+                evidence_id="diagnostics.auth.session.observation",
+                values={"login_ready": False, "provider": report.auth_provider},
+                action_id="operator.auth.login",
+                argument_bindings=(_resolved_verdict_binding("provider", report.auth_provider),),
+            ),
         )
     return DiagnosticCheck(
         name="auth.readiness",

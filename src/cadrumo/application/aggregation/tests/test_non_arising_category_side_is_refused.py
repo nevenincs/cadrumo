@@ -44,13 +44,14 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....domain.calculations.registry import IvaLedgerObservation
 from ....domain.iva import (
     IVA_CATEGORY_COMPONENTS,
     EUMemberState,
     InvoiceKind,
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaKindApplicability,
 )
 from ....domain.transactions import (
@@ -63,9 +64,9 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import aggregate_iva_ledger_observations
 from .._invoice_kind import invoice_kind_for_direction
 from .._iva_ledger import IvaLedgerAggregationIssueReason
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -133,6 +134,21 @@ def _transaction(
         "classified_at": datetime(2024, 12, 2, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
+    if direction is TransactionDirection.OUTGOING:
+        if category in {
+            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+        }:
+            payload["deduction_fact_kind"] = IvaDeductionFactKind.INTRA_EU_CURRENT
+            authority = IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT
+        else:
+            payload["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
+            authority = IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
+        payload["deduction_provenance"] = IvaDeductionClassificationProvenance(
+            authority=authority,
+            source_locator=f"fixture:{row_id}",
+            evidence_digest="f" * 64,
+        )
     return Transaction.model_validate(payload)
 
 

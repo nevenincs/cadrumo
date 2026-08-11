@@ -1647,6 +1647,28 @@ class RentaAscendantProfile(_RentaPersonProfileBase):
     cohabiting_descendant_count: int | None = Field(default=None, ge=0, le=10)
 
 
+def _survivor_rank_by_position(eligible: Sequence[DescendantInfo], filing_year: int) -> dict[int, int]:
+    """Rank the surviving descendants, vacating the rank of each who died before devengo.
+
+    Art. 61 norma 4ª limb two: the ordering that assigns "primero, segundo,
+    tercero…" is computed over the survivors ALONE. A descendant who died before
+    the devengo still contributes their flat cuantía (limb one) but vacates their
+    rank, which is what moves each younger sibling down a tranche. Omitting this
+    limb over-grants the survivors as well as the deceased.
+
+    Keyed by POSITION rather than by the record itself: DescendantInfo is a frozen
+    pydantic model, so two identically-declared siblings — twins with the same
+    birth date and no distinguishing fact — compare equal, and a value-keyed
+    lookup would give them both the elder's rank.
+    """
+    return {
+        position: rank
+        for rank, position in enumerate(
+            position for position, d in enumerate(eligible) if not d.died_before_devengo(filing_year)
+        )
+    }
+
+
 class RentaFamilyProfile(BaseModel):
     """Typed repeated family-member facts consumed by Modelo 100 bindings."""
 
@@ -2189,20 +2211,7 @@ class RentaFamilyProfile(BaseModel):
             return Decimal("0")
         if not birth_order_amounts:
             raise ProfileValidationError("birth_order_amounts must not be empty")
-        # Art. 61 norma 4ª limb two: the ordering that assigns "primero,
-        # segundo, tercero…" is computed over the survivors ALONE. A descendant
-        # who died before the devengo still contributes (limb one) but vacates
-        # their rank, which is what moves each younger sibling down a tranche.
-        # Keyed by POSITION rather than by the record itself: DescendantInfo is
-        # a frozen pydantic model, so two identically-declared siblings — twins
-        # with the same birth date and no distinguishing fact — compare equal,
-        # and a value-keyed lookup would give them both the elder's rank.
-        rank_by_position = {
-            position: rank
-            for rank, position in enumerate(
-                position for position, d in enumerate(eligible) if not d.died_before_devengo(filing_year)
-            )
-        }
+        rank_by_position = _survivor_rank_by_position(eligible, filing_year)
         total = Decimal("0")
         for position, descendant in enumerate(eligible):
             if descendant.died_in_period(filing_year):

@@ -16,14 +16,22 @@ already performs:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ...core.logging import get_logger
 from ._schema import (
     IvaCatalogue,
     IvaCategory,
+    IvaCitation,
     IvaCitationGrounding,
     IvaVerificationIssue,
     IvaVerificationReport,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
+
+    from ..calculations.registry import LegalReference, LegalRefId
 
 _logger = get_logger(__name__)
 
@@ -39,12 +47,7 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
         finding.
     """
     # Keep this local: registry binding modules consume the IVA public facade.
-    from ...core.resources import bundled_path
-    from ..calculations.registry import (
-        bundled_authority,
-        legal_reference_quotes_corpus,
-        verify_legal_reference,
-    )
+    from ..calculations.registry import bundled_authority
 
     issues: list[IvaVerificationIssue] = []
     legal = bundled_authority().catalogues.legal
@@ -72,95 +75,116 @@ def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
                 ),
             )
         for citation in regulation.citations:
-            # An UNRESOLVED citation is empty by design: it was read against
-            # the corpus and refused, and its reason is recorded beside it.
-            # Flagging it here would erase the distinction between a citation
-            # nobody checked and one that failed the check.
-            if citation.grounding is IvaCitationGrounding.VERIFIED and not citation.quoted_text.strip():
-                issues.append(
-                    IvaVerificationIssue(
-                        level="error",
-                        code="empty_quoted_text",
-                        message=f"citation {citation.legal_reference!r} claims verified grounding with no quotation",
-                        category_id=regulation.category.value,
-                    ),
-                )
-            reference = legal.get(citation.legal_reference)
-            if reference is None:
-                issues.append(
-                    IvaVerificationIssue(
-                        level="error",
-                        code="unknown_legal_reference",
-                        message=(
-                            f"citation legal_reference {citation.legal_reference!r} "
-                            "is absent from the registry legal catalogue"
-                        ),
-                        category_id=regulation.category.value,
-                    ),
-                )
-                continue
-            if reference.article is None:
-                issues.append(
-                    IvaVerificationIssue(
-                        level="error",
-                        code="legal_reference_not_article_qualified",
-                        message=f"citation legal_reference {citation.legal_reference!r} has no registry article",
-                        category_id=regulation.category.value,
-                    ),
-                )
-                continue
-            try:
-                verify_legal_reference(reference, source_root=bundled_path())
-            except Exception as exc:
-                issues.append(
-                    IvaVerificationIssue(
-                        level="error",
-                        code="legal_reference_unverified",
-                        message=(
-                            f"citation legal_reference {citation.legal_reference!r} has invalid corpus evidence: {exc}"
-                        ),
-                        category_id=regulation.category.value,
-                    ),
-                )
-                continue
-            # A non-empty quotation is not yet grounding. This reads the stored
-            # text back against the bundled corpus, which is the only check that
-            # separates a transcription from an assertion about one.
-            if citation.grounding is not IvaCitationGrounding.VERIFIED:
-                continue
-            try:
-                quoted = legal_reference_quotes_corpus(
-                    reference,
-                    citation.quoted_text,
-                    source_root=bundled_path(),
-                )
-            except Exception as exc:
-                issues.append(
-                    IvaVerificationIssue(
-                        level="error",
-                        code="quotation_uncheckable",
-                        message=(
-                            f"citation {citation.legal_reference!r} quotation could not be read "
-                            f"against the bundled corpus: {exc}"
-                        ),
-                        category_id=regulation.category.value,
-                    ),
-                )
-                continue
-            if not quoted:
-                issues.append(
-                    IvaVerificationIssue(
-                        level="error",
-                        code="quotation_absent_from_corpus",
-                        message=(
-                            f"citation {citation.legal_reference!r} claims verified grounding, but its "
-                            "quotation does not occur in the bundled corpus text for that reference"
-                        ),
-                        category_id=regulation.category.value,
-                    ),
-                )
+            issues.extend(
+                _citation_issues(citation, category_id=regulation.category.value, legal=legal),
+            )
     _logger.debug("verify_catalogue produced %d issue(s)", len(issues))
     return IvaVerificationReport(issues=tuple(issues))
+
+
+def _citation_issues(
+    citation: IvaCitation,
+    *,
+    category_id: str,
+    legal: Mapping[LegalRefId, LegalReference],
+) -> list[IvaVerificationIssue]:
+    """Run every registry and corpus check for one citation, in refusal order.
+
+    Returns the findings rather than raising, because the catalogue audit reports
+    every defect at once. A check that cannot resolve its reference stops this
+    citation's remaining checks, which would otherwise report a second failure
+    caused solely by the first.
+    """
+    # Keep this local: registry binding modules consume the IVA public facade.
+    from ...core.resources import bundled_path
+    from ..calculations.registry import legal_reference_quotes_corpus, verify_legal_reference
+
+    issues: list[IvaVerificationIssue] = []
+    # An UNRESOLVED citation is empty by design: it was read against
+    # the corpus and refused, and its reason is recorded beside it.
+    # Flagging it here would erase the distinction between a citation
+    # nobody checked and one that failed the check.
+    if citation.grounding is IvaCitationGrounding.VERIFIED and not citation.quoted_text.strip():
+        issues.append(
+            IvaVerificationIssue(
+                level="error",
+                code="empty_quoted_text",
+                message=f"citation {citation.legal_reference!r} claims verified grounding with no quotation",
+                category_id=category_id,
+            ),
+        )
+    reference = legal.get(citation.legal_reference)
+    if reference is None:
+        issues.append(
+            IvaVerificationIssue(
+                level="error",
+                code="unknown_legal_reference",
+                message=(
+                    f"citation legal_reference {citation.legal_reference!r} is absent from the registry legal catalogue"
+                ),
+                category_id=category_id,
+            ),
+        )
+        return issues
+    if reference.article is None:
+        issues.append(
+            IvaVerificationIssue(
+                level="error",
+                code="legal_reference_not_article_qualified",
+                message=f"citation legal_reference {citation.legal_reference!r} has no registry article",
+                category_id=category_id,
+            ),
+        )
+        return issues
+    try:
+        verify_legal_reference(reference, source_root=bundled_path())
+    except Exception as exc:
+        issues.append(
+            IvaVerificationIssue(
+                level="error",
+                code="legal_reference_unverified",
+                message=(f"citation legal_reference {citation.legal_reference!r} has invalid corpus evidence: {exc}"),
+                category_id=category_id,
+            ),
+        )
+        return issues
+    # A non-empty quotation is not yet grounding. This reads the stored
+    # text back against the bundled corpus, which is the only check that
+    # separates a transcription from an assertion about one.
+    if citation.grounding is not IvaCitationGrounding.VERIFIED:
+        return issues
+    try:
+        quoted = legal_reference_quotes_corpus(
+            reference,
+            citation.quoted_text,
+            source_root=bundled_path(),
+        )
+    except Exception as exc:
+        issues.append(
+            IvaVerificationIssue(
+                level="error",
+                code="quotation_uncheckable",
+                message=(
+                    f"citation {citation.legal_reference!r} quotation could not be read "
+                    f"against the bundled corpus: {exc}"
+                ),
+                category_id=category_id,
+            ),
+        )
+        return issues
+    if not quoted:
+        issues.append(
+            IvaVerificationIssue(
+                level="error",
+                code="quotation_absent_from_corpus",
+                message=(
+                    f"citation {citation.legal_reference!r} claims verified grounding, but its "
+                    "quotation does not occur in the bundled corpus text for that reference"
+                ),
+                category_id=category_id,
+            ),
+        )
+    return issues
 
 
 __all__ = ["verify_catalogue"]

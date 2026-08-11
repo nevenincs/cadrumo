@@ -40,6 +40,7 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     CalculationRevisionStateError,
     ModeloExportCommand,
+    ModeloExportUnsupportedError,
     ModeloRequiredBindingsMissingError,
     calculate_modelo_revision,
     create_work_unit,
@@ -97,7 +98,7 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
         UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
         UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
         UserProfileFact(path="taxpayer_type.tributacion_estado_porcentaje", value=Decimal("100")),
-        UserProfileFact(path="filing_export.declaration_type", value="1"),
+        UserProfileFact(path="renta_filing.declaration_type", value="1"),
     ]
     if incn is not None:
         facts.append(UserProfileFact(path="taxpayer_type.incn_prior_12_months", value=incn))
@@ -351,7 +352,7 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         assert file_failure.scenario_id == "modelo.work.file.required_bindings_missing"
         assert _M202_PRIOR_PAYMENTS_BINDING in file_error.value.context["missing_bindings"]
         export_path = tmp_path / "modelo-202-2026-1P.txt"
-        with pytest.raises(ModeloRequiredBindingsMissingError) as export_error:
+        with pytest.raises(ModeloExportUnsupportedError) as export_error:
             export_modelo_revision(
                 ModeloExportCommand(
                     calculation_revision_id=verified.calculation_revision_id,
@@ -365,8 +366,8 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
                 verification_repository=verification_repo,
                 clock=_CLOCK,
             )
-        assert export_error.value.precondition_failure is None
-        assert _M202_RELATION_BINDING in export_error.value.context["missing_bindings"]
+        assert export_error.value.context["modelo"] == "202"
+        assert "no complete export_layouts definition" in export_error.value.context["reason"]
         assert export_path.exists() is False
 
 

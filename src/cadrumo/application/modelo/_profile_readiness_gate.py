@@ -346,7 +346,6 @@ def _require_not_pre_activity_period(
     raise ModeloProfileReadinessError(
         message,
         context=context,
-        suggestion=f"aeat config profile edit {bucket_id}",
     )
 
 
@@ -363,7 +362,6 @@ def _require_modelo_applicable_for_local_work(
     raise ModeloProfileReadinessError(
         message,
         context=context,
-        suggestion=f"aeat app modelo describe {modelo.strip()}",
     )
 
 
@@ -481,7 +479,6 @@ def _require_profile_filing_ready(
             "period": period.registry_token,
             "missing": ", ".join(format_profile_preflight_requirement(requirement) for requirement in missing),
         },
-        suggestion=f"aeat config profile edit {bucket_id}",
     )
 
 
@@ -515,7 +512,6 @@ def require_profile_ready_for_modelo_work(
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_profile_missing",
             context={"bucket_id": bucket_id},
-            suggestion="aeat config profile create NAME",
         ) from exc
     if record.status is UserProfileStatus.SETUP_INCOMPLETE:
         # A profile minted by the interactive setup flow is live (listed,
@@ -537,12 +533,10 @@ def require_profile_ready_for_modelo_work(
             raise ModeloProfileReadinessError(
                 translated_message="application.modelo.errors.profile_readiness_setup_incomplete_missing",
                 context={"bucket_id": bucket_id, "modelo": modelo, "missing": missing_labels},
-                suggestion="aeat config profile create NAME",
             )
         raise ModeloProfileReadinessError(
             translated_message="application.modelo.errors.profile_readiness_setup_incomplete",
             context={"bucket_id": bucket_id, "modelo": modelo},
-            suggestion="aeat config profile create NAME",
         )
     authority = resources().modelos.authority
     grounding_index = build_profile_grounding_index(authority)
@@ -586,7 +580,6 @@ def require_profile_ready_for_modelo_work(
                     format_profile_preflight_requirement(requirement) for requirement in report.missing
                 ),
             },
-            suggestion=f"aeat config profile edit {bucket_id}",
         )
     _require_not_pre_activity_period(
         record=record,

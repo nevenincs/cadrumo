@@ -31,7 +31,7 @@ from ..._kdf_salt import KDF_SALT_BYTES
 from ...errors import MasterKeyUnavailableError, StorageValidationError
 from .. import FileFallbackMasterKeyProvider
 from .._master_key import _KdfParameters
-from .._master_key_derivation import SALT_SIZE, derive_kek_with_params
+from .._master_key_derivation import KDF_PARAMS_VERSION, SALT_SIZE, derive_kek_with_params
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -121,9 +121,17 @@ def test_noncanonical_salt_length_is_a_typed_material_refusal(tmp_path: Path, sa
 
 
 def test_record_refuses_a_short_salt_directly() -> None:
-    """The record is the authority, asserted without going through a store."""
-    with pytest.raises(ValidationError):
+    """The record is the authority, asserted without going through a store.
+
+    ``version`` is supplied explicitly, and the raise is matched on the salt
+    field rather than accepted bare. The record requires ``version``, so a
+    construction omitting it raises before the salt validator is ever reached --
+    which would leave this test green while asserting nothing about salts. The
+    field match is what makes the refusal provably about the length contract.
+    """
+    with pytest.raises(ValidationError, match="salt_b64"):
         _KdfParameters(
+            version=KDF_PARAMS_VERSION,
             memory_cost=19 * 1024,
             time_cost=2,
             parallelism=1,
@@ -135,6 +143,7 @@ def test_record_exposes_the_decoded_salt_at_contract_length() -> None:
     """A valid record hands the derivation its bytes; nothing re-decodes them."""
     salt = b"\xab" * KDF_SALT_BYTES
     params = _KdfParameters(
+        version=KDF_PARAMS_VERSION,
         memory_cost=19 * 1024,
         time_cost=2,
         parallelism=1,
@@ -144,13 +153,46 @@ def test_record_exposes_the_decoded_salt_at_contract_length() -> None:
 
 
 def test_record_refuses_malformed_base64_salt() -> None:
-    """A salt that does not decode at all is refused by the same validator."""
-    with pytest.raises(ValidationError):
+    """A salt that does not decode at all is refused by the same validator.
+
+    Matched on the salt field for the same reason as the short-salt case: an
+    omitted ``version`` also raises here, and a bare assertion cannot tell the
+    two refusals apart.
+    """
+    with pytest.raises(ValidationError, match="salt_b64"):
         _KdfParameters(
+            version=KDF_PARAMS_VERSION,
             memory_cost=19 * 1024,
             time_cost=2,
             parallelism=1,
             salt_b64="!!!not-base64!!!",
+        )
+
+
+def test_record_refuses_a_construction_that_omits_the_version_marker() -> None:
+    """The default is gone, so a record cannot acquire the marker by silence.
+
+    This is the control for the two salt refusals above. Without it, supplying
+    ``version`` at those sites is an unverified precaution: nothing would prove
+    that omitting it refuses, so nothing would prove the field match is doing
+    any work. The refusal is matched on ``version`` so that this test cannot be
+    satisfied by the salt validator it sits beside -- every other field is valid
+    here, so the missing one is the only thing that can raise.
+
+    It goes through ``model_validate`` rather than the constructor because a
+    mapping is the shape the hazard actually arrives in: the concern is a future
+    consumer parsing a stored document that declares no version, not a
+    hand-written call. That also keeps the omission a runtime subject rather
+    than a static-analysis suppression.
+    """
+    with pytest.raises(ValidationError, match="version"):
+        _KdfParameters.model_validate(
+            {
+                "memory_cost": 19 * 1024,
+                "time_cost": 2,
+                "parallelism": 1,
+                "salt_b64": base64.b64encode(b"\xab" * KDF_SALT_BYTES).decode("ascii"),
+            },
         )
 
 

@@ -77,19 +77,16 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
             status=check.status,
             summary=check.summary,
             detail=check.detail,
-            next_action=check.next_action,
             precondition_action=(
                 resolve_cli_precondition_action(check.precondition_verdict)
                 if check.precondition_verdict is not None
                 else None
             ),
-            dead_end=check.dead_end,
             audience=check.audience,
             findings=[
                 ConfigRepairFindingPayload(
                     summary=finding.summary,
                     detail=finding.detail,
-                    next_action=finding.next_action,
                     requirement=finding.requirement,
                 )
                 for finding in check.findings
@@ -105,7 +102,18 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
         log_file=report.log_file,
         registry=ConfigRepairRegistryPayload.model_validate(report.registry.model_dump(mode="json")),
         setup=(
-            ConfigRepairSetupPayload.model_validate(report.setup.model_dump(mode="json"))
+            ConfigRepairSetupPayload(
+                active_profile=report.setup.active_profile,
+                profile_ready=report.setup.profile_ready,
+                identity_ready=report.setup.identity_ready,
+                enrolment_ready=report.setup.enrolment_ready,
+                missing_required=list(report.setup.missing_required),
+                missing_enrolment=list(report.setup.missing_enrolment),
+                profile_present_keys=report.setup.profile_present_keys,
+                profile_total_keys=report.setup.profile_total_keys,
+                auth_provider=report.setup.auth_provider,
+                login_ready=report.setup.login_ready,
+            )
             if report.setup is not None
             else None
         ),

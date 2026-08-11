@@ -23,6 +23,7 @@ from ._schema import (
     ModeloRevision,
     PeriodSelector,
 )
+from ._ids import RevisionId
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",
@@ -42,8 +43,8 @@ class CrossRevisionCasillaDivergence:
 
     modelo_id: str
     casilla_id: CasillaId
-    left_revision_id: str
-    right_revision_id: str
+    left_revision_id: RevisionId
+    right_revision_id: RevisionId
     field: str
     left_value: object
     right_value: object

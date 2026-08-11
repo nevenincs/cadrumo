@@ -89,6 +89,27 @@ class PreconditionActionIdentity(BaseModel):
     action_id: str = Field(pattern=NAMESPACED_ID_PATTERN, min_length=3, max_length=160)
 
 
+def _require_argument_matches_its_evidence(
+    argument: ActionArgumentResolution,
+    evidence_by_id: Mapping[str, PreconditionEvidence],
+) -> None:
+    """Refuse a condition-evidence argument whose declared fact is absent or divergent.
+
+    The value comparison is type-exact on purpose: a ``1`` that reads as an ``int``
+    where the evidence recorded ``True`` is a different fact, not a match.
+    """
+    assert argument.source_evidence_id is not None
+    evidence = evidence_by_id.get(argument.source_evidence_id)
+    if evidence is None:
+        raise ValueError("condition-evidence action argument must reference declared evidence")
+    assert argument.source_key is not None
+    evidence_value = evidence.values.get(argument.source_key)
+    if evidence_value is None and argument.source_key not in evidence.values:
+        raise ValueError("condition-evidence action argument must reference a declared evidence fact")
+    if type(argument.value) is not type(evidence_value) or argument.value != evidence_value:
+        raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
+
+
 class PreconditionOutcomeInvariant[
     EvidenceT: PreconditionEvidence,
     ActionT: BaseModel,
@@ -165,16 +186,7 @@ class PreconditionOutcomeInvariant[
         for argument in self.argument_bindings:
             if argument.source is not ActionArgumentSource.CONDITION_EVIDENCE:
                 continue
-            assert argument.source_evidence_id is not None
-            evidence = evidence_by_id.get(argument.source_evidence_id)
-            if evidence is None:
-                raise ValueError("condition-evidence action argument must reference declared evidence")
-            assert argument.source_key is not None
-            evidence_value = evidence.values.get(argument.source_key)
-            if evidence_value is None and argument.source_key not in evidence.values:
-                raise ValueError("condition-evidence action argument must reference a declared evidence fact")
-            if type(argument.value) is not type(evidence_value) or argument.value != evidence_value:
-                raise ValueError("condition-evidence action argument value must exactly match its evidence fact")
+            _require_argument_matches_its_evidence(argument, evidence_by_id)
 
     def _reject_conditionality_the_outcome_contradicts(
         self,

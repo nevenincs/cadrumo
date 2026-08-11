@@ -338,6 +338,13 @@ def filing_record_observe_local(
             help=tr("cli.app.modelo.filing_record.observe_local_file_help"),
         ),
     ] = None,
+    replace_official_evidence: Annotated[
+        bool,
+        typer.Option(
+            "--replace-official-evidence",
+            help=tr("cli.app.modelo.filing_record.observe_local_replace_official_evidence_help"),
+        ),
+    ] = False,
 ) -> None:
     """Record non-official local observations for later calculation prefill.
 
@@ -382,6 +389,7 @@ def filing_record_observe_local(
             period=filing_period,
             casilla_values=casilla_values,
             actor=actor or _actor(),
+            replace_official_evidence=replace_official_evidence,
         )
     except ModeloLocalObservationError as exc:
         raise _bad_from_error(exc) from exc

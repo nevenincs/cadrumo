@@ -104,6 +104,32 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
         )
 
     code_index, value_index, data_rows = _locate_columns(rows)
+    values, malformed = _parse_value_rows(data_rows, code_index=code_index, value_index=value_index)
+    if malformed:
+        raise ModeloLocalObservationError(
+            f"casilla-value spreadsheet {path} has malformed rows: {'; '.join(malformed)}",
+            context={"path": str(path), "malformed_row_count": str(len(malformed))},
+        )
+    if not values:
+        raise ModeloLocalObservationError(
+            f"casilla-value spreadsheet {path} contains no usable casilla_code/value rows",
+            context={"path": str(path)},
+        )
+    return values
+
+
+def _parse_value_rows(
+    data_rows: list[list[str]],
+    *,
+    code_index: int,
+    value_index: int,
+) -> tuple[dict[str, Decimal], list[str]]:
+    """Project data rows into a code-to-Decimal mapping plus one message per unusable row.
+
+    Accumulates rather than raising on the first bad row, so the caller can name
+    every offending row at once instead of making the operator fix a sheet one
+    refusal at a time. A wholly blank row is skipped and reported as neither.
+    """
     values: dict[str, Decimal] = {}
     first_row_by_code: dict[str, int] = {}
     malformed: list[str] = []
@@ -122,60 +148,64 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
             )
             continue
         first_row_by_code[code] = row_number
-        # Thousands are stripped only when a comma is present, which reads every
-        # unambiguous Spanish spelling correctly and leaves exactly one that it
-        # cannot: a lone dot before three digits. ``1.234`` is one thousand two
-        # hundred and thirty-four to the operator who typed it and one point two
-        # three four to this parser, and nothing in the token decides between
-        # them. These are casilla values -- the figures that go on the return --
-        # so the row is refused and named rather than read a thousandfold light.
-        if european_thousands_reading_is_ambiguous(raw_value):
-            # Name both numbers rather than the abstract ambiguity: the operator
-            # knows which one they meant, and seeing them side by side is what
-            # lets them pick the spelling that says so.
-            written = raw_value.strip()
-            malformed.append(
-                f"row {row_number}: value {raw_value!r} for casilla {code!r} could mean "
-                f"{written.replace('.', '')} (a Spanish thousands separator) or "
-                f"{written.replace('.', ',')} (a decimal fraction), and nothing in the value "
-                f"decides which; write {written.replace('.', '')} if you meant the first, "
-                f"or {written.replace('.', ',')} if you meant the second",
-            )
-            continue
-        # Separators are normalised first, because the operator's grammar is
-        # Spanish and the canonical one is not: "1.234,56" has to become
-        # "1234.56" before anything can judge its shape. What survives that is
-        # then held to the canonical grammar rather than handed to a bare
-        # Decimal, which accepts a good deal that no one writes in a
-        # spreadsheet cell -- "1e5" (silently a hundred thousand), a leading
-        # "+", "1_000", and the non-finite "NaN"/"Infinity". Fraction digits
-        # are deliberately left unconstrained: this runs before registry
-        # canonicalisation, so the casilla's type is unknown here, and a
-        # two-decimal euro cap would refuse a coefficient row like "0.333" to
-        # catch an amount row. Shape is decidable without knowing the type;
-        # precision is not, and belongs where the declared type is known.
-        normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
-        value = try_parse_canonical_decimal(normalized)
+        value = _parse_row_amount(raw_value, row_number=row_number, code=code, malformed=malformed)
         if value is None:
-            malformed.append(
-                f"row {row_number}: value {raw_value!r} for casilla {code!r} is not a plain number; "
-                f'write digits with an optional decimal comma (for example "1234,56"). Scientific '
-                f"notation, a leading '+', underscore separators, 'NaN' and 'Infinity' are refused "
-                f"because they are not what a figure on a return looks like",
-            )
             continue
         values[code] = value
-    if malformed:
-        raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} has malformed rows: {'; '.join(malformed)}",
-            context={"path": str(path), "malformed_row_count": str(len(malformed))},
+    return values, malformed
+
+
+def _parse_row_amount(
+    raw_value: str,
+    *,
+    row_number: int,
+    code: str,
+    malformed: list[str],
+) -> Decimal | None:
+    """Coerce one cell to :class:`~decimal.Decimal`, appending a named refusal instead when it cannot."""
+    # Thousands are stripped only when a comma is present, which reads every
+    # unambiguous Spanish spelling correctly and leaves exactly one that it
+    # cannot: a lone dot before three digits. ``1.234`` is one thousand two
+    # hundred and thirty-four to the operator who typed it and one point two
+    # three four to this parser, and nothing in the token decides between
+    # them. These are casilla values -- the figures that go on the return --
+    # so the row is refused and named rather than read a thousandfold light.
+    if european_thousands_reading_is_ambiguous(raw_value):
+        # Name both numbers rather than the abstract ambiguity: the operator
+        # knows which one they meant, and seeing them side by side is what
+        # lets them pick the spelling that says so.
+        written = raw_value.strip()
+        malformed.append(
+            f"row {row_number}: value {raw_value!r} for casilla {code!r} could mean "
+            f"{written.replace('.', '')} (a Spanish thousands separator) or "
+            f"{written.replace('.', ',')} (a decimal fraction), and nothing in the value "
+            f"decides which; write {written.replace('.', '')} if you meant the first, "
+            f"or {written.replace('.', ',')} if you meant the second",
         )
-    if not values:
-        raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} contains no usable casilla_code/value rows",
-            context={"path": str(path)},
+        return None
+    # Separators are normalised first, because the operator's grammar is
+    # Spanish and the canonical one is not: "1.234,56" has to become
+    # "1234.56" before anything can judge its shape. What survives that is
+    # then held to the canonical grammar rather than handed to a bare
+    # Decimal, which accepts a good deal that no one writes in a
+    # spreadsheet cell -- "1e5" (silently a hundred thousand), a leading
+    # "+", "1_000", and the non-finite "NaN"/"Infinity". Fraction digits
+    # are deliberately left unconstrained: this runs before registry
+    # canonicalisation, so the casilla's type is unknown here, and a
+    # two-decimal euro cap would refuse a coefficient row like "0.333" to
+    # catch an amount row. Shape is decidable without knowing the type;
+    # precision is not, and belongs where the declared type is known.
+    normalized = normalize_decimal_separators(raw_value, strip_thousands="," in raw_value)
+    value = try_parse_canonical_decimal(normalized)
+    if value is None:
+        malformed.append(
+            f"row {row_number}: value {raw_value!r} for casilla {code!r} is not a plain number; "
+            f'write digits with an optional decimal comma (for example "1234,56"). Scientific '
+            f"notation, a leading '+', underscore separators, 'NaN' and 'Infinity' are refused "
+            f"because they are not what a figure on a return looks like",
         )
-    return values
+        return None
+    return value
 
 
 def _locate_columns(rows: list[list[str]]) -> tuple[int, int, list[list[str]]]:

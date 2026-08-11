@@ -35,6 +35,7 @@ from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Recovery as _Recovery
 from ._coverage import ObligationCoverageReport
+from ...domain.calculations.registry import RevisionId
 
 
 def _hydrate_calendar_period(value: object) -> object:
@@ -250,7 +251,7 @@ class OverviewCalendarEntry(BaseModel):
     source: OverviewCalendarEntrySource = OverviewCalendarEntrySource.REGISTRY_DEADLINE
     local_work_unit_id: WorkUnitId | None = None
     local_work_unit_name: str | None = Field(default=None, min_length=1, max_length=200)
-    local_work_unit_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
+    local_work_unit_revision_id: RevisionId | None = Field(default=None, min_length=1, max_length=128)
 
     @model_validator(mode="after")
     def _enforce_window_order(self) -> OverviewCalendarEntry:

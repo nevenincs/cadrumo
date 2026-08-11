@@ -339,13 +339,14 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
     operator refusal without re-parsing the message. Catchable as
     :class:`RegistrySnapshotError`.
 
-    THE REMEDY IS RAISER-SUPPLIED, and deliberately not part of the shared
-    message. Two selectors raise this: the year-only one, where the fix is to
-    supply a period or an as-of date, and the period-scoped one, where the
-    caller has already supplied a period and that advice would send an operator
-    to redo what they just did. No single string is correct for both, so each
-    raiser passes its own ``suggestion`` through the standard channel while the
-    translated message stays shared and unchanged.
+    THE REMEDY IS RAISER-SELECTED, through the locale key rather than through a
+    second channel beside it. Two selectors raise this: the year-only one, where
+    the fix is to supply a period or an as-of date, and the period-scoped one,
+    where the caller has already supplied a period and that advice would send an
+    operator to redo what they just did. No single string is correct for both,
+    so the year-only raiser names its own ``translated_message`` and the
+    period-scoped raiser keeps the shared default, which states the collision
+    without prescribing an action the operator cannot take.
 
     Structured attributes: ``modelo_id``, ``candidate_ids``, ``filing_year``.
     """
@@ -357,7 +358,7 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
         candidate_ids: Iterable[str],
         filing_year: int | None = None,
         reason: str | None = None,
-        suggestion: str | None = None,
+        translated_message: str = "errors.snapshot.ambiguous_revision_selection",
     ) -> None:
         """Construct the ambiguous-revision-selection error.
 
@@ -371,10 +372,11 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
                 WHICH year is doubly covered.
             reason: Optional raiser-supplied explanation of WHY the year is
                 ambiguous, appended to the fallback text.
-            suggestion: Optional raiser-supplied remedy. Passed through the
-                standard suggestion channel rather than folded into the shared
-                translated message, which two selectors with opposite remedies
-                use.
+            translated_message: Locale key for the operator-facing refusal. The
+                default states the collision alone; the year-only selector names
+                a key whose text also carries the remedy, because the two
+                selectors have opposite remedies and one shared string is
+                correct for neither.
         """
         ids = tuple(sorted(candidate_ids))
         self.modelo_id: str = modelo_id
@@ -389,9 +391,8 @@ class AmbiguousRevisionSelectionError(RegistrySnapshotError):
             context["filing_year"] = filing_year
         super().__init__(
             detail,
-            translated_message="errors.snapshot.ambiguous_revision_selection",
+            translated_message=translated_message,
             context=context,
-            suggestion=suggestion,
         )
 
 

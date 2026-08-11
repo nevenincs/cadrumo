@@ -48,6 +48,7 @@ from ._schema import (
 )
 from ._toml_helpers import as_toml_table as _as_toml_table
 from ._validate_revision_identity import revision_reference_identity_failures
+from ._ids import RevisionId
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
 _REVISION_CONSTRUCTS = "constructs"
@@ -120,7 +121,7 @@ type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
 class ModeloRevisionSource:
     """On-disk source for one modelo revision before schema validation."""
 
-    revision_id: str
+    revision_id: RevisionId
     layout: ModeloRevisionSourceLayout
     path: Path
     fragment_paths: tuple[Path, ...]
@@ -237,7 +238,7 @@ def _raise_on_ambiguous_revision_identity(
     source_path: Path,
     *,
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     revision: ModeloRevision,
 ) -> None:
     prefix = f"{source_path}: modelo {modelo_id} revision {revision_id}"
@@ -342,7 +343,7 @@ def _localised_casilla_aliases(
     raw_aliases: object,
     *,
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     casilla_id: str,
 ) -> tuple[dict[str, object], ...] | None:
     """Return one casilla's aliases with derived locale keys, or ``None`` if absent.
@@ -374,7 +375,7 @@ def _localised_casilla_aliases(
     return tuple(aliases)
 
 
-def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: str) -> dict[str, object]:
+def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
     """Return one casilla with its derived locale keys attached.
 
     Two keys, not one, when the casilla declares a continuidad: the occurrence
@@ -405,7 +406,7 @@ def _localised_casilla(raw_casilla: object, *, modelo_id: str, revision_id: str)
     return payload
 
 
-def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: str) -> dict[str, object]:
+def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: RevisionId) -> dict[str, object]:
     """Return one construct with its derived locale key attached."""
     construct = _as_toml_table(raw_construct)
     if construct is None:
@@ -422,7 +423,7 @@ def _localised_construct(raw_construct: object, *, modelo_id: str, revision_id: 
 def _enroll_revision_localization(
     *,
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     raw_revision: Mapping[str, object],
 ) -> dict[str, object]:
     """Attach derived locale identities without copying presentation values."""
@@ -583,7 +584,7 @@ def _merge_revision_directory(path: Path, merged_revisions: dict[str, object]) -
     merged_revisions[revision_id] = merged_revision
 
 
-def _read_single_revision_table(path: Path, expected_revision_id: str) -> dict[str, object]:
+def _read_single_revision_table(path: Path, expected_revision_id: RevisionId) -> dict[str, object]:
     """Parse one revision TOML and return its ``[revisions."<id>"]`` table.
 
     Enforces the shared preconditions for both the fragment-directory
@@ -611,7 +612,7 @@ def _read_single_revision_table(path: Path, expected_revision_id: str) -> dict[s
     return raw_revision_table
 
 
-def _merge_revision_manifest(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
+def _merge_revision_manifest(path: Path, expected_revision_id: RevisionId, merged_revision: dict[str, object]) -> None:
     """Merge the fragment directory's ``revision.toml`` scalar-metadata manifest.
 
     In the fragmented layout the ``revision.toml`` manifest carries ONLY scalar
@@ -644,7 +645,7 @@ def _merge_revision_manifest(path: Path, expected_revision_id: str, merged_revis
         merged_revision[key] = value
 
 
-def _merge_revision_fragment(path: Path, expected_revision_id: str, merged_revision: dict[str, object]) -> None:
+def _merge_revision_fragment(path: Path, expected_revision_id: RevisionId, merged_revision: dict[str, object]) -> None:
     """Merge one per-section fragment TOML into a single raw revision payload."""
     raw_revision_table = _read_single_revision_table(path, expected_revision_id)
     for key, value in raw_revision_table.items():

@@ -26,7 +26,15 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import BindingSourceKind, CasillaId, Modelo, Period, ProrrataProvisionalProvenance, validated_casilla_id
+from ....core import (
+    BindingSourceKind,
+    CasillaId,
+    Modelo,
+    Period,
+    ProrrataProvisionalProvenance,
+    ResultDisposition,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
@@ -79,6 +87,7 @@ _VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
     surface="test casilla id",
 )
 _PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
+_RESULTADO_ID: CasillaId = validated_casilla_id("iva.resultado", surface="test casilla id")
 
 
 def _periods_2026() -> tuple[Period, ...]:
@@ -126,6 +135,7 @@ def _seed_verified_m303_settlement(
         _VOLUMEN_TOTAL_ID: Decimal("200000.00"),
         _VOLUMEN_CON_DERECHO_ID: Decimal("150000.00"),
         _PORCENTAJE_ID: Decimal("75"),
+        _RESULTADO_ID: Decimal("0"),
     }
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
@@ -564,6 +574,7 @@ def test_settlement_writeback_persists_observation_that_seeds_next_year_carried_
             calculation_observation_repository=observation_repository,
             participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
             prorrata_register_repository=prorrata_repository,
+            result_disposition=ResultDisposition.NEGATIVA,
         )
 
         settled_entry = prorrata_repository.load().entry_for(_SETTLEMENT_YEAR)

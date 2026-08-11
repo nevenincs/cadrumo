@@ -46,6 +46,7 @@ from ._schema import (
     VerificationStatus,
     VerificationVerdict,
 )
+from ...domain.calculations.registry import RevisionId
 
 _logger = get_logger(__name__)
 
@@ -298,7 +299,7 @@ def _assert_snapshot_ref_matches(
     )
 
 
-def _snapshot_ref_context(modelo: str, revision_id: str, modelo_year: int, period: str) -> str:
+def _snapshot_ref_context(modelo: str, revision_id: RevisionId, modelo_year: int, period: str) -> str:
     """Return an operator-facing registry snapshot coordinate.
 
     Uses the same identifier the verdict carries, so the two refs named in a

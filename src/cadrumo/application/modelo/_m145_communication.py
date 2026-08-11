@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG, Modelo
 from ...core.resources import resources
+from ...domain.calculations.registry import RevisionId
 
 M145_COMMUNICATION_MODELO = Modelo.M145.value
 M145_COMMUNICATION_PERIOD = "comunicacion"
@@ -75,7 +76,7 @@ class M145CommunicationServiceContract(BaseModel):
     )
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     period_token: str = Field(default=M145_COMMUNICATION_PERIOD, pattern=r"^comunicacion$")
-    revision_id: str = Field(min_length=1)
+    revision_id: RevisionId = Field(min_length=1)
     actions: tuple[M145CommunicationAction, ...] = _EXPECTED_ACTIONS
     surfaces: tuple[str, ...]
     export_layout_ids: tuple[str, ...]

@@ -28,7 +28,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...domain.contribuyente import RentaDeclaracionType, SituacionFamiliar
+from ...core import RentaDeclaracionType
+from ...domain.contribuyente import SituacionFamiliar
 from ..flows import (
     FlowDefinition,
     FlowSection,

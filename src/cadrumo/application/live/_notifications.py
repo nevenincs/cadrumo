@@ -125,13 +125,11 @@ def _notifications_repository(
         object_key=notifications_snapshot_object_key,
         not_found_factory=lambda snapshot_id: NotificationsSnapshotNotFoundError(
             "no notifications snapshot matches the requested id",
-            suggestion="aeat app live notifications list",
             translated_message="application.live.notifications.errors.snapshot_not_found",
             context={"snapshot_id": snapshot_id},
         ),
         ambiguous_prefix_factory=lambda snapshot_id, full_ids: NotificationsSnapshotNotFoundError(
             "notifications snapshot prefix matches multiple snapshots",
-            suggestion="provide a longer prefix",
             translated_message="application.live.notifications.errors.snapshot_prefix_ambiguous",
             context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
         ),

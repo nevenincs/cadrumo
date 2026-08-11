@@ -1246,13 +1246,9 @@ def _refuse_foral_ccaa(canonical: dict[str, str], explicit_flags: dict[str, str]
         parse_tax_region(ccaa_token)
     except ForalRegimeError as foral_exc:
         # Re-raise the domain refusal so the whole line renders through the
-        # localized CadrumoError boundary (translated_message + suggestion),
-        # instead of English Click ``Usage`` chrome around a localized body.
-        foral_exc.suggestion = _FORAL_REFUSAL_SUGGESTION
+        # localized CadrumoError boundary (translated_message), instead of
+        # English Click ``Usage`` chrome around a localized body.
         raise foral_exc
-
-
-_FORAL_REFUSAL_SUGGESTION = "aeat config profile create NAME --tax-residence-ccaa <ccaa>"
 
 
 # ``SetupAnswers`` field names whose free-text value fails an ISO-8601 date or

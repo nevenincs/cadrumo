@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
 from ._schema import ModeloDefinition
+from ._ids import RevisionId
 
 _UNRESOLVED_FORMAT_PLACEHOLDER = re.compile(r"\{[A-Za-z0-9_]+\}")
 
@@ -28,7 +29,7 @@ class LabelArtifactFinding:
     """One suspicious extraction artifact in a casilla label."""
 
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     casilla_id: CasillaId
     artifact: str
     placeholder_token: str

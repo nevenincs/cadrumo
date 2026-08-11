@@ -71,6 +71,7 @@ from ._m145_communication import (
 from ._ports import FicheroBoeRecordRenderer
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
@@ -165,7 +166,7 @@ class M145CommunicationValidationResult(BaseModel):
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
-    revision_id: str = Field(min_length=1)
+    revision_id: RevisionId = Field(min_length=1)
     valid: bool
     issue_count: int = Field(ge=0)
     issues: tuple[M145CommunicationValidationIssue, ...]
@@ -194,7 +195,7 @@ class M145CommunicationExportResult(BaseModel):
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
-    revision_id: str = Field(min_length=1)
+    revision_id: RevisionId = Field(min_length=1)
     export_layout_id: str = Field(min_length=1)
     encoding: str = Field(min_length=1)
     record_count: int = Field(ge=1)
@@ -264,7 +265,7 @@ class M145CommunicationRecord(BaseModel):
     modelo: str = Field(default=M145_COMMUNICATION_MODELO, pattern=r"^145$")
     communication_year: int = Field(ge=2012, le=2099)
     period_token: M145CommunicationPeriod
-    revision_id: str = Field(min_length=1)
+    revision_id: RevisionId = Field(min_length=1)
     state: M145CommunicationRecordState = M145CommunicationRecordState.CREATED
     field_values: dict[CasillaId, M145CommunicationFieldValue] = Field(min_length=1)
     legal_refs: tuple[str, ...]
@@ -316,7 +317,7 @@ def derive_m145_communication_record_id(
     bucket_id: BucketId,
     communication_year: int,
     period_token: M145CommunicationPeriod | str,
-    revision_id: str,
+    revision_id: RevisionId,
     field_values: Mapping[str, str],
 ) -> M145CommunicationRecordId:
     """Return the content-addressed id for a Modelo 145 communication record."""

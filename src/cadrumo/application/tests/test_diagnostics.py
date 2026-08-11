@@ -20,6 +20,7 @@ from ...adapters.persistence.storage.master_key import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
 from ...tests.master_key import EphemeralMasterKeyProvider
@@ -40,6 +41,7 @@ from ..diagnostics import (
     render_config_repair_text,
     secure_object_unreadable_total,
 )
+from ..operator_actions import ConditionEvidence, PreconditionVerdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,35 +104,30 @@ _DIAGNOSTIC_CHECK_INVALID_CASES: tuple[tuple[str, dict[str, object], str], ...] 
     (
         "fail-missing-recovery",
         {"name": "x", "status": "fail", "summary": "y"},
-        "must populate one of",
+        "must populate `precondition_verdict`",
     ),
     (
         "warn-missing-recovery",
         {"name": "x", "status": "warn", "summary": "y"},
-        "must populate one of",
-    ),
-    (
-        "both-recovery-fields",
-        {
-            "name": "x",
-            "status": "fail",
-            "summary": "y",
-            "next_action": "aeat config repair",
-            "dead_end": "terminal",
-        },
-        "at most one recovery outcome",
-    ),
-    (
-        "ok-with-next-action",
-        {"name": "x", "status": "ok", "summary": "y", "next_action": "aeat config repair"},
-        "must not carry",
-    ),
-    (
-        "ok-with-dead-end",
-        {"name": "x", "status": "ok", "summary": "y", "dead_end": "no route"},
-        "must not carry",
+        "must populate `precondition_verdict`",
     ),
 )
+
+
+def _terminal_diagnostic_verdict(condition_id: str = "diagnostics.test.available") -> PreconditionVerdict:
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"available": False},
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    )
 
 
 def test_diagnostic_check_invalid_recovery_fields_raise_validation_error() -> None:
@@ -141,36 +138,64 @@ def test_diagnostic_check_invalid_recovery_fields_raise_validation_error() -> No
             DiagnosticCheck.model_validate(fields)
 
 
-def test_diagnostic_check_ok_row_with_both_recovery_fields_none_constructs() -> None:
-    """An ``ok`` row carries neither recovery field — happy path constructs."""
+def test_diagnostic_check_ok_row_with_no_recovery_verdict_constructs() -> None:
+    """An ``ok`` row carries no recovery verdict."""
 
     check = DiagnosticCheck(name="x", status="ok", summary="y")
-    assert check.next_action is None
-    assert check.dead_end is None
+    assert check.precondition_verdict is None
 
 
-def test_diagnostic_check_fail_row_with_dead_end_only_constructs() -> None:
-    """A ``fail`` row populated with ``dead_end`` alone satisfies the contract."""
+def test_diagnostic_check_fail_row_with_explicit_no_recovery_constructs() -> None:
+    """A failing row carries a closed typed no-recovery outcome."""
 
-    check = DiagnosticCheck(name="x", status="fail", summary="y", dead_end="terminal")
-    assert check.next_action is None
-    assert check.dead_end == "terminal"
+    check = DiagnosticCheck(
+        name="x",
+        status="fail",
+        summary="y",
+        precondition_verdict=_terminal_diagnostic_verdict(),
+    )
+    assert check.precondition_verdict is not None
+    assert check.precondition_verdict.no_recovery_outcome is NoRecoveryOutcome.TERMINAL
 
 
-def test_diagnostic_check_model_dump_surfaces_both_recovery_fields() -> None:
-    """JSON rendering surfaces ``next_action`` and ``dead_end`` keys explicitly."""
+def test_diagnostic_check_model_dump_contains_only_the_typed_recovery_channel() -> None:
+    """Application JSON never carries legacy command or dead-end prose fields."""
 
     populated = DiagnosticCheck(
         name="x",
         status="fail",
         summary="y",
-        next_action="aeat config repair reset-progress --yes",
+        precondition_verdict=_terminal_diagnostic_verdict(),
     )
     dumped = populated.model_dump(mode="json")
-    assert "next_action" in dumped
-    assert "dead_end" in dumped
-    assert dumped["next_action"] == "aeat config repair reset-progress --yes"
-    assert dumped["dead_end"] is None
+    assert set(dumped) == {
+        "name",
+        "status",
+        "summary",
+        "detail",
+        "precondition_verdict",
+        "audience",
+        "findings",
+    }
+    assert dumped["precondition_verdict"]["no_recovery_outcome"] == "terminal"
+
+
+def test_diagnostic_models_reject_retired_recovery_transport_fields() -> None:
+    """Removed prose channels are forbidden rather than silently ignored."""
+    check_payload = DiagnosticCheck(
+        name="x",
+        status="fail",
+        summary="y",
+        precondition_verdict=_terminal_diagnostic_verdict(),
+    ).model_dump(mode="json")
+    check_payload["next_action"] = "legacy-transport"
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        DiagnosticCheck.model_validate(check_payload)
+
+    finding_payload = DiagnosticFinding(summary="cause").model_dump(mode="json")
+    finding_payload["next_action"] = "legacy-transport"
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        DiagnosticFinding.model_validate(finding_payload)
 
 
 def test_config_repair_preserves_the_active_profile_typed_verdict() -> None:
@@ -180,7 +205,6 @@ def test_config_repair_preserves_the_active_profile_typed_verdict() -> None:
     profile_check = next(check for check in report.checks if check.name == "profile.readiness")
 
     assert profile_check.status == "warn"
-    assert profile_check.next_action is None
     verdict = profile_check.precondition_verdict
     assert verdict is not None
     assert verdict.failed_condition_id == "profile.active.available"
@@ -288,7 +312,12 @@ def test_secure_objects_integrity_check_reports_unreadable_rows_from_rotated_mas
         assert integrity_check.status == "warn"
         assert str(report.secure_objects.unreadable_total) in integrity_check.summary
         assert str(report.secure_objects.readable_total) in integrity_check.summary
-        assert integrity_check.next_action == "aeat config repair quarantine --yes"
+        verdict = integrity_check.precondition_verdict
+        assert verdict is not None
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.diagnostics.secure_objects.quarantine"
+        assert verdict.argument_bindings[0].argument_name == "yes"
+        assert verdict.argument_bindings[0].value is True
 
         ns_report = next(item for item in report.secure_objects.namespaces if item.namespace == namespace)
         # Three rows sealed under the OLD ephemeral key should be
@@ -364,7 +393,8 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
     assert "StorageValidationError" in caplog.text
-    assert "no active bucket session" in caplog.text
+    assert "errors.storage.runtime.not_ready" in caplog.text
+    assert "no active bucket session" not in caplog.text
 
 
 def test_secure_object_unreadable_total_logs_route_session_mismatch(
@@ -387,7 +417,8 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
 
     assert "secure objects engine unreachable for repair probe" in caplog.text
     assert "StorageValidationError" in caplog.text
-    assert "route does not match the active bucket session" in caplog.text
+    assert "errors.storage.runtime.not_ready" in caplog.text
+    assert "route does not match the active bucket session" not in caplog.text
 
 
 def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path) -> None:
@@ -401,7 +432,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     """
     from ..auth import update_auth
     from ..user_profile import profile_create_storage_span
-    from ..workflow import WorkflowState
+    from ..workflow import WorkflowState, workflow_state_repository
 
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
@@ -424,17 +455,30 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
         from ..wizard import build_wizard_status
 
         for state in (no_provider, provider_only, fully_authenticated):
+            workflow_state_repository().save(state)
             setup_report = build_wizard_status(state)
-            # The repair renderer reads the same login_ready field; this
-            # assertion pins both surfaces against the shared projection.
+            repair_report = build_config_repair_report()
+            auth_check = next(check for check in repair_report.checks if check.name == "auth.readiness")
             if state is no_provider:
                 assert setup_report.login_ready is False
+                verdict = auth_check.precondition_verdict
+                assert verdict is not None
+                assert verdict.action is not None
+                assert verdict.action.action_id == "operator.auth.configure"
+                assert verdict.missing_argument_names == ("file",)
             elif state is provider_only:
                 assert setup_report.auth_provider == "clave_movil"
                 assert setup_report.login_ready is False
+                verdict = auth_check.precondition_verdict
+                assert verdict is not None
+                assert verdict.action is not None
+                assert verdict.action.action_id == "operator.auth.login"
+                assert verdict.argument_bindings[0].value == "clave_movil"
             else:
                 assert setup_report.auth_provider == "clave_movil"
                 assert setup_report.login_ready is True
+                assert auth_check.status == "ok"
+                assert auth_check.precondition_verdict is None
 
 
 def test_quarantine_unreadable_secure_objects_moves_only_unreadable_rows(
@@ -639,14 +683,14 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
             status="fail",
             summary="Registry integrity failed",
             detail="casilla 9999 missing from revision 100-2025",
-            next_action="aeat config repair integrity registry",
+            precondition_verdict=_terminal_diagnostic_verdict("diagnostics.registry.integrity.valid"),
             audience="internal",
         ),
         DiagnosticCheck(
             name="auth.readiness",
             status="warn",
             summary="Authentication is not configured",
-            next_action="aeat config auth configure --provider certificate --file PATH",
+            precondition_verdict=_terminal_diagnostic_verdict("diagnostics.auth.provider.configured"),
             audience="operator",
         ),
     )
@@ -663,17 +707,16 @@ def _internal_registry_repair_report() -> ConfigRepairReport:
     )
 
 
-def test_diagnostic_finding_carries_typed_per_cause_detail() -> None:
-    """A finding names one concrete cause and its optional remediation."""
+def test_diagnostic_finding_carries_typed_per_cause_detail_without_transport() -> None:
+    """A finding names one concrete cause without duplicating the parent action."""
 
     finding = DiagnosticFinding(
         summary="identity.tax_id — Tax identification number",
         requirement="required",
-        next_action="aeat config profile edit NAME",
     )
     assert finding.requirement == "required"
-    assert finding.next_action == "aeat config profile edit NAME"
     dumped = finding.model_dump(mode="json")
+    assert set(dumped) == {"summary", "detail", "requirement"}
     assert dumped["summary"].startswith("identity.tax_id")
     assert dumped["requirement"] == "required"
 
@@ -691,8 +734,8 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
 
     Reproduces cluster F / M14: a bare ``N/M`` counter or a one-word
     ``warn`` verdict told the operator nothing actionable. The fixed row
-    carries one :class:`DiagnosticFinding` per unset required key, each
-    with the exact ``aeat config profile edit NAME`` command.
+    carries one :class:`DiagnosticFinding` per unset required key and one
+    canonical profile-editor action on the parent check.
     """
 
     from ..wizard import WizardStatusReport
@@ -708,7 +751,7 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
         profile_total_keys=40,
         auth_provider="",
         login_ready=False,
-        next_action="aeat config profile edit NAME",
+        next_action="unused-status-field",
     )
     check = profile_check(report)
 
@@ -716,12 +759,28 @@ def test_profile_check_warn_row_names_every_missing_required_key() -> None:
     finding_keys = {finding.summary.split(" — ", 1)[0] for finding in check.findings}
     assert finding_keys == {"identity.tax_id", "activities.description", "iva.regime"}
     assert all(finding.requirement == "required" for finding in check.findings)
-    # The check-level next_action routes the operator to the guided
-    # editor; the per-finding summaries name exactly which keys to fill.
-    assert check.next_action == "aeat config profile edit NAME"
+    verdict = check.precondition_verdict
+    assert verdict is not None
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.profile.edit"
+    assert verdict.argument_bindings[0].value == "demo"
     # The bare counter must no longer be the only signal: the row carries
     # one finding per cause.
     assert len(check.findings) == 3
+
+
+def test_missing_log_parent_has_no_false_read_only_recovery_action(tmp_path: Path) -> None:
+    """A log-tail command cannot repair a missing log directory."""
+
+    missing_log_dir = tmp_path / "not-created" / "logs"
+    with override_settings(cadrumo_log_dir=missing_log_dir):
+        report = build_config_repair_report()
+    check = next(item for item in report.checks if item.name == "logging.file")
+    assert check.status == "warn"
+    verdict = check.precondition_verdict
+    assert verdict is not None
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 def test_render_config_repair_text_lists_specific_findings() -> None:
@@ -742,7 +801,7 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
         profile_total_keys=40,
         auth_provider="",
         login_ready=False,
-        next_action="aeat config profile edit NAME",
+        next_action="unused-status-field",
     )
     check = profile_check(report)
     registry = RegistryVersionSummary(available=True, registry_root="/x", modelo_count=1, casilla_count=2)
@@ -760,10 +819,10 @@ def test_render_config_repair_text_lists_specific_findings() -> None:
 
     rendered = render_config_repair_text(repair_report)
 
-    # The specific missing key is named, and the guided-editor command
-    # that fills it is on the row — not a bare counter.
+    # The application renderer retains the diagnosis and leaves typed action
+    # projection to the entrypoint boundary.
     assert "identity.tax_id" in rendered
-    assert "aeat config profile edit NAME" in rendered
+    assert "unused-status-field" not in rendered
 
 
 def test_render_config_repair_text_marks_internal_problems_distinctly() -> None:

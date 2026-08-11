@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ......domain.user_profile import UserProfileStatus
-from .._manifest import BucketManifest, ManifestKdfParams
+from .._manifest import BucketKeySchedule, BucketManifest, ManifestKdfParams
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -92,6 +92,7 @@ def _manifest_payload(**overrides: object) -> dict[str, object]:
         "last_unlocked_at": None,
         "kdf_params": _kdf(),
         "recovery_enrolled": False,
+        "key_schedule": BucketKeySchedule.BUCKET_DEK_V1,
         "schema_version": 1,
         "status": UserProfileStatus.ACTIVE,
     }
@@ -142,6 +143,7 @@ def _manifest(**overrides: object) -> BucketManifest:
         "last_unlocked_at": None,
         "kdf_params": _kdf(),
         "recovery_enrolled": False,
+        "key_schedule": BucketKeySchedule.BUCKET_DEK_V1,
         "schema_version": 1,
         "status": UserProfileStatus.ACTIVE,
     }

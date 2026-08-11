@@ -63,6 +63,7 @@ from ._calculation_actions import list_calculation_revisions
 from ._profile_binding import resolve_profile_sourced_bindings
 from ._registry_helpers import validate_casilla_input_ids
 from ._work_lifecycle import list_work_units
+from ...domain.calculations.registry import RevisionId
 
 _LOG = get_logger(__name__)
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
@@ -113,13 +114,11 @@ class ModeloProjectionError(CadrumoError):
         message: str | None = None,
         *,
         context: Mapping[str, object] | None = None,
-        suggestion: str | None = None,
         translated_message: str | None = None,
     ) -> None:
         super().__init__(
             message or translated_message or self.__class__.__name__,
             context=dict(context or {}),
-            suggestion=suggestion,
             translated_message=translated_message,
         )
 
@@ -253,8 +252,8 @@ class ModeloCompareServiceResult(BaseModel):
     modelo: str = Field(min_length=1)
     year_a: int
     year_b: int
-    year_a_revision_id: str
-    year_b_revision_id: str
+    year_a_revision_id: RevisionId
+    year_b_revision_id: RevisionId
     year_a_is_draft: bool
     year_b_is_draft: bool
     sections: tuple[ModeloCompareSection, ...]

@@ -31,6 +31,7 @@ from ._validate_cross_revision_advisory import (
     summarize_non_overlapping_cross_revision_casilla_drift,
 )
 from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
+from ._ids import RevisionId
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,
@@ -244,8 +245,8 @@ def _is_strict_non_overlapping_revision_pair(
 
 def _has_retired_evolution(
     modelo: ModeloDefinition,
-    left_revision_id: str,
-    right_revision_id: str,
+    left_revision_id: RevisionId,
+    right_revision_id: RevisionId,
     continuidad_id: str,
 ) -> bool:
     return any(
@@ -259,7 +260,7 @@ def _has_retired_evolution(
 
 def _format_unmatched_continuity_evolution_failure(
     modelo_id: str,
-    declaring_revision_id: str,
+    declaring_revision_id: RevisionId,
     evolution: CasillaContinuidadEvolutionDefinition,
     reason: str,
 ) -> str:
@@ -285,8 +286,8 @@ def _has_declared_continuity_surface(divergence: CrossRevisionCasillaDivergence)
 def _format_strict_continuity_failure(
     modelo_id: str,
     casilla_id: CasillaId,
-    left_revision_id: str,
-    right_revision_id: str,
+    left_revision_id: RevisionId,
+    right_revision_id: RevisionId,
     divergences: Iterable[CrossRevisionCasillaDivergence],
 ) -> str:
     divergence_tuples = tuple(
@@ -308,7 +309,7 @@ def _format_strict_continuity_failure(
 def _format_cross_revision_failure(
     modelo_id: str,
     casilla_id: CasillaId,
-    left_revision_id: str,
+    left_revision_id: RevisionId,
     divergences: Iterable[CrossRevisionCasillaDivergence],
 ) -> str:
     divergence_tuples = tuple(

@@ -40,6 +40,7 @@ from ...domain.calculations.registry import (
 from ...domain.user_profile import ProfileNotFoundError
 from ._profile_binding import profile_resolved_binding_ids, resolve_profile_sourced_bindings
 from ._registry_resources import authority_via_resources
+from ...domain.calculations.registry import RevisionId
 
 _log = get_logger(__name__)
 
@@ -51,7 +52,7 @@ def profile_resolvable_binding_ids(
     filing_year: int,
     period: Period | None,
     as_of: date | None = None,
-    revision_id: str | None = None,
+    revision_id: RevisionId | None = None,
 ) -> frozenset[str]:
     """Return binding ids resolvable from the active profile's stored facts.
 

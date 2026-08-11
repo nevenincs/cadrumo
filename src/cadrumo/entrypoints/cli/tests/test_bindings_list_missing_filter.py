@@ -85,7 +85,7 @@ def _seed_partial_modelo_100_profile() -> None:
             state,
             (
                 UserProfileFact(path="tax_residence.ccaa", value="cataluna"),
-                UserProfileFact(path="filing_export.declaration_type", value="1"),
+                UserProfileFact(path="renta_filing.declaration_type", value="1"),
                 UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
                 UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
             ),

@@ -46,6 +46,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core import FilingProducerKey
 from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
@@ -150,6 +151,7 @@ from ._bindings import (
     binding_aggregation_op,
     bound_casilla_binding_ids,
     binding_source_casilla_ids,
+    casillas_by_binding,
     compute_modelo_349_operador_totals_parity,
     compute_withholding_totals_parity,
     counterpart_binding_requirements,
@@ -323,6 +325,22 @@ from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._ledger_binding_resolution import screened_quantity_families
+from ._m303_differentiated_deduction_projection import (
+    M303DifferentiatedDeductionEndpointValue,
+    M303DifferentiatedDeductionRowProjection,
+    project_m303_differentiated_deduction_rows,
+)
+from ._m303_prorrata_activity_projection import (
+    M303ProrrataActivityEndpointValue,
+    M303ProrrataActivityRowProjection,
+    project_m303_prorrata_activity_rows,
+)
+from ._m303_regimen_simplificado_projection import (
+    M303RegimenSimplificadoFieldProjection,
+    M303RegimenSimplificadoRecordProjection,
+    m303_regimen_simplificado_nonnumbered_fields,
+    project_m303_regimen_simplificado_rows,
+)
 from ._legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
@@ -476,12 +494,8 @@ from ._schema import (
     DependencyClassificationDefinition,
     EvidenceTier,
     ExportComputedKey,
-    ExportComputedKeyValue,
     ExportDraftAttribute,
-    ExportDraftAttributeValue,
     ExportFieldDefinition,
-    ExportHeaderKey,
-    ExportHeaderKeyValue,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExportSemanticPayloadAxis,
@@ -694,7 +708,11 @@ def __getattr__(name: str) -> object:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     from importlib import import_module
 
-    value = getattr(import_module(module_name, __name__), name)
+    # module_name is resolved from this package's own closed _LAZY_EXPORTS
+    # mapping above, never from caller-supplied input.
+    value = getattr(
+        import_module(module_name, __name__), name
+    )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
     globals()[name] = value
     return value
 
@@ -791,14 +809,10 @@ __all__ = [
     "EvidenceTier",
     "EvidenceTierCoverageGate",
     "ExportComputedKey",
-    "ExportComputedKeyValue",
     "ExportDraftAttribute",
-    "ExportDraftAttributeValue",
     "ExportEncoding",
     "ExportFieldDefinition",
     "ExportFieldId",
-    "ExportHeaderKey",
-    "ExportHeaderKeyValue",
     "ExportJustification",
     "ExportLayoutDefinition",
     "ExportLayoutId",
@@ -814,6 +828,7 @@ __all__ = [
     "ExtractionProfileDefinition",
     "ExtractionProfileId",
     "ExtractionTargetDefinition",
+    "FilingProducerKey",
     "FormulaDefinition",
     "FormulaExpression",
     "FormulaId",
@@ -834,6 +849,12 @@ __all__ = [
     "LiveCrossReferenceDecision",
     "LiveParityCatalogue",
     "LiveParityOracle",
+    "M303DifferentiatedDeductionEndpointValue",
+    "M303DifferentiatedDeductionRowProjection",
+    "M303ProrrataActivityEndpointValue",
+    "M303ProrrataActivityRowProjection",
+    "M303RegimenSimplificadoFieldProjection",
+    "M303RegimenSimplificadoRecordProjection",
     "ManualWorkedExamplePayload",
     "ModelLawCoverageLedger",
     "Modelo202Modality",
@@ -1015,6 +1036,7 @@ __all__ = [
     "canonical_remote_hostname",
     "casilla_noncanonical_reference_targets",
     "casilla_noncanonical_reference_tokens",
+    "casillas_by_binding",
     "casillas_by_id",
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
@@ -1082,6 +1104,7 @@ __all__ = [
     "load_modelo_path",
     "load_modelo_source",
     "load_registry_tree",
+    "m303_regimen_simplificado_nonnumbered_fields",
     "materialize_relation_binding_values",
     "modelo_202_modality_from_inputs",
     "modelo_locale_key",
@@ -1095,6 +1118,9 @@ __all__ = [
     "previous_filing_source_reference",
     "profile_condition_matches",
     "project_export_value",
+    "project_m303_differentiated_deduction_rows",
+    "project_m303_prorrata_activity_rows",
+    "project_m303_regimen_simplificado_rows",
     "rate_box_coverage_shortfalls",
     "rate_box_unscreened_groups",
     "read_parameter",

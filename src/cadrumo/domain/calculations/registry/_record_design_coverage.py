@@ -21,6 +21,7 @@ from ._ids import LegalRefId
 from ._record_design_schema import RecordDesignSheet
 from ._runtime_graph import expression_casilla_refs
 from ._schema import CasillaDefinition, DataBindingDefinition, ModeloRevision
+from ._ids import RevisionId
 
 
 def _extract_record_design(path: Path) -> tuple[RecordDesignSheet, ...]:
@@ -534,7 +535,7 @@ class DisenoCoverageReport:
     """
 
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     diseno_casillas: tuple[DerivedDisenoCasilla, ...]
     covered_casillas: tuple[DerivedDisenoCasilla, ...]
     coverage_gap_casillas: tuple[DerivedDisenoCasilla, ...]

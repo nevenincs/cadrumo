@@ -294,16 +294,19 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRun
 
     notices = _stale_finalized_revision_notices(result)
     assert len(notices) == 1
-    suggestion = notices[0].suggestion or ""
-    assert "work discard" not in suggestion
-    assert "work create" not in suggestion
+    message = notices[0].message
+    assert "work discard" not in message
+    assert "work create" not in message
     # `work calculate` may only appear as the thing to link BEFORE, never as the
-    # action to run now, so the suggestion must not open with it.
-    assert not suggestion.lstrip().startswith("aeat app modelo work calculate")
-    # It must still name the real way forward.
-    assert "ledger attach" in suggestion
+    # action to run now, so the message must not open with it.
+    assert not message.lstrip().startswith("aeat app modelo work calculate")
+    # Neither candidate verb works here, so the advisory must carry no executable
+    # action at all and must say so in its context rather than leave the absence
+    # indistinguishable from an action nobody got round to attaching.
+    assert notices[0].action is None
     assert notices[0].context is not None
     assert notices[0].context["reason"] == "finalized_revision_predates_evidence"
+    assert notices[0].context["actionability"] == "finalized_revision_has_no_safe_recovery_action"
 
 
 def test_evidence_fields_are_not_transaction_identity_or_tax_facts(

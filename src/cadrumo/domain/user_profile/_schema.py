@@ -124,7 +124,6 @@ class ProfileFieldDefinition(BaseModel):
     description: _Description
     enum_values: tuple[str, ...] = Field(default=())
     model_selectors: tuple[_Selector, ...] = Field(default=())
-    export_headers: tuple[_Selector, ...] = Field(default=())
     schedule_predicates: tuple[_Selector, ...] = Field(default=())
     legal_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None

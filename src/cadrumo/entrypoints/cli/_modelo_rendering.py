@@ -238,6 +238,16 @@ def short_id(value: str | None) -> str | None:
     return value[-12:] if value else None
 
 
+def _short_id_text(value: str | None) -> str:
+    """Return the display suffix for a content-addressed id, blank when absent.
+
+    The text-rendering companion to :func:`short_id`, whose ``str | None``
+    return otherwise makes every rendering call site restate the same
+    blank-for-absent fallback.
+    """
+    return short_id(value) or ""
+
+
 def _has_m349_detail_rows(rev) -> bool:
     return any(getattr(row, "row_type", None) == "operador" for row in rev.detail_rows)
 
@@ -321,7 +331,7 @@ def work_unit_payload(unit) -> WorkUnitPayload:
 def work_unit_lines(unit, *, include_bucket_id: bool = True) -> list[str]:
     lines = [
         f"work_unit_id\t{unit.work_unit_id}",
-        f"short_work_unit_id\t{short_id(unit.work_unit_id) or ''}",
+        f"short_work_unit_id\t{_short_id_text(unit.work_unit_id)}",
         f"modelo\t{unit.modelo}",
         f"filing_year\t{unit.filing_year}",
         f"period\t{unit.period.registry_token}",
@@ -329,9 +339,9 @@ def work_unit_lines(unit, *, include_bucket_id: bool = True) -> list[str]:
         f"name\t{unit.name}",
         f"state\t{_human_state_label(_effective_work_unit_state(unit))}",
         f"current_calculation_revision_id\t{unit.current_calculation_revision_id or ''}",
-        f"short_current_calculation_revision_id\t{short_id(unit.current_calculation_revision_id) or ''}",
+        f"short_current_calculation_revision_id\t{_short_id_text(unit.current_calculation_revision_id)}",
         f"filed_calculation_revision_id\t{unit.filed_calculation_revision_id or ''}",
-        f"short_filed_calculation_revision_id\t{short_id(unit.filed_calculation_revision_id) or ''}",
+        f"short_filed_calculation_revision_id\t{_short_id_text(unit.filed_calculation_revision_id)}",
         f"current_filing_record_id\t{unit.current_filing_record_id or ''}",
         f"created_at\t{unit.created_at.isoformat()}",
         f"updated_at\t{unit.updated_at.isoformat()}",

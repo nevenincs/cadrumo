@@ -42,6 +42,7 @@ from ...core.errors import BaseSeverity
 from ...core.identity import BucketId, ContentDigest, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
+from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import UserProfileStatus
 
 # The two wizard-owned profile result schemas register through the manifest's
@@ -206,7 +207,6 @@ class ConfigRepairSetupPayload(OutputSchema):
     profile_total_keys: int = Field(ge=0)
     auth_provider: str
     login_ready: bool
-    next_action: str
 
 
 class ConfigRepairNamespacePayload(OutputSchema):
@@ -230,7 +230,6 @@ class ConfigRepairFindingPayload(OutputSchema):
 
     summary: str
     detail: str | None = None
-    next_action: str | None = None
     requirement: Literal["required", "optional"] | None = None
 
 
@@ -241,9 +240,7 @@ class ConfigRepairCheckPayload(OutputSchema):
     status: Literal["ok", "warn", "fail"]
     summary: str
     detail: str | None = None
-    next_action: str | None = None
     precondition_action: ResolvedPreconditionAction | None = None
-    dead_end: str | None = None
     audience: Literal["operator", "internal"]
     findings: list[ConfigRepairFindingPayload]
 
@@ -576,7 +573,7 @@ class ConfigProfilePreflightResult(OutputSchema):
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
     ready: bool

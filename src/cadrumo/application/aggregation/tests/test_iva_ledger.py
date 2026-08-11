@@ -11,15 +11,28 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import Art104TresExclusion, Period
+from ....core import Art104TresExclusion, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
+from ....domain.bienes_inversion import (
+    BienesInversionIvaRegister,
+    BienInversionIvaRecord,
+    BienInversionKind,
+)
 from ....domain.calculations.registry import (
     DataBindingDefinition,
     ModeloRevision,
     PeriodSelector,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind, ProrrataKind, ProrrataRegime
+from ....domain.iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaExemptionArticle,
+    IvaFlowDirection,
+    IvaRateKind,
+    ProrrataKind,
+    ProrrataRegime,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -33,17 +46,44 @@ from ....domain.transactions import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import (
     AggregationValidationError,
+    IvaLedgerAggregation,
     IvaLedgerAggregationIssueReason,
     IvaLedgerCandidate,
-    IvaLedgerInputKind,
     aggregate_iva_ledger_candidate_bindings,
     aggregate_iva_ledger_candidates,
-    aggregate_iva_ledger_observations,
     aggregate_iva_ledger_observations_from_repositories,
     validate_iva_ledger_observation,
 )
+from .. import (
+    aggregate_iva_ledger_observations as _aggregate_iva_ledger_observations_with_authority,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_TEST_ASSET_REGISTER = BienesInversionIvaRegister()
+
+
+def aggregate_iva_ledger_observations(
+    transactions: TransactionCatalogue,
+    *,
+    period: Period,
+) -> IvaLedgerAggregation:
+    """Exercise the public path with an explicit empty authority owned by this test profile."""
+    return _aggregate_iva_ledger_observations_with_authority(
+        transactions,
+        period=period,
+        ledger_profile_id="test-profile",
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id="test-profile",
+    )
+
+
+def _intra_eu_deduction_provenance(locator: str) -> IvaDeductionClassificationProvenance:
+    return IvaDeductionClassificationProvenance(
+        authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
+        source_locator=locator,
+        evidence_digest="c" * 64,
+    )
 
 
 def _period(year: int, code: str) -> Period:
@@ -218,6 +258,12 @@ def _transaction(
     # IVA-inclusive gross magnitude from them; flow is carried by ``direction``.
     if amount is None:
         amount = taxable_base + iva_amount if taxable_base is not None and iva_amount is not None else Decimal("121.00")
+    carries_input_iva = (
+        direction is TransactionDirection.OUTGOING
+        and taxable_base is not None
+        and iva_rate is not None
+        and iva_amount is not None
+    )
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
@@ -236,6 +282,18 @@ def _transaction(
             "iva_rate": iva_rate,
             "iva_amount": iva_amount,
             "iva_category": iva_category,
+            "deduction_fact_kind": (
+                IvaDeductionFactKind.DOMESTIC_CURRENT if carries_input_iva else None
+            ),
+            "deduction_provenance": (
+                IvaDeductionClassificationProvenance(
+                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    source_locator=f"test-invoice:{provider_id}",
+                    evidence_digest="a" * 64,
+                )
+                if carries_input_iva
+                else None
+            ),
             "exemption_article": exemption_article,
             "art_104_tres_exclusion": art_104_tres_exclusion,
             "prorrata_reference": prorrata_reference,
@@ -246,6 +304,54 @@ def _transaction(
             "classified_by": "manual",
         },
     )
+
+
+def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> None:
+    transaction = _transaction("direct-investment").model_copy(
+        update={
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
+            "investment_asset_id": "asset-direct",
+            "prorrata_sector_id": "sector-a",
+        }
+    )
+    catalogue = TransactionCatalogue.from_transactions((transaction,))
+
+    with pytest.raises(TypeError, match="investment_asset_register"):
+        _aggregate_iva_ledger_observations_with_authority(catalogue, period=_Q2_2026)
+
+
+def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
+    transaction = _transaction("direct-investment-valid").model_copy(
+        update={
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
+            "investment_asset_id": "asset-direct",
+            "prorrata_sector_id": "sector-a",
+        }
+    )
+    register = BienesInversionIvaRegister(
+        records=(
+            BienInversionIvaRecord(
+                identifier="asset-direct",
+                description="Direct aggregation asset",
+                acquisition_year=2026,
+                cuota_soportada=Decimal("21.00"),
+                prorrata_inicial_pct=Decimal("100"),
+                kind=BienInversionKind.MUEBLE,
+                acquisition_ledger_id=transaction.transaction_id,
+                prorrata_sector_id="sector-a",
+            ),
+        )
+    )
+
+    result = _aggregate_iva_ledger_observations_with_authority(
+        TransactionCatalogue.from_transactions((transaction,)),
+        period=_Q2_2026,
+        ledger_profile_id="test-profile",
+        investment_asset_register=register,
+        investment_asset_profile_id="test-profile",
+    )
+
+    assert result.observations[0].investment_asset_id == "asset-direct"
 
 
 def test_art_104_tres_tagged_transaction_is_recorded_as_excluded_ledger_id() -> None:
@@ -634,6 +740,8 @@ def test_repository_backed_projection_rejects_bucket_mismatch_before_loading(
                 bucket_id=_OTHER_BUCKET_ID,
                 objects=secure_objects,
             ),
+            investment_asset_register=_TEST_ASSET_REGISTER,
+            investment_asset_profile_id=_BUCKET_ID,
         )
 
 
@@ -652,6 +760,8 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
             bucket_id=_BUCKET_ID,
             objects=secure_objects,
         ),
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id=_BUCKET_ID,
     )
 
     assert result.issues == ()
@@ -677,6 +787,8 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id=_BUCKET_ID,
     )
 
     assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
@@ -717,6 +829,8 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id=_BUCKET_ID,
     )
 
     assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
@@ -756,6 +870,8 @@ def test_repository_backed_projection_partition_matches_full_scan(
         bucket_id=_BUCKET_ID,
         period=_Q2_2026,
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id=_BUCKET_ID,
     )
     full_scan = aggregate_iva_ledger_observations(catalogue, period=_Q2_2026)
 
@@ -966,7 +1082,13 @@ def test_preclassified_candidate_preserves_exemption_article_on_observation_proj
     )
 
     observation = validate_iva_ledger_observation(candidate)
-    aggregation = aggregate_iva_ledger_candidates((candidate,), period=_Q2_2026)
+    aggregation = aggregate_iva_ledger_candidates(
+        (candidate,),
+        period=_Q2_2026,
+        ledger_profile_id="test-profile",
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id="test-profile",
+    )
 
     assert observation.exemption_article is IvaExemptionArticle.ART_20_UNO_8
     assert aggregation.issues == ()
@@ -988,6 +1110,8 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
             ledger_id="eu-acquisition",
             transaction_date=date(2026, 4, 11),
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_provenance=_intra_eu_deduction_provenance("test:eu-acquisition"),
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("200.00"),
@@ -1010,11 +1134,16 @@ def test_preclassified_candidates_cover_non_domestic_exempt_recargo_and_adjustme
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("-50.00"),
             iva_amount=Decimal("0.00"),
-            input_kind=IvaLedgerInputKind.ADJUSTMENT,
         ),
     )
 
-    result = aggregate_iva_ledger_candidates(candidates, period=_Q2_2026)
+    result = aggregate_iva_ledger_candidates(
+        candidates,
+        period=_Q2_2026,
+        ledger_profile_id="test-profile",
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id="test-profile",
+    )
 
     assert result.issues == ()
     assert [observation.category for observation in result.observations] == [
@@ -1033,6 +1162,8 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
             ledger_id="eu-acquisition",
             transaction_date=date(2026, 4, 11),
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_provenance=_intra_eu_deduction_provenance("test:eu-acquisition-binding"),
             rate_kind=IvaRateKind.GENERAL,
             flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("200.00"),
@@ -1049,7 +1180,14 @@ def test_preclassified_candidates_feed_modelo_309_recargo_and_reverse_charge_bin
         ),
     )
 
-    binding_values = aggregate_iva_ledger_candidate_bindings(revision, candidates, period=_Q2_2026)
+    binding_values = aggregate_iva_ledger_candidate_bindings(
+        revision,
+        candidates,
+        period=_Q2_2026,
+        ledger_profile_id="test-profile",
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id="test-profile",
+    )
 
     assert binding_values["modelo-309-iva-autorepercutido-intracomunitaria-cuota"] == Decimal("42.00")
     assert binding_values["modelo-309-iva-soportado-recargo-equivalencia-cuota"] == Decimal("5.20")
@@ -1068,7 +1206,14 @@ def test_preclassified_candidate_blocks_unsupported_modelo_390_regime() -> None:
     )
 
     with pytest.raises(AggregationValidationError, match="unsupported_iva_category") as exc_info:
-        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period=_Q2_2026)
+        aggregate_iva_ledger_candidate_bindings(
+            revision,
+            (candidate,),
+            period=_Q2_2026,
+            ledger_profile_id="test-profile",
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id="test-profile",
+        )
 
     assert exc_info.value.context is not None
     assert exc_info.value.context["ledger_id"] == "retail-recargo"
@@ -1104,7 +1249,14 @@ def test_preclassified_candidate_outside_period_blocks_binding_resolution() -> N
     )
 
     with pytest.raises(AggregationValidationError, match="candidate_outside_period"):
-        aggregate_iva_ledger_candidate_bindings(revision, (candidate,), period=_Q2_2026)
+        aggregate_iva_ledger_candidate_bindings(
+            revision,
+            (candidate,),
+            period=_Q2_2026,
+            ledger_profile_id="test-profile",
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id="test-profile",
+        )
 
 
 def test_projected_observations_feed_modelo_303_binding_resolver() -> None:

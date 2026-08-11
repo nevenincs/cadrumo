@@ -59,6 +59,7 @@ def _register() -> BienesInversionIvaRegister:
                 cuota_soportada=Decimal("5000.00"),
                 prorrata_inicial_pct=Decimal("80"),
                 kind=BienInversionKind.MUEBLE,
+                acquisition_ledger_id="ledger-bi-2022-maquina",
             ),
         )
     )
@@ -230,6 +231,7 @@ def _disposed_register() -> BienesInversionIvaRegister:
                 cuota_soportada=Decimal("10000.00"),
                 prorrata_inicial_pct=Decimal("60"),
                 kind=BienInversionKind.MUEBLE,
+                acquisition_ledger_id="ledger-bi-2022-furgoneta",
                 disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
             ),
         )

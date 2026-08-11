@@ -587,7 +587,10 @@ def test_a_decision_payload_missing_the_unreadable_evidence_flag_reloads_unequal
         repo.save_decision(original)
         assert repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T")) == original
 
-        payload = original.model_dump(mode="json")
+        # Feed the strict model its Python-shaped contract. JSON mode also turns
+        # Period/authority tuples and datetimes into wire strings/lists, making
+        # validation fail before the deliberately omitted flag is exercised.
+        payload = original.model_dump(mode="python")
         # Assert the field was THERE before dropping it. Without this, a model
         # that never serialised it at all would satisfy every assertion below
         # while proving the opposite defect: the drop would be a no-op and the

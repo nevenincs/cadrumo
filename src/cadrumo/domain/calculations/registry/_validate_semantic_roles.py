@@ -22,6 +22,7 @@ from ._validate_semantic_role_required import REQUIRED_ROLE_LABEL_PATTERNS, requ
 from ._validate_semantic_role_required import (
     collect_casillas_by_semantic_role as collect_casillas_by_semantic_role,
 )
+from ._ids import RevisionId
 
 __all__ = (
     "REQUIRED_ROLE_LABEL_PATTERNS",
@@ -38,7 +39,7 @@ class _RoleObservation:
     """One casilla's contribution to a semantic-role consistency check."""
 
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     casilla_id: CasillaId
     data_type: object
     constraints: object
@@ -60,7 +61,7 @@ class _RoleObservation:
     def __init__(
         self,
         modelo_id: str,
-        revision_id: str,
+        revision_id: RevisionId,
         casilla: CasillaDefinition,
     ) -> None:
         self.modelo_id = modelo_id

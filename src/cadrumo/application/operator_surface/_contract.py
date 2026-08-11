@@ -587,5 +587,9 @@ def resolve_source_kind_alias(value: str) -> BindingSourceKind:
             return alias.canonical
     raise OperatorSurfaceContractError(
         value,
-        reason=tr("cli.operator_surface.errors.unknown_source_kind", kind=value),
+        reason=tr(
+            "cli.operator_surface.errors.unknown_source_kind",
+            kind=value,
+            options=", ".join(source_kind.value for source_kind in SOURCE_KINDS),
+        ),
     )

@@ -62,6 +62,7 @@ from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
+from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...domain.modelos import WorkUnit
@@ -238,7 +239,7 @@ def resolve_modelo_workflow_resume_target(
     modelo: str | None = None,
     year: int | None = None,
     period: Period | None = None,
-    registry_revision_id: str | None = None,
+    registry_revision_id: RevisionId | None = None,
     bucket_id: str | None = None,
     selector: object | None = None,
 ) -> WorkflowResumeTargetResolution:
@@ -345,7 +346,7 @@ def _resolve_resume_from_visible_target(
     modelo: str,
     year: int,
     period: Period,
-    registry_revision_id: str | None,
+    registry_revision_id: RevisionId | None,
     bucket_id: str | None,
     selector: object | None,
 ) -> WorkflowResumeTargetResolution:
@@ -516,7 +517,7 @@ def resolve_modelo_visible_workflow_run_for_resume(
     modelo: str,
     filing_year: int,
     period: Period,
-    registry_revision_id: str | None = None,
+    registry_revision_id: RevisionId | None = None,
     bucket_id: str | None = None,
 ) -> WorkflowResumeTargetResolution:
     """Resolve natural modelo filing selectors to a resume target resolution.

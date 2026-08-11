@@ -29,6 +29,7 @@ from click.testing import Result
 
 from ....adapters.persistence.storage.bucket import (
     BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -84,6 +85,7 @@ def _stage_setup_incomplete_manifest(*, bucket_id: str, label: str) -> None:
                 output_length=32,
             ),
             recovery_enrolled=False,
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.SETUP_INCOMPLETE,
         ),

@@ -39,6 +39,10 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
     action_ids = tuple(action_by_id)
 
     assert action_ids == (
+        "operator.auth.configure",
+        "operator.auth.login",
+        "operator.diagnostics.secure_objects.quarantine",
+        "operator.diagnostics.workflow.reset_progress",
         "operator.ledger.evidence.review.list",
         "operator.ledger.link",
         "operator.live.filed.pull_all",
@@ -65,6 +69,44 @@ def test_initial_actions_are_deterministic_and_lookup_by_stable_identity() -> No
         "operator.storage.init",
     )
     assert lookup_action("operator.profile.create").target_command_key == "config.profile.create"
+    assert lookup_action("operator.auth.configure").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="file",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="file",
+        ),
+        ActionArgumentBindingSpecification(
+            argument_name="provider",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="provider",
+        ),
+    )
+    assert lookup_action("operator.diagnostics.secure_objects.quarantine").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="yes",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="yes",
+        ),
+    )
+    assert lookup_action("operator.auth.login").target_command_key == "config.auth.login"
+    assert lookup_action("operator.auth.login").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="provider",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="provider",
+        ),
+    )
+    assert (
+        lookup_action("operator.diagnostics.workflow.reset_progress").target_command_key
+        == "config.repair.reset_progress"
+    )
+    assert lookup_action("operator.diagnostics.workflow.reset_progress").argument_specifications == (
+        ActionArgumentBindingSpecification(
+            argument_name="yes",
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key="yes",
+        ),
+    )
     assert lookup_action("operator.profile.repair_active_pointer").argument_specifications == (
         ActionArgumentBindingSpecification(
             argument_name="clear_active",

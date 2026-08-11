@@ -30,6 +30,7 @@ from . import (
 )
 from ._completeness import conditional_profile_missing_required
 from ._projections import record_to_path_values
+from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ModeloRevision
@@ -211,7 +212,7 @@ class ProfilePreflightService:
         *,
         record: UserProfileRecord,
         modelo: str,
-        revision_id: str,
+        revision_id: RevisionId,
         period: Period,
         revision: ModeloRevision | None = None,
         authority: ValidatedRegistryAuthority | None = None,

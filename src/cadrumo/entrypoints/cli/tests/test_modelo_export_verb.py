@@ -649,6 +649,34 @@ def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert "Traceback" not in result.output
 
 
+def test_export_modelo_303_cli_refuses_without_typed_applicability(tmp_path: Path) -> None:
+    work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="303", filing_year=2026, period="1T")
+    out = tmp_path / "modelo-303.txt"
+
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "export",
+            work_unit_id,
+            "--output",
+            str(out),
+        ],
+    )
+
+    assert result.exit_code == 5, result.output
+    payload = json.loads(result.output)
+    assert payload["status"] == "error"
+    assert payload["error"]["context"]["cause"] == (
+        "modelo 303 export requires an explicit applicability envelope"
+    )
+    assert not out.exists()
+    assert not out.with_name(out.name + ".tmp").exists()
+    assert "Traceback" not in result.output
+
+
 def test_export_modelo_100_reaches_xml_dictionary_path_before_cross_period_gate(tmp_path: Path) -> None:
     work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="100", filing_year=2025, period="0A")
     out = tmp_path / "modelo-100.xml"

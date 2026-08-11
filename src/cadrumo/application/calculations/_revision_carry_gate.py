@@ -30,6 +30,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ...core.resources import resources
+from ...domain.calculations.registry import RevisionId
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,7 +38,7 @@ class RevisionCarryOutcome:
     """Law-determined result of re-confirming one persisted revision stamp."""
 
     refused: bool
-    selected_revision_id: str | None
+    selected_revision_id: RevisionId | None
     detail: str | None
 
 

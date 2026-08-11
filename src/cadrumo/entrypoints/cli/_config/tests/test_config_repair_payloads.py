@@ -37,7 +37,6 @@ def _repair_payload() -> dict[str, object]:
                 "name": "registry.load",
                 "status": "warn",
                 "summary": "Registry needs attention",
-                "next_action": "aeat config repair integrity registry",
                 "audience": "operator",
                 "findings": [{"summary": "One revision is pending", "requirement": "required"}],
             },
@@ -54,6 +53,45 @@ def test_config_repair_payload_projects_all_nested_sections() -> None:
     assert result.registry.revision_ids == ["modelo-303-v1"]
     assert result.secure_objects.namespaces[0].namespace == "workflow"
     assert result.checks[0].findings[0].requirement == "required"
+    check_payload = result.checks[0].model_dump(mode="json")
+    assert "next_action" not in check_payload
+    assert "dead_end" not in check_payload
+    assert "next_action" not in check_payload["findings"][0]
+
+
+@pytest.mark.parametrize("retired_field", ("next_action", "dead_end"))
+def test_config_repair_payload_refuses_retired_recovery_transport(retired_field: str) -> None:
+    """The wire contract rejects legacy prose channels instead of emitting nulls."""
+
+    payload = _repair_payload()
+    check = payload["checks"][0]
+    assert isinstance(check, dict)
+    check[retired_field] = "legacy transport"
+
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        ConfigRepairResult.model_validate(payload)
+
+
+def test_config_repair_setup_payload_refuses_wizard_next_action_transport() -> None:
+    """The diagnostics wire projection cannot inherit wizard command prose."""
+
+    payload = _repair_payload()
+    payload["setup"] = {
+        "active_profile": "demo",
+        "profile_ready": True,
+        "identity_ready": True,
+        "enrolment_ready": True,
+        "missing_required": [],
+        "missing_enrolment": [],
+        "profile_present_keys": 10,
+        "profile_total_keys": 10,
+        "auth_provider": "certificate",
+        "login_ready": False,
+        "next_action": "aeat config auth login",
+    }
+
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        ConfigRepairResult.model_validate(payload)
 
 
 @pytest.mark.parametrize("overall", ("unknown", "", 1))
