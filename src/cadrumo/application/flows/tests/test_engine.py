@@ -469,6 +469,25 @@ def test_review_projection_refuses_contradictory_derived_state() -> None:
         ReviewProjection.model_validate({**document, "flow_verdicts": (ValidationVerdict.passed(),)})
 
 
+def test_review_projection_preserves_flow_verdict_refusal_precedence() -> None:
+    """The first validator stage remains the flow-verdict coherence guard."""
+    definition = _submit_definition()
+    projection = review(definition, start_flow(definition, mode=FlowMode.CREATE))
+    document: dict[str, Any] = dict(projection.model_dump())
+
+    with pytest.raises(ValidationError, match="flow_verdicts"):
+        ReviewProjection.model_validate(
+            {
+                **document,
+                "flow_verdicts": (ValidationVerdict.passed(),),
+                "answered_count": 1,
+                "required_remaining": 0,
+                "blocking": (),
+                "submit_eligible": True,
+            },
+        )
+
+
 def test_derived_review_projection_round_trips() -> None:
     """A production-derived complete review remains valid through JSON round-trip."""
     definition = _submit_definition()
