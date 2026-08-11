@@ -799,11 +799,29 @@ class TestFileFallbackProvider:
                 passphrase_callback=lambda: "test-passphrase",
             ).get_master_key()
 
-        assert excinfo.value.translated_message == "errors.auth.auth_storage_master_key_kdf_version"
         # Both numbers reach the operator: what the file claims and what this
         # build accepts. A refusal naming neither is not actionable.
         assert str(foreign_version) in str(excinfo.value)
         assert str(KDF_PARAMS_VERSION) in str(excinfo.value)
+        assert str(kdf_path) not in str(excinfo.value)
+        envelope = build_error_envelope(excinfo.value)
+        assert envelope.code == "AUTH_STORAGE_MASTER_KEY_KDF_VERSION"
+        assert str(foreign_version) in envelope.message
+        assert str(KDF_PARAMS_VERSION) in envelope.message
+        assert str(kdf_path) not in envelope.message
+
+        # A serialized-JSON substring assertion is insufficient on Windows:
+        # JSON escapes every path separator, so the literal path is absent even
+        # when the decoded operator-facing field leaks it in full. Keep this
+        # positive control beside the real decoded-field assertion above.
+        deliberately_leaking = build_error_envelope(
+            MasterKeyKdfVersionError(
+                f"master.kdf at {kdf_path} is version {foreign_version!r}; "
+                f"this build expects version {KDF_PARAMS_VERSION}.",
+            ),
+        )
+        assert str(kdf_path) not in deliberately_leaking.model_dump_json()
+        assert str(kdf_path) in deliberately_leaking.message
 
     def test_a_version_bearing_kdf_file_still_unlocks(self, tmp_path: Path) -> None:
         """Positive control: the untouched file the writer produced still opens.

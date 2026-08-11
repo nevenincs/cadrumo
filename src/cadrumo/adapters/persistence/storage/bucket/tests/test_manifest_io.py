@@ -16,6 +16,7 @@ from ...errors import StorageValidationError
 from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from .._manifest import (
     BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
 )
@@ -45,6 +46,7 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
         last_unlocked_at=datetime(2026, 5, 14, 13, 30, 0, tzinfo=UTC) if last_unlocked else None,
         kdf_params=kdf,
         recovery_enrolled=True,
+        key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
         status=UserProfileStatus.ACTIVE,
     )
@@ -120,6 +122,33 @@ def test_read_rejects_missing_status_key(tmp_path: Path) -> None:
 
     with pytest.raises(StorageValidationError, match="lifecycle status"):
         read_manifest(paths)
+
+
+def test_read_rejects_missing_key_schedule(tmp_path: Path) -> None:
+    paths, manifest = _write_fixture_manifest(tmp_path)
+
+    target = manifest_path(paths)
+    text = target.read_text(encoding=UTF_8_ENCODING)
+    assert f'key_schedule = "{manifest.key_schedule.value}"' in text
+    target.write_text(
+        "\n".join(line for line in text.splitlines() if not line.startswith("key_schedule = ")) + "\n",
+        encoding=UTF_8_ENCODING,
+    )
+
+    with pytest.raises(ValidationError) as excinfo:
+        read_manifest(paths)
+
+    assert any(error["loc"] == ("key_schedule",) and error["type"] == "missing" for error in excinfo.value.errors())
+
+
+def test_manifest_constructor_requires_key_schedule() -> None:
+    payload = _fixture_manifest().model_dump(mode="python")
+    assert payload.pop("key_schedule") is not None
+
+    with pytest.raises(ValidationError) as excinfo:
+        BucketManifest.model_validate(payload)
+
+    assert any(error["loc"] == ("key_schedule",) and error["type"] == "missing" for error in excinfo.value.errors())
 
 
 def test_read_raises_when_manifest_absent(tmp_path: Path) -> None:

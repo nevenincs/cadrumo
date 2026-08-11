@@ -35,6 +35,7 @@ from .._layout import provision_bucket_directory
 from .._manifest import (
     BUCKET_MANIFEST_DURABILITY_FLOOR,
     BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
 )
@@ -62,6 +63,7 @@ def _manifest() -> BucketManifest:
             output_length=32,
         ),
         recovery_enrolled=False,
+        key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
         schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
         status=UserProfileStatus.ACTIVE,
     )

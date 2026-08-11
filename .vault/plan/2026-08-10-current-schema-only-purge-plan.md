@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#current-schema-only-purge'
 date: '2026-08-10'
-modified: '2026-08-10'
-body_hash: 'sha256:35b8cf6d28d30904b682a286875a2eb2f9c7c3a966710a88546b6e6855de438e'
+modified: '2026-08-11'
+body_hash: 'sha256:f8e6efe25315addcd350031fdcd282a95bed128970b19f9294059126504ce657'
 tier: L3
 related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
@@ -103,10 +103,10 @@ write.
 - [x] `W02.P06.S15` - Prove missing and non-current secret-index markers refuse real store operations; `src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py`.
 - [x] `W02.P06.S16` - Require the exact current KdfParameters version marker; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py`.
 - [x] `W02.P06.S17` - Stamp current KDF markers during key mint and recovery; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py; src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py; src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_kdf_salt.py; src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
-- [ ] `W02.P06.S18` - Prove file-fallback key loading refuses missing and non-current KDF markers; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
-- [ ] `W02.P06.S41` - Stop the master-key KDF version refusal disclosing the absolute store path. Measured: the path reaches str(exc) and the error envelope's decoded message field unscrubbed, while the sibling missing-version branch of the same function is asserted path-clean. Keep both version numbers in the operator-facing message and drop the path. Any redaction assertion must compare DECODED envelope field values rather than substring-matching the serialized JSON, because backslash escaping makes the naive form pass while the path is fully present, and its anti-tautology proof is to plant the path then confirm the naive form passes while the decoded form fails. Scoped to this one raise site and its sibling. A census of other path-interpolating error constructions is a separate and larger question, deliberately not folded in; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py; src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
-- [ ] `W02.P06.S19` - Make BucketManifest key_schedule mandatory; `src/cadrumo/adapters/persistence/storage/bucket/_manifest.py`.
-- [ ] `W02.P06.S20` - Prove real manifest reads require and preserve the current key schedule; `src/cadrumo/adapters/persistence/storage/bucket/tests/test_manifest_io.py`.
+- [x] `W02.P06.S18` - Prove file-fallback key loading refuses missing and non-current KDF markers; `src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
+- [x] `W02.P06.S41` - Stop the master-key KDF version refusal disclosing the absolute store path. Measured: the path reaches str(exc) and the error envelope's decoded message field unscrubbed, while the sibling missing-version branch of the same function is asserted path-clean. Keep both version numbers in the operator-facing message and drop the path. Any redaction assertion must compare DECODED envelope field values rather than substring-matching the serialized JSON, because backslash escaping makes the naive form pass while the path is fully present, and its anti-tautology proof is to plant the path then confirm the naive form passes while the decoded form fails. Scoped to this one raise site and its sibling. A census of other path-interpolating error constructions is a separate and larger question, deliberately not folded in; `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py; src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key_file_fallback.py`.
+- [x] `W02.P06.S19` - Make BucketManifest key_schedule mandatory; `src/cadrumo/adapters/persistence/storage/bucket/_manifest.py`.
+- [x] `W02.P06.S20` - Prove real manifest reads require and preserve the current key schedule; `src/cadrumo/adapters/persistence/storage/bucket/tests/test_manifest_io.py`.
 - [x] `W02.P06.S26` - Make the master-key KDF preflight model require a real version, replacing the optional-and-defaulting-to-absent field that lets a marker-less file pass the check the preflight exists to perform; `src/cadrumo/adapters/persistence/storage/master_key/_master_key_records.py preflight model and its single read call site, with no writer or derivation path touched`.
 
 ## Wave `W03` - Close the Modelo 303 observation write boundary

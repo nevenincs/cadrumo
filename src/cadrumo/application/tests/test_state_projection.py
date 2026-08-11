@@ -30,6 +30,7 @@ from pydantic import SecretStr
 
 from ...adapters.persistence.storage.bucket import (
     BUCKET_MANIFEST_SCHEMA_VERSION,
+    BucketKeySchedule,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -165,6 +166,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
                 output_length=32,
             ),
             recovery_enrolled=False,
+            key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=BUCKET_MANIFEST_SCHEMA_VERSION,
             status=UserProfileStatus.ACTIVE,
         ),
