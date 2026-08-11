@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-11'
-body_hash: 'sha256:85104b5ccc482fd0be7f953ec10b11b0d30e2434f517bfa8059ab7c74945a9d8'
+body_hash: 'sha256:e5e17fb839c86ccd149f7fc782c87ea3318e612a3eea4666d22b8efd297c212f'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -194,7 +194,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts; `src/cadrumo/application/ledger`.
 - [ ] `W05.P10.S39` - Migrate deadline recovery commands and overdue continuations; `src/cadrumo/domain/deadlines`.
 - [ ] `W05.P10.S40` - Migrate live-read recovery producers with explicit safety dispositions; `src/cadrumo/application/live`.
-- [ ] `W05.P10.S41` - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose; `src/cadrumo/locales`.
+- [x] `W05.P10.S41` - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose; `src/cadrumo/locales`.
 - [ ] `W05.P10.S58` - Migrate AEAT adapter recovery producers with explicit external-system safety dispositions including browser _factory.py optional-extra forwarding with typed machine facts and no raw installation prose; `src/cadrumo/adapters/outbound/aeat`.
 - [ ] `W05.P10.S59` - Remove stale lazy schema-owner-table claims from the config payload surface while S91 exclusively owns residual Modelo CLI action producers; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
