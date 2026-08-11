@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:8bf734fb7a756695653bd0144b4f53868afd75265cd1c5da01369ee91c01de6b'
+body_hash: 'sha256:a1ee6f4da025d4be477df9645021f83a220f4cd9f6ced216bb694f1edb714c6f'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -50,6 +50,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S54]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S55]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S56]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S57]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
@@ -194,6 +195,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S55` - Prove the third domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where three migration_required rows are exclusively owned by later producer steps
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S56` - Retire recovery-authority comments from the first adapter registry shard and prove its 59 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where eight migration_required rows are exclusively owned by later producer steps
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S57` - Retire recovery-authority comments from the second adapter registry shard and prove its 63 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where 16 migration_required rows are exclusively owned by later producer steps and 2 rows are retired_or_unreachable
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes
 
 ### plan
