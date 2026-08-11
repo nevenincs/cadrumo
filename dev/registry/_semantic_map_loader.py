@@ -30,7 +30,7 @@ __all__ = [
 SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION: Final[int] = 1
 _FRAGMENT_FILENAME = re.compile(r"^[0-9]{4}-(?P<fragment_id>[a-z0-9][a-z0-9-]*)$")
 _RAW_ENTRIES_ADAPTER = TypeAdapter(tuple[dict[str, object], ...], config=ConfigDict(strict=True))
-_PROJECTION_REF_ADAPTER = TypeAdapter(FilingProjectionRef)
+_PROJECTION_REF_ADAPTER: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
 
 
 class _StrictModel(BaseModel):

@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import dev.registry as registry_facade
+from cadrumo.core import M303ProrrataActivityProjectionRef
 from cadrumo.domain.calculations.registry import RegistryValidationError
 from dev.registry import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 
@@ -39,6 +40,27 @@ ordinal = 1
 record_identity = "registro-tipo-1"
 """
 
+_PROJECTION_ENTRY = """
+[[entries]]
+export_field_id = "dp30305.prorrata-activity-1-cnae"
+kind = "projection"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[entries.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "cnae"
+casilla_id = "500"
+
+[entries.anchor]
+sheet = "DP30305"
+source_row = 42
+source_cell = "A42"
+ordinal = 1
+record_identity = "dp30305"
+"""
+
 
 def _fragment(*, fragment_id: str, body: str, epoch: str = "2026") -> str:
     return (
@@ -67,6 +89,21 @@ def test_loads_fragments_in_filename_order_independent_of_creation_order(tmp_pat
     assert semantic_map.design_epoch == "2026"
     assert tuple(record.export_record_id for record in semantic_map.records) == ("registro-tipo-1",)
     assert tuple(entry.export_field_id for entry in semantic_map.entries) == ("registro-tipo-1.declarante-nif",)
+
+
+def test_loader_is_the_exact_string_to_typed_projection_reference_boundary(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    record = _RECORD.replace("Registro tipo 1", "DP30305").replace("registro-tipo-1", "dp30305")
+    _write(root / "0001-projection.toml", _fragment(fragment_id="projection", body=record + _PROJECTION_ENTRY))
+
+    semantic_map = load_semantic_map(root)
+
+    projection_ref = semantic_map.entries[0].projection_ref
+    assert isinstance(projection_ref, M303ProrrataActivityProjectionRef)
+    assert projection_ref.projection_kind == "m303_prorrata_activity"
+    assert projection_ref.slot == 1
+    assert projection_ref.casilla_id == "500"
 
 
 def test_compiled_semantics_have_canonical_order_across_fragments(tmp_path: Path) -> None:
@@ -294,7 +331,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         if node.module in {"cadrumo.core", "cadrumo.domain.calculations.registry", "_semantic_map"}
     }
     assert imported_names_by_module == {
-        "cadrumo.core": {"FilingProducerKey", "freeze_toml", "read_toml"},
+        "cadrumo.core": {"FilingProducerKey", "FilingProjectionRef", "freeze_toml", "read_toml"},
         "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
         "_semantic_map": {"SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
