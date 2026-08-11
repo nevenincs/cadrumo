@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:5bd04ec2f3db9b0ad1c10e8e674eaa350df0a5bf4fa6663281270bcd65a29eca'
+body_hash: 'sha256:6db5e4f1f970bbd1064f144230e6df79e328e22448c36dcb458ff82ba0661bc2'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -114,6 +114,7 @@ related:
   - '[[2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s90-final-pass-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit]]'
 ---
 
@@ -178,6 +179,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit` - `cli-action-envelope-hardening` audit: `S63 rationale remediation lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit` - `cli-action-envelope-hardening` audit: `S64 entrypoint taxonomy and owner reconciliation review`
 - `2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit` - `cli-action-envelope-hardening` audit: `S89 installed public-console action-envelope proof`
+- `2026-08-11-cli-action-envelope-hardening-s90-final-pass-audit` - `cli-action-envelope-hardening` audit: `S90 final independent PASS review`
 - `2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit` - `cli-action-envelope-hardening` audit: `S94 independent closure review`
 
 ### exec
