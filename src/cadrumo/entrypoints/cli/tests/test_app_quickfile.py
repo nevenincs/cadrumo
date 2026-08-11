@@ -622,7 +622,7 @@ def test_quickfile_result_payload_carries_a_missing_binding_requirement() -> Non
         missing_bindings=(
             ProjectionModeloBindingRequirement(
                 binding_id="binding-1",
-                source="ledger",
+                source="ledger_renta_income_aggregation",
                 input_channel="preflight",
             ),
         ),

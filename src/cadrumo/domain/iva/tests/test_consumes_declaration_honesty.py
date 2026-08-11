@@ -340,7 +340,7 @@ def test_the_helper_following_branch_finds_a_read_the_plain_walk_misses() -> Non
     )
 
 
-def _reads_a_field_off_whatever_it_was_handed(state: EUMemberState) -> bool:
+def _reads_a_field_off_whatever_it_was_handed(state: EUMemberState | None) -> bool:
     """A helper handed a criteria ATTRIBUTE, not the criteria.
 
     Its parameter is the attribute's VALUE, and ``value`` is a field of the
@@ -352,7 +352,7 @@ def _reads_a_field_off_whatever_it_was_handed(state: EUMemberState) -> bool:
 
     Never called, like its sibling synthetic predicates: it exists to be read.
     """
-    return state.value is not None
+    return state is not None and bool(state.value)
 
 
 def _predicate_handing_an_attribute_to_a_helper(criteria: IvaInvoiceClassificationCriteria) -> bool:
