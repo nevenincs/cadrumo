@@ -32,6 +32,7 @@ import json
 import threading
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Final, override
 
@@ -60,6 +61,10 @@ class SilentLoopbackHandler(BaseHTTPRequestHandler):
     buries real output under traffic no reader wants; every suite here had
     independently overridden it.
     """
+
+    def do_POST(self) -> None:
+        """Reject POST requests unless a suite supplies its endpoint behavior."""
+        self.send_error(HTTPStatus.NOT_IMPLEMENTED)
 
     @override
     def log_message(self, format: str, *args: object) -> None:
