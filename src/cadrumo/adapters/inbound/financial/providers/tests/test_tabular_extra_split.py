@@ -105,8 +105,7 @@ def _probe_worker(
         logging.disable(logging.CRITICAL)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = storage_root
 
-        from cadrumo.core import LLM_EXTRA
-        from cadrumo.core._optional_extras import optional_extra_available
+        from cadrumo.core import LLM_EXTRA, optional_extra_available
 
         result: _ProbeResult = {"extra_available": optional_extra_available(LLM_EXTRA)}
         if case == "known":
