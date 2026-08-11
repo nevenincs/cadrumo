@@ -144,6 +144,7 @@ from ...domain.iva import (
     InvoiceKind,
     IvaCategory,
     IvaRateKind,
+    SupplyNature,
     country_code_for_stated_country_code,
     rate_kinds_for_declared_rate,
 )
@@ -2322,6 +2323,7 @@ def confirm_invoice_draft_from_evidence(
     retention_amount: Decimal | None = None,
     recargo_amount: Decimal | None = None,
     invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    supply_nature: SupplyNature | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     notes: str = "",
@@ -2396,6 +2398,14 @@ def confirm_invoice_draft_from_evidence(
             whenever a rate is supplied.
         recargo_amount: Recargo de equivalencia (LIVA art. 161), which rides
             INSIDE the invoice total, unlike a retención.
+        supply_nature: The operator's statement of whether the supply is goods
+            or services. Demanded only where the law forks on it -- the
+            cross-border and reverse-charge families -- so an ordinary domestic
+            invoice never needs one, and supplying it there changes nothing.
+            Until this parameter existed the classifier could REPORT that gap
+            and the operator had no way to answer it, so a cross-border
+            document with no printed statutory citation reached a category of
+            ABSENT with no route forward.
         invoice_class: Invoice class. A rectificativa also needs
             ``rectifies_invoice_number``.
         series: Invoice numbering series, when the issuer uses one.
@@ -2508,6 +2518,7 @@ def confirm_invoice_draft_from_evidence(
             invoice_date=classification_date,
             operator_restated_amounts=operator_restated_amounts,
         ),
+        supply_nature=supply_nature,
     )
     extracted_counterparty_tax_id = counterparty_side.tax_id
     extracted_counterparty_name = counterparty_side.name
