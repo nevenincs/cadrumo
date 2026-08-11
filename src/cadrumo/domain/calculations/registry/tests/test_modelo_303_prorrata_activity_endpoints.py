@@ -89,9 +89,10 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
         for field in sheet.fields
         if (match := _CASILLA_TAG.search(field.description)) is not None and match.group(1) in _ENDPOINTS
     )
-    assert tuple(_CASILLA_TAG.search(field.description).group(1) for field in source_fields) == tuple(
-        str(number) for number in range(500, 525)
+    source_casilla_ids = tuple(
+        match.group(1) for field in source_fields if (match := _CASILLA_TAG.search(field.description)) is not None
     )
+    assert source_casilla_ids == tuple(str(number) for number in range(500, 525))
     assert tuple(field.type_code for field in source_fields) == _OFFICIAL_TYPE_CODES * 5
     assert tuple(field.length for field in source_fields) == (cnae_width, 17, 17, 1, 5) * 5
     expected_offsets = (

@@ -39,6 +39,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshot,
     RelationId,
+    casillas_by_binding,
     relation_source_requirements,
     selector_as_dict,
 )
@@ -164,22 +165,20 @@ def _calculated_decimal(value: object | None) -> Decimal:
 
 def _m390_303_reconciliation_targets(
     snapshot: RegistrySnapshot,
-) -> tuple[tuple[RelationId, BindingId, CasillaId, CasillaId, CasillaId], ...]:
+) -> tuple[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId], ...]:
     """Return M390 reconciliation relation targets keyed by their M303 source output."""
-    target_casillas_by_binding = {
-        casilla.binding: casilla.id for casilla in snapshot.revision.casillas if casilla.binding is not None
-    }
-    targets: list[tuple[RelationId, BindingId, CasillaId, CasillaId, CasillaId]] = []
+    target_casillas_by_binding = casillas_by_binding(snapshot.revision)
+    targets: list[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId]] = []
     for relation in snapshot.revision.relations:
         if relation.source_modelo != Modelo.M303.value:
             continue
         annual_casilla = _M390_303_RECONCILIATION_ANNUAL_CASILLA_BY_SOURCE.get(relation.source_casilla_id)
         if annual_casilla is None:
             continue
-        target_casilla = target_casillas_by_binding.get(relation.target_binding)
-        if target_casilla is None:
+        target_casillas = target_casillas_by_binding.get(relation.target_binding, ())
+        if not target_casillas:
             continue
-        target = relation.id, relation.target_binding, target_casilla, relation.source_casilla_id, annual_casilla
+        target = relation.id, relation.target_binding, target_casillas, relation.source_casilla_id, annual_casilla
         targets.append(target)
     return tuple(targets)
 
@@ -211,7 +210,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     missing_bindings: list[BindingId] = []
     missing_targets: list[CasillaId] = []
     missing_annuals: list[CasillaId] = []
-    for relation_id, binding_id, target_casilla, _source_casilla, annual_casilla in _m390_303_reconciliation_targets(
+    for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in _m390_303_reconciliation_targets(
         snapshot,
     ):
         if binding_id in resolved_binding_values:
@@ -220,7 +219,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)
-        missing_targets.append(target_casilla)
+        missing_targets.extend(target_casillas)
         missing_annuals.append(annual_casilla)
 
     if not missing_bindings:

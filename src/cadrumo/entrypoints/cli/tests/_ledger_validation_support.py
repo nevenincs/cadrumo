@@ -28,6 +28,23 @@ def _invoke(args: Sequence[str], *, env: Mapping[str, str] | None = None) -> Res
 
 @contextmanager
 def open_bucket_session(tmp_path: Path) -> Iterator[None]:
+    """Open the shared real-CLI ledger session against an isolated storage root.
+
+    The registered profile is minimal PLUS a declared IVA block, and the second
+    half is load-bearing rather than convenience. Every ledger path that
+    resolves an IVA treatment -- add, allocate, split, evidence confirm --
+    consults the deadlines profile, which refuses outright for a taxpayer whose
+    IVA axes were never declared. That refusal is correct in production: an
+    undeclared Modelo 303 composition is not a general one. In this harness it
+    arrives before any behaviour under test, so a suite asserting a
+    non-negative-amount refusal instead reads an incomplete-profile refusal and
+    fails on a message it never mentions.
+
+    Declared HERE rather than per suite because the cause is the harness, not
+    any one file: when the IVA block became mandatory, roughly thirty ledger
+    CLI modules went red on this single reason at once, and a per-suite
+    declaration would have been thirty copies of one fact.
+    """
     dispose_engine()
     with (
         override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
@@ -41,6 +58,7 @@ def open_bucket_session(tmp_path: Path) -> Iterator[None]:
                 display_name=_PROFILE_LABEL,
             ),
         )
+        _declare_general_regime_iva_profile()
         try:
             yield
         finally:

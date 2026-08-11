@@ -28,7 +28,6 @@ from pathlib import Path
 import pytest
 
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
-from ._ledger_validation_support import _declare_general_regime_iva_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -46,10 +45,6 @@ _FACTURAE_FIXTURE = (
 @pytest.fixture(autouse=True)
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with _open_ledger_ux_session(tmp_path):
-        # The confirm path resolves an IVA treatment and the deadlines profile
-        # refuses on an incomplete IVA block, before any of the duplicate-guard
-        # behaviour under test is reached.
-        _declare_general_regime_iva_profile()
         yield
 
 

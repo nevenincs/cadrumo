@@ -64,7 +64,6 @@ from pathlib import Path
 import pytest
 
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
-from ._ledger_validation_support import _declare_general_regime_iva_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -101,15 +100,6 @@ _GRAND_TOTAL = "126.20"
 @pytest.fixture(autouse=True)
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with _open_ledger_ux_session(tmp_path):
-        # The confirm path resolves an IVA treatment, and the deadlines profile
-        # refuses to answer for a taxpayer whose IVA block is incomplete. The
-        # minimal profile the shared session registers does not carry it, so
-        # every confirm through this harness refused before reaching the
-        # behaviour under test. Declared as an ordinary general-regime filer:
-        # being charged recargo de equivalencia is a fact about the supplier's
-        # obligation towards this buyer, not a fourth composition -- a recargo
-        # retailer still files 303 under the general composition.
-        _declare_general_regime_iva_profile()
         yield
 
 

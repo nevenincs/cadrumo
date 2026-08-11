@@ -2,17 +2,25 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
 from typing import Final
 
-from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
+from .....application.calculations import (
+    ObservationEnvelopePayload,
+    ResultDispositionProjection,
+    normalize_m303_carry_observation_envelope,
+    resolve_iva_compensation_annual_partition_binding_values,
+)
 from .....core import (
     BindingSourceKind,
     CasillaId,
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
+    ResultDisposition,
+    derive_result_disposition,
+    result_disposition_casilla_ids,
     validated_casilla_id,
 )
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
@@ -40,6 +48,8 @@ from .. import (
 )
 from .._binding_selector_utils import selector_as_dict
 from .._relations import resolve_relation_values_from_observations
+
+_M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -108,6 +118,18 @@ def _with_selector(binding: DataBindingDefinition, **updates: object) -> DataBin
 
 def _with_aggregation(binding: DataBindingDefinition, op: BindingAggregationOp) -> DataBindingDefinition:
     return binding.model_copy(update={"aggregation": BindingAggregation(op=op)})
+
+
+def _filing_result_disposition(result: RegistryCalculationResult) -> ResultDisposition:
+    """Use the production result-disposition resolver at this test filing boundary."""
+    casilla_ids = result_disposition_casilla_ids("303")
+    assert casilla_ids is not None
+    disposition = derive_result_disposition(
+        "303",
+        {casilla_id: Decimal(result.values[casilla_id]) for casilla_id in casilla_ids},
+    )
+    assert disposition is not None
+    return disposition
 
 
 #: The tiers on which a real line always carries a rate, so a fixture that omits
@@ -253,6 +275,34 @@ def _calculate_390_from_observations_and_303_filings(
         )
         for period, result in quarterly_results.items()
     )
+    normalized_m303_envelopes = tuple(
+        normalize_m303_carry_observation_envelope(
+            ObservationEnvelopePayload(
+                observation=observation,
+                captured_at=_M303_APP_FILING_CAPTURED_AT,
+                source_kind="app_filing",
+                stamped_revision_id=str(
+                    resources()
+                    .modelos.authority.snapshot(
+                        "303",
+                        filing_year=filing_year,
+                        period=period,
+                    )
+                    .revision.id
+                ),
+                result_disposition=ResultDispositionProjection(
+                    disposition=_filing_result_disposition(result),
+                    provenance_kind="app_filing",
+                    provenance_locator=f"test-local-filing:{filing_year}:{period}",
+                ),
+            ),
+        )
+        for (period, result), observation in zip(
+            quarterly_results.items(),
+            m303_observations,
+            strict=True,
+        )
+    )
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         m303_observations,
@@ -262,7 +312,7 @@ def _calculate_390_from_observations_and_303_filings(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     annual_partition_values = resolve_iva_compensation_annual_partition_binding_values(
         snapshot.revision,
-        m303_observations,
+        normalized_m303_envelopes,
         filing_year=filing_year,
     )
     binding_values = {
