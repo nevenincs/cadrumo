@@ -302,6 +302,7 @@ async def test_authenticated_representation_landing_records_phone_acceptance_wit
             target_url = f"{external.aeat.domains.www1}{external.aeat.pre303.presentation_service_path}"
             try:
                 with pytest.raises(ClaveMovilApprovalTimeoutError) as raised:
+                    assert isinstance(provider, ClaveMovilAuthProvider)
                     await provider.authenticate_for_target(target_url=target_url)
             finally:
                 await provider.close()

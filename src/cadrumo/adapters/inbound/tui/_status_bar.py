@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import math
 from time import monotonic
-from typing import Final, Literal
+from typing import Final, Literal, override
 
 from textual.app import ComposeResult
 from textual.containers import Vertical
@@ -109,6 +109,7 @@ class PinnedStatusBar(Vertical):
         """Plain message currently held by the second line, without its glyph."""
         return self._message
 
+    @override
     def compose(self) -> ComposeResult:
         yield Static(self._summary, markup=False, classes="status-summary")
         yield Static("", markup=False, classes="status-message")

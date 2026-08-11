@@ -293,8 +293,8 @@ def _observed_header_facts_from_submitted_file(
         definition = resolved.fields_by_id.get(field_value.field_id)
         if definition is None or definition.kind is not CasillaFieldKind.HEADER:
             continue
-        header_key = definition.header_key
-        if header_key is None or field_value.value is None:
+        producer_key = definition.producer_key
+        if producer_key is None or field_value.value is None:
             continue
         token = str(field_value.value).strip()
         if not token:
@@ -304,7 +304,7 @@ def _observed_header_facts_from_submitted_file(
             continue
         facts.append(
             ObservedHeaderFact(
-                header_key=header_key,
+                header_key=producer_key.value,
                 value=token,
                 source_artefact_kind="submitted_file",
                 source_locator=field_value.source_locator,
