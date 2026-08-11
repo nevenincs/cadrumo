@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:72307f12b4381d78fe3afac3f178828ac4dec0e9e00b71545ec93a13d5d3da41'
+body_hash: 'sha256:491e55fedc93647630eb46e02de3fbdae0108a2d6a9d57537cbd27bf6782a06f'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -69,3 +69,13 @@ Verification: the structural gate and real link-help CLI proof pass (3 passed); 
 The remaining presentation-localization debt is assigned to S41: 254 `tr(default=...)` calls under `_ledger*.py`, of which exactly 174 are help defaults and 80 are other presentation fallbacks. They are not action/continuation/recovery semantics and were deliberately not swept into S90.
 
 S90 remains open for independent review.
+
+## Absolute ledger locale closure
+
+The operator's absolute locale rule supersedes the earlier S41 deferral recorded above. An AST inventory found 254 remaining `tr(default=...)` calls across sixteen `_ledger*.py` modules: 174 help fallbacks and 80 other presentation fallbacks, covering 226 distinct literal locale keys. Before mutation, every referenced key resolved to a nonempty authored value in ca/en/es/hu and all placeholder sets matched across the four catalogues.
+
+A token-span, AST-enumerated mechanical rewrite removed exactly those 254 `default` keywords while preserving each key and every non-default interpolation argument. The S90 conformance gate now scans every `_ledger*.py` source module and refuses any future `tr(default=...)`, in addition to its thirteen-module Notice/action checks. The fixed-point result is zero runtime English or Spanish fallback prose in the declared ledger scope.
+
+Verification: exact AST census reports `LEDGER_TR_DEFAULT_ZERO=True count=0`; Ruff, formatting, compileall, and diff checks pass; direct `aeat --language {ca,en,es,hu} app ledger --help` succeeds in all four locales. The help/conformance integration selection produced 31 passes and three unrelated failures at the pre-existing profile gate requiring `iva.m303_regime_composition`, before the changed operations ran. Locale scaffold remains globally red only on separately owned schema/profile omissions and IVA-wallet extras. BasedPyright remains globally red with 215 pre-existing private-usage, Typer typing, unused-callback, and unknown-type diagnostics; fallback removal introduced no typed construct.
+
+S90 remains open for final independent review.
