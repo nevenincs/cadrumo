@@ -4865,10 +4865,6 @@ cli:
         folder_id_unrecognised: A(z) %{reference} Google Drive mappahivatkozás nem
           tartalmaz felismerhető mappaazonosítót. Adj meg egy Drive mappa-URL-t vagy
           a puszta mappaazonosítót.
-        folder_refused: 'A(z) %{folder_id}%{scope_hint} Drive mappa nem listázható:
-          a mappának elérhetőnek kell lennie a drive.file hatókörben (az alkalmazás
-          hozta létre, vagy az operátor kifejezetten kiválasztotta), vagy add meg
-          a szükséges Google hatókört, és próbáld újra.'
       folder_help: Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák tömeges
         letöltéséhez.
       help: Kötegelten lekéri egy Drive-mappa összes PDF- vagy képszámláját, és mindegyiket

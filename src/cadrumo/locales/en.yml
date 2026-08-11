@@ -4604,10 +4604,6 @@ cli:
         folder_id_unrecognised: Google Drive folder reference %{reference} does not
           contain a recognisable folder id. Pass a Drive folder URL or its bare folder
           id.
-        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the
-          folder must be reachable under the drive.file scope (created by the app
-          or explicitly picked by the operator), or grant the required Google scope
-          and retry.'
       folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
         from.
       help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
