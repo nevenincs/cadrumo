@@ -15,8 +15,8 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
-modified: '2026-08-10'
-body_hash: 'sha256:abd70876d46531335d0e39f1c3c74d0b05b989cfd66517c56fb08b4672842687'
+modified: '2026-08-11'
+body_hash: 'sha256:6b4116340f7ce65eaf85e8530ba7eb1355c002e74a8e0010d88f457a4dfffd11'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -104,6 +104,32 @@ projection from the five typed activity-row children of the encrypted
 `ProrrataRegister`. Missing, duplicate, over-capacity, or invalid applicable rows refuse
 before target creation or byte emission. This refinement does not reactivate a withdrawn
 M303 layout and creates no alias, fallback, legacy spelling, or parallel store.
+
+### Differentiated-sector deduction projection
+
+The two differentiated-sector rows are an ephemeral deterministic application
+projection beside the canonical IVA-ledger aggregation. They consume only the
+selected filing revision and period's frozen canonical ledger observations, the
+same ejercicio's ordered `ProrrataRegister` sector identities, regimes, and
+resolved percentages, and the existing registry aggregation and apportionment
+primitives. They create no persistence, input authority, selector, scalar family,
+or export-specific aggregation.
+
+Each sector's seven base and deductible-cuota pairs are selected by canonical
+binding and category identity, never by labels, slot numbers, or a second store.
+Rectification base and cuota and investment-goods regularisation arrive only from
+their existing canonical ledger or binding owners. The row sum is projection-only
+arithmetic performed once with the established Decimal and rounding policy: the
+seven projected deductible cuotas plus signed rectification cuota plus signed
+investment-goods regularisation. It is neither persisted nor accepted as input,
+and it is not reverse-derived from the already aggregated M303 total.
+
+The whole projection refuses before target creation for more than two applicable
+sectors, duplicate or unknown sector identity, missing regime or percentage,
+unattributable relevant common observations, missing or ambiguous category
+ownership, overlap or double consumption, or any incomplete applicable row fact.
+No missing authority becomes blank or zero. The production M303 layout remains
+withdrawn, with no alias, legacy selector, or manual 700-through-735 input path.
 
 ### Producer vocabulary and resolution
 
