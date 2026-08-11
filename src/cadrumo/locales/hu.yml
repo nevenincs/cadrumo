@@ -2708,6 +2708,9 @@ cli:
           a táblázat sorát
         observe_local_help: Rögzítsen egy kezelő által megadott helyi megfigyelést
           a számítás előtöltéséhez
+        observe_local_replace_official_evidence_help: Engedélyezi, hogy ez az operátor
+          által megadott megfigyelés felülírja az ugyanazon modellhez és időszakhoz
+          tartozó meglévő hivatalos AEAT-bizonyítékot.
         observe_local_set_help: Kanonikus casilla.id és Decimal érték a rögzítéshez,
           pl. --set 1391=0
         view_help: Egy benyújtási rekord megjelenítése azonosító alapján.

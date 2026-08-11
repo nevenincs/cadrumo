@@ -2793,6 +2793,9 @@ cli:
           la fila de la hoja de cálculo
         observe_local_help: Registrar una observación local aportada por el operador
           para el prellenado del cálculo
+        observe_local_replace_official_evidence_help: Permite que esta observación
+          aportada por el operador sustituya las pruebas oficiales de la AEAT existentes
+          para el mismo modelo y periodo.
         observe_local_set_help: Id de casilla canónico y valor Decimal a registrar,
           p. ej. --set 1391=0
         view_help: Mostrar un filing record por id
