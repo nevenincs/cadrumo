@@ -63,6 +63,7 @@ from ._modelo_work_options import (
     _WorkUnitIdArg,
     _YearOpt,
 )
+from ...domain.calculations.registry import RevisionId
 
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099
@@ -278,7 +279,7 @@ def _validate_registry_target_before_profile_if_needed(
     modelo: str,
     filing_year: int,
     period: Period,
-    registry_revision_id: str | None,
+    registry_revision_id: RevisionId | None,
 ) -> None:
     from ...core import resolve_active_bucket_id
 

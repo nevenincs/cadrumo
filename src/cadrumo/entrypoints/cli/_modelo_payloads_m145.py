@@ -30,6 +30,7 @@ from ...core import CasillaId
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import LegalRefId, SourceRefId
+from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...application.modelo import (
@@ -49,7 +50,7 @@ class M145CommunicationRecordPayload(OutputSchema):
     modelo: str
     communication_year: int
     period_token: str
-    revision_id: str
+    revision_id: RevisionId
     state: str
     field_values: dict[CasillaId, str]
     legal_refs: tuple[LegalRefId, ...]
@@ -127,7 +128,7 @@ class M145CommunicationValidationResultPayload(OutputSchema):
     modelo: str
     communication_year: int
     period_token: str
-    revision_id: str
+    revision_id: RevisionId
     valid: bool
     issue_count: int
     issues: tuple[M145CommunicationValidationIssuePayload, ...]
@@ -163,7 +164,7 @@ class M145CommunicationExportResultPayload(OutputSchema):
     modelo: str
     communication_year: int
     period_token: str
-    revision_id: str
+    revision_id: RevisionId
     export_layout_id: str
     encoding: str
     record_count: int

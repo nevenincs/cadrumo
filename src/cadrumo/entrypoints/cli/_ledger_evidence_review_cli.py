@@ -21,6 +21,8 @@ import typer
 from ...application.ledger import (
     ConfirmationBlocker,
     CountryVocabularyAdvisory,
+    ExtractionDraftDocument,
+    FieldProvenance,
     FindingResolution,
     InvoiceDraft,
     PartyAttributionAdvisory,
@@ -89,6 +91,38 @@ def _blocker_payload(blocker: ConfirmationBlocker) -> EvidenceReviewBlockerPaylo
     )
 
 
+def _field_envelope_payload(envelope: FieldProvenance | None) -> dict[str, object]:
+    """Project one field's provenance envelope onto its review-row columns.
+
+    A field the reader recovered nothing for still emits every column, so an
+    absent reading and a recovered one stay distinguishable on the surface
+    rather than collapsing into a missing row.
+    """
+    if envelope is None:
+        return {
+            "origin": None,
+            "grounding": None,
+            "anchor": None,
+            "refused_anchor": None,
+            "anchor_self_reported": False,
+            "candidates": [],
+            "note": "",
+        }
+    return {
+        "origin": envelope.origin.value,
+        "grounding": envelope.grounding.value,
+        "anchor": envelope.anchor,
+        # Passed beside the anchor rather than folded into it. The grounding
+        # stage clears an anchor it could not locate, so a row showing only the
+        # anchor renders a refused claim and an absent one identically -- which
+        # is the distinction the envelope records this form to preserve.
+        "refused_anchor": envelope.refused_anchor,
+        "anchor_self_reported": bool(envelope.anchor_self_reported),
+        "candidates": _candidate_payloads(envelope),
+        "note": envelope.note,
+    }
+
+
 def _field_payloads(draft: InvoiceDraft) -> list[EvidenceReviewFieldPayload]:
     """Return one review row per scalar draft field, envelope attached when present.
 
@@ -102,24 +136,12 @@ def _field_payloads(draft: InvoiceDraft) -> list[EvidenceReviewFieldPayload]:
     for field in type(draft).model_fields:
         if field in {"provenance", "discrepancies", "lines", "iva_breakdown", "raw_text_length"}:
             continue
-        envelope = envelopes.get(field)
         rows.append(
             EvidenceReviewFieldPayload.model_validate(
                 {
                     "field": field,
                     "value": _printed(getattr(draft, field, None)),
-                    "origin": envelope.origin.value if envelope is not None else None,
-                    "grounding": envelope.grounding.value if envelope is not None else None,
-                    "anchor": envelope.anchor if envelope is not None else None,
-                    # Passed beside the anchor rather than folded into it. The
-                    # grounding stage clears an anchor it could not locate, so a
-                    # row showing only the anchor renders a refused claim and an
-                    # absent one identically -- which is the distinction the
-                    # envelope records this form to preserve.
-                    "refused_anchor": envelope.refused_anchor if envelope is not None else None,
-                    "anchor_self_reported": bool(envelope is not None and envelope.anchor_self_reported),
-                    "candidates": _candidate_payloads(envelope) if envelope is not None else [],
-                    "note": envelope.note if envelope is not None else "",
+                    **_field_envelope_payload(envelopes.get(field)),
                 },
             ),
         )
@@ -284,6 +306,105 @@ def _country_vocabulary_lines(notice: Notice) -> list[str]:
     return lines
 
 
+def _review_queue_rows(
+    document: ExtractionDraftDocument,
+    *,
+    reason: ConfirmationBlockReason | None,
+    finding: DraftDiscrepancyKind | None,
+    advisory: ReviewAdvisoryKind | None,
+    blocking_only: bool,
+) -> list[EvidenceReviewRowPayload]:
+    """Project the pending drafts the operator's filters keep, in reference order.
+
+    Every filter narrows the same queue; a draft must satisfy all of the ones
+    the operator supplied to survive.
+    """
+    rows: list[EvidenceReviewRowPayload] = []
+    for stored in sorted(document.drafts, key=lambda row: row.evidence_reference):
+        blockers = confirmation_blockers(stored.draft)
+        reasons = sorted({blocker.reason.value for blocker in blockers})
+        # Read through the one projection the show surface's notices are
+        # built from, never re-classified here: a queue that disagrees with
+        # the document it sends the operator to is a queue they stop reading.
+        advisories = review_advisory_kinds(stored.draft)
+        if reason is not None and reason.value not in reasons:
+            continue
+        if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
+            continue
+        if advisory is not None and advisory not in advisories:
+            continue
+        if blocking_only and not blockers:
+            continue
+        rows.append(
+            EvidenceReviewRowPayload.model_validate(
+                {
+                    "evidence_reference": stored.evidence_reference,
+                    "extractor": stored.extractor,
+                    "drafted_at": stored.drafted_at.isoformat(),
+                    "blocking_count": len(blockers),
+                    "reasons": reasons,
+                    "advisory_count": len(advisories),
+                    "advisories": [kind.value for kind in advisories],
+                },
+            ),
+        )
+    return rows
+
+
+def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
+    """Summarise the queue's advisory and blocking population for the operator."""
+    notices: list[Notice] = []
+    advised = sum(1 for row in rows if row.advisory_count)
+    if advised:
+        # A count and a route, not a row per advisory. The per-document prose
+        # already exists on `show` and repeating it here once per affected
+        # draft is how a channel earns the reflex to skip it -- but a queue
+        # that never mentions them at all is why these fire into nothing.
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.evidence.review.advised_pending",
+                message=tr(
+                    "cli.app.ledger.evidence.review.advised_pending_message",
+                    default=(
+                        "Some pending documents carry advisories. These block nothing and will "
+                        "confirm as they are, so nothing else will raise them again. Use the listed "
+                        "advisory kinds to focus review, then inspect each affected document."
+                    ),
+                ),
+                action=resolve_notice_action(
+                    action=ActionReference(action_id="operator.ledger.evidence.review.list"),
+                ),
+                context={
+                    "advised": str(advised),
+                    "kinds": ",".join(
+                        sorted({value for row in rows for value in row.advisories}),
+                    ),
+                },
+            ),
+        )
+    blocked = sum(1 for row in rows if row.blocking_count)
+    if blocked:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.evidence.review.blocked_pending",
+                message=tr(
+                    "cli.app.ledger.evidence.review.blocked_pending_message",
+                    default=(
+                        "Some pending documents carry findings that must each be answered before "
+                        "they can be confirmed. Inspect each affected draft before resolving its findings."
+                    ),
+                ),
+                action=resolve_notice_action(
+                    action=ActionReference(action_id="operator.ledger.evidence.review.list"),
+                ),
+                context={"blocked": str(blocked)},
+            ),
+        )
+    return notices
+
+
 def _register_review_list_command() -> None:
     @review_app.command(
         "list",
@@ -344,35 +465,13 @@ def _register_review_list_command() -> None:
         if blocking_only:
             filters.append("blocking=true")
 
-        rows: list[EvidenceReviewRowPayload] = []
-        for stored in sorted(document.drafts, key=lambda row: row.evidence_reference):
-            blockers = confirmation_blockers(stored.draft)
-            reasons = sorted({blocker.reason.value for blocker in blockers})
-            # Read through the one projection the show surface's notices are
-            # built from, never re-classified here: a queue that disagrees with
-            # the document it sends the operator to is a queue they stop reading.
-            advisories = review_advisory_kinds(stored.draft)
-            if reason is not None and reason.value not in reasons:
-                continue
-            if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
-                continue
-            if advisory is not None and advisory not in advisories:
-                continue
-            if blocking_only and not blockers:
-                continue
-            rows.append(
-                EvidenceReviewRowPayload.model_validate(
-                    {
-                        "evidence_reference": stored.evidence_reference,
-                        "extractor": stored.extractor,
-                        "drafted_at": stored.drafted_at.isoformat(),
-                        "blocking_count": len(blockers),
-                        "reasons": reasons,
-                        "advisory_count": len(advisories),
-                        "advisories": [kind.value for kind in advisories],
-                    },
-                ),
-            )
+        rows = _review_queue_rows(
+            document,
+            reason=reason,
+            finding=finding,
+            advisory=advisory,
+            blocking_only=blocking_only,
+        )
 
         lines = [f"bucket_id\t{bucket_id}", f"pending\t{len(rows)}"]
         lines.extend(
@@ -380,55 +479,7 @@ def _register_review_list_command() -> None:
             f"{row.advisory_count}\t{','.join(row.advisories) or '-'}"
             for row in rows
         )
-        notices: list[Notice] = []
-        advised = sum(1 for row in rows if row.advisory_count)
-        if advised:
-            # A count and a route, not a row per advisory. The per-document prose
-            # already exists on `show` and repeating it here once per affected
-            # draft is how a channel earns the reflex to skip it -- but a queue
-            # that never mentions them at all is why these fire into nothing.
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code="ledger.evidence.review.advised_pending",
-                    message=tr(
-                        "cli.app.ledger.evidence.review.advised_pending_message",
-                        default=(
-                            "Some pending documents carry advisories. These block nothing and will "
-                            "confirm as they are, so nothing else will raise them again. Use the listed "
-                            "advisory kinds to focus review, then inspect each affected document."
-                        ),
-                    ),
-                    action=resolve_notice_action(
-                        action=ActionReference(action_id="operator.ledger.evidence.review.list"),
-                    ),
-                    context={
-                        "advised": str(advised),
-                        "kinds": ",".join(
-                            sorted({value for row in rows for value in row.advisories}),
-                        ),
-                    },
-                ),
-            )
-        blocked = sum(1 for row in rows if row.blocking_count)
-        if blocked:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code="ledger.evidence.review.blocked_pending",
-                    message=tr(
-                        "cli.app.ledger.evidence.review.blocked_pending_message",
-                        default=(
-                            "Some pending documents carry findings that must each be answered before "
-                            "they can be confirmed. Inspect each affected draft before resolving its findings."
-                        ),
-                    ),
-                    action=resolve_notice_action(
-                        action=ActionReference(action_id="operator.ledger.evidence.review.list"),
-                    ),
-                    context={"blocked": str(blocked)},
-                ),
-            )
+        notices = _review_queue_notices(rows)
         _emit_envelope(
             ctx,
             command="ledger.evidence.review.list",
@@ -438,6 +489,42 @@ def _register_review_list_command() -> None:
             lines=lines,
             notices=notices,
         )
+
+
+def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: str) -> StoredExtractionDraft:
+    """Resolve one pending draft by reference, naming the known set when it misses."""
+    for row in document.drafts:
+        if row.evidence_reference == reference:
+            return row
+    known = ", ".join(sorted(row.evidence_reference for row in document.drafts)) or "none"
+    raise _bad(
+        tr(
+            "cli.app.ledger.evidence.review.unknown_reference",
+            default="No pending draft for that reference.",
+        )
+        + f" ({known})",
+    )
+
+
+def _review_show_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str]]:
+    """Return the non-blocking advisories for one draft, as notices and their text lines.
+
+    Both channels are built from the same notice so the JSON envelope and the
+    printed dump cannot state different advisories for the same document.
+    """
+    notices: list[Notice] = []
+    lines: list[str] = []
+    advisory = party_attribution_advisory(draft)
+    if advisory is not None:
+        attribution_notice = _party_attribution_notice(advisory)
+        notices.append(attribution_notice)
+        lines.extend(_party_attribution_lines(attribution_notice))
+    country_advisory = country_vocabulary_advisory(draft)
+    if country_advisory is not None:
+        for country_notice in _country_vocabulary_notices(country_advisory):
+            notices.append(country_notice)
+            lines.extend(_country_vocabulary_lines(country_notice))
+    return notices, lines
 
 
 def _register_review_show_command() -> None:
@@ -461,19 +548,7 @@ def _register_review_show_command() -> None:
         """Show every reviewable field of one pending draft, with its blocking findings."""
         bucket_id = _tx_repo(_state()).bucket_id
         document = load_extraction_drafts(bucket_id, load_settings())
-        stored: StoredExtractionDraft | None = next(
-            (row for row in document.drafts if row.evidence_reference == reference),
-            None,
-        )
-        if stored is None:
-            known = ", ".join(sorted(row.evidence_reference for row in document.drafts)) or "none"
-            raise _bad(
-                tr(
-                    "cli.app.ledger.evidence.review.unknown_reference",
-                    default="No pending draft for that reference.",
-                )
-                + f" ({known})",
-            )
+        stored = _stored_draft_for_reference(document, reference)
 
         draft = stored.draft
         blockers = confirmation_blockers(draft)
@@ -505,17 +580,8 @@ def _register_review_show_command() -> None:
         lines.extend(
             f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
         )
-        notices: list[Notice] = []
-        advisory = party_attribution_advisory(draft)
-        if advisory is not None:
-            attribution_notice = _party_attribution_notice(advisory)
-            notices.append(attribution_notice)
-            lines.extend(_party_attribution_lines(attribution_notice))
-        country_advisory = country_vocabulary_advisory(draft)
-        if country_advisory is not None:
-            for country_notice in _country_vocabulary_notices(country_advisory):
-                notices.append(country_notice)
-                lines.extend(_country_vocabulary_lines(country_notice))
+        notices, advisory_lines = _review_show_advisories(draft)
+        lines.extend(advisory_lines)
         if blockers:
             notices.append(
                 Notice(

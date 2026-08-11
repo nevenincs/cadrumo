@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import typer
 
@@ -21,6 +23,10 @@ from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.profile.ledger import TransactionCatalogueRepository
+    from ...domain.currency import CurrencyNormalizationService
 
 
 def _known_import_providers() -> tuple[str, ...]:
@@ -55,6 +61,167 @@ def _validate_import_provider(provider: str) -> str:
     return normalised
 
 
+@dataclass(frozen=True, slots=True)
+class _ImportBucketContext:
+    """Where an import writes, and who it is recorded as."""
+
+    bucket_id: str | None
+    actor: str
+    transaction_repository: TransactionCatalogueRepository | None
+
+
+@dataclass(frozen=True, slots=True)
+class _ImportReport:
+    """The operator-facing text lines plus the notice strings the payload echoes."""
+
+    lines: list[str]
+    dry_run_notice: str | None
+    empty_import_notice: str | None
+    likely_duplicate_notice: str | None
+
+
+def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
+    """Resolve the bucket an import writes to, and the actor it is recorded under.
+
+    A real import requires an active profile. A dry run resolves the active
+    bucket when one exists so the preview can count rows against the stored
+    catalogue, but it still works on a cold workspace.
+    """
+    if not dry_run:
+        transaction_repository = _tx_repo(_state())
+        return _ImportBucketContext(
+            bucket_id=transaction_repository.bucket_id,
+            actor=resolve_active_bucket_id() or "operator",
+            transaction_repository=transaction_repository,
+        )
+    if resolve_active_bucket_id() is None:
+        return _ImportBucketContext(bucket_id=None, actor="operator", transaction_repository=None)
+    transaction_repository = _tx_repo(_state())
+    return _ImportBucketContext(
+        bucket_id=transaction_repository.bucket_id,
+        actor="operator",
+        transaction_repository=transaction_repository,
+    )
+
+
+def _imported_files(
+    import_paths: list[Path],
+    *,
+    command: Callable[[Path], LedgerSourceImportCommand],
+    transaction_repository: TransactionCatalogueRepository | None,
+    currency_normalizer: CurrencyNormalizationService,
+) -> tuple[list[LedgerSourceImportResult], list[tuple[Path, str]]]:
+    """Import each statement file, returning the successes and the refusals apart.
+
+    Caught per FILE, so one unreadable statement cannot discard the results
+    already produced for the rest of the folder. Only the project's own failure
+    taxonomy is caught: a TypeError here is a defect and must still crash rather
+    than be reported as a bad statement.
+    """
+    file_results: list[LedgerSourceImportResult] = []
+    refusals: list[tuple[Path, str]] = []
+    for file_path in import_paths:
+        try:
+            file_results.append(
+                import_ledger_source(
+                    command(file_path),
+                    transaction_repository=transaction_repository,
+                    currency_normalizer=currency_normalizer,
+                ),
+            )
+        except CadrumoError as exc:
+            refusals.append((file_path, resolve_error_message(exc)))
+    return file_results, refusals
+
+
+def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: bool) -> _ImportReport:
+    """Render the counted totals, and every notice line they imply, for one import."""
+    lines = [
+        f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
+        f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
+        f"{tr('cli.ledger.labels.skipped')}\t{result.skipped}",
+    ]
+    dry_run_notice: str | None = None
+    likely_duplicate_notice: str | None = None
+    if result.dry_run:
+        lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
+        dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
+        lines.append(dry_run_notice)
+    empty_import_notice = _empty_import_notice(result)
+    if empty_import_notice is not None:
+        lines.append(empty_import_notice)
+    if result.likely_duplicates > 0:
+        likely_duplicate_notice = (
+            f"{tr('cli.ledger.labels.warning')}\t"
+            f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
+        )
+        lines.append(likely_duplicate_notice)
+    if verbose or verify:
+        lines.extend(_validation_lines(result.validation, result.source))
+    return _ImportReport(
+        lines=lines,
+        dry_run_notice=dry_run_notice,
+        empty_import_notice=empty_import_notice,
+        likely_duplicate_notice=likely_duplicate_notice,
+    )
+
+
+def _refusal_lines_and_notices(
+    refusals: list[tuple[Path, str]],
+    *,
+    imported_files: int,
+) -> tuple[list[str], list[Notice]]:
+    """Surface every file that failed inside an otherwise-successful folder import.
+
+    A partially-failed folder must not read as a clean import. The aggregate sums
+    only the files that SUCCEEDED, so without these the totals would describe a
+    subset while presenting themselves as the whole -- the silent-degradation
+    shape, one layer up.
+    """
+    lines: list[str] = []
+    notices: list[Notice] = []
+    for refused_path, reason in refusals:
+        refusal_line = tr(
+            "cli.ledger.import.file_refused",
+            path=refused_path.name,
+            reason=reason,
+            default=f"{refused_path.name} was not imported: {reason}",
+        )
+        lines.append(f"{tr('cli.ledger.labels.warning')}\t{refusal_line}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.import.file_refused",
+                message=refusal_line,
+                context={
+                    "path": refused_path.name,
+                    "reason": reason,
+                    "imported_files": str(imported_files),
+                    "refused_files": str(len(refusals)),
+                },
+            ),
+        )
+    return lines, notices
+
+
+def _all_files_refused(refusals: list[tuple[Path, str]]) -> typer.BadParameter:
+    """Build the hard refusal for an import that produced no result at all.
+
+    Nothing imported at all, which is the single-file failure case as well as a
+    folder in which every file failed. That stays a hard refusal: downgrading it
+    to a warning would turn today's error exit into a success for an operator who
+    imported nothing.
+    """
+    detail = "; ".join(f"{path.name}: {reason}" for path, reason in refusals)
+    return _bad(
+        tr(
+            "cli.ledger.import.all_files_refused",
+            detail=detail,
+            default="No statement file could be imported: " + detail,
+        ),
+    )
+
+
 def register_import_commands(app: typer.Typer) -> None:
     """Register ledger import commands."""
 
@@ -84,131 +251,47 @@ def register_import_commands(app: typer.Typer) -> None:
     ) -> None:
         """Import a financial-statement file via the existing provider registry."""
         normalised_provider = _validate_import_provider(provider)
-        bucket_id: str | None = None
-        actor = "operator"
-        transaction_repository = None
-        # A real import requires an active profile. A dry run resolves the
-        # active bucket when one exists so the preview can count rows against
-        # the stored catalogue, but it still works on a cold workspace.
-        if dry_run:
-            if resolve_active_bucket_id() is not None:
-                transaction_repository = _tx_repo(_state())
-                bucket_id = transaction_repository.bucket_id
-        else:
-            current_state = _state()
-            transaction_repository = _tx_repo(current_state)
-            bucket_id = transaction_repository.bucket_id
-            actor = resolve_active_bucket_id() or "operator"
+        context = _import_bucket_context(dry_run=dry_run)
 
         from ...adapters.outbound.fx import default_ecb_rate_provider
         from ...domain.currency import CurrencyNormalizationService
 
         currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
         canonical_period = _optional_canonical_period(period, year=year)
-        import_paths = _resolve_import_paths(file)
-        file_results: list[LedgerSourceImportResult] = []
-        refusals: list[tuple[Path, str]] = []
-        for file_path in import_paths:
-            # Per FILE, so one unreadable statement cannot discard the results
-            # already produced for the rest of the folder. Only the project's
-            # own failure taxonomy is caught: a TypeError here is a defect and
-            # must still crash rather than be reported as a bad statement.
-            try:
-                file_results.append(
-                    import_ledger_source(
-                        LedgerSourceImportCommand(
-                            bucket_id=bucket_id,
-                            path=file_path,
-                            provider=normalised_provider,
-                            dry_run=dry_run,
-                            verify=verify,
-                            source=verify_source,
-                            period=canonical_period,
-                            actor=actor,
-                            source_command="aeat app ledger import",
-                        ),
-                        transaction_repository=transaction_repository,
-                        currency_normalizer=currency_normalizer,
-                    ),
-                )
-            except CadrumoError as exc:
-                refusals.append((file_path, resolve_error_message(exc)))
+        file_results, refusals = _imported_files(
+            _resolve_import_paths(file),
+            command=lambda file_path: LedgerSourceImportCommand(
+                bucket_id=context.bucket_id,
+                path=file_path,
+                provider=normalised_provider,
+                dry_run=dry_run,
+                verify=verify,
+                source=verify_source,
+                period=canonical_period,
+                actor=context.actor,
+                source_command="aeat app ledger import",
+            ),
+            transaction_repository=context.transaction_repository,
+            currency_normalizer=currency_normalizer,
+        )
         if not file_results:
-            # Nothing imported at all, which is the single-file failure case as
-            # well as a folder in which every file failed. That stays a hard
-            # refusal: downgrading it to a warning would turn today's error exit
-            # into a success for an operator who imported nothing.
-            raise _bad(
-                tr(
-                    "cli.ledger.import.all_files_refused",
-                    detail="; ".join(f"{path.name}: {reason}" for path, reason in refusals),
-                    default=(
-                        "No statement file could be imported: "
-                        + "; ".join(f"{path.name}: {reason}" for path, reason in refusals)
-                    ),
-                ),
-            )
+            raise _all_files_refused(refusals)
         result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
-        lines = [
-            f"{tr('cli.ledger.labels.rows')}\t{result.rows}",
-            f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
-            f"{tr('cli.ledger.labels.skipped')}\t{result.skipped}",
-        ]
-        dry_run_notice: str | None = None
-        likely_duplicate_notice: str | None = None
-        if result.dry_run:
-            lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
-            dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
-            lines.append(dry_run_notice)
-        empty_import_notice = _empty_import_notice(result)
-        if empty_import_notice is not None:
-            lines.append(empty_import_notice)
-        if result.likely_duplicates > 0:
-            likely_duplicate_notice = (
-                f"{tr('cli.ledger.labels.warning')}\t"
-                f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
-            )
-            lines.append(likely_duplicate_notice)
-        if verbose or verify:
-            lines.extend(_validation_lines(result.validation, result.source))
+        report = _import_report(result, verbose=verbose, verify=verify)
+        refusal_lines, notices = _refusal_lines_and_notices(refusals, imported_files=len(file_results))
+
         from ._ledger_payloads import LedgerImportPayload
 
-        # A partially-failed folder must not read as a clean import. The
-        # aggregate sums only the files that SUCCEEDED, so without these the
-        # totals would describe a subset while presenting themselves as the
-        # whole -- the silent-degradation shape, one layer up.
-        notices: list[Notice] = []
-        for refused_path, reason in refusals:
-            refusal_line = tr(
-                "cli.ledger.import.file_refused",
-                path=refused_path.name,
-                reason=reason,
-                default=f"{refused_path.name} was not imported: {reason}",
-            )
-            lines.append(f"{tr('cli.ledger.labels.warning')}	{refusal_line}")
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.WARNING,
-                    code="ledger.import.file_refused",
-                    message=refusal_line,
-                    context={
-                        "path": refused_path.name,
-                        "reason": reason,
-                        "imported_files": str(len(file_results)),
-                        "refused_files": str(len(refusals)),
-                    },
-                ),
-            )
         _emit_envelope(
             ctx,
             command="ledger.import",
             result=LedgerImportPayload.from_result(
                 result,
-                dry_run_notice=dry_run_notice,
-                empty_import_notice=empty_import_notice,
-                likely_duplicate_notice=likely_duplicate_notice,
+                dry_run_notice=report.dry_run_notice,
+                empty_import_notice=report.empty_import_notice,
+                likely_duplicate_notice=report.likely_duplicate_notice,
             ),
-            lines=lines,
+            lines=[*report.lines, *refusal_lines],
             notices=notices,
         )
 

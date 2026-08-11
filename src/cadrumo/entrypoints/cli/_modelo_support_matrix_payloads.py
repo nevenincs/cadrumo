@@ -18,6 +18,7 @@ See Also:
 from __future__ import annotations
 
 from ...core.json_contract import OutputSchema, register_schema
+from ...domain.calculations.registry import RevisionId
 
 
 class ModeloRenamePayload(OutputSchema):
@@ -53,7 +54,7 @@ class ModeloSupportMatrixEntryPayload(OutputSchema):
     title: str
     calculation_class: str
     revision_count: int
-    latest_revision_id: str
+    latest_revision_id: RevisionId
     latest_revision_valid_from: str
     supported_revision_ids: list[str]
     calc_grade: bool

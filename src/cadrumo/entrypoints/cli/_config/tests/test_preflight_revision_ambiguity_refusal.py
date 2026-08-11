@@ -54,7 +54,6 @@ def test_an_ambiguous_filing_year_refuses_and_names_both_candidate_revisions() -
             candidate_ids=("2024-desde-09", "2024-hasta-08"),
             filing_year=2024,
             reason="mid-year AEAT design boundary",
-            suggestion="supply the filing period, or an as-of date",
         )
 
     with (

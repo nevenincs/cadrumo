@@ -34,6 +34,7 @@ from ...core.json_contract import OutputSchema, register_schema
 from ...core.parsing import require_iso8601_date
 from ._decimal_wire import NonNegativeDecimalWireText
 from ._ledger_payloads import LedgerStatusResult
+from ...domain.calculations.registry import RevisionId
 
 # ---------------------------------------------------------------------------
 # Shared sub-models (not registered — used as nested types)
@@ -124,7 +125,7 @@ class OverviewCalendarEntryPayload(OutputSchema):
     source: str = "registry_deadline"
     local_work_unit_id: str | None = None
     local_work_unit_name: str | None = None
-    local_work_unit_revision_id: str | None = None
+    local_work_unit_revision_id: RevisionId | None = None
 
 
 class OverviewCalendarFilingEvidencePayload(OutputSchema):

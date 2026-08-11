@@ -38,7 +38,7 @@ def test_non_tty_refused_error_has_no_recovery_transport_attribute() -> None:
     """The renderer receives a typed verdict, never a copied command string."""
 
     exc = NonTtyRefusedError()
-    assert exc.suggestion is None
+    assert not hasattr(exc, "suggestion")
 
 
 # ---------------------------------------------------------------------------

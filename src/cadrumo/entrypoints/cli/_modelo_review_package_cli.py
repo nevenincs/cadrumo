@@ -311,6 +311,7 @@ def review_package_build(
                     refund_election=refund_election,
                     payment_election=payment_election,
                     prior_domiciliation_election=prior_domiciliation_election,
+                    m303_applicability=None,
                 ),
                 workflow_profile=workflow_profile,
             )

@@ -43,6 +43,7 @@ from ...core.identity import BucketId, ContentDigest, ProfileId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.user_profile import UserProfileStatus
+from ...domain.calculations.registry import RevisionId
 
 # The two wizard-owned profile result schemas register through the manifest's
 # explicit lazy schema-owner table, NOT here: the `config` group imports this
@@ -576,7 +577,7 @@ class ConfigProfilePreflightResult(OutputSchema):
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
     ready: bool

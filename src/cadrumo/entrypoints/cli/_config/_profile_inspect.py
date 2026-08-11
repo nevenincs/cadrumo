@@ -34,6 +34,7 @@ from ._profile_readiness import (
     _emit_profile_record_unreadable,
     _read_profile_record,
 )
+from ....domain.calculations.registry import RevisionId
 
 _log = _get_logger(__name__)
 
@@ -205,7 +206,7 @@ def _register_show_command(
             raise typer.Exit(code=2)
 
 
-def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id: str | None) -> str:
+def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id: RevisionId | None) -> str:
     """Resolve the registry revision a preflight check is assessed against.
 
     When ``revision_id`` is supplied it is an explicit override and is
@@ -287,7 +288,7 @@ def _register_preflight_command(
             help=tr("cli.config.profile.preflight_filing_year_help"),
         ),
         period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
-        revision_id: str | None = typer.Option(
+        revision_id: RevisionId | None = typer.Option(
             None,
             "--revision-id",
             help=tr("cli.config.profile.preflight_revision_id_help"),
