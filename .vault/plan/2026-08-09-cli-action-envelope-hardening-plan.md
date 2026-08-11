@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-10'
-body_hash: 'sha256:cf8f7a8a4a6afad40b87c46b934e107aea5b2923601bc9a4b9468086c317b5ad'
+body_hash: 'sha256:8d3adb9808a2df93b94a4d2463d3d205c19e3b885fb235b49ee068a28bc08a8e'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -24,7 +24,25 @@ identity joins and real negative-recovery-retry observations. The related ADR,
 research, and reference authorize every Wave. This VaultSpec lifecycle record
 is intentionally not routed through the user-documentation pipeline.
 
-## Steps
+Error-default migration is staged and rehome-first. `S50` preserves the
+immutable 612-row preimage while it requires a disposition only for each of the
+238 historical non-null keys. The current set has 111 keys: 106 physical
+constructors, including direct or alias-resolved constructions in `raise`,
+`return`, and assignment contexts, and five nonconstructing references. A
+current import-and-alias-resolved physical constructor or reference may be
+recorded only as evidence-only `migration_required` with one open scope-valid
+current owner; it is not a recovery outcome. The five nonconstructing
+references start in that state and may become `verified_nonproducer_reference`
+only after no emitting, dynamic, or re-export route is proven. The final kinds
+are `verified_typed_action`, `verified_terminal_no_recovery`,
+`verified_nonproducer_reference`, and `retired_or_unreachable`; the last is
+restricted to the source-proven 127-row zero-reference set. The rehoming ledger
+carries source locators and ownership evidence only, never action, command,
+condition, prose, or locale policy.
+
+Historic shard Steps retain immutable allocation evidence and may retire only
+after every allocated historical non-null row has a final disposition. `S51`
+through `S57` and `S64` remain open until that closure criterion is met.## Steps
 
 ## Wave `W01` - Establish the fixed-point census and live denominator
 
@@ -115,9 +133,9 @@ Retire error-registry defaults and free-form operational guidance by complete pr
 Convert registered defaults and exception-level action overrides into catalogue references or explicit no-recovery outcomes.
 
 - [x] `W05.P08.S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection; `src/cadrumo/core/errors/_registry.py`.
-- [ ] `W05.P08.S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step; `dev/cli_action_census_dispositions.py`.
-- [ ] `W05.P08.S30` - Prove registered error recovery resolves against the live command and input surface; `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`.
-- [ ] `W05.P08.S50` - Migrate core error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_core.py`.
+- [x] `W05.P08.S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step; `dev/cli_action_census_dispositions.py`.
+- [x] `W05.P08.S30` - Prove registered error recovery resolves against the live command and input surface; `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`.
+- [ ] `W05.P08.S50` - Build a fail-closed per-record historical-default rehoming join before any registry-shard owner is retired; `dev/error_code_default_recovery_rehoming.py; dev/error_code_default_recovery_rehoming.toml; dev/tests/test_error_code_default_recovery_rehoming.py`.
 - [ ] `W05.P08.S51` - Migrate first application error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_application_part1.py`.
 - [ ] `W05.P08.S52` - Migrate second application error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_application_part2.py`.
 - [ ] `W05.P08.S53` - Migrate first domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part1.py`.
@@ -128,9 +146,16 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [ ] `W05.P08.S63` - Delete the retired CadrumoError suggestion parameter and attribute so every unmigrated exception producer fails loudly; `src/cadrumo/core/errors/__init__.py`.
 - [ ] `W05.P08.S64` - Migrate entrypoint error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_entrypoints.py`.
 - [ ] `W05.P08.S65` - Replace ancillary core install and repair suggestion producers with canonical action references or explicit no-recovery outcomes; `src/cadrumo/core/_optional_extras.py; src/cadrumo/core/external_constants.py`.
-- [ ] `W05.P08.S96` - Migrate residual modelo exception-override action selectors and forwarding bridge to typed conditions and canonical actions; `src/cadrumo/application/modelo/_export.py; src/cadrumo/application/modelo/_profile_readiness_gate.py; src/cadrumo/application/modelo/_projection.py; src/cadrumo/application/modelo/_reconcile.py`.
-- [ ] `W05.P08.S97` - Migrate the active transaction-catalogue workflow refusal from its legacy exception continuation to a typed verdict or explicit no-recovery outcome; `src/cadrumo/application/workflow/_models.py`.
+- [ ] `W05.P08.S96` - Migrate residual Modelo exception recovery producers and forwarding bridges to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/modelo/_export.py; src/cadrumo/application/modelo/_profile_readiness_gate.py; src/cadrumo/application/modelo/_projection.py; src/cadrumo/application/modelo/_reconcile.py; src/cadrumo/application/modelo/_work_addressing.py; src/cadrumo/application/modelo/_registry_helpers.py; src/cadrumo/application/modelo/_required_binding_gate.py; src/cadrumo/application/modelo/_workflow_gate.py; src/cadrumo/application/modelo/_result_disposition_resolution.py; src/cadrumo/application/modelo/_work_lifecycle.py; src/cadrumo/application/modelo/_calculation_helpers.py; src/cadrumo/application/modelo/_calculation_actions.py; src/cadrumo/application/modelo/_calculation_preparation.py; src/cadrumo/application/modelo/_m349_ledger_guard.py; src/cadrumo/application/modelo/_calculation_modelo_adjustments.py; src/cadrumo/application/modelo/_verification_cross_period.py; src/cadrumo/application/modelo/_amendment_actions.py; src/cadrumo/application/modelo/_amendment_kind_resolution.py; src/cadrumo/application/modelo/_external_import_actions.py; src/cadrumo/application/modelo/_filed_revision_observation.py; src/cadrumo/application/modelo/_filing_actions.py; src/cadrumo/application/modelo/_local_observation_actions.py; src/cadrumo/application/modelo/_local_observation_spreadsheet.py; src/cadrumo/application/modelo/_selectors.py; src/cadrumo/application/modelo/_semantic_role_resolution.py`.
+- [ ] `W05.P08.S97` - Migrate workflow exception precondition and continuation producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/workflow/_models.py; src/cadrumo/application/workflow/_engine.py; src/cadrumo/application/workflow/_profile_bucket_scan.py`.
 - [ ] `W05.P08.S99` - Migrate justificante exception action forwarding through cooperative MRO to the retired-error boundary and canonical typed actions; `src/cadrumo/domain/justificante/_errors.py`.
+- [ ] `W05.P08.S100` - Migrate core corpus, access-gate, and active-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/core/corpus_manifest/__init__.py; src/cadrumo/core/access_gate/__init__.py; src/cadrumo/core/config.py`.
+- [ ] `W05.P08.S101` - Migrate application user-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/user_profile/_profile_repository.py; src/cadrumo/application/user_profile/_bundle.py`.
+- [ ] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
+- [ ] `W05.P08.S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/export/_tabular.py`.
+- [ ] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py`.
+- [ ] `W05.P08.S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/invoices/_service.py; src/cadrumo/domain/iva/_lookup.py; src/cadrumo/domain/portals/_registry.py`.
+- [ ] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
@@ -148,7 +173,7 @@ Migrate high-density operational guidance and prove blank-state and readiness re
 Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale slices named by the census.
 
 - [ ] `W05.P10.S36` - Migrate authentication and session recovery predicates and actions; `src/cadrumo/application/auth`.
-- [ ] `W05.P10.S37` - Migrate wizard status and next-step producers; `src/cadrumo/application/wizard`.
+- [ ] `W05.P10.S37` - Migrate wizard status, next-step, and missing-input refusal producers to typed failed-condition verdicts with live input bindings or explicit no-recovery outcomes, and prove profile-create recovery rejection.; `src/cadrumo/application/wizard`.
 - [ ] `W05.P10.S38` - Migrate ledger findings lifecycle guards and recovery-action producers; `src/cadrumo/application/ledger`.
 - [ ] `W05.P10.S39` - Migrate deadline recovery commands and overdue continuations; `src/cadrumo/domain/deadlines`.
 - [ ] `W05.P10.S40` - Migrate live-read recovery producers with explicit safety dispositions; `src/cadrumo/application/live`.
@@ -198,12 +223,15 @@ Replace scenario-authored expectations with production-derived condition and act
 - [ ] `W06.P11.S42` - Generate the leaf-condition-scenario matrix from live surface and production verdict declarations; `dev/agent_eval/_action_coverage.py`.
 - [ ] `W06.P11.S43` - Replace scenario-owned expected actions with observed production condition and action assertions; `dev/agent_eval/_models.py`.
 - [ ] `W06.P11.S44` - Dispatch negative cases validate bindings execute safe recovery and retry original leaves; `dev/agent_eval/_runner.py`.
-- [ ] `W06.P11.S45` - Enforce the bidirectional declaration and observation join; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
+- [ ] `W06.P11.S45` - Enforce the bidirectional declaration and observation join, removing retired error-registry-suggestion test references so only the live canonical citation gate remains.; `src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py`.
 
 ### Phase `W06.P12` - Fixed-point closure and campaign honesty
 
-Require zero unclassified sites and exact declared-observed reconciliation before campaign closure.
-
+Require zero unclassified sites and exact declared-observed reconciliation before
+campaign closure. `W06` rejects `migration_required` and ambiguous rehoming
+rows, revalidates each final typed-producer resolver or terminal proof, proves
+retired absence and reference-only status, and preserves the complete immutable
+612-row history.
 - [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/cli_action_census.py`.
 - [ ] `W06.P12.S47` - Fail closure on unclassified sites unresolved actions insufficient bindings missing proofs or ungrounded exclusions; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
@@ -247,3 +275,4 @@ cross-Wave exceptions.
   xfails, or tautological expected actions.
 - A fresh-context Terra xhigh honesty review is persisted and every finding is
   closed or formally deferred with a follow-up reference before S48 is checked.
+

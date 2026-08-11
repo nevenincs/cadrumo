@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:b70ed232b450efc529f612628e12f6511569affff87364bf0710825ffe49bff4'
+body_hash: 'sha256:8e52ff44a7c55bc2d54f22d4516f674a819240c08af73a35ad4ccdefab8bad6d'
 related: []
 ---
 # `cli-action-envelope-hardening` reference: `Blast-radius census method and baseline`
@@ -148,8 +148,8 @@ than fake execution.
 ## Historical error-code default preimage
 
 The live candidate-disposition ledger deliberately contains only the current
-source universe. Retired `ErrorCode.default_suggestion` declarations are instead
-recorded by the dedicated non-runtime preimage ledger
+source universe. Retired `ErrorCode.default_suggestion` declarations remain in
+the dedicated non-runtime preimage ledger
 `dev/error_code_default_suggestion_preimage.json`. Its parser
 `dev/error_code_default_suggestion_preimage_ledger.py` reads immutable source
 commit `930ef9f4017a23cccaf4990d287beb014fc9723c` through Git, AST-extracts every
@@ -157,8 +157,24 @@ former declaration, and requires ordered multiset equality with the checked-in
 rows.
 
 Each of the 612 rows retains the full source commit, error code, error qualname,
-registry shard, exact old-value expression source, source location, and its one
-exclusive downstream migration Step (`S50` through `S57` or `S64`). The ledger
-is historical migration evidence only: the live `ErrorCode` schema remains
-policy-free and runtime actions or explicit no-recovery outcomes continue to be
-resolved through the typed application and action-catalogue contracts.
+registry shard, exact old-value expression source, and source location. Its
+existing `disposition_owner_step` value is immutable historical allocation,
+called `historical_owner_step` in this rehoming boundary: it preserves the
+former shard-to-Step evidence (`S50` through `S57` or `S64`) but is not an
+active implementation owner.
+
+Before any historical shard owner can be retired, `S50` must create a separate,
+fail-closed per-record rehoming join for every historically non-null default.
+Each join row must identify current producer locator(s), exactly one
+`current_owner_step`, and one `disposition_kind`: a typed catalogue action
+resolved through the live input schema, a typed terminal or safety no-recovery
+outcome, or source-proven retired or unreachable state. Missing, duplicate, or
+unscoped current-owner evidence fails the join. The rehoming data contains no
+action, condition, command, or localized-text authority; runtime policy remains
+at the current producer or guard and user-facing text remains locale keys plus
+typed facts.
+
+The historical preimage and its `historical_owner_step` remain immutable; the
+new `current_owner_step` and `disposition_kind` evidence govern future work.
+This removes the one-shard-one-active-Step implication without rewriting the
+historical S28 execution and audit record.

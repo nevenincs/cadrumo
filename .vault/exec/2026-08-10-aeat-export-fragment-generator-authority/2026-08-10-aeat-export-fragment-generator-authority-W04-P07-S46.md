@@ -5,47 +5,11 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a918eba60d1e5c7fc63429fa28d973a30b95a86a5792af5896836abdb26b857'
+body_hash: 'sha256:d0595dccda293e8e4f6b9e2ef09128aaa1c03cd787255ba4b1074ba6b503a914'
 step_id: 'S46'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S46 and 2026-08-10-aeat-export-fragment-generator-authority-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Land the typed canonical producer substrate and public producer snapshot for M303: a dedicated `PresenterIdentity`, stable taxpayer/model profile facts (including M111, M202, and M303), immutable filing elections with amendment evidence, and the disposition-selected secure refund/charge-account projection. Delete duplicate producer owners and plaintext financial-data persistence, and prove the snapshot is complete, typed, immutable, and fail-closed. This step ends at the producer substrate/snapshot boundary: it does not define registry semantic vocabulary or axes, edit semantic-map schema, migrate registry maps or renderers, migrate raw export headers, or change the generator/composer integration, and those are S45's subsequent integration work and ## Scope
-
-- `src/cadrumo/domain/deadlines/`
-- `src/cadrumo/application/user_profile/`
-- `src/cadrumo/application/modelo/`
-- `src/cadrumo/application/filing/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Land the typed canonical producer substrate and public producer snapshot for M303: a dedicated `PresenterIdentity`, stable taxpayer/model profile facts (including M111, M202, and M303), immutable filing elections with amendment evidence, and the disposition-selected secure refund/charge-account projection. Delete duplicate producer owners and plaintext financial-data persistence, and prove the snapshot is complete, typed, immutable, and fail-closed. This step ends at the producer substrate/snapshot boundary: it does not define registry semantic vocabulary or axes, edit semantic-map schema, migrate registry maps or renderers, migrate raw export headers, or change the generator/composer integration, and those are S45's subsequent integration work
 

@@ -15,8 +15,9 @@ related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
-modified: '2026-08-10'
-body_hash: 'sha256:12031d79eb34f4db70e03f2914127316976ddaa6e49f1a97d0b28ed0b4f2ec7b'
+  - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
+modified: '2026-08-11'
+body_hash: 'sha256:4ca68918405c02d997835a511e789cca67527dfe716b2fc3d1accbc0c946f836'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -83,6 +84,134 @@ The architecture has three stages:
 3. The filing renderer projects the value to its numbered casilla, nonnumbered fixed slot, or repeated row only after applicability and whole-export completeness have passed.
 
 The projection stage contains no business fallback. Missing producer authority, row identity, election, secure account, or applicability evidence refuses before target creation or byte emission.
+
+### Projection-only numbered endpoints
+
+An official numbered casilla whose value is owned exclusively by a typed repeated-row
+projection uses the closed registry input kind `projection_only`. This is an input-kind
+classification, not a free boolean over `manual`, and not a sibling descriptor outside
+the canonical casilla graph.
+
+Projection-only casillas remain visible in the selected registry snapshot so their
+official identity, legal and source grounding, applicability, and exact export anchor
+remain reviewable. They are excluded from initial-value discovery, manual and bound
+input maps, and zero seeding. A caller that supplies one directly is rejected explicitly;
+the value is never ignored or accepted as a scalar override.
+
+A projection-only casilla cannot declare a formula, binding, alternate binding, or
+independent producer. Its producer classification is the distinct `projection_only`
+path. For M303 casillas 500 through 524, values arrive only by deterministic slot
+projection from the five typed activity-row children of the encrypted
+`ProrrataRegister`. Missing, duplicate, over-capacity, or invalid applicable rows refuse
+before target creation or byte emission. This refinement does not reactivate a withdrawn
+M303 layout and creates no alias, fallback, legacy spelling, or parallel store.
+
+### Differentiated-sector deduction projection
+
+The earlier statement that all calculated values for casillas 700 through 735
+already existed was inaccurate. The frozen IVA-ledger observation does not retain
+the current-versus-investment or adjustment identities required by the official
+rows; the registry selectors do not close REAGP and rectification ownership; and
+the bienes-inversion regularisation owner has no accepted transaction or asset
+linkage to those observations. An ephemeral projection over those incomplete
+inputs would infer or collapse facts and become a second aggregation authority.
+
+Casillas 700 through 735 therefore remain unavailable projection-only endpoints
+until a prerequisite decision and implementation name the canonical source for
+current versus investment, REAGP and rectification identity, transaction and asset
+linkage, adjustment ownership, candidate-to-frozen classification preservation,
+and migration, backfill, and refusal behavior. S49 may consume that enriched
+immutable authority only after the prerequisite lands.
+
+Until then the complete differentiated-sector population refuses before target
+creation. These endpoints cannot become manual or bound scalars, raw mappings,
+label- or slot-inferred categories, blanks, zeros, aliases, legacy selectors, or
+layout fields. The production M303 layout remains withdrawn.
+
+### Canonical differentiated-sector source taxonomy
+
+The S54 grounding in
+`2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research`
+closes the prerequisite as follows.
+
+`IvaLedgerInputKind` is deleted and replaced by the core/domain-owned closed
+`IvaDeductionFactKind`: `domestic_current`, `domestic_investment`,
+`import_current`, `import_investment`, `intra_eu_current`,
+`intra_eu_investment`, `reagp_compensation`, `rectification`, and
+`investment_goods_regularisation`. The first eight may occur on canonical ledger
+observations. Investment-goods regularisation is emitted only by its existing
+bienes-inversion owner. Category, flow, rate, and prorrata classification remain
+orthogonal axes, with exhaustive validation of their legal combinations.
+
+Candidates and frozen observations carry the deduction kind plus immutable typed
+classification provenance: authority or source kind, source reference or locator,
+and evidence digest. Freezing copies both losslessly and never derives them from
+amount, category, label, account, slot, or the removed input kind. All old readers
+and writers are deleted atomically; there is no alias, dual read, or dual write.
+
+An investment observation carries a validated `investment_asset_id`. Its canonical
+bienes-inversion record carries the reciprocal stable `acquisition_ledger_id` and,
+in sectorized scope, `prorrata_sector_id`. Freezing and aggregation require exact
+reciprocity, the same secure profile and year, and equal sector identity. Missing,
+duplicate, stale, many-to-one, cross-profile, cross-year, or sector-mismatched links
+refuse. Non-investment observations cannot carry an asset identifier.
+
+Rectification base and cuota remain signed ledger-observation values with evidence
+linking the corrected source fact and are consumed once by the existing resolver.
+Investment-goods regularisation remains calculated by the bienes-inversion service,
+which exposes immutable per-asset contributions grouped by register-owned sector;
+their sum must equal the existing casilla-43 binding result. The aggregate is never
+allocated backward and no projection total is persisted.
+
+The secure ledger and bienes-inversion payloads cut over atomically to the new-only
+schema. Backfill is permitted only where persisted authoritative evidence proves
+the exact deduction kind and reciprocal asset, ledger, and sector links. Otherwise
+migration refuses before commit with an itemized remediation or re-import inventory.
+There is no default `current`, inference, compatibility loader, retained old shape,
+or partial migration. Each secure profile is replaced only after validated post-load.
+
+S54 owns the enum and provenance in core/domain IVA, observation and selector
+validation in the calculation registry, lossless freeze and aggregation routing in
+application aggregation, per-sector regularisation contributions in the asset
+service, and versioned atomic migration in secure adapters. S49 consumes only these
+enriched immutable outputs. Missing classification or provenance, illegal
+combinations, ungrounded signed adjustment, unresolved asset or sector, observation
+reuse, or incomplete migration refuses before calculation, persistence, projection,
+target creation, or bytes. No export registry or layout is changed by S54.
+
+For S49, `IvaLedgerObservation.iva_amount` remains the raw supported or charged
+cuota and is not a deductible amount already adjusted by prorrata. The canonical
+application aggregation service applies each sector's regime and percentage exactly
+once, including the existing special-prorrata 100%, 0%, or common-input routing, and
+exposes immutable per-sector and per-deduction-kind apportioned outputs. The registry
+projection consumes those outputs and only orders, sums, and projects them into the
+official endpoints. It never sums raw observation cuota as deductible, multiplies by
+a register percentage, or reimplements special-prorrata routing.
+
+S50 may make the five DP30302 source shapes structurally complete without claiming
+that the simplified-regime calculation is complete. The canonical filing-year owner
+is one ordered, evidence-bearing collection of discriminated agricultural and
+non-agricultural IAE activity rows. Agricultural rows carry the official activity
+code and their applicable declared and attested row facts. Non-agricultural rows
+carry the canonical IAE epigraph and typed module entries keyed and ordered by the
+annual Orden module identity, never domain fields named `module1` through `module7`.
+The shared annual Orden/IAE substrate owns activity taxonomy, annual module identity,
+order, coefficients, and legal evidence; the filing rows own taxpayer-declared
+quantities and evidence-backed off-form results. Taxpayer and IVA profiles own only
+applicability and enrolment, not module quantities or export-slot values.
+
+Projection packs exactly two agricultural and two non-agricultural activities per
+DP30302 record, permits at most six of each across three records, and preserves each
+revision's exact source anchors. It does not coerce the 2023 employee-count fields
+into later reserved offsets or infer one positional superset across epochs. Missing
+applicable facts, unknown annual module identity or order, duplicate or conflicting
+activities, over-capacity, wrong-epoch fields, or row-to-census conflicts refuse
+before target creation or bytes. Only fields proven non-applicable may project blank.
+Casilla 48 remains manual, guarded against silent zero, and compared with the existing
+partial formula reference by advisory. S50 does not promote it, synthesize unsupported
+facts from the three-slot reference tables, add a second resolver or store, introduce
+profile defaults or scalar slot redeclarations, or treat structural completeness as
+calculation completeness.
 
 ### Producer vocabulary and resolution
 

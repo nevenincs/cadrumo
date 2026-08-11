@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:debb4aec65848f94d3d0b66a2104220b4b79e1c75d4afd9591349e2733896b52'
+body_hash: 'sha256:3d3279c974c0afb5542b3abba538fb7056f9b9cd7365bcb22e2e299e2efc5450'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -36,6 +36,10 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S36]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S39]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S42]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S43]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S44]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S46]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S53]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -68,6 +72,10 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s41-singleton-value-policy-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s42-semantic-map-fragment-loader-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s43-variable-envelope-recognition-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s44-m303-semantic-home-architecture-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s45-freeze-handover-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s46-typed-producer-snapshot-audit]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-s53-composite-relative-closing-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-semantic-map-fragment-loader-reference]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
 ---
@@ -113,6 +121,10 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-s41-singleton-value-policy-audit` - `aeat-export-fragment-generator-authority` audit: `s41 singleton value policy`
 - `2026-08-10-aeat-export-fragment-generator-authority-s42-semantic-map-fragment-loader-audit` - `aeat-export-fragment-generator-authority` audit: `s42 semantic map fragment loader`
 - `2026-08-10-aeat-export-fragment-generator-authority-s43-variable-envelope-recognition-audit` - `aeat-export-fragment-generator-authority` audit: `s43 variable envelope recognition`
+- `2026-08-10-aeat-export-fragment-generator-authority-s44-m303-semantic-home-architecture-audit` - `aeat-export-fragment-generator-authority` audit: `S44 M303 semantic-home architecture reconciliation`
+- `2026-08-10-aeat-export-fragment-generator-authority-s45-freeze-handover-audit` - `aeat-export-fragment-generator-authority` audit: `S45 freeze handover to the executing author`
+- `2026-08-10-aeat-export-fragment-generator-authority-s46-typed-producer-snapshot-audit` - `aeat-export-fragment-generator-authority` audit: `s46 typed producer snapshot`
+- `2026-08-10-aeat-export-fragment-generator-authority-s53-composite-relative-closing-audit` - `aeat-export-fragment-generator-authority` audit: `S53 composite relative closing review`
 
 ### exec
 
@@ -144,6 +156,10 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S36` - Replace the spanning Modelo 303 revision with five explicit revision/source bindings: `2023`, `2024-hasta-08-y-2t`, `2024-desde-09-y-3t`, `2025`, and `2026-y-siguientes`. Prove production period-token selection at every early, late, annual, and future boundary, negative cross-token refusal, year-only 2024 ambiguity refusal, and exactly one matching record-design source reference per selected revision without a date-only selector, source-period duplication, alias, bridge, or legacy fallback
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S39` - Remove every executable and test dependency on the deleted Modelo 303 `2023-y-siguientes` revision across domain, application, adapter, CLI, and fixture surfaces. Route production callers through the law-determined period selector and use an explicit surviving revision only where the test subject requires a concrete identity. Delete compatibility aliases, bridges, fallback literals, and copied selector logic, and add a structural gate that fails if the retired id or an equivalent redeclared selector reappears outside the single intentional negative-refusal assertion
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S42` - Define one strict canonical persisted semantic-map fragment format and public loader/facade with deterministic filename-ordered compilation, exact schema validation, duplicate and collision refusal, and real reviewability tests, without consulting legacy export trees or adding aliases
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S43` - Generalize parser-owned variable-envelope recognition from the exact official body, closing-marker, and Variable-total shape, remove the DP200000 name selector, and prove real Modelo 200 plus all five Modelo 303 binaries while retaining malformed and ambiguous refusal with no extent inference
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S44` - Adjudicate and approve the one M303 semantic-home and fixed-slot row-projection architecture for annual-summary, per-activity prorrata, differentiated-deduction, simplified-activity/module, taxpayer/profile, filing-election, presenter, payment, and secure-account fields
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S46` - Land the typed canonical producer substrate and public producer snapshot for M303: a dedicated `PresenterIdentity`, stable taxpayer/model profile facts (including M111, M202, and M303), immutable filing elections with amendment evidence, and the disposition-selected secure refund/charge-account projection. Delete duplicate producer owners and plaintext financial-data persistence, and prove the snapshot is complete, typed, immutable, and fail-closed. This step ends at the producer substrate/snapshot boundary: it does not define registry semantic vocabulary or axes, edit semantic-map schema, migrate registry maps or renderers, migrate raw export headers, or change the generator/composer integration, and those are S45's subsequent integration work
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S53` - Define and prove one parser-owned typed composite relative-closing contract for Modelo 220's exact six-row *** sequence after the Variable body and before the explicit Variable total, preserving every source row, ordinal, length, and content without concatenation, name selection, or extent inference, threading the typed composition through the intermediate representation and fixed-generation refusal boundary, and proving every pinned Modelo 220 binary plus malformed, incomplete, reordered, duplicate, and ambiguous variants
 
 ### plan
 

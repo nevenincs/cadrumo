@@ -6,7 +6,7 @@ tags:
 date: '2026-08-10'
 modified: '2026-08-10'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f1245998a05038cff25dd195c93687f426a8b7106f2774663be9f06dc70da55'
+body_hash: 'sha256:6d10ebd452c412f1c65c19ca5909d54874b7ab032dc64e2901e5ba8f54fc716c'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -40,6 +40,8 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S26]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S27]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S28]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S29]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S30]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
@@ -73,6 +75,8 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s26-canonical-action-chain-closure-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s28-error-default-preimage-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit]]'
+  - '[[2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
 ---
 
@@ -117,6 +121,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s26-canonical-action-chain-closure-audit` - `cli-action-envelope-hardening` audit: `S26 canonical action-chain closure`
 - `2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit` - 2026-08-10-cli-action-envelope-hardening-s27-modelo-recovery-audit
 - `2026-08-10-cli-action-envelope-hardening-s28-error-default-preimage-audit` - `cli-action-envelope-hardening` audit: `S28 error-code default preimage independent review`
+- `2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit` - 2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit
+- `2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit` - `cli-action-envelope-hardening` audit: `S30 error recovery contract independent review`
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
 
 ### exec
@@ -153,6 +159,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W04-P07-S26` - Replace unknown-revision and verification continuations with bound or explicitly conditional actions
 - `2026-08-09-cli-action-envelope-hardening-W04-P07-S27` - 2026-08-09-cli-action-envelope-hardening-W04-P07-S27
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S30` - Prove registered error recovery resolves against the live command and input surface
 
 ### plan
 

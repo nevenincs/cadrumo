@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:68c9a03a7e22602b5bd65496c335c7e609175bb3f65db73e88a8fea8db21a471'
+body_hash: 'sha256:2f5d0f637f673e33ab4ba3430174db07a74434364090c909e92e20b468f92e63'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-research]]"
   - "[[2026-08-09-cli-action-envelope-hardening-reference]]"
@@ -64,17 +64,42 @@ are executable. The scope and blast radius are grounded in
   outcome joins to a real observation. Unmatched rows on either side fail.
 - The accepted profile-diagnostics decision remains the upstream authority for
   profile requirement labels and grounding; this decision does not duplicate it.
-
+- `ErrorCode` registry rows carry taxonomy and locale-key metadata only; no
+  action identity or no-recovery outcome belongs on a registry row.
+- The immutable retired-default preimage is discovery evidence, not runtime
+  policy.
+- Every historical non-null default must join its exact immutable key and a
+  fail-closed, lexical fixed-point physical producer or reference fingerprint.
+  The resolver accepts explicit import aliases and re-exports, including only
+  statically enumerable PEP-562 export maps; it rejects ambiguity and nested-
+  scope leakage, and it records every resolved call context. Each current row
+  has exactly one current owner Step.
+- The current set has 106 keys: 101 physical constructors and five
+  nonconstructing references. Before producer migration, only evidence-only
+  `migration_required` is allowed for a current fingerprint with exactly one
+  open, scope-valid owner; it is not a final recovery outcome.
+- The final kinds are `verified_typed_action`,
+  `verified_terminal_no_recovery`, `verified_nonproducer_reference`, and
+  `retired_or_unreachable`. The five nonconstructing references begin as
+  `migration_required` and can become `verified_nonproducer_reference` only
+  after proof that no emitting, dynamic, or re-export route remains.
+- `retired_or_unreachable` is allowed only for the source-proven 127-row
+  zero-reference set; a historical `None` does not itself establish a terminal
+  outcome.- Rehoming evidence carries no action, condition, command, or localized-text
+  authority; user-facing rendering uses locale keys plus typed facts only.
 ## Implementation
 
 Introduce strict application-owned precondition and action-reference models plus
 a central action catalogue. Join catalogue entries to live Click-derived input
 schemas and registered result schemas in the operator manifest. Project the
 resolved record through success notices and error envelopes, preserving localized
-human rendering as a derived view. Migrate producer-to-projection slices by
-behavioral cluster, beginning with root storage/profile guards, then workflow and
-modelo, error-registry defaults, diagnostics/overview/provisioning, and remaining
-adjudicated clusters.
+human rendering as a derived view. Migrate producer-to-projection slices by behavioral cluster, beginning with root
+storage/profile guards, then workflow and modelo, diagnostics/overview/provisioning,
+and remaining adjudicated clusters. Rehome every retired non-null default at its
+current producer or guard before changing any registry-shard ownership. The
+rehoming join records only provenance, locator, current owner Step, and disposition;
+runtime policy remains in the producer verdict and its catalogue/live-schema
+projection.
 
 Add an AST-backed census and a live coverage join. New unclassified action sites,
 unresolved action identities, insufficient bindings, undeclared preconditions,
@@ -98,3 +123,5 @@ MCP share one semantic contract. The migration is broad and cannot be represente
 as one envelope edit; each cluster requires real negative and positive proof.
 Temporary coexistence of migrated typed records and adjudicated legacy sites is
 allowed only while the census makes the remainder explicit and shrinking.
+
+

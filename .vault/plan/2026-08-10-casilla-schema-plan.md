@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-10'
-body_hash: 'sha256:d1c6e814aa98c762b8bd8ebbafce2938204137f840136cc3fc89096eed436e14'
+body_hash: 'sha256:e8573097b19f161bdc3cadf0ce69c2c0b0a913d7983468dfd7d1ef1e2e2af6da'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -41,7 +41,7 @@ Deliver a base that imports cleanly and registry data whose derivations can be t
 The tree imports and a measurement reference point exists.
 
 - [ ] `W01.P01.S01` - land the NoRecoveryOutcome import fix via the apply-cached drive (the file carries unrelated peer WIP) and prove the tree imports with a clean collect-only run; `src/cadrumo/application/modelo/_preconditions.py`.
-- [ ] `W01.P01.S02` - confirm the registry restructure (91 to 94 revisions, the M303 split) is committed, pin that commit as the measurement SHA, and re-take the six basis-tracked numbers (registry revisions, relation pairs, relation-declaring revisions, export-exemption casillas, manifest-bearing revisions, manifest-less revisions) with a bundled-authority probe, recording the command and outputs in the exec record; `src/cadrumo/_data/registry/aeat/`.
+- [x] `W01.P01.S02` - confirm the registry restructure (91 to 94 revisions, the M303 split) is committed, pin that commit as the measurement SHA, and re-take the six basis-tracked numbers (registry revisions, relation pairs, relation-declaring revisions, export-exemption casillas, manifest-bearing revisions, manifest-less revisions) with a bundled-authority probe, recording the command and outputs in the exec record; `src/cadrumo/_data/registry/aeat/`.
 
 ### Phase `W01.P02` - registry data corrections
 
@@ -143,6 +143,7 @@ Open-ended by design: every mid-campaign discovery lands here as an appended Ste
 
 - [ ] `W05.P11.S37` - reconcile the stale export-exemption docstring describing M720 design positions 5-8 against the layout whose records carry zero inline fields; `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`.
 - [ ] `W05.P11.S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it; `src/cadrumo/core/`.
+- [ ] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
 
 ### Phase `W05.P12` - campaign close
 
