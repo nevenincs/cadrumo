@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:7ac363b2b42b1fe4d58d599c9a0ce4b47d405ca9b9747c08e22ece8db4eccb88'
+body_hash: 'sha256:a3f8633ff60d58017a4d818b6b895605164dcfa4245abb345c8ad69856372c80'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -182,6 +182,8 @@ Open-ended by design: every mid-campaign discovery lands here as an appended Ste
 - [ ] `W05.P11.S37` - reconcile the stale export-exemption docstring describing M720 design positions 5-8 against the layout whose records carry zero inline fields; `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`.
 - [ ] `W05.P11.S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it; `src/cadrumo/core/`.
 - [ ] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
+- [ ] `W05.P11.S80` - adjudicate the S08 manifest-absence worklist against canonical calculation closure, prove whether each of the 38 revisions requires a completeness manifest, and append the exact lifecycle correction without authoring registry data; `src/cadrumo/domain/calculations/registry/_validate_completeness.py and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py and .vault/plan/2026-08-10-casilla-schema-plan.md`.
+- [ ] `W05.P11.S81` - retire the false-positive manifest-authoring steps S42-S79 through plan remove verbs, correct the append and progress prose to key completeness-manifest applicability on a non-empty canonical calculation closure, correct the S08 execution record and research A-09 to record 38 manifest-absent zero-closure revisions and zero required-manifest gaps, and pass plan status body modified diff plus focused completeness checks; `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md`.
 
 ### Phase `W05.P12` - campaign close
 

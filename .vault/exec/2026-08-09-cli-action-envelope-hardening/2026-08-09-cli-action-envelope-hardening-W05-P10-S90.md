@@ -5,11 +5,12 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:87731911281c58d8cd5a9cfc19ed59ce835d3ca159f2b63739dd8ffe694c2b27'
+body_hash: 'sha256:72307f12b4381d78fe3afac3f178828ac4dec0e9e00b71545ec93a13d5d3da41'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
+
 # Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct typed-error consumer migration so canonical refusals reach the shared envelope intact.
 
 ## Scope
@@ -54,5 +55,17 @@ Fresh semantic discovery confirmed that neither the split-recommendation predica
 The two live Notice paths now render only their canonical localized fact keys, with no English default fallback, continuation sentence, synthetic `actionability` context, guessed action, or raw command. Their text mirrors the same Notice message rather than translating a second independently authored copy. The ca/en/es/hu catalogue values were narrowed through the locale authority to the same neutral facts.
 
 Focused real JSON/Notice tests pass (2 passed), including explicit `action is None` and empty neutral context. Ruff and formatting pass. Exact residual search finds neither retired default continuation nor retired actionability identity. The immutable-HEAD census remains globally open on pre-existing campaign clusters and cannot observe this uncommitted delta. Locale audit remains externally red on unrelated schema/profile gaps and concurrent IVA-wallet leaves.
+
+S90 remains open for independent review.
+
+## Frozen independent-review closure
+
+The independent review found indirect translation defaults whose values were first assigned to local names and then passed to `Notice.message`. The ledger Notice conformance gate now covers all thirteen Notice-bearing ledger modules and follows those local bindings, so direct and name-bound raw English defaults fail the same structural test.
+
+All frozen name-bound defaults were removed from add/prorrata, idempotent no-op, bulk classify/import, invoice wizard/import, and counterparty fact notices. The two remaining `OutboundStorageError` catches in pull-folder were removed; list and per-document failures now reach the shared typed boundary without local `BadParameter` translation or `refusal_reason=str(exc)` flattening. The link-help proof now asserts a canonical invoice input description without a raw command hint.
+
+Verification: the structural gate and real link-help CLI proof pass (3 passed); the bulk-classify real CLI notice proof passes; Ruff passes. Counterparty real CLI proofs remain blocked before the owned verb by the shared profile fixture omitting the newly required `--tax-residence-jurisdiction-scope`. Fixed-point census remains globally red on separately owned campaign clusters and immutable HEAD cannot observe this working-tree delta. BasedPyright remains globally red on pre-existing private-usage and Typer typing diagnostics.
+
+The remaining presentation-localization debt is assigned to S41: 254 `tr(default=...)` calls under `_ledger*.py`, of which exactly 174 are help defaults and 80 are other presentation fallbacks. They are not action/continuation/recovery semantics and were deliberately not swept into S90.
 
 S90 remains open for independent review.

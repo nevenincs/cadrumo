@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:4d850aaa8ab209c9cba1ab04a699a4894894c1bab89312b26053e4f0ecf0270a'
+body_hash: 'sha256:5bd04ec2f3db9b0ad1c10e8e674eaa350df0a5bf4fa6663281270bcd65a29eca'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -99,6 +99,8 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s33-provisioning-closure-rereview-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s35-closure-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s38-closure-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit]]'
@@ -111,6 +113,8 @@ related:
   - '[[2026-08-11-cli-action-envelope-hardening-s57-adapters-part2-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit]]'
 ---
 
 # `cli-action-envelope-hardening` feature index
@@ -159,6 +163,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
 - `2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit` - `cli-action-envelope-hardening` audit: `S116 schema-owner lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s33-provisioning-closure-rereview-audit` - `cli-action-envelope-hardening` audit: `S33 provisioning closure re-review`
+- `2026-08-11-cli-action-envelope-hardening-s35-closure-review-audit` - `cli-action-envelope-hardening` audit: `S35 independent closure review`
+- `2026-08-11-cli-action-envelope-hardening-s38-closure-review-audit` - `cli-action-envelope-hardening` audit: `S38 independent closure review`
 - `2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit` - `cli-action-envelope-hardening` audit: `S38 and S90 typed ledger refusal re-review`
 - `2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit` - `cli-action-envelope-hardening` audit: `S41 locale leaves independent review`
 - `2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit` - `cli-action-envelope-hardening` audit: `S50 rehoming join review`
@@ -171,6 +177,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-11-cli-action-envelope-hardening-s57-adapters-part2-review-audit` - `cli-action-envelope-hardening` audit: `S57 adapters-part2 lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit` - `cli-action-envelope-hardening` audit: `S63 rationale remediation lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit` - `cli-action-envelope-hardening` audit: `S64 entrypoint taxonomy and owner reconciliation review`
+- `2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit` - `cli-action-envelope-hardening` audit: `S89 installed public-console action-envelope proof`
+- `2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit` - `cli-action-envelope-hardening` audit: `S94 independent closure review`
 
 ### exec
 
