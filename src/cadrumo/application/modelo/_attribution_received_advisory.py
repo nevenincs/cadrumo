@@ -118,6 +118,7 @@ def _attribution_received_omission_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
+                casilla_id=casilla_id,
                 message_locale_key="application.modelo.findings.attribution_received_unfolded",
                 message_facts={
                     "filing_year": work_unit.filing_year,
@@ -134,6 +135,7 @@ def _attribution_received_omission_advisory_findings(
             ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
+                casilla_id=casilla_id,
                 message_locale_key="application.modelo.findings.attribution_received_uncaptured",
                 message_facts={
                     "casilla_id": casilla_id,
