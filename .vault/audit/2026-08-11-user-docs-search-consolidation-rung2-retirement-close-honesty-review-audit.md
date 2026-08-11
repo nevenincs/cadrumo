@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:a425d92bafd6f90b2bde1c1366fe88cda9a972a67072f61394b611c133a68a0d'
+body_hash: 'sha256:e7b9e5dd985976c970683be83327a79c374a90442f356ac4517ebc2caf44e617'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -103,3 +103,17 @@ The alias-authority module argued in its docstring that its schema id must be ke
 - Re-run the built-site multilingual recall gate, the Diseño fail-closed gate and the relevance re-sweep once CLOSE-005 clears, in that order, and close P03.S08, P06.S27 and CLOSE-006 on their results.
 - Re-authenticate and publish to close P04.S12 and P04.S13; preserve the current 404 evidence until real live checks replace it.
 - Do not soften the casilla projection's refusal on a missing source-locale label. It is the only thing currently making the violation visible.
+
+## CLOSE-005 sharpened: the blocking set is 85 labels, and they are unauthored rather than unpropagated
+
+Added after a second pass specifically aimed at reducing the blocker, because a close that reports a blocker without sizing it hands the next reader a search rather than a task.
+
+**The blocking set is 85 labels, not 889.** The casilla projection reads only the latest revision of each modelo, so only `303/2026-y-siguientes` gates it: 85 of its 214 casilla labels are null. The other 804 nulls sit in superseded M303 revisions and block nothing today. Whoever picks this up needs those 85, and the first blocking id is `107`.
+
+**They are unauthored, not merely unpropagated.** The obvious hypothesis was that the label text exists in the registry fragments and only the catalogue is stale, which would make this a mechanical propagation. It is not. The registry fragment declaring casilla `107` carries id, number, section, data type, semantic role, continuidad id, input kind and both reference lists, and no label text at all -- correctly, because the localization contract puts every casilla label ONLY in the four locale catalogues. The text has never existed anywhere in the tree.
+
+So closing this needs the official AEAT Modelo 303 2026 form as the grounding source, then the Catalan and Hungarian values the parity gate and the honesty ratchet both require. That is grounded tax-authoring work owned by the M303 registry buildout. It was deliberately not attempted here: authoring 85 regulated Spanish labels without the official form would be inventing regulated content, and the untranslated escapes the scaffold offers are refused by shipped gates anyway.
+
+**A narrowed-authority workaround was attempted and rejected.** The resolver takes an injectable authority explicitly so a test can drive a narrowed registry, and the Diseño fail-closed rule's subject is modelo 036, so excluding M303 looked like a legitimate way to re-prove P06.S27 at HEAD. It is not reachable honestly: the authority's modelo index is a private cache that a field-level copy does not rebuild, so narrowing it means reaching into internals, which makes the resulting authority a fake rather than a real one. Recorded so it is not re-attempted.
+
+The surviving observation is still worth acting on later: the module-scoped resolver fixture projects every modelo, so a rule about one modelo is hostage to every other modelo's authoring state. Scoping that fixture to its subject is a real hardening, but it belongs with the gate owner and after the labels land, not as a way to make a red close look green.
