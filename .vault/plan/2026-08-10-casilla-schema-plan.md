@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:c62f859ef90c9b22040ac71c918cfc3a9ed7512341e0ad2e723abde99c8e3cfe'
+body_hash: 'sha256:3dd2f6950e49a78c658b64cfd693b5f464b3953962b3c4a2998111ab04dd094d'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -48,7 +48,7 @@ The tree imports and a measurement reference point exists.
 The Category-A data oversights are corrected so derivations are truthful on the outlier revisions.
 
 - [x] `W01.P02.S03` - widen the xml dictionary casilla-id parser beyond digits-only and regression-test the 2024 and 2025 M100 id conventions; `src/cadrumo/domain/calculations/registry/_export_parse.py`.
-- [ ] `W01.P02.S04` - run binding-field derivation before every casilla-keyed export scan so M720's binding-derived boxes become visible, with an M720 regression; `src/cadrumo/domain/calculations/registry/_export.py`.
+- [x] `W01.P02.S04` - run binding-field derivation before every casilla-keyed export scan so M720's binding-derived boxes become visible, with an M720 regression; `src/cadrumo/domain/calculations/registry/_export.py`.
 - [ ] `W01.P02.S05` - normalise the completeness-manifest authoring tree to one on-disk shape and add a shape gate; `src/cadrumo/_data/registry/aeat/modelos/`.
 - [ ] `W01.P02.S06` - remove the phantom constant_value source kind from its four production sites; `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`.
 - [ ] `W01.P02.S07` - reconcile the M200 multi-segment manifest internal-only inconsistency and correct the false single-segment comment; `src/cadrumo/domain/calculations/registry/_record_design_coverage.py`.

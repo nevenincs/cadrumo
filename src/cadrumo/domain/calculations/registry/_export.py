@@ -194,6 +194,8 @@ def _export_fields_from_record_bindings(
     derived_row_fields: set[str] = set()
     for binding, selector in bindings:
         if isinstance(selector, BindingFixedExportSelector):
+            if any(field.kind == CasillaFieldKind.BINDING and field.binding == binding.id for field in record.fields):
+                continue
             fields.append(_export_field_from_binding(record, binding, selector))
             continue
         row_field = _row_binding_field(binding, selector)

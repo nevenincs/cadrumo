@@ -9,9 +9,11 @@ from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from ..._export_field_kind import CasillaFieldKind
 from .. import (
     DataBindingDefinition,
+    ExportEncoding,
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+    bundled_authority,
     derive_export_layouts_from_bindings,
 )
 from .._schema import PeriodSelector
@@ -85,7 +87,7 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
         id="perceptor",
         record_type="perceptor",
         order=1,
-        encoding="utf-8",
+        encoding=ExportEncoding.ASCII,
         line_ending="none",
         binding_record="perceptor",
         row_field_casilla_ids={"retencion_practicada": _CASILLA_01},
@@ -110,6 +112,22 @@ def test_binding_derived_export_fields_preserve_enum_kind() -> None:
     assert derived_field.kind is CasillaFieldKind.BINDING
     assert derived_field.id == template.id
     assert all(isinstance(field.kind, CasillaFieldKind) for field in derived_record.fields)
+
+
+def test_m720_binding_fields_remain_visible_when_a_resolved_revision_is_derived_again() -> None:
+    """Every casilla-keyed consumer may safely derive the real M720 layout first."""
+    revision = bundled_authority().snapshot("720", filing_year=2025, period="0A").revision
+    binding_fields = tuple(
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.BINDING
+    )
+
+    assert binding_fields
+    assert len({field.id for field in binding_fields}) == len(binding_fields)
+    assert derive_export_layouts_from_bindings(revision) == revision.export_layouts
 
 
 def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_authored() -> None:
@@ -164,7 +182,7 @@ def test_binding_derived_export_skips_source_mirror_when_row_field_is_hand_autho
         id="perceptor",
         record_type="perceptor",
         order=1,
-        encoding="utf-8",
+        encoding=ExportEncoding.ASCII,
         line_ending="none",
         binding_record="perceptor",
         row_field_casilla_ids={"retencion_practicada": _CASILLA_01},
@@ -242,7 +260,7 @@ def test_binding_derived_export_emits_one_field_for_source_mirror_template() -> 
         id="perceptor",
         record_type="perceptor",
         order=1,
-        encoding="utf-8",
+        encoding=ExportEncoding.ASCII,
         line_ending="none",
         binding_record="perceptor",
         row_field_casilla_ids={"retencion_practicada": _CASILLA_01},
