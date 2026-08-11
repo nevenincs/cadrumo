@@ -141,7 +141,8 @@ class ExternalGroundingModel(BaseModel):
 
 #: Bounds on a bundled oracle payload's ``raw_evidence_locator``, declared once.
 #:
-#: The generic :class:`~domain.calculations.registry.ReplayPayload` that every
+#: The generic :class:`~domain.calculations.registry._live_parity.ReplayPayload`
+#: that every
 #: checker-style driver decodes through is deliberately looser — it makes the
 #: locator optional and caps it at 512 — because not every replay surface
 #: carries bundled-corpus evidence. The Renta WEB Open corpus is read by BOTH

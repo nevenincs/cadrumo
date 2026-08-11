@@ -162,8 +162,10 @@ class AnthropicAdapter(_ProviderAdapter):
 
     Holds a bound :class:`anthropic.AsyncAnthropic` client configured with
     the operator's API key and a per-call timeout. The :attr:`provider`
-    class attribute identifies this adapter to the :mod:`adapters.outbound.llm`
-    factory.
+    class attribute identifies this adapter to :class:`~llm.LLMClient`, which
+    builds it behind the optional-SDK import boundary -- not to the sibling
+    :mod:`adapters.outbound.llm` package, which since the split owns the
+    persistence-backed stores and constructs no adapter.
 
     Attributes:
         provider: The :class:`~llm.LLMProvider` tag
