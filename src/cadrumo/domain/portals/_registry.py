@@ -64,6 +64,7 @@ from ._entries import (
 )
 from ._errors import PortalIntegrityError, PortalValidationError, UnknownPortalError
 from ._metadata import PortalMetadata
+from ...domain.calculations.registry import RevisionId
 
 _LOG = get_logger(__name__)
 
@@ -192,7 +193,7 @@ def _finalise_registry(
 PORTAL_REGISTRY: Mapping[Portal, PortalMetadata] = _finalise_registry(_ENTRIES)
 
 
-def _portal_consumer_binding(modelo_id: str, revision_id: str, consumer: str) -> Portal | None:
+def _portal_consumer_binding(modelo_id: str, revision_id: RevisionId, consumer: str) -> Portal | None:
     """Resolve registry application consumers that identify portal dispatch entries."""
     for enum_prefix in (f"{Portal.__module__}.{Portal.__qualname__}.", "cadrumo.domain.portals.Portal."):
         if consumer.startswith(enum_prefix):

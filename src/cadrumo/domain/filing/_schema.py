@@ -22,6 +22,7 @@ from ...core.time import UtcInstant
 from ..calculations.registry import BindingId, FormulaId, LegalRefId, RegistrySnapshotRef, SourceRefId
 from ..submission import ModeloDraftStatus
 from ._errors import FilingValidationError
+from ...domain.calculations.registry import RevisionId
 
 APPROVAL_BASIS_VERSION = "review-basis-v4"
 
@@ -230,7 +231,7 @@ class ModeloApprovalBasis(BaseModel):
         return value
 
 
-def registry_schema_version(*, modelo: str, revision_id: str) -> str:
+def registry_schema_version(*, modelo: str, revision_id: RevisionId) -> str:
     """Return the canonical ``registry:{modelo}:{revision}`` schema marker.
 
     The marker names the registry modelo and revision a filing artefact was

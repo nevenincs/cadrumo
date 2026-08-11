@@ -25,6 +25,7 @@ if TYPE_CHECKING:
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.errors import BaseSeverity
+from ...domain.calculations.registry import RevisionId
 
 
 class UserProfileRegistryContractIssue(BaseModel):
@@ -34,7 +35,7 @@ class UserProfileRegistryContractIssue(BaseModel):
 
     severity: Literal[BaseSeverity.ERROR, BaseSeverity.WARNING]
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     surface: Literal[
         "binding",
         "filing_schedule",
@@ -316,7 +317,7 @@ def _issue(
     *,
     severity: Literal[BaseSeverity.ERROR, BaseSeverity.WARNING],
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     surface: Literal[
         "binding",
         "filing_schedule",

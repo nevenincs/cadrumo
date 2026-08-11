@@ -25,18 +25,13 @@ class TaxResidenceProfileError(CadrumoError):
 
 
 class ProfileNotConfiguredError(TaxResidenceProfileError):
-    """Raised when RENTA verification needs a tax-residence profile.
-
-    Attached to a ``suggestion`` pointing the operator at the profile
-    edit wizard.
-    """
+    """Raised when RENTA verification needs a tax-residence profile."""
 
     def __init__(self) -> None:
         """Build the multilingual no-profile-configured error."""
         super().__init__(
             "No tax-residence profile is configured for RENTA.",
             translated_message="profile.errors.not_configured",
-            suggestion="aeat config profile edit NAME --tax-residence-ccaa <ccaa>",
         )
 
 

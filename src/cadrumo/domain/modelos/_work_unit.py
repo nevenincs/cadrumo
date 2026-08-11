@@ -37,6 +37,7 @@ from ..calculations.registry import RevisionId
 from ..contribuyente import CCAA
 from ._codes import ModeloCode
 from ._errors import ModeloValidationError
+from ...domain.calculations.registry import RevisionId
 
 
 class WorkUnitState(StrEnum):
@@ -87,7 +88,7 @@ def derive_work_unit_id(
     modelo: str,
     filing_year: int,
     period: Period,
-    revision_id: str,
+    revision_id: RevisionId,
 ) -> str:
     """Return the deterministic ``work_unit_id`` for a four-axis key.
 
