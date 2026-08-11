@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:44f1522d2d6c3f13b3dd7ecedf2420a2d62786e16670d8c134ded2fd0841d213'
+body_hash: 'sha256:f3aa62a9f3eb434d729447cc2cac6e69e20c7b9243dbc48d8d3d1f1fd783e9bf'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -106,7 +106,7 @@ ModeloWorkReview, its producer, its envelope, and the findings attribution sweep
 - [x] `W03.P07.S22` - promote resolve_calculation_binding_channels to the application modelo facade; `src/cadrumo/application/modelo/__init__.py`.
 - [x] `W03.P07.S23` - add the frozen ModeloWorkReview model and its single producer build_modelo_work_review, law-resolving the revision and asserting any stored stamp; `src/cadrumo/application/modelo/`.
 - [x] `W03.P07.S24` - sweep all finding construction sites that leave casilla_id unset (26 sites across 18 files, with _verification_cross_period.py carrying 9 including the never-populating cross-period kind) and populate it wherever a casilla exists to name, recording the grep-derived site list in the exec record; `src/cadrumo/application/modelo/`.
-- [ ] `W03.P07.S25` - implement the owner-ruled progress counts: typed state plus counts against the named manifest denominator, UNDEFINED when no manifest exists, never a bare percentage; `src/cadrumo/application/modelo/`.
+- [x] `W03.P07.S25` - implement the owner-ruled progress counts: typed state plus counts against the named manifest denominator, UNDEFINED when no manifest exists, never a bare percentage; `src/cadrumo/application/modelo/`.
 - [ ] `W03.P07.S26` - register the modelo.work.review envelope wrapping the record, with the spine axis and machine facts riding Notice context; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `W03.P07.S27` - widen the modelo.requires classifier to bucket previous_filing, relation_prefill and live_observation sources, read alternate bindings, and surface unbucketed sources as an advisory; `src/cadrumo/application/modelo/_data_inventory.py`.
 

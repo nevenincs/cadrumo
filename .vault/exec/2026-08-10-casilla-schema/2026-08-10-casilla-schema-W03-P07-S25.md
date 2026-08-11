@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:a612944d89df0cdaee47e143ecaa21b2b2b12765449a3c85394cd875b99fa810'
+body_hash: 'sha256:7cb427ead1bca4323c831046a375aa9af02c804dd6404e4120265f337ed757d6'
 step_id: 'S25'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -39,4 +39,8 @@ A formal read-only review reported no CRITICAL or HIGH findings. Its initial MED
 
 The initial inventory contained six unrelated modified paths and no S25 collision. Peer churn continued during execution; all unrelated source, tests, Vault documents, and generated surfaces were preserved. The owned facade additions were inspected against their live diffs before validation.
 
-A combined focused-plus-import-hygiene pytest invocation exceeded the 120-second command boundary and its exact process tree then exited; no result is claimed for that broader gate. The separately executed S25 focused suite and static gates are green. `vaultspec-core status casilla-schema` confirms S25 remains open as instructed. No plan checkbox, staging area, commit, audit document, or summary artifact was changed for this step.
+A combined focused-plus-import-hygiene pytest invocation exceeded the 120-second command boundary and its exact process tree then exited; no result is claimed for that broader gate. The separately executed S25 focused suite and static gates are green.
+
+Delivery raced after verification. Commit `d6ae28688da5342650e37615d9b735ff59848b22` landed all five S25 production/test paths, but the same broad commit also absorbed unrelated S89 config-CLI, ledger, TUI, aggregation, and LLM work. Commit `5ca9be782d4f0349a52cf9b92f6d97790fc84ff5` then landed this execution record alone. This violates the campaign's one-Step/one-atomic-commit discipline and the execution record does not claim otherwise. The violation is historical and must not be concealed by rewriting or splitting published history.
+
+Carry-forward: the S25 technical implementation and its original execution evidence are already landed. Final S25 closure is therefore limited to the plan-state change, the formal review audit, and this execution-record correction; it must not reopen or modify the source/test payload merely to manufacture atomicity after the fact. Until that closure lands, `vaultspec-core status casilla-schema` correctly leaves S25 open. No staging, commit, history rewrite, or source/test mutation was performed by this correction.
