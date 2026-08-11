@@ -3,14 +3,13 @@ tags:
   - '#exec'
   - '#current-schema-only-purge'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:03c564a6ba04d3bf4af7887e94cb72c0d54981e9189eff8c98a62c1f95a80dbb'
+body_hash: 'sha256:89ff8044c603a813d299a24da9ec1728d5dc0f0d145c1597ddc2b9d01081c433'
 step_id: 'S23'
 related:
   - "[[2026-08-10-current-schema-only-purge-plan]]"
 ---
-
 # Prove under-declared Modelo 303 observations are refused and current dispositions round trip
 
 ## Scope
@@ -19,38 +18,17 @@ related:
 
 ## Description
 
-- Invert the test that asserted an under-declared official payload persists.
-- Prove the requirement fires with the opt-in flag NOT passed.
-- Prove an unrelated source with the same casillas and no disposition still
-  persists and reloads equal.
-- Prove a disposition-bearing official payload round trips.
-- Assert the repository is unchanged after each refusal.
+- Exercise the canonical carry-normalization ingress with real encrypted persistence.
+- Prove official evidence without `declaration_type` is refused before mutation.
+- Prove application-filing evidence without a typed result disposition is refused before mutation.
+- Round-trip distinct official `C` and application-filing `D` carry projections under strict equality.
 
 ## Outcome
 
-Landed in `25a22cb` alongside the production change.
+The restored current-contract proof covers both under-declared refusal populations and the two disposition-bearing success populations without reinstating the withdrawn generic runtime screen.
 
-The file carried a test asserting that an official Modelo 303 observation with no
-disposition IS persisted and reloads equal, refusing only in a downstream
-consumer. That test did not miss the defect; it encoded the defect as the
-contract, and it is the third such test this campaign has found. Every previous
-one was also the defect written down.
-
-It was corrected rather than deleted, and became three tests. Deleting it would
-have removed the only coverage protecting the population the refusal is
-deliberately scoped away from -- and a refusal with no such control is a refusal
-nobody can bound. The surviving control uses an operator-manual source carrying
-the same carry casillas and no disposition, and proves it still saves and reloads
-equal.
-
-The assertion that decides whether the change is real rather than a rearrangement
-is the one exercising the GENERIC path with the opt-in flag defaulted: if that
-passes, the hole the row exists for is still open.
+All four focused tests pass, Ruff is clean, and basedpyright reports no errors, warnings, or notes for the proof file.
 
 ## Notes
 
-Both refusal cases assert the observation is absent afterwards, so a refusal that
-arrived after a partial write would fail rather than read as success.
-
-The screen runs in the build-only entry point, so no save is reached at all on a
-refused payload.
+The prior Step Record described the superseded pre-amendment design. The accepted current-schema ADR assigns normalization to canonical ingress and requires explicit policy at callers, so this proof invokes `normalize_m303_carry=True` and verifies repository state directly.
