@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-11'
-body_hash: 'sha256:e612ea80b45c871054dfee73be33d94f938f99392470eea2ccf52625a989482e'
+body_hash: 'sha256:a85e9efafcca873cb4926ea0c9bd7a2c619de396797d5bfdc82a21ee57f294a7'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -156,8 +156,8 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S52` - Prove the second application registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger and 62 migration_required rows exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_application_part2.py`.
 - [x] `W05.P08.S53` - Prove the first domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 44 migration_required rows are exclusively owned by later producer steps and 3 rows are retired_or_unreachable; `src/cadrumo/core/errors/registry/_domain_part1.py`.
 - [x] `W05.P08.S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row; `src/cadrumo/core/errors/registry/_domain_part2.py`.
-- [ ] `W05.P08.S55` - Prove the third domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where three migration_required rows are exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_domain_part3.py`.
-- [ ] `W05.P08.S56` - Migrate first adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part1.py`.
+- [x] `W05.P08.S55` - Prove the third domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where three migration_required rows are exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_domain_part3.py`.
+- [ ] `W05.P08.S56` - Retire recovery-authority comments from the first adapter registry shard and prove its 59 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where eight migration_required rows are exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_adapters_part1.py`.
 - [ ] `W05.P08.S57` - Migrate second adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part2.py`.
 - [ ] `W05.P08.S63` - Delete the retired CadrumoError suggestion parameter and attribute so every unmigrated exception producer fails loudly; `src/cadrumo/core/errors/__init__.py`.
 - [ ] `W05.P08.S64` - Migrate entrypoint error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_entrypoints.py`.
