@@ -5,7 +5,7 @@ tags:
 date: '2026-08-06'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:9e67587283dce75dd02bbf29f8bb5e70e5a0fd508c786944dd42baeccb166b44'
+body_hash: 'sha256:013cd1ec509738fbfe3795ea47b134fbe86cc55d956cf8e753ddf24f73cbb74c'
 step_id: 'S13'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -58,3 +58,17 @@ This row stays OPEN by operator decision. No deployment was performed, no root w
 The source deployment configuration is ready: full Pagefind mode is pinned for every root and all four language roots are configured. The blocker is solely that the AWS session is expired, so the publish and its post-publish checks cannot run.
 
 Three checks remain unproven and are named here so the close cannot imply them: that every deployed root's entry carries the injected record corpus in that root's language, that the casilla destination page resolves live, and that the `es`, `ca` and `hu` roots respond.
+
+### 2026-08-12 publish readiness: one blocker cleared, one found, and it is not this campaign's
+
+Re-authentication alone will not produce a successful publish. Stating that plainly, because the previous record left the impression that the credential was the only thing missing.
+
+The publish builds every root through the docs driver with the strict flag, which is nitpicky warnings-as-errors, and it does that BEFORE it uploads anything. So any build warning fails the publish outright.
+
+Cleared this session: the three translated roots were red on two credential-free causes, both this campaign's own surface and both fixed. Two unauthored projection-only casilla labels aborted the reference generator, and five stale preview pages in the generated directory sat in no toctree. The generator now prunes pages a render no longer produces, so that second cause cannot recur.
+
+Still blocking, and NOT this campaign's: the English root is the one root built at full scope, and its nitpicky build reports unresolved py-domain cross-references. The cause is 23 source modules with no API stub, so autodoc cannot resolve the types their docstrings name. Every one belongs to another campaign's surface -- the M303 filing and aggregation modules, the IVA deduction and regimen rows, the profile sync store, the work-progress and official-box core types, the LLM preconditions. None is a docs-side module; the stub scaffold walks the shipped package only, so nothing this campaign owns can appear in that list.
+
+Deliberately not fixed here. The scaffold is tree-wide, so one run would emit stubs for all 23, and the standing rule is to stage only the stubs whose added lines name your own module and leave the rest to their owners. Regenerating and committing another campaign's API surface to unblock a deploy would be exactly the opportunistic peer edit that rule exists to prevent.
+
+So the publish needs two things, in either order: the credential, and those owners running the stub scaffold for their modules. The first is the operator's, the second is theirs.
