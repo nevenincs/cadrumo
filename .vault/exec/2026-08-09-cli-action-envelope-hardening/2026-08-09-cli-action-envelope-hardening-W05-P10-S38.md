@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad30a8433e6c5cc1e45d5b07b07676c883629f9dee8f9da08e5bb8a72f911111'
+body_hash: 'sha256:b57886b9ca074e9371db419249f6e85ac3b6bc498f20c77f80c030c90a3b4fac'
 step_id: 'S38'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -21,14 +21,19 @@ related:
 - Replace batch inference-pause reason, detail, remediation, and cause copies with S33 facts and a mandatory precondition verdict.
 - Preserve the exact S33 reader-unavailability verdict when an on-host reader call fails and its confirmation probe is unavailable.
 - Keep an operation failure whose confirmation probe is available distinct from a reader-unavailability precondition.
+- Correct the classifier contract to name `PurchaseInvoiceEvidenceInputError` and its exact provisioning verdict without transport or localized wording.
 - Update real batch pacing and closed-port reader coverage without a compatibility field or authored command text.
 
 ## Outcome
 
-Open for coordinated review and the S90 and S94 downstream consumer migrations.
+- The application producer preserves the exact provisioning verdict through `PurchaseInvoiceEvidenceInputError` when reader availability is not satisfied.
+- A reader call that fails after the confirmation probe reports availability remains `LLMClassifierError`, so no false precondition is invented.
+- The stale classifier contract now documents both typed outcomes accurately.
+- Five focused reader-contract tests and the wider shared action projection tests pass.
+- S38 remains open for coordinated re-review.
 
 ## Notes
 
-- S90 owns CLI catches and renderers for the typed PurchaseInvoiceEvidenceInputError handoff.
+- S90 owns CLI propagation of the typed `PurchaseInvoiceEvidenceInputError` handoff.
 - S94 owns the LLM-layer consumer proof at `src/cadrumo/llm/tests/test_llm_vision_classifier.py`.
-- The focused S38 application tests pass. The current LLM-layer test still asserts its retired LLMClassifierError and prose contract, intentionally without a compatibility bridge.
+- No `MissingOptionalExtraError` prose, compatibility field, duplicate exception identity, or locale-specific action wording was introduced.

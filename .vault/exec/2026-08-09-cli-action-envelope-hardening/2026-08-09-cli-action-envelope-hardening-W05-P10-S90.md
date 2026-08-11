@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:10fe3ab2198f36eb251b61bd6702edab1f1717d7bbbc3ca1f20da0cb3c247d64'
+body_hash: 'sha256:700ba3254305111236bb7250173c38f6439ea8c3fc979453aeab108077bc8d8f'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -16,24 +16,27 @@ related:
 
 - `src/cadrumo/entrypoints/cli/_ledger_llm_cli.py`
 - `src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py`
+- `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
+- `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
 
 ## Description
 
 - Remove local `LLMClassifierError` catches that redeclared producer failures as CLI-authored prose.
-- Remove the local `PurchaseInvoiceEvidenceInputError` string projection from the split consumer.
+- Remove local `PurchaseInvoiceEvidenceInputError` string projections from split, lifecycle, extract, and confirm consumers.
 - Propagate typed ledger failures to the shared command boundary so canonical precondition verdicts and action envelopes remain intact.
+- Replace the obsolete test-only runtime condition identity with `ProvisioningPreconditionCondition.RUNTIME_REACHABLE` and values derived from it.
 - Preserve operational failures as their registered typed errors without classifying them as false precondition failures.
 
 ## Outcome
 
-- Completed the immediate S38 consumer handoff in the two assigned ledger CLI modules.
-- Confirmed no stale `PurchaseInvoiceEvidenceInputError`, `LLMClassifierError`, or `cli.ledger.classify.llm_failed` references remain in the assigned modules.
-- Verified 21 ledger CLI integration behaviors, 14 shared action-resolution behaviors, and 5 producer distinction behaviors.
-- Verified reader unavailability remains `PurchaseInvoiceEvidenceInputError` with its canonical terminal verdict, while an available-reader operation failure remains `LLMClassifierError`; both reach the shared CLI boundary without a local prose wrapper.
-- Ruff check, Ruff format check, Python compilation, and diff whitespace validation pass for both assigned modules.
-- S90 remains open because the wider ledger CLI migration is outside this handoff slice.
+- No `PurchaseInvoiceEvidenceInputError` catch or obsolete `provisioning.ollama.runtime_reachable` identity remains in the S90 CLI scope.
+- Reader unavailability reaches the shared boundary as `PurchaseInvoiceEvidenceInputError` with its canonical terminal verdict; an available-reader operation failure remains `LLMClassifierError`.
+- Ten isolated batch CLI tests, fourteen shared action-resolution tests, five producer distinction tests, and two real evidence refusal CLI paths pass.
+- Ruff, format, compilation, focused BasedPyright, and diff checks pass for the changed surfaces.
+- S90 remains open for coordinated re-review.
 
 ## Notes
 
-- Focused basedpyright reports only the modules' pre-existing private shared-helper import diagnostics; the changed call sites introduce no new typing surface.
-- Vault execution mapping and body-section checks complete successfully with unrelated pre-existing corpus warnings.
+- The wider evidence CLI run produced thirty-three passes and five environment-sensitive failures: four happy-path extraction cases require an unavailable local Ollama semantic reader, while the lone combined-run batch failure passes in isolation.
+- Focused BasedPyright is clean for the changed application and test modules; the ledger evidence CLI module retains its pre-existing private shared-helper diagnostics.
+- No compatibility bridge, locally authored action prose, plan mutation, ledger mutation, or step closure was added.

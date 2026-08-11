@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:ab0b66cc4055a296eb4b40917fd4babcf526aba461ff1bf1e5185b955e5449bc'
+body_hash: 'sha256:b2d0211cdfa0200ef39fdb1359afab2f7b26fde063d2adfe62dc6306f27123af'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -55,10 +55,12 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S64]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S33]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S35]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S38]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S41]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S89]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S90]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S94]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
@@ -96,6 +98,8 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s51-application-part1-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s52-application-part2-review-audit]]'
@@ -153,6 +157,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit` - `cli-action-envelope-hardening` audit: `S30 error recovery contract independent review`
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
 - `2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit` - `cli-action-envelope-hardening` audit: `S116 schema-owner lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit` - `cli-action-envelope-hardening` audit: `S38 and S90 typed ledger refusal re-review`
+- `2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit` - `cli-action-envelope-hardening` audit: `S41 locale leaves independent review`
 - `2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit` - `cli-action-envelope-hardening` audit: `S50 rehoming join review`
 - `2026-08-11-cli-action-envelope-hardening-s51-application-part1-review-audit` - `cli-action-envelope-hardening` audit: `S51 application-part1 lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s52-application-part2-review-audit` - `cli-action-envelope-hardening` audit: `S52 application-part2 lifecycle review`
@@ -213,10 +219,12 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S64` - Prove the entrypoint registry shard is taxonomy-only with no recovery authority, retaining its two historical defaults only in the S50 ledger where current fingerprints are exclusively owned by S88, S89, and S114
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S33` - W05.P09.S33 - Replace provisioning optional-extra recovery prose with typed failed-condition facts and explicit no-recovery outcomes including the local-model stored-without-extra row and hand the changed dependency projection to S89 without retained remediation compatibility
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S35` - Create the missing end-to-end negative JSON and text locale and recovery-retry proof for overview and provisioning action or no-recovery journeys, deriving each action against the live schema and rejecting raw command prose
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S41` - W05.P10.S41 - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S89` - Complete the consumer half of the atomic S33/S89 provisioning cutover by replacing config-check and provision payload and renderer free-form detail and remediation forwarding plus raw Google package prose with the exact S33 typed projection and resolved action or no-recovery rendering, never hardcoding command or English text
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct PurchaseInvoiceEvidenceInputError consumer migration in _ledger_llm_cli.py and _ledger_lifecycle_cli.py so S38 reader-unavailability verdicts reach the shared envelope intact.
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update typed-error consumer tests after the ledger reader cutover without asserting translated prose.
 
 ### plan
 

@@ -5,31 +5,39 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:e2b9809892e4365544ce952f776a3997e9f8ebf4f922e710376ef9d9990f2503'
+body_hash: 'sha256:2e64492be56abf2e6b033b2bbc2c8257e0f3bfd1f1963020558a5575b68abc2e'
 step_id: 'S94'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-# Update typed-error consumer tests after the ledger reader cutover without asserting translated prose.
+# Update LLM action-envelope consumers and typed failure boundaries without retaining prose recovery authority.
 
 ## Scope
 
-- `src/cadrumo/llm/tests/test_llm_vision_classifier.py`
+- `src/cadrumo/llm`
 
 ## Description
 
-- Replace two stale `LLMClassifierError` and raw remediation-prose assertions with the imported `PurchaseInvoiceEvidenceInputError` contract.
-- Assert the canonical `ProvisioningPreconditionCondition.RUNTIME_REACHABLE` identifier and structured `runtime_reachable` evidence fact.
-- Preserve the distinction between reader unavailability and genuine available-reader operation failure without mirroring producer decision logic.
+- Replace the removed `ModelSelection.detail` read in column-role model resolution with the producer's machine facts and exact terminal precondition verdict.
+- Extend `LLMConfigError` with the established typed terminal-verdict carrier used by the sibling contention error.
+- Preserve the no-candidate `operator_decision` outcome without a fallback message or invented action.
+- Remove both Anthropic optional-extra exception-string bridges and propagate `MissingOptionalExtraError` unchanged from the core dependency boundary.
+- Replace stale vision classifier message assertions with typed reader-availability verdict assertions.
+- Replace optional-extra install-prose assertions with registered extra identity facts and cover both the client adapter builder and provider SDK loader in a fresh interpreter.
+- Run a fixed-point package scan for removed provisioning DTO fields, `install_hint` consumers, optional-extra rewrapping, raw install commands, and recovery-command fields.
 
 ## Outcome
 
-- Completed the immediate S38 consumer-test cutover in the assigned LLM vision classifier test module.
-- All 5 focused classifier tests, 5 producer evidence tests, and 21 ledger CLI integration tests pass.
-- Ruff check, Ruff format check, basedpyright, and diff whitespace validation pass for the assigned test module.
-- S94 remains open because its remaining campaign test migration scope is intentionally deferred.
+- Column-role selection failure now carries `provisioning.selected_model.available`, its exact evidence, no action, and `operator_decision` through `LLMConfigError`.
+- Both Anthropic dependency boundaries expose the same unchanged `MissingOptionalExtraError` machine identity and registered extra facts.
+- The previously migrated contention and vision paths retain their exact typed provisioning verdicts.
+- Twenty-three column-role tests, four optional-extra boundary tests, eleven contention tests, five vision tests, and eight client tests pass.
+- Ruff check and formatting pass for all owned files; focused basedpyright reports zero diagnostics; Python compilation and diff whitespace validation pass.
+- S94 remains open for independent re-review.
 
 ## Notes
 
-- Tests use real loopback or unreachable network behavior already provided by the suite; no fake, mock, stub, patch, monkeypatch, skip, or xfail was introduced.
-- No production or S38-owned files were edited.
+- No fake, mock, stub, patch, monkeypatch, skip, xfail, message matching, compatibility bridge, core/application layering import, or hardcoded recovery command was introduced.
+- The fixed-point production scan has zero removed provisioning fields, `install_hint` consumers, optional-extra rewrappers, raw install commands, or recovery-command fields. Remaining exception-string sites represent response validation, rasterisation, or provider-operation diagnostics rather than recovery authority.
+- CLI action and schema gates are externally red because concurrent Modelo code declares no `OperatorActionAxis` for `ModeloVerificationFindingKind.ADVISORY`; collection and six action-resolution cases stop at that import-time invariant.
+- The historical-default rehoming validator is externally red on fingerprint drift for `PurchaseInvoiceEvidenceInputError`, `PurchaseInvoiceEvidenceNotFoundError`, and `LLMContentionError`; this S94 remediation does not edit the ledger producers, contention constructor, or rehoming evidence.
