@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:575706c444e4bab10add0b4b91eb7a1e4efb079622da5c33c239524b4a60a949'
+body_hash: 'sha256:3d1b09f99fb4b93a382ff7a2b70be203c5102a28cc85534c2a3d0fd8510becba'
 step_id: 'S31'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -97,3 +97,11 @@ A fresh diagnostic build was attempted against the then-current shared checkout 
 Fresh vaultspec-rag grounding and an exact current Pagefind capture were followed by replay through the production Rung-2 ladder comparator. The temporary full-injection tree contained 302 HTML pages and 8,516 unified records; the diagnostic bundle artifact hash was `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`. The real browser capture covered all 32 held-out queries. Composed results were 16/32 hits and 16/32 misses (miss rate `0.5000`); the same bundle's semantic-only replay was 22/32 hits (miss rate `0.3125`) with 93/123 covered query tokens.
 
 For `modelo 303`, the weighted Pagefind pass does contain `concept:modelo-303`, but legal `DOC` records carry the declared 1.0 weight while the modelo concept carries the declared 0.9 weight. The RAG-grounded D8/R9 contract therefore retains the observed band ordering; no ranking, legal weight, or coverage-threshold change is justified. The evidence remains diagnostic: no bundle promotion, browser enablement, standing-baseline replacement, or plan closure is claimed.
+
+### 2026-08-11 close under ADR Update 12
+
+The lexical half of this row is delivered and at HEAD. The browser capture covered all 32 held-out queries through the shipped controller, and the defect it exposed is fixed in the controller: Pagefind's result object carries an ephemeral id and supplies its URL only through the hydrated data payload, so the earlier join on the result URL assigned the fallback relevance rank to every row. The controller now carries that ephemeral id through card materialisation and joins the relevance pass by it, using the hydrated URL solely as the destination and deduplication authority.
+
+The remaining half of the row, reconciling the composed-ladder drop against the semantic evaluator, is retired with the tier: ADR Update 12 (D12) rules the Rung-2 removal intended, so there is no semantic evaluator to reconcile against and no composed ladder beyond the lexical one. The measured drop that reconciliation would have explained is itself part of the retirement evidence.
+
+The captured observations and the failed acceptance gates are preserved as vault audits rather than promoted, which is what this row asked for.

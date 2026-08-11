@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:fc0217e3780347666a530deaad02ad4b60e9103ce369089a2aed05c57a75e271'
+body_hash: 'sha256:9b7caf929995a223d0648bb4e35e09b6f0cc34695bd61ed532cb802de8f1c069'
 step_id: 'S04'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -199,6 +199,14 @@ This advances the matrix from untracked to committed reviewable data but does no
 ### 2026-08-07 current-head bundle round trip
 
 The newer current-head temporary full bundle `C:\Users\hello\AppData\Local\Temp\aeat-rung2-current-20260807-ad997\bundle-full-current.json` also loads through the production validator. It is schema 3, 2,141,633 canonical bytes, artifact SHA-256 `7907fd6ad903dcb1189286b181639c5e816b061adc4e697497e489f32c6f254d`, with 8,516 manifest records, 114 bridge terms, and 153 query-token rows. Its nested matrix is byte-equal to the committed matrix (`d102c30db0a589854ac6ee4d0f1609d689a9dd5e5b23b61fe5063e3a1f6bbfda`). This confirms current-head loader/link parity; it remains temporary and does not change the rejected acceptance result.
+
+### 2026-08-11 retirement under ADR Update 12
+
+This row is retired, not delivered. The operator ruled that the removal of the Rung-2 implementation at `a3376362ef` was intended, and ADR Update 12 (D12) records that ruling with its evidence: the compiled tier measured a held-out miss rate of 0.3125 against the ratified 0.10 release line, query-token coverage of 0.748 against the 0.8 floor, 114 vocabulary rows against 8,507 injected records, and a composed ladder scoring worse than the lexical baseline it was built to supplement.
+
+No matrix was ever committed. The artefact this row's earlier entries describe existed only as untracked working-tree state and is not at HEAD. Nothing in this record should be read as a claim that a compiled, reviewable, provenance-stamped matrix ships.
+
+The cause was authoring coverage rather than mechanism: term labels across the 49 approved concepts stand at es 49, en 17, ca 3, hu 3, so most queries never reached the matrix at all. That programme is recorded in ADR Update 12 as a formally deferred carry-forward, not as silently dropped scope.
 
 ## 2026-08-05 source continuation: browser-recognizable query-token contract
 

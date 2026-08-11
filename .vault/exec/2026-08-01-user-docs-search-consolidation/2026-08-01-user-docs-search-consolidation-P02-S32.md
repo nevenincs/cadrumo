@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:be27ac755619a713ba1a77bba6d419e773e93b411dde8087857e7096a5993705'
+body_hash: 'sha256:1d4584c95fb71650bdacc19735a1788a9f639641820972211945cadd4787e342'
 step_id: 'S32'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -110,6 +110,18 @@ The same RAG searches returned broad manual/legal guidance rather than a unique 
 The RAG-ratified authority and relevance expansion, together with the provider/tokenizer provenance gate, were promoted in isolated commit `c918425f56` and pushed to `origin/main`; the unrelated staged peer payload was not included. The bounded post-commit suite returned `48 passed in 4.75s`, Ruff passed, and basedpyright reported `0 errors, 0 warnings, 0 notes` for the acceptance/input/authority modules.
 
 The current authoritative assembler now succeeds from the committed inputs with 114 queries/vocabulary rows, 153 query tokens, 8,516 projected records, authority version 1 with two entries, and zero failed queries. The held-out boundary remains unchanged and no held-out term supplied an authority row. The final checklist item remains open because the current Rung-2 diagnostic measurement is not accepted: semantic replay is 22/32 hits with `0.3125` miss-rate and `0.7561` coverage, so no browser configuration is enabled.
+
+### 2026-08-11 close under ADR Update 12
+
+This row closes delivered-narrower, and the narrowing is stated rather than absorbed.
+
+Delivered: the independent, versioned, build-time query/alias authority exists, is strictly loaded and schema-validated, enforces canonical ordering and duplicate refusal, is anchored to a repository-relative path with a raw-byte digest, and is consumed by the live sweep and the sweep command. It now carries two independently ratified entries, so this record's earlier statement that it ships with zero entries is superseded by the tree.
+
+Retired: binding its provenance into Rung-2 compilation inputs, recompiling, and remeasuring. All three presuppose the Rung-2 artefact that ADR Update 12 (D12) rules will not be produced.
+
+Re-homed: under D13 the authority's path segment and schema token no longer name the retired tier. That rename landed atomically across the committed JSON, the loader and the tests under the P02.S37 row, so nothing resolves the retired name.
+
+What this row was originally for survives the retirement intact. The authority admits reviewed aliases into the closed query vocabulary the sweep runs, and that sweep produces the committed relevance mapping that boosts lexical results. That is rung-1 work, and rung 1 ships.
 
 ## 2026-08-06 independent alias sweep and sweep-plumbing continuation
 

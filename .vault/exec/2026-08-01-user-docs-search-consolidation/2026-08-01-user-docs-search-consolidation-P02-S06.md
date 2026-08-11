@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:cb48a3a6f0fd6fadf1e9795ed2c4bdae10b0ee772b3ee24333b491e41d193700'
+body_hash: 'sha256:e64c291efee58f0e918f1792e9024270fadb05a6812d7045e2dfee4442d60fa1'
 step_id: 'S06'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -61,6 +61,12 @@ This verifies the source contracts, provider/provenance validation shape, input 
 A separately delegated LUNA Extra-High review grounded the P02.S06 plan/audit and exact acceptance source seam, then inspected the committed matrix and current temporary bundle. It found no additional source defect and made no edits. The existing acceptance boundary validates the canonical bundle hash and byte bound, pinned model revision/licence/dimension/snapshot, provider and tokenizer package/source/config/vocabulary hashes, provenance, and bridge-vocabulary linkage.
 
 The review independently confirmed that closure remains evidence-bound: semantic replay is 22/32 hits with `0.3125` miss-rate against the ratified `0.10` threshold and `93/123` coverage (`0.7561`), with composed-ladder/all-locale parity still unproven and no accepted browser configuration. No threshold was lowered and no deployment was run.
+
+### 2026-08-11 retirement under ADR Update 12
+
+This row is retired, not delivered. There is no shipped matrix whose provenance stamp, model licence or size bound the gate could validate, so the extension has no subject.
+
+What this retirement does not touch is equally important: every standing bar in the licence gate remains in force, on anything derived from NC, ND or gated sources, on raw oracle outputs, and on committing the heavy generated index. Under D14 the bounded-embedding exception is deliberately not re-narrowed either; it stays a documented, presently unused door with no consumer at HEAD, because a permission that oscillates is worse than one recorded as unused.
 
 ## Notes
 

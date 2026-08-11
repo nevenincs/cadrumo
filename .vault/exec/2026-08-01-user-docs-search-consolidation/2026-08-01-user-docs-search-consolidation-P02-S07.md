@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:3a71fced05e72cdc3dfdc48bde0c0790f6dbf5204160b0219c946b34986e8e91'
+body_hash: 'sha256:145e8a215cb96f6ea2f64c44bd1840ca06c491ff408402d9ff18ce567a1e1018'
 step_id: 'S07'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -154,6 +154,14 @@ The exact bundle compiled from `HEAD 9e6e552fee` was reloaded and replayed under
 ### 2026-08-07 pushed HEAD d24ae2fdee semantic replay
 
 The exact diagnostic bundle compiled from pushed `HEAD d24ae2fdee` was reloaded under the existing explicit policy. It produced 22/32 hits, 10/32 misses, and `0.3125` miss rate, with 93/123 covered query tokens (`0.7560975609756098`), 22 fully covered rows, 10 below the 0.8 floor, and 0 zero-covered rows; all misses were `insufficient-coverage`. This confirms the semantic result is unchanged at the pushed HEAD, but it remains above the ratified 0.10 gate and has no hash-linked current full-ladder Pagefind capture. The browser tier remains disabled and P02.S07 remains open.
+
+### 2026-08-11 retirement under ADR Update 12
+
+This row is retired, not delivered. No post-Rung-2 baseline will be measured because no post-Rung-2 ladder exists.
+
+The 0.1875 pre-Rung-2 held-out miss rate therefore stands as the project's standing and final honest recall statement, not as a baseline awaiting improvement. The measurement seam this record established, the held-out corpus, the evaluator and the report command, survives and continues to measure the lexical ladder.
+
+The measured prose-recall gap is not carried forward to a semantic tier. The dominant cause is Pagefind term conjunction rather than semantics: dropping function words alone lifted one probe from 2 results to 36 and another from 2 to 41, and a corpus-frequency heuristic was tested and shown unable to separate the classes in this corpus. That is lexical-tier work under an explicit per-language function-word authority or progressive term relaxation.
 
 ## Notes
 

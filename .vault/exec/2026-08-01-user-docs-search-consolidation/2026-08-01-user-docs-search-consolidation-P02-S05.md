@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-06'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:eec6858f48c89776f2a79bf9f43480a6d8995596c1d314a9410544d5462f4934'
+body_hash: 'sha256:c9f957878e47a41f7282408f2ffdcbc4485078e3f47dc1998038eebf8b7d898b'
 step_id: 'S05'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -71,3 +71,9 @@ Fresh vaultspec-rag exact-source grounding of the current controller confirmed f
 Fresh supported `vaultspec-rag` code/vault grounding confirmed that P02.S05's source implementation is already present in the shared controller. The fail-closed config and bundle validation, cosine candidate generation, five-result cap, semantic composition, and both `initPalette` and `initSearchPage` host paths are wired through the same controller. The worker ran `node --check`, scoped `git diff --check`, and focused controller contract checks successfully.
 
 No JavaScript change was justified. P02.S05 remains open because source presence is not shipped acceptance: it still requires an accepted provenance-stamped matrix/bundle/config, held-out and locale/kind evidence, built-surface browser proof, and deployment evidence. The semantic tier remains dormant while the browser configuration is not accepted.
+
+### 2026-08-11 retirement under ADR Update 12
+
+This row is retired, not delivered. The client semantic tier this record describes as present in source was excised from the shared controller at `a3376362ef`, together with the compiler, provider, bridge, acceptance, evaluation and provenance modules behind it. The operator has ruled that excision intended and ADR Update 12 (D12) records it.
+
+The surviving controller is lexical-authoritative by decision rather than by fail-closed default, and the comment where the tie-breaks once sat states that their removal is a no-op because no card carries a semantic score. No cosine tier composes into the ladder.
