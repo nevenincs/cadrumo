@@ -82,6 +82,7 @@ from ...domain.calculations.registry import (
     is_iva_wallet_owned_relation_target,
     materialize_relation_binding_values,
     relation_source_requirements,
+    relations_by_target_binding,
     resolve_observed_requirement_value,
 )
 from ..aggregation import (
@@ -1128,14 +1129,12 @@ def relation_prefill_period_zero_default_binding_ids(
     """
     if modelo != Modelo.M202.value:
         return frozenset()
-    relations_by_target: dict[BindingId, list[RelationDefinition]] = {}
-    for relation in revision.relations:
-        relations_by_target.setdefault(relation.target_binding, []).append(relation)
+    relations_by_target = relations_by_target_binding(revision)
     zero_defaulted: set[BindingId] = set()
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.RELATION_PREFILL:
             continue
-        relations = tuple(relations_by_target.get(binding.id, []))
+        relations = relations_by_target.get(binding.id, ())
         if not relations:
             continue
         if any(not relation.target_periods or period in relation.target_periods for relation in relations):

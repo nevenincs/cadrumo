@@ -727,6 +727,16 @@ def _build_modelo_bindings_report(context: ResolvedRegistryQueryContext) -> Mode
     )
 
 
+def relations_by_target_binding(
+    revision: ModeloRevision,
+) -> dict[BindingId, tuple[RelationDefinition, ...]]:
+    """Group declared relations by target binding in declaration order."""
+    grouped: dict[BindingId, list[RelationDefinition]] = {}
+    for relation in revision.relations:
+        grouped.setdefault(relation.target_binding, []).append(relation)
+    return {binding_id: tuple(relations) for binding_id, relations in grouped.items()}
+
+
 def _binding_rows(
     revision: ModeloRevision,
     *,
@@ -830,12 +840,17 @@ def _relation_inputs_by_target_binding(
     a per-form hardcoded channel table. Relation ids preserve their
     declaration order so the listing is deterministic.
     """
-    by_target: dict[BindingId, list[RelationId]] = {}
-    for relation in revision.relations:
-        if period is not None and relation.target_periods and period not in relation.target_periods:
-            continue
-        by_target.setdefault(relation.target_binding, []).append(relation.id)
-    return {target: tuple(relation_ids) for target, relation_ids in by_target.items()}
+    return {
+        target_binding: relation_ids
+        for target_binding, relations in relations_by_target_binding(revision).items()
+        if (
+            relation_ids := tuple(
+                relation.id
+                for relation in relations
+                if period is None or not relation.target_periods or period in relation.target_periods
+            )
+        )
+    }
 
 
 def _operator_input_required_by_binding(
@@ -848,9 +863,7 @@ def _operator_input_required_by_binding(
     required = {binding.id: True for binding in revision.bindings}
     if modelo != Modelo.M202.value or period is None:
         return required
-    relations_by_target: dict[BindingId, list[RelationDefinition]] = {}
-    for relation in revision.relations:
-        relations_by_target.setdefault(relation.target_binding, []).append(relation)
+    relations_by_target = relations_by_target_binding(revision)
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.RELATION_PREFILL:
             continue

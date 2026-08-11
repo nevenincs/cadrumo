@@ -409,6 +409,7 @@ from ._queries import (
     RegistrySourceInventoryReport,
     RegistrySourceInventoryRow,
     RegistrySourceSite,
+    relations_by_target_binding,
 )
 from ._support_matrix import (
     ModeloEntry,
@@ -1174,6 +1175,7 @@ __all__ = [
     "registry_snapshot_id_for",
     "relation_aggregation_op",
     "relation_source_requirements",
+    "relations_by_target_binding",
     "remote_state_policy_from_cross_reference",
     "render_fixed_width_export_field",
     "render_m303_annual_orden_manifest",
