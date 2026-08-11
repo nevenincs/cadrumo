@@ -30,7 +30,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId
+from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis
 from ...core.hashing import content_hash_hex
 from ...core.identity import CalculationRevisionId, VerificationReportId
 from ...core.time import validate_utc_aware
@@ -123,6 +123,38 @@ class ModeloVerificationFindingKind(StrEnum):
     INVALID_WAIVER = "invalid_waiver"
     BLOCKING_RULE = "blocking_rule"
     ADVISORY = "advisory"
+
+
+OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND: Mapping[
+    ModeloVerificationFindingKind,
+    OperatorActionAxis,
+] = MappingProxyType(
+    {
+        ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        ModeloVerificationFindingKind.RECONCILIATION_MISMATCH: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        ModeloVerificationFindingKind.UNRESOLVED_BINDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: OperatorActionAxis.FILE_PRIOR_PERIOD,
+        ModeloVerificationFindingKind.INVALID_WAIVER: OperatorActionAxis.RE_VERIFY,
+        ModeloVerificationFindingKind.BLOCKING_RULE: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        ModeloVerificationFindingKind.ADVISORY: OperatorActionAxis.REVIEW_ADVISORY,
+    },
+)
+"""Total coarse action spine for verification findings.
+
+The finding kind remains present beside this projection.  More precise native
+facts, such as a cross-period blocker code in ``message_facts``, may refine the
+operator action downstream; this table never replaces or discards them.
+"""
+
+if set(OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND) != set(ModeloVerificationFindingKind):
+    missing = sorted(
+        finding_kind.value
+        for finding_kind in set(ModeloVerificationFindingKind)
+        - set(OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND)
+    )
+    raise RuntimeError(
+        f"every ModeloVerificationFindingKind must declare an OperatorActionAxis; missing={missing}",
+    )
 
 
 class ModeloVerificationFindingSeverity(StrEnum):
@@ -319,6 +351,7 @@ class VerificationReportCatalogue(BaseModel):
 
 
 __all__ = [
+    "OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND",
     "ModeloVerificationFinding",
     "ModeloVerificationFindingKind",
     "ModeloVerificationFindingSeverity",

@@ -71,11 +71,14 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
+from enum import StrEnum
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from ..adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ..adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -84,7 +87,7 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import AuthProviderKind, BindingSourceKind, Period, resolve_active_bucket_id
+from ..core import AuthProviderKind, BindingSourceKind, OperatorActionAxis, Period, resolve_active_bucket_id
 from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
@@ -101,7 +104,6 @@ from ..domain.deadlines import (
 from ..domain.modelos import WorkUnitState
 from ._state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
 from ._state_projection_readiness import (
-    binding_source_value,
     one_line_error_message,
     readiness_binding_input_channel,
 )
@@ -110,7 +112,7 @@ from .auth import (
     active_auth_projection_span,
 )
 from .auth_credentials import ActiveCertificateCredentials
-from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
+from .ledger import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
 from .operator_actions import PreconditionVerdict
 from .user_profile import ProfilePreflightRequirement
 from .workflow import (
@@ -403,8 +405,113 @@ class ProjectionModeloBindingRequirement(BaseModel):
     model_config = _STRICT_FROZEN
 
     binding_id: str = Field(min_length=1, max_length=128)
-    source: str = Field(min_length=1, max_length=64)
+    source: BindingSourceKind
     input_channel: str = Field(min_length=1, max_length=16)
+
+    @field_validator("source", mode="before")
+    @classmethod
+    def _hydrate_source(cls, value: object) -> object:
+        """Hydrate the persisted source token without admitting unknown strings."""
+        if isinstance(value, str) and not isinstance(value, BindingSourceKind):
+            return BindingSourceKind(value)
+        return value
+
+
+MODELO_READINESS_MISSING_PROFILE_ACTION = OperatorActionAxis.SET_PROFILE_FACT
+"""Action spine for every profile requirement in readiness ``missing``."""
+
+
+OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
+    BindingSourceKind,
+    OperatorActionAxis,
+] = MappingProxyType(
+    {
+        BindingSourceKind.PROFILE: OperatorActionAxis.SET_PROFILE_FACT,
+        BindingSourceKind.PREVIOUS_FILING: OperatorActionAxis.FILE_PRIOR_PERIOD,
+        BindingSourceKind.RELATION_PREFILL: OperatorActionAxis.FILE_PRIOR_PERIOD,
+        BindingSourceKind.MANUAL_INPUT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.LEDGER_OSS_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.LEDGER_IVA_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (OperatorActionAxis.IMPORT_LEDGER_DATA),
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION: (OperatorActionAxis.IMPORT_LEDGER_DATA),
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.RETENCIONES_AGGREGATION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        BindingSourceKind.PRORRATA_REGULARIZACION: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        BindingSourceKind.BORRADOR: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+        BindingSourceKind.IVA_WALLET_DECISION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+        BindingSourceKind.PAYABLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.COLLECTIBLE_INVOICE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.LEDGER_TRANSACTION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        BindingSourceKind.WITHHOLDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.FOREIGN_ASSET: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        BindingSourceKind.RELATED_PARTY_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+        BindingSourceKind.ATRIBUCION_MEMBER: OperatorActionAxis.SET_PROFILE_FACT,
+        BindingSourceKind.REFUND_OPERATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+        BindingSourceKind.DONATIVO_DONOR: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+    },
+)
+"""Total action spine for a readiness ``missing_bindings`` source."""
+
+
+OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE: Mapping[
+    LedgerPreflightIssueReason,
+    OperatorActionAxis,
+] = MappingProxyType(
+    {
+        LedgerPreflightIssueReason.MISSING_BUSINESS_CLASSIFICATION: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.MISSING_CATEGORY: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.MISSING_TAXABLE_BASE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.MISSING_IVA_AMOUNT: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.MISSING_IVA_RATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE: OperatorActionAxis.RESOLVE_IDENTITY,
+        LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION: (
+            OperatorActionAxis.RESOLVE_IDENTITY
+        ),
+        LedgerPreflightIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: OperatorActionAxis.RESOLVE_IDENTITY,
+        LedgerPreflightIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT: (OperatorActionAxis.RESOLVE_IDENTITY),
+        LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE: (OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE),
+        LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.UNSUPPORTED_PERIOD: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_IVA_CATEGORY: OperatorActionAxis.REVIEW_ADVISORY,
+        LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA: (OperatorActionAxis.REVIEW_ADVISORY),
+    },
+)
+"""Total action spine for readiness ``ledger_issues`` reasons."""
+
+
+def _assert_total_action_projection[ActionSourceT: StrEnum](
+    source_name: str,
+    members: tuple[ActionSourceT, ...],
+    projection: Mapping[ActionSourceT, OperatorActionAxis],
+) -> None:
+    member_set = set(members)
+    projection_set = set(projection)
+    if member_set != projection_set:
+        missing = sorted(member.value for member in member_set - projection_set)
+        unexpected = sorted(str(member) for member in projection_set - member_set)
+        raise RuntimeError(
+            f"every {source_name} must declare exactly one OperatorActionAxis; "
+            f"missing={missing}; unexpected={unexpected}",
+        )
+
+
+_assert_total_action_projection(
+    BindingSourceKind.__name__,
+    tuple(BindingSourceKind),
+    OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
+)
+_assert_total_action_projection(
+    LedgerPreflightIssueReason.__name__,
+    tuple(LedgerPreflightIssueReason),
+    OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
+)
 
 
 class ProjectionModeloReadiness(BaseModel):
@@ -779,7 +886,6 @@ def _missing_calculation_bindings_for_readiness(
     missing: list[ProjectionModeloBindingRequirement] = []
     for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
         binding_id = str(binding.id)
-        source = binding_source_value(binding.source)
         if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
             continue
         if binding.source == BindingSourceKind.PROFILE and binding_id in profile_resolved:
@@ -789,7 +895,7 @@ def _missing_calculation_bindings_for_readiness(
         missing.append(
             ProjectionModeloBindingRequirement(
                 binding_id=binding_id,
-                source=source,
+                source=binding.source,
                 input_channel=readiness_binding_input_channel(
                     binding_id,
                     enum_consumed=enum_consumed,
@@ -983,6 +1089,9 @@ def _ensure_profile_key_registry_registered() -> None:
 
 
 __all__ = [
+    "MODELO_READINESS_MISSING_PROFILE_ACTION",
+    "OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE",
+    "OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE",
     "ModeloReadinessRequest",
     "OperatorStateProjection",
     "ProjectionActiveProfile",

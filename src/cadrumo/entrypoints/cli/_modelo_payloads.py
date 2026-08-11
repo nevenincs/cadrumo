@@ -31,7 +31,15 @@ from ...application.aggregation import (
 )
 from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
 from ...application.modelo import validate_modelo_work_deadline_posture
-from ...core import BindingSourceKind, CasillaId, PaymentElection, Period, RefundElection, ResultDisposition
+from ...core import (
+    BindingSourceKind,
+    CasillaId,
+    OperatorActionAxis,
+    PaymentElection,
+    Period,
+    RefundElection,
+    ResultDisposition,
+)
 from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, VerificationReportId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 from ...domain.buckets import (
@@ -1115,14 +1123,16 @@ class ModeloReadinessMissingRequirementPayload(OutputSchema):
     label: str
     legal_refs: list[str]
     modelos: list[str]
+    operator_action: OperatorActionAxis
 
 
 class ModeloReadinessMissingBindingPayload(OutputSchema):
     """One calculation binding readiness cannot satisfy."""
 
     binding_id: str
-    source: str
+    source: BindingSourceKind
     input_channel: str
+    operator_action: OperatorActionAxis
 
 
 class LedgerIssuePayload(OutputSchema):
@@ -1131,6 +1141,7 @@ class LedgerIssuePayload(OutputSchema):
     transaction_id: str
     reason: str
     detail: str = Field(min_length=1, max_length=512)
+    operator_action: OperatorActionAxis
 
 
 @register_schema("modelo.readiness")

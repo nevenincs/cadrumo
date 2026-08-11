@@ -8,7 +8,11 @@ import typer
 
 from ...application.operator_actions import ActionReference
 from ...application.state_projection import (
+    MODELO_READINESS_MISSING_PROFILE_ACTION,
+    OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
+    OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
     ModeloReadinessRequest,
+    ProjectionModeloReadiness,
     build_operator_state_projection,
 )
 from ...core import (
@@ -121,7 +125,7 @@ def _resolve_readiness_period(*, modelo: str, filing_year: int, period: str | No
         raise
 
 
-def _readiness_report(request: ModeloReadinessRequest):
+def _readiness_report(request: ModeloReadinessRequest) -> ProjectionModeloReadiness:
     from ...core import resolve_active_bucket_id
     from ...core.i18n import tr as _tr
 
@@ -139,7 +143,7 @@ def _readiness_report(request: ModeloReadinessRequest):
 
 
 def _readiness_result(
-    report,
+    report: ProjectionModeloReadiness,
     *,
     modelo: str,
     revision_id: RevisionId,
@@ -165,6 +169,7 @@ def _readiness_result(
                 label=req.label,
                 legal_refs=list(req.legal_refs),
                 modelos=list(req.modelos),
+                operator_action=MODELO_READINESS_MISSING_PROFILE_ACTION,
             )
             for req in report.missing
         ],
@@ -173,6 +178,7 @@ def _readiness_result(
                 binding_id=req.binding_id,
                 source=req.source,
                 input_channel=req.input_channel,
+                operator_action=OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE[req.source],
             )
             for req in report.missing_bindings
         ],
@@ -185,6 +191,7 @@ def _readiness_result(
                 transaction_id=issue.transaction_id,
                 reason=issue.reason.value,
                 detail=issue.detail,
+                operator_action=OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE[issue.reason],
             )
             for issue in report.ledger_issues
         ],
@@ -192,7 +199,7 @@ def _readiness_result(
 
 
 def _readiness_lines(
-    report,
+    report: ProjectionModeloReadiness,
     *,
     modelo: str,
     revision_id: RevisionId,
@@ -234,7 +241,10 @@ def _readiness_lines(
     return lines
 
 
-def _readiness_ledger_export_lines(report, export_context) -> list[str]:
+def _readiness_ledger_export_lines(
+    report: ProjectionModeloReadiness,
+    export_context: dict[str, str] | None,
+) -> list[str]:
     return [
         f"ledger_preflight_required\t{report.ledger_preflight_required}",
         f"ledger_ready\t{report.ledger_ready if report.ledger_ready is not None else ''}",
@@ -248,7 +258,7 @@ def _readiness_ledger_export_lines(report, export_context) -> list[str]:
     ]
 
 
-def _readiness_detail_lines(report) -> list[str]:
+def _readiness_detail_lines(report: ProjectionModeloReadiness) -> list[str]:
     lines: list[str] = []
     for requirement in report.missing:
         legal_refs = ", ".join(requirement.legal_refs) or "-"
@@ -267,7 +277,7 @@ def _readiness_detail_lines(report) -> list[str]:
     return lines
 
 
-def _readiness_notices(report) -> tuple[Notice, ...]:
+def _readiness_notices(report: ProjectionModeloReadiness) -> tuple[Notice, ...]:
     notices: list[Notice] = []
     if not report.per_operation_requirements_assessed:
         notices.append(
@@ -324,11 +334,11 @@ def _readiness_notices(report) -> tuple[Notice, ...]:
     return tuple(notices)
 
 
-def _ledger_ready_but_bindings_missing(report) -> bool:
+def _ledger_ready_but_bindings_missing(report: ProjectionModeloReadiness) -> bool:
     return report.ledger_ready is True and not report.binding_ready and bool(report.missing_bindings)
 
 
-def _export_readiness_context(report) -> dict[str, str] | None:
+def _export_readiness_context(report: ProjectionModeloReadiness) -> dict[str, str] | None:
     if not report.registry_ready:
         return None
     from ...application.filing import build_runtime_schema_provider, export_layout_renderability_reason
