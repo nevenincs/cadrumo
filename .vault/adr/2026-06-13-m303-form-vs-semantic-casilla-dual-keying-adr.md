@@ -179,6 +179,15 @@ combinations, ungrounded signed adjustment, unresolved asset or sector, observat
 reuse, or incomplete migration refuses before calculation, persistence, projection,
 target creation, or bytes. No export registry or layout is changed by S54.
 
+For S49, `IvaLedgerObservation.iva_amount` remains the raw supported or charged
+cuota and is not a deductible amount already adjusted by prorrata. The canonical
+application aggregation service applies each sector's regime and percentage exactly
+once, including the existing special-prorrata 100%, 0%, or common-input routing, and
+exposes immutable per-sector and per-deduction-kind apportioned outputs. The registry
+projection consumes those outputs and only orders, sums, and projects them into the
+official endpoints. It never sums raw observation cuota as deductible, multiplies by
+a register percentage, or reimplements special-prorrata routing.
+
 ### Producer vocabulary and resolution
 
 The public core producer enum names semantic facts, not record labels. The registry `producer_key` payload and development semantic-map schema import that enum and require one exact member. Canonical TOML loading is the only string-to-enum boundary. Renderer dispatch is an exhaustive enum-keyed table whose keys equal the enum membership; it receives one `FilingProducerSnapshot` and returns the typed value for the exact official projection.
