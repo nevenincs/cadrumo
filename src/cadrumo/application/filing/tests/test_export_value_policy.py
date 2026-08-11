@@ -211,6 +211,74 @@ def test_filing_writer_dispatches_only_the_exact_typed_projection_reference() ->
         )
 
 
+def test_projection_row_occurrences_are_selected_only_by_resolved_typed_values() -> None:
+    ref = M303Exonerado390ActivityProjectionRef(
+        slot=1,
+        field=M303Exonerado390ActivityField.ACTIVITY_CODE,
+    )
+    field = ExportFieldDefinition(
+        id="typed-row-projection",
+        offset=1,
+        length=3,
+        kind="projection",
+        projection_ref=ref,
+        data_type="text",
+        required=True,
+        padding="right_space",
+        justification="left",
+        signed=False,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
+    record = ExportRecordDefinition(
+        id="typed-projection-rows",
+        record_type="2",
+        order=0,
+        encoding="ascii",
+        line_ending="none",
+        repeat="projection_rows",
+        fields=(field,),
+    )
+    layout = ExportLayoutDefinition(
+        id="typed-projection-row-layout",
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+        records=(record,),
+    )
+
+    assert (
+        render_layout(
+            layout,
+            draft=_draft(checkbox=False, year=2026),
+            producer_snapshot=_typed_producer_snapshot(),
+            projection_values={
+                (ref.model_dump_json(), 0): "A01",
+                (ref.model_dump_json(), 1): "A02",
+            },
+        )
+        == b"A01A02"
+    )
+    with pytest.raises(FilingExportValidationError, match="has no projected occurrences"):
+        render_layout(
+            layout,
+            draft=_draft(checkbox=False, year=2026),
+            producer_snapshot=_typed_producer_snapshot(),
+            projection_values={},
+        )
+    optional_layout = layout.model_copy(
+        update={"records": (record.model_copy(update={"required": False}),)},
+    )
+    assert (
+        render_layout(
+            optional_layout,
+            draft=_draft(checkbox=False, year=2026),
+            producer_snapshot=_typed_producer_snapshot(),
+            projection_values={},
+        )
+        == b""
+    )
+
+
 @pytest.mark.parametrize("invalid", ["yes", 2, " "])
 def test_filing_writer_refuses_invalid_checkbox_inputs(invalid: object) -> None:
     with pytest.raises(FilingExportValidationError):

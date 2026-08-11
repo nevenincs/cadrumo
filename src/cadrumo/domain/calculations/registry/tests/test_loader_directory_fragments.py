@@ -22,6 +22,54 @@ from ._loader_directory_mode_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+@pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
+def test_registry_loader_refuses_projection_slot_coercion(tmp_path: Path, slot_literal: str) -> None:
+    registry_file = tmp_path / "999.toml"
+    registry_file.write_text(
+        _standard_manifest_text("Projection compiler proof")
+        + "\n"
+        + _standard_revision_preamble_text()
+        + f"""
+
+[[revisions."2025".export_layouts]]
+id = "modelo-999-layout"
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[[revisions."2025".export_layouts.records]]
+id = "modelo-999-record"
+record_type = "1"
+order = 0
+encoding = "latin-1"
+line_ending = "crlf"
+required = true
+
+[[revisions."2025".export_layouts.records.fields]]
+id = "modelo-999-projection"
+offset = 1
+length = 3
+kind = "projection"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["ley-58-2003:art-29"]
+source_refs = ["aeat-manual"]
+
+[revisions."2025".export_layouts.records.fields.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = {slot_literal}
+field = "cnae"
+casilla_id = "500"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(RegistryLoadError, match="exact integer"):
+        load_modelo_file(registry_file)
+
+
 def test_directory_mode_loads_fragmented_revision_layout(tmp_path: Path) -> None:
     """A ``revisions/<id>/`` fragment tree compiles to the same object shape."""
 

@@ -159,6 +159,7 @@ from ._filing_projection_ref import (
     M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
+    compile_filing_projection_ref,
 )
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
@@ -641,6 +642,7 @@ __all__: list[str] = [
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "clear_pointer",
+    "compile_filing_projection_ref",
     "default_model_runtime_id",
     "derive_result_disposition",
     "detect_image_media_type",

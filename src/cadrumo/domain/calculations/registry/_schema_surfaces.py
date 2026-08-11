@@ -953,7 +953,7 @@ class ExportRecordDefinition(RegistryModel):
     encoding: ExportEncodingValue
     line_ending: Literal["crlf", "lf", "none"]
     required: bool = True
-    repeat: Literal["binding_rows"] | None = None
+    repeat: Literal["binding_rows", "projection_rows"] | None = None
     binding_record: str | None = None
     row_field_casilla_ids: Mapping[str, CasillaId] = Field(default_factory=dict)
     discriminator: RecordDiscriminator | None = None

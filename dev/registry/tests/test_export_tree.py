@@ -795,6 +795,34 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     assert layout == first.layout
 
 
+@pytest.mark.parametrize("required", [False, True])
+def test_renderer_carries_semantic_projection_occurrence_authority_into_generated_record(
+    _m200_snapshot,
+    tmp_path,
+    required: bool,
+) -> None:
+    semantic_map = _semantic_map()
+    records = tuple(
+        record.model_copy(update={"repeat": "projection_rows", "required": required}) if index == 1 else record
+        for index, record in enumerate(semantic_map.records)
+    )
+    semantic_map = semantic_map.model_copy(update={"records": records})
+    joined = join_record_design_semantics(semantic_map, _intermediate(), _m200_snapshot)
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.layout.records[1].repeat == "projection_rows"
+    assert rendered.layout.records[1].required is required
+
+
 def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_field_evidence(
     _m200_snapshot,
     tmp_path,

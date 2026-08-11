@@ -16,6 +16,7 @@ from cadrumo.core import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
+    compile_filing_projection_ref,
 )
 from cadrumo.core import _filing_projection_ref as owner
 
@@ -50,6 +51,34 @@ def test_discriminator_hydrates_one_exact_member_and_rejects_unknown_shapes() ->
     )
     with pytest.raises(ValidationError):
         adapter.validate_python({"projection_kind": "legacy_slot", "slot": 1}, strict=False)
+
+
+@pytest.mark.parametrize("slot", ["1", 1.0, True])
+def test_persisted_projection_compiler_refuses_coerced_slot_primitives(slot: object) -> None:
+    with pytest.raises(ValueError, match="exact integer"):
+        compile_filing_projection_ref(
+            {
+                "projection_kind": "m303_prorrata_activity",
+                "slot": slot,
+                "field": "cnae",
+                "casilla_id": "500",
+            },
+        )
+
+
+def test_persisted_projection_compiler_accepts_only_the_exact_integer_wire_shape() -> None:
+    assert compile_filing_projection_ref(
+        {
+            "projection_kind": "m303_prorrata_activity",
+            "slot": 1,
+            "field": "cnae",
+            "casilla_id": "500",
+        },
+    ) == M303ProrrataActivityProjectionRef(
+        slot=1,
+        field=M303ProrrataActivityProjectionField.CNAE,
+        casilla_id="500",
+    )
 
 
 def test_simplified_activity_reference_refuses_cross_cohort_field_drift() -> None:

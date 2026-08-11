@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, model_validator
 
 from ._casilla_id import CasillaId
 from ._models import STRICT_FROZEN_CONFIG
@@ -179,6 +180,37 @@ FilingProjectionRef = Annotated[
 ]
 """Strict core-owned union for every repeated-row filing projection."""
 
+_FILING_PROJECTION_REF_ADAPTER: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
+_STRING_WIRE_FIELDS = frozenset(
+    {
+        "casilla_id",
+        "cohort",
+        "fact_identity",
+        "field",
+        "module_identity",
+        "projection_kind",
+        "value",
+    },
+)
+
+
+def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
+    """Compile one canonical projection reference from exact persisted primitives."""
+    if not isinstance(value, Mapping):
+        raise ValueError("filing projection reference must be a mapping")
+    source = cast(Mapping[object, object], value)
+    payload: dict[str, object] = {}
+    for raw_key, raw_value in source.items():
+        if type(raw_key) is not str:
+            raise ValueError("filing projection reference keys must be exact strings")
+        payload[raw_key] = raw_value
+    for field_name in _STRING_WIRE_FIELDS.intersection(payload):
+        if type(payload[field_name]) is not str:
+            raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
+    if "slot" in payload and type(payload["slot"]) is not int:
+        raise ValueError("filing projection reference 'slot' must be an exact integer")
+    return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
+
 
 __all__ = [
     "FilingProjectionRef",
@@ -195,4 +227,5 @@ __all__ = [
     "M303RegimenSimplificadoFactProjectionRef",
     "M303RegimenSimplificadoModuleProjectionRef",
     "M303RegimenSimplificadoModuleValue",
+    "compile_filing_projection_ref",
 ]

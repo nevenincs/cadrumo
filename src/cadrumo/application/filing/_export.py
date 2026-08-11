@@ -850,7 +850,7 @@ def _render_layout(
             prior_domiciliation_election=prior_domiciliation_election,
         ):
             continue
-        for row in _record_render_rows(record, binding_values):
+        for row in _record_render_rows(record, binding_values, projection_values):
             _guard_record_export(record, casilla_values=casilla_values)
             text = _render_record(
                 record,
@@ -892,7 +892,28 @@ def render_layout(
 def _record_render_rows(
     record: ExportRecordDefinition,
     binding_values: dict[tuple[BindingId, int | None], object],
+    projection_values: Mapping[tuple[str, int | None], object],
 ) -> tuple[_RecordRenderRow, ...]:
+    if record.repeat == "projection_rows":
+        projection_identities = {
+            field.projection_ref.model_dump_json() for field in record.fields if field.projection_ref is not None
+        }
+        if not projection_identities:
+            raise FilingExportValidationError(
+                f"projection-row export record {record.id!r} must declare typed projection fields",
+            )
+        row_indexes = sorted(
+            {
+                row_index
+                for projection_identity, row_index in projection_values
+                if projection_identity in projection_identities and row_index is not None
+            },
+        )
+        if record.required and not row_indexes:
+            raise FilingExportValidationError(
+                f"required projection-row export record {record.id!r} has no projected occurrences",
+            )
+        return tuple(_RecordRenderRow(row_index=row_index, active_binding_ids=frozenset()) for row_index in row_indexes)
     if record.repeat != "binding_rows":
         if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
             return ()

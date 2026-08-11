@@ -106,6 +106,33 @@ def test_loader_is_the_exact_string_to_typed_projection_reference_boundary(tmp_p
     assert projection_ref.casilla_id == "500"
 
 
+def test_loader_preserves_projection_record_occurrence_authority(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    projection_record = _RECORD.replace(
+        'record_type = "declaracion"',
+        'record_type = "declaracion"\nrequired = false\nrepeat = "projection_rows"',
+    )
+    _write(root / "0001-record.toml", _fragment(fragment_id="record", body=projection_record + _ENTRY))
+
+    semantic_map = load_semantic_map(root)
+
+    assert semantic_map.records[0].repeat == "projection_rows"
+    assert semantic_map.records[0].required is False
+
+
+@pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
+def test_loader_refuses_projection_slot_coercion(tmp_path: Path, slot_literal: str) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    record = _RECORD.replace("Registro tipo 1", "DP30305").replace("registro-tipo-1", "dp30305")
+    projection_entry = _PROJECTION_ENTRY.replace("slot = 1", f"slot = {slot_literal}")
+    _write(root / "0001-projection.toml", _fragment(fragment_id="projection", body=record + projection_entry))
+
+    with pytest.raises(RegistryValidationError, match="exact integer"):
+        load_semantic_map(root)
+
+
 def test_compiled_semantics_have_canonical_order_across_fragments(tmp_path: Path) -> None:
     root = tmp_path / "semantic-map"
     root.mkdir()
@@ -331,7 +358,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         if node.module in {"cadrumo.core", "cadrumo.domain.calculations.registry", "_semantic_map"}
     }
     assert imported_names_by_module == {
-        "cadrumo.core": {"FilingProducerKey", "FilingProjectionRef", "freeze_toml", "read_toml"},
+        "cadrumo.core": {"FilingProducerKey", "compile_filing_projection_ref", "freeze_toml", "read_toml"},
         "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
         "_semantic_map": {"SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }

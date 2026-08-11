@@ -263,6 +263,8 @@ def _render_records(
                 {
                     "id": record_id,
                     "record_type": joined_record.semantic_record.record_type,
+                    "required": joined_record.semantic_record.required,
+                    "repeat": joined_record.semantic_record.repeat,
                     "order": order,
                     "encoding": transport_profile.encoding,
                     "line_ending": transport_profile.line_ending,
