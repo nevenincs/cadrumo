@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2d0211cdfa0200ef39fdb1359afab2f7b26fde063d2adfe62dc6306f27123af'
+body_hash: 'sha256:4d850aaa8ab209c9cba1ab04a699a4894894c1bab89312b26053e4f0ecf0270a'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -98,6 +98,7 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s33-provisioning-closure-rereview-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit]]'
@@ -157,6 +158,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit` - `cli-action-envelope-hardening` audit: `S30 error recovery contract independent review`
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
 - `2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit` - `cli-action-envelope-hardening` audit: `S116 schema-owner lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s33-provisioning-closure-rereview-audit` - `cli-action-envelope-hardening` audit: `S33 provisioning closure re-review`
 - `2026-08-11-cli-action-envelope-hardening-s38-s90-re-review-audit` - `cli-action-envelope-hardening` audit: `S38 and S90 typed ledger refusal re-review`
 - `2026-08-11-cli-action-envelope-hardening-s41-locale-leaves-audit` - `cli-action-envelope-hardening` audit: `S41 locale leaves independent review`
 - `2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit` - `cli-action-envelope-hardening` audit: `S50 rehoming join review`
@@ -223,8 +225,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S41` - W05.P10.S41 - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S89` - Complete the consumer half of the atomic S33/S89 provisioning cutover by replacing config-check and provision payload and renderer free-form detail and remediation forwarding plus raw Google package prose with the exact S33 typed projection and resolved action or no-recovery rendering, never hardcoding command or English text
-- `2026-08-09-cli-action-envelope-hardening-W05-P10-S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct PurchaseInvoiceEvidenceInputError consumer migration in _ledger_llm_cli.py and _ledger_lifecycle_cli.py so S38 reader-unavailability verdicts reach the shared envelope intact.
-- `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update typed-error consumer tests after the ledger reader cutover without asserting translated prose.
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct typed-error consumer migration so canonical refusals reach the shared envelope intact.
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope consumers and typed failure boundaries without retaining prose recovery authority.
 
 ### plan
 
