@@ -31,6 +31,7 @@ from .....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
@@ -59,9 +60,7 @@ _DESIGNS = (
 
 def _revision():
     modelo, catalogues = _committed_modelo("303")
-    return build_snapshot(
-        modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="4T"
-    ).revision
+    return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="4T").revision
 
 
 def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
@@ -74,6 +73,7 @@ def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
             ejercicio=2025,
             sector_id=sector_id,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=percentage,
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         )
@@ -83,7 +83,9 @@ def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
 
 
 def _contributions() -> tuple[IvaDifferentiatedDeductionContribution, ...]:
-    kinds = tuple(kind for kind in IvaDeductionFactKind if kind is not IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION)
+    kinds = tuple(
+        kind for kind in IvaDeductionFactKind if kind is not IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
+    )
     return tuple(
         IvaDifferentiatedDeductionContribution(
             sector_id=sector_id,
@@ -124,6 +126,7 @@ def _observation(
             source_locator=f"invoice:{ledger_id}",
             evidence_digest="a" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -139,7 +142,8 @@ def _apportionment(
 
 def test_all_36_endpoints_are_projection_only_and_fixed_to_two_rows() -> None:
     endpoints = tuple(
-        item for item in _revision().casillas
+        item
+        for item in _revision().casillas
         if tuple(item.section[:3]) == ("iva", "deducciones", "sectores-diferenciados")
     )
     assert tuple(str(item.id) for item in endpoints) == tuple(str(number) for number in range(700, 736))
@@ -159,9 +163,10 @@ def test_real_dp30305_geometry_is_exact_for_every_revision(
     fields = sheet.fields[30:66]
     assert tuple(field.offset for field in fields) == tuple(first_offset + 17 * index for index in range(36))
     assert all(field.length == 17 for field in fields)
-    assert tuple(f"[{number}]" in field.description for number, field in zip(range(700, 736), fields, strict=True)) == (
-        True,
-    ) * 36
+    assert (
+        tuple(f"[{number}]" in field.description for number, field in zip(range(700, 736), fields, strict=True))
+        == (True,) * 36
+    )
 
 
 def test_apportioned_contributions_and_regularisation_project_once() -> None:
@@ -169,12 +174,18 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
         regularizacion_year=2025,
         rows=(
             RegistroRegularizacionRow(
-                identifier="asset-a", kind=BienInversionKind.MUEBLE, prorrata_sector_id="a",
-                prorrata_anio_pct=Decimal("80"), result=None,
+                identifier="asset-a",
+                kind=BienInversionKind.MUEBLE,
+                prorrata_sector_id="a",
+                prorrata_anio_pct=Decimal("80"),
+                result=None,
             ),
             RegistroRegularizacionRow(
-                identifier="asset-b", kind=BienInversionKind.MUEBLE, prorrata_sector_id="b",
-                prorrata_anio_pct=Decimal("60"), result=None,
+                identifier="asset-b",
+                kind=BienInversionKind.MUEBLE,
+                prorrata_sector_id="b",
+                prorrata_anio_pct=Decimal("60"),
+                result=None,
             ),
         ),
         proposed_casilla_43=Decimal("12"),
@@ -193,7 +204,8 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
         regularisation_result=regularisation,
     )
     assert tuple((row.slot, row.sector_id, row.percentage) for row in projection) == (
-        (1, "a", Decimal("80")), (2, "b", Decimal("60"))
+        (1, "a", Decimal("80")),
+        (2, "b", Decimal("60")),
     )
     assert tuple(str(item.casilla_id) for row in projection for item in row.endpoints) == tuple(
         str(number) for number in range(700, 736)
@@ -235,6 +247,7 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
             prorrata_sector_id="a",
             deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
             deduction_provenance=provenance,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
         for index, classification in enumerate(
             (InputClassification.EXCLUSIVELY_DEDUCTIBLE, InputClassification.COMMON), 1
@@ -254,7 +267,8 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
         ),
     )
     domestic = next(
-        item for item in apportioned
+        item
+        for item in apportioned
         if item.sector_id == "a" and item.deduction_fact_kind is IvaDeductionFactKind.DOMESTIC_CURRENT
     )
     assert domestic.base_amount == Decimal("200")
@@ -273,15 +287,14 @@ def test_canonical_aggregation_refuses_unattributable_duplicate_and_wrong_owner_
     observations: tuple[IvaLedgerObservation, ...], message: str
 ) -> None:
     with pytest.raises(ValueError, match=message):
-        resolve_iva_differentiated_deduction_contributions(
-            _revision(), observations, apportionment=_apportionment()
-        )
+        resolve_iva_differentiated_deduction_contributions(_revision(), observations, apportionment=_apportionment())
 
 
 def test_especial_common_use_must_be_explicit() -> None:
     with pytest.raises(ValueError, match="common-use classification must be explicit"):
         resolve_iva_differentiated_deduction_contributions(
-            _revision(), (_observation("implicit-common", classification=None),),
+            _revision(),
+            (_observation("implicit-common", classification=None),),
             apportionment=_apportionment(regime=ProrrataRegisterRegime.ESPECIAL),
         )
 
@@ -315,11 +328,15 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
     ("entry", "message"),
     (
         (
-            ProrrataRegisterEntry(ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.NINGUNA),
+            ProrrataRegisterEntry(
+                ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None
+            ),
             "no applicable regime",
         ),
         (
-            ProrrataRegisterEntry(ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.GENERAL),
+            ProrrataRegisterEntry(
+                ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+            ),
             "no resolved percentage",
         ),
     ),
@@ -336,24 +353,36 @@ def test_projector_refuses_inactive_or_percentage_less_active_sector(
 
 def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> None:
     row = RegistroRegularizacionRow(
-        identifier="asset-a", kind=BienInversionKind.MUEBLE, prorrata_sector_id="a",
-        prorrata_anio_pct=Decimal("80"), result=None,
+        identifier="asset-a",
+        kind=BienInversionKind.MUEBLE,
+        prorrata_sector_id="a",
+        prorrata_anio_pct=Decimal("80"),
+        result=None,
     )
     unlinked = RegistroRegularizacionResult(
-        regularizacion_year=2025, rows=(row,), proposed_casilla_43=Decimal("1"),
-        computed_count=1, pending_percentage_count=0,
+        regularizacion_year=2025,
+        rows=(row,),
+        proposed_casilla_43=Decimal("1"),
+        computed_count=1,
+        pending_percentage_count=0,
         sector_contributions=(
             BienesInversionSectorContribution(asset_id="asset-x", prorrata_sector_id="a", amount=Decimal("1")),
         ),
     )
     with pytest.raises(RegistryValidationError, match="no canonical asset row"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=_contributions(),
+            _revision(),
+            register=_register(),
+            ejercicio=2025,
+            contributions=_contributions(),
             regularisation_result=unlinked,
         )
     duplicated = RegistroRegularizacionResult(
-        regularizacion_year=2025, rows=(row,), proposed_casilla_43=Decimal("2"),
-        computed_count=2, pending_percentage_count=0,
+        regularizacion_year=2025,
+        rows=(row,),
+        proposed_casilla_43=Decimal("2"),
+        computed_count=2,
+        pending_percentage_count=0,
         sector_contributions=(
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="a", amount=Decimal("1")),
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="a", amount=Decimal("1")),
@@ -361,7 +390,10 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
     )
     with pytest.raises(RegistryValidationError, match="double-consumed"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=_contributions(),
+            _revision(),
+            register=_register(),
+            ejercicio=2025,
+            contributions=_contributions(),
             regularisation_result=duplicated,
         )
 
@@ -371,17 +403,25 @@ def test_projector_refuses_regularisation_asset_sector_mismatch() -> None:
         regularizacion_year=2025,
         rows=(
             RegistroRegularizacionRow(
-                identifier="asset-a", kind=BienInversionKind.MUEBLE, prorrata_sector_id="a",
-                prorrata_anio_pct=Decimal("80"), result=None,
+                identifier="asset-a",
+                kind=BienInversionKind.MUEBLE,
+                prorrata_sector_id="a",
+                prorrata_anio_pct=Decimal("80"),
+                result=None,
             ),
         ),
-        proposed_casilla_43=Decimal("1"), computed_count=1, pending_percentage_count=0,
+        proposed_casilla_43=Decimal("1"),
+        computed_count=1,
+        pending_percentage_count=0,
         sector_contributions=(
             BienesInversionSectorContribution(asset_id="asset-a", prorrata_sector_id="b", amount=Decimal("1")),
         ),
     )
     with pytest.raises(RegistryValidationError, match="asset and contribution sectors differ"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=_contributions(),
+            _revision(),
+            register=_register(),
+            ejercicio=2025,
+            contributions=_contributions(),
             regularisation_result=result,
         )

@@ -75,6 +75,8 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import (
     AggregationCaptureKind,
     CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
@@ -82,6 +84,7 @@ from ....core import (
 )
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import (
     BindingId,
     InputKind,
@@ -89,7 +92,11 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
 )
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.iva import (
+    IvaDeductionClassificationProvenance,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions import (
@@ -116,6 +123,8 @@ from ...modelo import (
     create_work_unit,
     resolve_available_bound_inputs_by_casilla_id,
 )
+from ...modelo._binding_resolution import resolve_declaration_period_inputs
+from ...modelo.tests._export_test_support import _general_m303_filing_evidence
 from ...user_profile import UserProfileLifecycleRepository
 from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository
@@ -198,6 +207,14 @@ def _seed_ready_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value="false"),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
+                UserProfileFact(
+                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                    value="false",
+                ),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -232,7 +249,12 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
         full_inputs = {
             c.id: Decimal("0")
             for c in snap.revision.casillas
-            if c.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL)
+            if c.input_kind
+            not in (
+                InputKind.COMPUTED,
+                InputKind.INFORMATIONAL,
+                InputKind.PROJECTION_ONLY,
+            )
         }
         full_inputs.update(casilla_inputs)
         result = calculate_registry_snapshot(
@@ -314,6 +336,18 @@ def _m303_iva_transaction(
     taxable_base: Decimal,
     iva_amount: Decimal,
 ) -> Transaction:
+    deduction_authority = (
+        {
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{provider_id}",
+                evidence_digest="8" * 64,
+            ),
+        }
+        if direction is TransactionDirection.OUTGOING
+        else {}
+    )
     return Transaction.model_validate(
         {
             "raw": _m303_raw_transaction(provider_id, amount=amount),
@@ -325,6 +359,7 @@ def _m303_iva_transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
+            **deduction_authority,
             "classified_at": datetime(_PRORRATA_YEAR, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -545,6 +580,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
                 ProrrataRegisterEntry(
                     ejercicio=_PRORRATA_YEAR,
                     regime=ProrrataRegisterRegime.GENERAL,
+                    especial_transition=None,
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
@@ -567,6 +603,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         bucket_event_repository=bucket_event_repository,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        filing_instance_evidence=_general_m303_filing_evidence(_PRORRATA_PERIOD),
         clock=_PRORRATA_T1,
     )
 
@@ -581,6 +618,12 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
     pull_resolution = LedgerIvaAggregationSourceResolver(
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
+        prorrata_register_repository=ProrrataRegisterRepository(
+            bucket_id=_BUCKET_ID,
+            objects=secure_objects,
+        ),
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id=_BUCKET_ID,
     ).resolve(context)
     pull_binding_values = dict(pull_resolution.binding_values)
     pull_binding_values.update(
@@ -590,12 +633,13 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         },
     )
     pull_inputs = {
-        casilla.id: Decimal("0")
-        for casilla in snapshot.revision.casillas
-        if casilla.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL)
-        and casilla.id != _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
+        **resolve_declaration_period_inputs(
+            snapshot.revision,
+            filing_year=_PRORRATA_YEAR,
+            period=_PRORRATA_PERIOD,
+        ).casilla_inputs,
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, pull_binding_values),
     }
-    pull_inputs.update(resolve_available_bound_inputs_by_casilla_id(snapshot.revision, pull_binding_values))
     pull_result = calculate_registry_snapshot(
         snapshot,
         inputs=pull_inputs,

@@ -31,8 +31,8 @@ import pytest
 import typer
 
 from ....application.modelo import WorkUnitNotFoundError
+from ....core import CasillaId, validated_casilla_id
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
-
 from ....tests.cli_runner import invoke_cached_cli
 from .._modelo import _bad_parameter_from_error
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -65,6 +65,11 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -385,7 +390,7 @@ def test_missing_binding_guidance_routes_by_binding_source(tmp_path) -> None:
     """
 
     from ....application.modelo import create_work_unit
-    from ....core import CasillaId, Period, validated_casilla_id
+    from ....core import Period
     from ....domain.calculations.registry import RegistryValidationError
     from ....tests.secure_sql import isolated_runtime_profile
     from .._modelo import _missing_binding_guidance
@@ -447,6 +452,11 @@ def test_work_calculate_missing_m200_m202_relation_prefill_is_advisory(tmp_path)
                     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                     UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 ),
             ),
         )

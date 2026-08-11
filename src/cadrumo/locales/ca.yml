@@ -4034,6 +4034,9 @@ cli:
       create_epilog: 'Perfil mínim per a autònom: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
+        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
+        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
@@ -70705,8 +70708,14 @@ wizard:
         help: Alta com a entitat dominant d'un grup d'IVA
       iva-group-member-enrolled:
         help: Alta com a entitat membre d'un grup d'IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declara el dret a deduir pagaments anticipats del règim de dipòsits fiscals d'hidrocarburs.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
+      iva-cash-accounting-regime-enrolled:
+        help: Declara l'alta en el règim especial del criteri de caixa de l'IVA.
+      iva-m303-regime-composition:
+        help: 'Composició de règims del Model 303: general, simplificat o mixt.'
       iva-oss-enrolled:
         help: Alta en OSS
       iva-redeme-enrolled:
@@ -70717,6 +70726,8 @@ wizard:
         help: Alta en ROI
       iva-sii-enrolled:
         help: Si el contribuent està inscrit al SII
+      iva-voluntary-sii-enrolled:
+        help: Declara l'alta voluntària al SII, separada de les causes d'inclusió obligatòria.
       legal-entity-form:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       legal-name:
@@ -70823,6 +70834,8 @@ wizard:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
         help: 'Comunitat autònoma de residència fiscal. Una de: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Règim territorial declarat: territori comú o territori foral encara no compatible.'
       taxation-type:
         help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
           familiar).'
@@ -70867,10 +70880,14 @@ wizard:
 
       Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Està inscrit al règim especial del criteri de caixa?
       iva-group-dominant-entity-enrolled:
         prompt: Alta com a entitat dominant d'un grup d'IVA
       iva-group-member-enrolled:
         prompt: Alta com a entitat membre d'un grup d'IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Té dret a deduir pagaments anticipats del règim de dipòsits fiscals d'hidrocarburs?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
@@ -70883,6 +70900,17 @@ wizard:
         prompt: Alta en ROI
       iva-sii-enrolled:
         prompt: Inscrit al SII (Subministrament Immediat d'Informació)
+      iva-voluntary-sii-enrolled:
+        prompt: Està inscrit voluntàriament al SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Només règim general
+          mixed:
+            label: Règims mixtos
+          simplified:
+            label: Només règim simplificat
+        prompt: Quina composició de règims s'aplica al Model 303?
       title: IVA configuració
     notes:
       notes:
@@ -71086,6 +71114,13 @@ wizard:
         prompt: Nom del representant fiscal a Espanya
       tax-residence-ccaa:
         prompt: Comunitat autònoma de residència fiscal
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Territori comú
+          foral_unsupported:
+            label: Territori foral (encara no compatible)
+        prompt: Quin territori tributari s'aplica a aquest Model 303?
       title: Residència fiscal
     review:
       registered-non-official-suffix: ' (del certificat censal - no verificat per

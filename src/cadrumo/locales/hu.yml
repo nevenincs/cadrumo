@@ -3971,6 +3971,9 @@ cli:
       create_epilog: 'Minimális önálló vállalkozói profil: aeat config profile create
         PROFILE --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME>
         --surnames <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
+        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
+        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Új aktív profil inicializálása.
       delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutató
@@ -70833,8 +70836,14 @@ wizard:
         help: IVA-csoport dominans szervezetekent bejelentkezett
       iva-group-member-enrolled:
         help: IVA-csoport tag szervezetekent bejelentkezett
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Nyilatkozzon a szénhidrogén-adóraktári előlegek levonására való jogosultságról.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
+      iva-cash-accounting-regime-enrolled:
+        help: Nyilatkozzon az IVA pénzforgalmi különleges rendszerébe való bejelentkezésről.
+      iva-m303-regime-composition:
+        help: 'Modelo 303 rendszerösszetétel: általános, egyszerűsített vagy vegyes.'
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
       iva-redeme-enrolled:
@@ -70845,6 +70854,8 @@ wizard:
         help: ROI-ba bejelentkezett
       iva-sii-enrolled:
         help: Az adózó be van-e jegyezve az SII-be
+      iva-voluntary-sii-enrolled:
+        help: Nyilatkozzon az önkéntes SII-bejelentkezésről, elkülönítve a kötelező okoktól.
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
       legal-name:
@@ -70956,6 +70967,8 @@ wizard:
         help: Adóazonosító (NIF/CIF/DNI/NIE) az aktív profilhoz
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Nyilatkozott területi rendszer: közös terület vagy még nem támogatott forális terület.'
       taxation-type:
         help: 'Jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
       taxpayer-birth-date:
@@ -70995,10 +71008,14 @@ wizard:
       lakóhely és családi adatok, ha relevánsak. Mentés után ellenőrizze az előrehaladást
       a következővel: .'
     iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Be van jelentkezve az IVA pénzforgalmi különleges rendszerébe?
       iva-group-dominant-entity-enrolled:
         prompt: IVA-csoport dominans szervezetekent bejelentkezett
       iva-group-member-enrolled:
         prompt: IVA-csoport tag szervezetekent bejelentkezett
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Jogosult a szénhidrogén-adóraktári előlegek levonására?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
@@ -71011,6 +71028,17 @@ wizard:
         prompt: ROI-ba bejelentkezett
       iva-sii-enrolled:
         prompt: SII-be bejelentkezett (azonnali információszolgáltatás)
+      iva-voluntary-sii-enrolled:
+        prompt: Önkéntesen bejelentkezett az SII-be?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Csak általános rendszer
+          mixed:
+            label: Vegyes rendszerek
+          simplified:
+            label: Csak egyszerűsített rendszer
+        prompt: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
       title: IVA
     notes:
       notes:
@@ -71219,6 +71247,13 @@ wizard:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
         prompt: Adóügyi illetékességi autonóm közösség
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Közös terület
+          foral_unsupported:
+            label: Forális terület (még nem támogatott)
+        prompt: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
       title: Adóügyi illetőség
     review:
       registered-non-official-suffix: ' (censal tanúsítványból - az AEAT által nem

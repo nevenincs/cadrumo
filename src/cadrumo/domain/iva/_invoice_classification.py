@@ -41,7 +41,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG
+from ...core import STRICT_FROZEN_CONFIG, IvaDeductionFactKind
 
 # IvaRate (and the public ``iva_rate_kind`` accessor) are imported lazily
 # inside ``classify_invoice_line_for_iva``
@@ -50,6 +50,7 @@ from ...core import STRICT_FROZEN_CONFIG
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
 from ._classification import InvoiceKind, domestic_categories_by_rate_kind
+from ._deduction_facts import IvaDeductionClassificationProvenance
 from ._flow import (
     IvaFlowDirection,
     IvaSettlementSide,
@@ -57,7 +58,7 @@ from ._flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
-from ._schema import IvaCategory, IvaRateKind
+from ._schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
@@ -213,6 +214,8 @@ def invoice_line_to_iva_observation(
     iva_rate: IvaRate,
     base_amount: Decimal,
     iva_amount: Decimal,
+    deduction_fact_kind: IvaDeductionFactKind | None,
+    deduction_provenance: IvaDeductionClassificationProvenance | None,
     recargo_amount: Decimal = Decimal("0"),
 ) -> IvaLedgerObservation:
     """Build an :class:`IvaLedgerObservation` from invoice line metadata.
@@ -241,6 +244,10 @@ def invoice_line_to_iva_observation(
             (substrate-NULL category needs explicit construction).
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR.
+        deduction_fact_kind: Exact statutory deduction family for a received
+            IVA input, or ``None`` for an issued output.
+        deduction_provenance: Immutable evidence provenance for a received
+            IVA input, or ``None`` for an issued output.
         recargo_amount: Recargo de equivalencia charged on this line in EUR
             (LIVA art. 161), or zero when none was. Routed to the Modelo 303
             recargo cuota casilla for the line's rate tier via the
@@ -289,6 +296,9 @@ def invoice_line_to_iva_observation(
         # the line out of every rate-specific box on the annual return -- the
         # 2 % foodstuffs line silently missing from the 2 % box it belongs in.
         applied_rate=iva_rate_percentage(iva_rate, issued_at),
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

@@ -2,19 +2,29 @@
 
 from datetime import date
 from decimal import Decimal
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
 
 import cadrumo.application.filing as filing
+from cadrumo.application.aggregation import (
+    IvaLedgerAggregation,
+    M303ProrrataTransitionArrival,
+    M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
+    resolve_m303_supplier_regime_arrival,
+)
 from cadrumo.application.filing import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
     ChargeAccountSelection,
     FilingElectionFacts,
+    FilingProducerSnapshot,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
     M202UnsupportedProducerId,
+    M303FilingFacts,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
     Modelo202ProducerProfile,
@@ -22,18 +32,56 @@ from cadrumo.application.filing import (
     RefundAccountSelection,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
+    resolve_m303_filing_facts,
 )
 from cadrumo.application.filing._export import _filing_producer_values
 from cadrumo.core import (
     FilingProducerKey,
     Modelo,
     PaymentElection,
+    Period,
     PriorDomiciliationElection,
+    ProrrataEspecialTransitionKind,
+    ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
 )
-from cadrumo.domain.deadlines import ChargeAccount, IVARegime, ModeloIVAProfile, RefundAccount, TaxpayerProfile
-from cadrumo.domain.modelos import CalculationRevisionAmendmentKind
+from cadrumo.core.resources import resources
+from cadrumo.domain.bienes_inversion import (
+    BienesInversionIvaRegister,
+    BienInversionIvaRecord,
+    BienInversionKind,
+    RegistroRegularizacionResult,
+    compute_registro_regularizacion,
+)
+from cadrumo.domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from cadrumo.domain.deadlines import (
+    ChargeAccount,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    RefundAccount,
+    TaxpayerProfile,
+)
+from cadrumo.domain.filing_evidence import FilingEvidenceReference
+from cadrumo.domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from cadrumo.domain.modelos import (
+    CalculationRevisionAmendmentKind,
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
+from cadrumo.domain.prorrata_register import (
+    ProrrataEspecialTransitionEvidence,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -67,8 +115,14 @@ def _elections(disposition: ResultDisposition) -> FilingElectionFacts:
     )
 
 
-def _m303_profile() -> ModeloIVAProfile:
+def _m303_profile(
+    *,
+    refund_account: RefundAccount | None = None,
+    charge_account: ChargeAccount | None = None,
+) -> ModeloIVAProfile:
     return ModeloIVAProfile(
+        tax_territory=M303TaxTerritory.COMMON_REGIME,
+        regime_composition=M303RegimeComposition.GENERAL,
         roi_enrolled=False,
         oss_enrolled=False,
         group_member_enrolled=False,
@@ -76,12 +130,100 @@ def _m303_profile() -> ModeloIVAProfile:
         intracommunity_operations_exceed_50000_eur=False,
         sii_enrolled=False,
         redeme_enrolled=False,
+        cash_accounting_regime_enrolled=False,
+        voluntary_sii_enrolled=False,
+        hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        refund_account=refund_account,
+        charge_account=charge_account,
     )
+
+
+def _m303_filing_facts():
+    """Resolve complete M303 facts through the canonical production assembler."""
+    period = Period.from_year_and_code(2026, "1T")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    evidence = FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(
+                    reference="test:producer-snapshot:exonerado-not-applicable"
+                ),
+                endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
+            ),
+            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
+                    registry_snapshot=resources().modelos.authority.snapshot(
+                        "303",
+                        filing_year=period.filing_year,
+                        period=period.registry_token,
+                    ),
+                    scope_decision=scope,
+                ),
+            ),
+        ),
+    )
+    prorrata_register = ProrrataRegister()
+    return resolve_m303_filing_facts(
+        evidence=evidence,
+        supplier_regime=resolve_m303_supplier_regime_arrival(
+            period=period,
+            iva_aggregation=IvaLedgerAggregation(period=period),
+        ),
+        prorrata_transition=resolve_m303_prorrata_transition_arrival(
+            period=period,
+            prorrata_register=prorrata_register,
+        ),
+        prorrata_register=prorrata_register,
+        differentiated_contributions=(),
+        bienes_register=BienesInversionIvaRegister(),
+        regularisation_result=RegistroRegularizacionResult(
+            regularizacion_year=period.filing_year,
+            rows=(),
+            proposed_casilla_43=Decimal("0"),
+            computed_count=0,
+            pending_percentage_count=0,
+            sector_contributions=(),
+        ),
+    )
+
+
+def _bien_inversion(identifier: str) -> BienInversionIvaRecord:
+    return BienInversionIvaRecord(
+        identifier=identifier,
+        description=f"Bien de inversión {identifier}",
+        acquisition_year=2024,
+        cuota_soportada=Decimal("5000.00"),
+        prorrata_inicial_pct=Decimal("70"),
+        kind=BienInversionKind.MUEBLE,
+        acquisition_ledger_id=f"ledger:{identifier}",
+    )
+
+
+def _m303_filing_facts_payload(
+    *,
+    bienes_register: BienesInversionIvaRegister,
+    regularisation_result: RegistroRegularizacionResult,
+) -> dict[str, object]:
+    payload = _m303_filing_facts().model_dump()
+    payload["bienes_register"] = bienes_register.model_dump()
+    payload["regularisation_result"] = regularisation_result.model_dump()
+    return payload
 
 
 def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
     with pytest.raises(TypeError, match="presenter"):
-        build_filing_producer_snapshot(  # type: ignore[call-arg]
+        cast(Any, build_filing_producer_snapshot)(
             modelo=Modelo.M111,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             taxpayer_identity=_taxpayer_identity(),
@@ -90,6 +232,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
             amendment_evidence=None,
             refund_account=None,
             charge_account=None,
+            m303_filing_facts=None,
         )
 
     presenter = _presenter()
@@ -103,6 +246,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=None,
     )
     assert snapshot.presenter.tax_id == _PRESENTER_TAX_ID
     assert snapshot.taxpayer_tax_id == _TAXPAYER_TAX_ID
@@ -112,7 +256,7 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
 
 def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> None:
     with pytest.raises(TypeError, match="taxpayer_identity"):
-        build_filing_producer_snapshot(  # type: ignore[call-arg]
+        cast(Any, build_filing_producer_snapshot)(
             modelo=Modelo.M111,
             taxpayer_tax_id=_TAXPAYER_TAX_ID,
             presenter=_presenter(),
@@ -121,6 +265,7 @@ def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> No
             amendment_evidence=None,
             refund_account=None,
             charge_account=None,
+            m303_filing_facts=None,
         )
 
     snapshot = build_filing_producer_snapshot(
@@ -133,6 +278,7 @@ def test_taxpayer_name_facts_are_required_and_not_derived_from_presenter() -> No
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=None,
     )
     assert snapshot.taxpayer_identity.full_name == "María García López"
     assert snapshot.taxpayer_identity.full_name != snapshot.presenter.full_name
@@ -150,6 +296,7 @@ def test_modelo_111_unknown_profile_fact_refuses_snapshot_but_false_is_valid() -
             amendment_evidence=None,
             refund_account=None,
             charge_account=None,
+            m303_filing_facts=None,
         )
 
 
@@ -203,6 +350,7 @@ def test_modelo_202_uses_canonical_taxpayer_profile_without_scalarising_repeatab
             amendment_evidence=None,
             refund_account=None,
             charge_account=None,
+            m303_filing_facts=None,
         )
     for producer_id in M202_UNSUPPORTED_PRODUCER_IDS:
         assert producer_id.value in str(exc_info.value)
@@ -224,8 +372,13 @@ def test_modelo_303_uses_the_canonical_iva_profile_type() -> None:
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=_m303_filing_facts(),
     )
     assert type(snapshot.model_profile) is ModeloIVAProfile
+    payload = snapshot.model_dump()
+    del payload["m303_filing_facts"]
+    with pytest.raises(ValidationError, match="m303_filing_facts"):
+        FilingProducerSnapshot.model_validate(payload)
 
 
 def test_modelo_without_specific_producers_requires_explicit_general_profile() -> None:
@@ -239,14 +392,201 @@ def test_modelo_without_specific_producers_requires_explicit_general_profile() -
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=None,
     )
     assert type(snapshot.model_profile) is GeneralFilingProfileFacts
+
+
+@pytest.mark.parametrize(
+    ("modelo", "model_profile"),
+    (
+        (Modelo.M111, Modelo111ProfileFacts(colegio_concertado=False)),
+        (
+            Modelo.M202,
+            Modelo202ProducerProfile(
+                taxpayer_profile=TaxpayerProfile(tax_id=_TAXPAYER_TAX_ID, iva_regime=IVARegime.GENERAL),
+                activities=(),
+            ),
+        ),
+        (Modelo.M131, GeneralFilingProfileFacts()),
+    ),
+)
+def test_m303_filing_facts_are_refused_for_every_non_m303_modelo(
+    modelo: Modelo,
+    model_profile: Modelo111ProfileFacts | Modelo202ProducerProfile | GeneralFilingProfileFacts,
+) -> None:
+    """Modelo-specific filing facts never cross into M111, M202, or generic producers."""
+    with pytest.raises(FilingProducerSnapshotError, match="M303FilingFacts are valid only for modelo 303"):
+        build_filing_producer_snapshot(
+            modelo=modelo,
+            taxpayer_tax_id=_TAXPAYER_TAX_ID,
+            taxpayer_identity=_taxpayer_identity(),
+            presenter=_presenter(),
+            model_profile=model_profile,
+            elections=_elections(ResultDisposition.NEGATIVA),
+            amendment_evidence=None,
+            refund_account=None,
+            charge_account=None,
+            m303_filing_facts=_m303_filing_facts(),
+        )
+
+
+def test_m303_filing_facts_refuse_a_regularisation_result_for_another_year() -> None:
+    payload = _m303_filing_facts().model_dump()
+    payload["regularisation_result"]["regularizacion_year"] = 2025
+
+    with pytest.raises(ValidationError, match="regularisation result must use the filing year"):
+        M303FilingFacts.model_validate(payload)
+
+
+def test_m303_filing_facts_accept_the_canonical_bienes_regularisation_result() -> None:
+    register = BienesInversionIvaRegister(records=(_bien_inversion("canonical-bien"),))
+    regularisation = compute_registro_regularizacion(
+        register,
+        regularizacion_year=2026,
+        prorrata_definitiva_by_identifier={"canonical-bien": Decimal("80")},
+    )
+
+    facts = M303FilingFacts.model_validate(
+        _m303_filing_facts_payload(
+            bienes_register=register,
+            regularisation_result=regularisation,
+        )
+    )
+
+    assert facts.bienes_register == register
+    assert facts.regularisation_result == regularisation
+
+
+def test_m303_filing_facts_refuse_an_empty_regularisation_for_a_register_bien() -> None:
+    register = BienesInversionIvaRegister(records=(_bien_inversion("unrepresented-bien"),))
+    empty = RegistroRegularizacionResult(
+        regularizacion_year=2026,
+        rows=(),
+        proposed_casilla_43=Decimal("0"),
+        computed_count=0,
+        pending_percentage_count=0,
+        sector_contributions=(),
+    )
+
+    with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
+        M303FilingFacts.model_validate(
+            _m303_filing_facts_payload(
+                bienes_register=register,
+                regularisation_result=empty,
+            )
+        )
+
+
+def test_m303_filing_facts_refuse_a_regularisation_from_another_bienes_register() -> None:
+    canonical_register = BienesInversionIvaRegister(records=(_bien_inversion("canonical-bien"),))
+    foreign_register = BienesInversionIvaRegister(records=(_bien_inversion("foreign-bien"),))
+    foreign_regularisation = compute_registro_regularizacion(
+        foreign_register,
+        regularizacion_year=2026,
+        prorrata_definitiva_by_identifier={"foreign-bien": Decimal("80")},
+    )
+
+    with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
+        M303FilingFacts.model_validate(
+            _m303_filing_facts_payload(
+                bienes_register=canonical_register,
+                regularisation_result=foreign_regularisation,
+            )
+        )
+
+
+def test_m303_filing_facts_refuse_a_regularisation_that_omits_an_in_window_bien() -> None:
+    register = BienesInversionIvaRegister(records=(_bien_inversion("first-bien"), _bien_inversion("second-bien")))
+    canonical = compute_registro_regularizacion(
+        register,
+        regularizacion_year=2026,
+        prorrata_definitiva_by_identifier={},
+    )
+    omitted = RegistroRegularizacionResult(
+        regularizacion_year=2026,
+        rows=(canonical.rows[0],),
+        proposed_casilla_43=Decimal("0"),
+        computed_count=0,
+        pending_percentage_count=1,
+        sector_contributions=(),
+    )
+
+    with pytest.raises(ValidationError, match="canonical projection of the supplied Bienes register"):
+        M303FilingFacts.model_validate(
+            _m303_filing_facts_payload(
+                bienes_register=register,
+                regularisation_result=omitted,
+            )
+        )
+
+
+def test_m303_filing_facts_refuse_final_period_register_coverage_gaps() -> None:
+    facts = _m303_filing_facts()
+    period = Period.from_year_and_code(2026, "4T")
+    payload = facts.model_dump()
+    payload.update(
+        period=period,
+        supplier_regime=M303SupplierRegimeArrival(
+            period=period,
+            recipient_of_cash_accounting_operations=False,
+            source_ledger_ids=(),
+        ),
+        prorrata_transition=M303ProrrataTransitionArrival(
+            period=period,
+            transition=None,
+            register_evidence=(),
+        ),
+        prorrata_register=ProrrataRegister(),
+    )
+
+    with pytest.raises(ValidationError, match="complete current-year prorrata register coverage"):
+        M303FilingFacts.model_validate(payload)
+
+
+def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_register() -> None:
+    facts = _m303_filing_facts()
+    period = Period.from_year_and_code(2026, "4T")
+    canonical_entry = ProrrataRegisterEntry(
+        ejercicio=period.filing_year,
+        regime=ProrrataRegisterRegime.ESPECIAL,
+        especial_transition=ProrrataEspecialTransitionEvidence(
+            kind=ProrrataEspecialTransitionKind.OPCION,
+            evidence_reference="operator-evidence:canonical-option",
+        ),
+    )
+    foreign_entry = canonical_entry.model_copy(
+        update={
+            "especial_transition": ProrrataEspecialTransitionEvidence(
+                kind=ProrrataEspecialTransitionKind.OPCION,
+                evidence_reference="operator-evidence:foreign-option",
+            )
+        }
+    )
+    payload = facts.model_dump()
+    payload.update(
+        period=period,
+        supplier_regime=M303SupplierRegimeArrival(
+            period=period,
+            recipient_of_cash_accounting_operations=False,
+            source_ledger_ids=(),
+        ),
+        prorrata_transition=M303ProrrataTransitionArrival(
+            period=period,
+            transition=ProrrataEspecialTransitionKind.OPCION,
+            register_evidence=(foreign_entry,),
+        ),
+        prorrata_register=ProrrataRegister(entries=(canonical_entry,)),
+    )
+
+    with pytest.raises(ValidationError, match="transition arrival evidence must belong to the supplied register"):
+        M303FilingFacts.model_validate(payload)
 
 
 def test_disposition_selects_only_the_secure_account_with_the_matching_role() -> None:
     refund_account = RefundAccount(iban=_REFUND_IBAN)
     charge_account = ChargeAccount(iban=_CHARGE_IBAN)
-    source_profile = ModeloIVAProfile(refund_account=refund_account, charge_account=charge_account)
+    source_profile = _m303_profile(refund_account=refund_account, charge_account=charge_account)
     refund_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
@@ -257,6 +597,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
         amendment_evidence=None,
         refund_account=refund_account,
         charge_account=charge_account,
+        m303_filing_facts=_m303_filing_facts(),
     )
     assert isinstance(refund_snapshot.selected_account, RefundAccountSelection)
     assert isinstance(refund_snapshot.model_profile, ModeloIVAProfile)
@@ -278,6 +619,7 @@ def test_disposition_selects_only_the_secure_account_with_the_matching_role() ->
         amendment_evidence=None,
         refund_account=refund_account,
         charge_account=charge_account,
+        m303_filing_facts=_m303_filing_facts(),
     )
     assert isinstance(charge_snapshot.selected_account, ChargeAccountSelection)
     assert _CHARGE_IBAN in charge_snapshot.model_dump_json()
@@ -299,6 +641,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
             amendment_evidence=None,
             refund_account=None,
             charge_account=None,
+            m303_filing_facts=_m303_filing_facts(),
         )
     with pytest.raises(FilingProducerSnapshotError, match="refund account"):
         build_filing_producer_snapshot(
@@ -311,6 +654,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
             amendment_evidence=None,
             refund_account=RefundAccount(iban=None),
             charge_account=None,
+            m303_filing_facts=_m303_filing_facts(),
         )
 
     snapshot = build_filing_producer_snapshot(
@@ -323,6 +667,7 @@ def test_missing_required_account_refuses_and_unneeded_accounts_are_not_retained
         amendment_evidence=None,
         refund_account=RefundAccount(iban=_REFUND_IBAN),
         charge_account=ChargeAccount(iban=_CHARGE_IBAN),
+        m303_filing_facts=_m303_filing_facts(),
     )
     assert snapshot.selected_account is None
     assert _REFUND_IBAN not in snapshot.model_dump_json()
@@ -360,6 +705,7 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
         amendment_evidence=evidence,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=None,
     )
     values = _filing_producer_values(snapshot)
     assert values[FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA] is True

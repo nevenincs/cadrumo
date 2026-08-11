@@ -75,6 +75,7 @@ def _carried_entry(*, percentage: Decimal) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=_CURRENT_YEAR,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=_SOURCE_REF,
@@ -90,6 +91,7 @@ def _override_entry(
     return ProrrataRegisterEntry(
         ejercicio=_CURRENT_YEAR,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         provisional_percentage=percentage,
         provisional_provenance=provenance,
         authorisation_reference=reference,

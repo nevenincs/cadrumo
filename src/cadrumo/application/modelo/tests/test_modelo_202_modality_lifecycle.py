@@ -22,7 +22,15 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
+from ....domain.deadlines import (
+    EntityType,
+    IVARegime,
+    LegalEntityForm,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -83,6 +91,14 @@ def _workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
         activity_start_date=date(2020, 1, 1),
         incn_prior_12_months=incn,
         new_entity_first_two_profit_periods=False,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 
@@ -94,6 +110,13 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
         UserProfileFact(path="identity.legal_name", value="Taller Sol Sociedad Limitada"),
         UserProfileFact(path="activities.description", value="taller mecanico"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.oss_enrolled", value=False),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
         UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
         UserProfileFact(path="taxpayer_type.new_entity_first_two_profit_periods", value=False),
@@ -127,7 +150,7 @@ def _seed_prior_m200_evidence(*, bucket_id: str) -> None:
         repository=work_repo,
         clock=_CLOCK,
     )
-    evidence_reference_id = "JUST-M200-2024-0A"
+    evidence_reference_id = "JUSTM20020240A"
     casilla_values = {_M200_CUOTA_LIQUIDA: Decimal("0")}
     persist_justificante_metadata(
         evidence_reference_id,
@@ -328,7 +351,11 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         verify_failure = verify_error.value.precondition_failure
         assert verify_failure is not None
         assert verify_failure.scenario_id == "modelo.work.verify.required_bindings_missing"
-        assert _M202_INCN_BINDING in verify_error.value.context["missing_bindings"]
+        verify_context = verify_error.value.context
+        assert verify_context is not None
+        verify_missing_bindings = verify_context["missing_bindings"]
+        assert isinstance(verify_missing_bindings, tuple)
+        assert _M202_INCN_BINDING in verify_missing_bindings
         stored = calc_repo.load().get(draft.calculation_revision_id)
         assert stored is not None
         assert stored.state is CalculationRevisionState.BORRADOR
@@ -352,7 +379,11 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
         file_failure = file_error.value.precondition_failure
         assert file_failure is not None
         assert file_failure.scenario_id == "modelo.work.file.required_bindings_missing"
-        assert _M202_PRIOR_PAYMENTS_BINDING in file_error.value.context["missing_bindings"]
+        file_context = file_error.value.context
+        assert file_context is not None
+        file_missing_bindings = file_context["missing_bindings"]
+        assert isinstance(file_missing_bindings, tuple)
+        assert _M202_PRIOR_PAYMENTS_BINDING in file_missing_bindings
         export_path = tmp_path / "modelo-202-2026-1P.txt"
         with pytest.raises(ModeloExportUnsupportedError) as export_error:
             export_modelo_revision(
@@ -368,8 +399,13 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
                 verification_repository=verification_repo,
                 clock=_CLOCK,
             )
-        assert export_error.value.context["modelo"] == "202"
-        assert "no complete export_layouts definition" in export_error.value.context["reason"]
+        export_context = export_error.value.context
+        assert export_context is not None
+        export_modelo = export_context["modelo"]
+        export_reason = export_context["reason"]
+        assert export_modelo == "202"
+        assert isinstance(export_reason, str)
+        assert "no complete export_layouts definition" in export_reason
         assert export_path.exists() is False
 
 
@@ -381,7 +417,7 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
             bucket_id=_BUCKET_ID,
         )
 
-        with pytest.raises(CalculationRevisionStateError, match="VERIFICADO_COMPLETO"):
+        with pytest.raises(CalculationRevisionStateError, match="error_modelo_calculation_revision_state"):
             file_modelo_revision(
                 revision.calculation_revision_id,
                 actor="operator-test",

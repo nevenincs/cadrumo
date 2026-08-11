@@ -12,7 +12,7 @@ from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
-from ....iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....iva import IvaLedgerObservationRole, M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .. import (
     InputKind,
     ModeloDefinition,
@@ -462,6 +462,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000"),
             iva_amount=Decimal("210"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="rep-reducido-1",
@@ -471,6 +472,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("200"),
             iva_amount=Decimal("20"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="rep-super-1",
@@ -480,6 +482,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("100"),
             iva_amount=Decimal("4"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="sop-interior-1",
@@ -489,6 +492,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("300"),
             iva_amount=Decimal("63"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="auto-ica-1",
@@ -498,6 +502,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("400"),
             iva_amount=Decimal("84"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     ]
 
@@ -890,6 +895,8 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
     from ....deadlines import (
         IVARegime,
+        M303RegimeComposition,
+        M303TaxTerritory,
         ModeloEnrollment,
         ModeloIVAProfile,
         TaxpayerProfile,
@@ -903,24 +910,55 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
         TaxpayerProfile(
             tax_id="B12345674",
             iva_regime=IVARegime.GENERAL,
-            iva=ModeloIVAProfile(redeme_enrolled=True),
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                redeme_enrolled=True,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
         ),
         TaxpayerProfile(
             tax_id="C12345674",
             iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                redeme_enrolled=False,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
             enrollment=ModeloEnrollment(large_company=True),
         ),
     )
     voluntary_sii_profile = TaxpayerProfile(
         tax_id="A12345674",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=True, redeme_enrolled=False),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            sii_enrolled=True,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=True,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
         enrollment=ModeloEnrollment(large_company=False),
     )
     ordinary_quarterly_profile = TaxpayerProfile(
         tax_id="D98765431",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            sii_enrolled=False,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
         enrollment=ModeloEnrollment(large_company=False),
     )
 

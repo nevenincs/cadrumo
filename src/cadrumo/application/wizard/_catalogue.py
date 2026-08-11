@@ -28,6 +28,8 @@ from ...domain.deadlines import (
     IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
+    M303RegimeComposition,
+    M303TaxTerritory,
 )
 from ._models import (
     WizardChoice,
@@ -45,7 +47,8 @@ def _confirm(
     profile_key: str,
     *,
     suffix: str,
-    default: str = "false",
+    default: str | None = "false",
+    required: bool = False,
     visible_when: WizardCondition | WizardVisibility | None = None,
 ) -> WizardQuestion:
     """Build a CONFIRM question that persists into ``profile_key``."""
@@ -55,7 +58,7 @@ def _confirm(
         widget=WizardWidget.CONFIRM,
         prompt=tr(f"wizard.setup.{suffix}.{qid}.prompt"),
         default=default,
-        required=False,
+        required=required,
         visible_when=visible_when,
         answer_type=bool,
     )
@@ -108,6 +111,28 @@ _IVA_CHOICES: tuple[WizardChoice, ...] = (
         label=tr("wizard.setup.profile.iva-regime.choices.exento.label"),
         description=tr("wizard.setup.profile.iva-regime.choices.exento.description"),
     ),
+)
+
+
+_M303_TAX_TERRITORY_LABELS: dict[M303TaxTerritory, tr] = {
+    M303TaxTerritory.COMMON_REGIME: tr(
+        "wizard.setup.residence.tax-residence-jurisdiction-scope.choices.common_regime.label",
+    ),
+    M303TaxTerritory.FORAL: tr(
+        "wizard.setup.residence.tax-residence-jurisdiction-scope.choices.foral_unsupported.label",
+    ),
+}
+_M303_TAX_TERRITORY_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(value=member.value, label=_M303_TAX_TERRITORY_LABELS[member]) for member in M303TaxTerritory
+)
+
+_M303_REGIME_COMPOSITION_LABELS: dict[M303RegimeComposition, tr] = {
+    M303RegimeComposition.GENERAL: tr("wizard.setup.iva.m303-regime-composition.choices.general.label"),
+    M303RegimeComposition.SIMPLIFIED: tr("wizard.setup.iva.m303-regime-composition.choices.simplified.label"),
+    M303RegimeComposition.MIXED: tr("wizard.setup.iva.m303-regime-composition.choices.mixed.label"),
+}
+_M303_REGIME_COMPOSITION_CHOICES: tuple[WizardChoice, ...] = tuple(
+    WizardChoice(value=member.value, label=_M303_REGIME_COMPOSITION_LABELS[member]) for member in M303RegimeComposition
 )
 
 
@@ -332,6 +357,14 @@ _IVA_REGIME_VISIBLE = WizardVisibility(
     ),
 )
 
+_IVA_BLOCK_CLAIMED = WizardVisibility(
+    any_of=tuple(
+        WizardCondition(question_id="iva-regime", equals=member.value)
+        for member in IVARegime
+        if member is not IVARegime.NO_APLICA
+    ),
+)
+
 
 _IDENTIDAD_SECTION = WizardSection(
     id="identidad",
@@ -444,6 +477,15 @@ _RESIDENCE_SECTION = WizardSection(
             prompt=tr("wizard.setup.residence.representante-fiscal-nombre.prompt"),
             required=False,
             visible_when=_NON_RESIDENT_IRNR,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="tax-residence-jurisdiction-scope",
+            profile_key="tax_residence.jurisdiction_scope",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.residence.tax-residence-jurisdiction-scope.prompt"),
+            choices=_M303_TAX_TERRITORY_CHOICES,
+            required=True,
             answer_type=str,
         ),
         WizardQuestion(
@@ -602,23 +644,95 @@ _IVA_SECTION = WizardSection(
             id="iva-regime",
             profile_key="iva.regime",
             widget=WizardWidget.SELECT,
-            prompt=tr("wizard.setup.iva.iva-regime.prompt"),
+            prompt=tr("wizard.setup.profile.iva-regime.prompt"),
             choices=_IVA_CHOICES,
-            default=_DEFAULT_IVA_REGIME,
             required=False,
             visible_when=_IVA_REGIME_VISIBLE,
             answer_type=str,
         ),
-        _confirm("iva-roi-enrolled", "iva.roi_enrolled", suffix="iva"),
-        _confirm("iva-oss-enrolled", "iva.oss_enrolled", suffix="iva"),
-        _confirm("iva-group-member-enrolled", "iva.group_member_enrolled", suffix="iva"),
-        _confirm("iva-group-dominant-entity-enrolled", "iva.group_dominant_entity_enrolled", suffix="iva"),
-        _confirm("iva-sii-enrolled", "iva.sii_enrolled", suffix="iva"),
-        _confirm("iva-redeme-enrolled", "iva.redeme_enrolled", suffix="iva"),
+        WizardQuestion(
+            id="iva-m303-regime-composition",
+            profile_key="iva.m303_regime_composition",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.iva.m303-regime-composition.prompt"),
+            choices=_M303_REGIME_COMPOSITION_CHOICES,
+            required=True,
+            visible_when=_IVA_BLOCK_CLAIMED,
+            answer_type=str,
+        ),
+        _confirm(
+            "iva-roi-enrolled",
+            "iva.roi_enrolled",
+            suffix="iva",
+            default=None,
+            visible_when=_IVA_REGIME_VISIBLE,
+        ),
+        _confirm(
+            "iva-oss-enrolled",
+            "iva.oss_enrolled",
+            suffix="iva",
+            default=None,
+            visible_when=_IVA_REGIME_VISIBLE,
+        ),
+        _confirm(
+            "iva-group-member-enrolled",
+            "iva.group_member_enrolled",
+            suffix="iva",
+            default=None,
+            visible_when=_IVA_REGIME_VISIBLE,
+        ),
+        _confirm(
+            "iva-group-dominant-entity-enrolled",
+            "iva.group_dominant_entity_enrolled",
+            suffix="iva",
+            default=None,
+            visible_when=_IVA_REGIME_VISIBLE,
+        ),
+        _confirm(
+            "iva-sii-enrolled",
+            "iva.sii_enrolled",
+            suffix="iva",
+            default=None,
+            visible_when=_IVA_REGIME_VISIBLE,
+        ),
+        _confirm(
+            "iva-redeme-enrolled",
+            "iva.redeme_enrolled",
+            suffix="iva",
+            default=None,
+            required=True,
+            visible_when=_IVA_BLOCK_CLAIMED,
+        ),
         _confirm(
             "iva-intracommunity-operations-exceed-50000-eur",
             "iva.intracommunity_operations_exceed_50000_eur",
             suffix="iva",
+            default=None,
+            visible_when=_IVA_REGIME_VISIBLE,
+        ),
+        _confirm(
+            "iva-cash-accounting-regime-enrolled",
+            "iva.cash_accounting_regime_enrolled",
+            suffix="iva",
+            default=None,
+            required=True,
+            visible_when=_IVA_BLOCK_CLAIMED,
+        ),
+        _confirm(
+            "iva-voluntary-sii-enrolled",
+            "iva.voluntary_sii_enrolled",
+            suffix="iva",
+            default=None,
+            required=True,
+            visible_when=_IVA_BLOCK_CLAIMED,
+        ),
+        _confirm(
+            "iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+            suffix="iva",
+            default=None,
+            required=True,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
     ),
 )

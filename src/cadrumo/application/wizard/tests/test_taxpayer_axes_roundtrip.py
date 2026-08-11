@@ -105,8 +105,8 @@ class TestWizardPersistenceRoundTrip:
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
 
-    def test_dropped_enrolment_key_re_defaults_on_reprojection(self) -> None:
-        """Anti-tautology: removing iva.sii_enrolled re-defaults the field.
+    def test_dropped_enrolment_key_stays_undeclared_on_reprojection(self) -> None:
+        """Anti-tautology: removing iva.sii_enrolled preserves its undeclared state.
 
         If the roundtrip were tautological, the dropped key would not
         change the reprojected answers and a save-drops-field
@@ -118,7 +118,7 @@ class TestWizardPersistenceRoundTrip:
         del canonical["iva.sii_enrolled"]
         rebuilt = project_answers(SETUP_FLOW, canonical)
         assert isinstance(rebuilt, SetupAnswers)
-        assert rebuilt.iva_sii_enrolled is False
+        assert rebuilt.iva_sii_enrolled == ""
         assert rebuilt != original
 
 
@@ -134,11 +134,16 @@ class TestTaxpayerProfileProjection:
                 "taxpayer_type.irpf_income_categories": "capital_inmobiliario,pension",
                 "irpf.estimation_regime": "objetiva",
                 "irpf.art109_activity_income_withholding_ge_70pct": "true",
+                "tax_residence.jurisdiction_scope": "common_regime",
                 "iva.regime": "REAGP",
+                "iva.m303_regime_composition": "general",
                 "iva.group_member_enrolled": "true",
                 "iva.group_dominant_entity_enrolled": "true",
                 "iva.sii_enrolled": "true",
                 "iva.redeme_enrolled": "true",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             },
             tax_id_default="00000000T",
         )
@@ -149,10 +154,12 @@ class TestTaxpayerProfileProjection:
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
         assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.iva_regime is IVARegime.REAGP
-        assert profile.iva.group_member_enrolled is True
-        assert profile.iva.group_dominant_entity_enrolled is True
-        assert profile.iva.sii_enrolled is True
-        assert profile.iva.redeme_enrolled is True
+        iva = profile.iva
+        assert iva is not None
+        assert iva.group_member_enrolled is True
+        assert iva.group_dominant_entity_enrolled is True
+        assert iva.sii_enrolled is True
+        assert iva.redeme_enrolled is True
 
     def test_mapping_projection_carries_cross_period_group_roster(self) -> None:
         profile = taxpayer_profile_from_mapping(
@@ -221,8 +228,7 @@ class TestTaxpayerProfileProjection:
         assert profile.legal_entity_form is None
         assert profile.irpf_income_categories == frozenset()
         assert profile.irpf_estimation_regime is None
-        assert profile.iva.sii_enrolled is False
-        assert profile.iva.redeme_enrolled is False
+        assert profile.iva is None
 
 
 class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
@@ -351,6 +357,13 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             "activity": "Software development",
             "entity-type": "legal_entity",
             "legal-entity-form": "sl",
+            "tax-residence-jurisdiction-scope": "common_regime",
+            "iva-regime": "GENERAL",
+            "iva-m303-regime-composition": "general",
+            "iva-redeme-enrolled": "false",
+            "iva-cash-accounting-regime-enrolled": "false",
+            "iva-voluntary-sii-enrolled": "false",
+            "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
         }
         answers = _run_scripted_walk(
             SETUP_FLOW,

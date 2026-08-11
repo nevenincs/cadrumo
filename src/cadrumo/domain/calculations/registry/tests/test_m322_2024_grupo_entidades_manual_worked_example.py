@@ -74,7 +74,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     IvaLedgerObservation,
     RegistryCalculationResult,
@@ -115,6 +115,7 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("0"),
             iva_amount=devengado,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="deducible-general",
@@ -124,6 +125,7 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("0"),
             iva_amount=deducible,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     )
     binding_values = dict(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations))

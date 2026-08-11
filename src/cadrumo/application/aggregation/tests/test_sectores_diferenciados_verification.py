@@ -114,7 +114,8 @@ def _purchase(provider_id: str, *, sector_id: str | None) -> Transaction:
         "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
         "deduction_provenance": IvaDeductionClassificationProvenance(
             authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
-            source_locator=f"invoice:{provider_id}", evidence_digest="5" * 64,
+            source_locator=f"invoice:{provider_id}",
+            evidence_digest="5" * 64,
         ),
         "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
@@ -149,6 +150,7 @@ def _settled_2025_entry(sector_id: str | None, *, con: str, sin: str) -> Prorrat
     provisional = ProrrataRegisterEntry(
         ejercicio=2025,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=Decimal("50"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
@@ -199,6 +201,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path:
     common_2026 = ProrrataRegisterEntry(
         ejercicio=2026,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         provisional_percentage=Decimal("40"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="seed:comun:2026",
@@ -233,6 +236,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path:
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=_BUCKET_ID,
         )

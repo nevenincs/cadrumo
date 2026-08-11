@@ -31,7 +31,14 @@ from pathlib import Path
 
 import pytest
 
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from ....iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values, selector_as_dict
 from .._loader import load_registry_tree
 from ._gate_support import fragment_declaring
@@ -46,6 +53,11 @@ _AIC_BINDING_IDS = (
     "modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota",
     _BINDING_BASE,
     "modelo-303-iva-autorepercutido-intracomunitaria-deducible-cuota",
+)
+_AIC_DEDUCTION_PROVENANCE = IvaDeductionClassificationProvenance(
+    authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
+    source_locator="fixture:modelo-303-aic-box-10",
+    evidence_digest="0" * 64,
 )
 
 
@@ -95,6 +107,9 @@ def test_aic_row_feeds_box_10_base_and_box_11_cuota_from_the_same_row() -> None:
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("2500.00"),
         iva_amount=Decimal("525.00"),
+        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_provenance=_AIC_DEDUCTION_PROVENANCE,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
@@ -120,6 +135,9 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
+        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_provenance=_AIC_DEDUCTION_PROVENANCE,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
@@ -127,7 +145,9 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
     assert resolved[_BINDING_BASE] == Decimal("1739.25")
     bindings = {binding.id: binding for binding in revision.bindings}
     for binding_id in _AIC_BINDING_IDS:
-        assert "zero" in selector_as_dict(bindings[binding_id])["rate_kinds"]
+        rate_kinds = selector_as_dict(bindings[binding_id])["rate_kinds"]
+        assert isinstance(rate_kinds, tuple)
+        assert "zero" in rate_kinds
 
 
 def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(tmp_path: Path) -> None:
@@ -188,6 +208,9 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
+        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+        deduction_provenance=_AIC_DEDUCTION_PROVENANCE,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
     mutated_resolved = dict(resolve_ledger_iva_aggregation_binding_values(_m303_revision(scratch_root), (aic_row,)))
 

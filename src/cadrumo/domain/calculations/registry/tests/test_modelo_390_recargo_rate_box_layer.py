@@ -134,6 +134,8 @@ def _rated_rows() -> tuple[IvaLedgerObservation, ...]:
             iva_rate=slot,
             base_amount=Decimal(base),
             iva_amount=Decimal(cuota),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
             recargo_amount=Decimal(recargo),
         )
         for suffix, slot, on, base, cuota, recargo in _RUNGS

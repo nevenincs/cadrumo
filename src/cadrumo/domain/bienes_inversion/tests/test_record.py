@@ -14,6 +14,7 @@ from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .. import (
@@ -337,6 +338,7 @@ def _investment_observation(
             evidence_digest="a" * 64,
         ),
         investment_asset_id=asset_id,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -366,8 +368,20 @@ def test_investment_asset_reciprocity_accepts_one_real_matching_observation() ->
     ("observation", "ledger_profile_id", "asset_profile_id", "filing_year", "message"),
     (
         (_investment_observation(ledger_id="ledger-wrong"), "profile-a", "profile-a", 2024, "not reciprocal"),
-        (_investment_observation(transaction_date=date(2025, 1, 8)), "profile-a", "profile-a", 2024, "share the filing year"),
-        (_investment_observation(prorrata_sector_id="sector-rentals"), "profile-a", "profile-a", 2024, "share the prorrata sector"),
+        (
+            _investment_observation(transaction_date=date(2025, 1, 8)),
+            "profile-a",
+            "profile-a",
+            2024,
+            "share the filing year",
+        ),
+        (
+            _investment_observation(prorrata_sector_id="sector-rentals"),
+            "profile-a",
+            "profile-a",
+            2024,
+            "share the prorrata sector",
+        ),
         (_investment_observation(), "profile-a", "profile-b", 2024, "share a secure profile"),
     ),
 )

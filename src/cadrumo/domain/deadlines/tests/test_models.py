@@ -19,6 +19,8 @@ from pydantic import ValidationError
 from ....core import Period
 from .. import (
     IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -113,7 +115,13 @@ class TestTaxpayerProfile:
             {
                 "tax.id": "12345678Z",
                 "activity": "design",
+                "tax_residence.jurisdiction_scope": "common_regime",
                 "iva.regime": "SIMPLIFICADO",
+                "iva.m303_regime_composition": "simplified",
+                "iva.redeme_enrolled": "false",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
                 "has_employees": "true",
                 "art109_activity_income_withholding_ge_70pct": "true",
                 "pays_rent_with_retencion": "true",
@@ -136,11 +144,17 @@ class TestTaxpayerProfile:
         assert profile.pays_rent_with_retencion is True
         assert profile.does_intracomunitario is True
         assert profile.iva == ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.SIMPLIFIED,
             roi_enrolled=True,
             oss_enrolled=False,
             group_member_enrolled=True,
             group_dominant_entity_enrolled=True,
             intracommunity_operations_exceed_50000_eur=True,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
         )
         assert profile.enrollment == ModeloEnrollment(large_company=True)
 
@@ -150,7 +164,6 @@ class TestTaxpayerProfile:
         profile = taxpayer_profile_from_mapping(
             {
                 "tax.id": "12345678Z",
-                "iva.regime": "GENERAL",
                 "irpf.pagadores_count": "2",
                 "irpf.pagadores_secondary_income": "1600",
                 "irpf.pagadores_total_work_income": "18000",

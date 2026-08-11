@@ -70,7 +70,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     IvaLedgerObservation,
     ValidatedRegistryAuthority,
@@ -121,6 +121,7 @@ def _calculate() -> object:
             # OMEGA 6.000 + DELTA 1.000 (manual's own printed per-member
             # "IVA devengado" figures, pag. 199).
             iva_amount=Decimal("7000.00"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="grupo-deducible-general",
@@ -132,6 +133,7 @@ def _calculate() -> object:
             # OMEGA 2.000 + DELTA 2.000 (manual's own printed per-member
             # "IVA deducible" figures, pag. 199).
             iva_amount=Decimal("4000.00"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     )
     binding_values: dict[str, Decimal] = {binding_id: Decimal("0") for binding_id in _RECONCILIATION_BINDING_IDS}

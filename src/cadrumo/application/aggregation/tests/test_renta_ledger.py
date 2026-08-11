@@ -6,6 +6,7 @@ from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -49,7 +50,7 @@ from ....domain.transactions import (
 from ....domain.usage_ratios import UsageRatioProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from .. import (
     AggregationValidationError,
     CalculationSourceContext,
@@ -243,6 +244,7 @@ def test_repository_backed_aggregation_loads_persisted_catalogues_and_emits_casi
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert result.issues == ()
@@ -279,6 +281,7 @@ def test_repository_backed_aggregation_binds_default_invoice_repository_to_reque
         period=_ANNUAL_2025,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert result.issues == ()
@@ -303,6 +306,7 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     ).resolve(
         CalculationSourceContext(
             bucket_id="test",
@@ -350,6 +354,7 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     ).resolve(
         CalculationSourceContext(
             bucket_id="test",
@@ -387,6 +392,7 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     ).resolve(
         CalculationSourceContext(
             bucket_id="test",
@@ -449,6 +455,7 @@ def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_exp
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     expected_taxable_base = office_base + software_base + marketing_base
@@ -505,11 +512,13 @@ def test_m100_and_m130_expense_aggregations_reconcile_on_taxable_base_for_same_l
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
     m130_result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id="test",
         period=_Q1_2025,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     expected_taxable_base = sum(bases, Decimal("0"))
@@ -537,6 +546,7 @@ def test_repository_backed_aggregation_rejects_transaction_repository_bucket_mis
             transaction_repository=repo,
             invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
             profile_year=2025,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
 
 
@@ -553,6 +563,7 @@ def test_repository_backed_aggregation_rejects_invoice_repository_bucket_mismatc
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             profile_year=2025,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
 
 
@@ -569,6 +580,7 @@ def test_repository_backed_aggregation_rejects_unbound_invoice_repository(
             transaction_repository=tx_repo,
             invoice_repository=invoice_repo,
             profile_year=2025,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
 
 
@@ -756,6 +768,7 @@ def test_repository_backed_aggregation_admits_a_transaction_whose_invoice_date_i
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert len(result.observations) == 1
@@ -786,6 +799,7 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_year.transaction_id}
@@ -1106,6 +1120,7 @@ def test_repository_wrapper_residence_ccaa_is_byte_identical_while_override_empt
             invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
 
     with_madrid = _run(_profile_with_ccaa("madrid"))
@@ -1148,6 +1163,7 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
             profile_year=2025,
             profile_record=profile_record,
             region_category_overrides=overrides,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
 
     matched = _run(_profile_with_ccaa("canarias"))
@@ -1167,15 +1183,12 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
 # ---------------------------------------------------------------------------
 
 
-def _profile_with_iva_regime(regime_value: str | None) -> UserProfileRecord:
-    """A user profile carrying an optional ``iva.regime`` fact."""
-    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
-    if regime_value is not None:
-        facts = (*facts, UserProfileFact(path="iva.regime", value=regime_value))
+def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
+    """Build a user-profile record from explicitly supplied IVA facts."""
     return UserProfileRecord(
         profile_id="33333333-3333-4333-8333-333333333333",
         display_name="IVA Regime Tester",
-        facts=facts,
+        facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
     )
 
 
@@ -1213,9 +1226,20 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
             invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
             profile_year=2025,
             profile_record=profile_record,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
 
-    exento = _run(_profile_with_iva_regime("EXENTO"))
+    exento = _run(
+        _profile_with_iva_regime(
+            UserProfileFact(path="iva.regime", value="EXENTO"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        ),
+    )
     assert exento.issues == ()
     assert exento.observations[0].deductible_amount == Decimal("9600.00")
     assert exento.observations[0].non_deductible_amount == Decimal("0.00")
@@ -1224,7 +1248,7 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_deductible_c
     # Without the EXENTO fact the historic base-only behaviour stands: only the
     # net-of-IVA base is deductible, proving the ratio is the actual selector
     # and not silently ignored.
-    general = _run(_profile_with_iva_regime(None))
+    general = _run(_profile_with_iva_regime())
     assert general.issues == ()
     assert general.observations[0].deductible_amount == Decimal("8000.00")
 
@@ -1258,6 +1282,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         ProrrataRegisterEntry(
             ejercicio=2025,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         ),
@@ -1269,6 +1294,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert result.issues == ()
@@ -1297,7 +1323,7 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         TransactionCatalogue.from_transactions((row,)),
     )
     ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA),
+        ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
@@ -1306,8 +1332,77 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2025,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert result.issues == ()
     assert result.observations[0].deductible_amount == Decimal("1000.00")
     assert result.observations[0].non_deductible_amount == Decimal("210.00")
+
+
+def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_primary_is_active(
+    tmp_path: Path,
+) -> None:
+    """The M100 IVA ratio follows the injected secondary register, never the active primary bucket."""
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        row = _transaction(
+            "secondary-prorrata",
+            amount=Decimal("1210.00"),
+            category=SpendingCategory.MATERIAL_OFICINA,
+            taxable_base=Decimal("1000.00"),
+            iva_amount=Decimal("210.00"),
+        )
+        primary_prorrata_repository = ProrrataRegisterRepository(
+            bucket_id=runtime.primary.bucket_id,
+            objects=runtime.primary.repository,
+        )
+        with runtime.switch_to_secondary():
+            transaction_repository = TransactionCatalogueRepository(
+                bucket_id=runtime.secondary.bucket_id,
+                objects=runtime.secondary.repository,
+            )
+            invoice_repository = InvoiceCatalogueRepository(
+                bucket_id=runtime.secondary.bucket_id,
+                objects=runtime.secondary.repository,
+            )
+            secondary_prorrata_repository = ProrrataRegisterRepository(
+                bucket_id=runtime.secondary.bucket_id,
+                objects=runtime.secondary.repository,
+            )
+            transaction_repository.save(TransactionCatalogue.from_transactions((row,)))
+            secondary_prorrata_repository.upsert_entry(
+                ProrrataRegisterEntry(
+                    ejercicio=2025,
+                    regime=ProrrataRegisterRegime.GENERAL,
+                    especial_transition=None,
+                    provisional_percentage=Decimal("80"),
+                    provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                )
+            )
+
+            result = aggregate_renta_ledger_expenses_from_repositories(
+                bucket_id=runtime.secondary.bucket_id,
+                period=_ANNUAL_2025,
+                transaction_repository=transaction_repository,
+                invoice_repository=invoice_repository,
+                profile_year=2025,
+                profile_record=_profile_with_iva_regime(),
+                prorrata_register_repository=secondary_prorrata_repository,
+            )
+
+        assert primary_prorrata_repository.load().entries == ()
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("1042.00")
+    assert result.observations[0].non_deductible_amount == Decimal("168.00")
+
+
+def test_repository_wrapper_refuses_an_implicit_prorrata_repository() -> None:
+    """No public Renta repository path can silently recreate a register store."""
+    with pytest.raises(TypeError, match="prorrata_register_repository"):
+        cast(Any, aggregate_renta_ledger_expenses_from_repositories)(
+            bucket_id="test",
+            period=_ANNUAL_2025,
+            transaction_repository=None,
+            invoice_repository=None,
+        )

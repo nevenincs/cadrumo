@@ -20,7 +20,13 @@ from ....domain.calculations.registry import (
     RegistrySnapshotRef,
     resolve_m303_regimen_simplificado_snapshot,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     M303RegimenSimplificadoScope,
@@ -112,6 +118,14 @@ def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 

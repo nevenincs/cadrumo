@@ -12,6 +12,8 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.deadlines import (
     IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -126,7 +128,14 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
         return TaxpayerProfile(
             tax_id="B66012345",
             iva_regime=IVARegime.GENERAL,
-            iva=ModeloIVAProfile(redeme_enrolled=True),
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                redeme_enrolled=True,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
         )
     if kind == "ordinary":
         return _profile()

@@ -79,6 +79,7 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     assert payload["entry"]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
     assert payload["entry"]["provisional_percentage"] == "60"
     assert payload["entry"]["provisional_provenance"] == (ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA.value)
+    assert payload["entry"]["especial_transition"] is None
 
     # The election reaches the persisted register read back through the list
     # verb: a subsequent live aggregation would read this ESPECIAL entry and
@@ -88,6 +89,54 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     assert entries[0]["ejercicio"] == 2025
     assert entries[0]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
     assert entries[0]["provisional_percentage"] == "60"
+    assert entries[0]["especial_transition"] is None
+
+
+def test_transition_evidence_persists_the_explicit_option_and_revocation() -> None:
+    option = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--percentage",
+            "60",
+            "--transition-evidence",
+            "operator-option-2025",
+        ]
+    )
+    assert option.exit_code == 0, option.output
+    assert _json(option)["entry"]["especial_transition"] == {
+        "kind": "opcion",
+        "evidence_reference": "operator-option-2025",
+    }
+
+    revocation = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-general",
+            "--ejercicio",
+            "2026",
+            "--percentage",
+            "60",
+            "--transition-evidence",
+            "operator-revocation-2026",
+        ]
+    )
+    assert revocation.exit_code == 0, revocation.output
+    entries = _prorrata_entries()
+    assert entries[-1]["especial_transition"] == {
+        "kind": "revocacion",
+        "evidence_reference": "operator-revocation-2026",
+    }
 
 
 def test_elect_general_persists_general_register_entry() -> None:
@@ -185,7 +234,11 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
         )
         repository.save(
             ProrrataRegister(
-                entries=(ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL),),
+                entries=(
+                    ProrrataRegisterEntry(
+                        ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+                    ),
+                ),
                 sector_definitions=(definition,),
             )
         )
@@ -194,6 +247,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
             ProrrataRegisterEntry(
                 ejercicio=2025,
                 regime=ProrrataRegisterRegime.ESPECIAL,
+                especial_transition=None,
                 provisional_percentage=Decimal("60"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             )
@@ -258,6 +312,7 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
         entry = ProrrataRegisterEntry(
             ejercicio=2025,
             regime=ProrrataRegisterRegime.ESPECIAL,
+            especial_transition=None,
             provisional_percentage=Decimal("60"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         )

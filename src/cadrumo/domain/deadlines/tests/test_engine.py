@@ -11,6 +11,8 @@ from .. import (
     DeadlineEngine,
     IrpfEstimationRegime,
     IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloDeadline,
     ModeloEnrollment,
     ModeloIVAProfile,
@@ -35,6 +37,14 @@ def _profile(**overrides: object) -> TaxpayerProfile:
     base: dict[str, object] = {
         "tax_id": "X1234567L",
         "iva_regime": IVARegime.GENERAL,
+        "iva": ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
         "professional_income_withholding_ge_70pct": False,
         "art109_activity_income_withholding_ge_70pct": False,
     }
@@ -154,7 +164,15 @@ class TestCompute:
         schedule = _engine().compute(
             _profile(
                 does_intracomunitario=True,
-                iva=ModeloIVAProfile(intracommunity_operations_exceed_50000_eur=True),
+                iva=ModeloIVAProfile(
+                    tax_territory=M303TaxTerritory.COMMON_REGIME,
+                    regime_composition=M303RegimeComposition.GENERAL,
+                    intracommunity_operations_exceed_50000_eur=True,
+                    redeme_enrolled=False,
+                    cash_accounting_regime_enrolled=False,
+                    voluntary_sii_enrolled=False,
+                    hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                ),
             ),
             2026,
             today=date(2026, 1, 1),

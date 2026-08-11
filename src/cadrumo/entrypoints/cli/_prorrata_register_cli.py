@@ -27,9 +27,15 @@ from typing import Annotated
 import typer
 
 from ...application.prorrata_register import ProrrataRegisterService
-from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, SectorDiferenciadoLetra
+from ...core import (
+    ProrrataEspecialTransitionKind,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ...core.i18n import tr
 from ...domain.prorrata_register import (
+    ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterValidationError,
@@ -102,6 +108,19 @@ _SectorOpt = Annotated[
         help=tr(
             "cli.app.ledger.prorrata.sector_help",
             default="Differentiated-sector id this entry covers; omit for the whole-entity entry.",
+        ),
+    ),
+]
+_TransitionEvidenceOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--transition-evidence",
+        help=tr(
+            "cli.app.ledger.prorrata.transition_evidence_help",
+            default=(
+                "Operator-held evidence for an election or revocation in this ejercicio; "
+                "omit for an explicit continuation."
+            ),
         ),
     ),
 ]
@@ -193,6 +212,7 @@ def _elect(
     provenance: ProrrataProvisionalProvenance,
     reference: str | None,
     sector_id: str | None,
+    especial_transition: ProrrataEspecialTransitionEvidence | None,
     result_class: type[ProrrataElectResult],
     command: str,
 ) -> None:
@@ -203,6 +223,7 @@ def _elect(
         entry = ProrrataRegisterEntry(
             ejercicio=ejercicio,
             regime=regime,
+            especial_transition=especial_transition,
             sector_id=sector_id,
             provisional_percentage=percentage,
             provisional_provenance=resolved_provenance,
@@ -256,6 +277,7 @@ def prorrata_elect_especial(
     provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     reference: _ReferenceOpt = None,
     sector: _SectorOpt = None,
+    transition_evidence: _TransitionEvidenceOpt = None,
 ) -> None:
     """Persist an ``ESPECIAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
     _elect(
@@ -266,6 +288,14 @@ def prorrata_elect_especial(
         provenance=provenance,
         reference=reference,
         sector_id=sector,
+        especial_transition=(
+            ProrrataEspecialTransitionEvidence(
+                kind=ProrrataEspecialTransitionKind.OPCION,
+                evidence_reference=transition_evidence,
+            )
+            if transition_evidence is not None
+            else None
+        ),
         result_class=ProrrataElectEspecialResult,
         command="ledger.prorrata.elect_especial",
     )
@@ -295,6 +325,7 @@ def prorrata_elect_general(
     provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     reference: _ReferenceOpt = None,
     sector: _SectorOpt = None,
+    transition_evidence: _TransitionEvidenceOpt = None,
 ) -> None:
     """Persist a ``GENERAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
     _elect(
@@ -305,6 +336,14 @@ def prorrata_elect_general(
         provenance=provenance,
         reference=reference,
         sector_id=sector,
+        especial_transition=(
+            ProrrataEspecialTransitionEvidence(
+                kind=ProrrataEspecialTransitionKind.REVOCACION,
+                evidence_reference=transition_evidence,
+            )
+            if transition_evidence is not None
+            else None
+        ),
         result_class=ProrrataElectGeneralResult,
         command="ledger.prorrata.elect_general",
     )

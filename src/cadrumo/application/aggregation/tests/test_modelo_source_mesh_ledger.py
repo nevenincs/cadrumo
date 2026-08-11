@@ -98,6 +98,9 @@ class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
         super().__init__(
             transaction_repository=transaction_repository,
             invoice_repository=invoice_repository,
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=(transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID),
+            ),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=(
                 transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
@@ -387,6 +390,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance(
                 ProrrataRegisterEntry(
                     ejercicio=2026,
                     regime=ProrrataRegisterRegime.GENERAL,
+                    especial_transition=None,
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
@@ -458,6 +462,46 @@ def test_iva_source_mesh_resolver_refuses_m303_invoice_domestic_iva_without_tran
     assert verdict.action is None
     assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values["invoice_count"] == 1
+
+
+def test_iva_source_mesh_withholds_received_invoice_without_deduction_authority(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A received invoice reaches no SOPORTADO row until classified authority exists."""
+    revision = _m303_revision()
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    invoice = _domestic_iva_invoice(
+        "PURCHASE-WITHOUT-DEDUCTION-AUTHORITY",
+        kind=CatalogueInvoiceKind.RECEIVED,
+        issued_at=date(2025, 2, 10),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+    )
+    invoice_repo.save(InvoiceCatalogue.from_invoices((invoice,)))
+
+    resolution = LedgerIvaAggregationSourceResolver(
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
+
+    assert resolution.source_transaction_ids == ()
+    assert resolution.binding_values.get("modelo-303-iva-soportado-interiores-cuota", Decimal("0")) == Decimal("0")
+    assert len(resolution.diagnostics) == 1
+    diagnostic = resolution.diagnostics[0]
+    assert diagnostic.reason == "source_issue"
+    assert diagnostic.source_ref == f"invoice:{invoice.invoice_id}"
+    assert "no exact deduction fact kind" in diagnostic.message
+    assert diagnostic.remedy is not None
+    assert "classified ledger transaction" in diagnostic.remedy
 
 
 def test_iva_source_mesh_resolver_attributes_a_q1_operation_invoiced_in_q2_to_q1(
@@ -942,6 +986,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,

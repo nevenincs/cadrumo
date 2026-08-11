@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Any, cast
 
 import pytest
 
@@ -17,6 +18,7 @@ from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .. import IvaLedgerCandidate, aggregate_iva_ledger_candidates, validate_iva_ledger_observation
@@ -43,6 +45,7 @@ def _domestic_current_candidate() -> IvaLedgerCandidate:
         iva_amount=Decimal("21.00"),
         deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
         deduction_provenance=_invoice_provenance("invoice:purchase-2026-001"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -85,6 +88,7 @@ def test_signed_rectification_with_one_corrected_fact_is_accepted_once() -> None
             evidence_digest="b" * 64,
         ),
         rectifies_ledger_id="current-purchase",
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     aggregation = aggregate_iva_ledger_candidates(
@@ -135,6 +139,7 @@ def test_rectification_preserves_the_corrected_import_or_intra_eu_legal_axes(
             evidence_digest="c" * 64,
         ),
         rectifies_ledger_id="corrected-source",
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     assert validate_iva_ledger_observation(candidate).category is category
@@ -149,6 +154,7 @@ def test_rectification_refuses_category_flow_mismatch_and_exempt_rate() -> None:
         "flow_direction": IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         "base_amount": Decimal("-100.00"),
         "iva_amount": Decimal("-21.00"),
+        "observation_role": IvaLedgerObservationRole.SETTLEMENT,
         "deduction_fact_kind": IvaDeductionFactKind.RECTIFICATION,
         "deduction_provenance": IvaDeductionClassificationProvenance(
             authority=IvaDeductionEvidenceAuthority.RECTIFICATION_EVIDENCE,
@@ -174,6 +180,7 @@ def test_reagp_requires_its_exact_category_flow_and_rate_axes() -> None:
         "flow_direction": IvaFlowDirection.SOPORTADO,
         "base_amount": Decimal("100.00"),
         "iva_amount": Decimal("12.00"),
+        "observation_role": IvaLedgerObservationRole.SETTLEMENT,
         "deduction_fact_kind": IvaDeductionFactKind.REAGP_COMPENSATION,
         "deduction_provenance": IvaDeductionClassificationProvenance(
             authority=IvaDeductionEvidenceAuthority.REAGP_RECEIPT,
@@ -200,6 +207,7 @@ def _investment_candidate(*, ledger_id: str, asset_id: str, sector_id: str) -> I
         deduction_provenance=_invoice_provenance(f"invoice:{ledger_id}"),
         investment_asset_id=asset_id,
         prorrata_sector_id=sector_id,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -219,13 +227,11 @@ def _investment_record(*, ledger_id: str, asset_id: str, sector_id: str) -> Bien
 def test_production_candidate_aggregation_requires_and_accepts_exact_reciprocal_asset_authority() -> None:
     candidate = _investment_candidate(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a")
     register = BienesInversionIvaRegister(
-        records=(
-            _investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),
-        )
+        records=(_investment_record(ledger_id="ledger-machine", asset_id="asset-machine", sector_id="sector-a"),)
     )
 
     with pytest.raises(TypeError, match="investment_asset_register"):
-        aggregate_iva_ledger_candidates((candidate,), period=Period.from_year_and_code(2026, "2T"))
+        cast(Any, aggregate_iva_ledger_candidates)((candidate,), period=Period.from_year_and_code(2026, "2T"))
 
     result = aggregate_iva_ledger_candidates(
         (candidate,),

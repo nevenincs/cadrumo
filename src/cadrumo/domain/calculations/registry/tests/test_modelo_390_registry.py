@@ -11,6 +11,7 @@ import pytest
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
+from ....iva import IvaLedgerObservationRole
 from .. import (
     InputKind,
     ModeloDefinition,
@@ -547,6 +548,7 @@ def test_modelo_390_iva_bindings_resolve_against_annual_substrate_observations()
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000") * idx,
             iva_amount=amount,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
         for idx, amount in enumerate(quarterly_iva_amounts, start=1)
     ]

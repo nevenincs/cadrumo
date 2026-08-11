@@ -3758,6 +3758,9 @@ cli:
       create_epilog: 'Minimal freelancer profile: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
+        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
+        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Initialize a new active profile.
       delete_active_cleared: The deleted profile was the active one; the active-profile
@@ -70225,8 +70228,14 @@ wizard:
         help: Enrolled as the dominant entity of an IVA group
       iva-group-member-enrolled:
         help: Enrolled as a member entity of an IVA group
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declare entitlement to deduct advance payments under the hydrocarbon tax-deposit regime.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intra-community operations exceed 50,000 EUR
+      iva-cash-accounting-regime-enrolled:
+        help: Declare enrolment in the special IVA cash-accounting regime.
+      iva-m303-regime-composition:
+        help: 'Modelo 303 regime composition: general, simplified, or mixed.'
       iva-oss-enrolled:
         help: Enrolled in OSS
       iva-redeme-enrolled:
@@ -70237,6 +70246,8 @@ wizard:
         help: Enrolled in ROI
       iva-sii-enrolled:
         help: Whether the taxpayer is enrolled in the SII
+      iva-voluntary-sii-enrolled:
+        help: Declare voluntary SII enrolment separately from mandatory inclusion triggers.
       legal-entity-form:
         help: Recognised legal form when the entity type is a legal entity
       legal-name:
@@ -70344,6 +70355,8 @@ wizard:
         help: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
       tax-residence-ccaa:
         help: 'Tax-residence autonomous community. One of: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Declared territorial regime: common territory or the not-yet-supported foral territory.'
       taxation-type:
         help: 'Income-tax return type: 1 = individual, 2 = joint (family unit).'
       taxpayer-birth-date:
@@ -70382,10 +70395,14 @@ wizard:
       residence, and family details if they apply. After saving, check progress with
       `aeat config profile status`.'
     iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Are you enrolled in the special IVA cash-accounting regime?
       iva-group-dominant-entity-enrolled:
         prompt: Enrolled as an IVA group dominant entity
       iva-group-member-enrolled:
         prompt: Enrolled as an IVA group member entity
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Are you entitled to deduct advance payments under the hydrocarbon tax-deposit regime?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intra-community operations exceed 50,000 EUR
       iva-oss-enrolled:
@@ -70398,6 +70415,17 @@ wizard:
         prompt: Enrolled in ROI
       iva-sii-enrolled:
         prompt: Enrolled in the SII (immediate information supply)
+      iva-voluntary-sii-enrolled:
+        prompt: Are you voluntarily enrolled in SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: General regime only
+          mixed:
+            label: Mixed regimes
+          simplified:
+            label: Simplified regime only
+        prompt: Which Modelo 303 regime composition applies?
       title: IVA
     notes:
       notes:
@@ -70601,6 +70629,13 @@ wizard:
         prompt: Name of fiscal representative in Spain
       tax-residence-ccaa:
         prompt: Tax-residence autonomous community
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Common territory
+          foral_unsupported:
+            label: Foral territory (not yet supported)
+        prompt: Which tax territory applies to this Modelo 303?
       title: Tax residence
     review:
       registered-non-official-suffix: ' (from censal certificate - not AEAT-verified)'

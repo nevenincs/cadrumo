@@ -4068,6 +4068,9 @@ cli:
       create_epilog: 'Perfil mínimo para autónomo: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
+        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
+        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.
       delete_active_cleared: El perfil eliminado era el activo; el puntero de perfil
@@ -73080,8 +73083,14 @@ wizard:
         help: Alta como entidad dominante de un grupo de IVA
       iva-group-member-enrolled:
         help: Alta como entidad miembro de un grupo de IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declara el derecho a deducir pagos anticipados del régimen de depósitos fiscales de hidrocarburos.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operaciones intracomunitarias superan 50.000 EUR
+      iva-cash-accounting-regime-enrolled:
+        help: Declara la inscripción en el régimen especial del criterio de caja del IVA.
+      iva-m303-regime-composition:
+        help: 'Composición de regímenes del Modelo 303: general, simplificado o mixto.'
       iva-oss-enrolled:
         help: Alta en OSS
       iva-redeme-enrolled:
@@ -73092,6 +73101,8 @@ wizard:
         help: Alta en ROI
       iva-sii-enrolled:
         help: Si el contribuyente está inscrito en el SII
+      iva-voluntary-sii-enrolled:
+        help: Declara la inscripción voluntaria en el SII, separada de las causas de inclusión obligatoria.
       legal-entity-form:
         help: Forma jurídica reconocida cuando el tipo de entidad es persona jurídica
       legal-name:
@@ -73202,6 +73213,8 @@ wizard:
         help: Identificador fiscal (NIF/CIF/DNI/NIE) del perfil activo
       tax-residence-ccaa:
         help: 'Comunidad autónoma de residencia fiscal. Una de: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Régimen territorial declarado: territorio común o territorio foral todavía no compatible.'
       taxation-type:
         help: 'Tipo de declaración de Renta: 1 = individual, 2 = conjunta (unidad
           familiar).'
@@ -73246,10 +73259,14 @@ wizard:
 
       Después de guardar, revisa el progreso con `aeat config profile status`.'
     iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: ¿Está inscrito en el régimen especial del criterio de caja?
       iva-group-dominant-entity-enrolled:
         prompt: Alta como entidad dominante de un grupo de IVA
       iva-group-member-enrolled:
         prompt: Alta como entidad miembro de un grupo de IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: ¿Tiene derecho a deducir pagos anticipados del régimen de depósitos fiscales de hidrocarburos?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operaciones intracomunitarias superan 50.000 EUR
       iva-oss-enrolled:
@@ -73262,6 +73279,17 @@ wizard:
         prompt: Alta en ROI
       iva-sii-enrolled:
         prompt: Inscrito en el SII (Suministro Inmediato de Información)
+      iva-voluntary-sii-enrolled:
+        prompt: ¿Está inscrito voluntariamente en el SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Solo régimen general
+          mixed:
+            label: Regímenes mixtos
+          simplified:
+            label: Solo régimen simplificado
+        prompt: ¿Qué composición de regímenes se aplica al Modelo 303?
       title: IVA
     notes:
       notes:
@@ -73466,6 +73494,13 @@ wizard:
         prompt: Nombre del representante fiscal en España
       tax-residence-ccaa:
         prompt: Comunidad autónoma de residencia fiscal
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Territorio común
+          foral_unsupported:
+            label: Territorio foral (todavía no compatible)
+        prompt: ¿Qué territorio tributario se aplica a este Modelo 303?
       title: Residencia fiscal
     review:
       registered-non-official-suffix: ' (del certificado censal - no verificado por

@@ -40,16 +40,19 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ActionEvidenceProvenance,
@@ -65,8 +68,14 @@ from ...core import (
 from ...core.hashing import sha256_hex
 from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, WorkUnitId
 from ...core.logging import get_logger
+from ...core.resources import resources
 from ...core.time import now as _utc_now
 from ...domain import filing as filing_domain
+from ...domain.bienes_inversion import (
+    BienesInversionIvaRegister,
+    RegistroRegularizacionResult,
+    compute_registro_regularizacion,
+)
 from ...domain.buckets import BucketEvent, BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
     DataBindingDefinition,
@@ -86,6 +95,15 @@ from ...domain.modelos import (
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
 )
+from ...domain.prorrata_register import ProrrataRegister
+from ..aggregation import (
+    IvaDifferentiatedDeductionContribution,
+    IvaLedgerAggregation,
+    aggregate_iva_ledger_observations_from_repositories,
+    resolve_iva_differentiated_deduction_contributions,
+    resolve_m303_prorrata_transition_arrival,
+    resolve_m303_supplier_regime_arrival,
+)
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
@@ -99,6 +117,7 @@ from ..filing import (
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
+    M303FilingFacts,
     Modelo111ProfileFacts,
     Modelo202ProducerProfile,
     PresenterIdentity,
@@ -111,6 +130,7 @@ from ..filing import (
     export_draft,
     export_layout_renderability_reason,
     filing_profile_from_taxpayer,
+    resolve_m303_filing_facts,
 )
 from ..filing.runtime import RegistrySchemaAccessor
 from ._action_errors import (
@@ -122,6 +142,7 @@ from ._action_errors import (
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import deductible_vat_evidence_gap_transaction_ids
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._profile_export_binding import resolve_profile_export_values
@@ -614,6 +635,66 @@ def _approve_export_draft(
     return period, approved
 
 
+def _resolve_m303_export_arrivals(
+    *,
+    period: Period,
+    prorrata_register: ProrrataRegister,
+    iva_aggregation: IvaLedgerAggregation,
+    bienes_register: BienesInversionIvaRegister,
+) -> tuple[
+    tuple[IvaDifferentiatedDeductionContribution, ...],
+    BienesInversionIvaRegister,
+    RegistroRegularizacionResult,
+]:
+    """Assemble current canonical register arrivals from the work-unit-bound register."""
+    snapshot = resources().modelos.authority.snapshot(
+        Modelo.M303.value,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    if prorrata_register.is_sectorized:
+        apportionment = iva_aggregation.prorrata_apportionment
+        if apportionment is None or not apportionment.sector_apportionments:
+            raise FilingProducerSnapshotError(
+                "modelo 303 differentiated sectors require canonical sector apportionment",
+            )
+        contributions = resolve_iva_differentiated_deduction_contributions(
+            snapshot.revision,
+            iva_aggregation.observations,
+            apportionment=apportionment,
+        )
+    else:
+        contributions = ()
+    definitive_by_identifier: dict[str, Decimal] = {}
+    for record in bienes_register.in_window_records(period.filing_year):
+        entry = prorrata_register.entry_for(period.filing_year, sector_id=record.prorrata_sector_id)
+        if entry is not None and entry.definitive_percentage is not None:
+            definitive_by_identifier[record.identifier] = entry.definitive_percentage
+    regularisation_result = compute_registro_regularizacion(
+        bienes_register,
+        regularizacion_year=period.filing_year,
+        prorrata_definitiva_by_identifier=definitive_by_identifier,
+    )
+    if regularisation_result.pending_percentage_count:
+        raise FilingProducerSnapshotError(
+            "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
+        )
+    return contributions, bienes_register, regularisation_result
+
+
+def _require_m303_regimen_simplificado_scope_matches_profile(
+    *,
+    filing_facts: M303FilingFacts,
+    workflow_profile: TaxpayerProfile,
+) -> None:
+    """Require persisted M303 evidence to agree with the canonical profile scope."""
+    expected_scope = m303_regimen_simplificado_scope_for_profile(workflow_profile)
+    if filing_facts.regimen_simplificado.scope_decision != expected_scope:
+        raise FilingProducerSnapshotError(
+            "modelo 303 simplified-regime filing evidence disagrees with the canonical IVA profile composition",
+        )
+
+
 def _build_export_producer_snapshot(
     *,
     command: ModeloExportCommand,
@@ -650,20 +731,53 @@ def _build_export_producer_snapshot(
             model_profile = iva_profile
             if model_profile is None:
                 raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
-            require_filing_instance_evidence_for_work_unit(
+            filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
                 work_unit=work_unit,
                 revision=revision,
             )
-            raise FilingProducerSnapshotError(
-                "modelo 303 export awaits the canonical S55 producer snapshot; "
-                "S58 filing evidence does not assemble producer facts",
+            assert filing_instance_evidence is not None
+            prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
+            prorrata_register = prorrata_register_repository.load()
+            iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
+                bucket_id=work_unit.bucket_id,
+                period=work_unit.period,
+                prorrata_register_repository=prorrata_register_repository,
+            )
+            bienes_register = BienesInversionIvaRegisterRepository(bucket_id=work_unit.bucket_id).load()
+            differentiated_contributions, bienes_register, regularisation_result = _resolve_m303_export_arrivals(
+                period=filing_instance_evidence.m303.period,
+                prorrata_register=prorrata_register,
+                iva_aggregation=iva_aggregation,
+                bienes_register=bienes_register,
+            )
+            m303_filing_facts = resolve_m303_filing_facts(
+                evidence=filing_instance_evidence,
+                supplier_regime=resolve_m303_supplier_regime_arrival(
+                    period=work_unit.period,
+                    iva_aggregation=iva_aggregation,
+                ),
+                prorrata_transition=resolve_m303_prorrata_transition_arrival(
+                    period=work_unit.period,
+                    prorrata_register=prorrata_register,
+                ),
+                prorrata_register=prorrata_register,
+                differentiated_contributions=differentiated_contributions,
+                bienes_register=bienes_register,
+                regularisation_result=regularisation_result,
+            )
+            _require_m303_regimen_simplificado_scope_matches_profile(
+                filing_facts=m303_filing_facts,
+                workflow_profile=workflow_profile,
             )
         elif modelo is Modelo.M202:
             model_profile = Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=())
+            m303_filing_facts = None
         elif modelo is Modelo.M111:
             model_profile = Modelo111ProfileFacts(colegio_concertado=None)
+            m303_filing_facts = None
         else:
             model_profile = GeneralFilingProfileFacts()
+            m303_filing_facts = None
         return build_filing_producer_snapshot(
             modelo=modelo,
             taxpayer_tax_id=workflow_profile.tax_id,
@@ -679,6 +793,7 @@ def _build_export_producer_snapshot(
             amendment_evidence=evidence,
             refund_account=iva_profile.refund_account if iva_profile is not None else None,
             charge_account=iva_profile.charge_account if iva_profile is not None else None,
+            m303_filing_facts=m303_filing_facts,
         )
     except (FilingProducerSnapshotError, ValueError) as exc:
         raise ModeloExportError(

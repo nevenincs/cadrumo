@@ -99,6 +99,12 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
             # M100 2025 added age_at_year_end date binding + declaration-type
             # and derived marriage facts. Seed minimum values so M100 calculate

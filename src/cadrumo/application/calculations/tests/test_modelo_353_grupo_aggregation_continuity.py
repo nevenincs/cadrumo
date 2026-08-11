@@ -60,7 +60,7 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....domain.iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -120,6 +120,7 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         flow_direction=flow,
         base_amount=Decimal("1000.00"),
         iva_amount=iva,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

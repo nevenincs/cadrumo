@@ -50,5 +50,7 @@ rate_kinds = ["general", "reduced", "super_reduced", "zero", "exempt"]
 flow_direction = "operacion_con_inversion"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-hasta-08-y-2t.bindings.aggregation]
 op = "sum"

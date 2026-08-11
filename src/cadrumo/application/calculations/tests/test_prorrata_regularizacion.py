@@ -50,6 +50,7 @@ from ....domain.iva import (
     IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     RegularizacionProrrataDireccion,
 )
@@ -129,6 +130,7 @@ def _ledger_observation(
         flow_direction=flow,
         base_amount=Decimal(base),
         iva_amount=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
         **deduction,
     )
 

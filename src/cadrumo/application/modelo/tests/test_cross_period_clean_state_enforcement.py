@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
@@ -18,19 +19,27 @@ from ....domain.deadlines import (
     EntityType,
     IrpfIncomeCategory,
     IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
     TaxpayerProfile,
 )
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    ExternalEvidence,
     ExternalEvidenceKind,
+    ModeloRecord,
     ModeloRecordStatus,
     ModeloVerificationFindingKind,
     derive_calculation_revision_id,
+    derive_filing_record_id,
     upsert_calculation_revision,
+    upsert_filing_record,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
@@ -108,6 +117,14 @@ def _workflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 
@@ -121,6 +138,12 @@ def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None =
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="activities.description", value="economic activity"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.oss_enrolled", value=False),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(path="provenance.source", value="manual_cli"),
         UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
     ]
@@ -163,6 +186,11 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="activities.description", value="salaried income"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
@@ -197,20 +225,26 @@ def _seed_verified_revision(
         modelo=modelo,
         filing_year=filing_year,
     )
+    work_period = Period.from_year_and_code(filing_year, period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
+        period=work_period,
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
+    )
+    filing_instance_evidence = (
+        general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303")
+        if modelo == "303"
+        else None
     )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -228,7 +262,7 @@ def _seed_verified_revision(
         updated_at=_CLOCK,
         verified_at=_CLOCK,
         verified_by="operator-test",
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -267,13 +301,19 @@ def _seed_draft_revision(
 ) -> str:
     _seed_ready_profile(bucket_id, modelo=modelo)
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period)
+    work_period = Period.from_year_and_code(filing_year, period)
     work_unit = create_work_unit(
         bucket_id=bucket_id,
         modelo=modelo,
         filing_year=filing_year,
-        period=Period.from_year_and_code(filing_year, period),
+        period=work_period,
         revision_id=snapshot.revision.id,
         clock=_CLOCK,
+    )
+    filing_instance_evidence = (
+        general_m303_filing_evidence(work_period, reference="test:cross-period-clean-state:m303")
+        if modelo == "303"
+        else None
     )
     resolved_binding_overrides = binding_overrides or {}
     resolved_relation_overrides = relation_overrides or {}
@@ -284,7 +324,7 @@ def _seed_draft_revision(
         binding_overrides=resolved_binding_overrides,
         relation_overrides=resolved_relation_overrides,
         casilla_values=resolved_casilla_values,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -295,7 +335,7 @@ def _seed_draft_revision(
         casilla_values=resolved_casilla_values,
         created_at=_CLOCK,
         updated_at=_CLOCK,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -574,7 +614,13 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
             casilla_values = {
                 casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(sorted(source_casilla_ids))
             }
-            evidence_reference_id = f"JUST-{source_modelo}-{filing_year}-{period}"
+            registry_observations = registry_grounded_observations(
+                modelo=source_modelo,
+                filing_year=filing_year,
+                period=period,
+                casilla_values=casilla_values,
+            )
+            evidence_reference_id = f"JUST{source_modelo}{filing_year}{period}"
             persist_justificante_metadata(
                 evidence_reference_id,
                 modelo=source_modelo,
@@ -582,27 +628,84 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                 period=period,
                 captured_at=_CLOCK,
             )
-            import_external_filing_evidence(
-                work_unit_id=source_work_unit.work_unit_id,
-                casilla_values=casilla_values,
-                evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                evidence_reference_id=evidence_reference_id,
-                actor="aeat-import-test",
-                expected_tax_id="X1234567L",
-                clock=_CLOCK,
-            )
+            if source_modelo == "303":
+                filing_instance_evidence = general_m303_filing_evidence(
+                    Period.from_year_and_code(filing_year, period),
+                    reference="test:cross-period-clean-state:imported-m303",
+                )
+                calculation_revision_id = derive_calculation_revision_id(
+                    work_unit_id=source_work_unit.work_unit_id,
+                    input_values_by_casilla_id={},
+                    binding_overrides={},
+                    relation_overrides={},
+                    casilla_values=casilla_values,
+                    filing_instance_evidence=filing_instance_evidence,
+                )
+                calculation_repository = CalculationRevisionCatalogueRepository()
+                calculation_repository.save(
+                    upsert_calculation_revision(
+                        calculation_repository.load(),
+                        CalculationRevision(
+                            calculation_revision_id=calculation_revision_id,
+                            work_unit_id=source_work_unit.work_unit_id,
+                            state=CalculationRevisionState.PRESENTADO,
+                            casilla_values=casilla_values,
+                            observations=registry_observations,
+                            created_at=_CLOCK,
+                            updated_at=_CLOCK,
+                            verified_at=_CLOCK,
+                            verified_by="aeat-import-test",
+                            filed_at=_CLOCK,
+                            filed_by="aeat-import-test",
+                            filing_instance_evidence=filing_instance_evidence,
+                        ),
+                    )
+                )
+                filing_record_id = derive_filing_record_id(
+                    work_unit_id=source_work_unit.work_unit_id,
+                    calculation_revision_id=calculation_revision_id,
+                    filed_by="aeat-import-test",
+                )
+                filing_repository = ModeloRecordCatalogueRepository()
+                filing_repository.save(
+                    upsert_filing_record(
+                        filing_repository.load(),
+                        ModeloRecord(
+                            filing_record_id=filing_record_id,
+                            work_unit_id=source_work_unit.work_unit_id,
+                            calculation_revision_id=calculation_revision_id,
+                            bucket_id=profile.bucket_id,
+                            modelo=source_modelo,
+                            filing_year=filing_year,
+                            period=Period.from_year_and_code(filing_year, period),
+                            filed_at=_CLOCK,
+                            filed_by="aeat-import-test",
+                            aeat_accepted=True,
+                            external_evidence=ExternalEvidence(
+                                kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                                reference_id=evidence_reference_id,
+                                imported_at=_CLOCK,
+                            ),
+                        ),
+                    )
+                )
+            else:
+                import_external_filing_evidence(
+                    work_unit_id=source_work_unit.work_unit_id,
+                    casilla_values=casilla_values,
+                    evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    evidence_reference_id=evidence_reference_id,
+                    actor="aeat-import-test",
+                    expected_tax_id="X1234567L",
+                    clock=_CLOCK,
+                )
             observations.save(
                 observations.prepare_observation_envelope(
                     RegistryModeloObservation(
                         modelo=source_modelo,
                         filing_year=filing_year,
                         period=period,
-                        observations=registry_grounded_observations(
-                            modelo=source_modelo,
-                            filing_year=filing_year,
-                            period=period,
-                            casilla_values=casilla_values,
-                        ),
+                        observations=registry_observations,
                     ),
                     source_kind="aeat_sede_justificante",
                     captured_at=_CLOCK,
@@ -687,6 +790,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
             )
 
     failure = exc_info.value.precondition_failure
+    assert failure is not None
     blocker_codes = str(failure.verdict.evidence[0].values["blocker_codes"]).split("|")
     assert "incomplete_group_member_coverage" in blocker_codes
     assert "missing_expected_group_member_roster" not in blocker_codes
@@ -747,6 +851,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
             )
 
     failure = exc_info.value.precondition_failure
+    assert failure is not None
     blocker_codes = str(failure.verdict.evidence[0].values["blocker_codes"]).split("|")
     assert "incomplete_group_member_coverage" in blocker_codes
     assert "missing_expected_group_member_roster" not in blocker_codes

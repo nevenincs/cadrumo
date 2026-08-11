@@ -60,6 +60,7 @@ from ...core import (
     FilingProducerKey,
     Period,
     PriorDomiciliationElection,
+    ProrrataEspecialTransitionKind,
 )
 from ...core.atomic_write import atomic_write_bytes
 from ...core.decimal import coerce_decimal
@@ -80,14 +81,14 @@ from ...domain.calculations.registry import (
     render_fixed_width_export_field,
     xml_dictionary_entries,
 )
-from ...domain.deadlines import ModeloIVAProfile
+from ...domain.deadlines import M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile
 from ...domain.filing import (
     FilingExportError,
     FilingExportValidationError,
     ModeloCasillaProvenance,
     ModeloDraft,
 )
-from ...domain.iva import derive_sepa_marca
+from ...domain.iva import derive_sepa_marca, is_last_filing_period_of_year
 from ...domain.submission import ModeloDraftStatus
 from ._export_parity import (
     assert_export_mirrors_manifest,
@@ -104,6 +105,7 @@ from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
+    M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
     RefundAccountSelection,
 )
@@ -310,6 +312,11 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
     """Resolve every canonical producer identity from one immutable snapshot."""
     identity = snapshot.taxpayer_identity
     amendment = snapshot.amendment_evidence
+    iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
+    m303_facts = snapshot.m303_filing_facts
+    m303_period = m303_facts.period if m303_facts is not None else None
+    m303_is_final_period = is_last_filing_period_of_year(m303_period) if m303_period is not None else False
+    insolvency = m303_facts.insolvency if m303_facts is not None else None
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
         FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
@@ -330,7 +337,75 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
             "X" if snapshot.elections.prior_domiciliation is PriorDomiciliationElection.CANCEL_OR_MODIFY else None
         ),
         FilingProducerKey.M303_REDEME_ENROLLED: (
-            snapshot.model_profile.redeme_enrolled if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
+            _m303_yes_no(iva_profile.redeme_enrolled) if iva_profile is not None else None
+        ),
+        FilingProducerKey.M303_EXCLUSIVELY_FORAL: (
+            "1"
+            if iva_profile is not None and iva_profile.tax_territory is M303TaxTerritory.FORAL
+            else "2"
+            if iva_profile is not None
+            else None
+        ),
+        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: (
+            {
+                M303RegimeComposition.SIMPLIFIED: "1",
+                M303RegimeComposition.MIXED: "2",
+                M303RegimeComposition.GENERAL: "3",
+            }[iva_profile.regime_composition]
+            if iva_profile is not None
+            else None
+        ),
+        FilingProducerKey.M303_JOINT_RETURN_ELECTED: (
+            _m303_yes_no(m303_facts.joint_return_elected) if m303_facts is not None else None
+        ),
+        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: (
+            _m303_yes_no(iva_profile.cash_accounting_regime_enrolled) if iva_profile is not None else None
+        ),
+        FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: (
+            _m303_yes_no(m303_facts.supplier_regime.recipient_of_cash_accounting_operations)
+            if m303_facts is not None
+            else None
+        ),
+        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: (
+            _m303_yes_no(m303_facts.prorrata_transition.transition is ProrrataEspecialTransitionKind.OPCION)
+            if m303_facts is not None and m303_facts.prorrata_transition.is_applicable
+            else None
+        ),
+        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: (
+            _m303_yes_no(m303_facts.prorrata_transition.transition is ProrrataEspecialTransitionKind.REVOCACION)
+            if m303_facts is not None and m303_facts.prorrata_transition.is_applicable
+            else None
+        ),
+        FilingProducerKey.M303_INSOLVENCY_DECLARED: (
+            "1" if insolvency is not None else "2" if m303_facts is not None else None
+        ),
+        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: (
+            insolvency.judicial_order_date.strftime("%d%m%Y") if insolvency is not None else None
+        ),
+        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: (
+            {
+                M303InsolvencyFilingSubtype.PRE_ORDER: "1",
+                M303InsolvencyFilingSubtype.POST_ORDER: "2",
+            }[insolvency.subtype]
+            if insolvency is not None
+            else None
+        ),
+        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: (
+            _m303_yes_no(iva_profile.voluntary_sii_enrolled) if iva_profile is not None else None
+        ),
+        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: (
+            _m303_yes_no(m303_facts.exonerado_390.applicable)
+            if m303_facts is not None and m303_is_final_period
+            else "0"
+            if m303_facts is not None
+            else None
+        ),
+        FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
+            _m303_yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
+            if iva_profile is not None and m303_period is not None and _m303_a30_entitlement_applicable(m303_period)
+            else "0"
+            if iva_profile is not None and m303_period is not None
+            else None
         ),
         FilingProducerKey.M111_COLEGIO_CONCERTADO: (
             snapshot.model_profile.colegio_concertado
@@ -351,9 +426,41 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
                 FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: selected.account.bank_country_code,
             },
         )
+    if iva_profile is not None and iva_profile.tax_territory is M303TaxTerritory.FORAL:
+        values.update(
+            {
+                FilingProducerKey.M303_REDEME_ENROLLED: "2",
+                FilingProducerKey.M303_EXCLUSIVELY_FORAL: "1",
+                FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
+                FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
+                FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
+                FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
+                FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: (
+                    "2" if m303_facts is not None and m303_facts.prorrata_transition.is_applicable else None
+                ),
+                FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: (
+                    "2" if m303_facts is not None and m303_facts.prorrata_transition.is_applicable else None
+                ),
+                FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
+                FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
+                FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
+                FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
+                FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
+                FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
+            },
+        )
     if set(values) != set(FilingProducerKey):
         raise FilingExportValidationError("filing producer resolver is not exhaustive")
     return values
+
+
+def _m303_yes_no(value: bool) -> str:
+    """Project DP30301's exact Num1 convention: 1 = SI, 2 = NO."""
+    return "1" if value else "2"
+
+
+def _m303_a30_entitlement_applicable(period: Period) -> bool:
+    return period.registry_token.isdigit() and int(period.registry_token) >= 2
 
 
 def export_draft(

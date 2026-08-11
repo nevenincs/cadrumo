@@ -17,6 +17,7 @@ from ...domain.modelos import FilingInstanceEvidence, ModeloError, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
 from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
 from ._action_errors import ModeloProfileReadinessError
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 
 
 def validate_m303_filing_instance_evidence_for_revision(
@@ -39,13 +40,17 @@ def validate_m303_filing_instance_evidence_for_revision(
         raise ModeloError("modelo 303 filing-instance evidence period must match its work unit")
 
     regimen = m303.regimen_simplificado
+    profile = _active_taxpayer_profile(work_unit)
+    if regimen.scope_decision != m303_regimen_simplificado_scope_for_profile(profile):
+        raise ModeloError(
+            "modelo 303 simplified-regime evidence scope must match the canonical IVA profile composition"
+        )
     expected_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=regimen.scope_decision,
     )
     if regimen.regimen_snapshot != expected_snapshot:
         raise ModeloError("modelo 303 simplified-regime evidence does not match the selected registry snapshot")
-    profile = _active_taxpayer_profile(work_unit)
     censo_iae_epigraphs: frozenset[str] = frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset()
     validate_regimen_simplificado_rows(
         regimen.rows,

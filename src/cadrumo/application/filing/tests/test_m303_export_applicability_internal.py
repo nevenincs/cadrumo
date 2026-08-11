@@ -9,6 +9,9 @@ from pathlib import Path
 import pytest
 
 from ...modelo import ModeloExportCommand
+from ...modelo import _export as modelo_export
+from ...modelo import _m303_filing_evidence as m303_filing_evidence
+from ...modelo._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from .. import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -23,14 +26,9 @@ _S56_FILING_EVIDENCE_FIELDS = frozenset(
         "operaciones_terceros_reference",
     }
 )
-_RETIRED_M303_EXPORT_SYMBOLS = (
+_RETIRED_M303_EXPORT_OVERRIDE_SURFACE = (
     "m303_applicability",
     "M303ExportApplicabilityEnvelope",
-    "M303FilingFacts",
-    "resolve_m303_filing_facts",
-    "M303RegimeComposition",
-    "m303_regimen_simplificado_scope_for_profile",
-    "resolve_m303_regimen_simplificado_scope",
     "M303DifferentiatedSectorValueArrival",
     "M303Exonerado390EndpointValue",
     "M303Exonerado390ValueArrival",
@@ -74,9 +72,17 @@ def test_retired_m303_export_override_has_no_production_surface() -> None:
     offenders = {
         path.relative_to(source_root).as_posix()
         for path in production_sources
-        if any(retired in path.read_text(encoding="utf-8") for retired in _RETIRED_M303_EXPORT_SYMBOLS)
+        if any(retired in path.read_text(encoding="utf-8") for retired in _RETIRED_M303_EXPORT_OVERRIDE_SURFACE)
     }
     assert offenders == set()
+
+
+def test_canonical_profile_scope_mapper_is_required_by_calculation_and_export() -> None:
+    """Scope derives from the secured profile, never an export-side input."""
+    assert (
+        m303_filing_evidence.m303_regimen_simplificado_scope_for_profile is m303_regimen_simplificado_scope_for_profile
+    )
+    assert modelo_export.m303_regimen_simplificado_scope_for_profile is m303_regimen_simplificado_scope_for_profile
 
 
 def test_s56_exonerado_390_evidence_owner_is_unique_and_typed() -> None:

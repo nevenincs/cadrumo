@@ -291,7 +291,7 @@ class BienesInversionRegularizacionSourceResolver:
         missing_current_year_casilla_ids: tuple[CasillaId, ...] = (),
         unresolved_current_year_casilla_ids: tuple[CasillaId, ...] = (),
         register_repository: BienesInversionIvaRegisterRepository | None = None,
-        observation_repository: CalculationObservationRepository | None = None,
+        observation_repository: CalculationObservationRepository,
     ) -> None:
         self._current_year_values = dict(current_year_values or {})
         self._missing_current_year_casilla_ids = missing_current_year_casilla_ids
@@ -346,7 +346,7 @@ class BienesInversionRegularizacionSourceResolver:
         current_year_values = dict(self._current_year_values)
         if _CURRENT_YEAR_PRORRATA_ID not in current_year_values and context.modelo == Modelo.M390.value:
             observed_pct = _current_year_prorrata_from_m303_observation(
-                self._observation_repository or CalculationObservationRepository(),
+                self._observation_repository,
                 filing_year=context.filing_year,
             )
             if observed_pct is not None:

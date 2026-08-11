@@ -155,6 +155,7 @@ from .....core.resources import resources
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -231,6 +232,7 @@ def _op(
         base_amount=base,
         iva_amount=iva,
         recargo_amount=recargo,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

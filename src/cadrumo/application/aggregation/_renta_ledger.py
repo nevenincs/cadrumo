@@ -31,7 +31,6 @@ from typing import Annotated, overload
 from pydantic import BaseModel, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, ProrrataRegisterRegime
@@ -227,7 +226,7 @@ def _resolve_iva_deduction_ratio(
     bucket_id: str,
     ejercicio: int,
     profile_record: UserProfileRecord | None = None,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
 ) -> Decimal | None:
     """Resolve the activity's IVA-deduction fraction for :attr:`RentaDeductibilityContext.iva_deduction_ratio`.
 
@@ -260,9 +259,9 @@ def _resolve_iva_deduction_ratio(
         ejercicio: Filing year to resolve the register entry for.
         profile_record: Optional :class:`UserProfileRecord` override for testing;
             when ``None`` the record is loaded from the bucket.
-        prorrata_register_repository: Optional
-            :class:`~domain.prorrata_register.ProrrataRegisterRepositoryProtocol`
-            override for testing; when ``None`` the bucket's register is loaded.
+        prorrata_register_repository: Canonical repository for the bucket's
+            prorrata register. The caller owns its store selection so a
+            non-active bucket cannot be shadowed by a process-global default.
     """
     record = profile_record
     if record is None:
@@ -280,8 +279,7 @@ def _resolve_iva_deduction_ratio(
             if regime is IVARegime.EXENTO:
                 return Decimal("0")
 
-    repository = prorrata_register_repository or ProrrataRegisterRepository(bucket_id=bucket_id)
-    register = repository.load()
+    register = prorrata_register_repository.load()
     entry = register.entry_for(ejercicio, sector_id=None)
     if entry is None or entry.regime not in (ProrrataRegisterRegime.GENERAL, ProrrataRegisterRegime.ESPECIAL):
         return None
@@ -303,7 +301,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     modelo: str = Modelo.M100.value,
     profile_record: UserProfileRecord | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -323,8 +321,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     :class:`~domain.prorrata_register.ProrrataRegister`, so the non-recoverable
     share of input IVA joins the IRPF-deductible cost basis (PGC NRV 12.ª) for
     an exempt or prorrata-rationed activity. ``prorrata_register_repository``
-    supplies the register directly (tests); otherwise it is loaded from the
-    bucket.
+    supplies the canonical register store explicitly.
 
     Returns a :class:`RentaLedgerExpenseAggregation`.
     """

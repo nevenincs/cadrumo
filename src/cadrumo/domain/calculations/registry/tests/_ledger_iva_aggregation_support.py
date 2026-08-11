@@ -2,19 +2,34 @@
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import lru_cache
 from typing import Final
 
-from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
-from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from .....application.calculations import (
+    ObservationEnvelopePayload,
+    ResultDispositionProjection,
+    resolve_iva_compensation_annual_partition_binding_values,
+)
+from .....application.calculations._m303_carry_ingress import normalize_m303_carry_observation_envelope
+from .....core import (
+    BindingSourceKind,
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    ResultDisposition,
+    validated_casilla_id,
+)
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
+from .....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....iva import (
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -110,6 +125,41 @@ _DOMESTIC_RATE_TIERS: Final[frozenset[IvaRateKind]] = frozenset(
 )
 
 
+def _fixture_deduction_evidence(
+    *,
+    category: IvaCategory,
+    flow: IvaFlowDirection,
+    ledger_id: str,
+) -> tuple[IvaDeductionFactKind | None, IvaDeductionClassificationProvenance | None]:
+    """State the real authority pair for a fixture input fact.
+
+    This is provenance data for the test observation, not a calculation rule:
+    deduction classification remains validated by ``IvaLedgerObservation``.
+    """
+    if flow not in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}:
+        return None, None
+    if category is IvaCategory.IMPORT_THIRD_COUNTRY:
+        kind = IvaDeductionFactKind.IMPORT_CURRENT
+        authority = IvaDeductionEvidenceAuthority.CUSTOMS_DECLARATION
+    elif category in {
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
+    }:
+        kind = IvaDeductionFactKind.INTRA_EU_CURRENT
+        authority = IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT
+    elif category is IvaCategory.REAGP_COMPENSATION:
+        kind = IvaDeductionFactKind.REAGP_COMPENSATION
+        authority = IvaDeductionEvidenceAuthority.REAGP_RECEIPT
+    else:
+        kind = IvaDeductionFactKind.DOMESTIC_CURRENT
+        authority = IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
+    return kind, IvaDeductionClassificationProvenance(
+        authority=authority,
+        source_locator=f"fixture:{ledger_id}",
+        evidence_digest="0" * 64,
+    )
+
+
 def _observation(
     *,
     ledger_id: str = "ledger-1",
@@ -151,6 +201,11 @@ def _observation(
             "every production path supplies one on the domestic tiers, so this models "
             "a row that cannot occur. State the rate the line carried.",
         )
+    deduction_fact_kind, deduction_provenance = _fixture_deduction_evidence(
+        category=category,
+        flow=flow,
+        ledger_id=ledger_id,
+    )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -162,6 +217,9 @@ def _observation(
         iva_amount=iva,
         recargo_amount=recargo,
         applied_rate=applied_rate,
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -232,6 +290,26 @@ def _calculate_390_from_observations_and_303_filings(
         )
         for period, result in quarterly_results.items()
     )
+    m303_envelopes = tuple(
+        normalize_m303_carry_observation_envelope(
+            ObservationEnvelopePayload(
+                observation=observation,
+                captured_at=datetime(filing_year, 12, 31, tzinfo=UTC),
+                source_kind="app_filing",
+                stamped_revision_id=result.revision,
+                result_disposition=ResultDispositionProjection(
+                    disposition=(
+                        ResultDisposition.COMPENSACION
+                        if result.values[M303_COMPENSATION_RESULTADO_CASILLA] < Decimal("0")
+                        else ResultDisposition.INGRESO
+                    ),
+                    provenance_kind="app_filing",
+                    provenance_locator=f"test-local-filing:{filing_year}:{period}",
+                ),
+            ),
+        )
+        for observation, (period, result) in zip(m303_observations, quarterly_results.items(), strict=True)
+    )
     relation_values = resolve_relation_values_from_observations(
         snapshot.revision,
         m303_observations,
@@ -241,7 +319,7 @@ def _calculate_390_from_observations_and_303_filings(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     annual_partition_values = resolve_iva_compensation_annual_partition_binding_values(
         snapshot.revision,
-        m303_observations,
+        m303_envelopes,
         filing_year=filing_year,
     )
     binding_values = {

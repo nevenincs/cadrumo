@@ -265,6 +265,7 @@ from ._prorrata_exclusions import (
 )
 from ._prorrata_register import (
     ProrrataActivityRowType,
+    ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -564,6 +565,7 @@ __all__: list[str] = [
     "ProductIdentity",
     "ProfileSessionRefusalReason",
     "ProrrataActivityRowType",
+    "ProrrataEspecialTransitionKind",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",

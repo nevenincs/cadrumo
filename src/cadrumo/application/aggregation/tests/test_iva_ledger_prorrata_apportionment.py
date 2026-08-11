@@ -22,6 +22,7 @@ from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -86,6 +87,7 @@ def aggregate_iva_ledger_observations_from_repositories(
         bucket_id=bucket_id,
         period=period,
         transaction_repository=transaction_repository,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=bucket_id,
     )
@@ -192,6 +194,22 @@ def _canonical_binding_bytes(values: Mapping[BindingId, Decimal]) -> bytes:
     ).encode()
 
 
+def test_repository_aggregation_refuses_an_implicit_prorrata_store(tmp_path: Path) -> None:
+    """A caller must name the encrypted register it expects to consume."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        tx_repo.save(TransactionCatalogue.from_transactions((_fully_taxable_purchase("missing-prorrata-owner"),)))
+
+        with pytest.raises(TypeError, match="prorrata_register_repository"):
+            cast(Any, _aggregate_from_repositories)(
+                bucket_id=_BUCKET_ID,
+                period=_PERIOD,
+                transaction_repository=tx_repo,
+                investment_asset_register=BienesInversionIvaRegister(),
+                investment_asset_profile_id=_BUCKET_ID,
+            )
+
+
 def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_identical(tmp_path: Path) -> None:
     """A taxpayer recorded as no-prorrata keeps the previous full-deduction output."""
     revision = resources().modelos.get("303").revisions["2009-y-siguientes"]
@@ -220,6 +238,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
                     ProrrataRegisterEntry(
                         ejercicio=2026,
                         regime=ProrrataRegisterRegime.NINGUNA,
+                        especial_transition=None,
                     ),
                 ),
             ),
@@ -273,6 +292,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
                     ProrrataRegisterEntry(
                         ejercicio=2026,
                         regime=ProrrataRegisterRegime.GENERAL,
+                        especial_transition=None,
                         provisional_percentage=Decimal("80"),
                         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                         source_observation_ref="303:2025:4T",
@@ -313,6 +333,7 @@ def _seed_register(
                 ProrrataRegisterEntry(
                     ejercicio=2026,
                     regime=regime,
+                    especial_transition=None,
                     provisional_percentage=percentage,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
@@ -499,6 +520,7 @@ def _sector_entry(sector_id: str | None, percentage: Decimal) -> ProrrataRegiste
     return ProrrataRegisterEntry(
         ejercicio=2026,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
@@ -688,13 +710,13 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
         (None, "has no filing-year register entry"),
         (
             ProrrataRegisterEntry(
-                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA
+                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None
             ),
             "is inactive for the filing year",
         ),
         (
             ProrrataRegisterEntry(
-                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL
+                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
             ),
             "has no resolved provisional percentage",
         ),
@@ -713,7 +735,8 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
                 entries=tuple(entries),
                 sector_definitions=(
                     SectorDefinition(
-                        sector_id="comercio", letra=SectorDiferenciadoLetra.A,
+                        sector_id="comercio",
+                        letra=SectorDiferenciadoLetra.A,
                         member_activity_codes=("4711",),
                     ),
                 ),

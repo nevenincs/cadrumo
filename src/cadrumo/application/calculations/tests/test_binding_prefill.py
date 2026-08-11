@@ -12,6 +12,8 @@ import pytest
 from ....core import (
     CasillaId,
     IvaCompensationStateProvenance,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
     Period,
     derive_result_disposition,
     result_disposition_casilla_ids,
@@ -31,7 +33,9 @@ from ....domain.calculations.registry import (
 )
 from ....domain.iva import (
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -124,6 +128,18 @@ def _observation(
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     iva: Decimal,
 ) -> IvaLedgerObservation:
+    deduction = (
+        {
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="d" * 64,
+            ),
+        }
+        if flow is IvaFlowDirection.SOPORTADO
+        else {}
+    )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -132,6 +148,8 @@ def _observation(
         flow_direction=flow,
         base_amount=Decimal("100.00"),
         iva_amount=iva,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        **deduction,
     )
 
 
@@ -301,6 +319,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         # annual snapshot has every declared binding fact.
         bienes_resolution = BienesInversionRegularizacionSourceResolver(
             register_repository=BienesInversionIvaRegisterRepository(objects=profile.repository),
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
         ).resolve(
             CalculationSourceContext(
                 bucket_id=profile.bucket_id,

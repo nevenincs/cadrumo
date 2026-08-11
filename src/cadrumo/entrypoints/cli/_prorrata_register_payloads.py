@@ -18,6 +18,13 @@ from __future__ import annotations
 from ...core.json_contract import OutputSchema, register_schema
 
 
+class ProrrataEspecialTransitionPayload(OutputSchema):
+    """Visible evidence state for one prorrata-especial transition."""
+
+    kind: str
+    evidence_reference: str
+
+
 class ProrrataEntryPayload(OutputSchema):
     """One ``(ejercicio, sector)`` register entry.
 
@@ -28,6 +35,7 @@ class ProrrataEntryPayload(OutputSchema):
 
     ejercicio: int
     regime: str
+    especial_transition: ProrrataEspecialTransitionPayload | None
     sector_id: str | None = None
     interrupted: bool
     provisional_percentage: str | None = None
@@ -91,6 +99,7 @@ __all__ = [
     "ProrrataElectGeneralResult",
     "ProrrataElectResult",
     "ProrrataEntryPayload",
+    "ProrrataEspecialTransitionPayload",
     "ProrrataListResult",
     "SectorDefinitionPayload",
 ]

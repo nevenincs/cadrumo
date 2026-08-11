@@ -119,6 +119,8 @@ def _issued_lines() -> tuple[IvaLedgerObservation, ...]:
             iva_rate=slot,
             base_amount=Decimal(base),
             iva_amount=Decimal(cuota),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
         )
         for slot, on, suffix, base, cuota in _LINES
     )
@@ -166,6 +168,8 @@ def test_the_bridge_decides_the_classification_the_selectors_match_on(
         iva_rate=slot,
         base_amount=Decimal("100.00"),
         iva_amount=Decimal("1.00"),
+        deduction_fact_kind=None,
+        deduction_provenance=None,
     )
     assert observation.applied_rate == expected_rate
     assert observation.rate_kind is expected_tier
@@ -190,6 +194,8 @@ def test_a_transitional_slot_outside_its_window_is_refused(slot: IvaRate, on: da
             iva_rate=slot,
             base_amount=Decimal("100.00"),
             iva_amount=Decimal("7.50"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
         )
 
 

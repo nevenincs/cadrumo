@@ -1115,27 +1115,26 @@ def _inject_derived_state_attribution_facts(
     consumes it through the existing Decimal-channel resolver without a
     new enum→Decimal transform op.
 
-    Idempotent: if the synthetic key is already present (explicit profile
-    fact written by an older tooling version) it is not overwritten.
+    The canonical derived key overwrites any legacy stored scalar. Missing or
+    unknown territory authority refuses; this function never treats the scalar
+    or supported population as authority.
     """
     synthetic_key = "tax_residence.state_attribution_ratio"
-    if synthetic_key in fact_index:
-        return
     scope = fact_index.get("tax_residence.jurisdiction_scope")
+    if scope is None:
+        raise ProfileBindingResolutionError(
+            "tax_residence.jurisdiction_scope is required; state attribution cannot default to common regime",
+        )
     if scope == "foral_unsupported":
         # Explicit foral selection: the foral branch is unsupported; the calc
         # downstream emits zero, blocking the filing.
         fact_index[synthetic_key] = Decimal("0")
-    else:
-        # common_regime, or no scope recorded. Every profile the app accepts
-        # carries a común-regime residence — the ``CCAA`` enum is común-only and
-        # foral regimes (País Vasco, Navarra) are refused at profile creation with
-        # ``ForalRegimeError`` — so the periodic IVA result attributes 100% to the
-        # State (Concierto Económico, Ley 12/2002 art. 29). Default the
-        # absent-scope case to 100 rather than letting casilla 65 resolve silently
-        # to 0, which would zero the headline result (casilla 71) on a real
-        # liability — a silent under-declaration.
+    elif scope == "common_regime":
         fact_index[synthetic_key] = Decimal("100")
+    else:
+        raise ProfileBindingResolutionError(
+            f"unsupported tax_residence.jurisdiction_scope {scope!r}; state attribution is unresolved",
+        )
 
 
 def _decimal_value(binding_id: BindingId, value: object) -> Decimal:
@@ -1308,6 +1307,7 @@ def _load_profile_facts(
     bucket_id: str,
     profile_record: object | None,
     schema: ProfileSchemaDefinition | None,
+    selected_bindings: tuple[DataBindingDefinition, ...],
 ) -> _ProfileFacts | None:
     """Load and derive the bucket's profile fact index, or ``None`` when absent."""
     record = profile_record
@@ -1329,7 +1329,10 @@ def _load_profile_facts(
     _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
     _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors)
     _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors)
-    _inject_derived_state_attribution_facts(fact_index)
+    if "tax_residence.state_attribution_ratio" in {
+        selector for binding in selected_bindings for selector in profile_binding_selectors(binding.selector)
+    }:
+        _inject_derived_state_attribution_facts(fact_index)
     return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
 
 
@@ -1441,6 +1444,7 @@ def resolve_profile_sourced_bindings(
         bucket_id=bucket_id,
         profile_record=profile_record,
         schema=schema,
+        selected_bindings=selection.bindings,
     )
     if facts is None:
         return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)

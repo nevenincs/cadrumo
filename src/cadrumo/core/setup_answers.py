@@ -248,18 +248,24 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     "irpf_income_categories": SetupFieldSpec("taxpayer_type.irpf_income_categories", str),
     "irpf_special_regime": SetupFieldSpec("irpf.special_regime", str),
     "irpf_special_regime_start_date": SetupFieldSpec("irpf.special_regime_start_date", str),
-    "iva_group_dominant_entity_enrolled": SetupFieldSpec("iva.group_dominant_entity_enrolled", bool, "false"),
-    "iva_group_member_enrolled": SetupFieldSpec("iva.group_member_enrolled", bool, "false"),
+    "iva_group_dominant_entity_enrolled": SetupFieldSpec("iva.group_dominant_entity_enrolled", bool),
+    "iva_group_member_enrolled": SetupFieldSpec("iva.group_member_enrolled", bool),
     "iva_intracommunity_operations_exceed_50000_eur": SetupFieldSpec(
         "iva.intracommunity_operations_exceed_50000_eur",
         bool,
-        "false",
     ),
-    "iva_oss_enrolled": SetupFieldSpec("iva.oss_enrolled", bool, "false"),
-    "iva_redeme_enrolled": SetupFieldSpec("iva.redeme_enrolled", bool, "false"),
-    "iva_regime": SetupFieldSpec("iva.regime", str, "GENERAL"),
-    "iva_roi_enrolled": SetupFieldSpec("iva.roi_enrolled", bool, "false"),
-    "iva_sii_enrolled": SetupFieldSpec("iva.sii_enrolled", bool, "false"),
+    "iva_oss_enrolled": SetupFieldSpec("iva.oss_enrolled", bool),
+    "iva_redeme_enrolled": SetupFieldSpec("iva.redeme_enrolled", bool),
+    "iva_regime": SetupFieldSpec("iva.regime", str),
+    "iva_roi_enrolled": SetupFieldSpec("iva.roi_enrolled", bool),
+    "iva_sii_enrolled": SetupFieldSpec("iva.sii_enrolled", bool),
+    "iva_m303_regime_composition": SetupFieldSpec("iva.m303_regime_composition", str),
+    "iva_cash_accounting_regime_enrolled": SetupFieldSpec("iva.cash_accounting_regime_enrolled", bool),
+    "iva_voluntary_sii_enrolled": SetupFieldSpec("iva.voluntary_sii_enrolled", bool),
+    "iva_hydrocarbon_deposit_advance_payment_deduction_entitled": SetupFieldSpec(
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+        bool,
+    ),
     "legal_entity_form": SetupFieldSpec("taxpayer_type.legal_entity_form", str),
     "legal_name": SetupFieldSpec("identity.legal_name", str),
     "ley_49_2002_option_date": SetupFieldSpec("taxpayer_type.ley_49_2002_special_regime_option_date", str),
@@ -341,6 +347,7 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     "surnames": SetupFieldSpec("identity.surnames", str),
     "tax_id": SetupFieldSpec("identity.tax_id", str),
     "tax_residence_ccaa": SetupFieldSpec("tax_residence.ccaa", str, "madrid"),
+    "tax_residence_jurisdiction_scope": SetupFieldSpec("tax_residence.jurisdiction_scope", str),
     "taxation_type": SetupFieldSpec("renta_filing.declaration_type", str),
     "taxpayer_birth_date": SetupFieldSpec("renta_taxpayer.birth_date", str),
     "taxpayer_death_date": SetupFieldSpec("renta_taxpayer.death_date", str),
@@ -526,14 +533,18 @@ class SetupAnswers(BaseModel):
     """Custodia compartida progenitor claiming the monoparental unidad familiar."""
 
     # ── IVA ──────────────────────────────────────────────────────────────
-    iva_regime: Any = None
-    iva_roi_enrolled: bool = False
-    iva_oss_enrolled: bool = False
-    iva_group_member_enrolled: bool = False
-    iva_group_dominant_entity_enrolled: bool = False
-    iva_sii_enrolled: bool = False
-    iva_redeme_enrolled: bool = False
-    iva_intracommunity_operations_exceed_50000_eur: bool = False
+    iva_regime: Any = ""
+    iva_roi_enrolled: Any = ""
+    iva_oss_enrolled: Any = ""
+    iva_group_member_enrolled: Any = ""
+    iva_group_dominant_entity_enrolled: Any = ""
+    iva_sii_enrolled: Any = ""
+    iva_redeme_enrolled: Any = ""
+    iva_intracommunity_operations_exceed_50000_eur: Any = ""
+    iva_m303_regime_composition: str = ""
+    iva_cash_accounting_regime_enrolled: Any = ""
+    iva_voluntary_sii_enrolled: Any = ""
+    iva_hydrocarbon_deposit_advance_payment_deduction_entitled: Any = ""
 
     # ── enrollment ───────────────────────────────────────────────────────
     enrollment_large_company: bool = False
@@ -568,6 +579,7 @@ class SetupAnswers(BaseModel):
 
     # ── residence ────────────────────────────────────────────────────────
     tax_residence_ccaa: Any = None
+    tax_residence_jurisdiction_scope: str = ""
     fiscal_residency: Any = ""
     """Fiscal residency category."""
     country_of_fiscal_residence: str = ""
@@ -603,11 +615,28 @@ class SetupAnswers(BaseModel):
         iva_regime_cls = _m().IVARegime
         if isinstance(value, iva_regime_cls):
             return value
-        if value is None:
-            return iva_regime_cls.GENERAL
+        if value is None or value == "":
+            return ""
         if isinstance(value, str):
-            return iva_regime_cls(value.upper()) if value else iva_regime_cls.GENERAL
+            return iva_regime_cls(value.upper())
         raise ProfileAnswerTypeError("iva_regime must be an IVARegime member or string token")
+
+    @field_validator(
+        "iva_roi_enrolled",
+        "iva_oss_enrolled",
+        "iva_group_member_enrolled",
+        "iva_group_dominant_entity_enrolled",
+        "iva_sii_enrolled",
+        "iva_redeme_enrolled",
+        "iva_intracommunity_operations_exceed_50000_eur",
+        "iva_cash_accounting_regime_enrolled",
+        "iva_voluntary_sii_enrolled",
+        "iva_hydrocarbon_deposit_advance_payment_deduction_entitled",
+        mode="before",
+    )
+    @classmethod
+    def _parse_optional_iva_bool(cls, value: object) -> Any:
+        return _parse_optional_bool_token(value, field_name="Modelo IVA boolean")
 
     @field_validator("tax_residence_ccaa", mode="before")
     @classmethod

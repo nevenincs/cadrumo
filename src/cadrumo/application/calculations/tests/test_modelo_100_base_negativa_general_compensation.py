@@ -101,6 +101,11 @@ def _seed_taxpayer_unit_profile() -> None:
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -328,7 +333,7 @@ def test_applied_exceeding_stock_is_blocked() -> None:
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert _STOCK_PREDICATE_ID in findings[0].message
+    assert findings[0].message_facts["predicate_id"] == _STOCK_PREDICATE_ID
 
 
 def test_applied_exceeding_art50_ceiling_is_blocked() -> None:
@@ -341,7 +346,7 @@ def test_applied_exceeding_art50_ceiling_is_blocked() -> None:
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert _LIMITE_PREDICATE_ID in findings[0].message
+    assert findings[0].message_facts["predicate_id"] == _LIMITE_PREDICATE_ID
 
 
 def test_upper_bound_predicates_do_not_fire_below_limits() -> None:

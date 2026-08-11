@@ -11,6 +11,7 @@ import pytest
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.deadlines import M303RegimeComposition
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     M303RegimenSimplificadoScope,
@@ -103,13 +104,14 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
     )
 
 
-def _store_profile() -> None:
+def _store_profile(*, composition: M303RegimeComposition = M303RegimeComposition.GENERAL) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
             display_name="M303 filing evidence validation",
             facts=(
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
                 UserProfileFact(path="iva.redeme_enrolled", value=False),
                 UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
                 UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
@@ -164,6 +166,28 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
         )
 
     assert validated == evidence
+
+
+@pytest.mark.parametrize(
+    "composition",
+    (M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED),
+)
+def test_profile_regime_scope_refuses_general_evidence_before_persistence(
+    tmp_path: Path,
+    composition: M303RegimeComposition,
+) -> None:
+    period = Period.from_year_and_code(2026, "1T")
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        _store_profile(composition=composition)
+        with pytest.raises(ModeloError, match="scope must match the canonical IVA profile composition"):
+            validate_m303_filing_instance_evidence_for_revision(
+                work_unit=_work_unit(period),
+                registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
+                evidence=_evidence(period),
+                casilla_values={},
+                observations=(),
+            )
 
 
 def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: Path) -> None:

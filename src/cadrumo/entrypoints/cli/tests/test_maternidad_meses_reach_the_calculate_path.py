@@ -110,6 +110,11 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
@@ -271,7 +276,9 @@ def test_0611_is_a_provenance_carrying_registry_formula(runtime_profile: TestRun
     observation = _casilla_0611_observation(output)
     assert observation["formula_id"] == "renta-2024-deduccion-maternidad-0611"
     assert observation["legal_refs"] == ["ley-35-2006:art-81"]
-    assert set(observation["source_refs"]) == {
+    source_refs = observation["source_refs"]
+    assert isinstance(source_refs, list)
+    assert set(source_refs) == {
         "aeat-renta-2024-manual-parte1",
         "aeat-dr-100-2024-dictionary",
     }

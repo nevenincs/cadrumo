@@ -421,6 +421,21 @@ class ChargeAccount(BaseModel):
         return canonical
 
 
+class M303TaxTerritory(StrEnum):
+    """Exclusive tax-territory authority for Modelo 303 identification."""
+
+    COMMON_REGIME = "common_regime"
+    FORAL = "foral_unsupported"
+
+
+class M303RegimeComposition(StrEnum):
+    """Closed composition of IVA regimes declared for Modelo 303."""
+
+    GENERAL = "general"
+    SIMPLIFIED = "simplified"
+    MIXED = "mixed"
+
+
 class ModeloIVAProfile(BaseModel):
     """IVA facts used by registry filing schedules.
 
@@ -458,13 +473,18 @@ class ModeloIVAProfile(BaseModel):
 
     model_config = _STRICT_FROZEN
 
+    tax_territory: M303TaxTerritory
+    regime_composition: M303RegimeComposition
     roi_enrolled: bool = False
     oss_enrolled: bool = False
     group_member_enrolled: bool = False
     group_dominant_entity_enrolled: bool = False
     intracommunity_operations_exceed_50000_eur: bool = False
     sii_enrolled: bool = False
-    redeme_enrolled: bool = False
+    redeme_enrolled: bool
+    cash_accounting_regime_enrolled: bool
+    voluntary_sii_enrolled: bool
+    hydrocarbon_deposit_advance_payment_deduction_entitled: bool
     refund_account: RefundAccount | None = None
     charge_account: ChargeAccount | None = None
 
@@ -683,7 +703,7 @@ class TaxpayerProfile(BaseModel):
     third_party_transactions_above_347_threshold: bool = False
     bienes_extranjero_above_threshold: bool = False
     monedas_virtuales_extranjero_above_threshold: bool = False
-    iva: ModeloIVAProfile = Field(default_factory=ModeloIVAProfile)
+    iva: ModeloIVAProfile | None = None
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     fiscal_address_cadastral_reference: str = ""

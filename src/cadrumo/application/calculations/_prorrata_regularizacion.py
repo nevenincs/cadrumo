@@ -44,7 +44,6 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -834,8 +833,8 @@ class ProrrataRegularizacionSourceResolver:
         current_year_values: Mapping[CasillaId, Decimal] | None = None,
         missing_current_year_casilla_ids: Iterable[CasillaId] = (),
         unresolved_current_year_casilla_ids: Iterable[CasillaId] = (),
-        prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
-        observation_repository: CalculationObservationRepository | None = None,
+        prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+        observation_repository: CalculationObservationRepository,
         registry_snapshot: RegistrySnapshot | None = None,
     ) -> None:
         self._current_year_values = dict(current_year_values or {})
@@ -857,10 +856,9 @@ class ProrrataRegularizacionSourceResolver:
         if not declared_binding_ids:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
 
-        observation_repository = self._observation_repository or CalculationObservationRepository()
         try:
             source_period_feed = _source_period_feed_from_observations(
-                observation_repository,
+                self._observation_repository,
                 snapshot=snapshot,
                 filing_year=context.filing_year,
             )
@@ -908,13 +906,10 @@ class ProrrataRegularizacionSourceResolver:
                 ),
             )
 
-        register_repository = self._prorrata_register_repository or ProrrataRegisterRepository(
-            bucket_id=context.bucket_id,
-        )
         try:
-            register = register_repository.load()
+            register = self._prorrata_register_repository.load()
             prior_definitiva = _stamped_prior_year_definitiva(
-                observation_repository,
+                self._observation_repository,
                 filing_year=context.filing_year,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:

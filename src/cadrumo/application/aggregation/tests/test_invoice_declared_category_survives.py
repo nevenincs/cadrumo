@@ -1,29 +1,10 @@
-"""A declared IVA treatment must reach the record, and its loss must be reported.
+"""Received invoice evidence must not bypass ledger IVA authority.
 
-The invoice projection derived an observation's category from the line's RATE
-SLOT even when the invoice DECLARED one. For a received domestic reverse charge
-(LIVA art. 84.Uno.2) that is doubly wrong: the supplier charges no cuota, so the
-line carries an exempt slot, and the projection turned a declared
-``domestic_reverse_charge`` into ``domestic_exempt`` at flow ``soportado``. The
-same operation recorded as a bank row is classified correctly, because that path
-reads the declared category first and derives the flow from it.
-
-Two things are asserted here and they must not be confused with each other.
-
-The record now STATES what the document stated. That is worth having on its own:
-a record that silently relabels a reverse charge as an exemption is wrong on its
-face, and every later reader inherits the wrong label.
-
-It does NOT make the operation declare. The recipient-side binding selector is a
-triple -- category, rate kind, flow -- and an exempt-slot line still carries the
-wrong rate kind, so it selects nothing even with the category and the flow both
-correct. That is asserted explicitly, so nobody reads this change as closing the
-self-assessment gap. What closes that is a decision about whether an invoice line
-may carry a rated slot with a zero cuota, which is open.
-
-Because the loss remains, it is reported rather than left silent: the operator is
-told the cuota could not be derived, through the same advisory channel that
-already reports an invoice withheld for a category its counterparty contradicts.
+A domestic reverse charge tells the recipient to self-assess, but an invoice
+does not carry the exact deduction family or immutable provenance required for
+an IVA input observation.  The invoice screen therefore withholds it and tells
+the operator to record the matching classified ledger transaction; it must never
+invent a domestic-current deduction merely to preserve a category projection.
 """
 
 from __future__ import annotations
@@ -33,12 +14,11 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.resources import resources
 from ....domain.invoices import Invoice, IvaRate
-from ....domain.iva import InvoiceKind, IvaCategory, IvaFlowDirection
-from .._iva_ledger import resolve_iva_ledger_binding_values
+from ....domain.iva import InvoiceKind, IvaCategory
 from .._modelo_bindings import (
     _invoice_line_iva_observation,
+    _missing_invoice_deduction_authority_diagnostics,
     _reverse_charge_cuota_not_derivable,
 )
 
@@ -94,43 +74,31 @@ def _observation_for(invoice: Invoice):
     )
 
 
-def test_the_declared_reverse_charge_survives_the_projection() -> None:
-    """The observation states the treatment the invoice declared.
-
-    Asserted on the flow as well as the category, because the two are separate
-    losses. A preserved category at flow ``soportado`` would still describe the
-    recipient as merely bearing input tax rather than self-assessing output tax,
-    which is the substance of what a reverse charge is.
-    """
+def test_received_reverse_charge_is_withheld_without_ledger_deduction_authority() -> None:
+    """An invoice cannot manufacture the authority input IVA rows require."""
     observation = _observation_for(_received_reverse_charge())
 
-    assert observation is not None
-    assert observation.category is IvaCategory.DOMESTIC_REVERSE_CHARGE, (
-        f"the declared treatment was overwritten from the rate slot: {observation.category.value}"
-    )
-    assert observation.flow_direction is IvaFlowDirection.INVERSION_SUJETO_PASIVO, (
-        f"the recipient is not recorded as self-assessing: {observation.flow_direction.value}"
-    )
-    assert observation.base_amount == _BASE
+    assert observation is None
 
 
-def test_the_preserved_category_does_not_by_itself_declare_the_cuota() -> None:
-    """The honest half: the record is right and the return is still short.
+def test_rated_received_reverse_charge_is_still_withheld_without_ledger_authority() -> None:
+    """A rate supplies a cuota tier, not the separate deduction authority."""
+    observation = _observation_for(_received_reverse_charge(slot=IvaRate.RATE_21, cuota="420.00"))
 
-    Pinned deliberately. The recipient-side selector is a triple and only two of
-    its three conditions are now satisfied -- the rate kind is still ``exempt``
-    because the line carries no rated slot. Asserting this stops the change being
-    read, later and by someone else, as having closed the self-assessment gap.
-    """
-    observation = _observation_for(_received_reverse_charge())
-    assert observation is not None
-    revision = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T").revision
+    assert observation is None
 
-    resolved = {str(k): v for k, v in resolve_iva_ledger_binding_values(revision, (observation,)).items()}
 
-    assert not any(resolved.values()), (
-        f"this change is not supposed to route anything yet, but it did: "
-        f"{ {k: str(v) for k, v in resolved.items() if v} }"
+def test_withheld_received_invoice_names_the_required_ledger_remedy() -> None:
+    """The hard cutover remains visible to the operator, not a silent omission."""
+    invoice = _received_reverse_charge()
+
+    (diagnostic,) = _missing_invoice_deduction_authority_diagnostics((invoice,), resolver_id="ledger_iva_aggregation")
+
+    assert diagnostic.source_ref == f"invoice:{invoice.invoice_id}"
+    assert diagnostic.message.endswith("no deductible IVA is declared on this modelo")
+    assert diagnostic.remedy == (
+        "Record the matching classified ledger transaction with its exact deduction family and "
+        "evidence provenance, then recalculate"
     )
 
 

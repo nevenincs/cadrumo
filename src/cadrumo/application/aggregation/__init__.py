@@ -150,6 +150,12 @@ from ._ledger_filing_snapshot import (
     row_fingerprint,
     stale_filed_revisions,
 )
+from ._m303_arrivals import (
+    M303ProrrataTransitionArrival,
+    M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
+    resolve_m303_supplier_regime_arrival,
+)
 from ._modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
@@ -312,6 +318,8 @@ __all__ = [
     "LedgerRentaGastosEstimacionDirectaAggregationSourceResolver",
     "LedgerRentaGastosPagoFraccionadoAggregationSourceResolver",
     "LedgerRentaIncomeAggregationSourceResolver",
+    "M303ProrrataTransitionArrival",
+    "M303SupplierRegimeArrival",
     "ModeloSourceResolver",
     "OperationKind347",
     "OperationKind349",
@@ -395,6 +403,8 @@ __all__ = [
     "proxy_attributed_invoice_ids",
     "resolve_invoice_devengo",
     "resolve_iva_differentiated_deduction_contributions",
+    "resolve_m303_prorrata_transition_arrival",
+    "resolve_m303_supplier_regime_arrival",
     "retencion_observation_key",
     "route_invoice_retenciones",
     "row_fingerprint",

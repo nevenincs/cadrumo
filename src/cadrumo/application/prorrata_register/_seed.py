@@ -38,10 +38,10 @@ from ...core import (
     ProrrataRegisterRegime,
     validated_casilla_id,
 )
+from ...domain.calculations.registry import RevisionId
 from ...domain.iva import m303_annual_settlement_order_key
 from ...domain.prorrata_register import ProrrataRegisterEntry
 from ..calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker, revision_carry_outcome
-from ...domain.calculations.registry import RevisionId
 
 _PRORRATA_PORCENTAJE_CASILLA: Final[CasillaId] = validated_casilla_id(
     "iva.prorrata-porcentaje",
@@ -243,6 +243,7 @@ def _seed_from_source(
     entry = ProrrataRegisterEntry(
         ejercicio=ejercicio,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=source.percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,

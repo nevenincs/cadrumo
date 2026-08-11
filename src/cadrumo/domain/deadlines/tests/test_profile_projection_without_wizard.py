@@ -47,7 +47,6 @@ profile = taxpayer_profile_from_mapping(
         "activities.description": "asesoria fiscal",
         "taxpayer_type.entity_type": "natural_person",
         "taxpayer_type.irpf_income_categories": "actividad_economica",
-        "iva.regime": "GENERAL",
         "withholding.has_employees": "true",
         "irpf.professional_income_withholding_ge_70pct": "true",
     },

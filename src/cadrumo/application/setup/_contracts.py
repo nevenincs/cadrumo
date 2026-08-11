@@ -16,7 +16,7 @@ from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, StringConstr
 
 from ...core.external_constants import OutputLanguage
 from ...core.identity import BucketId, ProfileId
-from ...domain.deadlines import IVARegime
+from ...domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory
 
 
 def _normalise_iva_regime(value: object) -> object:
@@ -48,6 +48,24 @@ class InitializeWorkspaceCommand(BaseModel):
     )
     iva_regime: Annotated[IVARegime, BeforeValidator(_normalise_iva_regime)] = Field(
         description="IVA regime; one of the IVARegime members (case-insensitive input).",
+    )
+    tax_residence_jurisdiction_scope: M303TaxTerritory = Field(
+        description="Declared IVA tax territory for Modelo 303 applicability.",
+    )
+    iva_m303_regime_composition: M303RegimeComposition = Field(
+        description="Declared Modelo 303 general, simplified, or mixed IVA composition.",
+    )
+    iva_redeme_enrolled: bool = Field(
+        description="Whether the operator is registered in REDEME.",
+    )
+    iva_cash_accounting_regime_enrolled: bool = Field(
+        description="Whether the operator has elected the IVA cash-accounting regime.",
+    )
+    iva_voluntary_sii_enrolled: bool = Field(
+        description="Whether the operator voluntarily uses SII.",
+    )
+    iva_hydrocarbon_deposit_advance_payment_deduction_entitled: bool = Field(
+        description="Whether the operator is entitled to the hydrocarbon-deposit advance-payment deduction.",
     )
     tax_residence_ccaa: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)] | None = Field(
         default=None,

@@ -46,6 +46,7 @@ def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         provisional_percentage=Decimal(percentage),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=f"303:{ejercicio - 1}:4T",

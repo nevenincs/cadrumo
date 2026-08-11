@@ -63,6 +63,7 @@ from ....domain.calculations.registry import (
 from ....domain.iva import (
     IvaCategory,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -149,6 +150,7 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         flow_direction=flow,
         base_amount=Decimal("100.00"),
         iva_amount=iva,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

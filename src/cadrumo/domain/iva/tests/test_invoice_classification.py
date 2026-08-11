@@ -2,19 +2,25 @@
 
 from __future__ import annotations
 
+import ast
 from decimal import Decimal
-from typing import cast
+from pathlib import Path
+from typing import Any, cast, override
 
 import pytest
 from pydantic import ValidationError
 
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.resources import resources
 from ...calculations.registry import IvaLedgerObservation
 from ...invoices import IvaRate
 from .. import (
     InvoiceKind,
+    IvaCashAccountingTreatment,
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     IvaSettlementSide,
 )
@@ -139,6 +145,8 @@ def test_invoice_line_to_iva_observation_builds_repercutido_record_for_issued() 
         iva_rate=IvaRate.RATE_21,
         base_amount=Decimal("1000"),
         iva_amount=Decimal("210"),
+        deduction_fact_kind=None,
+        deduction_provenance=None,
     )
     assert isinstance(obs, IvaLedgerObservation)
     assert obs.ledger_id == "inv-001"
@@ -177,6 +185,8 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
         iva_rate=IvaRate.RATE_2,
         base_amount=Decimal("100"),
         iva_amount=Decimal("2"),
+        deduction_fact_kind=None,
+        deduction_provenance=None,
     )
     four_percent = invoice_line_to_iva_observation(
         invoice_id="inv-4pct",
@@ -185,6 +195,8 @@ def test_invoice_observation_carries_the_rate_the_line_charged_not_its_tier_defa
         iva_rate=IvaRate.RATE_4,
         base_amount=Decimal("100"),
         iva_amount=Decimal("4"),
+        deduction_fact_kind=None,
+        deduction_provenance=None,
     )
 
     assert two_percent.applied_rate == Decimal("0.02")
@@ -230,6 +242,12 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
                 "categories": (IvaCategory.DOMESTIC_SUPER_REDUCED,),
                 "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
                 "flow_direction": IvaFlowDirection.REPERCUTIDO,
+                "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+                "cash_accounting_treatments": (
+                    IvaCashAccountingTreatment.NONE,
+                    IvaCashAccountingTreatment.TAXPAYER_REGIME,
+                    IvaCashAccountingTreatment.SUPPLIER_REGIME,
+                ),
                 "applied_rates": (rate,),
                 "fact": "base_amount_sum",
             },
@@ -240,13 +258,15 @@ def test_invoice_sourced_rows_reach_their_own_rate_specific_box() -> None:
 
     in_window = date(2024, 11, 15)
     rows = tuple(
-        invoice_line_to_iva_observation(
+        cast(Any, invoice_line_to_iva_observation)(
             invoice_id=f"inv-{slot.name}",
             issued_at=in_window,
             invoice_kind=InvoiceKind.ISSUED,
             iva_rate=slot,
             base_amount=base,
             iva_amount=Decimal("1"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
         )
         for slot, base in ((IvaRate.RATE_2, Decimal("100.00")), (IvaRate.RATE_4, Decimal("250.00")))
     )
@@ -294,10 +314,44 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
         iva_rate=IvaRate.RATE_10,
         base_amount=Decimal("500"),
         iva_amount=Decimal("50"),
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator="invoice:bill-77",
+            evidence_digest="a" * 64,
+        ),
     )
     assert obs.flow_direction is IvaFlowDirection.SOPORTADO
     assert obs.category is IvaCategory.DOMESTIC_REDUCED
     assert obs.rate_kind is IvaRateKind.REDUCED
+
+
+def test_invoice_line_to_iva_observation_refuses_received_input_without_exact_authority() -> None:
+    """A received invoice cannot become deductible IVA by a domestic-current default."""
+    from datetime import date
+
+    from ...invoices import invoice_line_to_iva_observation
+
+    with pytest.raises(TypeError, match=r"deduction_fact_kind|deduction_provenance"):
+        cast(Any, invoice_line_to_iva_observation)(
+            invoice_id="bill-without-authority",
+            issued_at=date(2025, 7, 1),
+            invoice_kind=InvoiceKind.RECEIVED,
+            iva_rate=IvaRate.RATE_10,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("50"),
+        )
+    with pytest.raises(ValidationError, match="exact deduction authority"):
+        invoice_line_to_iva_observation(
+            invoice_id="bill-explicitly-unclassified",
+            issued_at=date(2025, 7, 1),
+            invoice_kind=InvoiceKind.RECEIVED,
+            iva_rate=IvaRate.RATE_10,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("50"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
+        )
 
 
 def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
@@ -313,6 +367,8 @@ def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
             iva_rate=IvaRate.RATE_21,
             base_amount=cast(Decimal, "1000"),
             iva_amount=cast(Decimal, "210"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
         )
 
 
@@ -339,6 +395,8 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
             iva_rate=IvaRate.RATE_21,
             base_amount=Decimal("1000"),
             iva_amount=Decimal("210"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
         ),
         invoice_line_to_iva_observation(
             invoice_id="inv-2",
@@ -347,6 +405,8 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
             iva_rate=IvaRate.RATE_10,
             base_amount=Decimal("500"),
             iva_amount=Decimal("50"),
+            deduction_fact_kind=None,
+            deduction_provenance=None,
         ),
         invoice_line_to_iva_observation(
             invoice_id="bill-1",
@@ -355,6 +415,12 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
             iva_rate=IvaRate.RATE_21,
             base_amount=Decimal("400"),
             iva_amount=Decimal("84"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_provenance=IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator="invoice:bill-1",
+                evidence_digest="b" * 64,
+            ),
         ),
     )
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -369,3 +435,64 @@ def test_invoice_line_observation_feeds_modelo_303_binding_resolver_end_to_end()
     assert result["modelo-303-iva-repercutido-general-cuota"] == observations[0].iva_amount
     assert result["modelo-303-iva-repercutido-reducido-cuota"] == observations[1].iva_amount
     assert result["modelo-303-iva-soportado-interiores-cuota"] == observations[2].iva_amount
+
+
+def test_invoice_iva_bridge_callers_supply_explicit_deduction_authority_or_refuse() -> None:
+    """The invoice bridge may not regain an implicit received-IVA default."""
+    source_root = Path(__file__).parents[3]
+    intentional_refusals = {
+        (
+            "domain/iva/tests/test_invoice_classification.py",
+            "test_invoice_line_to_iva_observation_refuses_received_input_without_exact_authority",
+        )
+    }
+    bridge_calls: list[tuple[str, str | None, set[str]]] = []
+    observation_calls: list[tuple[str, int, set[str]]] = []
+
+    for path in source_root.rglob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        if "invoice_line_to_iva_observation" not in source and "IvaLedgerObservation(" not in source:
+            continue
+        tree = ast.parse(source, filename=str(path))
+        relative_path = path.relative_to(source_root).as_posix()
+
+        class Visitor(ast.NodeVisitor):
+            current_function: str | None = None
+            relative_path: str
+
+            @override
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                previous = self.current_function
+                self.current_function = node.name
+                self.generic_visit(node)
+                self.current_function = previous
+
+            @override
+            def visit_Call(self, node: ast.Call) -> None:
+                keyword_names = {keyword.arg for keyword in node.keywords if keyword.arg is not None}
+                if isinstance(node.func, ast.Name) and node.func.id == "invoice_line_to_iva_observation":
+                    bridge_calls.append((self.relative_path, self.current_function, keyword_names))
+                if isinstance(node.func, ast.Name) and node.func.id == "IvaLedgerObservation":
+                    observation_calls.append((self.relative_path, node.lineno, keyword_names))
+                self.generic_visit(node)
+
+        visitor = Visitor()
+        visitor.relative_path = relative_path
+        visitor.visit(tree)
+
+    assert len(bridge_calls) == 17
+    for relative_path, function_name, keyword_names in bridge_calls:
+        if (relative_path, function_name) in intentional_refusals:
+            continue
+        assert {"deduction_fact_kind", "deduction_provenance"} <= keyword_names, (
+            f"{relative_path}:{function_name} constructs invoice IVA without explicit deduction authority"
+        )
+    production_observation_paths = {
+        "domain/iva/_invoice_classification.py",
+        "application/aggregation/_modelo_bindings.py",
+    }
+    for relative_path, lineno, keyword_names in observation_calls:
+        if relative_path in production_observation_paths:
+            assert {"deduction_fact_kind", "deduction_provenance"} <= keyword_names, (
+                f"{relative_path}:{lineno} constructs IVA without explicit deduction authority"
+            )

@@ -173,7 +173,7 @@ import pytest
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     IvaLedgerObservation,
     RegistryCalculationResult,
@@ -335,7 +335,13 @@ def _annual_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservation
         _dg_soportado("4t-soportado-general", day_month=(10, 15), base=Decimal("84000.00"), iva=Decimal("17640.00")),
         _dr_soportado("4t-soportado-reducido", day_month=(10, 1), base=Decimal("60000.00"), iva=Decimal("6000.00")),
     )
-    return tuple(IvaLedgerObservation(**row) for row in rows)
+    return tuple(
+        IvaLedgerObservation(
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+            **row,
+        )
+        for row in rows
+    )
 
 
 def _calculate(
@@ -513,6 +519,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
     observations = (
         *_annual_observations(include_recargo=True),
         IvaLedgerObservation(
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
             **_dr_super_reducido_repercutido(
                 "synthetic-super-reducido-recargo-equivalencia",
                 day_month=(6, 30),

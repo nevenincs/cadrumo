@@ -60,6 +60,18 @@ class ProrrataRegisterRegime(StrEnum):
     NINGUNA = "ninguna"
 
 
+class ProrrataEspecialTransitionKind(StrEnum):
+    """The explicitly evidenced change to the prorrata-especial regime.
+
+    A regime is durable state, not proof that an election happened in the
+    current ejercicio.  Modelo 303 therefore carries these two closed
+    transition values separately from :class:`ProrrataRegisterRegime`.
+    """
+
+    OPCION = "opcion"
+    REVOCACION = "revocacion"
+
+
 class ProrrataActivityRowType(StrEnum):
     """Official Modelo 303 type token for one per-activity prorrata row.
 
@@ -136,6 +148,7 @@ class SectorDiferenciadoLetra(StrEnum):
 
 __all__ = [
     "ProrrataActivityRowType",
+    "ProrrataEspecialTransitionKind",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "SectorDiferenciadoLetra",
