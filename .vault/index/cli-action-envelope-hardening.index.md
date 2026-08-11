@@ -6,7 +6,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:a4668f2f8895b6d0a21867320370008e45c9bfa67ef43f722090741ccbb09cac'
+body_hash: 'sha256:104a4a68096976c1791f525fefcf444201412bd2e79930522ff4b3ed2aba4358'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -52,6 +52,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S56]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S57]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S63]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S64]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
@@ -99,6 +100,7 @@ related:
   - '[[2026-08-11-cli-action-envelope-hardening-s56-adapters-part1-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s57-adapters-part2-review-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit]]'
 ---
 
 # `cli-action-envelope-hardening` feature index
@@ -155,6 +157,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-11-cli-action-envelope-hardening-s56-adapters-part1-review-audit` - S56 adapters-part1 lifecycle review
 - `2026-08-11-cli-action-envelope-hardening-s57-adapters-part2-review-audit` - `cli-action-envelope-hardening` audit: `S57 adapters-part2 lifecycle review`
 - `2026-08-11-cli-action-envelope-hardening-s63-rationale-remediation-review-audit` - `cli-action-envelope-hardening` audit: `S63 rationale remediation lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s64-entrypoint-taxonomy-audit` - `cli-action-envelope-hardening` audit: `S64 entrypoint taxonomy and owner reconciliation review`
 
 ### exec
 
@@ -202,6 +205,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S56` - Retire recovery-authority comments from the first adapter registry shard and prove its 59 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where eight migration_required rows are exclusively owned by later producer steps
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S57` - Retire recovery-authority comments from the second adapter registry shard and prove its 63 tuple taxonomy remains canonical, retaining historical recovery only in the S50 ledger where 16 migration_required rows are exclusively owned by later producer steps and 2 rows are retired_or_unreachable
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S63` - Retire CadrumoError suggestion compatibility and classify the two internal bare-root validation carriers explicitly so unmigrated user-facing producers remain loud
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S64` - Prove the entrypoint registry shard is taxonomy-only with no recovery authority, retaining its two historical defaults only in the S50 ledger where current fingerprints are exclusively owned by S88, S89, and S114
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes
 
 ### plan
