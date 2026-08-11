@@ -4,7 +4,7 @@ tags:
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
 modified: '2026-08-11'
-body_hash: 'sha256:e684e5fda7b859850548605ee302417247168a9563e4c8252162e28a72a4d138'
+body_hash: 'sha256:2f0db0628bf3294a68791c4c8263756806f9eee54e7c8b0f8355e0d7f61675ae'
 tier: L3
 related:
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
@@ -470,7 +470,7 @@ Lands the consent ledger and eligibility bar, the withdrawal and re-derivation v
 - [x] `W10.P18.S76` - Sweep every W08 through W10 verb for the pull and --file naming standard, envelope and notice conformance, and documented-command coverage, gated by the conformance suites red-green proven on one deliberate violation; `src/cadrumo/entrypoints/cli`.
 - [x] `W10.P18.S283` - Repair the incomplete relocation that deleted dev/packaging/evidence_release.py in commit 4841bc6bd3 while three modules still import from it - release_candidate.py line 44, seal_candidate.py line 31 and soak_promoter.py line 36 - and the symbols download_release_assets, list_releases, resolve_gh, run_gh_with_retry, EvidenceLane and evidence_tag exist nowhere else in the tree, so dev/release fails to collect at HEAD and the whole release lane is blocked - decide whether the module returns or the symbols land in a named new home and sweep every consumer in ONE commit; `dev/release`.
 - [x] `W10.P18.S289` - Amend the release-asset-transport ADR to record that D4 no-callers premise is false for the download surface, since D3 in the same record preserves the operator locally-minted evidence release which has no backing run and stays a release download - and three live modules import download_release_assets, list_releases, resolve_gh, run_gh_with_retry, EvidenceLane and evidence_tag - so the record contradicts itself and a reader executing D4 literally deletes what D3 requires, which is what broke HEAD; `.vault/adr/2026-08-07-release-asset-transport-public-repo-artifact-return-adr.md`.
-- [ ] `W10.P18.S294` - Retire the seven publish-workflow assertions that still encode the superseded release-asset contract, since they assert the sealed-manifest emit and verify surface that the public-repo artifact-return ADR removed and the job-permission set that predates actions read being added for gh run download - they were invisible while collection aborted and became visible when the module was restored, so they are stale expectations rather than regressions; `.github/workflows/publish-release.yml`.
+- [x] `W10.P18.S294` - Retire the seven publish-workflow assertions that still encode the superseded release-asset contract, since they assert the sealed-manifest emit and verify surface that the public-repo artifact-return ADR removed and the job-permission set that predates actions read being added for gh run download - they were invisible while collection aborted and became visible when the module was restored, so they are stale expectations rather than regressions; `.github/workflows/publish-release.yml`.
 
 ## Parallelization
 
