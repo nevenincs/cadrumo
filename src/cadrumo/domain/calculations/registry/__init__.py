@@ -324,6 +324,11 @@ from ._formula_initial_values import initial_value_casilla_ids
 from ._formula_runtime_ops import resolve_keyed_bracket, resolve_parameter
 from ._formula_text_inputs import validate_text_input_targets, validated_text_input_casilla_ids
 from ._ledger_binding_resolution import screened_quantity_families
+from ._m303_differentiated_deduction_projection import (
+    M303DifferentiatedDeductionEndpointValue,
+    M303DifferentiatedDeductionRowProjection,
+    project_m303_differentiated_deduction_rows,
+)
 from ._m303_prorrata_activity_projection import (
     M303ProrrataActivityEndpointValue,
     M303ProrrataActivityRowProjection,
@@ -842,6 +847,8 @@ __all__ = [
     "Modelo349OperadorClaveTotal",
     "Modelo349OperadorTotalsParity",
     "Modelo720RowObservation",
+    "M303DifferentiatedDeductionEndpointValue",
+    "M303DifferentiatedDeductionRowProjection",
     "M303ProrrataActivityEndpointValue",
     "M303ProrrataActivityRowProjection",
     "ModeloApplicability",
@@ -1098,6 +1105,7 @@ __all__ = [
     "previous_filing_source_reference",
     "profile_condition_matches",
     "project_export_value",
+    "project_m303_differentiated_deduction_rows",
     "project_m303_prorrata_activity_rows",
     "rate_box_coverage_shortfalls",
     "rate_box_unscreened_groups",

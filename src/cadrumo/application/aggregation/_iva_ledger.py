@@ -279,12 +279,11 @@ class IvaLedgerProrrataApportionment(BaseModel):
     exclusively-non-deductible inputs deduct nothing, routed per the
     observation's ``input_classification``.
 
-    When ``sector_apportionments`` is non-empty (LIVA arts. 9.1.c / 101), the
-    bucket is sectorized: the top-level ``percentage`` / ``regime`` describe the
-    COMMON-use apportionment (art. 104.Dos common percentage, for inputs with no
-    ``prorrata_sector_id``), and each :class:`IvaLedgerSectorApportionment`
-    describes one declared sector. Empty ``sector_apportionments`` is the
-    whole-entity register (byte-identical to the pre-sectores behaviour).
+    When ``sector_apportionments`` is non-empty (LIVA arts. 9.1.c / 101), every
+    sector-owned input carries one exact declared sector. Cross-sector common
+    use is represented only by explicit :attr:`InputClassification.COMMON`;
+    a bare missing sector never defaults to common. Empty
+    ``sector_apportionments`` is the whole-entity register.
 
     See Also:
         :class:`~core.ProrrataProvisionalProvenance`
@@ -302,6 +301,27 @@ class IvaLedgerProrrataApportionment(BaseModel):
     source_observation_ref: str | None = Field(default=None, min_length=1)
     authorisation_reference: str | None = Field(default=None, min_length=1)
     sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
+
+
+class IvaDifferentiatedDeductionContribution(BaseModel):
+    """Immutable canonical apportioned contribution for one sector/source family."""
+
+    model_config = _STRICT_FROZEN
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    deduction_fact_kind: IvaDeductionFactKind
+    source_ledger_ids: tuple[str, ...]
+    base_amount: Decimal
+    deducible_iva_amount: Decimal
+
+    @field_validator("source_ledger_ids")
+    @classmethod
+    def _source_ledger_ids_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
+        if any(not ledger_id.strip() for ledger_id in value):
+            raise ValueError("differentiated deduction source ledger ids must be nonblank")
+        if len(value) != len(set(value)):
+            raise ValueError("differentiated deduction source ledger ids must be unique")
+        return value
 
 
 class AnnualDeducibleTotalsByRegime(BaseModel):
@@ -995,13 +1015,13 @@ def _apply_sector_apportionment(
 ) -> dict[BindingId, Decimal]:
     """Route deducible cuota bindings per sector (LIVA arts. 9.1.c / 101).
 
-    Partitions ``observations`` by ``prorrata_sector_id`` and recomputes each
+    Partitions input ``observations`` by their exact ``prorrata_sector_id`` and recomputes each
     deducible cuota binding as the sum, over the partitions, of that sector's
     :func:`_apportioned_deducible_cuota` contribution (each sector applies its
-    own percentage and regime). An input with no sector — or one referencing a
-    sector not present in ``sector_apportionments`` — falls to the COMMON-use
-    apportionment: the top-level ``apportionment.percentage`` / ``regime`` (the
-    art. 104.Dos common percentage). Non-deducible bindings keep their
+    own percentage and regime). Missing or unknown sector identity refuses;
+    the sole no-sector case is an explicitly classified cross-sector COMMON
+    input, routed through the declared whole-entity common percentage.
+    Non-deducible bindings keep their
     unapportioned aggregate. Resolution runs through the SAME canonical registry
     resolver, so the sectored path is one more consumer of the single
     aggregation path.
@@ -1010,9 +1030,29 @@ def _apply_sector_apportionment(
     if not deducible_binding_ids:
         return binding_values
     by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
+    if len(by_sector) != len(apportionment.sector_apportionments):
+        raise AggregationValidationError(t("sectorized IVA apportionment carries duplicate sector definitions"))
     partitions: dict[str | None, list[IvaLedgerObservation]] = {}
     for observation in observations:
-        sector_key = observation.prorrata_sector_id if observation.prorrata_sector_id in by_sector else None
+        if observation.deduction_fact_kind is None:
+            continue
+        sector_key = observation.prorrata_sector_id
+        if sector_key is None:
+            if observation.input_classification is not InputClassification.COMMON:
+                raise AggregationValidationError(t("sectorized IVA input is missing explicit sector identity"))
+            partitions.setdefault(None, []).append(observation)
+            continue
+        if sector_key not in by_sector:
+            raise AggregationValidationError(
+                t("sectorized IVA input references an unknown sector"), context={"sector_id": sector_key}
+            )
+        sector = by_sector[sector_key]
+        if sector.regime is ProrrataRegisterRegime.NINGUNA:
+            raise AggregationValidationError(
+                t("sectorized IVA input references an inactive sector"), context={"sector_id": sector_key}
+            )
+        if sector.regime is ProrrataRegisterRegime.ESPECIAL and observation.input_classification is None:
+            raise AggregationValidationError(t("sectorized prorrata especial requires explicit input classification"))
         partitions.setdefault(sector_key, []).append(observation)
     apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
     for sector_key, partition_observations in partitions.items():
@@ -1036,6 +1076,68 @@ def _apply_sector_apportionment(
         binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
         for binding_id, value in binding_values.items()
     }
+
+
+def resolve_iva_differentiated_deduction_contributions(
+    revision: ModeloRevision,
+    observations: Iterable[IvaLedgerObservation],
+    *,
+    apportionment: IvaLedgerProrrataApportionment,
+) -> tuple[IvaDifferentiatedDeductionContribution, ...]:
+    """Expose the canonical sector apportionment as immutable per-kind outputs."""
+    if not apportionment.sector_apportionments:
+        return ()
+    rows = tuple(observations)
+    ledger_ids = tuple(row.ledger_id for row in rows)
+    if len(ledger_ids) != len(set(ledger_ids)):
+        raise ValueError("differentiated deduction observations contain duplicate ledger identity")
+    if any(
+        row.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
+        for row in rows
+    ):
+        raise ValueError("investment-goods regularisation is owned only by the bienes-inversion register")
+    by_sector = {item.sector_id: item for item in apportionment.sector_apportionments}
+    if len(by_sector) != len(apportionment.sector_apportionments):
+        raise ValueError("differentiated deduction apportionment carries duplicate sectors")
+    unknown = sorted({row.prorrata_sector_id for row in rows if row.prorrata_sector_id not in by_sector}, key=str)
+    if unknown:
+        raise ValueError(f"differentiated deduction observations have missing or unknown sectors: {unknown!r}")
+    for row in rows:
+        sector_id = row.prorrata_sector_id
+        if sector_id is None:
+            raise ValueError("differentiated deduction observation is missing explicit sector identity")
+        sector = by_sector[sector_id]
+        if sector.regime is ProrrataRegisterRegime.NINGUNA:
+            raise ValueError(f"differentiated deduction sector {sector.sector_id!r} is inactive")
+        if sector.regime is ProrrataRegisterRegime.ESPECIAL and row.input_classification is None:
+            raise ValueError("common-use classification must be explicit under differentiated prorrata especial")
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    contributions: list[IvaDifferentiatedDeductionContribution] = []
+    for sector_id, sector in by_sector.items():
+        for kind in IvaDeductionFactKind:
+            if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
+                continue
+            selected = tuple(
+                row for row in rows
+                if row.prorrata_sector_id == sector_id and row.deduction_fact_kind is kind
+            )
+            apportioned = _apportioned_deducible_cuota(
+                revision,
+                selected,
+                percentage=sector.percentage,
+                regime=sector.regime,
+                deducible_binding_ids=deducible_binding_ids,
+            )
+            contributions.append(
+                IvaDifferentiatedDeductionContribution(
+                    sector_id=sector_id,
+                    deduction_fact_kind=kind,
+                    source_ledger_ids=tuple(row.ledger_id for row in selected),
+                    base_amount=sum((row.base_amount for row in selected), Decimal("0")),
+                    deducible_iva_amount=sum(apportioned.values(), Decimal("0")),
+                )
+            )
+    return tuple(contributions)
 
 
 def _active_prorrata_apportionment(
@@ -1069,17 +1171,28 @@ def _active_prorrata_apportionment(
         return None
     if not register.is_sectorized:
         return base
-    sector_apportionments = tuple(
-        IvaLedgerSectorApportionment(
-            sector_id=sector_id,
-            percentage=sector.percentage,
-            regime=sector.regime,
+    sector_apportionments_list: list[IvaLedgerSectorApportionment] = []
+    for sector_id in register.sector_ids():
+        sector = _sector_scoped_apportionment(register, ejercicio, sector_id=sector_id)
+        if sector is None:
+            entry = register.entry_for(ejercicio, sector_id=sector_id)
+            if entry is None:
+                reason = "has no filing-year register entry"
+            elif entry.interrupted or entry.regime is ProrrataRegisterRegime.NINGUNA:
+                reason = "is inactive for the filing year"
+            else:
+                reason = "has no resolved provisional percentage"
+            raise AggregationValidationError(
+                t(f"differentiated sector {sector_id!r} {reason}")
+            )
+        sector_apportionments_list.append(
+            IvaLedgerSectorApportionment(
+                sector_id=sector_id,
+                percentage=sector.percentage,
+                regime=sector.regime,
+            )
         )
-        for sector_id in register.sector_ids()
-        if (sector := _sector_scoped_apportionment(register, ejercicio, sector_id=sector_id)) is not None
-    )
-    if not sector_apportionments:
-        return base
+    sector_apportionments = tuple(sector_apportionments_list)
     return base.model_copy(update={"sector_apportionments": sector_apportionments})
 
 
