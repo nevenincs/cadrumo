@@ -8,12 +8,12 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.application.filing._export as export_module
-import cadrumo.application.modelo._export as modelo_export_module
-import cadrumo.domain.calculations.registry as registry
-from cadrumo.application.filing import export_draft
-from cadrumo.core import FilingProducerKey
-from cadrumo.domain.calculations.registry import ExportComputedKey, ExportDraftAttribute
+from ....core import FilingProducerKey
+from ....domain.calculations import registry
+from ....domain.calculations.registry import ExportComputedKey, ExportDraftAttribute
+from ...modelo import _export as modelo_export_module
+from .. import _export as export_module
+from .. import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -22,9 +22,7 @@ def _resolver_enum_keys() -> set[FilingProducerKey]:
     source = Path("src/cadrumo/application/filing/_export.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
     resolver = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "_filing_producer_values"
+        node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == "_filing_producer_values"
     )
     members: set[FilingProducerKey] = set()
     for node in ast.walk(resolver):

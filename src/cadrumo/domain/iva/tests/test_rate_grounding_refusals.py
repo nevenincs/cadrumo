@@ -67,7 +67,7 @@ def _rate(
 def _source(
     ref_id: str,
     *,
-    corpus_path: str = "corpus/eu_official/vat/does-not-exist.html",
+    corpus_path: str = "corpus/eu_official/iva/does-not-exist.html",
     applies_from: date | None = date(2024, 1, 1),
     applies_to: date | None = None,
 ) -> SourceReference:
@@ -166,7 +166,7 @@ def test_source_window_boundaries(
 #: requires ``verify_source_file`` to SUCCEED -- a synthetic source pointing at
 #: an absent corpus file raises, never reaches the memo, and makes both
 #: orderings behave identically.
-_REAL_VERIFIABLE_SOURCE = "eu-eprs-vat-rates-2025-07-01"
+_REAL_VERIFIABLE_SOURCE = "eu-eprs-iva-rates-2025-07-01"
 
 
 def test_a_source_verified_on_an_earlier_row_still_grounds_a_later_row() -> None:

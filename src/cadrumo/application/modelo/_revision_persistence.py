@@ -76,8 +76,10 @@ from ...domain.modelos import (
     CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
+    FilingInstanceEvidence,
     LedgerFilingSnapshot,
     ModeloDetailRow,
+    ModeloError,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -245,6 +247,7 @@ def persist_calculation_revision(
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...] = (),
     source_issues: tuple[CalculationSourceIssue, ...] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     detail_rows: tuple[ModeloDetailRow, ...],
     formula_count: int,
     actor: str,
@@ -286,6 +289,11 @@ def persist_calculation_revision(
     source-connectivity change from the digest without decrypting the revision,
     instead of treating bucket history as the standalone provenance store.
     """
+    _require_filing_instance_evidence_for_work_unit(
+        work_unit=work_unit,
+        evidence=filing_instance_evidence,
+        operation="calculation revision creation",
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -300,6 +308,7 @@ def persist_calculation_revision(
         bindings_sourced_from_borrador=bindings_sourced_from_borrador,
         detail_rows=detail_rows,
         source_issues=source_issues,
+        filing_instance_evidence=filing_instance_evidence,
     )
     revisions = calculation_repository.load()
     existing = revisions.get(revision_id)
@@ -341,6 +350,7 @@ def persist_calculation_revision(
         source_issues=source_issues,
         detail_rows=detail_rows,
         ledger_filing_snapshot=ledger_filing_snapshot,
+        filing_instance_evidence=filing_instance_evidence,
         created_at=now,
         updated_at=now,
     )
@@ -395,6 +405,39 @@ def persist_calculation_revision(
         ),
     )
     return revision
+
+
+def require_filing_instance_evidence_for_work_unit(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+) -> FilingInstanceEvidence | None:
+    """Return persisted evidence only when it is valid for the selected work unit."""
+    return _require_filing_instance_evidence_for_work_unit(
+        work_unit=work_unit,
+        evidence=revision.filing_instance_evidence,
+        operation="verification or export",
+    )
+
+
+def _require_filing_instance_evidence_for_work_unit(
+    *,
+    work_unit: WorkUnit,
+    evidence: FilingInstanceEvidence | None,
+    operation: str,
+) -> FilingInstanceEvidence | None:
+    """Validate the closed Modelo 303 evidence branch at creation or replay."""
+    if work_unit.modelo == Modelo.M303.value:
+        if evidence is None:
+            raise ModeloError(f"modelo 303 filing-instance evidence is required before {operation}")
+        if evidence.m303.period != work_unit.period:
+            raise ModeloError(
+                "modelo 303 filing-instance evidence period must match the calculation revision work-unit period",
+            )
+        return evidence
+    if evidence is not None:
+        raise ModeloError("filing-instance evidence is currently valid only for modelo 303 revisions")
+    return None
 
 
 def _build_filed_participation_writes(

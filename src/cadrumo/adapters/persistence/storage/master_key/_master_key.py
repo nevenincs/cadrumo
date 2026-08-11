@@ -582,8 +582,7 @@ class FileFallbackMasterKeyProvider:
         on_disk_version = preview.version
         if on_disk_version != KDF_PARAMS_VERSION:
             raise MasterKeyKdfVersionError(
-                f"master.kdf is version {on_disk_version!r}; "
-                f"this build expects version {KDF_PARAMS_VERSION}.",
+                f"master.kdf is version {on_disk_version!r}; this build expects version {KDF_PARAMS_VERSION}.",
             )
         try:
             params = _KdfParameters.model_validate_json(raw_text)

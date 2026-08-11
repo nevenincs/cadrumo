@@ -58,7 +58,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import BindingSourceKind
 from ...core.external_constants import DEFAULT_CURRENCY
-from ...domain.iva import IvaRetencionRole, iva_category_components
+from ...domain.iva import IvaRetencionRole, category_components
 from ._errors import AggregationValidationError, t
 from ._retenciones import RetencionObservation, RetencionScheme
 
@@ -359,7 +359,7 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceRetencionProjectionDefect]
     """
     if invoice.iva_category is None:
         yield InvoiceRetencionProjectionDefect.IVA_TREATMENT_UNDECLARED
-    elif iva_category_components(invoice.iva_category, invoice.kind).retencion_role is not (
+    elif category_components(invoice.iva_category, invoice.kind).retencion_role is not (
         IvaRetencionRole.TAXPAYER_LIABILITY
     ):
         yield InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY

@@ -1,6 +1,6 @@
 """The tax-identifier normal-form gate: two canonical forms, no respellings.
 
-Wires ``dev/tax_id_respelling_census.py`` into the pytest surface. This class
+Wires ``dev/identity/tax_id_respelling_census.py`` into the pytest surface. This class
 has been declared closed TWICE on false completeness claims -- once for
 "the last same-bearer comparisons" and once for "the last key builder" -- and
 both times the claim was exhaustion of a PATTERN reported as exhaustion of the
@@ -34,7 +34,7 @@ have passed any assertion written against its output.
 from __future__ import annotations
 
 import pytest
-from dev.tax_id_respelling_census import (
+from dev.identity.tax_id_respelling_census import (
     EXEMPTIONS,
     Finding,
     census,

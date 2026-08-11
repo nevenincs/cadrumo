@@ -25,11 +25,18 @@ from __future__ import annotations
 from typing import Annotated
 
 import typer
+from pydantic import ValidationError
 
 from ...application.prorrata_register import ProrrataRegisterService
-from ...core import ProrrataProvisionalProvenance, ProrrataRegisterRegime, SectorDiferenciadoLetra
+from ...core import (
+    ProrrataEspecialTransitionKind,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    SectorDiferenciadoLetra,
+)
 from ...core.i18n import tr
 from ...domain.prorrata_register import (
+    ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterValidationError,
@@ -44,6 +51,7 @@ from ._prorrata_register_payloads import (
     ProrrataElectResult,
     ProrrataEntryPayload,
     ProrrataListResult,
+    ProrrataRevokeEspecialResult,
     SectorDefinitionPayload,
 )
 
@@ -102,6 +110,16 @@ _SectorOpt = Annotated[
         help=tr(
             "cli.app.ledger.prorrata.sector_help",
             default="Differentiated-sector id this entry covers; omit for the whole-entity entry.",
+        ),
+    ),
+]
+_EvidenceReferenceOpt = Annotated[
+    str,
+    typer.Option(
+        "--evidence-reference",
+        help=tr(
+            "cli.app.ledger.prorrata.evidence_reference_help",
+            default="Evidence reference for the current-period prorrata-especial option or revocation.",
         ),
     ),
 ]
@@ -193,6 +211,7 @@ def _elect(
     provenance: ProrrataProvisionalProvenance,
     reference: str | None,
     sector_id: str | None,
+    especial_transition: ProrrataEspecialTransitionEvidence | None,
     result_class: type[ProrrataElectResult],
     command: str,
 ) -> None:
@@ -207,10 +226,17 @@ def _elect(
             provisional_percentage=percentage,
             provisional_provenance=resolved_provenance,
             authorisation_reference=resolved_reference,
+            especial_transition=especial_transition,
         )
-    except ProrrataRegisterValidationError as exc:
+    except (ProrrataRegisterValidationError, ValidationError) as exc:
         raise _bad(str(exc)) from exc
-    register = ProrrataRegisterService().declare(entry)
+    service = ProrrataRegisterService()
+    try:
+        register = (
+            service.declare_especial_transition(entry) if especial_transition is not None else service.declare(entry)
+        )
+    except (ProrrataRegisterValidationError, ValidationError) as exc:
+        raise _bad(str(exc)) from exc
     payload = result_class(
         bucket_id=bucket_id,
         entry=_entry_payload(entry),
@@ -227,6 +253,8 @@ def _elect(
             f"sector_id\t{entry.sector_id or ''}",
             f"provisional_percentage\t{entry.provisional_percentage}",
             f"provisional_provenance\t{resolved_provenance.value}",
+            f"especial_transition\t{entry.especial_transition.kind.value if entry.especial_transition else ''}",
+            f"evidence_reference\t{entry.especial_transition.evidence_reference if entry.especial_transition else ''}",
             f"count\t{len(register.entries)}",
         ),
     )
@@ -245,6 +273,7 @@ def _elect(
 def prorrata_elect_especial(
     ctx: typer.Context,
     ejercicio: _EjercicioOpt,
+    evidence_reference: _EvidenceReferenceOpt,
     percentage: str = typer.Option(
         ...,
         "--percentage",
@@ -266,6 +295,10 @@ def prorrata_elect_especial(
         provenance=provenance,
         reference=reference,
         sector_id=sector,
+        especial_transition=ProrrataEspecialTransitionEvidence(
+            kind=ProrrataEspecialTransitionKind.OPCION,
+            evidence_reference=evidence_reference,
+        ),
         result_class=ProrrataElectEspecialResult,
         command="ledger.prorrata.elect_especial",
     )
@@ -305,8 +338,50 @@ def prorrata_elect_general(
         provenance=provenance,
         reference=reference,
         sector_id=sector,
+        especial_transition=None,
         result_class=ProrrataElectGeneralResult,
         command="ledger.prorrata.elect_general",
+    )
+
+
+@prorrata_app.command(
+    "revoke-especial",
+    help=tr(
+        "cli.app.ledger.prorrata.revoke_especial_help",
+        default=("Revoke prorrata especial for an ejercicio after a prior-year especial state (LIVA art. 103.Dos.1)."),
+    ),
+)
+def prorrata_revoke_especial(
+    ctx: typer.Context,
+    ejercicio: _EjercicioOpt,
+    evidence_reference: _EvidenceReferenceOpt,
+    percentage: str = typer.Option(
+        ...,
+        "--percentage",
+        help=tr(
+            "cli.app.ledger.prorrata.general_percentage_help",
+            default="Provisional deduction percentage 0-100 (LIVA art. 104.Uno + 105.Uno).",
+        ),
+    ),
+    provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    reference: _ReferenceOpt = None,
+    sector: _SectorOpt = None,
+) -> None:
+    """Persist a typed prorrata-especial revocation for the ejercicio."""
+    _elect(
+        ctx,
+        regime=ProrrataRegisterRegime.GENERAL,
+        ejercicio=ejercicio,
+        percentage_raw=percentage,
+        provenance=provenance,
+        reference=reference,
+        sector_id=sector,
+        especial_transition=ProrrataEspecialTransitionEvidence(
+            kind=ProrrataEspecialTransitionKind.REVOCACION,
+            evidence_reference=evidence_reference,
+        ),
+        result_class=ProrrataRevokeEspecialResult,
+        command="ledger.prorrata.revoke_especial",
     )
 
 

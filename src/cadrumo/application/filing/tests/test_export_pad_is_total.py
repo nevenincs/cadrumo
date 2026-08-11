@@ -122,12 +122,12 @@ def test_unpositioned_record_matches_the_positioned_record_byte_for_byte() -> No
     unpositioned path is where a regression surfaces first.
     """
     positioned = (
-        _field("a", offset=1, length=10, padding="none", literal="AB"),
-        _field("b", offset=11, length=4, padding="left_zero", literal="7"),
+        _field("a", offset=1, length=10, padding=ExportPadding.NONE, literal="AB"),
+        _field("b", offset=11, length=4, padding=ExportPadding.LEFT_ZERO, literal="7"),
     )
     unpositioned = (
-        _field("a", offset=None, length=10, padding="none", literal="AB"),
-        _field("b", offset=None, length=4, padding="left_zero", literal="7"),
+        _field("a", offset=None, length=10, padding=ExportPadding.NONE, literal="AB"),
+        _field("b", offset=None, length=4, padding=ExportPadding.LEFT_ZERO, literal="7"),
     )
 
     assert _render(unpositioned) == _render(positioned)
@@ -137,8 +137,8 @@ def test_unpositioned_record_matches_the_positioned_record_byte_for_byte() -> No
 def test_a_padding_none_field_occupies_its_whole_slot() -> None:
     """A short value under ``padding = "none"`` still consumes its declared width."""
     fields = (
-        _field("a", offset=None, length=10, padding="none", literal="AB"),
-        _field("b", offset=None, length=4, padding="left_zero", literal="7"),
+        _field("a", offset=None, length=10, padding=ExportPadding.NONE, literal="AB"),
+        _field("b", offset=None, length=4, padding=ExportPadding.LEFT_ZERO, literal="7"),
     )
 
     rendered = _render(fields)

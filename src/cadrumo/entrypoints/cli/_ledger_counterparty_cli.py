@@ -80,7 +80,7 @@ def register_counterparty_commands(app: typer.Typer) -> None:
 def _confirmed_answers(fact: ConfirmedCounterpartyFacts) -> str:
     """Name the answers actually stored, skipping the axis left unanswered.
 
-    Establishment and VAT-identification are independent axes and either may
+    Establishment and IVA-identification are independent axes and either may
     stand alone, so every surface describing a stored fact has to read both
     optionally: a summary assuming a territory is present renders a
     identification-only confirmation as nothing, and reaching for its value
@@ -113,7 +113,7 @@ def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPaylo
     "confirm",
     help=tr(
         "cli.app.ledger.counterparty.confirm_help",
-        default="Confirm where a counterparty is established and which State VAT-identifies it.",
+        default="Confirm where a counterparty is established and which State IVA-identifies it.",
     ),
 )
 def counterparty_confirm(
@@ -139,7 +139,7 @@ def counterparty_confirm(
         ),
     ),
     # A SECOND axis, not a synonym for --scope. Ley 37/1992 art. 25 exempts on
-    # where a counterparty is VAT-IDENTIFIED; arts. 69-70 govern where it is
+    # where a counterparty is IVA-IDENTIFIED; arts. 69-70 govern where it is
     # ESTABLISHED. They diverge in real trade, so the operator answers each.
     # Declared as the enum for the same reason --scope is: a guessed Member
     # State is precisely the invented fact this axis exists to prevent.
@@ -149,7 +149,7 @@ def counterparty_confirm(
         help=tr(
             "cli.app.ledger.counterparty.identification_state_help",
             default=(
-                "Member State that VAT-identifies the counterparty. A different fact from --scope: "
+                "Member State that IVA-identifies the counterparty. A different fact from --scope: "
                 "art. 25 exempts on this, not on where the party is established."
             ),
         ),
@@ -194,7 +194,7 @@ def counterparty_confirm(
                 default=(
                     f"Confirming '{tax_identifier}' needs at least one answer: '--scope' for where the "
                     f"counterparty is established, '--identification-state' for which Member State "
-                    f"VAT-identifies it, or both. They are independent facts and either may be supplied "
+                    f"IVA-identifies it, or both. They are independent facts and either may be supplied "
                     f"alone."
                 ),
             ),

@@ -26,6 +26,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextvars import ContextVar
+from dataclasses import dataclass
 from datetime import date as _date
 from decimal import Decimal
 from enum import StrEnum
@@ -130,8 +131,22 @@ if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ...application.auth import AuthProviderListing
     from ...application.modelo import ModeloWorkLifecycleContinuation
-    from ...application.operator_actions import ActionReference, PreconditionVerdict
-    from ...application.operator_surface import OperatorSurfaceReconciliation
+    from ...application.operator_actions import (
+        ActionArgumentBinding,
+        ActionArgumentBindingSpecification,
+        ActionReference,
+        PreconditionVerdict,
+    )
+    from ...application.operator_surface import (
+        ExplicitExclusionInventoryRow,
+        InputSchemaInventoryRow,
+        LiveLeafInventoryRow,
+        McpExposureInventoryRow,
+        MountedFamilyInventoryRow,
+        OperatorSurfaceReconciliation,
+        ProfilePolicyInventoryRow,
+        ResultSchemaInventoryRow,
+    )
     from ...application.workflow import WorkflowState
     from ...core import Period
     from ...core.json_contract import ResolvedActionReference, ResolvedNoticeAction
@@ -141,6 +156,7 @@ if TYPE_CHECKING:
     from ...domain.transactions import TransactionCatalogue
     from ...domain.user_profile import UserProfileRecord
     from ..mcp import VerbInputSchema
+    from ._app_contract import CommandSchemaRef
 
 __all__ = [
     "active_profile_label",
@@ -303,6 +319,88 @@ def project_cli_policy_refusal(
     )
 
 
+def _validate_cli_precondition_action_bindings(
+    *,
+    action_id: str,
+    specifications: tuple[ActionArgumentBindingSpecification, ...],
+    argument_bindings: tuple[ActionArgumentBinding, ...],
+) -> None:
+    """Require verdict bindings to account for the declared action arguments."""
+    specifications_by_name = _catalogue_argument_specifications_by_name(specifications)
+    observed_arguments = {item.argument_name: item for item in argument_bindings}
+    if set(observed_arguments) != set(specifications_by_name):
+        raise ValueError(f"CLI policy action arguments do not match catalogue declaration: {action_id}")
+    _require_cli_precondition_argument_sources(
+        observed_arguments=observed_arguments,
+        specifications_by_name=specifications_by_name,
+    )
+
+
+def _catalogue_argument_specifications_by_name(
+    specifications: tuple[ActionArgumentBindingSpecification, ...],
+) -> dict[str, list[ActionArgumentBindingSpecification]]:
+    """Group the catalogue's declared input sources by their argument identity."""
+    specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]] = {}
+    for specification in specifications:
+        specifications_by_name.setdefault(specification.argument_name, []).append(specification)
+    return specifications_by_name
+
+
+def _require_cli_precondition_argument_sources(
+    *,
+    observed_arguments: dict[str, ActionArgumentBinding],
+    specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]],
+) -> None:
+    """Refuse a resolved verdict binding whose provenance contradicts the catalogue."""
+    from ...core import ActionArgumentStatus
+
+    for name, argument in observed_arguments.items():
+        if argument.status is ActionArgumentStatus.MISSING:
+            continue
+        matching_specifications = tuple(
+            specification
+            for specification in specifications_by_name[name]
+            if argument.source is specification.source
+            and argument.source_key == specification.source_key
+            and argument.source_evidence_id == specification.source_evidence_id
+        )
+        if len(matching_specifications) != 1:
+            raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
+
+
+def _resolve_cli_precondition_action_reference(
+    verdict: PreconditionVerdict,
+) -> ResolvedActionReference | None:
+    """Resolve the optional verdict recovery action against the live surface."""
+    action = verdict.action
+    if action is None:
+        return None
+    from ...application.operator_actions import OPERATOR_ACTION_CATALOGUE
+    from ...application.operator_surface import resolve_catalogue_action
+    from ...core.json_contract import ResolvedActionReference
+
+    resolution = resolve_catalogue_action(
+        action=action,
+        catalogue=OPERATOR_ACTION_CATALOGUE,
+        reconciliation=_current_operator_surface_reconciliation(),
+    )
+    declaration = resolution.declaration
+    if resolution.target_leaf.input_schema is None:
+        raise ValueError(
+            f"CLI policy action target has no live input schema: {declaration.target_command_key}",
+        )
+    _validate_cli_precondition_action_bindings(
+        action_id=action.action_id,
+        specifications=declaration.argument_specifications,
+        argument_bindings=verdict.argument_bindings,
+    )
+    return ResolvedActionReference(
+        action_id=declaration.action_id,
+        target_command_key=declaration.target_command_key,
+        cli_path=resolution.target_leaf.live_leaf.canonical_cli_path,
+    )
+
+
 def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
     """Schema-resolve one application verdict against the live action catalogue.
 
@@ -311,56 +409,7 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
     history use it, so neither path can reconstruct recovery prose or disagree
     about missing bindings.
     """
-    from ...application.operator_actions import (
-        OPERATOR_ACTION_CATALOGUE,
-        ActionArgumentBindingSpecification,
-    )
-    from ...application.operator_surface import resolve_catalogue_action
-    from ...core import ActionArgumentStatus
-    from ...core.json_contract import (
-        ActionConditionEvidence,
-        ResolvedActionArgument,
-        ResolvedActionReference,
-    )
-
-    resolved_action: ResolvedActionReference | None = None
-    if verdict.action is not None:
-        resolution = resolve_catalogue_action(
-            action=verdict.action,
-            catalogue=OPERATOR_ACTION_CATALOGUE,
-            reconciliation=_current_operator_surface_reconciliation(),
-        )
-        declaration = resolution.declaration
-        input_schema = resolution.target_leaf.input_schema
-        if input_schema is None:
-            raise ValueError(
-                f"CLI policy action target has no live input schema: {declaration.target_command_key}",
-            )
-        specifications_by_name: dict[str, list[ActionArgumentBindingSpecification]] = {}
-        for specification in declaration.argument_specifications:
-            specifications_by_name.setdefault(specification.argument_name, []).append(specification)
-        observed_arguments = {item.argument_name: item for item in verdict.argument_bindings}
-        if set(observed_arguments) != set(specifications_by_name):
-            raise ValueError(
-                f"CLI policy action arguments do not match catalogue declaration: {verdict.action.action_id}"
-            )
-        for name, argument in observed_arguments.items():
-            if argument.status is ActionArgumentStatus.MISSING:
-                continue
-            matching_specifications = tuple(
-                specification
-                for specification in specifications_by_name[name]
-                if argument.source is specification.source
-                and argument.source_key == specification.source_key
-                and argument.source_evidence_id == specification.source_evidence_id
-            )
-            if len(matching_specifications) != 1:
-                raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
-        resolved_action = ResolvedActionReference(
-            action_id=declaration.action_id,
-            target_command_key=declaration.target_command_key,
-            cli_path=resolution.target_leaf.live_leaf.canonical_cli_path,
-        )
+    from ...core.json_contract import ActionConditionEvidence, ResolvedActionArgument
 
     projected = ResolvedPreconditionAction(
         failed_condition_id=verdict.failed_condition_id,
@@ -373,7 +422,7 @@ def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPre
             )
             for item in verdict.evidence
         ),
-        action=resolved_action,
+        action=_resolve_cli_precondition_action_reference(verdict),
         argument_bindings=tuple(
             ResolvedActionArgument(
                 argument_name=item.argument_name,
@@ -707,23 +756,25 @@ def resolve_lifecycle_continuation_notice(continuation: ModeloWorkLifecycleConti
     )
 
 
-def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
-    """Build the complete current CLI surface reconciliation without inference."""
-    from ...application.operator_surface import (
-        ExplicitExclusionInventoryRow,
-        InputSchemaInventoryRow,
-        LiveLeafInventoryRow,
-        McpExposureInventoryRow,
-        MountedFamilyInventoryRow,
-        ProfilePolicyInventoryRow,
-        ReconciliationSurface,
-        ResultSchemaInventoryRow,
-        get_operator_surface_contract,
-        reconcile_operator_surface_inventory,
-    )
-    from ...application.storage_write_policy import is_profile_bound_write_verb_path
-    from ...entrypoints.mcp import build_tool_descriptors, build_verb_input_schemas
-    from ...entrypoints.schema_surface import CALLBACK_RESULT_REUSE_BY_CLI_PATH, ROOT_LANDING_SCHEMA_KEYS
+@dataclass(frozen=True, slots=True)
+class _CurrentOperatorSurfaceSchemaInventory:
+    """The non-MCP projections collected from the live CLI command surface."""
+
+    command_keys: tuple[str, ...]
+    live_leaves: tuple[LiveLeafInventoryRow, ...]
+    result_schemas: tuple[ResultSchemaInventoryRow, ...]
+    input_rows: tuple[InputSchemaInventoryRow, ...]
+    mounted_families: tuple[MountedFamilyInventoryRow, ...]
+    profile_policies: tuple[ProfilePolicyInventoryRow, ...]
+
+
+def _current_operator_surface_input_schemas() -> tuple[
+    tuple[CommandSchemaRef, ...],
+    tuple[str, ...],
+    Mapping[str, VerbInputSchema],
+]:
+    """Collect the complete result-schema and S05 input-schema projections."""
+    from ...entrypoints.mcp import build_verb_input_schemas
     from ._app_contract import command_schema_refs
 
     schema_references = command_schema_refs()
@@ -733,11 +784,23 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
     input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
     if set(input_schemas) != set(command_keys):
         raise ValueError("current input-schema projection does not exactly match the result-schema registry")
+    return schema_references, command_keys, input_schemas
+
+
+def _current_operator_surface_callback_aliases() -> dict[str, set[tuple[str, ...]]]:
+    """Index declared callback result-reuse paths by their canonical command identity."""
+    from ...entrypoints.schema_surface import CALLBACK_RESULT_REUSE_BY_CLI_PATH
 
     callback_aliases_by_key: dict[str, set[tuple[str, ...]]] = {}
     for callback_path, command_key in CALLBACK_RESULT_REUSE_BY_CLI_PATH.items():
         callback_aliases_by_key.setdefault(command_key, set()).add(callback_path)
+    return callback_aliases_by_key
 
+
+def _current_operator_surface_primary_paths(
+    input_schemas: Mapping[str, VerbInputSchema],
+) -> dict[str, tuple[str, ...]]:
+    """Require each S05 schema to retain its result-schema command identity."""
     primary_paths: dict[str, tuple[str, ...]] = {}
     for command_key, schema in input_schemas.items():
         resolved_leaf = schema.resolved_leaf
@@ -746,6 +809,100 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
                 f"input-schema projection changed command identity: {command_key} -> {resolved_leaf.subject_leaf_key}",
             )
         primary_paths[command_key] = resolved_leaf.cli_path
+    return primary_paths
+
+
+def _current_operator_surface_schema_rows(
+    *,
+    schema_references: tuple[CommandSchemaRef, ...],
+    command_keys: tuple[str, ...],
+    input_schemas: Mapping[str, VerbInputSchema],
+    callback_aliases_by_key: Mapping[str, set[tuple[str, ...]]],
+    primary_paths: Mapping[str, tuple[str, ...]],
+) -> _CurrentOperatorSurfaceSchemaInventory:
+    """Build application-owned reconciliation rows from the verified live sources."""
+    from ...application.operator_surface import (
+        InputSchemaInventoryRow,
+        LiveLeafInventoryRow,
+        MountedFamilyInventoryRow,
+        ProfilePolicyInventoryRow,
+        ResultSchemaInventoryRow,
+        get_operator_surface_contract,
+    )
+    from ...application.storage_write_policy import is_profile_bound_write_verb_path
+    from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
+
+    return _CurrentOperatorSurfaceSchemaInventory(
+        command_keys=command_keys,
+        live_leaves=tuple(
+            LiveLeafInventoryRow(
+                subject_leaf_key=command_key,
+                canonical_cli_path=primary_paths[command_key],
+                alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
+                provenance="S05 live Click input-schema resolution with declared callback reuse",
+            )
+            for command_key in sorted(command_keys)
+        ),
+        result_schemas=tuple(
+            ResultSchemaInventoryRow(
+                subject_leaf_key=reference.command,
+                schema_name=reference.schema_name,
+                provenance="SCHEMA_REGISTRY through command_schema_refs",
+            )
+            for reference in schema_references
+        ),
+        input_rows=tuple(
+            InputSchemaInventoryRow(
+                subject_leaf_key=command_key,
+                required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
+                provenance="S05 VerbInputSchema.required_inputs",
+            )
+            for command_key, schema in sorted(input_schemas.items())
+        ),
+        mounted_families=tuple(
+            MountedFamilyInventoryRow(
+                root=family.root.value,
+                child=family.child,
+                provenance="OperatorSurfaceContract.command_families",
+            )
+            for family in get_operator_surface_contract().command_families
+        ),
+        profile_policies=tuple(
+            ProfilePolicyInventoryRow(
+                subject_leaf_key=command_key,
+                classification=(
+                    "profile_bound_write"
+                    if is_profile_bound_write_verb_path(" ".join(primary_paths[command_key]))
+                    else "non_profile_bound"
+                ),
+                should_expose_via_mcp=command_key not in ROOT_LANDING_SCHEMA_KEYS,
+                provenance="application storage policy plus root landing exposure contract",
+            )
+            for command_key in sorted(command_keys)
+        ),
+    )
+
+
+def _current_operator_surface_schema_inventory() -> _CurrentOperatorSurfaceSchemaInventory:
+    """Collect the schema, Click, family, and policy projections without inference."""
+    schema_references, command_keys, input_schemas = _current_operator_surface_input_schemas()
+    callback_aliases_by_key = _current_operator_surface_callback_aliases()
+    primary_paths = _current_operator_surface_primary_paths(input_schemas)
+    return _current_operator_surface_schema_rows(
+        schema_references=schema_references,
+        command_keys=command_keys,
+        input_schemas=input_schemas,
+        callback_aliases_by_key=callback_aliases_by_key,
+        primary_paths=primary_paths,
+    )
+
+
+def _current_operator_surface_mcp_exposures(
+    command_keys: tuple[str, ...],
+) -> tuple[McpExposureInventoryRow, ...]:
+    """Project current MCP exposure while rejecting duplicate and orphan tools."""
+    from ...application.operator_surface import McpExposureInventoryRow
+    from ...entrypoints.mcp import build_tool_descriptors
 
     descriptors = build_tool_descriptors()
     descriptor_by_key = {descriptor.command_key: descriptor for descriptor in descriptors}
@@ -753,54 +910,7 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
         raise ValueError("current MCP projection has duplicate command identities")
     if not set(descriptor_by_key).issubset(command_keys):
         raise ValueError("current MCP projection contains a command absent from the result-schema registry")
-
-    live_leaves = tuple(
-        LiveLeafInventoryRow(
-            subject_leaf_key=command_key,
-            canonical_cli_path=primary_paths[command_key],
-            alias_cli_paths=tuple(sorted(callback_aliases_by_key.get(command_key, set()))),
-            provenance="S05 live Click input-schema resolution with declared callback reuse",
-        )
-        for command_key in sorted(command_keys)
-    )
-    result_schemas = tuple(
-        ResultSchemaInventoryRow(
-            subject_leaf_key=reference.command,
-            schema_name=reference.schema_name,
-            provenance="SCHEMA_REGISTRY through command_schema_refs",
-        )
-        for reference in schema_references
-    )
-    input_rows = tuple(
-        InputSchemaInventoryRow(
-            subject_leaf_key=command_key,
-            required_input_names=tuple(parameter.name for parameter in schema.required_inputs),
-            provenance="S05 VerbInputSchema.required_inputs",
-        )
-        for command_key, schema in sorted(input_schemas.items())
-    )
-    mounted_families = tuple(
-        MountedFamilyInventoryRow(
-            root=family.root.value,
-            child=family.child,
-            provenance="OperatorSurfaceContract.command_families",
-        )
-        for family in get_operator_surface_contract().command_families
-    )
-    profile_policies = tuple(
-        ProfilePolicyInventoryRow(
-            subject_leaf_key=command_key,
-            classification=(
-                "profile_bound_write"
-                if is_profile_bound_write_verb_path(" ".join(primary_paths[command_key]))
-                else "non_profile_bound"
-            ),
-            should_expose_via_mcp=command_key not in ROOT_LANDING_SCHEMA_KEYS,
-            provenance="application storage policy plus root landing exposure contract",
-        )
-        for command_key in sorted(command_keys)
-    )
-    mcp_exposures = tuple(
+    return tuple(
         McpExposureInventoryRow(
             subject_leaf_key=command_key,
             exposed=command_key in descriptor_by_key,
@@ -808,7 +918,14 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
         )
         for command_key in sorted(command_keys)
     )
-    exclusions = tuple(
+
+
+def _current_operator_surface_exclusions() -> tuple[ExplicitExclusionInventoryRow, ...]:
+    """Project the declared root-landing omissions into reconciliation evidence."""
+    from ...application.operator_surface import ExplicitExclusionInventoryRow, ReconciliationSurface
+    from ...entrypoints.schema_surface import ROOT_LANDING_SCHEMA_KEYS
+
+    return tuple(
         exclusion
         for command_key in sorted(ROOT_LANDING_SCHEMA_KEYS)
         for exclusion in (
@@ -828,14 +945,21 @@ def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
             ),
         )
     )
+
+
+def _current_operator_surface_reconciliation() -> OperatorSurfaceReconciliation:
+    """Build the complete current CLI surface reconciliation without inference."""
+    from ...application.operator_surface import reconcile_operator_surface_inventory
+
+    inventory = _current_operator_surface_schema_inventory()
     return reconcile_operator_surface_inventory(
-        live_leaves=live_leaves,
-        result_schemas=result_schemas,
-        input_schemas=input_rows,
-        mounted_families=mounted_families,
-        profile_policies=profile_policies,
-        mcp_exposures=mcp_exposures,
-        exclusions=exclusions,
+        live_leaves=inventory.live_leaves,
+        result_schemas=inventory.result_schemas,
+        input_schemas=inventory.input_rows,
+        mounted_families=inventory.mounted_families,
+        profile_policies=inventory.profile_policies,
+        mcp_exposures=_current_operator_surface_mcp_exposures(inventory.command_keys),
+        exclusions=_current_operator_surface_exclusions(),
     )
 
 

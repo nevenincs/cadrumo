@@ -718,7 +718,9 @@ def __getattr__(name: str) -> object:
 
     # module_name is resolved from this package's own closed _LAZY_EXPORTS
     # mapping above, never from caller-supplied input.
-    value = getattr(import_module(module_name, __name__), name)  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+    value = getattr(
+        import_module(module_name, __name__), name
+    )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
     globals()[name] = value
     return value
 

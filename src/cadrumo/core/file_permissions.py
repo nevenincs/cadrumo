@@ -135,7 +135,9 @@ def restrict_directory_permissions(path: Path) -> None:
     try:
         # 0o700 (owner-only) is the intended confidentiality boundary for a
         # secrets/financial-data storage root, not a weaker default to relax.
-        os.chmod(path, 0o700)  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
+        os.chmod(
+            path, 0o700
+        )  # nosemgrep: python.lang.security.audit.insecure-file-permissions.insecure-file-permissions
     except OSError:
         _log.debug("restrict_directory_permissions: chmod failed on %s", path, exc_info=True)
 

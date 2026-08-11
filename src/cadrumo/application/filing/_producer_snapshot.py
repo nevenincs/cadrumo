@@ -8,7 +8,7 @@ own export keys, layout offsets, or rendered record fragments.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
@@ -16,23 +16,68 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     Modelo,
     PaymentElection,
+    Period,
     PriorDomiciliationElection,
     RefundElection,
     ResultDisposition,
+    StandardPeriodCode,
     result_disposition_is_refund,
 )
 from ...core.identity import SubjectTaxId
+from ...domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ...domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
-from ...domain.modelos import CalculationRevisionAmendmentKind
+from ...domain.modelos import (
+    CalculationRevisionAmendmentKind,
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
+    M303RegimenSimplificadoFilingEvidence,
+)
+from ...domain.prorrata_register import ProrrataRegister
+from ..aggregation import (
+    IvaDifferentiatedDeductionContribution,
+    M303ProrrataTransitionArrival,
+    M303SupplierRegimeArrival,
+)
 
 _NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
 _AmendmentMotive = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
 _AeatReceiptNumber = Annotated[str, StringConstraints(pattern=r"^\d{13}$")]
 _CnaeCode = Annotated[str, StringConstraints(pattern=r"^\d{4}$")]
+_M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
+    {
+        StandardPeriodCode.Q1,
+        StandardPeriodCode.Q2,
+        StandardPeriodCode.Q3,
+        StandardPeriodCode.Q4,
+        StandardPeriodCode.JAN,
+        StandardPeriodCode.FEB,
+        StandardPeriodCode.MAR,
+        StandardPeriodCode.APR,
+        StandardPeriodCode.MAY,
+        StandardPeriodCode.JUN,
+        StandardPeriodCode.JUL,
+        StandardPeriodCode.AUG,
+        StandardPeriodCode.SEP,
+        StandardPeriodCode.OCT,
+        StandardPeriodCode.NOV,
+        StandardPeriodCode.DEC,
+    },
+)
 
 
 class FilingProducerSnapshotError(ValueError):
     """Raised when filing facts cannot form a complete producer snapshot."""
+
+
+def _require_m303_official_filing_period(period: Period) -> None:
+    """Refuse non-303 periods before they can reach DP30301's producer fields."""
+    if period.standard_code not in _M303_OFFICIAL_FILING_PERIODS:
+        raise ValueError(
+            "Modelo 303 filing facts require an official quarterly or monthly period "
+            f"(1T-4T or 01-12), got {period.registry_token!r}",
+        )
 
 
 class PresenterIdentity(BaseModel):
@@ -132,6 +177,59 @@ class FilingElectionFacts(BaseModel):
     prior_domiciliation: PriorDomiciliationElection
 
 
+class M303FilingFacts(BaseModel):
+    """DP30301 facts owned by one immutable Modelo 303 filing instance."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    joint_return_elected: bool
+    insolvency: M303InsolvencyFilingFact | None
+    exonerado_390: M303Exonerado390FilingEvidence
+    regimen_simplificado: M303RegimenSimplificadoFilingEvidence
+    period: Period
+    supplier_regime: M303SupplierRegimeArrival
+    prorrata_transition: M303ProrrataTransitionArrival
+    prorrata_register: ProrrataRegister
+    differentiated_contributions: tuple[IvaDifferentiatedDeductionContribution, ...]
+    bienes_register: BienesInversionIvaRegister
+    regularisation_result: RegistroRegularizacionResult
+
+    @model_validator(mode="after")
+    def _arrivals_share_one_filing_period(self) -> M303FilingFacts:
+        _require_m303_official_filing_period(self.period)
+        if self.period != self.supplier_regime.period or self.period != self.prorrata_transition.period:
+            raise ValueError("M303 filing facts and arrivals must share one filing period")
+        return self
+
+
+def resolve_m303_filing_facts(
+    *,
+    evidence: FilingInstanceEvidence,
+    supplier_regime: M303SupplierRegimeArrival,
+    prorrata_transition: M303ProrrataTransitionArrival,
+    prorrata_register: ProrrataRegister,
+    differentiated_contributions: tuple[IvaDifferentiatedDeductionContribution, ...],
+    bienes_register: BienesInversionIvaRegister,
+    regularisation_result: RegistroRegularizacionResult,
+) -> M303FilingFacts:
+    """Project persisted M303 evidence together with canonical arrival facts."""
+    m303 = evidence.m303
+    _require_m303_official_filing_period(m303.period)
+    return M303FilingFacts(
+        joint_return_elected=m303.joint_return_elected,
+        insolvency=m303.insolvency,
+        exonerado_390=m303.exonerado_390,
+        regimen_simplificado=m303.regimen_simplificado,
+        period=m303.period,
+        supplier_regime=supplier_regime,
+        prorrata_transition=prorrata_transition,
+        prorrata_register=prorrata_register,
+        differentiated_contributions=differentiated_contributions,
+        bienes_register=bienes_register,
+        regularisation_result=regularisation_result,
+    )
+
+
 class AmendmentEvidence(BaseModel):
     """Typed evidence for an amendment of an AEAT-accepted filing."""
 
@@ -191,6 +289,7 @@ class FilingProducerSnapshot(BaseModel):
     elections: FilingElectionFacts
     amendment_evidence: AmendmentEvidence | None
     selected_account: SelectedFilingAccount | None
+    m303_filing_facts: M303FilingFacts | None = None
 
     @model_validator(mode="after")
     def _validate_model_profile(self) -> FilingProducerSnapshot:
@@ -207,8 +306,12 @@ class FilingProducerSnapshot(BaseModel):
         elif self.modelo is Modelo.M303:
             if not isinstance(self.model_profile, ModeloIVAProfile):
                 raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
+            if self.m303_filing_facts is None:
+                raise ValueError("modelo 303 requires complete M303FilingFacts")
         elif not isinstance(self.model_profile, GeneralFilingProfileFacts):
             raise ValueError(f"modelo {self.modelo.value} requires GeneralFilingProfileFacts")
+        elif self.m303_filing_facts is not None:
+            raise ValueError("M303FilingFacts are valid only for modelo 303")
         disposition = self.elections.result_disposition
         if disposition is ResultDisposition.DOMICILIACION:
             if self.elections.payment is not PaymentElection.DOMICILIACION:
@@ -247,6 +350,7 @@ def build_filing_producer_snapshot(
     amendment_evidence: AmendmentEvidence | None,
     refund_account: RefundAccount | None,
     charge_account: ChargeAccount | None,
+    m303_filing_facts: M303FilingFacts | None = None,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition."""
     safe_model_profile = _without_embedded_accounts(model_profile)
@@ -272,6 +376,7 @@ def build_filing_producer_snapshot(
             elections=elections,
             amendment_evidence=amendment_evidence,
             selected_account=selected_account,
+            m303_filing_facts=m303_filing_facts,
         )
     except ValueError as exc:
         raise FilingProducerSnapshotError(str(exc)) from exc
@@ -282,6 +387,8 @@ def _without_embedded_accounts(model_profile: FilingModelProfileFacts) -> Filing
         return model_profile.model_copy(update={"refund_account": None, "charge_account": None})
     if isinstance(model_profile, Modelo202ProducerProfile):
         taxpayer_profile = model_profile.taxpayer_profile
+        if taxpayer_profile.iva is None:
+            return model_profile
         safe_iva = taxpayer_profile.iva.model_copy(update={"refund_account": None, "charge_account": None})
         safe_taxpayer = taxpayer_profile.model_copy(update={"iva": safe_iva})
         return model_profile.model_copy(update={"taxpayer_profile": safe_taxpayer})
@@ -298,6 +405,9 @@ __all__ = [
     "FilingProducerSnapshotError",
     "GeneralFilingProfileFacts",
     "M202UnsupportedProducerId",
+    "M303FilingFacts",
+    "M303InsolvencyFilingFact",
+    "M303InsolvencyFilingSubtype",
     "Modelo111ProfileFacts",
     "Modelo202ActivityFacts",
     "Modelo202ProducerProfile",
@@ -306,4 +416,5 @@ __all__ = [
     "SelectedFilingAccount",
     "TaxpayerIdentityFacts",
     "build_filing_producer_snapshot",
+    "resolve_m303_filing_facts",
 ]

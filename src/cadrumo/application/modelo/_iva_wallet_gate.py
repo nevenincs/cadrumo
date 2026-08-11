@@ -54,7 +54,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshotError,
     previous_filing_observation_requirements,
 )
-from ...domain.iva_compensation import IvaCompensationReconciliationDecision
+from ...domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ...domain.modelos import (
     CalculationRevision,
     ModeloError,
@@ -125,16 +125,42 @@ def _blocked_refusal(decision: IvaCompensationReconciliationDecision) -> tuple[s
     sentence for a stale wallet as for evidence that existed and could not be
     interpreted.
 
-    Only the unreadable-evidence case is distinguishable from the decision
-    alone, because it is the only one carrying a field of its own. The rest stay
-    generic and remain readable through ``divergence``.
+    The persisted reason is a closed locale-neutral identity. Every blocking
+    identity selects its own translated message, so calculate and export expose
+    the same specific cause as the history surface without domain-authored prose.
     """
-    if decision.local_evidence_found_but_unusable:
+    if decision.reason_identity is IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE:
+        return "local_evidence_unreadable", "application.iva_wallet.decision_reason.local_evidence_unreadable"
+    if decision.reason_identity is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY:
+        return "no_usable_authority", "application.iva_wallet.decision_reason.no_usable_authority"
+    if decision.reason_identity is IvaCompensationDecisionReason.FILED_HISTORY_REQUIRES_OVERRIDE:
         return (
-            "local_evidence_found_but_unreadable",
-            "application.modelo.errors.iva_wallet_local_evidence_found_but_unreadable",
+            "filed_history_requires_override",
+            "application.iva_wallet.decision_reason.filed_history_requires_override",
         )
-    return "blocked", "application.modelo.errors.iva_wallet_blocked"
+    if decision.reason_identity is IvaCompensationDecisionReason.LOCAL_RECURRENCE_REQUIRES_OVERRIDE:
+        return (
+            "local_recurrence_requires_override",
+            "application.iva_wallet.decision_reason.local_recurrence_requires_override",
+        )
+    if decision.reason_identity is IvaCompensationDecisionReason.STALE_WALLET_NO_LOCAL_RECURRENCE:
+        return (
+            "stale_wallet_no_local_recurrence",
+            "application.iva_wallet.decision_reason.stale_wallet_no_local_recurrence",
+        )
+    if decision.reason_identity is IvaCompensationDecisionReason.STALE_WALLET_LOCAL_RECURRENCE_REQUIRES_OVERRIDE:
+        return (
+            "stale_wallet_local_recurrence_requires_override",
+            "application.iva_wallet.decision_reason.stale_wallet_local_recurrence_requires_override",
+        )
+    if decision.reason_identity is IvaCompensationDecisionReason.WALLET_LOCAL_RECURRENCE_DIVERGENCE:
+        return (
+            "wallet_local_recurrence_divergence",
+            "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence",
+        )
+    raise ValueError(
+        f"blocked IVA wallet decision has non-blocking reason {decision.reason_identity.value!r}",
+    )
 
 
 def _raise_iva_wallet_precondition(
@@ -659,6 +685,7 @@ def _decision_replay_basis(decision: IvaCompensationReconciliationDecision) -> t
         decision.local_recurrence_amount,
         decision.divergence,
         decision.blocked,
+        decision.reason_identity,
         tuple(
             (
                 source.source_kind,
@@ -705,7 +732,7 @@ def _non_blocking_concrete_zero_authority_decision(
             "divergence": "match",
             "blocked": False,
             "stale_wallet": False,
-            "reason": "caller_zero_matches_local_authority",
+            "reason_identity": IvaCompensationDecisionReason.CALLER_ZERO_MATCHES_LOCAL_AUTHORITY,
         },
     )
 
@@ -732,7 +759,11 @@ def _require_first_period_zero_decision_grounded(
     if _decision_has_concrete_zero_authority(decision):
         return decision
     if _activity_start_proves_first_iva_period(work_unit, snapshot):
-        return decision
+        return decision.model_copy(
+            update={
+                "reason_identity": (IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED),
+            },
+        )
     _raise_iva_wallet_precondition(
         subject_leaf_key=subject_leaf_key,
         reason_code="first_period_zero_ungrounded",
@@ -829,9 +860,17 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         # outcome states that nothing is available while the taxpayer's own
         # prior record sits in the store.
         local_evidence_found_but_unusable=(evidence.prior_period_observation_found and evidence.recurrence is None),
-        persist=persist,
+        persist=False,
     )
-    return report.decision
+    decision = _require_first_period_zero_decision_grounded(
+        work_unit,
+        snapshot,
+        report.decision,
+        subject_leaf_key="modelo.work.calculate",
+    )
+    if persist:
+        _save_iva_compensation_decision(decision, repository=repository)
+    return decision
 
 
 class _PriorPeriodCarryEvidence(NamedTuple):

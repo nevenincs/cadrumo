@@ -2,11 +2,10 @@
 
 Making the derived injectors compute-always was scoped by asking the profile
 schema's declared derived namespace which paths the engine owns, rather than by
-counting the guards that happened to share the skip-if-present shape. FOUR
-non-derived families defer to a stored fact, across six paths:
+counting the guards that happened to share the skip-if-present shape. The
+remaining non-derived families defer to stored facts across five paths:
 
 * the Art. 82 matrimonio-sobrevenido facts (three paths),
-* the M303 state-attribution ratio,
 * the Madrid nacimiento/adopción eligible count (DL 1/2010) -- a different
   shape again, ``setdefault`` then conditional overwrite, so it is pinned in
   both directions rather than flattened into a preservation assertion,
@@ -98,11 +97,11 @@ def test_marriage_facts_preserve_a_stored_value() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_state_attribution_ratio_preserves_a_stored_value() -> None:
+def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
     seeded: dict[str, Any] = {**_common_regime_profile(), _STATE_ATTRIBUTION: _UNREACHABLE_RATIO}
     _inject_derived_state_attribution_facts(seeded)
 
-    assert seeded[_STATE_ATTRIBUTION] == _UNREACHABLE_RATIO
+    assert seeded[_STATE_ATTRIBUTION] == Decimal("100")
 
     computed: dict[str, Any] = _common_regime_profile()
     _inject_derived_state_attribution_facts(computed)
@@ -204,7 +203,6 @@ def test_none_of_the_preserved_paths_is_declared_derived() -> None:
         _MARRIAGE_FULL_YEAR,
         "renta_taxpayer.marriage_month_start",
         "renta_taxpayer.marriage_month_end",
-        _STATE_ATTRIBUTION,
         _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY,
         _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY,
     )
@@ -213,7 +211,7 @@ def test_none_of_the_preserved_paths_is_declared_derived() -> None:
     # recalled count drifts -- it already has -- so the number is asserted
     # here, where adding a path forces the prose to be revisited instead of
     # quietly disagreeing with it.
-    assert len(preserved_paths) == 6
+    assert len(preserved_paths) == 5
 
     for path in preserved_paths:
         assert derived_selector_for_path(path, schema.derived_selectors) is None, path

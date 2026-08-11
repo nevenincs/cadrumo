@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ....adapters.persistence.storage import EnvelopeVersionError
+from ....adapters.persistence.storage import Envelope, EnvelopeVersionError
 from ....core import (
     CasillaId,
     Period,
@@ -33,6 +33,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
 from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
@@ -477,7 +478,7 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
 
-def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip(
+def test_iva_wallet_reconciliation_decision_v2_roundtrip_preserves_reason_identity_and_operator_explanation(
     tmp_path: Path,
 ) -> None:
     """An IVA wallet reconciliation decision round-trips as AUDIT state."""
@@ -489,15 +490,16 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
-            selected_authority="aeat_wallet",
-            selected_amount=Decimal("1200"),
+            selected_authority="taxpayer_override",
+            selected_amount=Decimal("1100"),
             wallet_amount=Decimal("1200"),
-            local_recurrence_amount=Decimal("1200"),
-            override_amount=None,
-            divergence="match",
+            local_recurrence_amount=Decimal("1000"),
+            override_amount=Decimal("1100"),
+            divergence="override",
             blocked=False,
             stale_wallet=False,
-            reason="Using latest valid AEAT wallet observation for Modelo 303 prior compensation.",
+            reason_identity=IvaCompensationDecisionReason.TAXPAYER_OVERRIDE,
+            operator_explanation="Operator reviewed the filed return and AEAT wallet evidence.",
             # Populated NON-default on purpose: it defaults to False, so a
             # save-drops-field / load-re-defaults-field regression would be
             # invisible if the fixture left it alone. It is the only field
@@ -538,15 +540,24 @@ def test_iva_wallet_reconciliation_decision_survives_encrypted_storage_roundtrip
         assert cleartext_key_record is None
         assert loaded == decision
         assert loaded is not None
-        assert loaded.selected_authority == "aeat_wallet"
-        assert loaded.selected_amount == Decimal("1200")
+        assert loaded.selected_authority == "taxpayer_override"
+        assert loaded.selected_amount == Decimal("1100")
+        assert loaded.reason_identity is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE
+        assert loaded.operator_explanation == "Operator reviewed the filed return and AEAT wallet evidence."
         assert loaded.blocked is False
         assert repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T")) == (decision,)
+        latest_envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(latest_record.payload)
+        event_envelope = Envelope[IvaWalletDecisionEnvelopePayload].model_validate_json(event_record.payload)
+        assert latest_record.schema_version == repo.schema_version == 2
+        assert event_record.schema_version == repo.history_schema_version == 2
+        assert latest_envelope.schema_version == repo.schema_version
+        assert event_envelope.schema_version == repo.history_schema_version
         assert latest_key.startswith("iva-wallet-decision:")
         assert event_key.startswith("iva-wallet-decision-event:")
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert b"12345678Z" not in database_bytes
         assert b"12345678Z:2026:2T" not in database_bytes
+        assert b"Operator reviewed the filed return" not in database_bytes
 
 
 def test_a_decision_payload_missing_the_unreadable_evidence_flag_reloads_unequal(
@@ -577,10 +588,7 @@ def test_a_decision_payload_missing_the_unreadable_evidence_flag_reloads_unequal
             divergence="missing",
             blocked=True,
             stale_wallet=False,
-            reason=(
-                "A prior Modelo 303 record exists for the source period but could not be read as "
-                "prior-compensation evidence, and no AEAT wallet observation is available."
-            ),
+            reason_identity=IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE,
             local_evidence_found_but_unusable=True,
             decided_at=decided_at,
         )
@@ -631,7 +639,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
             divergence="match",
             blocked=False,
             stale_wallet=False,
-            reason="Using first valid AEAT wallet observation for Modelo 303 prior compensation.",
+            reason_identity=IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED,
             wallet_captured_at=first_at,
             decided_at=first_at,
         )
@@ -641,7 +649,7 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
                 "wallet_amount": Decimal("1300"),
                 "local_recurrence_amount": None,
                 "divergence": "wallet_only",
-                "reason": "Using later valid AEAT wallet observation without local recurrence.",
+                "reason_identity": IvaCompensationDecisionReason.AEAT_WALLET_UNCROSSCHECKED,
                 "wallet_captured_at": second_at,
                 "decided_at": second_at,
             },
@@ -710,7 +718,8 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
             divergence="override",
             blocked=False,
             stale_wallet=False,
-            reason="Operator reviewed separate AEAT, filed-history, local, and override evidence.",
+            reason_identity=IvaCompensationDecisionReason.TAXPAYER_OVERRIDE,
+            operator_explanation="Operator reviewed separate AEAT, filed-history, local, and override evidence.",
             wallet_captured_at=wallet_captured_at,
             authority_sources=authority_sources,
             decided_at=decided_at,
@@ -786,7 +795,7 @@ class TestCaptureInstantContract:
             ObservationEnvelopePayload.model_validate(fields)
 
 
-def _wallet_decision(*, reason: str) -> IvaCompensationReconciliationDecision:
+def _wallet_decision() -> IvaCompensationReconciliationDecision:
     decided_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
     return IvaCompensationReconciliationDecision(
         taxpayer_nif="12345678Z",
@@ -800,10 +809,111 @@ def _wallet_decision(*, reason: str) -> IvaCompensationReconciliationDecision:
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason=reason,
+        reason_identity=IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED,
         wallet_captured_at=decided_at,
         decided_at=decided_at,
     )
+
+
+def _restamp_wallet_decision_row_as_v1(
+    repo: IvaWalletDecisionRepository,
+    *,
+    namespace: str,
+    object_key: str,
+) -> None:
+    """Turn one real encrypted v2 row into a self-consistent historical v1 row."""
+    import json
+
+    from sqlalchemy import select
+
+    from ....adapters.persistence.storage.crypto import (
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
+    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql._secure_object_crypto import derive_revision_id
+    from ....adapters.persistence.storage.sql.session import session_scope
+    from ....core.hashing import sha256_hex
+
+    current = repo.secure_object_repository.load(
+        namespace,
+        object_key,
+        expected_class=repo.sensitivity,
+        max_supported_version=2,
+    )
+    assert current is not None
+    legacy_envelope = json.loads(current.payload.decode("utf-8"))
+    legacy_envelope["schema_version"] = 1
+    legacy_decision = legacy_envelope["payload"]["decision"]
+    legacy_decision["reason"] = "Using latest valid AEAT wallet observation for Modelo 303 prior compensation."
+    del legacy_decision["reason_identity"]
+    legacy_decision.pop("operator_explanation", None)
+    legacy_payload = json.dumps(legacy_envelope, separators=(",", ":")).encode("utf-8")
+
+    with session_scope(repo.secure_object_repository.engine) as session:
+        row = session.execute(
+            select(SecureObjectRow).where(
+                SecureObjectRow.namespace == namespace,
+                SecureObjectRow.object_key == object_key,
+            ),
+        ).scalar_one()
+        legacy_payload_wire = encrypt_secure_object_payload(
+            legacy_payload,
+            associated_data=secure_object_payload_aad(namespace, bytes(row.object_key), 1),
+        )
+        legacy_payload_hash = sha256_hex(legacy_payload)
+        legacy_ciphertext_hash = sha256_hex(legacy_payload_wire)
+        row.schema_version = 1
+        row.payload = legacy_payload_wire
+        row.payload_hash = legacy_payload_hash
+        row.ciphertext_hash = legacy_ciphertext_hash
+        row.revision_id = derive_revision_id(
+            namespace=namespace,
+            object_key=bytes(row.object_key),
+            schema_version=1,
+            written_at=row.written_at,
+            payload_hash=legacy_payload_hash,
+            ciphertext_hash=legacy_ciphertext_hash,
+            previous_revision_id=row.previous_revision_id,
+            previous_payload_hash=row.previous_payload_hash,
+        )
+
+
+@pytest.mark.parametrize("surface", ["latest", "history"])
+def test_iva_wallet_reconciliation_decision_namespaces_refuse_v1_rows(
+    tmp_path: Path,
+    surface: str,
+) -> None:
+    """Both changed encrypted namespaces refuse the exact pre-current version."""
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = IvaWalletDecisionRepository()
+        decision = _wallet_decision()
+        repo.save_decision(decision)
+        period = Period.from_year_and_code(2026, "2T")
+        if surface == "latest":
+            _restamp_wallet_decision_row_as_v1(
+                repo,
+                namespace=repo.namespace,
+                object_key=iva_wallet_decision_key(decision.taxpayer_nif, period),
+            )
+            with pytest.raises(EnvelopeVersionError) as raised:
+                repo.load_decision(decision.taxpayer_nif, period)
+        else:
+            _restamp_wallet_decision_row_as_v1(
+                repo,
+                namespace=repo.history_namespace,
+                object_key=iva_wallet_decision_event_key(decision),
+            )
+            with pytest.raises(EnvelopeVersionError) as raised:
+                repo.secure_object_repository.load(
+                    repo.history_namespace,
+                    iva_wallet_decision_event_key(decision),
+                    expected_class=repo.sensitivity,
+                    max_supported_version=repo.history_schema_version,
+                )
+        assert raised.value.context is not None
+        assert raised.value.context["schema_version"] == 1
+        assert raised.value.context["expected"] == 2
 
 
 def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> None:
@@ -821,7 +931,7 @@ def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> N
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = IvaWalletDecisionRepository()
-        decision = _wallet_decision(reason="Committed together with its audit event.")
+        decision = _wallet_decision()
         latest_key = iva_wallet_decision_key("12345678Z", Period.from_year_and_code(2026, "2T"))
 
         # Positive control: the real save persists both rows.
@@ -830,7 +940,7 @@ def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> N
         assert len(repo.load_decision_history("12345678Z", Period.from_year_and_code(2026, "2T"))) == 1
 
         # A second decision whose history write is refused must not land its latest row.
-        replacement = _wallet_decision(reason="This decision must not survive a refused audit event.")
+        replacement = _wallet_decision().model_copy(update={"decided_at": decision.decided_at + timedelta(seconds=1)})
         latest_write = repo.to_secure_object_write(IvaWalletDecisionEnvelopePayload(decision=replacement))
         refused_history_write = SecureObjectWrite(
             namespace=repo.history_namespace,
@@ -847,7 +957,7 @@ def test_wallet_decision_latest_and_history_commit_together(tmp_path: Path) -> N
         # The prior decision is intact and the replacement never landed.
         surviving = repo.load_decision("12345678Z", Period.from_year_and_code(2026, "2T"))
         assert surviving is not None
-        assert surviving.reason == decision.reason
+        assert surviving.reason_identity is decision.reason_identity
         assert (
             repo.secure_object_repository.load(
                 repo.namespace,

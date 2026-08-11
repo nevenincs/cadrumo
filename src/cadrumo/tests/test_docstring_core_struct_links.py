@@ -460,8 +460,7 @@ def test_dotted_cross_references_resolve_to_a_defining_module() -> None:
     assert not unexpected, (
         f"{len(unexpected)} dotted cross-reference(s) name a symbol their cited module does not "
         "define, and are not in the stated allowance. Repoint the reference at the module that "
-        "owns the symbol; do not add an allowance entry to silence it.\n"
-        + "\n".join(sorted(unexpected)[:40])
+        "owns the symbol; do not add an allowance entry to silence it.\n" + "\n".join(sorted(unexpected)[:40])
     )
 
 
@@ -474,9 +473,7 @@ def test_every_unresolved_reference_allowance_is_still_live() -> None:
     fix is to delete its entry.
     """
     unresolved, _, _ = _unresolved_dotted_references()
-    live = {
-        match.group(1) for report in unresolved if (match := _REPORT_SYMBOL.search(report)) is not None
-    }
+    live = {match.group(1) for report in unresolved if (match := _REPORT_SYMBOL.search(report)) is not None}
 
     stale = sorted(set(_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE) - live)
 

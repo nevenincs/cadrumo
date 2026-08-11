@@ -65,7 +65,7 @@ class CounterpartyTaxablePersonStatus(StrEnum):
     gap between them is a legal one rather than a modelling preference. That
     enum's ``B2B_IVA_REGISTERED`` is the trigger for the intra-community supply
     rule, which classifies the operation EXEMPT under LIVA art. 25 — and that
-    exemption requires the customer's VAT identification number to be *verified
+    exemption requires the customer's IVA identification number to be *verified
     as valid*, which is what a VIES consultation does. A number merely printed
     on a page has not been verified by anyone. Promoting it to
     ``B2B_IVA_REGISTERED`` would let an unverified identifier zero-rate a sale
@@ -73,7 +73,7 @@ class CounterpartyTaxablePersonStatus(StrEnum):
     proxy as an authority.
 
     So a printed identifier establishes exactly this much: someone who prints a
-    VAT identifier is acting as a taxable person. Whether they are *registered*
+    IVA identifier is acting as a taxable person. Whether they are *registered*
     is a separate claim, for a separate authority, and this enum does not make
     it.
 

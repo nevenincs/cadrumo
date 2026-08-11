@@ -22,7 +22,31 @@ from ._registry_schema_support import _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ENDPOINTS = frozenset(
-    {"79", "80", "81", "83", "84", "86", "88", "89", "90", "91", "92", "93", "94", "95", "96", "97", "98", "99", "107", "125", "126", "127", "128"}
+    {
+        "79",
+        "80",
+        "81",
+        "83",
+        "84",
+        "86",
+        "88",
+        "89",
+        "90",
+        "91",
+        "92",
+        "93",
+        "94",
+        "95",
+        "96",
+        "97",
+        "98",
+        "99",
+        "107",
+        "125",
+        "126",
+        "127",
+        "128",
+    }
 )
 _TERRITORY_RATIOS = frozenset({"89", "90", "91", "92", "107"})
 _LEGAL_REFS = frozenset({"rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"})
@@ -143,12 +167,12 @@ def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_
         )
         assert {str(formula.target_casilla_id) for formula in revision.formulas}.isdisjoint(_ENDPOINTS)
         assert {
-            str(relation.source_casilla_id)
-            for relation in revision.relations
-            if relation.source_casilla_id is not None
+            str(relation.source_casilla_id) for relation in revision.relations if relation.source_casilla_id is not None
         }.isdisjoint(_ENDPOINTS)
         assert revision.export_layouts == ()
         assert all(not casilla.export_refs for casilla in endpoint_rows)
 
-    producer_tokens = {member.value.casefold() for member in FilingProducerKey}
-    assert all("exoner" not in token and "390" not in token for token in producer_tokens)
+    exonerado_producer_tokens = {
+        member.value for member in FilingProducerKey if "exonerado_390" in member.value
+    }
+    assert exonerado_producer_tokens == {FilingProducerKey.M303_EXONERADO_390_APPLICABLE.value}

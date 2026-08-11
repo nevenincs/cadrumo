@@ -34,9 +34,9 @@ from ....core.money import round_to_cents as _round_to_cents
 from ._casilla_membership import undeclared_casilla_ids
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_operator_contracts import require_formula_operator_arity
+from ._ids import RevisionId
 from ._schema import DatedValue, ModeloRevision, ParameterDefinition
 from ._schema_rounding import RegistryRoundingCode
-from ._ids import RevisionId
 
 if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons

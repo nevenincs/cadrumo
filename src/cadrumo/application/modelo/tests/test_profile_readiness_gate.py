@@ -216,6 +216,7 @@ def _store_draft_revision(repository: CalculationRevisionCatalogueRepository, *,
         state=CalculationRevisionState.BORRADOR,
         created_at=_NOW,
         updated_at=_NOW,
+    filing_instance_evidence=None,
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision_id

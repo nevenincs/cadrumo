@@ -12,6 +12,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....domain.filing import ModeloBuilderError, ModeloValueKind
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .. import build_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 
@@ -45,6 +46,12 @@ _M184_MEMBER_NIF_CASILLA: CasillaId = validated_casilla_id(
 _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
 
 
+def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
+    return M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+
+
 def test_build_draft_routes_m210_tipo_renta_as_text_input() -> None:
     """M210 ``tipo_renta`` must not enter the Decimal casilla-input channel."""
     period = Period.from_year_and_code(2025, "EVENT-1")
@@ -63,6 +70,7 @@ def test_build_draft_routes_m210_tipo_renta_as_text_input() -> None:
             _RETENCION_PRACTICADA_CASILLA: Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(modelos=("210",), filing_year=2025, period=period),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -83,6 +91,7 @@ def test_build_draft_routes_and_validates_required_m184_member_nif() -> None:
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M184 NIF routing"),
         inputs={_M184_MEMBER_NIF_CASILLA: "12345678Z"},
         schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=2026, period=period),
+        m303_regimen_simplificado_scope=None,
     )
 
     values = {value.casilla_id: value for value in draft.values}
@@ -95,6 +104,7 @@ def test_build_draft_routes_and_validates_required_m184_member_nif() -> None:
             profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="M184 NIF routing"),
             inputs={_M184_MEMBER_NIF_CASILLA: "12345678A"},
             schema_provider=build_runtime_schema_provider(modelos=("184",), filing_year=2026, period=period),
+            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -109,6 +119,7 @@ def test_build_draft_routes_and_validates_modelo_369_period_code() -> None:
         period=period,
         profile=profile,
         inputs={_DECL_PERIODO_CASILLA: "EXT-1T"},
+        m303_regimen_simplificado_scope=None,
         schema_provider=provider,
     )
 
@@ -122,6 +133,7 @@ def test_build_draft_routes_and_validates_modelo_369_period_code() -> None:
             profile=profile,
             inputs={_DECL_PERIODO_CASILLA: "T1"},
             schema_provider=provider,
+            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -158,4 +170,5 @@ def test_build_draft_refuses_ordinal_shaped_modelo_303_period_value() -> None:
             profile=profile,
             inputs={_DECL_PERIODO_CASILLA: "1"},
             schema_provider=provider,
+            m303_regimen_simplificado_scope=_general_m303_scope(),
         )

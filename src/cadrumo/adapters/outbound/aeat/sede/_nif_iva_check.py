@@ -624,7 +624,7 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
 
     Normalisation is :func:`~core.identity.normalise_nif_iva`, which is named
     for exactly this concept. A local restatement here once stripped spaces and
-    hyphens but NOT dots -- and a dotted VAT number is the canonical function's
+    hyphens but NOT dots -- and a dotted IVA number is the canonical function's
     own motivating example, because operators routinely paste one. That gap sent
     ``0123.456.789`` to VIES with the dots intact.
     """

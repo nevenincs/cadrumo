@@ -577,7 +577,9 @@ def __getattr__(name: str):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     # module_path is resolved from this package's own closed _LAZY_EXPORTS
     # mapping above, never from caller-supplied input.
-    return getattr(importlib.import_module(module_path, __name__), name)  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
+    return getattr(
+        importlib.import_module(module_path, __name__), name
+    )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
 
 
 __all__ = [
@@ -687,6 +689,7 @@ __all__ = [
     "export_profile_bundle",
     "fact_value",
     "facts_to_values",
+    "format_profile_path_requirements",
     "format_profile_preflight_requirement",
     "format_profile_selector_requirements",
     "inspect_recovery_status",

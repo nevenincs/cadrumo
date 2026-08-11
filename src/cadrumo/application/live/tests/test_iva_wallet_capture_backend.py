@@ -19,6 +19,7 @@ from ....adapters.persistence.storage import has_active_bucket_session
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
     IvaCompensationPeriodState,
     IvaCompensationReconciliationDecision,
 )
@@ -212,7 +213,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                 divergence="match",
                 blocked=False,
                 stale_wallet=False,
-                reason="AEAT wallet matches local recurrence.",
+                reason_identity=IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED,
                 wallet_captured_at=_CAPTURED_AT,
                 decided_at=_CAPTURED_AT,
                 authority_sources=(
@@ -317,7 +318,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                 divergence="match",
                 blocked=False,
                 stale_wallet=False,
-                reason="AEAT wallet matches filed-history recurrence.",
+                reason_identity=IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED,
                 wallet_captured_at=_CAPTURED_AT,
                 decided_at=_CAPTURED_AT,
                 authority_sources=(

@@ -545,22 +545,20 @@ def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
 
 
 def test_workflow_step_details_typed_envelope_roundtrip() -> None:
-    """``WorkflowStep.details`` boxes its dict payload into a typed envelope.
+    """``WorkflowStep.details`` preserves the concrete closed-union detail type.
 
-    The field used to be ``dict[str, str] | None``. It is now an
-    Annotated ``WorkflowStepDetails | Mapping[str, str] | None`` with a
-    BeforeValidator that coerces bare dicts into the typed model. After
-    construction the storage type is always ``WorkflowStepDetails``,
-    so the JSON round-trip must yield a ``WorkflowStepDetails`` (not a
-    bare dict) on the return path.
+    A skipped auth-provider check carries typed facts rather than a free-form
+    mapping, and the canonical preflight summary key remains valid across the
+    JSON boundary.
     """
 
     from datetime import timedelta
 
     from .....application.workflow import (
+        WorkflowAuthCheckDetails,
+        WorkflowDiagnosticSkipReason,
         WorkflowStage,
         WorkflowStep,
-        WorkflowStepDetails,
     )
 
     original = WorkflowStep(
@@ -568,20 +566,25 @@ def test_workflow_step_details_typed_envelope_roundtrip() -> None:
         started_at=_WORKFLOW_STEP_STARTED_AT,
         ended_at=_WORKFLOW_STEP_STARTED_AT + timedelta(seconds=2),
         success=True,
-        summary="health check passed",
-        details={"draft_id": "f" * 64, "casilla_count": "42"},
+        summary_locale_key="application.workflow.steps.preflight_completed",
+        details=WorkflowAuthCheckDetails(
+            kind="auth_check",
+            provider_check_skipped=True,
+            skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
+        ),
     )
 
-    assert isinstance(original.details, WorkflowStepDetails), (
-        f"details should be coerced into WorkflowStepDetails, got {type(original.details).__name__}"
-    )
-    assert original.details.get("draft_id") == "f" * 64
-    assert original.details.get("casilla_count") == "42"
+    assert isinstance(original.details, WorkflowAuthCheckDetails)
+    assert original.details.kind == "auth_check"
+    assert original.details.provider_check_skipped is True
+    assert original.details.skip_reason is WorkflowDiagnosticSkipReason.NOT_WIRED
 
     roundtripped = WorkflowStep.model_validate_json(original.model_dump_json())
-    assert isinstance(roundtripped.details, WorkflowStepDetails)
+    assert isinstance(roundtripped.details, WorkflowAuthCheckDetails)
     assert roundtripped == original
-    assert roundtripped.details.get("draft_id") == "f" * 64
+    assert roundtripped.details.kind == "auth_check"
+    assert roundtripped.details.provider_check_skipped is True
+    assert roundtripped.details.skip_reason is WorkflowDiagnosticSkipReason.NOT_WIRED
 
 
 def test_calculation_revision_carries_typed_observations() -> None:
@@ -620,6 +623,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
         observations=(observation,),
         created_at=_CALCULATION_REVISION_TIMESTAMP,
         updated_at=_CALCULATION_REVISION_TIMESTAMP,
+    filing_instance_evidence=None,
     )
 
     roundtripped = CalculationRevision.model_validate_json(revision.model_dump_json())

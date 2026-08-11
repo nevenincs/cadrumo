@@ -9,7 +9,15 @@ from typing import Annotated, Literal
 
 from pydantic import BeforeValidator, Field, field_validator, model_validator
 
-from ....core import CasillaId, DeclaracionIdioma, ExportLayoutFormat, FilingProducerKey
+from ....core import (
+    CasillaId,
+    DeclaracionIdioma,
+    ExportLayoutFormat,
+    FilingProducerKey,
+    FilingProjectionRef,
+    M303DifferentiatedDeductionProjectionRef,
+    M303ProrrataActivityProjectionRef,
+)
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
@@ -772,6 +780,7 @@ class ExportFieldDefinition(RegistryModel):
     producer_key: FilingProducerKey | None = None
     draft_attribute: ExportDraftAttribute | None = None
     computed_key: ExportComputedKey | None = None
+    projection_ref: FilingProjectionRef | None = None
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
     required: bool
     padding: ExportPaddingValue
@@ -783,6 +792,18 @@ class ExportFieldDefinition(RegistryModel):
     allowed_values: tuple[str, ...] | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @property
+    def endpoint_casilla_id(self) -> CasillaId | None:
+        """Return the exact numbered endpoint carried by this field, if any."""
+        if self.casilla_id is not None:
+            return self.casilla_id
+        if isinstance(
+            self.projection_ref,
+            M303ProrrataActivityProjectionRef | M303DifferentiatedDeductionProjectionRef,
+        ):
+            return self.projection_ref.casilla_id
+        return None
 
     @field_validator("allowed_values")
     @classmethod
@@ -798,6 +819,7 @@ class ExportFieldDefinition(RegistryModel):
             ExportSemanticPayloadAxis.PRODUCER_KEY: self.producer_key,
             ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
             ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
+            ExportSemanticPayloadAxis.PROJECTION_REF: self.projection_ref,
         }
         required = export_semantic_payload_axis(self.kind)
         declared = tuple(axis for axis, value in payloads.items() if value is not None)

@@ -149,7 +149,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="M303 evidence gate first-period neutral balance",
+        reason_identity="first_period_zero_aeat_wallet",
         wallet_captured_at=_CALCULATED_AT,
         decided_at=_CALCULATED_AT,
     )
@@ -364,8 +364,8 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     ]
     assert evidence_findings
     assert all(finding.source_refs == expected_source_refs for finding in evidence_findings)
-    assert all("deductible_vat_evidence" not in finding.source_refs for finding in evidence_findings)
-    assert all("output_vat_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all("deductible_iva_evidence" not in finding.source_refs for finding in evidence_findings)
+    assert all("output_iva_evidence" not in finding.source_refs for finding in evidence_findings)
     assert all(
         "_" not in source_ref and "-" in source_ref
         for finding in evidence_findings
@@ -382,7 +382,7 @@ def test_modelo_303_verify_blocks_on_deductible_gap_and_only_warns_on_the_output
     assert len(evidence_projections) == len(evidence_findings)
     assert all(
         projection.precondition_failure is not None
-        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_vat_evidence.missing"
+        and projection.precondition_failure.scenario_id == "modelo.work.verify.deductible_iva_evidence.missing"
         and projection.precondition_failure.verdict.action is None
         and projection.precondition_failure.verdict.no_recovery_outcome is not None
         for projection in evidence_projections
@@ -488,7 +488,7 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
     ``verify`` freezes) never carried ``invoice_id``, so a row credited only
     through a linked invoice at verify time bundled with
     ``purchase_invoice_evidence_id`` and ``attachment_ids`` both empty --
-    and ``raise_if_deductible_vat_evidence_missing``
+    and ``raise_if_deductible_iva_evidence_missing``
     (``_ledger_evidence_gate.py``) then blocked local filing on a revision
     ``verify`` had JUST granted. That is not a hypothetical: it reproduced
     against the first version of this fix, and is exactly the "permanent dead
@@ -693,7 +693,7 @@ def _work_unit() -> WorkUnit:
     )
 
 
-def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
+def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
     secure_objects: SecureObjectRepository,
 ) -> None:
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -734,7 +734,7 @@ def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
     assert "next_action" not in finding.model_dump(mode="json")
 
 
-def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_evidence(
+def test_modelo_303_export_refuses_legacy_verified_deductible_iva_missing_evidence(
     secure_objects: SecureObjectRepository,
     tmp_path: Path,
 ) -> None:
@@ -756,20 +756,20 @@ def test_modelo_303_export_refuses_legacy_verified_deductible_vat_missing_eviden
         )
 
     assert exc_info.value.context is not None
-    assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
+    assert exc_info.value.context["reason"] == "deductible_iva_evidence_missing"
     failure = exc_info.value.precondition_failure
     assert failure is not None
     assert failure.identity == (
         "modelo.export",
-        "modelo.export.deductible_vat_evidence.present",
-        "modelo.export.deductible_vat_evidence.missing",
+        "modelo.export.deductible_iva_evidence.present",
+        "modelo.export.deductible_iva_evidence.missing",
     )
     assert failure.verdict.no_recovery_outcome is not None
     assert not output_path.exists()
     assert not output_path.with_name(output_path.name + ".tmp").exists()
 
 
-def test_modelo_303_internal_file_refuses_legacy_verified_deductible_vat_missing_evidence(
+def test_modelo_303_internal_file_refuses_legacy_verified_deductible_iva_missing_evidence(
     secure_objects: SecureObjectRepository,
 ) -> None:
     revision, _sale, _purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _calculate_irene_revision(
@@ -791,13 +791,13 @@ def test_modelo_303_internal_file_refuses_legacy_verified_deductible_vat_missing
         )
 
     assert exc_info.value.context is not None
-    assert exc_info.value.context["reason"] == "deductible_vat_evidence_missing"
+    assert exc_info.value.context["reason"] == "deductible_iva_evidence_missing"
     failure = exc_info.value.precondition_failure
     assert failure is not None
     assert failure.identity == (
         "modelo.work.file",
-        "modelo.work.file.deductible_vat_evidence.present",
-        "modelo.work.file.deductible_vat_evidence.missing",
+        "modelo.work.file.deductible_iva_evidence.present",
+        "modelo.work.file.deductible_iva_evidence.missing",
     )
     assert failure.verdict.no_recovery_outcome is not None
     assert tuple(filing_repo.load().values()) == ()

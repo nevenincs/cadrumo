@@ -39,6 +39,7 @@ from ....core import AuthProviderKind, CasillaId, CasillaValueKind, Period, vali
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import calculate_registry_snapshot
+from ....domain.iva_compensation import IvaCompensationDecisionReason
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from .. import _app_live
 from .._app_live import (
@@ -505,7 +506,8 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
                 divergence="match",
                 blocked=False,
                 stale_wallet=False,
-                reason="matched",
+                reason_identity=IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED,
+                operator_explanation=None,
                 wallet_captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
                 decided_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
                 authority_sources=("aeat_wallet amount=60.00 ref=wallet:2026:2T",),
@@ -514,6 +516,7 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
     )
 
     lines = _iva_wallet_history_lines(report)
+    result = _iva_wallet_history_result(report)
 
     assert "carry_forward_lot_count=1" in lines
     assert any(
@@ -527,12 +530,17 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
         line.startswith("authority_decision=")
         and "selected_authority=aeat_wallet" in line
         and "blocked=False" in line
-        and "reason=matched" in line
+        and "reason_identity=aeat_wallet_validated" in line
+        and "reason=The latest valid AEAT wallet observation matches the local recurrence" in line
         and "wallet_captured_at=2026-05-21T12:00:00+00:00" in line
         and "decided_at=2026-05-21T12:00:00+00:00" in line
         for line in lines
     )
     assert any(line.startswith("authority_source=2026\t2T\taeat_wallet") for line in lines)
+    payload_decision = result.authority_decisions[0]
+    assert payload_decision.reason_identity == "aeat_wallet_validated"
+    assert payload_decision.reason.startswith("The latest valid AEAT wallet observation matches")
+    assert payload_decision.operator_explanation is None
 
 
 def test_live_iva_wallet_history_payload_preserves_typed_periods() -> None:

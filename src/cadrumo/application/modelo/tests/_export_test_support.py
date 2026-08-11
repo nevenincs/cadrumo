@@ -15,11 +15,25 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, RegistrySnapshotRef
+from ....domain.calculations.registry import (
+    BindingId,
+    RegistrySnapshotRef,
+    resolve_m303_regimen_simplificado_snapshot,
+)
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
@@ -104,6 +118,11 @@ def _seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str
     overrides = {
         "identity.name": "Test",
         "identity.surnames": "Operator",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         **dict(profile_overrides or {}),
     }
     if tax_id is not None:
@@ -116,6 +135,36 @@ def _seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str
     bucket_id = workflow_state_repository().load().active_profile_bucket_id()
     assert bucket_id is not None
     return bucket_id
+
+
+def _m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.code,
+        ),
+        scope_decision=scope,
+    )
+    return FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(reference="test:export:exonerado-390"),
+            ),
+            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=snapshot,
+            ),
+        ),
+    )
 
 
 def _seed_revision(
@@ -139,6 +188,7 @@ def _seed_revision(
         period=typed_period.registry_token,
     )
     revision_id = snapshot.revision.id
+    filing_instance_evidence = _m303_filing_evidence(typed_period) if modelo == "303" else None
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -165,6 +215,7 @@ def _seed_revision(
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -175,6 +226,7 @@ def _seed_revision(
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
         observations=registry_grounded_observations(
             modelo=modelo,
             filing_year=filing_year,

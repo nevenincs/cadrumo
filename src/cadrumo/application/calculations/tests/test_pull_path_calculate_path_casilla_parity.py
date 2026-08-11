@@ -341,7 +341,7 @@ def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="prorrata pull calculate parity fixture",
+        reason_identity="aeat_wallet_validated",
         wallet_captured_at=_PRORRATA_T1,
         decided_at=_PRORRATA_T1,
     )

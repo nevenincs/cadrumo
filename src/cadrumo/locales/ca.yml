@@ -474,25 +474,17 @@ application:
         both_missing_detail: No estan configurades ni la identitat Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           ni l'identificador fiscal del perfil actiu. Configura tots dos amb el mateix
           DNI/NIE abans de l'autenticació AEAT en directe.
-        both_missing_next_action: Edita el perfil actiu amb 'aeat config profile edit
-          NOM --tax-id DNI/NIE' i configura el mateix DNI/NIE per a Cl@ve Mòbil.
         clave_identity_missing_detail: La identitat Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           no està configurada, de manera que no es pot comparar amb l'identificador
           fiscal del perfil actiu. Configura-la amb el DNI/NIE del perfil actiu.
-        clave_identity_missing_next_action: Configura el DNI/NIE de Cl@ve Mòbil perquè
-          coincideixi amb l'identificador fiscal del perfil actiu.
         mismatch_detail: El DNI/NIE de la identitat Cl@ve '%{clave_identity}' no coincideix
           amb l'identificador fiscal del perfil actiu '%{profile_tax_id}'. L'autenticació
           AEAT en directe vincularia la sessió d'un contribuent a un altre perfil.
           Canvia al perfil l'identificador fiscal del qual coincideixi amb el DNI/NIE
           de Cl@ve, o corregeix el valor que sigui erroni.
-        mismatch_next_action: Canvia al perfil l'identificador fiscal del qual coincideixi
-          amb el DNI/NIE de Cl@ve Mòbil, o corregeix el valor erroni.
         profile_tax_id_missing_detail: El perfil actiu no té identificador fiscal,
           de manera que no es pot comparar amb la identitat Cl@ve. Configura l'identificador
           fiscal del perfil amb el DNI/NIE utilitzat per a Cl@ve.
-        profile_tax_id_missing_next_action: Edita el perfil actiu amb 'aeat config
-          profile edit NOM --tax-id DNI/NIE' abans d'autenticar.
       errors:
         certificate_file_required: El proveïdor de certificat requereix un fitxer
           de certificat. Executa `aeat config auth configure --provider certificate
@@ -829,6 +821,45 @@ application:
         build_failed: 'l''assistent de factures ha rebutjat: %{detail}'
         field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s):
           %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: S'ha seleccionat l'última observació vàlida de la
+        cartera de l'AEAT; no hi havia recurrència local disponible per contrastar-la.
+      aeat_wallet_validated: L'última observació vàlida de la cartera de l'AEAT coincideix
+        amb la recurrència local per a la compensació anterior del Model 303.
+      caller_zero_matches_local_authority: El zero proporcionat pel cridador coincideix
+        amb l'autoritat local de zero persistent.
+      filed_history_requires_override: No hi ha prova de la cartera de l'AEAT; la
+        recurrència de l'historial presentat requereix una anul·lació expressa del
+        contribuent abans de generar el resultat automàtic.
+      filed_history_zero: La prova registrada de l'historial presentat del Model 303
+        estableix una compensació a traslladar de zero.
+      first_period_zero_activity_start_uncontrasted: 'NO CONTRASTAT: El zero del primer
+        període es basa en la data d''inici d''activitat declarada per l''operador;
+        Cadrumo no pot verificar aquesta data amb la informació censal actual de l''AEAT.'
+      first_period_zero_aeat_wallet: La cartera de l'AEAT confirma que la compensació
+        anterior és zero en el primer període d'IVA registrat.
+      first_period_zero_local_recurrence: Un zero local inicial estableix que no hi
+        ha compensació anterior en el primer període d'IVA registrat.
+      local_evidence_unreadable: Hi ha un registre anterior del Model 303, però no
+        es pot llegir com a prova de compensació anterior i no hi ha cap observació
+        disponible de la cartera de l'AEAT.
+      local_recurrence_requires_override: La cartera de l'AEAT no està disponible;
+        la recurrència local requereix una anul·lació expressa del contribuent abans
+        de generar el resultat automàtic.
+      local_recurrence_zero: La recurrència local del Model 303 estableix una compensació
+        a traslladar de zero.
+      no_usable_authority: No hi ha cap observació de la cartera de l'AEAT ni recurrència
+        local utilitzable per a la compensació anterior del Model 303.
+      stale_wallet_local_recurrence_requires_override: L'observació de la cartera
+        de l'AEAT està desactualitzada; la recurrència local requereix una anul·lació
+        expressa del contribuent abans de generar el resultat automàtic.
+      stale_wallet_no_local_recurrence: L'observació de la cartera de l'AEAT està
+        desactualitzada i no hi ha cap recurrència local alternativa disponible.
+      taxpayer_override: S'ha seleccionat l'anul·lació expressa del contribuent; l'explicació
+        de l'operador registrada per separat n'indica el fonament probatori.
+      wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
+        difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1015,11 +1046,6 @@ application:
         existeix; el càlcul del model no pot continuar.
       calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
         del registre per al model %{modelo}, exercici %{filing_year}, període %{period}.
-      calculation_revision_id_is_discarded_work_unit: L'identificador de revisió de
-        càlcul proporcionat %{calculation_revision_id} identifica la unitat de treball
-        descartada %{work_unit_id}. No es pot calcular.
-      calculation_revision_id_is_work_unit: L'identificador de revisió de càlcul proporcionat
-        %{calculation_revision_id} identifica la unitat de treball %{work_unit_id}.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       calculation_revision_parent_work_unit_discarded: La revisió de càlcul %{calculation_revision_id}
         pertany a la unitat de treball descartada %{work_unit_id}.
@@ -1032,7 +1058,7 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
         troballa(es).
-      deductible_vat_evidence_missing: 'Les linies del llibre amb IVA deduible requereixen
+      deductible_iva_evidence_missing: 'Les linies del llibre amb IVA deduible requereixen
         una factura de compra vinculada. Vincula la factura a la linia i torna a executar
         work verify: la verificacio no es completa mentre una linia deduible no tingui
         factura, de manera que l''esborrany continua obert i recull l''evidencia.'
@@ -1047,11 +1073,6 @@ application:
         resoluble a l'snapshot; verifica la revisió de nou abans d'exportar.
       export_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config profile
         create NAME` abans d'exportar una revisió de modelo.
-      export_operator_name_missing: 'L''exportació requereix el nom de l''operador
-        al perfil actiu; falten aquestes dades de perfil: %{missing}.'
-      export_operator_profile_missing: L'exportació necessita la identitat del declarant
-        del perfil actiu, però no hi ha cap perfil persistit; indica %{requirements}
-        abans d'exportar.
       export_output_path_invalid: 'El camí de sortida de l''exportació no és vàlid:
         {output_path} ({reason}).'
       export_period_unmappable: La unitat de treball %{work_unit_id} conté el període
@@ -1106,11 +1127,6 @@ application:
         anterior de zero no té cap evidència al darrere. Inicialitza el saldo d''obertura
         de manera explícita o descarrega la cartera des de l''AEAT, perquè el zero
         quedi declarat i no suposat.'
-      iva_wallet_local_evidence_found_but_unreadable: 'La conciliació de la cartera
-        de compensació d''IVA està bloquejada per al Model 303: hi ha un registre
-        local de compensació anterior però no s''ha pogut llegir. Torna a descarregar
-        la cartera des de l''AEAT o reinicialitza l''historial de compensació per
-        poder establir el saldo anterior.'
       iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
         IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
         el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
@@ -1237,255 +1253,6 @@ application:
         per marcar com a presentat quan la finestra d''obligació sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
-    findings:
-      art20_reduccion_next_action: Verifiqueu si les vostres altres rendes diferents
-        de les del treball excloses les exemptes de l'exercici no superen 6500 EUR;
-        en aquest cas, declareu la reducció per rendiments del treball de l'article
-        20 LIRPF a la casella de reducció general (ley-35-2006:art-20).
-      art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casella %{rnt_id} (rendiment
-        net del treball) = %{rnt_value} és dins del tram de reducció de l''article
-        20 (per sota de 19747,50) però la casella %{reduccion_id} (reducció general
-        per rendiments del treball) és zero. Si les vostres altres rendes diferents
-        de les del treball excloses les exemptes no superen 6500, podeu aplicar la
-        reducció per rendiments del treball de l''article 20 LIRPF.'
-      art52_reduccion_individual_sublimit_next_action: Confirmeu si l'aportació està
-        recolzada per una aportació del treballador a un pla d'ocupació (casella 0426)
-        o per una contribució empresarial (casella 0427); si no ho està, la reducció
-        de l'article 52 LIRPF es limita a 1500 EUR, no al límit conjunt de 10000 EUR
-        (ley-35-2006:art-52).
-      art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
-        la casella %{reduccion_id} (reducció per previsió social) = %{reduccion_value}
-        supera el límit individual de l''article 52 de %{sublimit} EUR, però no s''ha
-        declarat cap aportació del treballador a un pla d''ocupació ni contribució
-        empresarial. Confirmeu que la reducció està recolzada per una contribució
-        vinculada a l''ocupador que doni dret a l''increment de 8500 EUR; en cas contrari,
-        el límit aplicable és %{sublimit}.'
-      attribution_received_uncaptured: 'la casella %{casilla_id} del règim d''atribució
-        del M100 declara una base atribuïda (modelo=100 year=%{filing_year} value=%{casilla_value}
-        EUR) però cap fet attribution_received no la fonamenta per a aquest exercici:
-        la renda declarada no té procedència registrada.'
-      attribution_received_uncaptured_next_action: Registreu els fets attribution_received
-        (NIF de l'entitat, nom, percentatge de participació, base atribuïda, exercici)
-        al perfil del contribuent perquè la renda declarada del règim d'atribució
-        tingui la procedència del seu Model 184.
-      attribution_received_unfolded: 'els fets attribution_received declaren una base
-        atribuïda per a aquest exercici (modelo=100 year=%{filing_year} total=%{total_base}
-        EUR) però la casella %{casilla_id} del règim d''atribució del M100 queda buida:
-        la participació rebuda es va registrar al perfil però no es va incorporar
-        a la declaració.'
-      attribution_received_unfolded_next_action: Incorporeu la base atribuïda a la
-        casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat
-        app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè
-        la renda del règim d'atribució quedi declarada.
-      cross_casilla_invariant_next_action: Assegura't que totes les caselles requerides
-        pel predicat %{predicate_id} són diferents de zero abans de verificar.
-      cross_casilla_invariant_violated: invariant entre caselles %{predicate_id} incomplert
-      cross_period_activity_start_missing: Falta la data d’inici d’activitat necessària
-        per determinar les obligacions de períodes anteriors del model %{target_modelo},
-        exercici %{target_filing_year}, període %{target_period}.
-      cross_period_dependency_unclean: 'la dependència entre períodes no està neta:
-        model=%{source_modelo} exercici=%{source_filing_year} període=%{source_period}
-        origen=%{origin_code} ids_origen=%{origin_ids} bloquejos=%{blocker_codes}'
-      cross_period_dependency_unclean_evidence_next_action: Captureu o importeu evidència
-        de l’AEAT per a la dependència d’origen. Executeu `%{target_capture}`, `%{source_justificante_capture}`,
-        `%{import_official_record}` o `%{reconcile_file}`; torneu a executar la verificació.
-      cross_period_first_year_fractional_suppression: La dependència del model %{source_modelo},
-        exercici %{source_filing_year}, període %{source_period} queda fora de l’activitat
-        iniciada el %{activity_start_date}.
-      cross_period_m111_no_retenciones: La dependència del model %{source_modelo},
-        exercici %{source_filing_year}, període %{source_period} queda satisfeta pel
-        fet declarat sense retencions %{profile_fact_id}.
-      cross_period_modelo_not_applicable:
-        message: 'Les dependències entre períodes de models origen que el contribuent
-          no presenta s han exclòs com a no aplicables: %{source_modelos}.'
-        next_action: 'Usa `aeat app modelo bindings list --missing` per identificar
-          el binding de retencions. Aporta l import del certificat amb --binding CLAU=VALOR
-          quan correspongui: posa l id del binding a l esquerra d un únic signe igual
-          i l import a la dreta. Confirma el règim d estimació d IRPF del perfil si
-          s ha exclos un model de pagament fraccionat mútuament excloent.'
-      cross_period_non_official_local_chain:
-        message: 'l''arrossegament entre períodes va usar un període anterior presentat
-          localment al mateix exercici sense evidència externa de l''AEAT: model=%{source_modelo}
-          exercici=%{source_filing_year} període=%{source_period} origen=%{origin_code}.
-          La cadena dins del mateix exercici s''admet per a l''exportació local, però
-          el valor arrossegat està evidenciat localment (app_filing), no per l''AEAT;
-          presenteu cada període a l''AEAT de manera externa.'
-        next_action: Exporteu i presenteu cada període a l'AEAT de manera externa,
-          després actualitzeu la cadena local amb evidència oficial; useu `aeat app
-          live justificante pull` quan hi hagi accés en viu, o `aeat app modelo filing-record
-          import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
-          CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
-          --file PATH` per a evidència que ja tingueu.
-      cross_period_operator_declared_suppression: 'dependència entre períodes exclosa
-        perquè no hi ha obligació prèvia (abans de l’inici de l’activitat): model=%{source_modelo}
-        exercici=%{source_filing_year} període=%{source_period} origen=%{origin_code}.
-        El període és estrictament anterior a la data d’inici de l’activitat declarada
-        per l’operador, %{activity_start_date}, que encara no s’ha contrastat amb
-        una instantània del cens de l’AEAT.'
-      cross_period_operator_declared_suppression_next_action: Confirmeu que la data
-        d’inici de l’activitat registrada és correcta. Quan estigui disponible la
-        lectura en viu del cens de l’AEAT, la data es contrastarà i aquest avís s’eliminarà.
-      cross_period_zero_value_previous_filing: La declaració anterior amb valor zero
-        del model %{source_modelo}, exercici %{source_filing_year}, període %{source_period}
-        satisfà la dependència del model %{target_modelo}, període %{target_period}.
-      cuota_less_ledger_row_base_missing: L’operació del llibre %{transaction_id}
-        utilitza la categoria d’IVA %{iva_category_code}, però no té base imposable.
-      dt12a_reduccion_antiquity_next_action: Confirmeu que han transcorregut més de
-        dos anys des de la primera aportació al pla de pensions, llevat que la prestació
-        sigui per invalidesa (ley-35-2006:dt-12).
-      dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: la
-        casella %{reduccion_id} (reducció treball) = %{reduccion_value} reflecteix
-        una reducció aplicada. Si inclou un rescat en capital d''un pla de pensions
-        DT 12a LIRPF, confirmeu que han transcorregut més de dos anys des de la primera
-        aportació; el requisit d''antiguitat de dos anys només es dispensa en les
-        prestacions per invalidesa.'
-      dt12a_reduccion_next_action: Proporcioneu --rescate-plan-pensiones-capital IMPORT
-        --rescate-plan-pensiones-aportaciones-pre-2007 IMPORT --rescate-plan-pensiones-aportaciones-totales
-        IMPORT per injectar automàticament la reducció DT 12a a la casella corresponent
-        (ley-35-2006:dt-12).
-      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
-        = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
-      foreign_asset_redeclaration: La posició %{position_key} del grup %{group_code}
-        en el model %{modelo_code} va augmentar de %{prior_value_eur} EUR a %{current_value_eur}
-        EUR i supera el llindar d’increment per tornar a declarar, %{redeclaration_increase_threshold_eur}
-        EUR.
-      iva_wallet_next_action: Revisa la decisió de conciliació de la cartera de compensació
-        d'IVA abans de verificar o exportar aquest Model 303.
-      iva_wallet_precondition_failed: La condició de la cartera d’IVA %{condition_id}
-        no es compleix en l’escenari %{scenario_id}.
-      ledger_snapshot_drift: 'La instantània del llibre del model %{modelo}, exercici
-        %{filing_year}, període %{period} va canviar després del càlcul: %{changed_count}
-        files modificades i %{removed_count} eliminades de %{anchored} files ancorades.'
-      m210_agrupacion_renta_invalid: L’agrupació de rendes del model %{modelo_id}
-        no és vàlida per al període %{period_code} (%{error_type}).
-      m210_baseline_tipo_deferred:
-        next_action: El corpus inclòs no publica cap tipus base per a tipo_renta=%{tipo_renta}.
-          Indica %{requirements} per aplicar el tipus del Conveni corresponent, o
-          espera que el corpus base incorpori aquesta fila.
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: s''ha aplicat el tipus
-        de Convenio Espanya-%{country_code} (%{document_id}) per a tipo_renta=%{tipo_renta_code}.
-        El benefici del conveni només està disponible per al beneficiari efectiu resident
-        en aquest Estat que compleixi les condicions de limitació de beneficis del
-        conveni; confirmi l''elegibilitat abans d''aplicar aquest tipus.'
-      m210_convenio_lob_advisory_next_action: Confirmi que el contribuent compleix
-        les condicions de beneficiari efectiu i de limitació de beneficis del Convenio
-        Espanya-%{cc} (%{document_id}) abans d'aplicar el tipus del conveni; revisi
-        l'article específic del conveni, no només el marc general del Model de Conveni
-        de l'OCDE.
-      m210_convenio_rate_missing:
-        next_action: Autoritzeu una fila de Conveni Espanya-{cc} per a tipo_renta={tipo_renta}
-          a registry/aeat/treaties/, o esborreu {requirements} per tornar al baseline
-          de l'art. 25 del TRLIRNR.
-      m210_rate_unavailable: No s’ha pogut resoldre el tipus de gravamen del Model
-        210 (%{reason_code}).
-      m303_m349_intracom_reconciliation_mismatch: 'Els totals intracomunitaris de
-        l’exercici %{filing_year}, període %{period_code} no concilien: Model 303=%{m303_total},
-        Model 349=%{m349_total}, diferència=%{gap}.'
-      madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
-        la casella %{casilla_id} és zero però el contribuent té un descendent elegible
-        (recompte %{weighted_count}) per a la deducció de Madrid. El disparador automàtic
-        queda tancat per a unitats conjunta/casats perquè no es pot avaluar el límit
-        de renda familiar; confirmeu l''elegibilitat manualment.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirmeu que la
-        base imposable de la unitat familiar està dins del límit aplicable i, si escau,
-        introduiu la casella 1039 manualment (madrid-dl-1-2010:art-4, art-18).
-      missing_required_casilla: La casella obligatòria %{casilla_id} no és present
-        a les dades d'entrada del càlcul.
-      modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
-        base liquidable general (C500) és positiva però la quota resultant de l'autoliquidació
-        (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
-        mínim personal i familiar, o compensada per deduccions) i no una llacuna no
-        modelada.
-      modelo_100_2025_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: La
-        base liquidable general (C500) és positiva però la quota resultant de l'autoliquidació
-        (C595) és zero; confirmeu que és un zero legítim (base igual o inferior al
-        mínim personal i familiar, o compensada per deduccions) i no una llacuna no
-        modelada.
-      modelo_123_2024_base_total_implica_retenciones_total: La base total és positiva
-        però les retencions totals són zero; reviseu la determinació de la retenció.
-      modelo_130_art109_exencion_alta_retencion: 'Art. 109 RIRPF: exempt de presentar
-        M130 aquest trimestre perquè les retencions i ingressos a compte acumulats
-        a l''any representen el 70% o més dels rendiments íntegres.'
-      modelo_131_2019_2023_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
-        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
-        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
-        percentatge de l'Ordre de mòduls (mínim 2 per cent).
-      modelo_131_2024_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
-        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
-        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
-        percentatge de l'Ordre de mòduls (mínim 2 per cent).
-      modelo_131_2025_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
-        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
-        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
-        percentatge de l'Ordre de mòduls (mínim 2 per cent).
-      modelo_131_2026_pago_fraccionado_determinado_cuando_rendimientos_positivos: Els
-        rendiments nets d'activitats en dades-base (C01) són positius però el pagament
-        fraccionat previ per dades-base (C02) és zero; reviseu la casella 02 amb el
-        percentatge de l'Ordre de mòduls (mínim 2 per cent).
-      modelo_151_base_liquidable_implica_cuota_integra: La base liquidable general
-        és positiva però la quota íntegra general és zero; reviseu la determinació
-        de la quota íntegra.
-      modelo_200_base_imponible_determinada_cuando_resultado_positivo: El resultat
-        comptable és positiu però la base imposable (C552) és zero; reviseu la determinació
-        de la base imposable.
-      modelo_200_bin_stock_cierre_reconcilia_roll_forward: El saldo final de bases
-        imposables negatives pendents (C671) no concilia amb l'arrossegament (obertura
-        C670 menys aplicat C547 més la BIN generada en el període); reviseu el saldo
-        a compensar en exercicis futurs.
-      modelo_202_base_imponible_previa_determinada_cuando_resultado_positivo: El resultat
-        comptable és positiu però la base imposable prèvia és zero; reviseu la determinació
-        de la base imposable.
-      modelo_202_modality_incomplete: La modalitat del Model 202 és incompleta; cal
-        resoldre el fet de perfil %{profile_fact_id}.
-      modelo_210_2025_inmobiliaria_implica_base_imponible: El tipus de renda és inmobiliaria
-        però la base imposable és zero; reviseu la determinació de la base imposable
-        de la renda immobiliària imputada (valor cadastral, coeficient, dies d'imputació).
-      modelo_210_2025_rendimientos_integros_implica_base_imponible: Els rendiments
-        íntegres són positius però la base imposable és zero; reviseu la determinació
-        de la base imposable.
-      modelo_210_2025_ue_residente_requiere_residencia_ue_eee: El tipus de renda declarat
-        és ue_residente (tipus reduït UE/EEE) però el país de residència fiscal del
-        contribuent no és un Estat membre de la Unió Europea ni de l'Espai Econòmic
-        Europeu; confirmeu l'elegibilitat per al tipus reduït del 19 per cent abans
-        de presentar, o seleccioneu el tipus general del 24 per cent.
-      modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: L'IVA
-        deduïble total (cuota-deducible-total) és positiu, però totes les caselles
-        oficials del Disseny de Registres (29 interiors corrents, 33 importacions,
-        37 adquisicions intracomunitàries) continuen a zero. El càlcul no emplena
-        automàticament les caselles oficials numerades; traslladeu la quota a les
-        caselles corresponents abans de presentar.
-      modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: L'IVA
-        reportat total (cuota-devengada-total) és positiu, però totes les caselles
-        oficials del Disseny de Registres (03 4%, 06 10%, 09 21%, 11 intracomunitàries,
-        13 inversió del subjecte passiu) continuen a zero. El càlcul no emplena automàticament
-        les caselles oficials numerades; traslladeu la quota a les caselles corresponents
-        abans de presentar.
-      modelo_714_cuota_integra_implica_total_cuota_integra: La quota íntegra és positiva
-        però la quota íntegra total és zero; reviseu la transcripció de la quota íntegra
-        total.
-      objective_estimation_exclusion_threshold_exceeded: 'Model %{modelo_id}, exercici
-        %{filing_year}: el valor declarat %{declared} del fet de perfil %{profile_field_id}
-        supera el llindar %{threshold} del paràmetre %{parameter_id}.'
-      oss_evidence_missing: S’ha declarat una font OSS del Model 369, però no hi ha
-        evidència OSS persistent.
-      oss_source_unrouted: 'Hi ha observacions OSS fora dels enllaços de càlcul: %{source_ref_count}
-        fonts identificades i %{unidentified_source_count} fonts sense identificar.'
-      pulled_filing_casilla_mismatch: 'La casella presentada %{casilla_number} difereix
-        del valor calculat per a l’exercici %{filing_year}, període %{period_code}:
-        calculat=%{computed_value}, presentat=%{filed_value}, tipus=%{mismatch_kind}.'
-      registry_advisory_predicate_fired: El predicat informatiu del registre %{predicate_id}
-        s’aplica a aquesta verificació.
-      registry_snapshot_unresolved: no s'ha pogut resoldre la instantània del registre
-        per al model=%{modelo} exercici=%{filing_year} període=%{period}
-      representante_fiscal_required:
-        next_action: Designeu un representant fiscal a Espanya establint {requirements}
-          mitjançant l'ordre `aeat config profile edit`. L'art. 10 del TRLIRNR exigeix
-          que els declarants IRNR no residents a l'EEE designin un representant per
-          a les comunicacions amb l'AEAT.
-      transaction_evidence_missing_deductible: Una font d’IVA deduïble no té l’evidència
-        d’operació exigida (font=%{source_kind_code}, motiu=%{diagnostic_reason_code}).
-      transaction_evidence_missing_output: Una font d’IVA repercutit no té evidència
-        d’operació adjunta (font=%{source_kind_code}, motiu=%{diagnostic_reason_code}).
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
@@ -2377,6 +2144,8 @@ cli:
           cada apunt.'
         elect_general_help: 'Tria prorrata general per a un exercici (LIVA art. 104):
           un únic percentatge de deducció s''aplica a cada quota deduïble.'
+        evidence_reference_help: Referència de l'evidència de l'opció o revocació
+          de la prorrata especial del període actual.
         general_percentage_help: Percentatge de deducció provisional 0-100 (LIVA art.
           104.Uno + 105.Uno).
         group_help: 'Registre de prorrata d''IVA entre exercicis: tria el règim (general
@@ -2398,6 +2167,8 @@ cli:
           o inicio_actividad.
         reference_required: L'origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
           requereix --reference.
+        revoke_especial_help: Revoca la prorrata especial per a un exercici després
+          d'un estat especial de l'exercici anterior (LIVA art. 103.Dos.1).
         sector_help: Identificador del sector diferenciat que cobreix aquesta entrada;
           ometre per a l'entrada de tota l'activitat.
         sector_id_help: Identificador estable del sector al qual fan referència les
@@ -3083,7 +2854,6 @@ cli:
         app_help: Inspeccionar els informes de verificació registrats
         list_help: Llistar els informes de verificació, opcionalment filtrats per
           revisió de càlcul
-        next_action: 'Reviseu l''informe de verificació: %{command}'
         verification_report_id_help: Identificador estable (SHA-256 de 64 caràcters)
           d'un informe de verificació
         view_help: Mostrar un informe de verificació per id
@@ -3265,7 +3035,6 @@ cli:
           viu)
         history_help: Mostra tots els esdeveniments del cicle de vida d'una unitat
           de treball
-        history_next_action_summary: Revisa l'estat actual d'aquesta unitat de treball.
         history_work_unit_id_help: Id d'unitat de treball el cicle de vida de la qual
           vols veure
         id_selector_ambiguous: 'L''id de treball mostrat {selector} coincideix amb
@@ -3294,11 +3063,6 @@ cli:
           signe igual i el valor a la dreta. S''ha rebut {spec}.'
         list_help: Llistar les unitats de treball registrades, opcionalment filtrades
           per perfil
-        list_no_active_work_summary: No hi ha cap unitat de treball activa disponible
-          per continuar.
-        list_selection_required_summary: Seleccioneu una unitat de treball abans de
-          continuar.
-        list_single_status_summary: Hi ha una unitat de treball disponible per inspeccionar.
         m184_socio_handoff_message: 'Règim d''atribució de rendes: el soci %{nif}
           (%{nombre}) rep una base atribuïda de %{importe} EUR (participació del %{porcentaje}%).
           En el seu propi espai de treball, el soci l''ha de registrar com a fets
@@ -3307,6 +3071,8 @@ cli:
           d''atribució (activitat econòmica) del seu Model 100 (arts. 86-89 LIRPF).'
         m210_gross_income_source_help: 'Autoritat de la [5] del Model 210: manual
           (predeterminada) o agregació de llibre major de font espanyola.'
+        m303_filing_evidence_help: Camí al document JSON complet d'evidències de presentació
+          del model 303.
         missing_binding_guidance: '%{base} Aporta el valor amb --binding KEY=VALUE
           en aquesta ordre, o executa `%{discover}` per veure tots els bindings que
           el càlcul encara necessita.'
@@ -3504,18 +3270,11 @@ cli:
         state_label_presentado: Presentat
         state_label_presentado_supersedido: Presentació substituïda
         state_label_verificado_completo: Verificat complet
-        status_calculate_summary: Aquesta unitat de treball activa es pot calcular.
-        status_discarded_summary: Aquesta unitat de treball està descartada, de manera
-          que el càlcul no està disponible.
         status_help: Mostrar les metadades d'una unitat de treball
         verify_help: Verificar una revisió draft contra el contracte verified-complete
         verify_idempotent_noop: 'Operació idempotent sense efecte: la revisió de càlcul
           %{calculation_revision_id} ja està verificada; s''ha retornat l''informe
           de verificació existent sense canvis.'
-        verify_next_action_granted_summary: La verificació ha estat satisfactòria.
-          Exporteu l'artefacte de presentació.
-        verify_next_action_incomplete_summary: La verificació ha trobat elements bloquejadors.
-          Resoleu-los, recalculeu i torneu a executar la verificació.
         verify_selector_help: Selector de revisió esborrany (current, latest-draft
           o explícit).
         wizard_help: Guia pas a pas per les caselles manuals pendents de la unitat
@@ -3540,6 +3299,15 @@ cli:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
         i exporta; mai presenta a l''AEAT'
+      errors:
+        m303_evidence_forbidden: L’evidència d’instància de declaració del model 303
+          està prohibida per a un altre model.
+        m303_filing_evidence_invalid: El document d'evidències de presentació del
+          model 303 a {path} no es pot llegir o no és vàlid.
+        m303_filing_evidence_period_mismatch: El període de les evidències de presentació
+          del model 303 no coincideix amb el període de treball seleccionat.
+        m303_filing_evidence_required: El model 303 requereix un document JSON complet
+          d'evidències de presentació abans del càlcul.
   common:
     errors:
       draft_id_not_found: ID d'esborrany %{draft_id} no trobat
@@ -4033,6 +3801,9 @@ cli:
       create_epilog: 'Perfil mínim per a autònom: aeat config profile create PROFILE
         --entity-type natural_person --tax-id <DNI/NIE/NIF> --name <NAME> --surnames
         <SURNAMES> --activity <ACTIVITY> --irpf-income-categories actividad_economica
+        --tax-residence-jurisdiction-scope common_regime --iva-regime GENERAL --iva-m303-regime-composition
+        general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled
+        --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
         --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.
       delete_active_cleared: El perfil eliminat era l'actiu; el punter de perfil actiu
@@ -4517,11 +4288,6 @@ cli:
       state_label: Estat
       target_browser: navegador
       target_label: Destinació
-    dead_end:
-      registry_bundled: 'Error intern: el registre està inclus al paquet i no es pot
-        reparar manualment.'
-      registry_integrity_internal: Problema intern de l'aplicació; no és un error
-        del teu perfil ni una cosa que puguis corregir tu.
     errors:
       header: 'Errors d''execucions LLM:'
       help: Desglossa les execucions LLM locals fallides recents per proveïdor i tipus
@@ -4557,9 +4323,6 @@ cli:
         d'execució LLM.
       until_help: Límit superior inclusiu en data ISO (AAAA-MM-DD) sobre els registres
         d'execució LLM.
-    next_action:
-      inspect_registry_toml: Inspecciona les fonts TOML del registre per identificar
-        el problema.
     repair:
       audience_internal: problema intern de l'aplicació
       auth_label: Autenticació
@@ -4569,8 +4332,6 @@ cli:
       finding_optional: opcional
       finding_required: obligatori
       logs_label: Logs
-      next_label: Següent
-      note_label: Nota
       overall_label: Estat
       profile_label: Perfil
       python_label: Python
@@ -4674,9 +4435,6 @@ cli:
   help:
     invalid_value: Valor no vàlid
     invalid_value_for: Valor no vàlid per a %{parameter}
-    missing_argument: Falta l’argument
-    missing_option: Falta l’opció
-    missing_parameter: Falta el paràmetre
     not_valid_integer: no és un enter vàlid.
     panel:
       arguments: Arguments
@@ -7397,24 +7155,8 @@ errors:
         només està disponible abans de seleccionar un bucket de perfil actiu.
       cold_bootstrap_explicit_database_refused: L'emmagatzematge d'arrencada en fred
         no pot ometre una ruta de base de dades explícita.
-      no_active_session: No hi ha cap sessió de bucket activa. Executa aeat config
-        login NAME per desbloquejar un perfil.
-      no_detail: No s'ha informat cap detall de preparació.
       not_ready: 'El runtime d''emmagatzematge no està preparat per a emmagatzematge
         vinculat al perfil: %{details}'
-      route_bucket_mismatch: La ruta de base de dades no coincideix amb la sessió
-        de bucket activa.
-      route_not_active_bucket: La ruta de base de dades no està associada a un bucket
-        de perfil actiu.
-      session_changed: La sessió de bucket activa ha canviat. Torna a desbloquejar
-        el perfil de destinació.
-      session_expired: La sessió de bucket activa ha caducat. Executa aeat config
-        login NAME per reactivar el perfil.
-      session_sealed: La sessió de bucket activa està segellada. Executa aeat config
-        login NAME per reactivar el perfil.
-      unsecured_backend: La sessió de bucket activa fa servir el backend no segur.
-        L'emmagatzematge de producció vinculat al perfil requereix custòdia de fitxer
-        o anell de claus.
     stored_data_validation_boundary: Un registre de perfil o flux de treball emmagatzemat
       ja no coincideix amb l'esquema esperat - les dades al disc han divergit del
       format actual. Executa `aeat config repair` per diagnosticar i recuperar.
@@ -7508,7 +7250,6 @@ flows:
       certificate: Certificat
       certificate_active: Certificat actiu
       certificate_done: 'Identificació: %{provider}; certificat actiu: %{name}.'
-      certificate_incomplete: 'Identificació: %{provider}; %{reason} Executa: %{next_action}'
       export: Exportar còpia
       export_destination: Ruta del fitxer de destinació
       export_done: Còpia xifrada escrita a %{destination}.
@@ -65731,6 +65472,258 @@ modelo:
           iva-resultado-regimen-general:
             help: null
             label: Resultat del règim general
+          m303-deducciones-sector-1-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-1-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-1-total:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-domestic-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-import-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-current-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-intra-eu-investment-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-investment-regularisation:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-reagp-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-base:
+            help: null
+            label: null
+          m303-deducciones-sector-2-rectification-cuota:
+            help: null
+            label: null
+          m303-deducciones-sector-2-total:
+            help: null
+            label: null
+          m303-exonerado-390-107:
+            help: null
+            label: null
+          m303-exonerado-390-125:
+            help: null
+            label: null
+          m303-exonerado-390-126:
+            help: null
+            label: null
+          m303-exonerado-390-127:
+            help: null
+            label: null
+          m303-exonerado-390-128:
+            help: null
+            label: null
+          m303-exonerado-390-79:
+            help: null
+            label: null
+          m303-exonerado-390-80:
+            help: null
+            label: null
+          m303-exonerado-390-81:
+            help: null
+            label: null
+          m303-exonerado-390-83:
+            help: null
+            label: null
+          m303-exonerado-390-84:
+            help: null
+            label: null
+          m303-exonerado-390-86:
+            help: null
+            label: null
+          m303-exonerado-390-88:
+            help: null
+            label: null
+          m303-exonerado-390-89:
+            help: null
+            label: null
+          m303-exonerado-390-90:
+            help: null
+            label: null
+          m303-exonerado-390-91:
+            help: null
+            label: null
+          m303-exonerado-390-92:
+            help: null
+            label: null
+          m303-exonerado-390-93:
+            help: null
+            label: null
+          m303-exonerado-390-94:
+            help: null
+            label: null
+          m303-exonerado-390-95:
+            help: null
+            label: null
+          m303-exonerado-390-96:
+            help: null
+            label: null
+          m303-exonerado-390-97:
+            help: null
+            label: null
+          m303-exonerado-390-98:
+            help: null
+            label: null
+          m303-exonerado-390-99:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-1-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-2-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-3-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-4-tipo:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-cnae:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-con-derecho:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-operaciones-total:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-porcentaje:
+            help: null
+            label: null
+          m303-prorrata-actividad-fila-5-tipo:
+            help: null
+            label: null
       construct:
         modelo-303-iva-autoliquidacion:
           field:
@@ -66162,6 +66155,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -66187,6 +66183,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -66345,10 +66353,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -66396,7 +66479,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -66409,6 +66600,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -66426,7 +66671,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -66553,6 +66798,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -66578,6 +66826,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -66736,10 +66996,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -66787,7 +67122,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -66800,6 +67243,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -66817,7 +67314,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -66944,6 +67441,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -66969,6 +67469,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -67127,10 +67639,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -67178,7 +67765,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -67191,6 +67886,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -67208,7 +67957,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -67335,6 +68084,9 @@ modelo:
             '10':
               help: null
               label: null
+            '107':
+              help: null
+              label: null
             '108':
               help: null
               label: null
@@ -67360,6 +68112,18 @@ modelo:
               help: null
               label: null
             '124':
+              help: null
+              label: null
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
               help: null
               label: null
             '13':
@@ -67518,10 +68282,85 @@ modelo:
             '50':
               help: null
               label: null
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: null
               label: null
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
+              help: null
+              label: null
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
               help: null
               label: null
             '53':
@@ -67569,7 +68408,115 @@ modelo:
             '70':
               help: null
               label: null
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -67582,6 +68529,60 @@ modelo:
               help: null
               label: null
             '77':
+              help: null
+              label: null
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
               help: null
               label: null
             modulos-iva-1-unidades:
@@ -67599,7 +68600,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -67740,6 +68741,9 @@ modelo:
                 de béns i serveis.'
               label: IVA meritat per adquisicions intracomunitàries de béns i serveis
                 - base
+            '107':
+              help: null
+              label: null
             '108':
               help: 'Casella 108: altres ajustos en una autoliquidació rectificativa
                 per supòsits determinats per discrepància de criteri administratiu.'
@@ -67787,6 +68791,18 @@ modelo:
                 en règims especials de finestreta única.'
               label: Informació addicional - operacions subjectes en règims especials
                 de finestreta única
+            '125':
+              help: null
+              label: null
+            '126':
+              help: null
+              label: null
+            '127':
+              help: null
+              label: null
+            '128':
+              help: null
+              label: null
             '13':
               help: 'Casella 13: quota d''IVA meritat per altres operacions amb inversió
                 del subjecte passiu excloses les intracomunitàries.'
@@ -67987,16 +69003,91 @@ modelo:
               help: 'Casella 50: resultat del règim simplificat en el 4T, calculat
                 com la casella 48 menys la casella 49.'
               label: Règim simplificat, 4T - resultat ([48] - [49])
+            '500':
+              help: null
+              label: null
+            '501':
+              help: null
+              label: null
+            '502':
+              help: null
+              label: null
+            '503':
+              help: null
+              label: null
+            '504':
+              help: null
+              label: null
+            '505':
+              help: null
+              label: null
+            '506':
+              help: null
+              label: null
+            '507':
+              help: null
+              label: null
+            '508':
+              help: null
+              label: null
+            '509':
+              help: null
+              label: null
             '51':
               help: 'Casella 51: quotes d''IVA meritades per adquisicions intracomunitàries
                 de béns en règim simplificat.'
               label: Règim simplificat - quotes meritades per adquisicions intracomunitàries
                 de béns
+            '510':
+              help: null
+              label: null
+            '511':
+              help: null
+              label: null
+            '512':
+              help: null
+              label: null
+            '513':
+              help: null
+              label: null
+            '514':
+              help: null
+              label: null
+            '515':
+              help: null
+              label: null
+            '516':
+              help: null
+              label: null
+            '517':
+              help: null
+              label: null
+            '518':
+              help: null
+              label: null
+            '519':
+              help: null
+              label: null
             '52':
               help: 'Casella 52: quotes d''IVA meritades per lliuraments d''actius
                 fixos en règim simplificat.'
               label: Règim simplificat - quotes meritades per lliuraments d'actius
                 fixos
+            '520':
+              help: null
+              label: null
+            '521':
+              help: null
+              label: null
+            '522':
+              help: null
+              label: null
+            '523':
+              help: null
+              label: null
+            '524':
+              help: null
+              label: null
             '53':
               help: 'Casella 53: quotes d''IVA meritades en règim simplificat per
                 operacions amb inversió del subjecte passiu.'
@@ -68059,7 +69150,115 @@ modelo:
                 anteriors del mateix exercici i període.'
               label: Resultat - resultats a ingressar d'autoliquidacions anteriors
                 de l'exercici i període
+            '700':
+              help: null
+              label: null
+            '701':
+              help: null
+              label: null
+            '702':
+              help: null
+              label: null
+            '703':
+              help: null
+              label: null
+            '704':
+              help: null
+              label: null
+            '705':
+              help: null
+              label: null
+            '706':
+              help: null
+              label: null
+            '707':
+              help: null
+              label: null
+            '708':
+              help: null
+              label: null
+            '709':
+              help: null
+              label: null
             '71':
+              help: null
+              label: null
+            '710':
+              help: null
+              label: null
+            '711':
+              help: null
+              label: null
+            '712':
+              help: null
+              label: null
+            '713':
+              help: null
+              label: null
+            '714':
+              help: null
+              label: null
+            '715':
+              help: null
+              label: null
+            '716':
+              help: null
+              label: null
+            '717':
+              help: null
+              label: null
+            '718':
+              help: null
+              label: null
+            '719':
+              help: null
+              label: null
+            '720':
+              help: null
+              label: null
+            '721':
+              help: null
+              label: null
+            '722':
+              help: null
+              label: null
+            '723':
+              help: null
+              label: null
+            '724':
+              help: null
+              label: null
+            '725':
+              help: null
+              label: null
+            '726':
+              help: null
+              label: null
+            '727':
+              help: null
+              label: null
+            '728':
+              help: null
+              label: null
+            '729':
+              help: null
+              label: null
+            '730':
+              help: null
+              label: null
+            '731':
+              help: null
+              label: null
+            '732':
+              help: null
+              label: null
+            '733':
+              help: null
+              label: null
+            '734':
+              help: null
+              label: null
+            '735':
               help: null
               label: null
             '74':
@@ -68078,6 +69277,60 @@ modelo:
               help: 'Casella 77: IVA a la importació liquidat per la Duana que resta
                 pendent d''ingrés.'
               label: Resultat - IVA a l'importació liquidat per la Duana pendent d'ingrés
+            '79':
+              help: null
+              label: null
+            '80':
+              help: null
+              label: null
+            '81':
+              help: null
+              label: null
+            '83':
+              help: null
+              label: null
+            '84':
+              help: null
+              label: null
+            '86':
+              help: null
+              label: null
+            '88':
+              help: null
+              label: null
+            '89':
+              help: null
+              label: null
+            '90':
+              help: null
+              label: null
+            '91':
+              help: null
+              label: null
+            '92':
+              help: null
+              label: null
+            '93':
+              help: null
+              label: null
+            '94':
+              help: null
+              label: null
+            '95':
+              help: null
+              label: null
+            '96':
+              help: null
+              label: null
+            '97':
+              help: null
+              label: null
+            '98':
+              help: null
+              label: null
+            '99':
+              help: null
+              label: null
             modulos-iva-1-unidades:
               help: null
               label: null
@@ -68093,7 +69346,7 @@ modelo:
             modulos-iva-cuota-devengada:
               help: null
               label: null
-            modulos-iva-epigrafe:
+            modulos-iva-orden-id:
               help: null
               label: null
             x-chim6r1ecll6asj3d5hmiro:
@@ -69884,39 +71137,6 @@ profile:
           label: El domicili fiscal és l'habitatge habitual
         postcode:
           label: Codi postal
-      filing_export:
-        aeat_seal:
-          label: Segell AEAT
-        bank_address:
-          label: Adreça del banc
-        bank_city:
-          label: Ciutat del banc
-        bank_country_code:
-          label: Codi de país del banc
-        bank_name:
-          label: Nom del banc
-        charge_iban:
-          label: IBAN de carrec
-        declaration_type:
-          label: Tipus de declaració
-        iban:
-          label: IBAN
-        period_end_date:
-          label: Data de fi del període
-        period_start_date:
-          label: Data d'inici del període
-        presenter_tax_id:
-          label: NIF/CIF del declarant
-        previous_receipt:
-          label: Referència del justificant anterior
-        program_version:
-          label: Versió del programa
-        rental_reduccion_art_23_2_tier_2024:
-          label: Tram de reducció per lloguer (art. 23.2, 2024)
-        sepa_marca:
-          label: Marca SEPA
-        swift_bic:
-          label: SWIFT-BIC
       identity:
         email:
           label: Correu electrònic de contacte
@@ -69976,14 +71196,20 @@ profile:
       iva:
         autoconsumo_promotor_base:
           label: Base imposable de l'autoconsum (promotor)
+        cash_accounting_regime_enrolled:
+          label: Inscripció al criteri de caixa
         does_intracomunitario:
           label: Operacions intracomunitàries
         group_dominant_entity_enrolled:
           label: Entitat dominant del grup d'IVA (Model 353)
         group_member_enrolled:
           label: Membre de grup d'IVA (Model 322)
+        hydrocarbon_deposit_advance_payment_deduction_entitled:
+          label: Dret a deduir bestretes de dipòsits d'hidrocarburs
         intracommunity_operations_exceed_50000_eur:
           label: Operacions intracomunitàries superiors a 50.000 EUR
+        m303_regime_composition:
+          label: Composició de règims del Model 303
         oss_enrolled:
           label: Inscripció a l'OSS/IOSS
         redeme_enrolled:
@@ -69994,6 +71220,8 @@ profile:
           label: Inscripció al ROI/VIES
         sii_enrolled:
           label: Inscripció al SII
+        voluntary_sii_enrolled:
+          label: Inscripció voluntària al SII
       maritime_worker:
         pending_eu_clearance:
           label: Pendent d'autorització d'ajudes d'Estat (UE)
@@ -70098,8 +71326,6 @@ profile:
           label: Comunitat autònoma de residència
         jurisdiction_scope:
           label: Règim territorial
-        state_attribution_ratio:
-          label: Percentatge atribuïble a l'Estat
       taxpayer_type:
         country_of_fiscal_residence:
           label: País de residència fiscal
@@ -70173,8 +71399,6 @@ profile:
         title: Cens i alta
       contact:
         title: Contacte i domicili fiscal
-      filing_export:
-        title: Context de presentació i exportació
       identity:
         title: Identitat
       irpf:
@@ -70700,12 +71924,19 @@ wizard:
         help: Data en què el treballador va optar pel règim d'impatriats (AAAA-MM-DD).
           Només quan irpf-special-regime és "impatriado". RIRPF Art. 116. El règim
           expira en acabar el 6è any natural.
+      iva-cash-accounting-regime-enrolled:
+        help: Declara la inscripció en el règim especial del criteri de caixa de l'IVA.
       iva-group-dominant-entity-enrolled:
         help: Alta com a entitat dominant d'un grup d'IVA
       iva-group-member-enrolled:
         help: Alta com a entitat membre d'un grup d'IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        help: Declara el dret a deduir pagaments anticipats del règim de dipòsits
+          fiscals d'hidrocarburs.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Operacions intracomunitàries superen 50.000 EUR
+      iva-m303-regime-composition:
+        help: 'Composició de règims del Model 303: general, simplificat o mixt.'
       iva-oss-enrolled:
         help: Alta en OSS
       iva-redeme-enrolled:
@@ -70716,6 +71947,9 @@ wizard:
         help: Alta en ROI
       iva-sii-enrolled:
         help: Si el contribuent està inscrit al SII
+      iva-voluntary-sii-enrolled:
+        help: Declara la inscripció voluntària al SII, separada de les causes d'inclusió
+          obligatòria.
       legal-entity-form:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
       legal-name:
@@ -70822,6 +72056,9 @@ wizard:
         help: Identificador fiscal (NIF/NIE) del perfil actiu
       tax-residence-ccaa:
         help: 'Comunitat autònoma de residència fiscal. Una de: %{choices}.'
+      tax-residence-jurisdiction-scope:
+        help: 'Règim territorial declarat: territori comú o territori foral encara
+          no compatible.'
       taxation-type:
         help: 'Tipus de declaració de Renda: 1 = individual, 2 = conjunta (unitat
           familiar).'
@@ -70866,10 +72103,15 @@ wizard:
 
       Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
+      iva-cash-accounting-regime-enrolled:
+        prompt: Està inscrit en el règim especial del criteri de caixa?
       iva-group-dominant-entity-enrolled:
         prompt: Alta com a entitat dominant d'un grup d'IVA
       iva-group-member-enrolled:
         prompt: Alta com a entitat membre d'un grup d'IVA
+      iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
+        prompt: Té dret a deduir pagaments anticipats del règim de dipòsits fiscals
+          d'hidrocarburs?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Operacions intracomunitàries superen 50.000 EUR
       iva-oss-enrolled:
@@ -70882,6 +72124,17 @@ wizard:
         prompt: Alta en ROI
       iva-sii-enrolled:
         prompt: Inscrit al SII (Subministrament Immediat d'Informació)
+      iva-voluntary-sii-enrolled:
+        prompt: Està inscrit voluntàriament al SII?
+      m303-regime-composition:
+        choices:
+          general:
+            label: Només règim general
+          mixed:
+            label: Règim mixt
+          simplified:
+            label: Només règim simplificat
+        prompt: Quina composició de règims declara el Model 303?
       title: IVA configuració
     notes:
       notes:
@@ -70999,6 +72252,7 @@ wizard:
             description: Règim simplificat per mòduls per a activitats acollides (vinculat
               a l'estimació objectiva).
             label: Règim simplificat
+        prompt: Quin règim d'IVA s'aplica?
       legal-name:
         help: Per a persones jurídiques, és el nom fiscal usat a les capçaleres d'exportació.
           És diferent del nom visible local.
@@ -71085,6 +72339,13 @@ wizard:
         prompt: Nom del representant fiscal a Espanya
       tax-residence-ccaa:
         prompt: Comunitat autònoma de residència fiscal
+      tax-residence-jurisdiction-scope:
+        choices:
+          common_regime:
+            label: Territori comú
+          foral_unsupported:
+            label: Territori foral (encara no compatible)
+        prompt: Quin règim territorial s'aplica a aquest perfil?
       title: Residència fiscal
     review:
       registered-non-official-suffix: ' (del certificat censal - no verificat per

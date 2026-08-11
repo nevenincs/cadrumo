@@ -18,7 +18,7 @@ fails the same way.
 
 Single detector authority
 -------------------------
-Both detectors live in ``dev/import_hygiene_scan.py`` — Family 5 for the
+Both detectors live in ``dev/quality/import_hygiene_scan.py`` — Family 5 for the
 ``dev.*`` import half, Family 6 for the ``dev/`` path-reach half — and this
 gate ASSERTS against them rather than carrying its own copy.  An earlier
 revision re-implemented the import half inline, on the reasoning that a
@@ -81,7 +81,7 @@ from pathlib import Path
 from typing import Final
 
 import pytest
-from dev.import_hygiene_scan import (
+from dev.quality.import_hygiene_scan import (
     DevPathForm,
     DevPathReachViolation,
     DevToolingImportViolation,
@@ -292,7 +292,7 @@ def test_import_scanner_does_not_fire_on_excluded_test_module(tmp_path: Path) ->
     violations = _scan_planted_imports(
         tmp_path,
         "cadrumo/tests/test_planted.py",
-        "from dev.import_hygiene_scan import find_dev_tooling_import_violations\n",
+        "from dev.quality.import_hygiene_scan import find_dev_tooling_import_violations\n",
         excludes=_TEST_TREE_EXCLUDES,
     )
     assert violations == [], (
@@ -325,13 +325,13 @@ def test_path_scanner_catches_planted_dev_path_literal(tmp_path: Path) -> None:
     violations = _scan_planted_paths(
         tmp_path,
         "cadrumo/reads_dev_file.py",
-        'from pathlib import Path\n\ndef load_baseline():\n    return Path("dev/import_hygiene_baseline.json").read_text()\n',
+        'from pathlib import Path\n\ndef load_baseline():\n    return Path("dev/quality/import_hygiene_baseline.json").read_text()\n',
     )
 
     assert len(violations) == 1, f"expected exactly 1 dev-path reach; got {violations!r}"
     assert violations[0].module_path == "cadrumo/reads_dev_file.py"
     assert violations[0].form is DevPathForm.LITERAL
-    assert violations[0].detail == "dev/import_hygiene_baseline.json"
+    assert violations[0].detail == "dev/quality/import_hygiene_baseline.json"
 
 
 def test_path_scanner_catches_relative_and_windows_separator_forms(tmp_path: Path) -> None:
@@ -608,7 +608,7 @@ def test_path_scanner_does_not_fire_on_multiline_prose_outside_a_docstring(tmp_p
     violations = _scan_planted_paths(
         tmp_path,
         "cadrumo/multiline_prose.py",
-        'MESSAGE = "dev/import_hygiene_baseline.json\\nis maintained by the dev-side scanner"\n',
+        'MESSAGE = "dev/quality/import_hygiene_baseline.json\\nis maintained by the dev-side scanner"\n',
     )
 
     assert violations == [], f"the scanner read multi-line prose as a dev-tree dependency: {violations!r}"
@@ -650,8 +650,8 @@ def test_path_scanner_does_not_fire_on_excluded_test_module(tmp_path: Path) -> N
         "from pathlib import Path\n"
         "from cadrumo.core.paths import REPO_ROOT\n"
         "\n"
-        'BASELINE = Path("dev/import_hygiene_baseline.json")\n'
-        'ANCHORED = REPO_ROOT / "dev" / "import_hygiene_baseline.json"\n'
+        'BASELINE = Path("dev/quality/import_hygiene_baseline.json")\n'
+        'ANCHORED = REPO_ROOT / "dev" / "quality" / "import_hygiene_baseline.json"\n'
         "\n"
         "def composed(root):\n"
         '    return f"{root}/dev/size_budget_baseline.json"\n',

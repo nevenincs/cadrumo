@@ -35,7 +35,6 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind

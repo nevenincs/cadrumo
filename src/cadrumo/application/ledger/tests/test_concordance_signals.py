@@ -51,18 +51,18 @@ _DATE = date(2026, 4, 2)
 #: A structurally valid German VAT number. Germany is the useful registration
 #: State here because its general rate is NOT one Spain carries, which is what
 #: lets the charged rate discriminate at all.
-_GERMAN_VAT = "DE811234567"
+_GERMAN_IVA = "DE811234567"
 
 #: A structurally valid Dutch VAT number. The Netherlands shares Spain's general
 #: rate, which is what makes it the control rather than a second example.
-_DUTCH_VAT = "NL123456789B01"
+_DUTCH_IVA = "NL123456789B01"
 
 _REVERSE_CHARGE = "inversión del sujeto pasivo"
 
 
 def _walk(
     *,
-    tax_identifier: str | None = _GERMAN_VAT,
+    tax_identifier: str | None = _GERMAN_IVA,
     # No address country and no postal code: this is the population the rung
     # exists for, where every earlier rung has already declined.
     country_code: str | None = None,
@@ -128,7 +128,7 @@ def test_a_rate_spain_also_carries_raises_a_conflict_rather_than_corroborating()
     declining: the charged Spanish registry rate is itself Spain-indicating, so
     the disagreement reaches an operator as a conflict.
     """
-    scope, rung, conflict = _walk(tax_identifier=_DUTCH_VAT, charged_iva_rates=(Decimal("21"),))
+    scope, rung, conflict = _walk(tax_identifier=_DUTCH_IVA, charged_iva_rates=(Decimal("21"),))
 
     assert scope is None
     assert rung is None
@@ -190,7 +190,7 @@ def test_the_corroborated_scope_is_the_registration_states_own() -> None:
     resolves to a Spanish one, which is the failure this axis refuses everywhere.
     """
     german, _, _ = _walk(charged_iva_rates=(Decimal("19"),))
-    dutch, _, _ = _walk(tax_identifier=_DUTCH_VAT, regime_legend=_REVERSE_CHARGE)
+    dutch, _, _ = _walk(tax_identifier=_DUTCH_IVA, regime_legend=_REVERSE_CHARGE)
 
     assert german is IvaTerritorialScope.EU_MEMBER
     assert dutch is IvaTerritorialScope.EU_MEMBER

@@ -225,10 +225,6 @@ def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
     assert "does not certify legal correctness" in message
 
 
-
-
-
-
 @cache
 def _approved_registry_draft():
     draft = build_draft(
@@ -252,10 +248,9 @@ def _approved_registry_draft():
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
         schema_provider=_schema_provider(),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 
 
 @cache
@@ -277,6 +272,7 @@ def _approved_modelo_131_registry_draft():
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -299,6 +295,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
             "modelo-131.dpa.031-032.vehiculos-afectos": {"1": "2"},
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -318,6 +315,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
             "modelo-131.did.012-045.iban": "ES9121000418450200051332",
         },
         schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -341,6 +339,7 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
             f"{binding_prefix}.did.012-045.iban": "ES9121000418450200051332",
         },
         schema_provider=_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -367,6 +366,7 @@ def _approved_modelo_131_historical_registry_draft():
             _M131_HISTORICAL_14_CASILLA: Decimal("0.25"),
         },
         schema_provider=provider,
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -393,10 +393,9 @@ def _approved_modelo_111_registry_draft():
             _M111_PREVIOUS_RESULT_CASILLA: Decimal("40.00"),
         },
         schema_provider=_schema_provider(modelos=("111",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 
 
 @cache
@@ -414,10 +413,9 @@ def _approved_modelo_115_registry_draft():
             _M115_PREVIOUS_RESULT_CASILLA: Decimal("10.00"),
         },
         schema_provider=_schema_provider(modelos=("115",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 
 
 @cache
@@ -441,10 +439,9 @@ def _approved_modelo_123_registry_draft():
             _M123_MINORACION_CASILLA: Decimal("12.25"),
         },
         schema_provider=_schema_provider(modelos=("123",)),
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 
 
 @cache
@@ -466,10 +463,9 @@ def _approved_modelo_123_2019_registry_draft():
             _M123_2019_2023_MINORACION_CASILLA: Decimal("12.25"),
         },
         schema_provider=provider,
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 
 
 @cache
@@ -502,10 +498,9 @@ def _approved_modelo_200_registry_draft():
             "modelo-200-2024-rel-202-pagos-fraccionados-40-2": Decimal("0"),
         },
         schema_provider=provider,
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
 
 
 @cache
@@ -541,26 +536,9 @@ def _approved_modelo_390_registry_draft():
             _M390_COMPENSACION_GENERADA_EJERCICIO_CASILLA: Decimal("0.00"),
         },
         schema_provider=provider,
+        m303_regimen_simplificado_scope=None,
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:

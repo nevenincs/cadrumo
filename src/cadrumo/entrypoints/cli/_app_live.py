@@ -32,6 +32,7 @@ from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
+from ...adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ...application.live import (
     BulkFiledDataCaptureReport,
     FiledCasillaSkipRow,
@@ -59,6 +60,7 @@ from ...core import Period, PeriodError
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.iva_compensation import IvaCompensationDecisionReason
 from ._app_live_auth_preflight import _emit_live_auth_preflight
 from ._app_live_borrador_cli import borrador_100_app, borrador_app, register_borrador_commands
 from ._app_live_deudas_cli import register_deudas_commands
@@ -355,7 +357,9 @@ def _iva_wallet_history_result(report: IvaCompensationHistoryReport) -> Any:
                 divergence=decision.divergence,
                 blocked=decision.blocked,
                 stale_wallet=decision.stale_wallet,
-                reason=decision.reason,
+                reason_identity=decision.reason_identity.value,
+                reason=_iva_wallet_decision_reason_text(decision.reason_identity),
+                operator_explanation=decision.operator_explanation,
                 wallet_captured_at=decision.wallet_captured_at,
                 decided_at=decision.decided_at,
                 authority_sources=list(decision.authority_sources),
@@ -429,7 +433,9 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                         f"divergence={decision.divergence}",
                         f"blocked={decision.blocked}",
                         f"stale_wallet={decision.stale_wallet}",
-                        f"reason={decision.reason}",
+                        f"reason_identity={decision.reason_identity.value}",
+                        f"reason={_iva_wallet_decision_reason_text(decision.reason_identity)}",
+                        f"operator_explanation={decision.operator_explanation}",
                         f"wallet_captured_at={wallet_captured_at}",
                         f"decided_at={decision.decided_at.isoformat()}",
                         f"taxpayer_ref={decision.taxpayer_ref}",
@@ -445,6 +451,43 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                 ),
             )
     return tuple(lines)
+
+
+def _iva_wallet_decision_reason_text(reason: IvaCompensationDecisionReason) -> str:
+    """Localize one closed decision-reason identity for operator output."""
+    if reason is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE:
+        return tr("application.iva_wallet.decision_reason.taxpayer_override")
+    if reason is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_AEAT_WALLET:
+        return tr("application.iva_wallet.decision_reason.first_period_zero_aeat_wallet")
+    if reason is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED:
+        return tr("application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted")
+    if reason is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_LOCAL_RECURRENCE:
+        return tr("application.iva_wallet.decision_reason.first_period_zero_local_recurrence")
+    if reason is IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE:
+        return tr("application.iva_wallet.decision_reason.local_evidence_unreadable")
+    if reason is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY:
+        return tr("application.iva_wallet.decision_reason.no_usable_authority")
+    if reason is IvaCompensationDecisionReason.FILED_HISTORY_ZERO:
+        return tr("application.iva_wallet.decision_reason.filed_history_zero")
+    if reason is IvaCompensationDecisionReason.FILED_HISTORY_REQUIRES_OVERRIDE:
+        return tr("application.iva_wallet.decision_reason.filed_history_requires_override")
+    if reason is IvaCompensationDecisionReason.LOCAL_RECURRENCE_ZERO:
+        return tr("application.iva_wallet.decision_reason.local_recurrence_zero")
+    if reason is IvaCompensationDecisionReason.LOCAL_RECURRENCE_REQUIRES_OVERRIDE:
+        return tr("application.iva_wallet.decision_reason.local_recurrence_requires_override")
+    if reason is IvaCompensationDecisionReason.STALE_WALLET_NO_LOCAL_RECURRENCE:
+        return tr("application.iva_wallet.decision_reason.stale_wallet_no_local_recurrence")
+    if reason is IvaCompensationDecisionReason.STALE_WALLET_LOCAL_RECURRENCE_REQUIRES_OVERRIDE:
+        return tr("application.iva_wallet.decision_reason.stale_wallet_local_recurrence_requires_override")
+    if reason is IvaCompensationDecisionReason.WALLET_LOCAL_RECURRENCE_DIVERGENCE:
+        return tr("application.iva_wallet.decision_reason.wallet_local_recurrence_divergence")
+    if reason is IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED:
+        return tr("application.iva_wallet.decision_reason.aeat_wallet_validated")
+    if reason is IvaCompensationDecisionReason.AEAT_WALLET_UNCROSSCHECKED:
+        return tr("application.iva_wallet.decision_reason.aeat_wallet_uncrosschecked")
+    if reason is IvaCompensationDecisionReason.CALLER_ZERO_MATCHES_LOCAL_AUTHORITY:
+        return tr("application.iva_wallet.decision_reason.caller_zero_matches_local_authority")
+    raise AssertionError(f"unhandled IVA wallet decision reason {reason!r}")
 
 
 @iva_wallet_app.command(
@@ -1222,7 +1265,14 @@ def filed_pull_all_cmd(
     profile = _active_taxpayer_profile_or_none()
     resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     _emit_live_auth_preflight()
-    run = asyncio.run(pull_filed_history(output_root=resolved_root, profile=profile, limit=limit))
+    run = asyncio.run(
+        pull_filed_history(
+            output_root=resolved_root,
+            profile=profile,
+            limit=limit,
+            sync_run_repository=SyncRunRecordRepository(),
+        ),
+    )
     result, lines = _filed_pull_all_result_and_lines(run)
     notices = _filed_pull_all_notices(run, limit=limit)
     _emit_envelope(
@@ -1524,6 +1574,7 @@ def filed_pull_cmd(
             modelos=selected_modelos or None,
             limit=limit,
             dry_run=dry_run,
+            sync_run_repository=SyncRunRecordRepository(),
         ),
     )
     lines = _filed_capture_lines(

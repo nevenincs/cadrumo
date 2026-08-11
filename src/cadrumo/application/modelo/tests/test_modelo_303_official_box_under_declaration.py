@@ -238,7 +238,7 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="official-box advisory fixture",
+        reason_identity="aeat_wallet_validated",
         wallet_captured_at=_T1,
         decided_at=_T1,
     )

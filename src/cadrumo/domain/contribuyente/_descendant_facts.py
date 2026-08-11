@@ -63,7 +63,7 @@ from ._guarderia_mensual import (
     serialise_guarderia_mensual,
 )
 from ._meses_trabajo import parse_meses_trabajo, serialise_meses_trabajo
-from .family import DescendantInfo
+from .family import DescendantInfo, GuarderiaMonthSpend
 
 #: Localised refusal for a rentas figure outside the canonical euro grammar.
 #:
@@ -137,61 +137,95 @@ def descendant_facts_from_list(
     records; this function only computes the canonical key-value pairs.
     """
     facts: list[tuple[str, str]] = []
-    for idx, d in enumerate(descendientes):
+    for idx, descendant in enumerate(descendientes):
         prefix = f"{_DESCENDANT_FACT_PREFIX}.{idx}"
-        facts.append((f"{prefix}.birth_date", d.birth_date.isoformat()))
-        # The ordinary relación is the default, so it emits no fact: an absent
-        # token means an ordinary descendant on the read side too, and writing
-        # the default would make every existing profile look re-declared.
-        if d.relacion is not DescendantRelacion.DESCENDIENTE:
-            facts.append((f"{prefix}.relacion", d.relacion.value))
-        if d.inscripcion_registro_civil_date is not None:
-            facts.append((f"{prefix}.inscripcion_registro_civil", d.inscripcion_registro_civil_date.isoformat()))
-        if d.acogimiento_resolucion_date is not None:
-            facts.append((f"{prefix}.acogimiento_resolucion", d.acogimiento_resolucion_date.isoformat()))
-        if d.death_date is not None:
-            facts.append((f"{prefix}.fallecimiento", d.death_date.isoformat()))
-        if d.discapacidad_grado is not None:
-            facts.append((f"{prefix}.discapacidad", str(d.discapacidad_grado)))
-        facts.append((f"{prefix}.convivencia", "true" if d.convive_con_contribuyente else "false"))
-        # Tri-state: an UNSET dependency emits no fact, because unset and an
-        # explicit "no" are different answers and only unset may later be
-        # answered. Collapsing them would lose the distinction the
-        # assimilation turns on.
-        if d.dependencia_economica is not None:
-            facts.append((f"{prefix}.dependencia_economica", "true" if d.dependencia_economica else "false"))
-        if d.custodia_compartida:
-            facts.append((f"{prefix}.custodia_compartida", "true"))
-        if d.rentas_anuales_euros is not None:
-            facts.append((f"{prefix}.rentas_anuales", str(d.rentas_anuales_euros)))
-        if d.presenta_declaracion_propia:
-            facts.append((f"{prefix}.declaracion_propia", "true"))
-        if d.prorrata_minimo is not None:
-            facts.append((f"{prefix}.prorrata_minimo", "true" if d.prorrata_minimo else "false"))
-        if d.meses_madre_trabajo:
-            facts.append((f"{prefix}.meses_madre_trabajo", serialise_meses_trabajo(d.meses_madre_trabajo)))
-        if d.alta_posterior_nacimiento_mes is not None:
-            facts.append((f"{prefix}.alta_posterior_nacimiento_mes", str(d.alta_posterior_nacimiento_mes)))
-        if d.segundo_ciclo_infantil_inicio_mes is not None:
-            facts.append(
-                (f"{prefix}.segundo_ciclo_infantil_inicio_mes", str(d.segundo_ciclo_infantil_inicio_mes)),
-            )
-        if d.gastos_guarderia_euros > 0:
-            facts.append((f"{prefix}.gastos_guarderia", str(d.gastos_guarderia_euros)))
-        # Emitted in the canonical expanded form regardless of how it was typed,
-        # so a map entered as a range and one entered month-by-month store the
-        # same bytes and a save-then-reload round-trip is stable.
-        if d.gastos_guarderia_mensuales:
-            facts.append(
-                (
-                    f"{prefix}.gastos_guarderia_mensuales",
-                    serialise_guarderia_mensual(d.gastos_guarderia_mensuales),
-                ),
-            )
-        if d.nif is not None:
-            facts.append((f"{prefix}.nif", d.nif))
+        facts.append((f"{prefix}.birth_date", descendant.birth_date.isoformat()))
+        _append_present_facts(facts, prefix, _identity_fact_values(descendant))
+        _append_present_facts(facts, prefix, _family_fact_values(descendant))
+        _append_present_facts(facts, prefix, _maternity_fact_values(descendant))
     facts.append((_COUNT_PATH, str(len(descendientes))))
     return facts
+
+
+def _append_present_facts(
+    facts: list[tuple[str, str]],
+    prefix: str,
+    values: tuple[tuple[str, str | None], ...],
+) -> None:
+    facts.extend((f"{prefix}.{field}", value) for field, value in values if value is not None)
+
+
+def _identity_fact_values(descendant: DescendantInfo) -> tuple[tuple[str, str | None], ...]:
+    """Serialise relationship evidence, omitting the ordinary default relation."""
+    return (
+        (
+            "relacion",
+            None if descendant.relacion is DescendantRelacion.DESCENDIENTE else descendant.relacion.value,
+        ),
+        (
+            "inscripcion_registro_civil",
+            None
+            if descendant.inscripcion_registro_civil_date is None
+            else descendant.inscripcion_registro_civil_date.isoformat(),
+        ),
+        (
+            "acogimiento_resolucion",
+            None
+            if descendant.acogimiento_resolucion_date is None
+            else descendant.acogimiento_resolucion_date.isoformat(),
+        ),
+        ("fallecimiento", None if descendant.death_date is None else descendant.death_date.isoformat()),
+        ("discapacidad", None if descendant.discapacidad_grado is None else str(descendant.discapacidad_grado)),
+    )
+
+
+def _family_fact_values(descendant: DescendantInfo) -> tuple[tuple[str, str | None], ...]:
+    """Serialise eligibility facts while retaining the unset-versus-false axes."""
+    return (
+        ("convivencia", "true" if descendant.convive_con_contribuyente else "false"),
+        (
+            "dependencia_economica",
+            None if descendant.dependencia_economica is None else str(descendant.dependencia_economica).lower(),
+        ),
+        ("custodia_compartida", "true" if descendant.custodia_compartida else None),
+        ("rentas_anuales", None if descendant.rentas_anuales_euros is None else str(descendant.rentas_anuales_euros)),
+        ("declaracion_propia", "true" if descendant.presenta_declaracion_propia else None),
+        (
+            "prorrata_minimo",
+            None if descendant.prorrata_minimo is None else str(descendant.prorrata_minimo).lower(),
+        ),
+    )
+
+
+def _maternity_fact_values(descendant: DescendantInfo) -> tuple[tuple[str, str | None], ...]:
+    """Serialise Art. 81 facts, preserving their canonical month representations."""
+    return (
+        (
+            "meses_madre_trabajo",
+            None if not descendant.meses_madre_trabajo else serialise_meses_trabajo(descendant.meses_madre_trabajo),
+        ),
+        (
+            "alta_posterior_nacimiento_mes",
+            None if descendant.alta_posterior_nacimiento_mes is None else str(descendant.alta_posterior_nacimiento_mes),
+        ),
+        (
+            "segundo_ciclo_infantil_inicio_mes",
+            None
+            if descendant.segundo_ciclo_infantil_inicio_mes is None
+            else str(descendant.segundo_ciclo_infantil_inicio_mes),
+        ),
+        (
+            "gastos_guarderia",
+            None if descendant.gastos_guarderia_euros <= 0 else str(descendant.gastos_guarderia_euros),
+        ),
+        (
+            "gastos_guarderia_mensuales",
+            None
+            if not descendant.gastos_guarderia_mensuales
+            else serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales),
+        ),
+        ("nif", descendant.nif),
+    )
 
 
 _N_RE = re.compile(
@@ -218,6 +252,30 @@ class RelacionKwarg(TypedDict, total=False):
     """
 
     relacion: DescendantRelacion
+
+
+class _CivilFields(TypedDict):
+    inscripcion_registro_civil_date: date | None
+    acogimiento_resolucion_date: date | None
+    death_date: date | None
+    discapacidad_grado: Literal[0, 33, 65] | None
+
+
+class _FamilyFields(TypedDict):
+    convive_con_contribuyente: bool
+    dependencia_economica: bool | None
+    custodia_compartida: bool
+    rentas_anuales_euros: Decimal | None
+    presenta_declaracion_propia: bool
+    prorrata_minimo: bool | None
+
+
+class _MaternityFields(TypedDict):
+    meses_madre_trabajo: tuple[int, ...]
+    alta_posterior_nacimiento_mes: int | None
+    segundo_ciclo_infantil_inicio_mes: int | None
+    gastos_guarderia_euros: int
+    gastos_guarderia_mensuales: tuple[GuarderiaMonthSpend, ...]
 
 
 def relacion_kwarg(relacion: DescendantRelacion | None) -> RelacionKwarg:
@@ -285,105 +343,91 @@ def descendant_list_from_facts(facts: dict[str, str]) -> tuple[DescendantInfo, .
         field = m.group(2)
         rows.setdefault(idx, {})[field] = value
 
-    result: list[DescendantInfo] = []
-    for idx in sorted(rows):
-        row = rows[idx]
-        birth_raw = row.get("birth_date")
-        if not birth_raw:
-            continue
-        # parse_iso8601_date returns None only for absent/empty input (it raises
-        # on a malformed non-empty string); birth_raw is non-empty here.
-        birth_date = parse_iso8601_date(birth_raw)
-        assert birth_date is not None
-        relacion = _stored_relacion(row.get("relacion"), index=idx)
-        inscripcion_raw = row.get("inscripcion_registro_civil")
-        inscripcion_date = parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None
-        acogimiento_raw = row.get("acogimiento_resolucion")
-        acogimiento_date = parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None
-        fallecimiento_raw = row.get("fallecimiento")
-        death_date = parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None
-        discapacidad_raw = row.get("discapacidad")
-        if discapacidad_raw is not None:
-            disc_val = int(discapacidad_raw)
-            if disc_val not in (0, 33, 65):
-                disc_val = 0
-        else:
-            disc_val = None
-        convivencia_raw = row.get("convivencia", "true")
-        convive = convivencia_raw.lower() not in ("false", "0")
-        dependencia_raw = row.get("dependencia_economica")
-        dependencia = (
-            _flag_bool(dependencia_raw, key=f"renta_family.descendiente.{idx}.dependencia_economica")
+    return tuple(_descendant_from_stored_row(idx, row) for idx, row in sorted(rows.items()) if row.get("birth_date"))
+
+
+def _descendant_from_stored_row(index: int, row: dict[str, str]) -> DescendantInfo:
+    """Hydrate one complete descendant record from its canonical fact row."""
+    birth_raw = row["birth_date"]
+    birth_date = parse_iso8601_date(birth_raw)
+    # The row filter rejects absent/empty values; the parser raises on a
+    # malformed non-empty value, so a surviving row always has a date.
+    assert birth_date is not None
+    relacion = _stored_relacion(row.get("relacion"), index=index)
+    return DescendantInfo(
+        birth_date=birth_date,
+        **relacion_kwarg(relacion),
+        **_stored_civil_fields(row),
+        **_stored_family_fields(row, index=index),
+        **_stored_maternity_fields(row, index=index),
+        nif=row.get("nif"),
+    )
+
+
+def _stored_civil_fields(row: dict[str, str]) -> _CivilFields:
+    inscripcion_raw = row.get("inscripcion_registro_civil")
+    acogimiento_raw = row.get("acogimiento_resolucion")
+    fallecimiento_raw = row.get("fallecimiento")
+    discapacidad_raw = row.get("discapacidad")
+    disc_val = int(discapacidad_raw) if discapacidad_raw is not None else None
+    if disc_val is not None and disc_val not in (0, 33, 65):
+        disc_val = 0
+    return {
+        "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
+        "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
+        "death_date": parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None,
+        "discapacidad_grado": _discapacidad_grade(disc_val),
+    }
+
+
+def _stored_family_fields(row: dict[str, str], *, index: int) -> _FamilyFields:
+    dependencia_raw = row.get("dependencia_economica")
+    declaracion_raw = row.get("declaracion_propia")
+    prorrata_raw = row.get("prorrata_minimo")
+    return {
+        "convive_con_contribuyente": row.get("convivencia", "true").lower() not in ("false", "0"),
+        "dependencia_economica": (
+            _flag_bool(dependencia_raw, key=f"renta_family.descendiente.{index}.dependencia_economica")
             if dependencia_raw is not None
             else None
-        )
-        custodia_raw = row.get("custodia_compartida", "false")
-        custodia = custodia_raw.lower() not in ("false", "0")
-        rentas_anuales = _stored_rentas_anuales(row.get("rentas_anuales"), index=idx)
-        declaracion_raw = row.get("declaracion_propia")
-        declaracion_propia = (
-            _flag_bool(declaracion_raw, key=f"renta_family.descendiente.{idx}.declaracion_propia")
+        ),
+        "custodia_compartida": row.get("custodia_compartida", "false").lower() not in ("false", "0"),
+        "rentas_anuales_euros": _stored_rentas_anuales(row.get("rentas_anuales"), index=index),
+        "presenta_declaracion_propia": (
+            _flag_bool(declaracion_raw, key=f"renta_family.descendiente.{index}.declaracion_propia")
             if declaracion_raw is not None
             else False
-        )
-        prorrata_raw = row.get("prorrata_minimo")
-        prorrata_minimo = (
-            _flag_bool(prorrata_raw, key=f"renta_family.descendiente.{idx}.prorrata_minimo")
+        ),
+        "prorrata_minimo": (
+            _flag_bool(prorrata_raw, key=f"renta_family.descendiente.{index}.prorrata_minimo")
             if prorrata_raw is not None
             else None
-        )
-        # A stored month set that will not parse REFUSES rather than silently
-        # emptying, for the same reason the guarderia map below does: an empty
-        # set withholds the whole Art. 81.1 deduccion and the Art. 81.2
-        # increment that prorates by it, so a corrupted value would make a
-        # deduction disappear with nothing said.
-        meses_raw = row.get("meses_madre_trabajo")
-        meses = (
-            parse_meses_trabajo(meses_raw, field=f"renta_family.descendiente.{idx}.meses_madre_trabajo")
+        ),
+    }
+
+
+def _stored_maternity_fields(row: dict[str, str], *, index: int) -> _MaternityFields:
+    meses_raw = row.get("meses_madre_trabajo")
+    return {
+        "meses_madre_trabajo": (
+            parse_meses_trabajo(meses_raw, field=f"renta_family.descendiente.{index}.meses_madre_trabajo")
             if meses_raw is not None
             else ()
-        )
-        alta_posterior_mes = _stored_alta_posterior_mes(row.get("alta_posterior_nacimiento_mes"), index=idx)
-        segundo_ciclo_mes = _stored_alta_posterior_mes(
+        ),
+        "alta_posterior_nacimiento_mes": _stored_alta_posterior_mes(
+            row.get("alta_posterior_nacimiento_mes"),
+            index=index,
+        ),
+        "segundo_ciclo_infantil_inicio_mes": _stored_alta_posterior_mes(
             row.get("segundo_ciclo_infantil_inicio_mes"),
-            index=idx,
-        )
-        gastos = _stored_gastos_guarderia(row.get("gastos_guarderia"), index=idx)
-        # A stored map that will not parse REFUSES rather than resolving to the
-        # empty tuple, on this module's standing reading of which direction a
-        # silent fallback points. Empty means "no monthly breakdown declared",
-        # which in the turning-three period makes the spend contribute nothing
-        # at all -- so a corrupted map would quietly withhold the whole Art.
-        # 81.2 increase from the household the extension exists for, and the
-        # operator would see a deduction disappear with nothing said.
-        mensuales = parse_guarderia_mensual(
+            index=index,
+        ),
+        "gastos_guarderia_euros": _stored_gastos_guarderia(row.get("gastos_guarderia"), index=index),
+        "gastos_guarderia_mensuales": parse_guarderia_mensual(
             row.get("gastos_guarderia_mensuales") or "",
-            field=f"renta_family.descendiente.{idx}.gastos_guarderia_mensuales",
-        )
-        nif = row.get("nif")
-        result.append(
-            DescendantInfo(
-                birth_date=birth_date,
-                **relacion_kwarg(relacion),
-                inscripcion_registro_civil_date=inscripcion_date,
-                acogimiento_resolucion_date=acogimiento_date,
-                death_date=death_date,
-                discapacidad_grado=_discapacidad_grade(disc_val),
-                convive_con_contribuyente=convive,
-                dependencia_economica=dependencia,
-                custodia_compartida=custodia,
-                rentas_anuales_euros=rentas_anuales,
-                presenta_declaracion_propia=declaracion_propia,
-                prorrata_minimo=prorrata_minimo,
-                meses_madre_trabajo=meses,
-                alta_posterior_nacimiento_mes=alta_posterior_mes,
-                segundo_ciclo_infantil_inicio_mes=segundo_ciclo_mes,
-                gastos_guarderia_euros=gastos,
-                gastos_guarderia_mensuales=mensuales,
-                nif=nif,
-            ),
-        )
-    return tuple(result)
+            field=f"renta_family.descendiente.{index}.gastos_guarderia_mensuales",
+        ),
+    }
 
 
 def _stored_alta_posterior_mes(raw: str | None, *, index: int) -> int | None:
@@ -632,118 +676,84 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     relacion_raw = parts.get("RELACION")
     relacion = _stored_relacion(relacion_raw.strip() or None if relacion_raw else None, index=0)
 
-    inscripcion_date: date | None = None
+    civil_fields = _flag_civil_fields(parts)
+    family_fields = _flag_family_fields(parts)
+    maternity_fields = _flag_maternity_fields(parts)
+    nif_raw = parts.get("NIF")
+
+    return DescendantInfo(
+        birth_date=birth_date,
+        **relacion_kwarg(relacion),
+        **civil_fields,
+        **family_fields,
+        **maternity_fields,
+        nif=tax_id_identity_token(nif_raw) if nif_raw else None,
+    )
+
+
+def _flag_civil_fields(parts: dict[str, str]) -> _CivilFields:
     inscripcion_raw = parts.get("INSCRIPCION")
-    if inscripcion_raw:
-        inscripcion_date = parse_iso8601_date(inscripcion_raw)
-
-    acogimiento_date: date | None = None
     acogimiento_raw = parts.get("ACOGIMIENTO")
-    if acogimiento_raw:
-        acogimiento_date = parse_iso8601_date(acogimiento_raw)
-
-    death_date = None
     fallecimiento_raw = parts.get("FALLECIMIENTO")
-    if fallecimiento_raw:
-        death_date = parse_iso8601_date(fallecimiento_raw)
-
-    discapacidad_grado = None
     disc_raw = parts.get("DISCAPACIDAD")
-    if disc_raw is not None:
-        val = int(disc_raw)
-        if val not in (0, 33, 65):
-            raise ProfileAnswerTypeError(f"DISCAPACIDAD must be 0, 33, or 65; got {val!r}")
-        discapacidad_grado = val
+    discapacidad_grado: int | None = int(disc_raw) if disc_raw is not None else None
+    if discapacidad_grado not in (None, 0, 33, 65):
+        raise ProfileAnswerTypeError(f"DISCAPACIDAD must be 0, 33, or 65; got {discapacidad_grado!r}")
+    return {
+        "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw) if inscripcion_raw else None,
+        "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw) if acogimiento_raw else None,
+        "death_date": parse_iso8601_date(fallecimiento_raw) if fallecimiento_raw else None,
+        "discapacidad_grado": _discapacidad_grade(discapacidad_grado),
+    }
 
-    convive = True
+
+def _flag_family_fields(parts: dict[str, str]) -> _FamilyFields:
     conv_raw = parts.get("CONVIVENCIA")
-    if conv_raw is not None:
-        convive = _flag_bool(conv_raw, key="CONVIVENCIA")
-
-    dependencia: bool | None = None
     dependencia_raw = parts.get("DEPENDENCIA")
-    if dependencia_raw is not None:
-        dependencia = _flag_bool(dependencia_raw, key="DEPENDENCIA")
-
-    custodia = False
     custodia_raw = parts.get("CUSTODIA")
-    if custodia_raw is not None:
-        custodia = _flag_bool(custodia_raw, key="CUSTODIA")
-
-    rentas_anuales_euros = _stored_rentas_anuales(parts.get("RENTAS") or None, index=0)
-
-    presenta_declaracion_propia = False
     declaracion_raw = parts.get("DECLARACION_PROPIA")
-    if declaracion_raw is not None:
-        presenta_declaracion_propia = _flag_bool(declaracion_raw, key="DECLARACION_PROPIA")
-
-    prorrata_minimo: bool | None = None
     prorrata_raw = parts.get("PRORRATA")
-    if prorrata_raw is not None:
-        prorrata_minimo = _flag_bool(prorrata_raw, key="PRORRATA")
+    return {
+        "convive_con_contribuyente": _flag_bool(conv_raw, key="CONVIVENCIA") if conv_raw is not None else True,
+        "dependencia_economica": (
+            _flag_bool(dependencia_raw, key="DEPENDENCIA") if dependencia_raw is not None else None
+        ),
+        "custodia_compartida": _flag_bool(custodia_raw, key="CUSTODIA") if custodia_raw is not None else False,
+        "rentas_anuales_euros": _stored_rentas_anuales(parts.get("RENTAS") or None, index=0),
+        "presenta_declaracion_propia": (
+            _flag_bool(declaracion_raw, key="DECLARACION_PROPIA") if declaracion_raw is not None else False
+        ),
+        "prorrata_minimo": _flag_bool(prorrata_raw, key="PRORRATA") if prorrata_raw is not None else None,
+    }
 
-    meses_madre_trabajo: tuple[int, ...] = ()
+
+def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
     meses_raw = parts.get("MESES_TRABAJO")
-    if meses_raw is not None:
-        meses_madre_trabajo = parse_meses_trabajo(meses_raw, field="MESES_TRABAJO")
-
-    alta_posterior_nacimiento_mes: int | None = None
     alta_posterior_raw = parts.get("ALTA_POSTERIOR_MES")
-    if alta_posterior_raw is not None:
-        alta_posterior_val = int(alta_posterior_raw)
-        if not (1 <= alta_posterior_val <= 12):
-            raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_val!r}")
-        alta_posterior_nacimiento_mes = alta_posterior_val
-
-    gastos_guarderia_euros = 0
+    alta_posterior_nacimiento_mes = int(alta_posterior_raw) if alta_posterior_raw is not None else None
+    if alta_posterior_nacimiento_mes is not None and not 1 <= alta_posterior_nacimiento_mes <= 12:
+        raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}")
     gastos_raw = parts.get("GASTOS_GUARDERIA")
-    if gastos_raw is not None:
-        gastos_val = int(gastos_raw)
-        if gastos_val < 0:
-            raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_val!r}")
-        gastos_guarderia_euros = gastos_val
-
+    gastos_guarderia_euros = int(gastos_raw) if gastos_raw is not None else 0
+    if gastos_guarderia_euros < 0:
+        raise ProfileAnswerTypeError(f"GASTOS_GUARDERIA must be ≥ 0; got {gastos_guarderia_euros!r}")
     gastos_guarderia_mensuales = parse_guarderia_mensual(
         parts.get("GASTOS_GUARDERIA_MENSUAL") or "",
         field="GASTOS_GUARDERIA_MENSUAL",
     )
-    # Raised HERE as well as by the record, and the flag door's copy is the one
-    # the operator reads. A refusal left to the model surfaces as a pydantic
-    # ValidationError, which this verb's handler does not translate -- so the
-    # operator would meet a raw traceback instead of a sentence naming the two
-    # keys and which one to drop. The record keeps its own refusal for every
-    # other door.
     if gastos_guarderia_mensuales and gastos_guarderia_euros > 0:
         raise ProfileAnswerTypeError(
             "--descendiente accepts GASTOS_GUARDERIA or GASTOS_GUARDERIA_MENSUAL for one "
             "descendant, not both. The monthly breakdown is the authority where it exists, "
             "so drop GASTOS_GUARDERIA rather than stating the same spend twice.",
         )
-
-    nif: str | None = None
-    nif_raw = parts.get("NIF")
-    if nif_raw:
-        nif = tax_id_identity_token(nif_raw)
-
-    return DescendantInfo(
-        birth_date=birth_date,
-        **relacion_kwarg(relacion),
-        inscripcion_registro_civil_date=inscripcion_date,
-        acogimiento_resolucion_date=acogimiento_date,
-        death_date=death_date,
-        discapacidad_grado=_discapacidad_grade(discapacidad_grado),
-        convive_con_contribuyente=convive,
-        dependencia_economica=dependencia,
-        custodia_compartida=custodia,
-        rentas_anuales_euros=rentas_anuales_euros,
-        presenta_declaracion_propia=presenta_declaracion_propia,
-        prorrata_minimo=prorrata_minimo,
-        meses_madre_trabajo=meses_madre_trabajo,
-        alta_posterior_nacimiento_mes=alta_posterior_nacimiento_mes,
-        gastos_guarderia_euros=gastos_guarderia_euros,
-        gastos_guarderia_mensuales=gastos_guarderia_mensuales,
-        nif=nif,
-    )
+    return {
+        "meses_madre_trabajo": parse_meses_trabajo(meses_raw, field="MESES_TRABAJO") if meses_raw is not None else (),
+        "alta_posterior_nacimiento_mes": alta_posterior_nacimiento_mes,
+        "segundo_ciclo_infantil_inicio_mes": None,
+        "gastos_guarderia_euros": gastos_guarderia_euros,
+        "gastos_guarderia_mensuales": gastos_guarderia_mensuales,
+    }
 
 
 __all__ = [

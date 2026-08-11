@@ -20,7 +20,6 @@ so the application layer never depends on this package.
 from __future__ import annotations
 
 import importlib
-import pkgutil
 
 import typer
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,32 +31,15 @@ from ...application.operator_surface import (
 from ...core.i18n import tr
 from ...core.json_contract import ENVELOPE_SCHEMA_VERSION, SCHEMA_REGISTRY, Notice, NoticeSeverity
 from ...core.logging import get_logger
+from ..schema_surface import RESULT_SCHEMA_MODULES
 from ._app_contract_payloads import ContractManifestResult
 from ._common import _emit_envelope
 
 logger = get_logger(__name__)
 
-# The two package locations that own ``@register_schema``-decorated ``--json``
-# result-payload modules. The registry populates lazily as the CLI dispatches
-# into a subtree, so the manifest command force-loads every payload module first
-# to enumerate the complete registered set. Limited to the payload directories
-# so importing the manifest command never pulls the test tree.
-_PAYLOAD_PACKAGES: tuple[str, ...] = (
-    "cadrumo.entrypoints.cli",
-    "cadrumo.entrypoints.cli._config",
-)
-
-# Result schemas normally live beside their CLI transport emitters and are
-# found by the payload-package walk above. A small number are correctly owned
-# below the application boundary, where their producers construct them. Keep
-# those owners explicit rather than creating a CLI re-export merely to satisfy
-# a filename-driven scanner. These imports occur only while building the
-# capability manifest/MCP surface, never during command parsing or dispatch.
-_LAZY_SCHEMA_OWNER_MODULES: tuple[str, ...] = ("cadrumo.application.wizard._results",)
-
 
 class SchemaModuleLoadFailure(BaseModel):
-    """One payload module that failed to import during registry population.
+    """One declared result-schema module that failed to populate the registry.
 
     Carried so the contract command can DEGRADE GRACEFULLY: a single broken
     payload module (typically an unrelated in-flight refactor that trips a
@@ -73,20 +55,14 @@ class SchemaModuleLoadFailure(BaseModel):
     error: str = Field(min_length=1)
 
 
-def _ensure_result_schemas_registered(
-    *,
-    payload_packages: tuple[str, ...] | None = None,
-) -> tuple[SchemaModuleLoadFailure, ...]:
-    """Import every ``*_payloads`` module so ``SCHEMA_REGISTRY`` is complete.
+def _ensure_result_schemas_registered() -> tuple[SchemaModuleLoadFailure, ...]:
+    """Import each canonical result-schema owner so ``SCHEMA_REGISTRY`` is complete.
 
     The CLI registers result schemas through module-level
     :func:`~core.json_contract.register_schema` decorators that only
-    run when their payload module is imported. The manifest must reflect the
-    whole registry, so this imports every payload module under the known payload
-    packages before the projection is read. The ``payload`` substring match (not
-    a strict ``_payloads`` suffix) is deliberate: the payload modules use three
-    naming shapes - ``_<area>_payloads``, ``_payloads_<area>``, and
-    ``_<area>_payloads_<variant>`` - and all must be loaded.
+    run when their owning module is imported. The manifest imports the one
+    canonical declaration from :mod:`entrypoints.schema_surface`; it never
+    infers owners from package contents or filenames.
 
     RESILIENT: each payload module import is isolated in its own ``try`` so a
     single broken module contributes ONE :class:`SchemaModuleLoadFailure` and
@@ -101,20 +77,7 @@ def _ensure_result_schemas_registered(
         The load failures, empty when every payload module imported cleanly.
     """
     failures: list[SchemaModuleLoadFailure] = []
-    for package_name in payload_packages or _PAYLOAD_PACKAGES:
-        try:
-            package = importlib.import_module(package_name)  # nosem
-        except Exception as exc:
-            failures.append(SchemaModuleLoadFailure(module=package_name, error=f"{type(exc).__name__}: {exc}"))
-            continue
-        for module_info in pkgutil.iter_modules(package.__path__):
-            if "payload" in module_info.name and not module_info.ispkg:
-                module_name = f"{package_name}.{module_info.name}"
-                try:
-                    importlib.import_module(module_name)  # nosem
-                except Exception as exc:
-                    failures.append(SchemaModuleLoadFailure(module=module_name, error=f"{type(exc).__name__}: {exc}"))
-    for module_name in _LAZY_SCHEMA_OWNER_MODULES:
+    for module_name in RESULT_SCHEMA_MODULES:
         try:
             importlib.import_module(module_name)  # nosem
         except Exception as exc:
@@ -130,7 +93,7 @@ def _project_registry() -> tuple[CommandSchemaRef, ...]:
     )
 
 
-def command_schema_refs(*, payload_packages: tuple[str, ...] | None = None) -> tuple[CommandSchemaRef, ...]:
+def command_schema_refs() -> tuple[CommandSchemaRef, ...]:
     """Populate the registry (resiliently) and project it into manifest references.
 
     Discards the per-module load failures - the consumers that need only the
@@ -143,7 +106,7 @@ def command_schema_refs(*, payload_packages: tuple[str, ...] | None = None) -> t
         One :class:`CommandSchemaRef` per registered command, sorted by
         command name.
     """
-    _ensure_result_schemas_registered(payload_packages=payload_packages)
+    _ensure_result_schemas_registered()
     return _project_registry()
 
 
@@ -157,9 +120,6 @@ def _schema_load_notices(failures: tuple[SchemaModuleLoadFailure, ...]) -> list[
                 "cli.contract.schema_module_load_failed",
                 module=failure.module,
                 error=failure.error,
-                default="Capability surface degraded: the result-schema module '{module}' failed to load "
-                "({error}); the commands it registers are absent from this manifest. This is usually an "
-                "unrelated in-flight code change, not a data problem.",
             ),
             context={"module": failure.module, "error": failure.error},
         )
@@ -187,11 +147,9 @@ def _contract_root(ctx: typer.Context) -> None:
     """
     if ctx.invoked_subcommand is not None:
         return
-    # Populate the registry resiliently: a broken payload module degrades the
-    # manifest by one command and becomes a warning notice, never an opaque
-    # crash of the grounding entry point (the command the operator rules read
-    # first). Both calls walk an already-cached import set, so the second is a
-    # near-no-op.
+    # Populate the registry from its canonical owner declaration. A broken
+    # declared module becomes a typed warning notice rather than an opaque crash
+    # of the grounding entry point. Both calls reuse Python's import cache.
     load_failures = _ensure_result_schemas_registered()
     command_schemas = _project_registry()
     manifest = build_operator_surface_manifest(
@@ -221,25 +179,21 @@ def _render_contract_lines(contract: object, command_count: int) -> list[str]:
     steps = getattr(lifecycle, "steps", ()) if lifecycle is not None else ()
     roots = getattr(contract, "roots", ())
     lines = [
-        tr("cli.contract.summary_heading", default="Operator surface manifest"),
+        tr("cli.contract.summary_heading"),
         tr(
             "cli.contract.summary_roots",
-            default="Roots: {roots}",
             roots=", ".join(getattr(root.name, "value", str(root.name)) for root in roots),
         ),
         tr(
             "cli.contract.summary_families",
-            default="Command families: {count}",
             count=str(len(families)),
         ),
         tr(
             "cli.contract.summary_lifecycle",
-            default="Modelo lifecycle: {steps}",
             steps=" -> ".join(getattr(step, "value", str(step)) for step in steps),
         ),
         tr(
             "cli.contract.summary_commands",
-            default="Registered commands: {count}",
             count=str(command_count),
         ),
     ]

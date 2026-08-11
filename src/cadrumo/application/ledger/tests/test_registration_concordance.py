@@ -50,7 +50,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373738"
 
-_GERMAN_VAT = "DE811234567"
+_GERMAN_IVA = "DE811234567"
 _SPANISH_CIF = "B12345674"
 
 _MADRID = "28013"
@@ -105,12 +105,12 @@ def _resolve(
 class TestARegistrationAloneSettlesNoTerritory:
     """The rung that was removed, asserted from both sides of the symmetry."""
 
-    def test_a_german_vat_number_alone_establishes_nothing(
+    def test_a_german_iva_number_alone_establishes_nothing(
         self,
         repository: ConfirmedCounterpartyFactsRepository,
     ) -> None:
         """The defect itself: this used to return EU_MEMBER and stop the ladder."""
-        resolved = _resolve(repository, tax_identifier=_GERMAN_VAT)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA)
 
         assert resolved.scope is None
         assert resolved.rung is None
@@ -131,7 +131,7 @@ class TestARegistrationAloneSettlesNoTerritory:
         repository: ConfirmedCounterpartyFactsRepository,
     ) -> None:
         """The symmetry itself. A repair tightening one side reddens exactly this."""
-        german = _resolve(repository, tax_identifier=_GERMAN_VAT)
+        german = _resolve(repository, tax_identifier=_GERMAN_IVA)
         spanish = _resolve(repository, tax_identifier=_SPANISH_CIF)
 
         assert (german.scope, german.rung) == (spanish.scope, spanish.rung) == (None, None)
@@ -147,7 +147,7 @@ class TestARegistrationAloneSettlesNoTerritory:
         asserting only the refusal would be satisfied by a ladder that had
         stopped reading the number at all.
         """
-        resolved = _resolve(repository, tax_identifier=_GERMAN_VAT)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA)
 
         assert resolved.identification_state is EUMemberState.DE
         assert resolved.scope is None
@@ -166,7 +166,7 @@ class TestConcordantPapersResolveSilently:
         German-established party whatever State registered it. This is why the
         prefix could be demoted without asking about most foreign invoices.
         """
-        resolved = _resolve(repository, tax_identifier=_GERMAN_VAT, country_name="Alemania", postal_code=_BERLIN)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="Alemania", postal_code=_BERLIN)
 
         assert resolved.scope is IvaTerritorialScope.EU_MEMBER
         assert resolved.rung is EstablishmentRung.ADDRESS_COUNTRY
@@ -178,7 +178,7 @@ class TestConcordantPapersResolveSilently:
         repository: ConfirmedCounterpartyFactsRepository,
     ) -> None:
         """The concordance rung proper: registration plus an independent treatment."""
-        resolved = _resolve(repository, tax_identifier=_GERMAN_VAT, regime_legend=_REVERSE_CHARGE)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, regime_legend=_REVERSE_CHARGE)
 
         assert resolved.scope is IvaTerritorialScope.EU_MEMBER
         assert resolved.rung is EstablishmentRung.CONCORDANT_REGISTRATION
@@ -208,7 +208,7 @@ class TestConcordantPapersResolveSilently:
         """
         resolved = _resolve(
             repository,
-            tax_identifier=_GERMAN_VAT,
+            tax_identifier=_GERMAN_IVA,
             regime_legend=_REVERSE_CHARGE,
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
         )
@@ -227,7 +227,7 @@ class TestConflictedPapersSurface:
         """The design's named conflict fixture, and never a silent EU_MEMBER."""
         resolved = _resolve(
             repository,
-            tax_identifier=_GERMAN_VAT,
+            tax_identifier=_GERMAN_IVA,
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
         )
 
@@ -242,7 +242,7 @@ class TestConflictedPapersSurface:
         repository: ConfirmedCounterpartyFactsRepository,
     ) -> None:
         """The other face of the same entity: registered abroad, addressed here."""
-        resolved = _resolve(repository, tax_identifier=_GERMAN_VAT, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID)
 
         assert resolved.conflicted
         assert resolved.scope is None
@@ -258,7 +258,7 @@ class TestConflictedPapersSurface:
         document has not settled. Checking after the rungs would let exactly the
         dangerous population resolve, just to a different wrong value.
         """
-        resolved = _resolve(repository, tax_identifier=_GERMAN_VAT, country_name="España", postal_code=_MADRID)
+        resolved = _resolve(repository, tax_identifier=_GERMAN_IVA, country_name="España", postal_code=_MADRID)
 
         assert resolved.scope is not IvaTerritorialScope.ES_MAINLAND
         assert resolved.rung is not EstablishmentRung.SPANISH_POSTAL_CODE
@@ -291,7 +291,7 @@ class TestConflictedPapersSurface:
         """
         resolved = _resolve(
             repository,
-            tax_identifier=_GERMAN_VAT,
+            tax_identifier=_GERMAN_IVA,
             regime_legend=_REVERSE_CHARGE,
             charged_iva_rates=(Decimal("19"),),
         )
@@ -311,7 +311,7 @@ class TestConflictedPapersSurface:
         """
         resolved = _resolve(
             repository,
-            tax_identifier=_GERMAN_VAT,
+            tax_identifier=_GERMAN_IVA,
             charged_iva_rates=(_SPANISH_GENERAL_RATE,),
             on_date=None,
         )

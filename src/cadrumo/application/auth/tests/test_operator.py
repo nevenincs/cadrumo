@@ -14,7 +14,7 @@ from ....adapters.outbound.aeat.auth import _session_store
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ....core import AuthProviderKind, Period
+from ....core import AuthProviderKind, NoRecoveryOutcome, Period
 from ....core.config import Settings, load_settings, override_settings
 from ....core.time import frozen_clock
 from ....domain.buckets import BucketEventType
@@ -93,8 +93,7 @@ def test_auth_status_preserves_the_active_profile_typed_verdict() -> None:
     assert verdict is not None
     assert verdict.failed_condition_id == "profile.active.pointer_registered"
     assert verdict.action is None
-    assert verdict.no_recovery_outcome is not None
-    assert verdict.no_recovery_outcome.value == "operator_decision"
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 def test_auth_status_is_not_blocked_by_unreadable_workspace_drafts() -> None:
@@ -425,7 +424,7 @@ def test_configure_operator_auth_certificate_without_file_is_incomplete() -> Non
     assert verdict is not None
     assert verdict.failed_condition_id == "auth.certificate.file_ready"
     assert verdict.action is None
-    assert verdict.no_recovery_outcome.value == "operator_decision"
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values == {
         "certificate_file_provided": False,
         "certificate_file_resolves": False,
@@ -757,7 +756,7 @@ def test_configure_clave_movil_mismatch_carries_an_explanatory_detail() -> None:
     assert verdict is not None
     assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
     assert verdict.action is None
-    assert verdict.no_recovery_outcome.value == "operator_decision"
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
     assert verdict.evidence[0].values["identity_alignment"] == "mismatch"
 
 

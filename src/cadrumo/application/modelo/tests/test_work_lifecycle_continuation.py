@@ -32,9 +32,6 @@ _LOCALES = ("en", "es", "ca", "hu")
 
 def _work_unit(*, state: WorkUnitState = WorkUnitState.BORRADOR, period_code: str = "1T") -> WorkUnit:
     period = Period.from_year_and_code(2026, period_code)
-    discard_metadata = (
-        {} if state is WorkUnitState.BORRADOR else {"discarded_at": _OBSERVED_AT, "discarded_by": "operator-1"}
-    )
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
@@ -50,9 +47,10 @@ def _work_unit(*, state: WorkUnitState = WorkUnitState.BORRADOR, period_code: st
         period=period,
         revision_id="2019-y-siguientes",
         state=state,
+        discarded_at=None if state is WorkUnitState.BORRADOR else _OBSERVED_AT,
+        discarded_by=None if state is WorkUnitState.BORRADOR else "operator-1",
         created_at=_OBSERVED_AT,
         updated_at=_OBSERVED_AT,
-        **discard_metadata,
     )
 
 

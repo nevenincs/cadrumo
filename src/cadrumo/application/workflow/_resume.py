@@ -59,10 +59,10 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
+from ...domain.calculations.registry import RevisionId
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
 from ._persistence import list_runs, load_run
-from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...domain.modelos import WorkUnit

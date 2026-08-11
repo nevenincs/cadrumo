@@ -104,6 +104,7 @@ from ..storage import (
 )
 from ..storage.sql import TransactionDateIndexRow
 from ..storage.sql.session import session_scope
+from .bienes_inversion import BienesInversionIvaRegisterRepository
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import (
@@ -118,6 +119,7 @@ _TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
 _TX_CATALOGUE_SENSITIVITY = TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
 TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
 _JSON_OBJECT = TypeAdapter(dict[str, object])
+
 
 class _TransactionIndex(BaseModel):
     """Per-bucket membership list: the transaction ids this bucket owns.
@@ -312,13 +314,13 @@ class TransactionCatalogueRepository:
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
+
         index_ids = self._load_index_ids()
         if not index_ids:
             return TransactionCatalogue.from_transactions([])
         index_key = transaction_index_object_key(self._bucket_id)
         transaction_keys = {
-            transaction_id: transaction_object_key(self._bucket_id, transaction_id)
-            for transaction_id in index_ids
+            transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in index_ids
         }
         self._require_current_rows(transaction_keys.values())
         migrated = self._objects.migrate_many_atomically(
@@ -406,8 +408,7 @@ class TransactionCatalogueRepository:
         """Validate the whole upgraded catalogue before any v2 row replacement."""
         transactions = self._validated_migrated_transactions(payloads)
         if any(
-            transaction.deduction_fact_kind is not None
-            and transaction.deduction_fact_kind.is_investment_acquisition
+            transaction.deduction_fact_kind is not None and transaction.deduction_fact_kind.is_investment_acquisition
             for transaction in transactions
         ):
             raise LedgerStorageError(
@@ -478,9 +479,7 @@ class TransactionCatalogueRepository:
                 )
             rate_kind = next(iter(rate_kinds))
         invoice_kind = (
-            InvoiceKind.RECEIVED
-            if transaction.direction is TransactionDirection.OUTGOING
-            else InvoiceKind.ISSUED
+            InvoiceKind.RECEIVED if transaction.direction is TransactionDirection.OUTGOING else InvoiceKind.ISSUED
         )
         flow_direction = derive_flow_for_classification(
             category=transaction.iva_category,
@@ -502,17 +501,16 @@ class TransactionCatalogueRepository:
         self,
         *,
         asset_profile_id: str,
-    ) -> None:
-        """Atomically migrate the catalogue and its persisted reciprocal register."""
+    ) -> BienesInversionIvaRegister:
+        """Migrate the catalogue and return its reciprocal Bienes authority."""
         if asset_profile_id != self._bucket_id:
             raise LedgerStorageError("transaction and bienes-inversion profiles must be identical")
         index_ids = self._load_index_ids(require_current=False)
         if not index_ids:
-            return
+            return BienesInversionIvaRegisterRepository(bucket_id=asset_profile_id).load()
         index_key = transaction_index_object_key(self._bucket_id)
         transaction_keys = {
-            transaction_id: transaction_object_key(self._bucket_id, transaction_id)
-            for transaction_id in index_ids
+            transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in index_ids
         }
 
         bienes_definition = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
@@ -520,9 +518,7 @@ class TransactionCatalogueRepository:
 
         def validate(payloads: Mapping[tuple[str, str], bytes]) -> None:
             transaction_payloads = {
-                key: payload
-                for (namespace, key), payload in payloads.items()
-                if namespace == TX_BUCKET_NAMESPACE
+                key: payload for (namespace, key), payload in payloads.items() if namespace == TX_BUCKET_NAMESPACE
             }
             transactions = self._validated_migrated_transactions(transaction_payloads)
             register_payload = payloads.get((bienes_definition.namespace, bienes_key))
@@ -542,9 +538,7 @@ class TransactionCatalogueRepository:
                             "deduction kind without an asset link"
                         )
                     transaction_date = (
-                        transaction.operation_date
-                        or transaction.raw.value_date
-                        or transaction.raw.booked_date
+                        transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
                     )
                     links = links_by_year.get(transaction_date.year)
                     if links is None:
@@ -559,10 +553,7 @@ class TransactionCatalogueRepository:
                             prorrata_sector_id=transaction.prorrata_sector_id,
                         )
                     )
-            years = sorted(
-                set(links_by_year)
-                | {record.acquisition_year for record in register.records}
-            )
+            years = sorted(set(links_by_year) | {record.acquisition_year for record in register.records})
             for filing_year in years:
                 validate_investment_asset_reciprocity(
                     observations=tuple(links_by_year.get(filing_year, [])),
@@ -593,6 +584,7 @@ class TransactionCatalogueRepository:
             validate_upgraded_payloads=validate,
             write_provenance="transaction-catalogue:iva-deduction-migration",
         )
+        return BienesInversionIvaRegisterRepository(bucket_id=asset_profile_id).load()
 
     def save(self, catalogue: TransactionCatalogue) -> None:
         """Persist ``catalogue`` as per-transaction encrypted rows.
@@ -906,9 +898,7 @@ class TransactionCatalogueRepository:
         """
         with session_scope(self._objects.engine) as session:
             any_row = session.execute(
-                select(TransactionDateIndexRow.id)
-                .where(TransactionDateIndexRow.bucket_id == self._bucket_id)
-                .limit(1),
+                select(TransactionDateIndexRow.id).where(TransactionDateIndexRow.bucket_id == self._bucket_id).limit(1),
             ).first()
             if any_row is None:
                 return None
@@ -1109,9 +1099,7 @@ class TransactionCatalogueRepository:
             and row.schema_version != _TX_CATALOGUE_VERSION
         ]
         if old:
-            raise LedgerStorageError(
-                "transaction catalogue requires explicit IVA authority migration before read"
-            )
+            raise LedgerStorageError("transaction catalogue requires explicit IVA authority migration before read")
 
     def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""

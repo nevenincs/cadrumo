@@ -114,7 +114,8 @@ def _purchase(provider_id: str, *, sector_id: str | None) -> Transaction:
         "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
         "deduction_provenance": IvaDeductionClassificationProvenance(
             authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
-            source_locator=f"invoice:{provider_id}", evidence_digest="5" * 64,
+            source_locator=f"invoice:{provider_id}",
+            evidence_digest="5" * 64,
         ),
         "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",

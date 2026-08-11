@@ -390,7 +390,7 @@ def _wallet_decision(
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="e2e IVA vertical fixture",
+        reason_identity="aeat_wallet_validated",
         wallet_captured_at=decided_at,
         decided_at=decided_at,
     )

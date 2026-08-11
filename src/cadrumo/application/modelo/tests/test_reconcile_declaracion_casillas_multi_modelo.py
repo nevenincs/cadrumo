@@ -157,6 +157,7 @@ def _persist_filed_revision(work_unit: WorkUnit, *, casilla_values: dict[str, De
                 verified_by="test",
                 filed_at=_CLOCK,
                 filed_by="test",
+            filing_instance_evidence=None,
             ),
         ),
     )

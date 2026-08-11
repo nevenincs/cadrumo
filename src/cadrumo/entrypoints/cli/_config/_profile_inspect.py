@@ -25,6 +25,7 @@ from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.logging import get_logger as _get_logger
+from ....domain.calculations.registry import RevisionId
 from .._common import _emit_envelope, _no_active_profile_refusal
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
@@ -34,7 +35,6 @@ from ._profile_readiness import (
     _emit_profile_record_unreadable,
     _read_profile_record,
 )
-from ....domain.calculations.registry import RevisionId
 
 _log = _get_logger(__name__)
 
@@ -288,7 +288,7 @@ def _register_preflight_command(
             help=tr("cli.config.profile.preflight_filing_year_help"),
         ),
         period: str = typer.Option(..., "--period", help=tr("cli.config.profile.preflight_period_help")),
-        revision_id: RevisionId | None = typer.Option(
+        revision_id: str | None = typer.Option(
             None,
             "--revision-id",
             help=tr("cli.config.profile.preflight_revision_id_help"),

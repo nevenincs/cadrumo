@@ -119,6 +119,8 @@ def _resolve_profile_fact(profile_facts: object, field: str) -> object:
         return getattr(profile_facts, _attr)
     current: object = profile_facts
     for part in field.split("."):
+        if current is None:
+            return None
         current_mapping = _profile_fact_mapping(current)
         if current_mapping is not None:
             if part not in current_mapping:

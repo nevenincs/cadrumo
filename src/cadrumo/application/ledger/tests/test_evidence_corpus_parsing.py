@@ -395,7 +395,7 @@ def test_the_core_draft_path_routes_a_structured_document_to_the_exact_reader() 
     assert draft.grand_total == Decimal("529.87")
 
 
-def test_the_ubl_fixture_parses_both_rates_and_selects_the_vat_identifier() -> None:
+def test_the_ubl_fixture_parses_both_rates_and_selects_the_iva_identifier() -> None:
     """EN16931 UBL, the half of the standard a CII-only reader returns nothing for.
 
     Nothing in the bundled corpus exercised UBL before this fixture, so the UBL

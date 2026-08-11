@@ -87,10 +87,7 @@ def project_m303_differentiated_deduction_rows(
         raise RegistryValidationError("modelo 303 differentiated deductions require exactly two sectors")
     sector_ids = tuple(item.sector_id for item in definitions)
     apportioned = tuple(contributions)
-    if any(
-        item.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
-        for item in apportioned
-    ):
+    if any(item.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION for item in apportioned):
         raise RegistryValidationError(
             "investment-goods regularisation cannot enter the ordinary deduction contribution channel"
         )
@@ -155,8 +152,7 @@ def project_m303_differentiated_deduction_rows(
         total = Decimal("0")
         for kind in _KINDS:
             selected = tuple(
-                item for item in apportioned
-                if item.sector_id == sector_id and item.deduction_fact_kind is kind
+                item for item in apportioned if item.sector_id == sector_id and item.deduction_fact_kind is kind
             )
             if len(selected) != 1:
                 raise RegistryValidationError(

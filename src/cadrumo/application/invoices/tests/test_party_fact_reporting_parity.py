@@ -38,7 +38,7 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
     """
 
     def test_every_clave_reported_category_has_a_declaring_rule(self) -> None:
-        declaring = classifiable_categories(consuming=PartyFact.VAT_IDENTIFICATION_STATE)
+        declaring = classifiable_categories(consuming=PartyFact.IVA_IDENTIFICATION_STATE)
         mintable = classifiable_categories()
         reported = {category for _, category in _CLAVE_BY_KIND_AND_CATEGORY}
         undeclared = sorted(category.value for category in (reported & mintable) - declaring)
@@ -52,7 +52,7 @@ class TestEveryReportedCategoryIsMintedByADeclaringBranch:
         strict and non-empty -- only the intra-community rows read the
         identifying State, and they are the rows the clave map reports.
         """
-        declaring = classifiable_categories(consuming=PartyFact.VAT_IDENTIFICATION_STATE)
+        declaring = classifiable_categories(consuming=PartyFact.IVA_IDENTIFICATION_STATE)
         mintable = classifiable_categories()
         assert declaring
         assert declaring < mintable

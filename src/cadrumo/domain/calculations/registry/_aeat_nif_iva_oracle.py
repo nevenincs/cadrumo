@@ -1,6 +1,6 @@
 """AEAT NIF-IVA verification oracle policy.
 
-This surface verifies other-EU VAT identifiers through AEAT's VIES-proxy
+This surface verifies other-EU IVA identifiers through AEAT's VIES-proxy
 form.  Its executable checker behavior, observation model, driver contract,
 and deterministic replay all live in :mod:`._checker_oracle_flow`.
 """
@@ -20,7 +20,7 @@ ORACLE_ID: OracleId = "aeat-nif-iva-checker"
 
 
 class AeatNifIvaCheckerOracle(CheckerOracle):
-    """Policy declaration for AEAT's read-only other-EU VAT checker."""
+    """Policy declaration for AEAT's read-only other-EU IVA checker."""
 
     surface_label = "AEAT NIF-IVA"
     expected_blank_message = "AEAT NIF-IVA expected values must not contain blanks"

@@ -47,7 +47,7 @@ from ....core import AuthProviderKind, CasillaId, Period, RefundElection, Result
 from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.calculations.registry import RelationId
-from ....domain.deadlines import IVARegime, ModeloIVAProfile, TaxpayerProfile
+from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
@@ -171,7 +171,14 @@ def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> Ta
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
         activity_start_date=activity_start_date,
-        iva=ModeloIVAProfile(redeme_enrolled=redeme_enrolled),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            redeme_enrolled=redeme_enrolled,
+        ),
     )
 
 

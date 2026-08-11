@@ -29,7 +29,7 @@ from ....entrypoints.mcp import McpToolDescriptor, build_tool_descriptors
 # The ranking helpers live only on the ``_meta_tools`` private surface (they wrap
 # the ``search`` meta-tool, not a public facade); this golden test is a white-box
 # reach into them to assert the live ranking, registered in the test-only
-# import-hygiene debt allowlist (dev/import_hygiene_test_debt.json).
+# import-hygiene debt allowlist (dev/quality/import_hygiene_test_debt.json).
 from ....entrypoints.mcp._meta_tools import build_command_search_index, search_commands
 from ...command_search import CommandIndex
 
@@ -63,7 +63,7 @@ def test_import_a_bank_statement_ranks_ledger_import_first(ranker: Callable[[str
     assert ranked[0] != "modelo.review_package.import_feedback"
 
 
-def test_file_my_quarterly_vat_surfaces_quickfile_in_the_top_hits(ranker: Callable[[str], list[str]]) -> None:
+def test_file_my_quarterly_iva_surfaces_quickfile_in_the_top_hits(ranker: Callable[[str], list[str]]) -> None:
     ranked = ranker("file my quarterly VAT")
     assert ranked, "the query matched no commands"
     assert "quickfile" in ranked[:5], f"expected quickfile in the top 5, got {ranked[:5]}"

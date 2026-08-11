@@ -140,7 +140,7 @@ def confirmed_counterparty_facts_key(
 
             That distinction is load-bearing here rather than cosmetic. While
             the absence defaulted to Spain, a foreign counterparty whose
-            document printed a prefixed VAT number and no address country got
+            document printed a prefixed IVA number and no address country got
             no key at all — so no confirmed establishment fact could be stored
             for them and none could be retrieved, disabling the ladder's
             remembered-fact rung for exactly the population the
@@ -175,7 +175,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
         asserted_by: The operator identity that confirmed it.
         asserted_at: When it was confirmed. A last-seen body field, never folded
             into the key.
-        identification_state: The Member State that VAT-identifies this
+        identification_state: The Member State that IVA-identifies this
             counterparty, when the operator has confirmed one. A DIFFERENT fact
             from :attr:`territorial_scope`, which is where the party is: Ley
             37/1992 art. 25 exempts on the registration, arts. 69-70 govern the
@@ -215,7 +215,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
 
         The identification axis inherits that rule, and inherits it MORE
         strongly rather than merely by symmetry. Ingestion reads identification
-        TERMINALLY from a printed VAT prefix -- read once and treated as
+        TERMINALLY from a printed IVA prefix -- read once and treated as
         settled, with no later rung to revise it -- so a document-read
         identification cached here would answer every subsequent document as
         though an operator had confirmed the registration. That registration is
@@ -274,7 +274,7 @@ class ConfirmedCounterpartyFacts(BaseModel):
         """Refuse a record that confirms nothing.
 
         Both axes are optional because they are independent -- an operator may
-        know which State VAT-identifies a counterparty without knowing where it
+        know which State IVA-identifies a counterparty without knowing where it
         is established, and the reverse. Neither answered is not a narrower
         assertion, it is an empty one, and an empty record is worse than no
         record: it addresses a counterparty, occupies the key, and answers every
@@ -380,7 +380,7 @@ class ConfirmedCounterpartyResolution(BaseModel):
         fact: The remembered assertion, in the channel the assembly consumes.
             ``None`` when nothing was confirmed for this counterparty, when the
             identifier had no identity, or when the evidence contradicts it.
-        identification: The confirmed Member State of VAT identification, in the
+        identification: The confirmed Member State of IVA identification, in the
             same channel. ``None`` when the operator has not answered it, which
             is independent of whether the territory was answered -- the two are
             different questions about the same entity and either may stand
@@ -450,7 +450,7 @@ def record_confirmed_counterparty_facts(
         tax_identifier: The counterparty's identifier as printed.
         territorial_scope: The territory the operator confirms.
         asserted_by: Operator identity making the claim.
-        identification_state: The Member State that VAT-identifies the
+        identification_state: The Member State that IVA-identifies the
             counterparty, when the operator answers it. ``None`` does not
             answer the question and never erases a stored answer.
         country_code: The country the identifier is stated under, if any.
@@ -505,7 +505,7 @@ def record_confirmed_counterparty_facts(
             and existing.identification_state is not fact.identification_state
         ):
             raise CounterpartyEstablishmentConflictError(
-                f"{existing.canonical_tax_identifier} is already confirmed as VAT-identified in "
+                f"{existing.canonical_tax_identifier} is already confirmed as IVA-identified in "
                 f"{existing.identification_state.value}, and this assertion says "
                 f"{fact.identification_state.value}; withdraw the confirmed fact before replacing it",
                 context={

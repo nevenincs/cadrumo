@@ -23,7 +23,7 @@ from .....adapters.inbound.tui import StatusApp
 from .....application.calculations import CalculationObservationRepository
 from .....application.overview import NO_AEAT_HISTORY_NOTICE_CODE
 from .....application.user_profile import register_profile_with_credentials
-from .....core.json_contract import NoticeSeverity
+from .....core.json_contract import NoticeSeverity, ResolvedNoticeAction
 from .....domain.calculations.registry import RegistryModeloObservation
 from .....tests.secure_sql import isolated_profile_storage_root
 from .._status_frontend import build_status_page_data
@@ -55,7 +55,7 @@ def test_a_fresh_profile_with_no_aeat_history_raises_a_real_info_notice(tmp_path
         notice = data.notices[0]
         assert notice.code == NO_AEAT_HISTORY_NOTICE_CODE
         assert notice.severity is NoticeSeverity.INFO
-        assert notice.action is not None
+        assert isinstance(notice.action, ResolvedNoticeAction)
         assert notice.action.action.action_id == "operator.live.filed.pull_all"
         assert notice.action.action.target_command_key == "app.live.filed.pull_all"
         assert notice.action.action.cli_path == ("app", "live", "filed", "pull-all")
@@ -97,7 +97,7 @@ async def test_the_real_notice_actually_paints_on_the_running_status_surface(tmp
         assert data.notices, "fixture premise: this profile must carry the real advisory"
         expected_message = data.notices[0].message
         notice_action = data.notices[0].action
-        assert notice_action is not None
+        assert isinstance(notice_action, ResolvedNoticeAction)
         cli_path = notice_action.action.cli_path
         assert cli_path is not None
         expected_action_target = "aeat " + " ".join(cli_path)

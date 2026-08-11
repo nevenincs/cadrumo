@@ -21,7 +21,6 @@ from typing import Final
 from ....core import Modelo
 from ._ids import BindingId, ModeloId, RelationId, RevisionId
 from ._schema import RelationDefinition
-from ._ids import RevisionId
 
 #: The single M303 compensación-pendiente binding id, owned by the iva-wallet
 #: compensación decision. This is the one

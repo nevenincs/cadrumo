@@ -60,6 +60,7 @@ from ._runtime_attached_repositories_support import (
     _calculation_catalogue,
     _filing_record_catalogue,
     _google_records,
+    _hex,
     _history,
     _inventory_ledger,
     _invoice,
@@ -328,7 +329,9 @@ def test_event_and_workflow_run_defaults_isolate_active_profile_writes(tmp_path:
         runs = WorkflowRunRepository().list()
 
     assert tuple(events) == (event_a.event_id,)
-    assert [run.summary for run in runs] == [f"runtime attached workflow run {_BUCKET_A_ID}"]
+    assert [(run.run_id, run.summary_locale_key) for run in runs] == [
+        (_hex(f"workflow-run-{_BUCKET_A_ID}")[:16], "application.workflow.results.completed")
+    ]
 
 
 def test_domain_repository_defaults_isolate_active_profile_writes(tmp_path: Path) -> None:

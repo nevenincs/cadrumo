@@ -40,6 +40,7 @@ class ExportSemanticPayloadAxis(StrEnum):
     PRODUCER_KEY = "producer_key"
     DRAFT_ATTRIBUTE = "draft_attribute"
     COMPUTED_KEY = "computed_key"
+    PROJECTION_REF = "projection_ref"
 
 
 _PAYLOAD_AXIS_BY_KIND: Final[dict[CasillaFieldKind, ExportSemanticPayloadAxis | None]] = {
@@ -49,6 +50,7 @@ _PAYLOAD_AXIS_BY_KIND: Final[dict[CasillaFieldKind, ExportSemanticPayloadAxis | 
     CasillaFieldKind.HEADER: ExportSemanticPayloadAxis.PRODUCER_KEY,
     CasillaFieldKind.DRAFT: ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE,
     CasillaFieldKind.COMPUTED: ExportSemanticPayloadAxis.COMPUTED_KEY,
+    CasillaFieldKind.PROJECTION: ExportSemanticPayloadAxis.PROJECTION_REF,
     CasillaFieldKind.FILLER: None,
     CasillaFieldKind.CHECKSUM: None,
 }

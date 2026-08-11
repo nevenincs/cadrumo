@@ -398,7 +398,7 @@ def _seed_iva_wallet_decision(bucket_id: str) -> None:
             divergence="match",
             blocked=False,
             stale_wallet=False,
-            reason="latest valid wallet observation",
+            reason_identity="aeat_wallet_validated",
             decided_at=_NOW,
         ),
     )

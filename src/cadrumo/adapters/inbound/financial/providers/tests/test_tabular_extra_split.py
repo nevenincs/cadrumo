@@ -23,7 +23,7 @@ anything else: a run where the extra was quietly present would otherwise report
 The fixtures are producer-shaped, not authored to match the reader. The known
 side is a real BBVA export (Spanish headers, ``;`` delimiter, comma decimals,
 cp1252); the unknown side is an expenses-app export whose header vocabulary
-(``merchant``, ``net``, ``vat_rate``, ``gross``) belongs to no bank layout. Both
+(``merchant``, ``net``, ``iva_rate``, ``gross``) belongs to no bank layout. Both
 are already bundled, and their sides were confirmed by measurement rather than
 assumed: detection claims the first with ``CsvProvider`` and claims the second
 with nothing.

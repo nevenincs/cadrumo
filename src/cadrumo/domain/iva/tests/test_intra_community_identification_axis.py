@@ -265,7 +265,7 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
     ) -> None:
         with_identification = classify_iva(_criteria(**overrides))
         assert with_identification.matched_rule_id == rule_id
-        assert PartyFact.VAT_IDENTIFICATION_STATE in with_identification.consumes_party_facts
+        assert PartyFact.IVA_IDENTIFICATION_STATE in with_identification.consumes_party_facts
 
         without = dict(overrides)
         without[identification_field] = None

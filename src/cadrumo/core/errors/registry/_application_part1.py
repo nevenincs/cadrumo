@@ -59,13 +59,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     ),
     (
         "cadrumo.application.live._errors.LiveApplicationError",
-        # Every direct raise of this class sits in the filed-observation
-        # persistence, filed-capture finalizer, or IVA remote-state modules --
-        # the three stages the history sweep sequences -- so the operator who
-        # reaches it is mid-way through building AEAT history and previously got
-        # no next step at all. Discovery comes first because it persists nothing
-        # and re-reads what AEAT holds without repeating the long authenticated
-        # sweep; the sweep follows once the grid is confirmed.
         ErrorCode(
             code="ERROR_APPLICATION_LIVE",
             category=ErrorCategory.ERROR,
@@ -710,8 +703,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_WIZARD_MISSING_FLAG",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_missing_flag",
-            # The message already names the missing flags; the next step an
-            # operator needs is the full flag set for the scripted create.
             retryable=False,
             runbook_id=None,
         ),
@@ -742,11 +733,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_WIZARD_UNSUPPORTED_CONSOLE",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_wizard_unsupported_console",
-            # The operator-facing message body spells out both recovery
-            # paths (interactive terminal vs. the one-step flag form) in
-            # plain language. A trailing `-> Run` suggestion would only
-            # repeat one of those two commands verbatim, so the message
-            # is the single source of recovery guidance here.
             retryable=False,
             runbook_id=None,
         ),

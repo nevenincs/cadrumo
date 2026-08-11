@@ -64,6 +64,7 @@ from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
     BindingId,
     InputKind,
+    M303AnnualOrdenSnapshot,
     ModeloRevision,
     RelationId,
     bound_casilla_binding_ids,
@@ -73,6 +74,7 @@ from ...domain.calculations.registry import (
     iva_wallet_owned_relation_targets_for_revision,
     validated_text_input_casilla_ids,
 )
+from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -80,6 +82,7 @@ from ...domain.modelos import (
     CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
+    FilingInstanceEvidence,
     LedgerFilingSnapshot,
     Modelo210AgrupacionRentaRow,
     ModeloDetailRow,
@@ -142,6 +145,8 @@ from ._calculation_source_staging import (
     resolve_prorrata_regularizacion_sources as _resolve_prorrata_regularizacion_sources,
 )
 from ._m210_agrupacion_renta import validate_m210_agrupacion_renta_rows_for_calculation
+from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from ._m303_regimen_simplificado_scope import resolve_m303_regimen_simplificado_scope
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -208,6 +213,7 @@ def calculate_modelo_revision(
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Run the registry formula engine, persist a draft revision, and return a :class:`CalculationRevision`.
@@ -245,6 +251,7 @@ def calculate_modelo_revision(
         bucket_event_repository: Repository used to persist bucket lifecycle events.
         borrador_snapshot_repository: Repository used to load Modelo 100 draft snapshots.
         detail_rows: Repeating detail rows supplied to the registry engine.
+        filing_instance_evidence: Immutable operator-selected Modelo 303 filing facts.
         clock: Optional deterministic timestamp for the persisted revision.
 
     """
@@ -274,6 +281,7 @@ def calculate_modelo_revision(
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=detail_rows,
+        filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
         source_issues=(),
         clock=clock,
@@ -347,6 +355,8 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     detail_rows: tuple[ModeloDetailRow, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...] = (),
     source_issues: tuple[CalculationSourceIssue, ...] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate with source evidence produced by the in-module source mesh only.
@@ -414,6 +424,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         borrador_snapshot_repository=borrador_snapshot_repository,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
     )
     work_units = prepared.work_units
     work_unit = prepared.work_unit
@@ -452,6 +463,13 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
         date_binding_values=prepared.channels.date_bindings or None,
+        m303_regimen_simplificado_scope=prepared.m303_regimen_simplificado_scope,
+        m303_annual_orden=(
+            filing_instance_evidence.m303.regimen_simplificado.regimen_snapshot.orden
+            if filing_instance_evidence is not None
+            and not filing_instance_evidence.m303.regimen_simplificado.scope_decision.is_not_claimed
+            else None
+        ),
     )
 
     replay_payloads = _build_calculation_replay_payloads(
@@ -473,6 +491,13 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     casilla_values, typed_observations = _suppress_m349_row_field_template_outputs(
         work_unit=work_unit,
         revision=snapshot.revision,
+        casilla_values=casilla_values,
+        observations=typed_observations,
+    )
+    validated_filing_instance_evidence = validate_m303_filing_instance_evidence_for_revision(
+        work_unit=work_unit,
+        registry_snapshot=snapshot,
+        evidence=filing_instance_evidence,
         casilla_values=casilla_values,
         observations=typed_observations,
     )
@@ -502,6 +527,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
         unresolved_outcomes=engine_result.unresolved_outcomes,
         source_provenance=source_provenance,
         source_issues=source_issues,
+        filing_instance_evidence=validated_filing_instance_evidence,
         detail_rows=detail_rows,
         formula_count=len(engine_result.entries),
         actor=actor,
@@ -535,6 +561,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
 ) -> CalculationRevision:
     """Calculate a modelo revision through the bucket-local source mesh.
@@ -585,6 +612,7 @@ def calculate_modelo_revision_from_bucket_aggregation(
         foreign_asset_observations=foreign_asset_observations,
         borrador_snapshot_repository=borrador_snapshot_repository,
         detail_rows=detail_rows,
+        filing_instance_evidence=filing_instance_evidence,
         clock=clock,
     ).revision
 
@@ -605,6 +633,8 @@ def _resolve_bucket_source_mesh(
     date_binding_values: Mapping[BindingId, date] | None = None,
     relation_values: Mapping[RelationId, Decimal] | None = None,
     filing_period_date: date | None = None,
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
+    m303_annual_orden: M303AnnualOrdenSnapshot | None = None,
 ) -> CalculationSourceResolution:
     """Resolve the live source mesh for a bucket-aggregation calculation.
 
@@ -624,6 +654,13 @@ def _resolve_bucket_source_mesh(
         bucket_id=work_unit.bucket_id,
     )
     memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    iva_investment_asset_register = None
+    iva_investment_asset_profile_id = None
+    if any(binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION for binding in snapshot.revision.bindings):
+        iva_investment_asset_register = resolved_transaction_repository.migrate_iva_deduction_authority(
+            asset_profile_id=work_unit.bucket_id,
+        )
+        iva_investment_asset_profile_id = work_unit.bucket_id
     from ..aggregation import (
         AtribucionMemberSourceResolver,
         CalculationSourceContext,
@@ -659,6 +696,8 @@ def _resolve_bucket_source_mesh(
         (
             LedgerIvaAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
+                investment_asset_register=iva_investment_asset_register,
+                investment_asset_profile_id=iva_investment_asset_profile_id,
             ).resolve(context),
             LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
@@ -762,6 +801,8 @@ def _resolve_bucket_source_mesh(
         date_binding_values=date_binding_values,
         relation_values=relation_values,
         filing_period_date=filing_period_date,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
+        m303_annual_orden=m303_annual_orden,
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     return _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
@@ -919,14 +960,14 @@ def _reconcile_caller_overrides(
 
 
 def _resolved_m210_gross_income_mode(
-    work_unit: object,
+    work_unit: WorkUnit,
     *,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
     m210_official_tipo_renta_code: str | None,
     casilla_inputs: Mapping[CasillaId, Decimal] | None,
     text_casilla_inputs: Mapping[CasillaId, str] | None,
     detail_rows: tuple[ModeloDetailRow, ...],
-) -> M210GrossIncomeSourceMode:
+) -> M210GrossIncomeSourceMode | None:
     """Resolve the M210 gross-income source mode and refuse the overrides it forbids.
 
     Ledger mode owns the gross-income figure, so a manual casilla override, an
@@ -974,6 +1015,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...] = (),
     borrador_snapshot_repository: Borrador100SnapshotRepository | None = None,
     detail_rows: tuple[ModeloDetailRow, ...] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
     clock: datetime | None = None,
 ) -> BucketAggregationCalculationResult:
     """Calculate a modelo revision and return it alongside the source diagnostics.
@@ -1000,6 +1042,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit_id,
         work_unit_repository=wu_repo,
     )
+    m303_regimen_simplificado_scope = resolve_m303_regimen_simplificado_scope(work_unit)
 
     # Boundary gate: reject any binding source that is neither enrolled in
     # the live resolver mesh nor explicitly deferred.  This converts a silent
@@ -1043,6 +1086,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
         filing_period_date=filing_period_date,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
+        m303_annual_orden=(
+            filing_instance_evidence.m303.regimen_simplificado.regimen_snapshot.orden
+            if filing_instance_evidence is not None
+            and not filing_instance_evidence.m303.regimen_simplificado.scope_decision.is_not_claimed
+            else None
+        ),
     )
     # Re-run the guard against the merged owned-sources, but EXCLUDE the
     # caller-overridable CARRY sources
@@ -1120,6 +1170,8 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(source_resolution),
         source_issues=_unrouted_source_issues(reconciliation.source_diagnostics),
+        filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,

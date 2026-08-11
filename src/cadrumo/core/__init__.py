@@ -113,6 +113,7 @@ from ._config_state_root import (
     platform_user_data_root,
 )
 from ._confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
+from ._corpus_sidecar import render_corpus_sidecar_text
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
     LENGTH_FAIR_FLOOR,
@@ -143,6 +144,22 @@ from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
 from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ._filing_producer_key import FilingProducerKey
+from ._filing_projection_ref import (
+    FilingProjectionRef,
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    M303RegimenSimplificadoActivityField,
+    M303RegimenSimplificadoActivityProjectionRef,
+    M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFactProjectionRef,
+    M303RegimenSimplificadoModuleProjectionRef,
+    M303RegimenSimplificadoModuleValue,
+)
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hardware import (
@@ -220,6 +237,14 @@ from ._optional_extras import (
     optional_extra_for_module,
     require_optional_extra,
 )
+from ._orden_anual_html import (
+    OrdenAnualHtmlParseError,
+    OrdenAnualIvaActivityTable,
+    OrdenAnualIvaModule,
+    extract_orden_anual_iva_tables,
+    orden_anual_iva_activity_anchors,
+    orden_anual_iva_table_text,
+)
 from ._payment_election import PaymentElection
 from ._period import (
     FilingPeriodCode,
@@ -256,6 +281,7 @@ from ._prorrata_exclusions import (
 )
 from ._prorrata_register import (
     ProrrataActivityRowType,
+    ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -501,7 +527,21 @@ __all__: list[str] = [
     "FiledHistoryDiscoverySignal",
     "FilingPeriodCode",
     "FilingProducerKey",
+    "FilingProjectionRef",
     "FindingResolutionAction",
+    "M303DifferentiatedDeductionProjectionField",
+    "M303DifferentiatedDeductionProjectionRef",
+    "M303Exonerado390ActivityField",
+    "M303Exonerado390ActivityProjectionRef",
+    "M303Exonerado390OperacionesTercerosProjectionRef",
+    "M303ProrrataActivityProjectionField",
+    "M303ProrrataActivityProjectionRef",
+    "M303RegimenSimplificadoActivityField",
+    "M303RegimenSimplificadoActivityProjectionRef",
+    "M303RegimenSimplificadoCohort",
+    "M303RegimenSimplificadoFactProjectionRef",
+    "M303RegimenSimplificadoModuleProjectionRef",
+    "M303RegimenSimplificadoModuleValue",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",
     "FormerProductStateError",
@@ -538,6 +578,9 @@ __all__: list[str] = [
     "OfficialTipoRentaCode",
     "OperatorProgress",
     "OptionalExtra",
+    "OrdenAnualHtmlParseError",
+    "OrdenAnualIvaActivityTable",
+    "OrdenAnualIvaModule",
     "PassphraseStrength",
     "PaymentElection",
     "Period",
@@ -552,6 +595,7 @@ __all__: list[str] = [
     "ProductIdentity",
     "ProfileSessionRefusalReason",
     "ProrrataActivityRowType",
+    "ProrrataEspecialTransitionKind",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",
@@ -604,6 +648,7 @@ __all__: list[str] = [
     "elided_prose",
     "exclusive_file_lock",
     "expected_floor",
+    "extract_orden_anual_iva_tables",
     "fold_diacritics",
     "fold_printed_phrase",
     "foreign_asset_obligation_group",
@@ -628,6 +673,8 @@ __all__: list[str] = [
     "normalise_product_identity_references",
     "optional_extra_available",
     "optional_extra_for_module",
+    "orden_anual_iva_activity_anchors",
+    "orden_anual_iva_table_text",
     "parse_toml_text",
     "permitted_amendment_kind_values",
     "pid_is_alive",
@@ -640,6 +687,7 @@ __all__: list[str] = [
     "read_pointer",
     "read_toml",
     "registry_period_kind",
+    "render_corpus_sidecar_text",
     "require_active_bucket_id",
     "require_optional_extra",
     "resolve_active_bucket_id",

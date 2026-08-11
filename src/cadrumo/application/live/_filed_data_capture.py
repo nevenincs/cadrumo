@@ -70,7 +70,12 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
 from ...core.time import now
 from ...domain.calculations.registry import RegistryModeloObservation, ValidatedRegistryAuthority
-from ..storage.sync_runs import bounded_scope_description, coverage_of, record_sync_run
+from ..storage.sync_runs import (
+    SyncRunRecordRepositoryProtocol,
+    bounded_scope_description,
+    coverage_of,
+    record_sync_run,
+)
 from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
 from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ._filed_data import (
@@ -727,6 +732,7 @@ async def capture_filed_data_bulk(
     limit: int | None = None,
     register: DeclaracionesRegisterSession | None = None,
     dry_run: bool = False,
+    sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
 ) -> BulkFiledDataCaptureReport:
     """Capture filed declarations across a year range and return a :class:`BulkFiledDataCaptureReport`.
 
@@ -749,6 +755,9 @@ async def capture_filed_data_bulk(
             written: no observation persisted, no justificante evidence
             enrolled, no calculation observation finalized. The report carries
             ``dry_run=True`` and the divergences as its primary result.
+        sync_run_repository: Persistence port for the completed-run provenance
+            record. Required for a non-preview capture that reaches a supported
+            query pair; the outer entrypoint composes the concrete adapter.
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
@@ -782,6 +791,11 @@ async def capture_filed_data_bulk(
             calculation_observation_count=0,
             calculation_observation_keys=(),
             failures=tuple(failures),
+        )
+
+    if not dry_run and sync_run_repository is None:
+        raise LiveApplicationInputError(
+            message="a persisted filed-data capture requires a sync-run persistence repository",
         )
 
     bucket_id = require_active_bucket_id()
@@ -849,6 +863,11 @@ async def capture_filed_data_bulk(
             dry_run=True,
         )
 
+    if sync_run_repository is None:
+        raise LiveApplicationInputError(
+            message="a persisted filed-data capture requires a sync-run persistence repository",
+        )
+
     finalization = finalize_filed_capture(
         tuple(accumulator.observations_for_calculation),
         justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
@@ -884,6 +903,7 @@ async def capture_filed_data_bulk(
         # tally is not lost: it is `calculation_observation_count` below.
         coverage=coverage_of(accumulator),
         completed_at=now(),
+        repository=sync_run_repository,
     )
     return BulkFiledDataCaptureReport(
         output_root=str(output_root),
@@ -1790,6 +1810,7 @@ async def pull_filed_history(
     today: date | None = None,
     limit: int | None = None,
     discover: FiledHistoryDiscoveryPort = discover_filed_history,
+    sync_run_repository: SyncRunRecordRepositoryProtocol | None = None,
 ) -> FiledHistoryOnboardingRun:
     """Sequence discovery, bulk filed capture, IVA wallet and notificaciones.
 
@@ -1816,6 +1837,8 @@ async def pull_filed_history(
         discover: The discovery step to sequence, defaulting to
             :func:`discover_filed_history`. Injected so the composition itself is
             reachable without an authenticated session; production never passes it.
+        sync_run_repository: Completed-run persistence port forwarded to the
+            bulk capture after discovery finds a supported pair.
 
     Returns:
         The composed :class:`FiledHistoryOnboardingRun`.
@@ -1844,6 +1867,7 @@ async def pull_filed_history(
         output_root=output_root,
         modelos=modelos,
         limit=limit,
+        sync_run_repository=sync_run_repository,
     )
 
     failures_by_pair: dict[tuple[str, int], FiledDataCaptureFailureRow] = {}

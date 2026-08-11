@@ -482,7 +482,7 @@ def record_iva_compensation_override_for_bucket(
     )
     override = IvaCompensationOverride(
         amount=amount,
-        reason=reason,
+        operator_explanation=reason,
         evidence_locator=evidence_locator,
         recorded_at=now(),
     )

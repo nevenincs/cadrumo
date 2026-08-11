@@ -36,7 +36,7 @@ _EXPECTED = ("BE", "0123456789")
         pytest.param("  be0123456789  ", id="lowercase-padded"),
     ),
 )
-def test_a_printed_vat_number_splits_to_one_prefix_and_number(printed: str) -> None:
+def test_a_printed_iva_number_splits_to_one_prefix_and_number(printed: str) -> None:
     assert _split_vies_nif(printed) == _EXPECTED
 
 
@@ -63,7 +63,7 @@ def test_the_dotted_form_carries_no_separator_into_the_number() -> None:
         pytest.param("B-0123456789", id="single-letter-prefix"),
     ),
 )
-def test_a_value_that_is_not_a_prefixed_vat_number_is_refused(malformed: str) -> None:
+def test_a_value_that_is_not_a_prefixed_iva_number_is_refused(malformed: str) -> None:
     # The negative controls. Normalising more aggressively must not turn a
     # malformed value into an acceptable one -- stripping separators shortens
     # the string, so a value that was long enough before may not be after, and

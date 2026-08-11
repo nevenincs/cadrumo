@@ -45,9 +45,9 @@ from ....domain.iva import (
     IvaCatalogueError,
     IvaTerritorialScope,
     country_code_for_printed_tax_identifier,
+    identification_state_for_printed_tax_identifier,
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
-    vat_identification_state_for_printed_tax_identifier,
 )
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .. import _establishment_ladder as ladder_module
@@ -80,8 +80,8 @@ def _replacing(target: object, name: str, value: object):
 
 _BUCKET_ID = "37373737-3737-4737-8737-373737373737"
 _SPANISH_CIF = "B12345674"
-_GERMAN_VAT = "DE811234567"
-_GREEK_VAT = "EL123456789"
+_GERMAN_IVA = "DE811234567"
+_GREEK_IVA = "EL123456789"
 _ASSERTED_AT = datetime(2026, 5, 12, 9, 30, tzinfo=UTC)
 
 _LAS_PALMAS = "35001"
@@ -222,7 +222,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
     """
     resolved = _resolve(
         repository,
-        tax_identifier=_GERMAN_VAT,
+        tax_identifier=_GERMAN_IVA,
         country_name="España",
         postal_code=_LAS_PALMAS,
     )
@@ -237,7 +237,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
     assert resolved.scope is not IvaTerritorialScope.EU_MEMBER
 
 
-def test_a_greek_vat_prefix_resolves_through_its_iso_code(
+def test_a_greek_iva_prefix_resolves_through_its_iso_code(
     repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
     """``EL`` is Greece's VAT prefix while ``GR`` is its ISO code, and the catalogues are ISO-keyed.
@@ -245,9 +245,9 @@ def test_a_greek_vat_prefix_resolves_through_its_iso_code(
     Left untranslated, a Greek party matches no Member State and is placed in a
     third country -- an intra-community acquisition reclassified as an import.
     """
-    assert country_code_for_printed_tax_identifier(_GREEK_VAT) == "GR"
+    assert country_code_for_printed_tax_identifier(_GREEK_IVA) == "GR"
 
-    resolved = _resolve(repository, tax_identifier=_GREEK_VAT)
+    resolved = _resolve(repository, tax_identifier=_GREEK_IVA)
 
     # The divergence now bites on the fact a registration actually settles. Left
     # untranslated the number names no Member State at all, so the party's
@@ -257,7 +257,7 @@ def test_a_greek_vat_prefix_resolves_through_its_iso_code(
     # And it carries through to the territory once something corroborates it,
     # which is where a mistranslation would have reclassified an intra-community
     # acquisition as an import.
-    corroborated = _resolve(repository, tax_identifier=_GREEK_VAT, country_name="Grecia")
+    corroborated = _resolve(repository, tax_identifier=_GREEK_IVA, country_name="Grecia")
     assert corroborated.scope is IvaTerritorialScope.EU_MEMBER
 
 
@@ -276,8 +276,8 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
     printed-prefix vocabulary, so a Spanish identification is declared or read
     from the Spanish identifier authority, never inferred from a printed number.
     """
-    assert vat_identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
-    assert vat_identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
+    assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
+    assert identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
 
     resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
 
@@ -494,10 +494,10 @@ def test_a_corrupt_identifier_rung_refuses_from_the_top_of_the_walk(
     a gate green because it patched nothing.
     """
     with (
-        _replacing(ladder_module, "vat_identification_state_for_printed_tax_identifier", _refusing_rung),
+        _replacing(ladder_module, "identification_state_for_printed_tax_identifier", _refusing_rung),
         pytest.raises(IvaCatalogueError),
     ):
-        _resolve(repository, tax_identifier=_GERMAN_VAT)
+        _resolve(repository, tax_identifier=_GERMAN_IVA)
 
 
 def test_a_corrupt_country_rung_refuses_from_between_the_covered_depths(
@@ -594,7 +594,7 @@ class TestDraftRouting:
         that took the wrong party could not leave it empty.
         """
         draft = InvoiceDraft(
-            supplier_tax_id=_GERMAN_VAT,
+            supplier_tax_id=_GERMAN_IVA,
             customer_tax_id=_SPANISH_CIF,
         )
 
@@ -607,7 +607,7 @@ class TestDraftRouting:
 
         assert resolved.scope is None
         assert resolved.identification_state is None
-        assert vat_identification_state_for_printed_tax_identifier(draft.supplier_tax_id) is EUMemberState.DE
+        assert identification_state_for_printed_tax_identifier(draft.supplier_tax_id) is EUMemberState.DE
 
     def test_a_received_document_takes_the_issuing_party(
         self,
@@ -615,7 +615,7 @@ class TestDraftRouting:
     ) -> None:
         """On an invoice the filer received, the counterparty is the supplier."""
         draft = InvoiceDraft(
-            supplier_tax_id=_GERMAN_VAT,
+            supplier_tax_id=_GERMAN_IVA,
             customer_tax_id=_SPANISH_CIF,
         )
 

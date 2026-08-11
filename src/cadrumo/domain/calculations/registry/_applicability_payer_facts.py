@@ -50,8 +50,8 @@ def payer_fact_holds(profile: TaxpayerProfile, fact: PayerFact) -> bool:
         case PayerFact.PAYS_CAPITAL_INCOME_WITH_RETENCION:
             return profile.pays_capital_income_with_retencion
         case PayerFact.IVA_GROUP_MEMBER:
-            return profile.iva.group_member_enrolled
+            return profile.iva is not None and profile.iva.group_member_enrolled
         case PayerFact.IVA_GROUP_DOMINANT_ENTITY:
-            return profile.iva.group_dominant_entity_enrolled
+            return profile.iva is not None and profile.iva.group_dominant_entity_enrolled
         case PayerFact.OSS_ENROLLED:
-            return profile.iva.oss_enrolled
+            return profile.iva is not None and profile.iva.oss_enrolled

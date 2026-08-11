@@ -16,6 +16,7 @@ from dataclasses import dataclass
 
 from ....core import CasillaId
 from ....core.i18n import MissingTranslationError
+from ._ids import RevisionId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
@@ -23,7 +24,6 @@ from ._schema import (
     ModeloRevision,
     PeriodSelector,
 )
-from ._ids import RevisionId
 
 _CROSS_REVISION_CASILLA_FIELDS: tuple[str, ...] = (
     "label",

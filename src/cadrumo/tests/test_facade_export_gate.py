@@ -1,6 +1,6 @@
 """Facade export-integrity gate: every name a package facade promises exists at HEAD.
 
-Wires :mod:`dev.facade_export_scan` into the pytest/CI surface. The defect it
+Wires :mod:`dev.quality.facade_export_scan` into the pytest/CI surface. The defect it
 pins broke ``cadrumo.core`` -- imported by every package -- for over three hours
 on 2026-08-01 without a single failing test, because of an asymmetry worth
 stating plainly:
@@ -37,7 +37,7 @@ import subprocess
 from pathlib import Path
 
 import pytest
-from dev.facade_export_scan import REPO_ROOT, ScanResult, scan
+from dev.quality.facade_export_scan import REPO_ROOT, ScanResult, scan
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -259,7 +259,7 @@ def test_planted_break_is_detected_in_each_direction() -> None:
     """
     import ast
 
-    from dev.facade_export_scan import module_facts
+    from dev.quality.facade_export_scan import module_facts
 
     facts = module_facts(
         ast.parse(

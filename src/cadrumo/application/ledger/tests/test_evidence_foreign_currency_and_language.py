@@ -57,10 +57,10 @@ _PRINTED_CUOTA = Decimal("0.00")
 _PRINTED_TOTAL = Decimal("18500.00")
 # <cac:AccountingSupplierParty> ... the party that issued the document.
 _PRINTED_SUPPLIER_NAME = "Nordiska Verkstad AB"
-_PRINTED_SUPPLIER_VAT = "SE556677889901"
+_PRINTED_SUPPLIER_IVA = "SE556677889901"
 # <cac:AccountingCustomerParty> ... the party billed.
 _PRINTED_CUSTOMER_NAME = "Talleres Peninsulares SL"
-_PRINTED_CUSTOMER_VAT = "ESB12345674"
+_PRINTED_CUSTOMER_IVA = "ESB12345674"
 # <cbc:Note> -- the statutory mention, in the issuer's own language.
 _PRINTED_LEGEND = "Steuerfreie innergemeinschaftliche Lieferung"
 
@@ -111,7 +111,7 @@ def _confirm_the_foreign_document(
         counterparty_country="SE",
         evidence_id=record.evidence_id,
         currency=currency_override,
-        counterparty_tax_id=_PRINTED_SUPPLIER_VAT,
+        counterparty_tax_id=_PRINTED_SUPPLIER_IVA,
         # The Modelo 349 clave. The document states the intra-community
         # category but no document states WHICH clave, so the writer demands it
         # and only the operator can answer -- an ordinary entrega (E) here.
@@ -220,9 +220,9 @@ def test_the_reader_recovers_every_field_from_a_document_printing_no_spanish(
     assert draft.iva_amount == _PRINTED_CUOTA
     assert draft.grand_total == _PRINTED_TOTAL
     assert draft.supplier_name == _PRINTED_SUPPLIER_NAME
-    assert draft.supplier_tax_id == _PRINTED_SUPPLIER_VAT
+    assert draft.supplier_tax_id == _PRINTED_SUPPLIER_IVA
     assert draft.customer_name == _PRINTED_CUSTOMER_NAME
-    assert draft.customer_tax_id == _PRINTED_CUSTOMER_VAT
+    assert draft.customer_tax_id == _PRINTED_CUSTOMER_IVA
     assert draft.regime_legend == _PRINTED_LEGEND, (
         "the statutory mention the document prints did not survive the structured read"
     )

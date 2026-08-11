@@ -671,7 +671,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
             normalised = normalise_nif_iva(span)
             prefix, body = normalised[:2], normalised[2:]
             if prefix == "ES":
-                # Spain is absent from the per-State VAT table, because its own
+                # Spain is absent from the per-State IVA table, because its own
                 # identities are the AEAT control-character authority's. So the
                 # ES arm asks that authority about the BODY -- which is the
                 # whole of what the prefixed spelling adds.
@@ -1092,9 +1092,9 @@ __all__ = [
     "CLI_OBJECT_KEY_PLACEHOLDER",
     "CLI_PROFILE_ID_PLACEHOLDER",
     "default_rules",
-    "normalise_redaction_key",
     "default_rules_for",
     "default_rules_for_class",
+    "normalise_redaction_key",
     "redact",
     "redact_for_cli_output",
     "redact_for_log",

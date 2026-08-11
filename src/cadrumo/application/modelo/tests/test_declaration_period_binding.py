@@ -117,7 +117,7 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="test fixture: zero prior compensation per AEAT wallet match",
+        reason_identity="first_period_zero_aeat_wallet",
         decided_at=_CLOCK,
     )
 

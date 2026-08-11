@@ -21,6 +21,7 @@ from ._cross_revision_divergence import (
     revisions_overlap,
 )
 from ._errors import RegistryValidationError
+from ._ids import RevisionId
 from ._schema import (
     CasillaContinuidadEvolutionDefinition,
     ModeloDefinition,
@@ -31,7 +32,6 @@ from ._validate_cross_revision_advisory import (
     summarize_non_overlapping_cross_revision_casilla_drift,
 )
 from ._validate_cross_revision_contiguity import strict_continuity_chain_contiguity_failures
-from ._ids import RevisionId
 
 # D3 defines revision-level continuidad_validation = "strict" as
 # surface-scoped strictness: declared continuity surfaces hard-fail drift,

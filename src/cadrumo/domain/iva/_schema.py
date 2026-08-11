@@ -36,7 +36,7 @@ from ._errors import IvaValidationError
 
 
 class IvaCategory(StrEnum):
-    """Closed catalogue of Spanish IVA (IVA) situations.
+    """Closed catalogue of Spanish IVA situations.
 
     The member names and string values are the authoritative identifiers used
     by the downstream classifier layers (financial providers, the spending
@@ -325,7 +325,7 @@ class EUMemberState(StrEnum):
     """Current EU IVA country prefixes accepted at IVA-facing boundaries.
 
     The canonical 27 EU member states use ISO 3166-1 alpha-2 codes. ``XI`` is
-    the post-Brexit Northern Ireland VAT prefix accepted for goods movements in
+    the post-Brexit Northern Ireland IVA prefix accepted for goods movements in
     Modelo 349 / intra-community IVA contexts; predicates that need strict
     member-state membership must exclude it explicitly.
     """

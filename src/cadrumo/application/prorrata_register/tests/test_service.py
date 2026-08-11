@@ -21,12 +21,38 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import ProrrataProvisionalProvenance, ProrrataRegisterRegime
-from ....domain.prorrata_register import ProrrataRegisterEntry
+from ....core import ProrrataEspecialTransitionKind, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.prorrata_register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_declare_especial_transition_persists_typed_option(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = ProrrataRegisterRepository(objects=profile.repository)
+        service = ProrrataRegisterService(repository=repository)
+        entry = ProrrataRegisterEntry(
+            ejercicio=2026,
+            regime=ProrrataRegisterRegime.ESPECIAL,
+            provisional_percentage=Decimal("60"),
+            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            especial_transition=ProrrataEspecialTransitionEvidence(
+                kind=ProrrataEspecialTransitionKind.OPCION,
+                evidence_reference="modelo-303-2026-prorrata-opcion",
+            ),
+        )
+
+        updated = service.declare_especial_transition(entry)
+        loaded = repository.load()
+
+    assert updated == loaded
+    persisted = loaded.entry_for(2026)
+    assert persisted is not None
+    assert persisted.especial_transition is not None
+    assert persisted.especial_transition.kind is ProrrataEspecialTransitionKind.OPCION
+    assert persisted.especial_transition.evidence_reference == "modelo-303-2026-prorrata-opcion"
 
 
 def test_record_aeat_autorizada_persists_authorised_override(tmp_path: Path) -> None:

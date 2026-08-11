@@ -7,7 +7,18 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.filing import (
+from ....core import Modelo, PaymentElection, Period, PriorDomiciliationElection, RefundElection, ResultDisposition
+from ....core.resources import bundled_path
+from ....domain.calculations.registry import (
+    RegistrySnapshotRef,
+    bundled_authority,
+    extract_record_design,
+    load_modelo_directory,
+)
+from ....domain.deadlines import ChargeAccount, IVARegime, RefundAccount, TaxpayerProfile
+from ....domain.filing import ModeloDraft
+from ....domain.submission import ModeloDraftStatus
+from .. import (
     FilingElectionFacts,
     FilingProducerSnapshotError,
     PresenterIdentity,
@@ -15,17 +26,6 @@ from cadrumo.application.filing import (
     build_filing_producer_snapshot,
     render_layout,
 )
-from cadrumo.core import Modelo, PaymentElection, Period, PriorDomiciliationElection, RefundElection, ResultDisposition
-from cadrumo.core.resources import bundled_path
-from cadrumo.domain.calculations.registry import (
-    RegistrySnapshotRef,
-    bundled_authority,
-    extract_record_design,
-    load_modelo_directory,
-)
-from cadrumo.domain.deadlines import ChargeAccount, IVARegime, RefundAccount, TaxpayerProfile
-from cadrumo.domain.filing import ModeloDraft
-from cadrumo.domain.submission import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -235,6 +235,8 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
 ) -> None:
     layout = _load_isolated_did_layout(tmp_path)
     taxpayer = _taxpayer_profile()
+    iva_profile = taxpayer.iva
+    assert iva_profile is not None
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
         taxpayer_tax_id=taxpayer.tax_id,
@@ -245,11 +247,11 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
             full_name="María García López",
         ),
         presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
-        model_profile=taxpayer.iva,
+        model_profile=iva_profile,
         elections=_elections(disposition),
         amendment_evidence=None,
-        refund_account=taxpayer.iva.refund_account,
-        charge_account=taxpayer.iva.charge_account,
+        refund_account=iva_profile.refund_account,
+        charge_account=iva_profile.charge_account,
     )
 
     wire = render_layout(layout, draft=_draft(), producer_snapshot=snapshot)
@@ -276,6 +278,8 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
     message: str,
 ) -> None:
     taxpayer = _taxpayer_profile()
+    iva_profile = taxpayer.iva
+    assert iva_profile is not None
 
     with pytest.raises(FilingProducerSnapshotError, match=message):
         build_filing_producer_snapshot(
@@ -288,7 +292,7 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
                 full_name="María García López",
             ),
             presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Ejemplo"),
-            model_profile=taxpayer.iva,
+            model_profile=iva_profile,
             elections=_elections(disposition),
             amendment_evidence=None,
             refund_account=refund_account,

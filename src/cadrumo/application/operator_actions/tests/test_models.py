@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
+from types import MappingProxyType
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -207,8 +208,7 @@ def test_immediate_verdict_is_immutable_and_serializes_evidence_deterministicall
         "no_recovery_outcome": None,
     }
 
-    with pytest.raises(TypeError):
-        verdict.evidence[0].values["profile_key"] = "changed"
+    assert isinstance(verdict.evidence[0].values, MappingProxyType)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         verdict.failed_condition_id = "profile.other"
 
@@ -240,7 +240,7 @@ def test_immediate_verdict_is_immutable_and_serializes_evidence_deterministicall
 )
 def test_argument_resolution_states_are_not_ambiguous(binding: dict[str, object], match: str) -> None:
     with pytest.raises(ValidationError, match=match):
-        ActionArgumentBinding(**binding)
+        ActionArgumentBinding.model_validate(binding)
 
 
 def test_condition_evidence_binding_requires_a_declared_matching_fact() -> None:

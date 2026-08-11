@@ -23,6 +23,7 @@ from ...core.json_contract import (
     NoticeSeverity,
     ResolvedActionArgument,
 )
+from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import ProfileNotFoundError
 from ._common import MODELO_CODE_CHOICE, _emit_envelope, _no_active_profile_refusal, resolve_notice_action
 from ._errors import CliRefusedBoundaryError
@@ -33,7 +34,6 @@ from ._modelo_payloads import (
     ModeloReadinessMissingRequirementPayload,
     ModeloReadinessResult,
 )
-from ...domain.calculations.registry import RevisionId
 
 
 def register_readiness_commands(app: typer.Typer) -> None:

@@ -56,7 +56,7 @@ document stated nothing, so the absence reads as "not asked" at every consumer.
 **EU identifiers count.** A Spanish-only check silently discards every intra-EU
 counterparty, which is precisely the Modelo 349 population -- the filing that
 exists to report them. Validation therefore routes through the repository's
-established EU VAT authority (:mod:`core.identity`) rather than a local
+established EU IVA authority (:mod:`core.identity`) rather than a local
 Spain-shaped test.
 
 See Also:
@@ -149,13 +149,13 @@ def canonical_identity_token(value: str, *, country_code: str | None = None) -> 
     """Return the canonical form of *value*, or ``None`` when it does not verify.
 
     Routes Spanish identifiers through the AEAT control-character algorithm and
-    non-Spanish ones through the EU VAT format authority. Returning ``None``
+    non-Spanish ones through the EU IVA format authority. Returning ``None``
     rather than raising keeps this usable as a filter: a document carrying a
     malformed identifier is an ordinary case the caller reports, not an
     exception it must catch per candidate.
 
     **An absent country asks the identifier's own prefix before assuming Spain.**
-    An intra-community VAT number leads with its Member State's prefix, so a
+    An intra-community IVA number leads with its Member State's prefix, so a
     document printing ``SE556677889901`` states its country in the number
     itself -- and that is exactly the document whose address block often states
     none. Defaulting the absence to Spain measured such a number against the

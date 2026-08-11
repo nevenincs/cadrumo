@@ -100,6 +100,7 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
         updated_at=_NOW,
         verified_at=_NOW,
         verified_by="operator",
+    filing_instance_evidence=None,
     )
 
 
@@ -128,6 +129,7 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
         updated_at=_NOW,
         verified_at=_NOW,
         verified_by="operator",
+    filing_instance_evidence=None,
     )
 
 

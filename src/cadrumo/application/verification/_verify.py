@@ -32,6 +32,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
+    RevisionId,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     declared_casilla_ids,
@@ -46,7 +47,6 @@ from ._schema import (
     VerificationStatus,
     VerificationVerdict,
 )
-from ...domain.calculations.registry import RevisionId
 
 _logger = get_logger(__name__)
 

@@ -17,7 +17,7 @@ from ....application.overview import (
 )
 from ....application.overview._agenda import OverviewAgenda
 from ....application.overview._backlog import OverviewBacklog
-from ....core.json_contract import Notice, NoticeSeverity
+from ....core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from .._overview_payloads import (
     OverviewAgendaResult,
     OverviewBacklogResult,
@@ -114,10 +114,11 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
     assert rendered.coverage.model_dump(mode="json") == coverage.model_dump(mode="json")
     assert any(line.startswith("coverage_advised\t1\t") for line in lines)
     assert notices[0].context == {"modelo": "190", "reason": "applicable_window_missing"}
-    assert notices[0].action is not None
-    assert notices[0].action.action.action_id == "operator.overview.explain"
-    assert notices[0].action.action.target_command_key == "overview.explain"
-    assert notices[0].action.argument_bindings[0].value == "190"
+    notice_action = notices[0].action
+    assert isinstance(notice_action, ResolvedNoticeAction)
+    assert notice_action.action.action_id == "operator.overview.explain"
+    assert notice_action.action.target_command_key == "overview.explain"
+    assert notice_action.argument_bindings[0].value == "190"
 
 
 def test_coverage_notices_bind_one_modelo_per_explanation_action() -> None:
@@ -134,9 +135,10 @@ def test_coverage_notices_bind_one_modelo_per_explanation_action() -> None:
     by_modelo = {notice.context["modelo"]: notice for notice in notices if notice.context is not None}
     assert set(by_modelo) == set(coverage.advised_modelos)
     for modelo, notice in by_modelo.items():
-        assert notice.action is not None
-        assert notice.action.action.action_id == "operator.overview.explain"
-        assert notice.action.argument_bindings[0].value == modelo
+        notice_action = notice.action
+        assert isinstance(notice_action, ResolvedNoticeAction)
+        assert notice_action.action.action_id == "operator.overview.explain"
+        assert notice_action.argument_bindings[0].value == modelo
 
 
 def test_calendar_projection_resolves_the_history_pull_action() -> None:
@@ -157,10 +159,11 @@ def test_calendar_projection_resolves_the_history_pull_action() -> None:
     _, _, notices = overview_calendar_output(calendar, calendar_range, evidence_notices=(application_notice,))
 
     assert len(notices) == 1
-    assert notices[0].action is not None
-    assert notices[0].action.action.action_id == "operator.live.filed.pull_all"
-    assert notices[0].action.action.target_command_key == "app.live.filed.pull_all"
-    assert notices[0].action.argument_bindings == ()
+    notice_action = notices[0].action
+    assert isinstance(notice_action, ResolvedNoticeAction)
+    assert notice_action.action.action_id == "operator.live.filed.pull_all"
+    assert notice_action.action.target_command_key == "app.live.filed.pull_all"
+    assert notice_action.argument_bindings == ()
 
 
 def test_every_calendar_derived_renderer_retains_coverage() -> None:

@@ -514,7 +514,7 @@ class TestAShortCodeIsNotAFragmentOfAnIdentifier:
     """
 
     @staticmethod
-    def test_a_country_code_does_not_anchor_inside_a_vat_identifier() -> None:
+    def test_a_country_code_does_not_anchor_inside_an_iva_identifier() -> None:
         """The measured case, on the value that makes it worst."""
         evaluation = evaluate_anchor(
             value="ES",

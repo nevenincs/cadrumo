@@ -103,7 +103,7 @@ from ...domain.modelos import (
     upsert_work_unit,
 )
 from ..aggregation import (
-    MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
+    MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,
     assert_evidence_covers_snapshot,
     compute_ledger_filing_evidence,
@@ -144,7 +144,12 @@ from ._registry_resources import authority_via_resources as _authority_via_resou
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import (
+    emit_modelo_bucket_event as _emit_bucket_event,
+)
+from ._revision_persistence import (
+    require_filing_instance_evidence_for_work_unit,
+)
 from ._verification_cross_period import (
     CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
@@ -411,7 +416,7 @@ def _missing_evidence_findings(
     findings: list[ModeloVerificationFinding] = []
     registry_source_refs = _optional_observation_refs(target.observations, "source_refs")
     for diagnostic in diagnostics:
-        is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND
+        is_deductible_gap = diagnostic.source_kind == MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND
         message_facts: dict[str, str | int | bool | Decimal] = {
             "diagnostic_reason_code": str(diagnostic.reason),
             "source_kind_code": diagnostic.source_kind,
@@ -576,9 +581,9 @@ def _collect_verification_gate_findings(
             build_verification_precondition_failure(
                 calculation_revision_id=target.calculation_revision_id,
                 work_unit_id=target.work_unit_id,
-                condition_id="modelo.work.verify.deductible_vat_evidence.present",
-                scenario_id="modelo.work.verify.deductible_vat_evidence.missing",
-                evidence_id="modelo.work.verify.deductible_vat_evidence",
+                condition_id="modelo.work.verify.deductible_iva_evidence.present",
+                scenario_id="modelo.work.verify.deductible_iva_evidence.missing",
+                evidence_id="modelo.work.verify.deductible_iva_evidence",
                 evidence_values={
                     "diagnostic_reason_code": str(diagnostic.reason),
                     "source_kind_code": diagnostic.source_kind,
@@ -929,6 +934,7 @@ def verify_modelo_revision_with_preconditions(
         )
 
     _assert_revision_content_integrity(target)
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
 
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 

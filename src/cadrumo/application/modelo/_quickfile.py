@@ -38,7 +38,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -51,7 +51,12 @@ from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RevisionId
 from ...domain.deadlines import TaxpayerProfile
-from ...domain.modelos import CalculationRevision, VerificationReport, WorkUnit
+from ...domain.modelos import (
+    CalculationRevision,
+    FilingInstanceEvidence,
+    VerificationReport,
+    WorkUnit,
+)
 from ._calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from ._export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
 from ._verification_actions import verify_modelo_revision
@@ -182,6 +187,7 @@ class QuickfileCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
+    filing_instance_evidence: FilingInstanceEvidence | None = None
 
 
 def _refusal_outcome(stage: QuickfileStage, exc: CadrumoError) -> QuickfileStageOutcome:
@@ -300,7 +306,10 @@ def run_modelo_quickfile(
 
     # ── Stage 3: calculate ────────────────────────────────────────────────
     try:
-        calculation_inputs = build_calculation_inputs(work_unit.work_unit_id)
+        calculation_inputs = replace(
+            build_calculation_inputs(work_unit.work_unit_id),
+            filing_instance_evidence=command.filing_instance_evidence,
+        )
         calculation = calculate_modelo_work_revision(
             work_unit_id=work_unit.work_unit_id,
             actor=command.actor,
@@ -384,7 +393,6 @@ def run_modelo_quickfile(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
-                m303_applicability=None,
             ),
             workflow_profile=workflow_profile,
         )

@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...core import IvaCompensationStateProvenance, Period
 from ...core.json_contract import Notice
+from ...domain.iva_compensation import IvaCompensationDecisionReason
 from ._errors import LiveIvaAcquisitionFailureMode
 
 
@@ -237,7 +238,8 @@ class IvaWalletAuthorityDecisionRow(BaseModel):
     divergence: str
     blocked: bool
     stale_wallet: bool
-    reason: str
+    reason_identity: IvaCompensationDecisionReason
+    operator_explanation: str | None
     wallet_captured_at: datetime | None
     decided_at: datetime
     authority_sources: tuple[str, ...] = ()

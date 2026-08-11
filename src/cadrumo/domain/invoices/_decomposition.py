@@ -15,7 +15,7 @@ the operator has to be told about. The contract runs afterwards, over an
 already-valid record, and its verdict is data.
 
 What "grounded" means is decided by the Axis-A component-expectation table
-(:func:`~cadrumo.domain.iva.iva_category_components`), not by inspecting which
+(:func:`~cadrumo.domain.iva.category_components`), not by inspecting which
 fields happen to be populated. That is the whole point: field nullness cannot
 distinguish "this component does not exist in law" from "nobody recorded it",
 and conflating the two is what let an IVA-exempt professional service and an
@@ -61,7 +61,7 @@ from ..iva import (
     IvaComponentPresence,
     IvaKindApplicability,
     category_bears_taxable_base,
-    iva_category_components,
+    category_components,
 )
 from ._errors import InvoiceValidationError
 
@@ -347,7 +347,7 @@ def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
     # direction, so reading it without the kind would answer about the wrong
     # side of the operation. The invoice carries its kind, so the caller never
     # has to guess.
-    row = iva_category_components(category, invoice.kind)
+    row = category_components(category, invoice.kind)
     if row.applicability is IvaKindApplicability.DOES_NOT_ARISE:
         # The category is one-directional and this invoice claims the other
         # side (an "import" the taxpayer issued, say). Its own defect rather

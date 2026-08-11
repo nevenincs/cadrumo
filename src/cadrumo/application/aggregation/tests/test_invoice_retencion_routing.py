@@ -28,7 +28,7 @@ from ....core import BindingSourceKind, Modelo, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision, resolve_retenciones_aggregation_binding_values
 from ....domain.invoices import Invoice, InvoiceLine, IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, iva_category_components
+from ....domain.iva import InvoiceKind, IvaCategory, IvaRetencionRole, category_components
 from ....tests.secure_sql import isolated_runtime_profile
 from .._errors import AggregationValidationError
 from .._invoice_retencion import (
@@ -386,7 +386,7 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
     implementations.
     """
     received_no_liability = _invoice(category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
-    role = iva_category_components(
+    role = category_components(
         IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         InvoiceKind.RECEIVED,
     ).retencion_role

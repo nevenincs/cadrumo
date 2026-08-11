@@ -68,8 +68,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _FACT_BY_CRITERIA_ATTRIBUTE: dict[str, PartyFact | None] = {
     "issuer_residency": PartyFact.TERRITORIAL_ESTABLISHMENT,
     "customer_residency": PartyFact.TERRITORIAL_ESTABLISHMENT,
-    "issuer_identification_state": PartyFact.VAT_IDENTIFICATION_STATE,
-    "customer_identification_state": PartyFact.VAT_IDENTIFICATION_STATE,
+    "issuer_identification_state": PartyFact.IVA_IDENTIFICATION_STATE,
+    "customer_identification_state": PartyFact.IVA_IDENTIFICATION_STATE,
     "transaction_date": None,
     "customer_tax_status": None,
     "kind": None,
@@ -261,7 +261,7 @@ def test_the_identification_reads_are_actually_reached() -> None:
     identifying = {
         rule.rule_id
         for rule in _classification._CLASSIFICATION_RULES
-        if PartyFact.VAT_IDENTIFICATION_STATE in _facts_read_by(rule.predicate)
+        if PartyFact.IVA_IDENTIFICATION_STATE in _facts_read_by(rule.predicate)
     }
     assert identifying, (
         "the extractor found no rule reading the identifying State, so the intra-community rows "
@@ -325,7 +325,7 @@ def test_the_helper_following_branch_finds_a_read_the_plain_walk_misses() -> Non
         f"the mixed shape extracted {sorted(mixed)}; the inline read and the delegated one must both "
         "be found, or a row reads an identification it never declares"
     )
-    assert PartyFact.VAT_IDENTIFICATION_STATE in _facts_read_by(
+    assert PartyFact.IVA_IDENTIFICATION_STATE in _facts_read_by(
         _predicate_reading_some_and_delegating_the_rest,
         module=module,
     )
@@ -356,7 +356,7 @@ def test_without_following_the_mixed_shape_would_pass_while_reading_undeclared()
     without = _criteria_attributes_read(_predicate_reading_some_and_delegating_the_rest, module=no_helpers)
 
     assert without == {"kind"}, f"expected the unfollowed walk to see only the inline read; got {sorted(without)}"
-    assert PartyFact.VAT_IDENTIFICATION_STATE not in {
+    assert PartyFact.IVA_IDENTIFICATION_STATE not in {
         fact for attribute in without if (fact := _FACT_BY_CRITERIA_ATTRIBUTE[attribute]) is not None
     }, "the unfollowed walk must lose the identification, or this proves nothing about the branch"
     # And it is NOT caught by the extractor's empty-set refusal, which is the

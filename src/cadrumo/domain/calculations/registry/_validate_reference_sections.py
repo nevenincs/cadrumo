@@ -134,7 +134,7 @@ def check_export_layout_refs(checker: IdReferenceChecker, revision: ModeloRevisi
                 checker.chk(f"{rcp}.row_field_casilla_ids.{row_field}", casilla_id, checker.casilla_ids)
             for field in record.fields:
                 efp = f"{rcp}.field {field.id}"
-                checker.chk_opt(f"{efp}.casilla_id", field.casilla_id, checker.casilla_ids)
+                checker.chk_opt(f"{efp}.endpoint_casilla_id", field.endpoint_casilla_id, checker.casilla_ids)
                 checker.chk_opt(f"{efp}.binding", field.binding, checker.binding_ids)
                 checker.chk_legal_source_refs(efp, field.legal_refs, field.source_refs)
 

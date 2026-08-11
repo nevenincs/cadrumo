@@ -30,13 +30,13 @@ from pydantic import ValidationError
 from ....core import BindingSourceKind, Period
 from ....core.time import validate_utc_aware
 from ...calculations.registry import RegistrySnapshotRef
+from ...submission import ModeloDraftStatus
 from .. import (
     ModeloBindingValue,
     ModeloDraft,
     ModeloValue,
     ModeloValueKind,
 )
-from ...submission import ModeloDraftStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

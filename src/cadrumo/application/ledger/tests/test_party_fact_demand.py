@@ -53,7 +53,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _DATE = date(2026, 3, 10)
 _ASSERTED = ClassifierInputSource.OPERATOR_ASSERTION
 
-_GERMAN_VAT_NUMBER = "DE811234567"
+_GERMAN_IVA_NUMBER = "DE811234567"
 _SPANISH_CIF = "B12345678"
 
 _TAXABLE = ClassifierInputs(counterparty_taxable_person=CounterpartyTaxablePersonStatus.TAXABLE_PERSON)
@@ -78,7 +78,7 @@ class TestARegistrationSettlesNoPlace:
         """The failure that produced this split: it used to resolve silently to EU_MEMBER."""
         assert "customer_residency" in _missing_fields(
             declared=DeclaredFacts(),
-            customer_identifier=_GERMAN_VAT_NUMBER,
+            customer_identifier=_GERMAN_IVA_NUMBER,
         )
 
     def test_a_printed_spanish_number_alone_leaves_the_establishment_unsettled(self) -> None:
@@ -100,7 +100,7 @@ class TestARegistrationSettlesNoPlace:
         gate exists to refuse.
         """
         establishment_fields = {"issuer_residency", "customer_residency"}
-        german = _missing_fields(declared=DeclaredFacts(), customer_identifier=_GERMAN_VAT_NUMBER)
+        german = _missing_fields(declared=DeclaredFacts(), customer_identifier=_GERMAN_IVA_NUMBER)
         spanish = _missing_fields(declared=DeclaredFacts(), customer_identifier=_SPANISH_CIF)
         assert german & establishment_fields == spanish & establishment_fields == establishment_fields
 
@@ -163,7 +163,7 @@ class TestTheIdentificationIsDemandedOnlyByBranchesThatConsumeIt:
                 issuer_scope=DeclaredFact(value=IvaTerritorialScope.ES_MAINLAND, source=_ASSERTED),
                 customer_scope=DeclaredFact(value=IvaTerritorialScope.EU_MEMBER, source=_ASSERTED),
             ),
-            customer_identifier=_GERMAN_VAT_NUMBER,
+            customer_identifier=_GERMAN_IVA_NUMBER,
         )
         assert assembly.assembled, [gap.field for gap in assembly.missing]
         assert assembly.criteria is not None
@@ -245,4 +245,4 @@ class TestTheUnplacedOperationGuardCoversTheNewAxis:
             ),
         )
         assert unplaced.category is IvaCategory.UNKNOWN
-        assert PartyFact.VAT_IDENTIFICATION_STATE in unplaced.consumes_party_facts
+        assert PartyFact.IVA_IDENTIFICATION_STATE in unplaced.consumes_party_facts

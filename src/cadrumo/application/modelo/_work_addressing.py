@@ -34,7 +34,7 @@ from dataclasses import dataclass
 from ...core import ActionEvidenceProvenance, Period
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.resources import resources
-from ...domain.calculations.registry import RegistrySnapshotError, select_revision
+from ...domain.calculations.registry import RegistrySnapshotError, RevisionId, select_revision
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     CalculationRevision,
@@ -70,7 +70,6 @@ from ._selectors import (
     resolve_modelo_work_unit,
 )
 from ._work_lifecycle import RevisionParentOperation, create_work_unit, rename_work_unit, require_revision_parent_active
-from ...domain.calculations.registry import RevisionId
 
 
 class ModeloRevisionPickError(ModeloError, ValueError):

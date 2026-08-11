@@ -93,6 +93,8 @@ def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
 # - irpf.estimation_regime: a non-default regime
 # - objective-estimation módulos facts: annual operator inputs for M131/M100 support
 # - iva.regime: REAGP (the non-default member, not GENERAL)
+# - IVA regime composition and required explicit DP303 booleans: declared
+#   ``general`` and ``False`` values, respectively
 # - IVA group role, SII, and REDEME flags: True (default False)
 _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
@@ -106,6 +108,10 @@ _TAXPAYER_AXIS_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="irpf.objective_estimation_modulos_module_1_units", value="2.50"),
     UserProfileFact(path="irpf.objective_estimation_modulos_module_2_units", value="85"),
     UserProfileFact(path="irpf.objective_estimation_modulos_module_3_units", value="12000.75"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
     UserProfileFact(path="iva.group_member_enrolled", value=True),
     UserProfileFact(path="iva.group_dominant_entity_enrolled", value=True),
     UserProfileFact(path="iva.sii_enrolled", value=True),
@@ -166,6 +172,10 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     assert _fact_value(record, "irpf.objective_estimation_modulos_module_2_units") == Decimal("85")
     assert _fact_value(record, "irpf.objective_estimation_modulos_module_3_units") == Decimal("12000.75")
     assert _fact_value(record, "iva.regime") == "REAGP"
+    assert _fact_value(record, "iva.m303_regime_composition") == "general"
+    assert _fact_value(record, "iva.cash_accounting_regime_enrolled") is False
+    assert _fact_value(record, "iva.voluntary_sii_enrolled") is False
+    assert _fact_value(record, "iva.hydrocarbon_deposit_advance_payment_deduction_entitled") is False
     assert _fact_value(record, "iva.group_member_enrolled") is True
     assert _fact_value(record, "iva.group_dominant_entity_enrolled") is True
     assert _fact_value(record, "iva.sii_enrolled") is True
@@ -188,10 +198,16 @@ def test_taxpayer_axis_facts_survive_encrypted_sql_roundtrip(
     assert profile.objective_estimation_modulos_module_2_units == Decimal("85")
     assert profile.objective_estimation_modulos_module_3_units == Decimal("12000.75")
     assert profile.iva_regime is IVARegime.REAGP
-    assert profile.iva.group_member_enrolled is True
-    assert profile.iva.group_dominant_entity_enrolled is True
-    assert profile.iva.sii_enrolled is True
-    assert profile.iva.redeme_enrolled is True
+    iva = profile.iva
+    assert iva is not None
+    assert iva.regime_composition.value == "general"
+    assert iva.cash_accounting_regime_enrolled is False
+    assert iva.voluntary_sii_enrolled is False
+    assert iva.hydrocarbon_deposit_advance_payment_deduction_entitled is False
+    assert iva.group_member_enrolled is True
+    assert iva.group_dominant_entity_enrolled is True
+    assert iva.sii_enrolled is True
+    assert iva.redeme_enrolled is True
 
 
 def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
@@ -245,6 +261,10 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
         "irpf.objective_estimation_modulos_module_5_units",
         "irpf.objective_estimation_modulos_module_6_units",
         "irpf.objective_estimation_modulos_module_7_units",
+        "iva.m303_regime_composition",
+        "iva.cash_accounting_regime_enrolled",
+        "iva.voluntary_sii_enrolled",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
         "iva.group_member_enrolled",
         "iva.group_dominant_entity_enrolled",
         "iva.sii_enrolled",
@@ -253,16 +273,14 @@ def test_v1_shaped_record_without_taxpayer_axes_loads_under_v2_schema(
     persisted_paths = {fact.path for fact in record.facts}
     assert not (taxpayer_axis_paths & persisted_paths)
 
-    # The undeclared taxpayer model must not invent any axis value.
+    # The undeclared taxpayer model must not invent any axis value. With no
+    # IVA block-owned facts, the optional IVA block is absent.
     profile = projection_for_taxpayer(record)
     assert profile.entity_type is None
     assert profile.legal_entity_form is None
     assert profile.irpf_income_categories == frozenset()
     assert profile.irpf_estimation_regime is None
-    assert profile.iva.group_member_enrolled is False
-    assert profile.iva.group_dominant_entity_enrolled is False
-    assert profile.iva.sii_enrolled is False
-    assert profile.iva.redeme_enrolled is False
+    assert profile.iva is None
     # The optional censo alta date is also undeclared for a v1 record.
     assert profile.activity_start_date is None
 

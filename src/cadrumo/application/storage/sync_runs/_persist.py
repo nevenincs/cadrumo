@@ -24,18 +24,14 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import SyncSurface
 from ....core.time import validate_utc_aware
 from ....domain.buckets import (
-    BucketEvent,
     BucketEventObjectType,
     BucketEventType,
-    append_bucket_event,
-    derive_bucket_event_id,
+    build_bucket_event,
 )
-from ._records import SyncRunCoverage, SyncRunRecord, SyncRunRecordRepository
+from ._records import SyncRunCoverage, SyncRunRecord, SyncRunRecordRepositoryProtocol
 
 __all__ = [
     "record_sync_run",
@@ -60,6 +56,7 @@ def record_sync_run(
     succeeded: bool,
     coverage: SyncRunCoverage,
     completed_at: datetime,
+    repository: SyncRunRecordRepositoryProtocol,
     actor: str = "system",
 ) -> SyncRunRecord:
     """Persist one completed run and its bucket event in a single transaction.
@@ -90,6 +87,8 @@ def record_sync_run(
             reported more divergences than units and refused its own record at
             the end of a real sweep.
         completed_at: UTC instant the run finished, successfully or not.
+        repository: Persistence port that co-writes this record and its history
+            event through one encrypted storage transaction.
         actor: Who invoked the run.
 
     Returns:
@@ -110,17 +109,18 @@ def record_sync_run(
         "unit_count": str(coverage.unit_count),
         "divergence_count": str(coverage.divergence_count),
     }
-    event_id = derive_bucket_event_id(
+    event = build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=completed_at,
         actor=actor,
         object_type=BucketEventObjectType.BUCKET,
         object_id=surface.value,
+        payload_version=1,
         payload=payload,
     )
     record = SyncRunRecord(
-        bucket_event_id=event_id,
+        bucket_event_id=event.event_id,
         bucket_id=bucket_id,
         surface=surface,
         resolved_scope=resolved_scope,
@@ -130,29 +130,5 @@ def record_sync_run(
         completed_at=completed_at,
     )
 
-    catalogue_repo = BucketEventHistoryRepository()
-    next_catalogue = append_bucket_event(
-        catalogue_repo.load(),
-        BucketEvent(
-            event_id=event_id,
-            bucket_id=bucket_id,
-            event_type=event_type,
-            occurred_at=completed_at,
-            actor=actor,
-            object_type=BucketEventObjectType.BUCKET,
-            object_id=surface.value,
-            payload_version=1,
-            payload=payload,
-        ),
-    )
-    # One backend, one save_many, one transaction: both repositories are bound
-    # to the same SecureObjectRepository instance so the two writes share a
-    # single session scope and roll back together.
-    objects: SecureObjectRepository = catalogue_repo.secure_object_repository
-    objects.save_many(
-        (
-            catalogue_repo.to_secure_object_write(next_catalogue),
-            SyncRunRecordRepository(objects=objects).to_secure_object_write(record),
-        ),
-    )
+    repository.save_with_bucket_event(record, event)
     return record

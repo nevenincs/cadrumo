@@ -30,7 +30,6 @@ import sqlite3
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 
-
 from ...core import (
     STR_KEYED_MAPPING_ADAPTER,
     fts_or_group,

@@ -13,7 +13,7 @@ entirely. Neither is caught by a check further down, because both are perfectly
 well-formed answers to the wrong question. What prevents it is that the country
 rung is consulted first and, having answered, stops the ladder.
 
-**A printed VAT number is NOT a rung here, and that is the correction this
+**A printed IVA number is NOT a rung here, and that is the correction this
 ladder exists in its current form to carry.** It once was the first and
 strongest one: a ``DE`` prefix resolved decisively to ``EU_MEMBER`` and stopped
 the walk. Every Member State registers non-residents on exactly the terms Spain
@@ -23,7 +23,7 @@ foreign direction was the dangerous one: a German-registered entity actually
 established in Spain resolved silently and confidently, where its Spanish mirror
 failed loud to the operator.
 
-The prefix is now terminal for the OTHER fact, the party's VAT identification
+The prefix is now terminal for the OTHER fact, the party's IVA identification
 state, which it settles decisively because registration is exactly what that
 fact asserts. What it never settles alone is where the party IS.
 
@@ -48,7 +48,7 @@ The rungs, strongest first:
 **And any Spain-indicating rung beside a foreign registration is a CONTRADICTION,
 never a resolution either way.** A Spanish address, country-gated Spanish postal
 evidence, or Spanish IVA charged at a registry rate, printed on a document whose
-counterparty carries another State's VAT number, is the characteristic face of a
+counterparty carries another State's IVA number, is the characteristic face of a
 foreign-registered entity operating through an establecimiento permanente in
 Spain. It fails loud, and it is checked BEFORE the ordinary rungs so the postal
 rung cannot quietly answer it.
@@ -100,11 +100,11 @@ from ...domain.iva import (
     EUMemberState,
     IvaTerritorialScope,
     country_code_for_printed_country_name,
+    identification_state_for_printed_tax_identifier,
     match_regime_legend,
     rate_kinds_for_declared_rate,
     territorial_scope_for_country,
     territorial_scope_for_spanish_postal_code,
-    vat_identification_state_for_printed_tax_identifier,
 )
 
 # `names_spain` is the sibling module's authority on what positively names
@@ -187,7 +187,7 @@ class RegistrationEstablishmentConflict(BaseModel):
     population characteristically presents.** An entity registered in another
     Member State but operating through an establecimiento permanente in Spain
     charges Spanish IVA on its domestic supplies and prints a Spanish address to
-    do it — so a foreign VAT number beside a Spanish address, Spanish postal
+    do it — so a foreign IVA number beside a Spanish address, Spanish postal
     evidence or a Spanish registry rate is not noise, it is the signature of the
     exact case the split exists to catch.
 
@@ -197,7 +197,7 @@ class RegistrationEstablishmentConflict(BaseModel):
     document does not state. So no scope is returned and a human decides.
 
     Attributes:
-        identification_state: The Member State whose VAT number was printed.
+        identification_state: The Member State whose IVA number was printed.
         spain_indicating: What placed the party in Spain, in operator-facing
             words. Never empty — a conflict nobody can see the other half of is
             not actionable.
@@ -229,7 +229,7 @@ class CounterpartyEstablishment(BaseModel):
             disputes. Carried WITH no scope: the stored value is an operator's
             claim about an entity and the printed value is an issuer's claim
             about one document, and neither may be preferred without a decision.
-        identification_state: The Member State whose VAT number the counterparty
+        identification_state: The Member State whose IVA number the counterparty
             printed. Settled TERMINALLY by the prefix and carried independently
             of ``scope``, because they are two facts: this one is decided by
             registration evidence, and the other is decided by no registration at
@@ -326,7 +326,7 @@ def _spanish_iva_was_charged(
     """Whether the document charges IVA at a rate the SPANISH registry carries.
 
     A repercutido line is only Spain-indicating if the rate is a Spanish one: a
-    German supplier invoicing a German customer charges German VAT, and reading
+    German supplier invoicing a German customer charges German IVA, and reading
     any charged tax as Spanish tax would place half of Europe inside the TAI.
     The registry is asked rather than a literal compared, so a rate the schedule
     stops carrying stops indicating.
@@ -428,7 +428,7 @@ def _taxed_under_the_registration_state(
     Args:
         charged_iva_rates: The rates as the document PRINTS them, whole-number
             percentages, converted to the fraction the registry keys on.
-        identification: The Member State whose VAT identification the party
+        identification: The Member State whose IVA identification the party
             printed -- the only State whose schedule is relevant, because the
             claim being corroborated is that the party is established THERE.
         on_date: The date the rate must have been in force.
@@ -472,7 +472,7 @@ def _treatment_concurs_with_non_establishment(
     **The single-source version was safe but incomplete, and it was recorded as
     such rather than left to be found.** Only the reverse-charge mention was
     recognised, so a foreign-registered issuer that simply charged its own
-    country VAT -- the ordinary shape of a cross-border invoice that is not a
+    country IVA -- the ordinary shape of a cross-border invoice that is not a
     reverse charge -- corroborated nothing and fell to a question. That is the
     safe direction: an unanswered question, never a wrong territory. It was still
     a gap.
@@ -513,10 +513,10 @@ def _printed_evidence(
     so a foreign-registered party printing a Spanish address surfaces instead of
     being quietly resolved to a Spanish territory by the rung below.
 
-    The printed VAT number appears here only as the thing that must be
+    The printed IVA number appears here only as the thing that must be
     CORROBORATED. It settles no territory by itself at any point in this walk.
     """
-    identification = vat_identification_state_for_printed_tax_identifier(tax_identifier)
+    identification = identification_state_for_printed_tax_identifier(tax_identifier)
     spanish_iva_charged = _spanish_iva_was_charged(charged_iva_rates, on_date=on_date)
 
     if identification is not None:
@@ -533,7 +533,7 @@ def _printed_evidence(
                     identification_state=identification,
                     spain_indicating=indicating,
                     detail=(
-                        f"the counterparty prints a {identification.value.upper()} VAT identification while "
+                        f"the counterparty prints a {identification.value.upper()} IVA identification while "
                         f"{'; '.join(indicating)}. A party registered in another Member State may still be "
                         f"established in Spain through a sede or establecimiento permanente, and this "
                         f"document states both -- which of the two governs its IVA treatment is not settled "
@@ -564,7 +564,7 @@ def _printed_evidence(
     ):
         # The registration's OWN State, and only because something else agreed.
         # `None` here is not a failure to look up a country: Northern Ireland
-        # carries a VAT prefix without being an ISO jurisdiction the catalogue
+        # carries a IVA prefix without being an ISO jurisdiction the catalogue
         # resolves, and a registration whose territory cannot be named is one
         # this walk cannot corroborate into a scope.
         concordant = territorial_scope_for_country(identification.value.upper())
@@ -705,7 +705,7 @@ def resolve_counterparty_establishment_scope(
         stated_country_name=stated_country_name,
         resolved_country_code=resolved_country_code,
     )
-    identification = vat_identification_state_for_printed_tax_identifier(tax_identifier)
+    identification = identification_state_for_printed_tax_identifier(tax_identifier)
     evidenced, rung, conflict = _printed_evidence(
         tax_identifier=tax_identifier,
         country_code=country_code,

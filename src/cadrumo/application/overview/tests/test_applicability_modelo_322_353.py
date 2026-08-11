@@ -9,6 +9,8 @@ from ....domain.deadlines import (
     EntityType,
     IVARegime,
     LegalEntityForm,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
 )
@@ -27,6 +29,12 @@ def _legal_entity_with_iva_group_role(
         legal_entity_form=LegalEntityForm.SL,
         iva_regime=IVARegime.GENERAL,
         iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             group_member_enrolled=group_member,
             group_dominant_entity_enrolled=group_dominant,
         ),

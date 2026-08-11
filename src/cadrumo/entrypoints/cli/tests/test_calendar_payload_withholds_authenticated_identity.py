@@ -34,16 +34,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _NIF = "12345678Z"
 
 
-def _event(**overrides: object) -> OverviewCalendarEvent:
-    base: dict[str, object] = {
-        "event_type": OverviewCalendarEventType.FILING,
-        "event_date": date(2026, 4, 15),
-        "source": "live-snapshot",
-        "summary": "Modelo 303 1T filed",
-        "reference_id": "REF-303-1T",
-    }
-    base.update(overrides)
-    return OverviewCalendarEvent(**base)  # type: ignore[arg-type]
+def _event(
+    *,
+    authenticated_identity: str | None = None,
+    notificacion_estado_servicio: NotificacionEstadoServicio | None = None,
+) -> OverviewCalendarEvent:
+    return OverviewCalendarEvent(
+        event_type=OverviewCalendarEventType.FILING,
+        notificacion_estado_servicio=notificacion_estado_servicio,
+        event_date=date(2026, 4, 15),
+        source="live-snapshot",
+        summary="Modelo 303 1T filed",
+        reference_id="REF-303-1T",
+        authenticated_identity=authenticated_identity,
+    )
 
 
 def test_the_service_state_reaches_the_payload() -> None:
@@ -74,7 +78,7 @@ def test_the_nif_value_does_not_survive_the_projection_boundary() -> None:
     """
     event = _event(authenticated_identity=_NIF)
 
-    assert _NIF in event.authenticated_identity or ""  # the source genuinely holds it
+    assert event.authenticated_identity == _NIF  # the source genuinely holds it
     assert _NIF not in event.model_dump_json(), "the source must not serialize the NIF"
 
     projected = strict_round_trip(OverviewCalendarEventPayload, event)

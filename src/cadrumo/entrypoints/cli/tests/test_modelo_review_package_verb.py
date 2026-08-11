@@ -263,6 +263,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
         state=CalculationRevisionState.BORRADOR,
         created_at=now,
         updated_at=now,
+    filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))

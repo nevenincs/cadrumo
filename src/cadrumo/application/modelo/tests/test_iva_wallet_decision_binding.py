@@ -48,7 +48,7 @@ def _decision(
         divergence="match" if not blocked else "wallet_higher",
         blocked=blocked,
         stale_wallet=False,
-        reason="wallet decision fixture",
+        reason_identity=("wallet_local_recurrence_divergence" if blocked else "aeat_wallet_validated"),
         wallet_captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         decided_at=datetime(2026, 5, 19, 12, 1, 0, tzinfo=UTC),
     )
@@ -101,7 +101,7 @@ def test_non_blocking_iva_wallet_decision_supplies_modelo_303_binding() -> None:
 
 
 def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="blocks automatic Modelo 303 calculation"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -115,6 +115,13 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
             backend_binding_values={},
             decision=_decision(blocked=True, amount=None),
         )
+    assert (
+        exc_info.value.translated_message == "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence"
+    )
+    assert (
+        exc_info.value.precondition_failure.scenario_id
+        == "modelo.work.calculate.iva_wallet.wallet_local_recurrence_divergence"
+    )
 
 
 def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
@@ -217,7 +224,7 @@ def test_modelo_303_wallet_decision_for_other_taxpayer_is_refused() -> None:
 
 
 def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_refused() -> None:
-    with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="caller casilla"):
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
         _apply_iva_compensation_decision_binding(
             "303",
             2026,
@@ -231,3 +238,4 @@ def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_
             backend_binding_values={},
             decision=_decision(),
         )
+    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_caller_casilla_conflict"

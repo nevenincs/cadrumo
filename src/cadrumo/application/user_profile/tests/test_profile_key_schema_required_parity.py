@@ -46,9 +46,15 @@ class _Cause(StrEnum):
     #: required by an explicit conditional elsewhere, so the wizard's own
     #: requirement level is deliberately weaker than the schema's.
     CONDITIONAL_RESCUE = "conditional_rescue"
+    STRICT_HYDRATION = "strict_hydration"
 
 
 _KNOWN_DIVERGENCES: dict[str, tuple[_Cause, str]] = {
+    "tax_residence.jurisdiction_scope": (
+        _Cause.STRICT_HYDRATION,
+        "Required by strict taxpayer-profile hydration before Modelo IVA construction; absence refuses rather "
+        "than receiving a wizard or profile default.",
+    ),
     "activities.description": (
         _Cause.CONDITIONAL_RESCUE,
         "Raised to required by the readiness gate's baseline, which appends it unless the filer "

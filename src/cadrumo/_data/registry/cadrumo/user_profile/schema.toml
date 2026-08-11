@@ -68,6 +68,13 @@ entry_surface = "aeat config profile descendiente"
 description = "Deduccion por maternidad, calculada por descendiente desde los meses declarados y su elegibilidad."
 legal_refs = ["ley-35-2006:art-81"]
 
+[[derived_selectors]]
+pattern = "tax_residence.state_attribution_ratio"
+derived_from = ["tax_residence.jurisdiction_scope"]
+entry_surface = "aeat config profile set tax_residence.jurisdiction_scope"
+description = "Porcentaje atribuible al Estado derivado exclusivamente del regimen territorial declarado."
+legal_refs = ["ley-12-2002:art-29"]
+
 [[sections]]
 key = "identity"
 title = "Identity"
@@ -309,21 +316,11 @@ model_selectors = ["TaxResidenceProfile.ccaa"]
 [[sections.fields]]
 key = "jurisdiction_scope"
 type = "enum"
-required = false
+required = true
 sensitivity = "identity"
 effective_dated = true
-description = "Régimen territorial aplicable: territorio común o territorio foral aún no soportado. Si no se indica, se considera territorio común."
+description = "Régimen territorial aplicable declarado explícitamente: territorio común o territorio foral aún no soportado."
 enum_values = ["common_regime", "foral_unsupported"]
-
-[[sections.fields]]
-key = "state_attribution_ratio"
-type = "decimal"
-required = false
-sensitivity = "identity"
-effective_dated = true
-description = "Modelo 303 casilla 65 — porcentaje atribuible a la Administración del Estado (Art. 29 del Concierto Económico, Ley 12/2002). Cadrumo lo calcula a partir de la jurisdicción fiscal: 100 % en territorio común y 0 % cuando la atribución foral no está soportada."
-model_selectors = ["modelo_303"]
-legal_refs = ["ley-12-2002:art-29", "ley-37-1992:art-115", "orden-eha-3786-2008:art-1", "rd-1624-1992:art-71"]
 
 [[sections]]
 key = "censo"
@@ -1245,6 +1242,47 @@ description = "Whether the taxpayer is registered in REDEME (Registro de Devoluc
 model_selectors = ["iva.redeme_enrolled"]
 schedule_predicates = ["iva.redeme_enrolled"]
 legal_refs = ["rd-1624-1992:art-30"]
+
+[[sections.fields]]
+key = "m303_regime_composition"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm."
+enum_values = ["general", "simplified", "mixed"]
+model_selectors = ["iva.m303_regime_composition"]
+legal_refs = ["ley-37-1992:art-122", "orden-hac-242-2025:modelo-303"]
+
+[[sections.fields]]
+key = "cash_accounting_regime_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit enrolment in the special cash-accounting IVA regime. Required when the IVA profile block is present."
+model_selectors = ["iva.cash_accounting_regime_enrolled"]
+legal_refs = ["ley-37-1992:art-163-decies"]
+
+[[sections.fields]]
+key = "voluntary_sii_enrolled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present."
+model_selectors = ["iva.voluntary_sii_enrolled"]
+legal_refs = ["rd-1624-1992:art-68-bis"]
+
+[[sections.fields]]
+key = "hydrocarbon_deposit_advance_payment_deduction_entitled"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Explicit entitlement to deduct advance payments made under the hydrocarbon tax-deposit regime. Required when the IVA profile block is present."
+model_selectors = ["iva.hydrocarbon_deposit_advance_payment_deduction_entitled"]
+legal_refs = ["ley-37-1992:art-92"]
 
 [[sections.fields]]
 key = "autoconsumo_promotor_base"

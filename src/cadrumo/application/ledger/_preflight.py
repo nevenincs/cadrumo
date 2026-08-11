@@ -73,17 +73,17 @@ class LedgerPreflightIssueReason(StrEnum):
     MISSING_IVA_AMOUNT = "missing_iva_amount"
     MISSING_IVA_RATE = "missing_iva_rate"
     MISSING_EUR_TAX_SUBSTRATE = "missing_eur_tax_substrate"
-    # Ley 37/1992 art. 25 exempts an intra-community supply on the acquirer's VAT
+    # Ley 37/1992 art. 25 exempts an intra-community supply on the acquirer's IVA
     # IDENTIFICATION in another Member State, not on where it is established, so
     # these two name identification. An operator-facing reason has to name what
     # actually determines the outcome: keyed on establishment it sent the
     # operator to check the wrong field, and it moved money in BOTH directions --
-    # a Spanish-established acquirer holding a German VAT number, and a
+    # a Spanish-established acquirer holding a German IVA number, and a
     # German-established acquirer purchasing under a Spanish NIF-IVA.
     MISSING_COUNTERPARTY_IDENTIFICATION_STATE = "missing_counterparty_identification_state"
     DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION = "domestic_identification_on_intra_community_transaction"
     # Establishment, deliberately, and NOT identification: an export leaves the
-    # Union, so the question is where the counterparty IS, not who VAT-identifies
+    # Union, so the question is where the counterparty IS, not who IVA-identifies
     # it. The narrowing above is one concept, not a global substitution.
     EU_MEMBER_STATE_ON_EXPORT_TRANSACTION = "eu_member_state_on_export_transaction"
     # The other half of the same establishment question, and the direction that

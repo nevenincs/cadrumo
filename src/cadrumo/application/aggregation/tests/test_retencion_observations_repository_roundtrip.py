@@ -62,7 +62,7 @@ def test_retencion_observation_survives_encrypted_storage_roundtrip(tmp_path: Pa
             filing_year=2024,
             period=Period.from_year_and_code(2024, "0A"),
             observation=original,
-            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             captured_at=captured_at,
             source_metadata={"origin": "pull"},
         )
@@ -88,7 +88,7 @@ def test_distinct_nifs_and_schemes_persist_as_distinct_rows(tmp_path: Path) -> N
                 filing_year=2024,
                 period=period,
                 observation=record,
-                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_kind=AggregationCaptureKind.AGGREGATE_PULL,
             )
         loaded = repo.load_observations("180", period)
         # All three rows survive (no key collision); the two 11111111H rows are
@@ -128,7 +128,7 @@ def test_period_scoping_excludes_other_windows(tmp_path: Path) -> None:
             filing_year=2023,
             period=Period.from_year_and_code(2023, "0A"),
             observation=obs,
-            source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
         )
         # A different year window must not see the 2023 row.
         assert repo.load_observations("180", Period.from_year_and_code(2024, "0A")) == ()
@@ -153,7 +153,7 @@ def test_anti_tautology_strict_payload_rejects_dropped_field() -> None:
             retencion=Decimal("10"),
         ),
         "captured_at": datetime.now(UTC),
-        "source_kind": "ledger_transaction",
+        "source_kind": AggregationCaptureKind.AGGREGATE_PULL,
     }
     # Sanity: the full payload validates.
     _RetencionObservationEnvelopePayload.model_validate(full)
@@ -535,7 +535,7 @@ def test_a_stored_envelope_missing_the_capture_kind_refuses_to_load(tmp_path: Pa
         write = repo.to_secure_object_write(built)
 
         corrupted = json.loads(write.payload.decode(UTF_8_ENCODING))
-        assert corrupted.pop("source_kind", None) is not None, (
+        assert corrupted["payload"].pop("source_kind", None) is not None, (
             "the persisted payload does not carry source_kind, so deleting it proves nothing"
         )
         repo.secure_object_repository.save_with_raw_key(
@@ -561,14 +561,17 @@ def test_an_evidence_authority_value_cannot_enter_this_store() -> None:
     wrote an AEAT kind here. This is the refusal that makes it structural.
     """
     with pytest.raises(ValidationError):
-        RetencionObservationRepository().build_observation_payload(
-            modelo="180",
-            filing_year=2024,
-            period=Period.from_year_and_code(2024, "0A"),
-            observation=_observation(
-                nif="11111111H",
-                scheme=RetencionScheme.ECONOMIC_ACTIVITY,
-                retencion=Decimal("100"),
-            ),
-            source_kind="aeat_sede_justificante",  # type: ignore[arg-type]
+        _RetencionObservationEnvelopePayload.model_validate(
+            {
+                "modelo": "180",
+                "filing_year": 2024,
+                "period": Period.from_year_and_code(2024, "0A"),
+                "observation": _observation(
+                    nif="11111111H",
+                    scheme=RetencionScheme.ECONOMIC_ACTIVITY,
+                    retencion=Decimal("100"),
+                ),
+                "captured_at": datetime.now(UTC),
+                "source_kind": "aeat_sede_justificante",
+            },
         )

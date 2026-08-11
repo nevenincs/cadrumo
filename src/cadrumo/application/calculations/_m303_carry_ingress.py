@@ -15,7 +15,12 @@ from decimal import Decimal
 from ...core import Modelo, ResultDisposition, result_disposition_is_refund
 from ...core.errors import CoreValidationError
 from ...core.resources import resources
-from ...domain.calculations.registry import CasillaObservation, casillas_by_id, expression_casilla_refs
+from ...domain.calculations.registry import (
+    CasillaObservation,
+    ModeloRevision,
+    casillas_by_id,
+    expression_casilla_refs,
+)
 from ...domain.iva_compensation import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,
@@ -343,7 +348,7 @@ def _require_supplied_pair_matches_derivation(
 
 
 def _resolve_available_compensation_formula_id(
-    revision: object,
+    revision: ModeloRevision,
     derivation: M303CompensationAvailableDerivation,
 ) -> str | None:
     """Return the registry formula id backing a generated-basis available projection.

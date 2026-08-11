@@ -317,7 +317,8 @@ data_type = "money"
 semantic_role = "dr303_47"
 continuidad_id = "dr303-47"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-303-2009-regimen-simplificado-c47-neutral"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 
@@ -329,7 +330,8 @@ data_type = "money"
 semantic_role = "dr303_48"
 continuidad_id = "dr303-48"
 required = false
-input_kind = "manual"
+input_kind = "computed"
+formula = "modelo-303-2009-regimen-simplificado-c48-neutral"
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123", "ley-37-1992:art-124", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2025"]
 

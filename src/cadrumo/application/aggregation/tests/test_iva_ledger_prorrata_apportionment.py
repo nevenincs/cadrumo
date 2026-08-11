@@ -687,15 +687,11 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
     (
         (None, "has no filing-year register entry"),
         (
-            ProrrataRegisterEntry(
-                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA
-            ),
+            ProrrataRegisterEntry(ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA),
             "is inactive for the filing year",
         ),
         (
-            ProrrataRegisterEntry(
-                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL
-            ),
+            ProrrataRegisterEntry(ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL),
             "has no resolved provisional percentage",
         ),
     ),
@@ -713,7 +709,8 @@ def test_sectorized_register_refuses_missing_inactive_or_unresolved_sector_entry
                 entries=tuple(entries),
                 sector_definitions=(
                     SectorDefinition(
-                        sector_id="comercio", letra=SectorDiferenciadoLetra.A,
+                        sector_id="comercio",
+                        letra=SectorDiferenciadoLetra.A,
                         member_activity_codes=("4711",),
                     ),
                 ),

@@ -39,7 +39,7 @@ from ..iva import (
     IvaRateNotFoundError,
     OssIossRegime,
     TransactionKind,
-    vat_identification_state_for_printed_tax_identifier,
+    identification_state_for_printed_tax_identifier,
 )
 from ._enums import (
     InvoiceClass,
@@ -203,7 +203,7 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
     # identification off the identifier HERE is what makes the fact present on
     # all of them rather than on whichever remembered to set it.
     #
-    # The source is the printed VAT number's own prefix and nothing else. The
+    # The source is the printed IVA number's own prefix and nothing else. The
     # country sitting beside it in this same function is an address and is
     # deliberately not consulted: that substitution is the defect this field
     # exists to close. A caller that supplies the fact explicitly wins, because
@@ -212,7 +212,7 @@ def _normalise_invoice_counterparty(payload: dict[str, object]) -> dict[str, obj
     if payload.get("counterparty_identification_state") is None:
         printed = payload.get("counterparty_tax_id")
         payload["counterparty_identification_state"] = (
-            vat_identification_state_for_printed_tax_identifier(printed) if isinstance(printed, str) else None
+            identification_state_for_printed_tax_identifier(printed) if isinstance(printed, str) else None
         )
     return payload
 
@@ -466,11 +466,11 @@ class Invoice(BaseModel):
     counterparty_name: str = Field(min_length=1)
     counterparty_tax_id: str | None = Field(default=None, min_length=1)
     counterparty_country: str = Field(min_length=2, max_length=2)
-    # Which Member State VAT-IDENTIFIES the counterparty, read from the prefix
-    # of the VAT number the document printed. A DIFFERENT fact from
+    # Which Member State IVA-IDENTIFIES the counterparty, read from the prefix
+    # of the IVA number the document printed. A DIFFERENT fact from
     # `counterparty_country` above, which is an address -- establishment -- and
     # never a source for this one: a Spanish-established acquirer can hold a
-    # German VAT number, and a German-established one can purchase under a
+    # German IVA number, and a German-established one can purchase under a
     # Spanish NIF-IVA. Ley 37/1992 art. 25 exempts on this fact, not on the
     # address, so deriving one from the other lands in money in both
     # directions. `None` means the identification was not established -- never
@@ -941,14 +941,14 @@ class Invoice(BaseModel):
         RD 1619/2012 art. 6.1.d requires the invoice state "el Número de
         Identificación Fiscal ... atribuido por la Administración ... de otro
         Estado miembro", and LIVA art. 25 exempts on that identification. A
-        counterparty purchasing under a Spanish VAT identification therefore
+        counterparty purchasing under a Spanish IVA identification therefore
         contradicts the declared category outright, and the contradiction is
         what this refuses.
 
         It reads the identification and NOT
         :attr:`counterparty_country`, which is an address. The two diverge in
         real trade, and keying this on the address refused a supply art. 25
-        exempts: a Spanish-established acquirer holding a French VAT number is
+        exempts: a Spanish-established acquirer holding a French IVA number is
         an intra-community acquirer, and could not previously be recorded at
         all. Establishment is a question about where a party IS, and it does
         not answer this one.
@@ -970,7 +970,7 @@ class Invoice(BaseModel):
         ):
             raise InvoiceValidationError(
                 "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
-                "Spanish VAT identification (LIVA art. 25); its country of establishment does not "
+                "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
                 "change that",
             )
         return self

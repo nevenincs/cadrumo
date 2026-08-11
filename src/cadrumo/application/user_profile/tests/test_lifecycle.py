@@ -39,9 +39,9 @@ from .. import (
     UserProfileLifecycleRepository,
 )
 from .._repository import (
-    USER_PROFILE_VALUE_NAMESPACE,
     _USER_PROFILE_VALUE_SENSITIVITY,
     _USER_PROFILE_VALUE_VERSION,
+    USER_PROFILE_VALUE_NAMESPACE,
     user_profile_value_object_key,
 )
 
@@ -700,6 +700,7 @@ def test_load_refuses_a_stored_record_declaring_no_schema_version(
     the field still resolves it from the default factory; making that
     unconstructable was the wider remedy this row deliberately does not take.
     """
+    repository = UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects)
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -708,7 +709,7 @@ def test_load_refuses_a_stored_record_declaring_no_schema_version(
             facts=_all_required_facts(schema),
         ),
     )
-    assert UserProfileLifecycleRepository().load(_PROFILE_BUCKET_ID).schema_version == schema.version
+    assert repository.load(_PROFILE_BUCKET_ID).schema_version == schema.version
 
     object_key = user_profile_value_object_key(_PROFILE_BUCKET_ID)
     record = secure_objects.load(
@@ -731,7 +732,7 @@ def test_load_refuses_a_stored_record_declaring_no_schema_version(
     )
 
     with pytest.raises(EnvelopeVersionError, match="declares no schema_version"):
-        UserProfileLifecycleRepository().load(_PROFILE_BUCKET_ID)
+        repository.load(_PROFILE_BUCKET_ID)
 
 
 def test_iter_records_refuses_a_stored_row_declaring_no_schema_version(
@@ -749,6 +750,7 @@ def test_iter_records_refuses_a_stored_row_declaring_no_schema_version(
     ``iter_records`` is a generator, so the refusal surfaces on iteration; the
     walk is forced with ``list`` rather than by calling it alone.
     """
+    repository = UserProfileLifecycleRepository(bucket_id=_PROFILE_BUCKET_ID, objects=secure_objects)
     svc = _service(secure_objects, schema)
     svc.register(
         RegisterProfileCommand(
@@ -757,7 +759,6 @@ def test_iter_records_refuses_a_stored_row_declaring_no_schema_version(
             facts=_all_required_facts(schema),
         ),
     )
-    repository = UserProfileLifecycleRepository()
     seeded = list(repository.iter_records())
     assert [record.profile_id for record in seeded] == [_PROFILE_BUCKET_ID]
 
@@ -782,4 +783,4 @@ def test_iter_records_refuses_a_stored_row_declaring_no_schema_version(
     )
 
     with pytest.raises(EnvelopeVersionError, match="declares no schema_version"):
-        list(UserProfileLifecycleRepository().iter_records())
+        list(repository.iter_records())

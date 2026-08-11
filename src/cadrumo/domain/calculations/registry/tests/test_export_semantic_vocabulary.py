@@ -5,8 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey
-
+from .....core import FilingProducerKey
 from ..._export_field_kind import CasillaFieldKind
 from .. import (
     ExportComputedKey,

@@ -39,7 +39,7 @@ _CUSTOMER_NIF = "12345678Z"
 #: VAT-identified in France prints one, and it is what establishes the
 #: identification: the printed country code beside it says where the party
 #: IS, which is a different fact and settles nothing here.
-_FRENCH_VAT_NUMBER = "FR40303265045"
+_FRENCH_IVA_NUMBER = "FR40303265045"
 _DATE = date(2026, 4, 2)
 
 
@@ -101,7 +101,7 @@ def _complete(**overrides: object):
         # country-code answer and is asserted, which is the only sanctioned way
         # to supply it.
         "customer_country_code": "FR",
-        "customer_identifier": _FRENCH_VAT_NUMBER,
+        "customer_identifier": _FRENCH_IVA_NUMBER,
         "asserted_customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
         "asserted_issuer_scope": IvaTerritorialScope.ES_MAINLAND,
     }
@@ -179,7 +179,7 @@ def test_a_foreign_country_code_does_settle_the_territory() -> None:
         # an unplaced operation is asked rather than certified indifferent. The
         # printed number settles it, leaving the country resolver as the only
         # thing this case is testing.
-        customer_identifier=_FRENCH_VAT_NUMBER,
+        customer_identifier=_FRENCH_IVA_NUMBER,
         asserted_customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
     )
 
@@ -408,7 +408,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         declared=DeclaredFacts(supply_nature=goods),
         issuer_country_code="DE",
         customer_country_code="FR",
-        customer_identifier=_FRENCH_VAT_NUMBER,
+        customer_identifier=_FRENCH_IVA_NUMBER,
     )
     with_assertion = assemble_classification_criteria(
         transaction_date=_DATE,
@@ -423,7 +423,7 @@ def test_an_operator_assertion_settles_what_the_evidence_cannot() -> None:
         ),
         issuer_country_code="DE",
         customer_country_code="FR",
-        customer_identifier=_FRENCH_VAT_NUMBER,
+        customer_identifier=_FRENCH_IVA_NUMBER,
     )
 
     assert not without.assembled

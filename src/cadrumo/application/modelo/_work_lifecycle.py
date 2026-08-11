@@ -47,6 +47,7 @@ from ...core import (
 )
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
+from ...domain.calculations.registry import RevisionId
 from ...domain.contribuyente import CCAA
 from ...domain.modelos import (
     ModeloCode,
@@ -72,7 +73,6 @@ from ._preconditions import build_modelo_precondition_failure_for_scenario
 from ._registry_resources import reject_unknown_period_for_revision, reject_unknown_revision
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import modelo_bucket_event_write as _bucket_event_write
-from ...domain.calculations.registry import RevisionId
 
 _CONTINUATION_ID_PATTERN = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
 

@@ -2,16 +2,35 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import cast
 
 import pytest
 from pydantic import ValidationError
 
-from ....core import CasillaId, M210GrossIncomeSourceMode, validated_casilla_id
-from ...calculations.registry import RelationId
-from .._calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
+from ....core import CasillaId, M210GrossIncomeSourceMode, Period, validated_casilla_id
+from ....core.resources import resources
+from ...calculations.registry import RelationId, resolve_m303_regimen_simplificado_snapshot
+from ...filing_evidence import FilingEvidenceReference
+from ...iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from .._calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    FilingInstanceEvidence,
+    M303Exonerado390ActivityRowEvidence,
+    M303Exonerado390EndpointEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303InsolvencyFilingFact,
+    M303InsolvencyFilingSubtype,
+    M303RegimenSimplificadoFilingEvidence,
+    derive_calculation_revision_id,
+)
 from .._errors import ModeloValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -42,6 +61,46 @@ _NONCANONICAL_CASILLA_KEY = "bad key"
 _WHITESPACE_CASILLA_KEY = " 001 "
 _TEST_LEGAL_REFS = ("ley-58-2003:art-93",)
 _TEST_SOURCE_REFS = ("aeat-dr-303-2025",)
+
+
+def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period="1T",
+        ),
+        scope_decision=scope,
+    )
+    return M303FilingInstanceEvidence(
+        period=period,
+        joint_return_elected=True,
+        insolvency=None,
+        exonerado_390=M303Exonerado390FilingEvidence(
+            applicable=False,
+            applicability_reference=FilingEvidenceReference(reference="test:exonerado-390:not-applicable"),
+        ),
+        regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            scope_decision=scope,
+            rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+            regimen_snapshot=snapshot,
+        ),
+    )
+
+
+def test_m303_filing_evidence_requires_an_explicit_nullable_insolvency_fact() -> None:
+    evidence = _general_m303_filing_evidence(Period.from_year_and_code(2026, "1T"))
+    payload = evidence.model_dump(mode="python")
+    del payload["insolvency"]
+
+    with pytest.raises(ValidationError, match="insolvency"):
+        M303FilingInstanceEvidence.model_validate(payload)
+
+    payload["insolvency"] = None
+    assert M303FilingInstanceEvidence.model_validate(payload) == evidence
 
 
 def _base_id() -> str:
@@ -137,6 +196,71 @@ def test_revision_id_is_stable_across_equal_inputs() -> None:
     assert first == second
     assert len(first) == 64
     assert first == first.lower()
+
+
+def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> None:
+    """Different filing-instance facts must create different revisions, never mutate one."""
+
+    def revision_id_for(evidence: FilingInstanceEvidence) -> str:
+        return derive_calculation_revision_id(
+            work_unit_id="a" * 64,
+            input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
+            binding_overrides={},
+            casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            filing_instance_evidence=evidence,
+        )
+
+    period = Period.from_year_and_code(2026, "1T")
+    joint_m303 = _general_m303_filing_evidence(period)
+    joint = FilingInstanceEvidence(m303=joint_m303)
+    insolvent = FilingInstanceEvidence(
+        m303=joint_m303.model_copy(
+            update={
+                "insolvency": M303InsolvencyFilingFact(
+                    judicial_order_date=date(2026, 2, 3),
+                    subtype=M303InsolvencyFilingSubtype.POST_ORDER,
+                ),
+            },
+        ),
+    )
+
+    assert revision_id_for(joint) != revision_id_for(insolvent)
+    with pytest.raises(ValidationError, match="frozen"):
+        joint.m303.joint_return_elected = False
+
+    reference = FilingEvidenceReference(reference="test:revision-id:exonerado-activity")
+
+    def annual_evidence(codigo_actividad: str) -> FilingInstanceEvidence:
+        annual_m303 = _general_m303_filing_evidence(Period.from_year_and_code(2026, "4T"))
+        return FilingInstanceEvidence(
+            m303=annual_m303.model_copy(
+                update={
+                    "exonerado_390": M303Exonerado390FilingEvidence(
+                        applicable=True,
+                        applicability_reference=reference,
+                        endpoints=(
+                            M303Exonerado390EndpointEvidence(
+                                casilla_id=_casilla_id("79"),
+                                value=Decimal("0"),
+                                evidence_reference=reference,
+                            ),
+                        ),
+                        activity_rows=(
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=1,
+                                codigo_actividad=codigo_actividad,
+                                epigrafe_iae="4191",
+                                evidence_reference=reference,
+                            ),
+                        ),
+                        operaciones_terceros_declarables=False,
+                        operaciones_terceros_reference=reference,
+                    ),
+                },
+            ),
+        )
+
+    assert revision_id_for(annual_evidence("A01")) != revision_id_for(annual_evidence("A02"))
 
 
 def test_revision_id_pinned_against_fully_populated_fixture() -> None:
@@ -444,6 +568,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_casilla_keys() -> 
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
+        filing_instance_evidence=None,
         )
 
 
@@ -492,6 +617,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
+        filing_instance_evidence=None,
         )
 
     with pytest.raises(ValidationError, match="String should match pattern"):
@@ -503,6 +629,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
+        filing_instance_evidence=None,
         )
 
 
@@ -529,6 +656,7 @@ def test_calculation_revision_normalises_row_binding_values() -> None:
         casilla_values={},
         created_at=created,
         updated_at=created,
+    filing_instance_evidence=None,
     )
 
     assert revision.row_binding_values == {"modelo-720-asset-row-class": {"1": "C", "2": "V"}}
@@ -557,6 +685,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
+        filing_instance_evidence=None,
         )
 
 
@@ -602,6 +731,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
         observations=observations,
         created_at=created,
         updated_at=created,
+    filing_instance_evidence=None,
     )
     assert rev.observations == observations
     assert dict(rev.casilla_values) == casilla_values
@@ -646,6 +776,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
             observations=observations,
             created_at=created,
             updated_at=created,
+        filing_instance_evidence=None,
         )
 
 
@@ -674,6 +805,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
             casilla_values=casilla_values,
             created_at=created,
             updated_at=created,
+        filing_instance_evidence=None,
         )
 
 

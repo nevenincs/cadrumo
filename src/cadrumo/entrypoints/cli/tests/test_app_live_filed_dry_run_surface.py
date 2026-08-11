@@ -15,30 +15,11 @@ from __future__ import annotations
 
 import pytest
 
+from ....application.live import BulkFiledDataCaptureReport
 from .._app_live_payloads import FiledCaptureResult
 from .._app_live_rendering import _filed_capture_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-class _Report:
-    """Minimal stand-in carrying only the fields the line builder reads."""
-
-    def __init__(self, *, dry_run: bool) -> None:
-        self.dry_run = dry_run
-        self.captured_count = 0
-        self.failed_count = 0
-        self.observation_paths: tuple[str, ...] = ()
-        self.artefact_refs: tuple[str, ...] = ()
-        self.justificante_metadata_count = 0
-        self.justificante_csvs: tuple[str, ...] = ()
-        self.filing_evidence_stamped_count = 0
-        self.filing_record_ids: tuple[str, ...] = ()
-        self.filing_evidence_conflict_count = 0
-        self.filing_evidence_conflict_record_ids: tuple[str, ...] = ()
-        self.casilla_count = 0
-        self.calculation_observation_count = 0
-        self.calculation_observation_keys: tuple[str, ...] = ()
 
 
 def test_dry_run_is_a_result_field_not_a_notice() -> None:
@@ -52,6 +33,9 @@ def test_dry_run_is_a_result_field_not_a_notice() -> None:
         captured_count=0,
         observation_paths=[],
         artefact_refs=[],
+        casilla_count=0,
+        calculation_observation_count=0,
+        calculation_observation_keys=[],
     )
 
     assert result.dry_run is True
@@ -71,6 +55,9 @@ def test_dry_run_defaults_false_so_a_silent_omission_never_reads_as_a_preview() 
         captured_count=0,
         observation_paths=[],
         artefact_refs=[],
+        casilla_count=0,
+        calculation_observation_count=0,
+        calculation_observation_keys=[],
     )
 
     assert result.dry_run is False
@@ -79,7 +66,32 @@ def test_dry_run_defaults_false_so_a_silent_omission_never_reads_as_a_preview() 
 @pytest.mark.parametrize("dry_run", [True, False])
 def test_text_mode_agrees_with_the_result_field(dry_run: bool) -> None:
     """Text and JSON must not disagree about whether anything was written."""
-    lines = _filed_capture_lines(_Report(dry_run=dry_run), mode="bulk")
+    report = BulkFiledDataCaptureReport(
+        output_root="filed-declarations",
+        modelos=("303",),
+        year_from=2025,
+        year_to=2025,
+        captured_count=0,
+        reached_count=0,
+        failed_count=0,
+        observation_paths=(),
+        artefact_refs=(),
+        justificante_metadata_count=0,
+        justificante_csvs=(),
+        filing_evidence_stamped_count=0,
+        filing_record_ids=(),
+        filing_evidence_conflict_count=0,
+        filing_evidence_conflict_record_ids=(),
+        casilla_count=0,
+        calculation_observation_count=0,
+        calculation_observation_keys=(),
+        evidence_notices=(),
+        failures=(),
+        skipped_casillas=(),
+        recapture_notices=(),
+        dry_run=dry_run,
+    )
+    lines = _filed_capture_lines(report, mode="bulk")
 
     emitted = any(line.startswith("dry_run") for line in lines)
     assert emitted is dry_run

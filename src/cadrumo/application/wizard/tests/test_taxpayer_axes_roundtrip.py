@@ -134,7 +134,12 @@ class TestTaxpayerProfileProjection:
                 "taxpayer_type.irpf_income_categories": "capital_inmobiliario,pension",
                 "irpf.estimation_regime": "objetiva",
                 "irpf.art109_activity_income_withholding_ge_70pct": "true",
+                "tax_residence.jurisdiction_scope": "common_regime",
                 "iva.regime": "REAGP",
+                "iva.m303_regime_composition": "general",
+                "iva.cash_accounting_regime_enrolled": "false",
+                "iva.voluntary_sii_enrolled": "false",
+                "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
                 "iva.group_member_enrolled": "true",
                 "iva.group_dominant_entity_enrolled": "true",
                 "iva.sii_enrolled": "true",
@@ -149,10 +154,16 @@ class TestTaxpayerProfileProjection:
         assert profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA
         assert profile.art109_activity_income_withholding_ge_70pct is True
         assert profile.iva_regime is IVARegime.REAGP
-        assert profile.iva.group_member_enrolled is True
-        assert profile.iva.group_dominant_entity_enrolled is True
-        assert profile.iva.sii_enrolled is True
-        assert profile.iva.redeme_enrolled is True
+        iva = profile.iva
+        assert iva is not None
+        assert iva.regime_composition.value == "general"
+        assert iva.cash_accounting_regime_enrolled is False
+        assert iva.voluntary_sii_enrolled is False
+        assert iva.hydrocarbon_deposit_advance_payment_deduction_entitled is False
+        assert iva.group_member_enrolled is True
+        assert iva.group_dominant_entity_enrolled is True
+        assert iva.sii_enrolled is True
+        assert iva.redeme_enrolled is True
 
     def test_mapping_projection_carries_cross_period_group_roster(self) -> None:
         profile = taxpayer_profile_from_mapping(
@@ -221,8 +232,8 @@ class TestTaxpayerProfileProjection:
         assert profile.legal_entity_form is None
         assert profile.irpf_income_categories == frozenset()
         assert profile.irpf_estimation_regime is None
-        assert profile.iva.sii_enrolled is False
-        assert profile.iva.redeme_enrolled is False
+        # No IVA block-owned fact is declared, so the optional IVA block is absent.
+        assert profile.iva is None
 
 
 class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
@@ -369,15 +380,21 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         serialised = serialise_answers(SETUP_FLOW, answers)
         assert serialised.get("taxpayer_type.new_entity_first_two_profit_periods") == ""
 
-        # Filter blanks the way ``persist_answers`` does for create,
-        # then project the deadline-layer TaxpayerProfile.
-        persisted = {key: value for key, value in serialised.items() if value}
+        # Filter blanks and the wizard's undeclared IVA defaults before
+        # projecting the deadline-layer TaxpayerProfile. Those ``false``
+        # tokens are not declared IVA block facts in this scenario.
+        persisted = {
+            key: value
+            for key, value in serialised.items()
+            if value and not (key.startswith("iva.") and value == "false")
+        }
         assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted
         profile = taxpayer_profile_from_mapping(
             persisted,
             tax_id_default="00000000T",
         )
         assert profile.new_entity_first_two_profit_periods is None
+        assert profile.iva is None
 
 
 class TestLey49SpecialRegimeRoundTrip:
@@ -432,12 +449,17 @@ class TestLey49SpecialRegimeRoundTrip:
         assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared") == ""
         assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date") == ""
 
-        persisted = {key: value for key, value in canonical.items() if value}
+        persisted = {
+            key: value
+            for key, value in canonical.items()
+            if value and not (key.startswith("iva.") and value == "false")
+        }
         profile = taxpayer_profile_from_mapping(persisted, tax_id_default="00000000T")
         assert profile.ley_49_2002_special_regime_option_declared is None
         assert profile.ley_49_2002_special_regime_option_date is None
         assert profile.ley_49_2002_special_regime_renunciation_declared is None
         assert profile.ley_49_2002_special_regime_renunciation_date is None
+        assert profile.iva is None
 
     def test_taxpayer_profile_projects_declared_ley_49_option_facts(self) -> None:
         profile = taxpayer_profile_from_mapping(

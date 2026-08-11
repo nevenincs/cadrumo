@@ -124,6 +124,42 @@ def _canonical_field(header: str) -> str | None:
     return candidate if candidate in set(BULK_IMPORT_FIELD_BY_ROLE.values()) else None
 
 
+def _role_for_exact_field(field: str | None) -> FieldRole:
+    """Return the declared role for an exact importer field, if it has one."""
+    if field is None:
+        return FieldRole.UNMAPPED
+    return next(
+        (role for role, mapped_field in BULK_IMPORT_FIELD_BY_ROLE.items() if mapped_field == field), FieldRole.UNMAPPED
+    )
+
+
+def _apply_semantic_column_mapping(
+    headers: Sequence[str],
+    exact_fields: list[str | None],
+    roles: list[FieldRole],
+    *,
+    mapper: ColumnRoleMapper | None,
+    required_fields: frozenset[str],
+) -> bool:
+    """Fill unresolved columns from one mapping-lane verdict without displacing exact fields."""
+    claimed_fields = {field for field in exact_fields if field is not None}
+    if mapper is None or not required_fields - claimed_fields:
+        return False
+    proposed_roles = mapper(list(headers))
+    if proposed_roles is None:
+        return False
+    for index, role in enumerate(proposed_roles):
+        if index >= len(headers) or exact_fields[index] is not None:
+            continue
+        field = BULK_IMPORT_FIELD_BY_ROLE.get(role)
+        roles[index] = role
+        if field is None or field in claimed_fields:
+            continue
+        exact_fields[index] = field
+        claimed_fields.add(field)
+    return True
+
+
 def resolve_bulk_import_columns(
     headers: Sequence[str],
     *,
@@ -152,32 +188,14 @@ def resolve_bulk_import_columns(
         than refused.
     """
     exact: list[str | None] = [_canonical_field(header) for header in headers]
-    roles: list[FieldRole] = [
-        next((role for role, field in BULK_IMPORT_FIELD_BY_ROLE.items() if field == resolved), FieldRole.UNMAPPED)
-        if resolved is not None
-        else FieldRole.UNMAPPED
-        for resolved in exact
-    ]
-
-    consulted = False
-    if mapper is not None and required_fields - {field for field in exact if field is not None}:
-        proposed = mapper(list(headers))
-        if proposed is not None:
-            consulted = True
-            claimed = {field for field in exact if field is not None}
-            for index, role in enumerate(proposed):
-                if index >= len(headers) or exact[index] is not None:
-                    continue
-                field = BULK_IMPORT_FIELD_BY_ROLE.get(role)
-                # A role the importer has a slot for, already supplied by an
-                # exact column, does not get a second source: the deterministic
-                # column wins and this one is reported.
-                if field is None or field in claimed:
-                    roles[index] = role
-                    continue
-                exact[index] = field
-                roles[index] = role
-                claimed.add(field)
+    roles = [_role_for_exact_field(field) for field in exact]
+    consulted = _apply_semantic_column_mapping(
+        headers,
+        exact,
+        roles,
+        mapper=mapper,
+        required_fields=required_fields,
+    )
 
     return BulkImportColumnResolution(
         columns=tuple(

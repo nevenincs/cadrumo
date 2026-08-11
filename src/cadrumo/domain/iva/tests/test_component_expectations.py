@@ -52,9 +52,9 @@ from .. import (
     IvaRetencionExpectation,
     IvaRetencionRole,
     category_bears_taxable_base,
+    category_components,
     category_cuota_is_zero_by_law,
     cuota_less_m303_categories_from_table,
-    iva_category_components,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -132,7 +132,7 @@ def test_lookup_returns_the_keyed_row_for_every_member() -> None:
     """The public accessor resolves every member without falling through."""
     for category in IvaCategory:
         for kind in InvoiceKind:
-            assert iva_category_components(category, kind) is IVA_CATEGORY_COMPONENTS[(category, kind)]
+            assert category_components(category, kind) is IVA_CATEGORY_COMPONENTS[(category, kind)]
 
 
 # --------------------------------------------------------------------------- #

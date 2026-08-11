@@ -72,6 +72,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
+    RevisionId,
     SourceReference,
     SourceRefId,
     ValidatedRegistryAuthority,
@@ -86,7 +87,6 @@ from ...domain.calculations.registry import (
     clear_fingerprint_cache as _clear_loader_fingerprint_cache,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
-from ...domain.calculations.registry import RevisionId
 
 
 def _empty_source_references() -> dict[SourceRefId, SourceReference]:

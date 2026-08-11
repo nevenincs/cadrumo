@@ -19,9 +19,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import StrEnum
 from typing import Final, Literal, Protocol, runtime_checkable
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
@@ -67,13 +68,34 @@ type IvaCompensationDivergence = Literal[
 ]
 
 
+class IvaCompensationDecisionReason(StrEnum):
+    """Locale-neutral identity explaining an IVA compensation decision."""
+
+    TAXPAYER_OVERRIDE = "taxpayer_override"
+    FIRST_PERIOD_ZERO_AEAT_WALLET = "first_period_zero_aeat_wallet"
+    FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED = "first_period_zero_activity_start_uncontrasted"
+    FIRST_PERIOD_ZERO_LOCAL_RECURRENCE = "first_period_zero_local_recurrence"
+    LOCAL_EVIDENCE_UNREADABLE = "local_evidence_unreadable"
+    NO_USABLE_AUTHORITY = "no_usable_authority"
+    FILED_HISTORY_ZERO = "filed_history_zero"
+    FILED_HISTORY_REQUIRES_OVERRIDE = "filed_history_requires_override"
+    LOCAL_RECURRENCE_ZERO = "local_recurrence_zero"
+    LOCAL_RECURRENCE_REQUIRES_OVERRIDE = "local_recurrence_requires_override"
+    STALE_WALLET_NO_LOCAL_RECURRENCE = "stale_wallet_no_local_recurrence"
+    STALE_WALLET_LOCAL_RECURRENCE_REQUIRES_OVERRIDE = "stale_wallet_local_recurrence_requires_override"
+    WALLET_LOCAL_RECURRENCE_DIVERGENCE = "wallet_local_recurrence_divergence"
+    AEAT_WALLET_VALIDATED = "aeat_wallet_validated"
+    AEAT_WALLET_UNCROSSCHECKED = "aeat_wallet_uncrosschecked"
+    CALLER_ZERO_MATCHES_LOCAL_AUTHORITY = "caller_zero_matches_local_authority"
+
+
 class IvaCompensationOverride(BaseModel):
     """Explicit taxpayer override for Modelo 303 prior compensation."""
 
     model_config = _STRICT_FROZEN
 
     amount: Decimal = Field(ge=Decimal("0"))
-    reason: str = Field(min_length=1, max_length=1024)
+    operator_explanation: str = Field(min_length=1, max_length=1024)
     evidence_locator: str = Field(min_length=1, max_length=1024)
     recorded_at: datetime
 
@@ -123,7 +145,8 @@ class IvaCompensationReconciliationDecision(BaseModel):
     divergence: IvaCompensationDivergence
     blocked: bool
     stale_wallet: bool
-    reason: str = Field(min_length=1, max_length=2048)
+    reason_identity: IvaCompensationDecisionReason
+    operator_explanation: str | None = Field(default=None, min_length=1, max_length=1024)
     #: Whether the caller found a prior local record and could not read it as
     #: prior-compensation evidence. Both that situation and a genuinely absent
     #: record leave every other field on this model identical -- same
@@ -136,6 +159,12 @@ class IvaCompensationReconciliationDecision(BaseModel):
     authority_sources: tuple[IvaCompensationAuthoritySource, ...] = ()
     decided_at: datetime
 
+    @field_validator("reason_identity", mode="before")
+    @classmethod
+    def _parse_reason_identity(cls, value: object) -> IvaCompensationDecisionReason:
+        """Parse encrypted JSON and direct construction into the closed identity."""
+        return IvaCompensationDecisionReason(value)
+
     @model_validator(mode="after")
     def _validate_selected_amount(self) -> IvaCompensationReconciliationDecision:
         if self.target_period.filing_year != self.target_year:
@@ -146,6 +175,11 @@ class IvaCompensationReconciliationDecision(BaseModel):
             raise ValueError("selected_amount must be absent when selected_authority is 'missing'")
         if self.blocked and self.selected_authority == "aeat_wallet":
             raise ValueError("blocked wallet divergence cannot select aeat_wallet for calculation")
+        if self.reason_identity is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE:
+            if self.operator_explanation is None:
+                raise ValueError("taxpayer_override decisions require operator_explanation")
+        elif self.operator_explanation is not None:
+            raise ValueError("operator_explanation is allowed only for taxpayer_override decisions")
         return self
 
 
@@ -298,7 +332,8 @@ def _decision(
     divergence: IvaCompensationDivergence,
     blocked: bool,
     stale_wallet: bool,
-    reason: str,
+    reason_identity: IvaCompensationDecisionReason,
+    operator_explanation: str | None = None,
     wallet_captured_at: datetime | None,
     local_evidence_found_but_unusable: bool = False,
 ) -> IvaCompensationReconciliationDecision:
@@ -314,7 +349,8 @@ def _decision(
         divergence=divergence,
         blocked=blocked,
         stale_wallet=stale_wallet,
-        reason=reason,
+        reason_identity=reason_identity,
+        operator_explanation=operator_explanation,
         local_evidence_found_but_unusable=local_evidence_found_but_unusable,
         wallet_captured_at=wallet_captured_at,
         authority_sources=ctx.authority_sources,
@@ -334,7 +370,8 @@ def _override_reconciliation_decision(ctx: _ReconciliationContext) -> IvaCompens
         divergence="override",
         blocked=False,
         stale_wallet=ctx.stale_wallet,
-        reason=ctx.override.reason,
+        reason_identity=IvaCompensationDecisionReason.TAXPAYER_OVERRIDE,
+        operator_explanation=ctx.override.operator_explanation,
         wallet_captured_at=ctx.wallet_captured_at,
     )
 
@@ -352,11 +389,7 @@ def _first_period_zero_decision(ctx: _ReconciliationContext) -> IvaCompensationR
             divergence="first_period_zero",
             blocked=False,
             stale_wallet=False,
-            reason=(
-                "First registered IVA filing period: "
-                "iva.compensacion-pendiente-periodos-anteriores is zero per LIVA art. 99.5. "
-                "No prior compensation balance exists; zero is legally certain and non-blocking."
-            ),
+            reason_identity=IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_AEAT_WALLET,
             wallet_captured_at=ctx.wallet_captured_at,
         )
     local_recurrence_is_zero = ctx.local_recurrence_amount is not None and ctx.local_recurrence_amount == effective_zero
@@ -371,10 +404,7 @@ def _first_period_zero_decision(ctx: _ReconciliationContext) -> IvaCompensationR
             divergence="first_period_zero",
             blocked=False,
             stale_wallet=False,
-            reason=(
-                "First registered IVA filing period: seeded-zero local record per LIVA art. 99.5. "
-                "No prior compensation balance exists; zero is legally certain and non-blocking."
-            ),
+            reason_identity=IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_LOCAL_RECURRENCE,
             wallet_captured_at=None,
         )
     return None
@@ -397,14 +427,10 @@ def _missing_wallet_decision(
             divergence="missing",
             blocked=True,
             stale_wallet=False,
-            # Both outcomes are "no usable authority" and they are not the same
-            # situation. Saying nothing is available to a taxpayer whose prior
-            # record exists sends them looking for evidence they already hold.
-            reason=(
-                "A prior Modelo 303 record exists for the source period but could not be read as "
-                "prior-compensation evidence, and no AEAT wallet observation is available."
+            reason_identity=(
+                IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE
                 if local_evidence_found_but_unusable
-                else "No AEAT wallet observation or local recurrence is available for Modelo 303 prior compensation."
+                else IvaCompensationDecisionReason.NO_USABLE_AUTHORITY
             ),
             local_evidence_found_but_unusable=local_evidence_found_but_unusable,
             wallet_captured_at=None,
@@ -421,10 +447,7 @@ def _missing_wallet_decision(
                 divergence="filed_history_zero",
                 blocked=False,
                 stale_wallet=False,
-                reason=(
-                    "Committed local Modelo 303 filed-history evidence proves zero carry-forward "
-                    "compensation; no AEAT wallet amount is required for a zero prior-compensation binding."
-                ),
+                reason_identity=IvaCompensationDecisionReason.FILED_HISTORY_ZERO,
                 wallet_captured_at=None,
             )
         return _decision(
@@ -437,10 +460,7 @@ def _missing_wallet_decision(
             divergence="filed_history_only",
             blocked=True,
             stale_wallet=False,
-            reason=(
-                "Direct AEAT wallet/cartera evidence is unavailable; AEAT filed-history-derived recurrence "
-                "is recorded as fallback evidence but requires explicit taxpayer override before automatic output."
-            ),
+            reason_identity=IvaCompensationDecisionReason.FILED_HISTORY_REQUIRES_OVERRIDE,
             wallet_captured_at=None,
         )
     if ctx.local_recurrence_amount == Decimal("0"):
@@ -454,10 +474,7 @@ def _missing_wallet_decision(
             divergence="local_recurrence_zero",
             blocked=False,
             stale_wallet=False,
-            reason=(
-                "Local Modelo 303 recurrence proves zero carry-forward compensation; "
-                "no prior compensation balance is available to apply."
-            ),
+            reason_identity=IvaCompensationDecisionReason.LOCAL_RECURRENCE_ZERO,
             wallet_captured_at=None,
         )
     return _decision(
@@ -470,10 +487,7 @@ def _missing_wallet_decision(
         divergence="wallet_missing",
         blocked=True,
         stale_wallet=False,
-        reason=(
-            "AEAT wallet is unavailable; local recurrence is lower-confidence fallback evidence and requires "
-            "explicit taxpayer override before automatic output."
-        ),
+        reason_identity=IvaCompensationDecisionReason.LOCAL_RECURRENCE_REQUIRES_OVERRIDE,
         wallet_captured_at=None,
     )
 
@@ -491,7 +505,7 @@ def _stale_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconc
             divergence="wallet_stale",
             blocked=True,
             stale_wallet=True,
-            reason="AEAT wallet observation is stale and no local recurrence fallback is available.",
+            reason_identity=IvaCompensationDecisionReason.STALE_WALLET_NO_LOCAL_RECURRENCE,
             wallet_captured_at=ctx.wallet_captured_at,
         )
     return _decision(
@@ -504,10 +518,7 @@ def _stale_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconc
         divergence="wallet_stale",
         blocked=True,
         stale_wallet=True,
-        reason=(
-            "AEAT wallet observation is stale; local recurrence is lower-confidence fallback evidence and "
-            "requires explicit taxpayer override before automatic output."
-        ),
+        reason_identity=IvaCompensationDecisionReason.STALE_WALLET_LOCAL_RECURRENCE_REQUIRES_OVERRIDE,
         wallet_captured_at=ctx.wallet_captured_at,
     )
 
@@ -528,15 +539,12 @@ def _fresh_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconc
             divergence=divergence,
             blocked=True,
             stale_wallet=False,
-            reason="AEAT wallet and local recurrence diverge; review is required before automatic output.",
+            reason_identity=IvaCompensationDecisionReason.WALLET_LOCAL_RECURRENCE_DIVERGENCE,
             wallet_captured_at=ctx.wallet_captured_at,
         )
-    reason = "Using latest valid AEAT wallet observation for Modelo 303 prior compensation."
+    reason = IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED
     if ctx.local_recurrence_amount is None:
-        reason = (
-            "Using latest valid AEAT wallet observation for Modelo 303 prior compensation; "
-            "no local prior-filing recurrence was available for cross-check."
-        )
+        reason = IvaCompensationDecisionReason.AEAT_WALLET_UNCROSSCHECKED
     return _decision(
         ctx,
         selected_authority="aeat_wallet",
@@ -547,7 +555,7 @@ def _fresh_wallet_decision(ctx: _ReconciliationContext) -> IvaCompensationReconc
         divergence="wallet_only" if ctx.local_recurrence_amount is None else "match",
         blocked=False,
         stale_wallet=False,
-        reason=reason,
+        reason_identity=reason,
         wallet_captured_at=ctx.wallet_captured_at,
     )
 

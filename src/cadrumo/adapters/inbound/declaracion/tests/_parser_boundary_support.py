@@ -15,7 +15,6 @@ from .....core import CasillaId, Period, validated_casilla_id
 from .....core.errors import CadrumoError
 from .....core.money import round_to_cents
 from .....core.resources import resources
-
 from .....domain.justificante import PdfModeloImportError
 from .....tests import FIXTURES_DIR
 from ...pdf import source_pdf_reference_path

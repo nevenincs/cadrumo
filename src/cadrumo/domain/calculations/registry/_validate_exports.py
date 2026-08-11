@@ -218,15 +218,16 @@ def _validate_export_field(
     failures.extend(_missing_refs(prefix, owner, field.legal_refs, legal_refs, "legal"))
     failures.extend(_missing_refs(prefix, owner, field.source_refs, source_refs, "source"))
     failures.extend(evidence.require_source_tier(prefix, owner, field.source_refs, "layout_authority"))
-    if field.casilla_id is not None and field.casilla_id not in casillas:
-        failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {field.casilla_id!r}")
+    endpoint_casilla_id = field.endpoint_casilla_id
+    if endpoint_casilla_id is not None and endpoint_casilla_id not in casillas:
+        failures.append(f"{prefix}: export field {field.id!r} references unknown casilla {endpoint_casilla_id!r}")
     if (
-        field.casilla_id is not None
-        and field.casilla_id in casilla_by_id
-        and field.id not in casilla_by_id[field.casilla_id].export_refs
+        endpoint_casilla_id is not None
+        and endpoint_casilla_id in casilla_by_id
+        and field.id not in casilla_by_id[endpoint_casilla_id].export_refs
         and not _is_binding_record_template_field(record, field)
     ):
-        failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {field.casilla_id!r}")
+        failures.append(f"{prefix}: export field {field.id!r} is not declared by casilla {endpoint_casilla_id!r}")
     if field.binding is not None and field.binding not in bindings:
         failures.append(f"{prefix}: export field {field.id!r} references unknown binding {field.binding!r}")
     if field.kind == CasillaFieldKind.LITERAL and field.literal is not None and field.length is not None:

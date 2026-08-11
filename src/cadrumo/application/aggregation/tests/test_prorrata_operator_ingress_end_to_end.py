@@ -115,7 +115,8 @@ def _purchase(
             "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
             "deduction_provenance": IvaDeductionClassificationProvenance(
                 authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
-                source_locator=f"invoice:{provider_id}", evidence_digest="5" * 64,
+                source_locator=f"invoice:{provider_id}",
+                evidence_digest="5" * 64,
             ),
             "input_classification": classification,
             "prorrata_sector_id": sector_id,

@@ -27,6 +27,8 @@ from .. import (
     IrpfSpecialRegime,
     IVARegime,
     LegalEntityForm,
+    M303RegimeComposition,
+    M303TaxTerritory,
     ModeloIVAProfile,
     TaxpayerProfile,
     evaluate_multiple_pagadores_obligation,
@@ -60,6 +62,11 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
         irpf_estimation_regime=IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
         iva_regime=IVARegime.REAGP,
         iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             roi_enrolled=True,
             oss_enrolled=True,
             group_member_enrolled=True,
@@ -98,10 +105,12 @@ class TestTaxpayerModelRoundTrip:
         )
         assert restored.irpf_estimation_regime is IrpfEstimationRegime.DIRECTA_SIMPLIFICADA
         assert restored.iva_regime is IVARegime.REAGP
-        assert restored.iva.group_member_enrolled is True
-        assert restored.iva.group_dominant_entity_enrolled is True
-        assert restored.iva.sii_enrolled is True
-        assert restored.iva.redeme_enrolled is True
+        iva = restored.iva
+        assert iva is not None
+        assert iva.group_member_enrolled is True
+        assert iva.group_dominant_entity_enrolled is True
+        assert iva.sii_enrolled is True
+        assert iva.redeme_enrolled is True
         assert restored.cross_period_group_member_rosters == (
             CrossPeriodGroupMemberRoster(
                 source_modelo="322",
@@ -172,7 +181,9 @@ class TestTaxpayerModelAntiTautology:
         del payload["iva"]["sii_enrolled"]
         reloaded = TaxpayerProfile.model_validate_json(json.dumps(payload))
         # The dropped field silently re-defaults to False.
-        assert reloaded.iva.sii_enrolled is False
+        iva = reloaded.iva
+        assert iva is not None
+        assert iva.sii_enrolled is False
         # Strict equality therefore breaks — the proof the roundtrip bites.
         assert reloaded != original
 

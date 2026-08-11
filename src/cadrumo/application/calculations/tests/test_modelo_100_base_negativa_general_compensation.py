@@ -327,8 +327,9 @@ def test_applied_exceeding_stock_is_blocked() -> None:
     }
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert _STOCK_PREDICATE_ID in findings[0].message
+    finding = findings[0]
+    assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert dict(finding.message_facts) == {"predicate_id": _STOCK_PREDICATE_ID}
 
 
 def test_applied_exceeding_art50_ceiling_is_blocked() -> None:
@@ -340,8 +341,9 @@ def test_applied_exceeding_art50_ceiling_is_blocked() -> None:
     }
     findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
     assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert _LIMITE_PREDICATE_ID in findings[0].message
+    finding = findings[0]
+    assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
+    assert dict(finding.message_facts) == {"predicate_id": _LIMITE_PREDICATE_ID}
 
 
 def test_upper_bound_predicates_do_not_fire_below_limits() -> None:

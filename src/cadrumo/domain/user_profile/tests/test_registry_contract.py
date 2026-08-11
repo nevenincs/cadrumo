@@ -187,7 +187,8 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         if any(definition.matches(selector) for definition in schema.derived_selectors)
     }
 
-    assert len(covered) == 22, sorted(covered)
+    assert len(covered) == 23, sorted(covered)
+    assert "tax_residence.state_attribution_ratio" in covered
     assert not [selector for selector in covered if "cotizaciones_ss_madre" in selector]
     assert not [selector for selector in covered if "rental_reduccion_art_23_2_tier" in selector]
 

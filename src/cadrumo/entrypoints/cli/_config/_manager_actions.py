@@ -39,6 +39,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ....core.i18n import tr
 from ....domain.user_profile import profile_field_label, profile_section_title
 
@@ -410,7 +411,13 @@ def _run_filed_history_pull_all() -> ManagerActionOutcome:
         profile = None
 
     output_root = load_settings().cadrumo_filed_declarations_dir
-    run = asyncio.run(pull_filed_history(output_root=output_root, profile=profile))
+    run = asyncio.run(
+        pull_filed_history(
+            output_root=output_root,
+            profile=profile,
+            sync_run_repository=SyncRunRecordRepository(),
+        ),
+    )
     disposition = ManagerActionDisposition.WARNING if run.stage_failures else ManagerActionDisposition.SUCCESS
     return ManagerActionOutcome(message=_filed_history_pull_all_summary(run), disposition=disposition)
 

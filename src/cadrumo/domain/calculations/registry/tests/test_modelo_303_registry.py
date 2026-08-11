@@ -19,11 +19,11 @@ from .. import (
     RegistryValidator,
     binding_aggregation_op,
     build_snapshot,
+    bundled_authority,
     expression_casilla_refs,
     selector_as_dict,
 )
 from .._bindings import binding_source_casilla_ids, binding_source_modelo
-from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _WWW1_HOST = aeat_host("www1")
@@ -78,6 +78,13 @@ _M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
     "2025": "aeat-dr-303-2025",
     "2026-y-siguientes": "aeat-dr-303-2026",
 }
+_M303_ANNUAL_ORDEN_SOURCE_BY_REVISION = {
+    "2023": "boe-orden-hfp-1172-2022-iva-authority",
+    "2024-hasta-08-y-2t": "boe-orden-hfp-1359-2023-iva-authority",
+    "2024-desde-09-y-3t": "boe-orden-hfp-1359-2023-iva-authority",
+    "2025": "boe-orden-hac-1347-2024-iva-authority",
+    "2026-y-siguientes": "boe-orden-hac-1425-2025-iva-authority",
+}
 _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     "2009-y-siguientes": frozenset(
         {
@@ -118,7 +125,8 @@ for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
 
 
 def _load_modelo_303() -> tuple[ModeloDefinition, RegistryCatalogues]:
-    return _committed_modelo("303")
+    authority = bundled_authority()
+    return authority.modelo("303"), authority.catalogues
 
 
 def test_modelo_303_registry_validator_accepts_committed_definition() -> None:
@@ -244,10 +252,12 @@ def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> 
     for revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
         revision = modelo.revisions[revision_id]
         record_design_source = _M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]
+        annual_orden_source = _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION[revision_id]
 
         assert revision.source_refs == (
             record_design_source,
             "aeat-modelo-303-procedure",
+            annual_orden_source,
             "boe-modelo-303-2008-form",
         )
         assert len(revision.workbook_parity_refs) == 1
@@ -876,6 +886,8 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
     """The monthly schedule fires for monthly IVA-liquidation triggers only."""
     from ....deadlines import (
         IVARegime,
+        M303RegimeComposition,
+        M303TaxTerritory,
         ModeloEnrollment,
         ModeloIVAProfile,
         TaxpayerProfile,
@@ -889,24 +901,55 @@ def test_modelo_303_monthly_filing_schedule_matches_monthly_liquidation_profiles
         TaxpayerProfile(
             tax_id="B12345674",
             iva_regime=IVARegime.GENERAL,
-            iva=ModeloIVAProfile(redeme_enrolled=True),
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+                redeme_enrolled=True,
+            ),
         ),
         TaxpayerProfile(
             tax_id="C12345674",
             iva_regime=IVARegime.GENERAL,
+            iva=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                redeme_enrolled=False,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
             enrollment=ModeloEnrollment(large_company=True),
         ),
     )
     voluntary_sii_profile = TaxpayerProfile(
         tax_id="A12345674",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=True, redeme_enrolled=False),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=True,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            sii_enrolled=True,
+            redeme_enrolled=False,
+        ),
         enrollment=ModeloEnrollment(large_company=False),
     )
     ordinary_quarterly_profile = TaxpayerProfile(
         tax_id="D98765431",
         iva_regime=IVARegime.GENERAL,
-        iva=ModeloIVAProfile(sii_enrolled=False, redeme_enrolled=False),
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            sii_enrolled=False,
+            redeme_enrolled=False,
+        ),
         enrollment=ModeloEnrollment(large_company=False),
     )
 

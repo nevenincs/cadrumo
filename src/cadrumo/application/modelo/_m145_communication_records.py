@@ -58,6 +58,7 @@ from ...domain.calculations.registry import (
     CasillaDefinition,
     ExportRecordDefinition,
     RegistrySnapshot,
+    RevisionId,
     casillas_by_id,
     resolve_export_layout,
     undeclared_casilla_ids,
@@ -71,7 +72,6 @@ from ._m145_communication import (
 from ._ports import FicheroBoeRecordRenderer
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
-from ...domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository

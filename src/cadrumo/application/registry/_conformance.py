@@ -117,7 +117,6 @@ from ...core.access_gate import ModeloAuthorization as _ModeloAuthorization
 from ...core.resources import bundled_path as _bundled_path
 from ...domain.calculations.registry import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
 from ...domain.calculations.registry import BindingId as _BindingId
-
 from ...domain.calculations.registry import ConstructEvidenceLedger as _ConstructEvidenceLedger
 from ...domain.calculations.registry import ConstructEvidenceRow as _ConstructEvidenceRow
 from ...domain.calculations.registry import DeclaredAxisUsage as _DeclaredAxisUsage
@@ -1159,7 +1158,7 @@ def _capability_facts(revision: _ModeloRevision, *, modelo_id: str) -> RevisionC
     )
 
 
-def _support_probe(entry: _ModeloEntry, *, revision_id: RevisionId) -> LatestRevisionSupportProbe:
+def _support_probe(entry: _ModeloEntry, *, revision_id: _RevisionId) -> LatestRevisionSupportProbe:
     """Project the modelo-level support entry, naming the revision it probed."""
     return LatestRevisionSupportProbe(
         probed_revision=entry.latest_revision_id,

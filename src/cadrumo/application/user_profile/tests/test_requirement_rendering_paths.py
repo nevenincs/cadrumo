@@ -54,19 +54,13 @@ def test_a_schema_path_resolves_only_through_the_path_renderer() -> None:
 def _a_binding_key_naming_a_schema_field() -> str:
     """Return one committed binding's profile key that names a real field."""
     schema = _schema()
+    schema_paths = frozenset(schema.field_paths)
     for model in resources().modelos.authority.modelos:
         for revision in model.revisions.values():
-            try:
-                bindings = list(revision.bindings)
-            except Exception:
-                continue
-            for binding in bindings:
+            for binding in revision.bindings:
                 for key in binding_profile_keys(binding):
-                    try:
-                        schema.field(key)
-                    except Exception:
-                        continue
-                    return key
+                    if key in schema_paths:
+                        return key
     pytest.fail("no committed profile binding names a resolvable schema field")
 
 

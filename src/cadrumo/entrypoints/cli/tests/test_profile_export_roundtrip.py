@@ -35,6 +35,7 @@ import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
+from ....core import CasillaId, validated_casilla_id
 from ....domain.calculations.registry import (
     CasillaObservation,
     LegalRefId,
@@ -152,7 +153,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
         get_master_key_provider,
     )
     from ....application.modelo import create_work_unit
-    from ....core import CasillaId, Period, resolve_active_bucket_id, validated_casilla_id
+    from ....core import Period, resolve_active_bucket_id
     from ....core.config import override_settings
     from ....domain.modelos import (
         CalculationRevision,
@@ -249,6 +250,7 @@ def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
             updated_at=_T1,
             verified_at=_T1,
             verified_by="operator",
+        filing_instance_evidence=None,
         )
         cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 

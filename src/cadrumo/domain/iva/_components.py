@@ -1021,7 +1021,7 @@ invoice kind can ship undeclared.
 """
 
 
-def iva_category_components(category: IvaCategory, kind: InvoiceKind) -> IvaCategoryComponents:
+def category_components(category: IvaCategory, kind: InvoiceKind) -> IvaCategoryComponents:
     """Return the Axis-A component expectations for ``category`` on ``kind``.
 
     ``kind`` is required, deliberately. A category-only accessor over a
@@ -1110,7 +1110,7 @@ def category_bears_taxable_base(category: IvaCategory, kind: InvoiceKind) -> boo
     Returns:
         ``True`` when the pair requires a taxable base.
     """
-    return iva_category_components(category, kind).base is IvaComponentPresence.REQUIRED
+    return category_components(category, kind).base is IvaComponentPresence.REQUIRED
 
 
 def category_cuota_is_zero_by_law(category: IvaCategory, kind: InvoiceKind) -> bool:
@@ -1132,7 +1132,7 @@ def category_cuota_is_zero_by_law(category: IvaCategory, kind: InvoiceKind) -> b
     Returns:
         ``True`` when the cuota is zero by law for this pair.
     """
-    return iva_category_components(category, kind).cuota is IvaComponentPresence.ZERO_BY_LAW
+    return category_components(category, kind).cuota is IvaComponentPresence.ZERO_BY_LAW
 
 
 # Import-time coherence check. The table and the canonical frozenset describe
@@ -1155,7 +1155,7 @@ __all__ = [
     "IvaRetencionExpectation",
     "IvaRetencionRole",
     "category_bears_taxable_base",
+    "category_components",
     "category_cuota_is_zero_by_law",
     "cuota_less_m303_categories_from_table",
-    "iva_category_components",
 ]

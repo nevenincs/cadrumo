@@ -128,9 +128,7 @@ class ProfileBareModelSecurePersistence[DocumentT: BaseModel]:
             and row.schema_version != self._definition.schema_version
             for row in self._objects.iter_all_records_raw()
         ):
-            raise StorageValidationError(
-                f"{self._definition.namespace} requires explicit schema migration before read"
-            )
+            raise StorageValidationError(f"{self._definition.namespace} requires explicit schema migration before read")
         record = self._objects.load(
             self._definition.namespace,
             self.object_key,

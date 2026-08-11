@@ -28,6 +28,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...domain.calculations.registry import BindingId, ModeloRevision, RegistrySnapshot, RelationId
 from ...domain.deadlines import IVARegime
+from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -46,6 +47,7 @@ from ._iva_wallet_gate import (
     resolve_iva_compensation_decision_for_calculation,
     taxpayer_nif_for_bucket,
 )
+from ._m303_regimen_simplificado_scope import resolve_m303_regimen_simplificado_scope
 from ._preconditions import build_modelo_precondition_failure
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
 from ._required_binding_gate import (
@@ -80,6 +82,7 @@ class PreparedCalculation:
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None
     period_date: date
     channels: ResolvedCalculationChannels
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None
 
 
 def prepare_calculation(
@@ -99,6 +102,7 @@ def prepare_calculation(
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
 ) -> PreparedCalculation:
     """Prepare validated inputs, source channels, and gates for calculation.
 
@@ -126,6 +130,8 @@ def prepare_calculation(
 
     require_profile_ready_for_work_unit(work_unit)
     snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
+    if m303_regimen_simplificado_scope is None:
+        m303_regimen_simplificado_scope = resolve_m303_regimen_simplificado_scope(work_unit)
     casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
     if backend_casilla_inputs is not None:
         backend_casilla_inputs = _validate_casilla_input_ids(snapshot.revision, backend_casilla_inputs)
@@ -206,6 +212,7 @@ def prepare_calculation(
         backend_casilla_inputs=backend_casilla_inputs,
         period_date=period_date,
         channels=channels,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
     )
 
 

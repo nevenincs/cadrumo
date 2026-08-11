@@ -18,6 +18,7 @@ See Also:
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+
 from ._ids import RevisionId
 
 if TYPE_CHECKING:

@@ -16,9 +16,24 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import resolve_error_message
+from ....core.resources import resources
 from ....domain.buckets import BucketEventType
-from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import CalculationRevision
+from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.deadlines import M303RegimeComposition
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ....domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
+from ....domain.modelos import (
+    CalculationRevision,
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -88,6 +103,37 @@ def _repositories(objects: SecureObjectRepository):
         CalculationRevisionCatalogueRepository(objects=objects),
         BucketEventHistoryRepository(objects=objects),
         TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects),
+    )
+
+
+def _m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
+    scope = M303RegimenSimplificadoScopeDecision(
+        regime_composition=M303RegimeComposition.GENERAL,
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.code,
+        ),
+        scope_decision=scope,
+    )
+    return FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=False,
+            insolvency=None,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(reference="test:bucket-flow:exonerado-390"),
+            ),
+            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+                regimen_snapshot=snapshot,
+            ),
+        ),
     )
 
 
@@ -177,6 +223,11 @@ def _store_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -209,6 +260,11 @@ def _store_first_period_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -233,7 +289,7 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
         divergence="match",
         blocked=False,
         stale_wallet=False,
-        reason="bucket aggregation trace fixture",
+        reason_identity="aeat_wallet_validated",
         wallet_captured_at=_T1,
         decided_at=_T1,
     )
@@ -291,6 +347,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_uses_bucket_transacti
     revision = calculate_modelo_revision_from_bucket_aggregation(
         work_unit.work_unit_id,
         actor="operator-A",
+        filing_instance_evidence=_m303_filing_evidence(work_unit.period),
         binding_values={
             "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
             "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
@@ -369,6 +426,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_refuses_when_ledger_p
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             bucket_event_repository=event_repo,
@@ -403,6 +461,7 @@ def test_m303_still_blocks_base_only_rows_missing_iva_facts(
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
             bucket_event_repository=event_repo,
@@ -506,6 +565,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     q1_positive = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="1T").work_unit_id,
         actor="operator-A",
+        filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "1T")),
         binding_values=_baseline_303_bindings,
         iva_compensation_decision=q1_decision,
         work_unit_repository=wu_repo,
@@ -519,6 +579,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     q2_negative = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="2T").work_unit_id,
         actor="operator-A",
+        filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
         binding_values=_baseline_303_bindings,
         iva_compensation_decision=q2_decision,
         work_unit_repository=wu_repo,
@@ -532,6 +593,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     q3_zero = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="3T").work_unit_id,
         actor="operator-A",
+        filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "3T")),
         binding_values=_baseline_303_bindings,
         iva_compensation_decision=q3_decision,
         work_unit_repository=wu_repo,
@@ -545,6 +607,7 @@ def test_modelo_303_bucket_aggregation_traces_positive_negative_zero_and_compens
     q4_compensated = calculate_modelo_revision_from_bucket_aggregation(
         _seed_303_work_unit(wu_repo, period="4T").work_unit_id,
         actor="operator-A",
+        filing_instance_evidence=_m303_filing_evidence(Period.from_year_and_code(2026, "4T")),
         binding_values={
             **_baseline_303_bindings,
             "modelo-303-compensacion-pendiente-anteriores": Decimal("7.00"),
@@ -604,6 +667,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_conflicting_b
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -630,6 +694,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_empty_bucket_
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
             binding_values={"modelo-303-iva-repercutido-general-cuota": Decimal("99.00")},
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -656,6 +721,7 @@ def test_calculate_modelo_revision_from_bucket_aggregation_rejects_ledger_bound_
         calculate_modelo_revision_from_bucket_aggregation(
             work_unit.work_unit_id,
             actor="operator-A",
+            filing_instance_evidence=_m303_filing_evidence(work_unit.period),
             casilla_inputs={_M303_REPERCUTIDO_GENERAL_CASILLA: Decimal("99.00")},
             work_unit_repository=wu_repo,
             calculation_repository=cr_repo,
@@ -696,6 +762,7 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
+        filing_instance_evidence=_m303_filing_evidence(work_unit.period),
         clock=_T1,
     )
 
@@ -725,3 +792,4 @@ def test_first_period_empty_ledger_m303_calculates_zero_sin_actividad(
     assert decision.blocked is False
     assert decision.selected_amount == Decimal("0")
     assert str(decision.divergence) == "first_period_zero"
+    assert decision.reason_identity is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED

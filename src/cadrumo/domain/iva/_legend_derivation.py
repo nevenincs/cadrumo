@@ -135,22 +135,37 @@ class LegendDerivation(BaseModel):
         does not fit its state is how a caller ends up reading a category off a
         record that did not establish one.
         """
-        if self.outcome is LegendDerivationOutcome.DERIVED:
-            if self.category is None or self.legend is None:
-                raise ValueError("a derived outcome must carry both the category and the legend that declared it")
-            if not self.derived_from:
-                raise ValueError("a derived outcome must record the inputs it followed from")
-        elif self.outcome is LegendDerivationOutcome.CONTRADICTED:
-            if self.legend is None:
-                raise ValueError("a contradicted outcome must carry the legend that was contradicted")
-            if self.category is not None:
-                raise ValueError(
-                    "a contradicted outcome must not carry a category: the document disagrees with itself, "
-                    "and a caller holding the value would use it without the contradiction",
-                )
-        elif self.category is not None or self.legend is not None:
-            raise ValueError("an absent outcome derives nothing, so it carries neither a category nor a legend")
+        _validate_legend_derivation_payload(
+            outcome=self.outcome,
+            category=self.category,
+            legend=self.legend,
+            derived_from=self.derived_from,
+        )
         return self
+
+
+def _validate_legend_derivation_payload(
+    *,
+    outcome: LegendDerivationOutcome,
+    category: IvaCategory | None,
+    legend: RegimeLegend | None,
+    derived_from: tuple[str, ...],
+) -> None:
+    if outcome is LegendDerivationOutcome.DERIVED:
+        if category is None or legend is None:
+            raise ValueError("a derived outcome must carry both the category and the legend that declared it")
+        if not derived_from:
+            raise ValueError("a derived outcome must record the inputs it followed from")
+    elif outcome is LegendDerivationOutcome.CONTRADICTED:
+        if legend is None:
+            raise ValueError("a contradicted outcome must carry the legend that was contradicted")
+        if category is not None:
+            raise ValueError(
+                "a contradicted outcome must not carry a category: the document disagrees with itself, "
+                "and a caller holding the value would use it without the contradiction",
+            )
+    elif category is not None or legend is not None:
+        raise ValueError("an absent outcome derives nothing, so it carries neither a category nor a legend")
 
 
 #: Named so the absent outcome reads as a decision rather than a fall-through.

@@ -122,74 +122,142 @@ def validate_relation_source_coordinate_coverage(
     revisions_by_id = {revision.id: revision for revision in candidates}
     failures: list[str] = []
 
-    coordinates: tuple[tuple[str, int, str | None], ...]
-    if relation.source_period_offset_from_target is None:
-        coordinates = tuple((source_period, 0, None) for source_period in source_periods)
-    else:
-        derived_coordinates: list[tuple[str, int, str | None]] = []
-        for target_period in relation.target_periods:
-            try:
-                offset_year_delta, source_period = apply_period_offset(
-                    relation.source_period_offset_from_target,
-                    target_period=target_period,
-                )
-            except RegistryValidationError:
-                # The sibling period-shape validation reports this with the
-                # relation id and target-period context.
-                continue
-            derived_coordinates.append((source_period, offset_year_delta, target_period))
-        coordinates = tuple(derived_coordinates)
-
-    for source_period, offset_year_delta, target_period in coordinates:
-        period_candidates = tuple(
-            revision for revision in candidates if source_period in revision.period_selector.periods
-        )
-        if not period_candidates:
-            target_context = "" if target_period is None else f" for target period {target_period!r}"
-            failures.append(
-                f"{scope} derived source period {source_period!r}{target_context} "
-                "is not supported by any selected source revision",
-            )
-            continue
-
-        for source_start, source_end in _offset_source_year_intervals(
-            target_selector,
+    for source_period, offset_year_delta, target_period in _relation_source_coordinates(relation, source_periods):
+        covered_revision_ids, coordinate_failures = _coordinate_coverage(
+            scope,
             relation=relation,
+            target_selector=target_selector,
+            candidates=candidates,
+            source_period=source_period,
             offset_year_delta=offset_year_delta,
-        ):
-            for segment_start, segment_end, owners in _coverage_segments(
-                source_start,
-                source_end,
-                period_candidates,
-            ):
-                if len(owners) == 1:
-                    covered_periods_by_revision.setdefault(owners[0].id, set()).add(source_period)
-                    continue
-                if (
-                    not owners
-                    and source_is_observation_history
-                    and _is_pre_modelled_history(segment_end, period_candidates)
-                ):
-                    # There is no engine revision for this historical filing.
-                    # Attach the period to the earliest compatible revision so
-                    # the caller still checks the canonical source casilla.
-                    earliest = min(
-                        period_candidates,
-                        key=lambda revision: _earliest_selector_year(revision.period_selector),
-                    )
-                    covered_periods_by_revision.setdefault(earliest.id, set()).add(source_period)
-                    continue
-                coverage = "lacks" if not owners else "has ambiguous"
-                failures.append(
-                    f"{scope} {coverage} exact source revision coverage for derived "
-                    f"period {source_period!r} in source years {_year_interval_label(segment_start, segment_end)}",
-                )
+            target_period=target_period,
+            source_is_observation_history=source_is_observation_history,
+        )
+        failures.extend(coordinate_failures)
+        for revision_id in covered_revision_ids:
+            covered_periods_by_revision.setdefault(revision_id, set()).add(source_period)
 
     coverage = tuple(
         (revisions_by_id[revision_id], tuple(sorted(periods)))
         for revision_id, periods in sorted(covered_periods_by_revision.items())
     )
     return coverage, failures
+
+
+def _relation_source_coordinates(
+    relation: RelationDefinition,
+    source_periods: Iterable[str],
+) -> tuple[tuple[str, int, str | None], ...]:
+    """Return declared coordinates or the offset-derived coordinate for every target period."""
+    if relation.source_period_offset_from_target is None:
+        return tuple((source_period, 0, None) for source_period in source_periods)
+
+    coordinates: list[tuple[str, int, str | None]] = []
+    for target_period in relation.target_periods:
+        try:
+            offset_year_delta, source_period = apply_period_offset(
+                relation.source_period_offset_from_target,
+                target_period=target_period,
+            )
+        except RegistryValidationError:
+            # The sibling period-shape validation reports this with the relation
+            # id and target-period context.
+            continue
+        coordinates.append((source_period, offset_year_delta, target_period))
+    return tuple(coordinates)
+
+
+def _coordinate_coverage(
+    scope: str,
+    *,
+    relation: RelationDefinition,
+    target_selector: PeriodSelector,
+    candidates: tuple[ModeloRevision, ...],
+    source_period: str,
+    offset_year_delta: int,
+    target_period: str | None,
+    source_is_observation_history: bool,
+) -> tuple[tuple[str, ...], list[str]]:
+    """Resolve owners for one source-period coordinate across all required years."""
+    period_candidates = tuple(revision for revision in candidates if source_period in revision.period_selector.periods)
+    if not period_candidates:
+        target_context = "" if target_period is None else f" for target period {target_period!r}"
+        return (), [
+            f"{scope} derived source period {source_period!r}{target_context} "
+            "is not supported by any selected source revision",
+        ]
+
+    covered_revision_ids: set[str] = set()
+    failures: list[str] = []
+    for source_start, source_end in _offset_source_year_intervals(
+        target_selector,
+        relation=relation,
+        offset_year_delta=offset_year_delta,
+    ):
+        assignments, interval_failures = _coverage_assignments(
+            scope,
+            source_period=source_period,
+            source_start=source_start,
+            source_end=source_end,
+            candidates=period_candidates,
+            source_is_observation_history=source_is_observation_history,
+        )
+        covered_revision_ids.update(assignments)
+        failures.extend(interval_failures)
+    return tuple(sorted(covered_revision_ids)), failures
+
+
+def _coverage_assignments(
+    scope: str,
+    *,
+    source_period: str,
+    source_start: int,
+    source_end: int | None,
+    candidates: tuple[ModeloRevision, ...],
+    source_is_observation_history: bool,
+) -> tuple[tuple[str, ...], list[str]]:
+    """Resolve one-owner segments, retaining the history exception and diagnostics."""
+    assignments: set[str] = set()
+    failures: list[str] = []
+    for segment_start, segment_end, owners in _coverage_segments(source_start, source_end, candidates):
+        revision_id, failure = _coverage_segment_owner(
+            scope,
+            source_period=source_period,
+            segment_start=segment_start,
+            segment_end=segment_end,
+            owners=owners,
+            candidates=candidates,
+            source_is_observation_history=source_is_observation_history,
+        )
+        if revision_id is not None:
+            assignments.add(revision_id)
+        if failure is not None:
+            failures.append(failure)
+    return tuple(sorted(assignments)), failures
+
+
+def _coverage_segment_owner(
+    scope: str,
+    *,
+    source_period: str,
+    segment_start: int,
+    segment_end: int | None,
+    owners: tuple[ModeloRevision, ...],
+    candidates: tuple[ModeloRevision, ...],
+    source_is_observation_history: bool,
+) -> tuple[str | None, str | None]:
+    """Return the exact owner or the unchanged diagnostic for one stable segment."""
+    if len(owners) == 1:
+        return owners[0].id, None
+    if not owners and source_is_observation_history and _is_pre_modelled_history(segment_end, candidates):
+        earliest = min(candidates, key=lambda revision: _earliest_selector_year(revision.period_selector))
+        return earliest.id, None
+    coverage = "lacks" if not owners else "has ambiguous"
+    return (
+        None,
+        f"{scope} {coverage} exact source revision coverage for derived "
+        f"period {source_period!r} in source years {_year_interval_label(segment_start, segment_end)}",
+    )
 
 
 def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
@@ -226,22 +294,39 @@ def _coverage_segments(
         boundaries.add(end + 1)
     for revision in candidates:
         for candidate_start, candidate_end in _selector_year_intervals(revision.period_selector):
-            if candidate_start > start and (end is None or candidate_start <= end):
-                boundaries.add(candidate_start)
+            _add_coverage_boundary(boundaries, candidate_start, start=start, end=end)
             if candidate_end is not None:
-                after_candidate = candidate_end + 1
-                if after_candidate > start and (end is None or after_candidate <= end):
-                    boundaries.add(after_candidate)
+                _add_coverage_boundary(boundaries, candidate_end + 1, start=start, end=end)
     ordered_boundaries = sorted(boundaries)
-    segments: list[tuple[int, int | None, tuple[ModeloRevision, ...]]] = []
-    for index, segment_start in enumerate(ordered_boundaries):
-        if end is not None and segment_start > end:
-            continue
-        next_boundary = ordered_boundaries[index + 1] if index + 1 < len(ordered_boundaries) else None
-        segment_end = end if next_boundary is None else next_boundary - 1
-        owners = tuple(revision for revision in candidates if revision.period_selector.includes_year(segment_start))
-        segments.append((segment_start, segment_end, owners))
-    return tuple(segments)
+    return tuple(
+        _coverage_segment(
+            segment_start,
+            next_boundary=ordered_boundaries[index + 1] if index + 1 < len(ordered_boundaries) else None,
+            end=end,
+            candidates=candidates,
+        )
+        for index, segment_start in enumerate(ordered_boundaries)
+        if end is None or segment_start <= end
+    )
+
+
+def _add_coverage_boundary(boundaries: set[int], boundary: int, *, start: int, end: int | None) -> None:
+    """Keep only interior selector boundaries relevant to the requested interval."""
+    if boundary > start and (end is None or boundary <= end):
+        boundaries.add(boundary)
+
+
+def _coverage_segment(
+    start: int,
+    *,
+    next_boundary: int | None,
+    end: int | None,
+    candidates: tuple[ModeloRevision, ...],
+) -> tuple[int, int | None, tuple[ModeloRevision, ...]]:
+    """Materialise one interval between consecutive ownership boundaries."""
+    segment_end = end if next_boundary is None else next_boundary - 1
+    owners = tuple(revision for revision in candidates if revision.period_selector.includes_year(start))
+    return start, segment_end, owners
 
 
 def _is_pre_modelled_history(end: int | None, candidates: tuple[ModeloRevision, ...]) -> bool:

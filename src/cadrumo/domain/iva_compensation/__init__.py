@@ -84,6 +84,7 @@ from ._filed_derivation import (
 from ._reconciliation import (
     DEFAULT_MAX_WALLET_AGE_DAYS,
     IvaCompensationAuthoritySource,
+    IvaCompensationDecisionReason,
     IvaCompensationDivergence,
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
@@ -106,6 +107,7 @@ __all__ = [
     "IvaCompensationCarryForwardReport",
     "IvaCompensationCasillaReferenceError",
     "IvaCompensationDecimalParseError",
+    "IvaCompensationDecisionReason",
     "IvaCompensationDivergence",
     "IvaCompensationExpiryReviewState",
     "IvaCompensationOverride",

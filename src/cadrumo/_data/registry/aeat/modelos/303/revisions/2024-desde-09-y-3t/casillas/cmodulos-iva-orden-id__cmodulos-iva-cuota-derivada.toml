@@ -1,0 +1,139 @@
+# Internal M303 simplified-regime inputs. A canonical annual Orden activity
+# identity selects the source-pinned table; units one through seven preserve
+# every legally defined module without a positional truncation.
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-orden-id"
+number = "modulos-iva-orden-id"
+section = ["iva", "regimen_simplificado"]
+data_type = "text"
+semantic_role = "iva_rs_modulos_orden_id"
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-1-unidades"
+number = "modulos-iva-1-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_1_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 1 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-2-unidades"
+number = "modulos-iva-2-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_2_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 2 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-3-unidades"
+number = "modulos-iva-3-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_3_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 3 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-4-unidades"
+number = "modulos-iva-4-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_4_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 4 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-5-unidades"
+number = "modulos-iva-5-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_5_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 5 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-6-unidades"
+number = "modulos-iva-6-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_6_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 6 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-7-unidades"
+number = "modulos-iva-7-unidades"
+section = ["iva", "regimen_simplificado"]
+data_type = "decimal"
+semantic_role = "iva_rs_modulos_7_unidades"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "M303 annual-Orden módulo 7 unit-count support casilla; each ordered module input is a distinct semantic role."
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "manual"
+legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-cuota-devengada"
+number = "modulos-iva-cuota-devengada"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_rs_modulos_cuota_devengada"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "computed"
+formula = "modelo-303-2024-modulos-iva-cuota-devengada"
+internal_only = true
+legal_refs = ["ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]
+
+[[revisions."2024-desde-09-y-3t".casillas]]
+id = "modulos-iva-cuota-derivada"
+number = "modulos-iva-cuota-derivada"
+section = ["iva", "regimen_simplificado"]
+data_type = "money"
+semantic_role = "iva_rs_modulos_cuota_derivada"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-123"], source_refs = ["boe-orden-hfp-1359-2023-iva-authority"] }
+required = false
+input_kind = "computed"
+formula = "modelo-303-2024-modulos-iva-cuota-derivada"
+internal_only = true
+legal_refs = ["ley-37-1992:art-123"]
+source_refs = ["boe-orden-hfp-1359-2023-iva-authority"]

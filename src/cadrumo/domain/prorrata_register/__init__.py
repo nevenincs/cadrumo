@@ -52,6 +52,9 @@ from ...core import (
     ProrrataActivityRowType as _ProrrataActivityRowType,
 )
 from ...core import (
+    ProrrataEspecialTransitionKind as _ProrrataEspecialTransitionKind,
+)
+from ...core import (
     ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance,
 )
 from ...core import (
@@ -103,6 +106,29 @@ _PROVENANCE_PRECEDENCE: tuple[_ProrrataProvisionalProvenance, ...] = (
     _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     _ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
 )
+
+
+class ProrrataEspecialTransitionEvidence(BaseModel):
+    """Evidence for one Modelo 303 prorrata-especial transition.
+
+    The voluntary special-prorrata choice and its revocation are filing facts,
+    not inferred descriptions of a register regime.  A single discriminated
+    transition keeps their mutual exclusion structural while its reference
+    retains the operator evidence that supports the filing projection.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    kind: _ProrrataEspecialTransitionKind
+    evidence_reference: str = Field(min_length=1, max_length=256)
+
+    @field_validator("evidence_reference")
+    @classmethod
+    def _evidence_reference_is_not_blank(cls, value: str) -> str:
+        """Refuse whitespace-only evidence before it reaches encrypted storage."""
+        if not value.strip():
+            raise ProrrataRegisterValidationError("prorrata especial transition evidence_reference must not be blank")
+        return value
 
 
 class SectorDefinition(BaseModel):
@@ -244,6 +270,7 @@ class ProrrataRegisterEntry(BaseModel):
     definitive_volume_con_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     definitive_volume_sin_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_observation_ref: str | None = Field(default=None, min_length=1)
+    especial_transition: ProrrataEspecialTransitionEvidence | None = None
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
 
     @field_validator("schema_version")
@@ -303,6 +330,17 @@ class ProrrataRegisterEntry(BaseModel):
             raise ProrrataRegisterValidationError(
                 "source_observation_ref is permitted only for a carried_prior_definitiva entry"
             )
+        if self.especial_transition is not None:
+            required_regime = (
+                _ProrrataRegisterRegime.ESPECIAL
+                if self.especial_transition.kind is _ProrrataEspecialTransitionKind.OPCION
+                else _ProrrataRegisterRegime.GENERAL
+            )
+            if self.regime is not required_regime:
+                raise ProrrataRegisterValidationError(
+                    f"prorrata especial transition {self.especial_transition.kind!r} requires "
+                    f"regime {required_regime.value!r}"
+                )
         return self
 
 
@@ -464,6 +502,46 @@ class ProrrataRegister(BaseModel):
             raise ProrrataRegisterValidationError("register carries duplicate (ejercicio, slot) activity rows")
         return self
 
+    @model_validator(mode="after")
+    def _especial_transitions_are_mutually_exclusive(self) -> ProrrataRegister:
+        """Keep an option and revocation from claiming the same ejercicio."""
+        transition_kinds_by_ejercicio: dict[int, set[_ProrrataEspecialTransitionKind]] = {}
+        transition_references_by_ejercicio: dict[int, set[str]] = {}
+        for entry in self.entries:
+            if entry.especial_transition is None:
+                continue
+            transition_kinds_by_ejercicio.setdefault(entry.ejercicio, set()).add(entry.especial_transition.kind)
+            transition_references_by_ejercicio.setdefault(entry.ejercicio, set()).add(
+                entry.especial_transition.evidence_reference
+            )
+        contradictory_ejercicios = tuple(
+            ejercicio for ejercicio, kinds in transition_kinds_by_ejercicio.items() if len(kinds) > 1
+        )
+        if contradictory_ejercicios:
+            raise ProrrataRegisterValidationError(
+                "register carries contradictory prorrata especial option and revocation evidence for "
+                f"ejercicio(s) {contradictory_ejercicios}"
+            )
+        conflicting_reference_ejercicios = tuple(
+            ejercicio for ejercicio, references in transition_references_by_ejercicio.items() if len(references) > 1
+        )
+        if conflicting_reference_ejercicios:
+            raise ProrrataRegisterValidationError(
+                "register carries conflicting prorrata especial transition evidence references for "
+                f"ejercicio(s) {conflicting_reference_ejercicios}"
+            )
+        for entry in self.entries:
+            transition = entry.especial_transition
+            if transition is None or transition.kind is not _ProrrataEspecialTransitionKind.REVOCACION:
+                continue
+            prior_entry = self.entry_for(entry.ejercicio - 1, sector_id=entry.sector_id)
+            if prior_entry is None or prior_entry.regime is not _ProrrataRegisterRegime.ESPECIAL:
+                raise ProrrataRegisterValidationError(
+                    "prorrata especial revocation requires a prior-year especial register state for "
+                    f"sector {entry.sector_id!r}"
+                )
+        return self
+
     @property
     def is_sectorized(self) -> bool:
         """Whether the register declares a differentiated-sector partition.
@@ -579,6 +657,7 @@ class ProrrataRegister(BaseModel):
 __all__ = [
     "PRORRATA_REGISTER_SCHEMA_VERSION",
     "ProrrataActivityRow",
+    "ProrrataEspecialTransitionEvidence",
     "ProrrataProvisionalResolution",
     "ProrrataRegister",
     "ProrrataRegisterEntry",

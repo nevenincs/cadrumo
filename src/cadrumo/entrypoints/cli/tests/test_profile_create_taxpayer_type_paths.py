@@ -36,6 +36,18 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
 _NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
 _CREATED = tr("wizard.commands.status.created", locale="en")
+_COMMON_TERRITORY_ARGS = (
+    "--tax-residence-jurisdiction-scope",
+    "common_regime",
+)
+_M303_IVA_FACT_ARGS = (
+    "--iva-m303-regime-composition",
+    "general",
+    "--no-iva-redeme-enrolled",
+    "--no-iva-cash-accounting-regime-enrolled",
+    "--no-iva-voluntary-sii-enrolled",
+    "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+)
 
 
 @pytest.fixture(autouse=True)
@@ -69,6 +81,7 @@ def test_missing_entity_type_does_not_re_report_supplied_identity_flags() -> Non
             "Hardening",
             "--activity",
             "consultoria",
+            *_COMMON_TERRITORY_ARGS,
         ),
     )
 
@@ -94,6 +107,10 @@ def test_legal_entity_profile_creates_non_interactively_without_spouse_flags() -
         "B66012345",
         "--activity",
         "consultoria informatica",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -115,6 +132,10 @@ def test_legal_entity_profile_create_refuses_missing_legal_form_before_registrat
         "B66012345",
         "--activity",
         "consultoria informatica",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code != 0, result.output
@@ -137,6 +158,8 @@ def test_non_resident_irnr_quiet_create_requires_country_before_registration() -
         "X1234567L",
         "--iva-regime",
         "GENERAL",
+        *_COMMON_TERRITORY_ARGS,
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code != 0, result.output
@@ -162,6 +185,8 @@ def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> 
         "X1234567L",
         "--iva-regime",
         "GENERAL",
+        *_COMMON_TERRITORY_ARGS,
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -188,6 +213,8 @@ def test_gb_legal_entity_irnr_quiet_create_requires_representante_before_registr
         "consultoria internacional",
         "--iva-regime",
         "GENERAL",
+        *_COMMON_TERRITORY_ARGS,
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code != 0, result.output
@@ -214,6 +241,10 @@ def test_legal_entity_profile_creates_with_explicit_no_spouse_flag() -> None:
         "--no-spouse-non-resident-irpf",
         "--activity",
         "asesoria",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -238,6 +269,10 @@ def test_legal_entity_form_flag_populates_the_legal_entity_form_field() -> None:
         "B66012345",
         "--activity",
         "comercio",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -268,6 +303,10 @@ def test_legal_entity_profile_create_and_edit_exposes_legal_name() -> None:
         "Initial Legal Name SL",
         "--activity",
         "asesoria",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -304,6 +343,10 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
         "Operator",
         "--activity",
         "consultoria",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
     assert result.exit_code == 0, result.output
 
@@ -336,6 +379,10 @@ def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
         "Branch Legal SL",
         "--activity",
         "asesoria",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
     assert result.exit_code == 0, result.output
 
@@ -369,6 +416,7 @@ def test_pure_landlord_profile_creates_without_activity() -> None:
         "capital_inmobiliario",
         "--tax-id",
         "12345678Z",
+        *_COMMON_TERRITORY_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -395,6 +443,8 @@ def test_pure_landlord_profile_stores_explicit_iva_regime_when_operator_opts_in(
         "87654321X",
         "--iva-regime",
         "EXENTO",
+        *_COMMON_TERRITORY_ARGS,
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -415,6 +465,10 @@ def test_attribution_entity_profile_creates_without_spouse_flags() -> None:
         "E12345674",
         "--activity",
         "arrendamiento conjunto",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -441,6 +495,10 @@ def test_activity_start_date_flag_stores_the_censo_alta_date() -> None:
         "consultoria",
         "--activity-start-date",
         "2026-03-01",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -463,6 +521,10 @@ def test_profile_creates_without_activity_start_date_flag() -> None:
         "12345678Z",
         "--activity",
         "fontaneria",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output
@@ -485,6 +547,10 @@ def test_natural_person_with_economic_activity_stores_the_activity() -> None:
         "87654321X",
         "--activity",
         "fontaneria epigrafe 151",
+        *_COMMON_TERRITORY_ARGS,
+        "--iva-regime",
+        "GENERAL",
+        *_M303_IVA_FACT_ARGS,
     )
 
     assert result.exit_code == 0, result.output

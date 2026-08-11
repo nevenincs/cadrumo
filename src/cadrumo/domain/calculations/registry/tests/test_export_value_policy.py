@@ -34,7 +34,7 @@ def _field(
     field_id: str = "selected",
     casilla_id: str = "01",
     length: int | None = None,
-    **overrides: object,
+    payload_overrides: dict[str, object] | None = None,
 ) -> ExportFieldDefinition:
     payload: dict[str, object] = {
         "id": field_id,
@@ -50,7 +50,8 @@ def _field(
         "value_policy": policy,
         **_GROUNDING,
     }
-    payload.update(overrides)
+    if payload_overrides is not None:
+        payload.update(payload_overrides)
     return ExportFieldDefinition.model_validate(payload)
 
 
@@ -196,7 +197,7 @@ def test_each_policy_refuses_inconsistent_field_shapes(
     overrides: dict[str, object],
 ) -> None:
     with pytest.raises(ValidationError):
-        _field(policy, **overrides)
+        _field(policy, payload_overrides=overrides)
 
 
 def test_checkbox_policy_requires_exactly_one_wire_byte() -> None:

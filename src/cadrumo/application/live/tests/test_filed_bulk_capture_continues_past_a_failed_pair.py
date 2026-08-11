@@ -58,6 +58,7 @@ from playwright.async_api import Route, async_playwright
 
 from ....adapters.outbound.aeat.auth import AeatSession, CertificateSessionDetail
 from ....adapters.outbound.aeat.sede import DeclaracionesRegisterSession
+from ....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.secure_sql import isolated_runtime_profile
@@ -149,6 +150,7 @@ def _capture(output_root: Path) -> BulkFiledDataCaptureReport:
                         output_root=output_root,
                         modelos=(_MODELO,),
                         register=register,
+                        sync_run_repository=SyncRunRecordRepository(),
                     )
             finally:
                 await browser.close()

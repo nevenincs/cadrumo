@@ -102,6 +102,7 @@ def _seed_revision(
         updated_at=clock,
         verified_at=clock,
         verified_by="operator",
+    filing_instance_evidence=None,
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision

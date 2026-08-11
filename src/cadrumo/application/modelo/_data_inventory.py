@@ -38,13 +38,13 @@ from ...domain.calculations.registry import (
     BindingId,
     InputKind,
     LegalRefId,
+    RevisionId,
     SourceRefId,
     binding_profile_keys,
     build_profile_grounding_index,
 )
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_resources import authority_via_resources
-from ...domain.calculations.registry import RevisionId
 
 _log = get_logger(__name__)
 

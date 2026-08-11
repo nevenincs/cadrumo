@@ -15,6 +15,7 @@ from types import MappingProxyType
 
 from ...core.logging import get_logger
 from ...core.resources import resources
+from ...domain.calculations.registry import RevisionId
 from ..calculations.registry import RegistryError, RegistrySnapshotError
 from ..modelos import ModeloCode
 from ._categories import PortalCategory
@@ -64,7 +65,6 @@ from ._entries import (
 )
 from ._errors import PortalIntegrityError, PortalValidationError, UnknownPortalError
 from ._metadata import PortalMetadata
-from ...domain.calculations.registry import RevisionId
 
 _LOG = get_logger(__name__)
 

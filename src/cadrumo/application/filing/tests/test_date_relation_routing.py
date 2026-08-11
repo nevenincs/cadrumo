@@ -188,6 +188,7 @@ def test_build_draft_replay_routes_m100_tax_residence_ccaa_string_enum() -> None
             "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
         },
         schema_provider=build_runtime_schema_provider(modelos=("100",), filing_year=2024, period=period),
+        m303_regimen_simplificado_scope=None,
     )
 
     assert draft.modelo == "100"

@@ -39,10 +39,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ....core import BindingSourceKind, CasillaId, Period
 from ._binding_selector_utils import BooleanBindingEncodedValue
-from ._ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, SourceRefId
+from ._ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId
 from ._schema_input_kind import InputKind
 from ._support_matrix import ModeloEntry
-from ._ids import RevisionId
 
 
 class ModeloListRow(BaseModel):

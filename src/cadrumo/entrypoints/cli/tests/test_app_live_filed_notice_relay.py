@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import io
 import json
+from typing import NotRequired, TypedDict
 
 import pytest
 
@@ -36,6 +37,19 @@ from .._app_live import _filed_capture_notices, _filed_pull_all_notices, _filed_
 from .._app_live_payloads import FiledCaptureResult, FiledCaptureSourcesResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+class _CaptureReportFields(TypedDict):
+    """Common typed tally fields shared by the filed-capture report models."""
+
+    captured_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: tuple[str, ...]
+    evidence_notices: tuple[Notice, ...]
+    reached_count: NotRequired[int]
 
 
 def _answered_pair() -> FiledHistoryPairOutcome:
@@ -164,16 +178,25 @@ def _submitted_file_notice() -> Notice:
     )
 
 
-def _capture_report_fields(notice: Notice) -> dict[str, object]:
-    return {
-        "captured_count": 1,
-        "observation_paths": ("303/2025/1T/manifest.json",),
+def _capture_report_fields(
+    notice: Notice,
+    *,
+    captured_count: int = 1,
+    observation_paths: tuple[str, ...] = ("303/2025/1T/manifest.json",),
+    reached_count: int | None = None,
+) -> _CaptureReportFields:
+    fields: _CaptureReportFields = {
+        "captured_count": captured_count,
+        "observation_paths": observation_paths,
         "artefact_refs": ("sha256:submitted-file",),
         "casilla_count": 0,
         "calculation_observation_count": 0,
         "calculation_observation_keys": (),
         "evidence_notices": (notice,),
     }
+    if reached_count is not None:
+        fields["reached_count"] = reached_count
+    return fields
 
 
 def _emitted_notice_codes(*, command: str, result: object, notices: tuple[Notice, ...]) -> set[str]:
@@ -358,14 +381,18 @@ def test_every_limit_bearing_filed_read_reports_its_own_truncation() -> None:
     zero however much was reached. One builder answers for both, so a fix here
     cannot hold on one door while the other stays silent.
     """
-    fields = _capture_report_fields(_submitted_file_notice())
     bulk = BulkFiledDataCaptureReport(
         output_root="var/filed",
         modelos=("303",),
         year_from=2025,
         year_to=2025,
         failed_count=0,
-        **{**fields, "captured_count": 0, "observation_paths": (), "reached_count": 6},
+        **_capture_report_fields(
+            _submitted_file_notice(),
+            captured_count=0,
+            observation_paths=(),
+            reached_count=6,
+        ),
     )
     # The preview shape, guarded before it is asserted on.
     assert bulk.captured_count == 0 < bulk.reached_count
@@ -390,7 +417,7 @@ def test_a_capture_given_no_limit_keeps_its_notices_untouched() -> None:
         year_from=2025,
         year_to=2025,
         failed_count=0,
-        **{**_capture_report_fields(notice), "reached_count": 9999},
+        **_capture_report_fields(notice, reached_count=9999),
     )
 
     assert _filed_capture_notices(report) == (notice,)

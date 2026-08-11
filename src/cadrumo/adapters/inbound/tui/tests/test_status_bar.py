@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 from textual.app import App, ComposeResult
 from textual.containers import VerticalScroll
@@ -25,6 +27,7 @@ class _StatusBarHarness(App[None]):
     .scroll-row { height: 1; }
     """
 
+    @override
     def compose(self) -> ComposeResult:
         yield PinnedStatusBar(summary="Profile 2 / 5", id="status")
         with VerticalScroll(id="body"):
@@ -89,6 +92,7 @@ async def test_status_bar_without_a_summary_collapses_when_idle() -> None:
     """A screen with no operation under way must not carry an empty header row."""
 
     class _TransientHarness(App[None]):
+        @override
         def compose(self) -> ComposeResult:
             yield PinnedStatusBar(id="status")
             yield Static("body", id="body")

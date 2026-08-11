@@ -32,7 +32,8 @@ from decimal import Decimal, localcontext
 
 from pydantic import BaseModel, Field, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Modelo, validated_casilla_id
+from ....domain.iva import ActividadOrdenAnual, M303RegimenSimplificadoScopeDecision, ModuloOrdenAnual
 from ....domain.period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
@@ -40,7 +41,11 @@ from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
-from ._errors import CasillaConstraintViolationError, RegistryValidationError
+from ._errors import (
+    CasillaConstraintViolationError,
+    M303RegimenSimplificadoEvidenceRequiredError,
+    RegistryValidationError,
+)
 from ._formula_initial_values import (
     binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
 )
@@ -85,9 +90,6 @@ from ._formula_runtime_ops import (
     resolve_bracket as _resolve_bracket,
 )
 from ._formula_runtime_ops import (
-    resolve_keyed_bracket as _resolve_keyed_bracket,
-)
-from ._formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from ._formula_runtime_ops import (
@@ -103,6 +105,7 @@ from ._ids import (
     RelationId,
     SourceRefId,
 )
+from ._m303_orden_anual import M303AnnualOrdenSnapshot
 from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
@@ -339,6 +342,8 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     unresolved_binding_ids: tuple[BindingId, ...] = (),
     date_binding_values: Mapping[BindingId, date] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
+    m303_annual_orden: M303AnnualOrdenSnapshot | None = None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas for a registry snapshot.
 
@@ -391,8 +396,16 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             ``birth_date``) consumed by date-aware ops.
         text_inputs: Optional string-valued operator inputs keyed by casilla
             id; consumed by text-routed ops.
+        m303_regimen_simplificado_scope: Closed IVA-profile scope decision
+            required for Modelo 303 and prohibited for every other modelo.
+        m303_annual_orden: Immutable annual-Orden snapshot captured in M303
+            filing evidence; required when the scope requires that evidence.
     """
     revision = snapshot.revision
+    resolved_m303_scope = _require_m303_regimen_simplificado_scope(
+        snapshot=snapshot,
+        scope_decision=m303_regimen_simplificado_scope,
+    )
     resolved_inputs = _validated_decimal_input_casilla_ids(
         inputs,
         revision=revision,
@@ -438,6 +451,13 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = _casillas_by_id(revision)
     resolved_text_inputs = _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
+    m303_annual_orden = _resolve_m303_formula_orden_context(
+        snapshot=snapshot,
+        scope_decision=resolved_m303_scope,
+        inputs=resolved_inputs,
+        text_inputs=resolved_text_inputs,
+        m303_annual_orden=m303_annual_orden,
+    )
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
     # casillas keep the registry-sourced legal_refs/source_refs.
@@ -452,6 +472,8 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             operand_refs: list[str] = []
             operand_casilla_refs: list[CasillaId] = []
             operand_values: list[Decimal] = []
+            provenance_legal_refs: list[str] = []
+            provenance_source_refs: list[str] = []
             try:
                 value = _evaluate_expression(
                     formula.expression,
@@ -471,6 +493,10 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                     filing_year=snapshot.filing_year,
                     text_values=resolved_text_inputs,
                     convenio=snapshot.convenio,
+                    m303_annual_orden=m303_annual_orden,
+                    m303_regimen_simplificado_scope=resolved_m303_scope,
+                    provenance_legal_refs=provenance_legal_refs,
+                    provenance_source_refs=provenance_source_refs,
                 )
             except _UnresolvedFormulaOutcomeError as exc:
                 unresolved_casilla_ids.add(target)
@@ -526,8 +552,8 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                 operand_refs=tuple(operand_refs),
                 operand_casilla_refs=tuple(operand_casilla_refs),
                 operand_values=tuple(operand_values),
-                legal_refs=tuple(formula.legal_refs),
-                source_refs=tuple(formula.source_refs),
+                legal_refs=_merged_reference_ids(formula.legal_refs, provenance_legal_refs),
+                source_refs=_merged_reference_ids(formula.source_refs, provenance_source_refs),
             )
 
     observations = _materialise_observations(
@@ -573,6 +599,64 @@ def _validate_external_value_ids(
         binding_ids,
         "unresolved_binding",
     )
+
+
+def _require_m303_regimen_simplificado_scope(
+    *,
+    snapshot: RegistrySnapshot,
+    scope_decision: M303RegimenSimplificadoScopeDecision | None,
+) -> M303RegimenSimplificadoScopeDecision | None:
+    """Require a closed M303 scope and stop applicable branches before evaluation."""
+    if snapshot.modelo.id != Modelo.M303:
+        if scope_decision is not None:
+            raise RegistryValidationError("M303 simplified-regime scope applies only to Modelo 303")
+        return None
+    if scope_decision is None:
+        raise RegistryValidationError("Modelo 303 calculation requires an explicit simplified-regime scope decision")
+    return scope_decision
+
+
+def _resolve_m303_formula_orden_context(
+    *,
+    snapshot: RegistrySnapshot,
+    scope_decision: M303RegimenSimplificadoScopeDecision | None,
+    inputs: Mapping[CasillaId, Decimal],
+    text_inputs: Mapping[CasillaId, str],
+    m303_annual_orden: M303AnnualOrdenSnapshot | None,
+) -> M303AnnualOrdenSnapshot | None:
+    """Resolve the canonical S59 authority after enforcing general-scope neutrality."""
+    if snapshot.modelo.id != Modelo.M303:
+        if m303_annual_orden is not None:
+            raise RegistryValidationError("M303 annual-Orden evidence applies only to Modelo 303")
+        return None
+    if scope_decision is None:
+        raise RegistryValidationError("Modelo 303 formula evaluation requires a simplified-regime scope decision")
+    if not scope_decision.is_not_claimed:
+        if m303_annual_orden is None:
+            raise M303RegimenSimplificadoEvidenceRequiredError(
+                "Modelo 303 simplified or mixed scope requires the S58 annual-Orden evidence snapshot",
+            )
+        return m303_annual_orden
+    forbidden_numeric_ids = frozenset(
+        validated_casilla_id(f"modulos-iva-{index}-unidades", surface="M303 scope input") for index in range(1, 8)
+    )
+    forbidden_text_id = validated_casilla_id("modulos-iva-orden-id", surface="M303 scope input")
+    supplied_numeric_ids = sorted(str(casilla_id) for casilla_id in forbidden_numeric_ids.intersection(inputs))
+    if m303_annual_orden is not None or forbidden_text_id in text_inputs or supplied_numeric_ids:
+        raise RegistryValidationError(
+            "general Modelo 303 scope rejects annual-Orden and simplified-regime module inputs",
+            context={
+                "annual_orden_supplied": str(m303_annual_orden is not None).lower(),
+                "orden_id_supplied": str(forbidden_text_id in text_inputs).lower(),
+                "module_input_ids": ",".join(supplied_numeric_ids),
+            },
+        )
+    return None
+
+
+def _merged_reference_ids(declared: tuple[str, ...], discovered: list[str]) -> tuple[str, ...]:
+    """Append dynamic annual-Orden provenance without duplicate references."""
+    return tuple(dict.fromkeys((*declared, *discovered)))
 
 
 def _validate_operand_casilla_refs(
@@ -628,11 +712,17 @@ def _evaluate_expression(
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
     convenio: ConvenioAuthority | None = None,
+    m303_annual_orden: M303AnnualOrdenSnapshot | None = None,
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
+    provenance_legal_refs: list[str] | None = None,
+    provenance_source_refs: list[str] | None = None,
 ) -> Decimal:
     resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or {}
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or {}
     resolved_text_values: Mapping[CasillaId, str] = text_values or {}
     resolved_convenio: ConvenioAuthority = convenio if convenio is not None else ConvenioAuthority.empty()
+    resolved_provenance_legal_refs = provenance_legal_refs if provenance_legal_refs is not None else []
+    resolved_provenance_source_refs = provenance_source_refs if provenance_source_refs is not None else []
     ctx = _EvalContext(
         values=values,
         binding_values=binding_values,
@@ -650,6 +740,10 @@ def _evaluate_expression(
         filing_year=filing_year,
         text_values=resolved_text_values,
         convenio=resolved_convenio,
+        m303_annual_orden=m303_annual_orden,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
+        provenance_legal_refs=resolved_provenance_legal_refs,
+        provenance_source_refs=resolved_provenance_source_refs,
     )
     if expression.op is None:
         return _evaluate_leaf(expression, ctx)
@@ -721,6 +815,10 @@ class _EvalContext:
     unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=lambda: dict[CasillaId, str]())
     convenio: ConvenioAuthority = field(default_factory=ConvenioAuthority.empty)
+    m303_annual_orden: M303AnnualOrdenSnapshot | None = None
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None
+    provenance_legal_refs: list[str] = field(default_factory=list)
+    provenance_source_refs: list[str] = field(default_factory=list)
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
@@ -743,6 +841,10 @@ def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Deci
         filing_year=ctx.filing_year,
         text_values=ctx.text_values,
         convenio=ctx.convenio,
+        m303_annual_orden=ctx.m303_annual_orden,
+        m303_regimen_simplificado_scope=ctx.m303_regimen_simplificado_scope,
+        provenance_legal_refs=ctx.provenance_legal_refs,
+        provenance_source_refs=ctx.provenance_source_refs,
     )
 
 
@@ -1126,36 +1228,31 @@ def _evaluate_m100_resolve_eo_agraria_indices_correctores(expression: FormulaExp
 
 
 @dataclass(frozen=True, slots=True)
-class _M303ResolveModulosIvaCuotaDevengadaArgs:
-    """Resolved registry ids for the M303 régimen-simplificado IVA módulos dispatcher."""
+class _M303ModuloUnitCasillaArgs:
+    """The fixed complete manual-input surface for an annual Orden activity."""
 
-    epigrafe_casilla_id: CasillaId
-    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId]
-    coefficient_parameter: ParameterId
-
-
-#: Módulo slot count the M303 first-slice IVA cuota coefficient table carries
-#: (972.1 peluquería — personal empleado, superficie, consumo eléctrico — is
-#: the highest signo count among the tabled activities; 721.2 and 722 pass a
-#: literal ``0`` for the unused trailing slot).
-_M303_MODULOS_IVA_SLOT_COUNT = 3
+    orden_id_casilla_id: CasillaId
+    modulo_unit_casilla_ids: tuple[CasillaId, CasillaId, CasillaId, CasillaId, CasillaId, CasillaId, CasillaId]
 
 
-def _m303_resolve_modulos_iva_cuota_devengada_args(
+#: Every source-pinned annual Orden activity has one through seven modules.
+_M303_MODULOS_IVA_INPUT_COUNT = 7
+
+
+def _m303_modulo_unit_casilla_args(
     expression: FormulaExpression,
-) -> _M303ResolveModulosIvaCuotaDevengadaArgs:
+) -> _M303ModuloUnitCasillaArgs:
     op = "m303_resolve_modulos_iva_cuota_devengada"
-    expected_arg_count = 2 + _M303_MODULOS_IVA_SLOT_COUNT
+    expected_arg_count = 1 + _M303_MODULOS_IVA_INPUT_COUNT
     if len(expression.args) != expected_arg_count:
         raise RegistryValidationError(
             f"formula op {op!r} expects {expected_arg_count} args, got {len(expression.args)}",
             translated_message="errors.calc.lookup_dispatch_arg_count",
             context={"op": op, "expected": str(expected_arg_count)},
         )
-    epigrafe_arg = expression.args[0]
-    modulo_args = expression.args[1 : 1 + _M303_MODULOS_IVA_SLOT_COUNT]
-    coefficient_arg = expression.args[1 + _M303_MODULOS_IVA_SLOT_COUNT]
-    if epigrafe_arg.casilla_id is None:
+    orden_id_arg = expression.args[0]
+    modulo_args = expression.args[1:]
+    if orden_id_arg.casilla_id is None:
         raise RegistryValidationError(
             f"formula op {op!r} requires args[0] to be a casilla leaf",
             translated_message="errors.calc.lookup_dispatch_arg_kind",
@@ -1170,141 +1267,116 @@ def _m303_resolve_modulos_iva_cuota_devengada_args(
                 context={"op": op, "position": f"args[{index}]", "expected_kind": "casilla"},
             )
         resolved_modulo_ids.append(modulo_arg.casilla_id)
-    if coefficient_arg.parameter is None:
-        raise RegistryValidationError(
-            f"formula op {op!r} requires args[{1 + _M303_MODULOS_IVA_SLOT_COUNT}] to be a parameter leaf",
-            translated_message="errors.calc.lookup_dispatch_arg_kind",
-            context={
-                "op": op,
-                "position": f"args[{1 + _M303_MODULOS_IVA_SLOT_COUNT}]",
-                "expected_kind": "parameter",
-            },
-        )
-    modulo_ids = (resolved_modulo_ids[0], resolved_modulo_ids[1], resolved_modulo_ids[2])
-    return _M303ResolveModulosIvaCuotaDevengadaArgs(
-        epigrafe_casilla_id=epigrafe_arg.casilla_id,
-        modulo_unit_casilla_ids=modulo_ids,
-        coefficient_parameter=coefficient_arg.parameter,
+    return _M303ModuloUnitCasillaArgs(
+        orden_id_casilla_id=orden_id_arg.casilla_id,
+        modulo_unit_casilla_ids=(
+            resolved_modulo_ids[0],
+            resolved_modulo_ids[1],
+            resolved_modulo_ids[2],
+            resolved_modulo_ids[3],
+            resolved_modulo_ids[4],
+            resolved_modulo_ids[5],
+            resolved_modulo_ids[6],
+        ),
     )
 
 
 def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Resolve the M303 régimen-simplificado de IVA cuota devengada por operaciones corrientes.
-
-    LIVA art. 123.Dos.1 + Orden HAC/1347/2024 Anexo I (Instrucciones para la
-    aplicación de los índices y módulos en el IVA, apartado 2.1) fix the
-    mechanism: cuota devengada por operaciones corrientes = Σ(unidades_módulo
-    × cuota devengada anual por unidad), per IAE epígrafe — structurally the
-    same units×coefficient product as the M131 estimación-objetiva fase 1ª
-    (:func:`_evaluate_m131_resolve_modulos_previo`), but keyed to the IVA
-    cuota-per-unit table rather than the IRPF rendimiento-per-unit table (the
-    two Orden annexes carry distinct per-activity module sets and distinct
-    euro figures, so they are two coefficient parameters, never conflated).
-
-    An untabled epígrafe (a deliberately bounded first-slice coverage set) or
-    a blank epígrafe resolves to ``Decimal('0')`` — this op feeds an internal-only
-    advisory-support casilla, never the filed casilla 48 directly, so a zero
-    here means "the table-driven engine has no coverage for this activity",
-    not "the cuota is zero". The ``advisory_when_computed_diverges``
-    verification predicate surfaces the gap or the discrepancy to the
-    operator; it never silently substitutes.
-    """
-    args = _m303_resolve_modulos_iva_cuota_devengada_args(expression)
-    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
-    ctx.operand_refs.append(args.epigrafe_casilla_id)
-    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
-    parameter = ctx.parameters.get(args.coefficient_parameter)
-    ctx.operand_refs.append(args.coefficient_parameter)
-    if not epigrafe or parameter is None:
+    """Resolve the complete annual-Orden module product without parameter tables."""
+    if ctx.m303_regimen_simplificado_scope is None:
+        raise RegistryValidationError("Modelo 303 module formula lacks a simplified-regime scope decision")
+    if ctx.m303_regimen_simplificado_scope.is_not_claimed:
+        return _ZERO
+    args = _m303_modulo_unit_casilla_args(expression)
+    activity = _m303_activity_for_orden_id(args.orden_id_casilla_id, ctx)
+    _validate_m303_module_projection(activity.modulos)
+    units = tuple(_numeric_casilla_value(casilla_id, ctx) for casilla_id in args.modulo_unit_casilla_ids)
+    expected_count = len(activity.modulos)
+    if any(value != _ZERO for value in units[expected_count:]):
+        raise RegistryValidationError(
+            f"annual Orden activity {activity.orden_id!r} received extra non-zero module inputs",
+        )
+    active_units = units[:expected_count]
+    if all(value == _ZERO for value in active_units):
         return _ZERO
     total = _ZERO
-    for modulo_index, modulo_casilla_id in enumerate(args.modulo_unit_casilla_ids, start=1):
-        units = _numeric_casilla_value(modulo_casilla_id, ctx)
-        if units == _ZERO:
-            continue
-        coefficient = _resolve_keyed_bracket(
-            parameter,
-            key=f"{epigrafe}:{modulo_index}",
-            filing_year=ctx.filing_year,
-        )
-        if coefficient is None:
-            # This módulo slot has no row for the declared epígrafe (either
-            # untabled entirely, or this slot does not apply to it) — the
-            # whole cuota-devengada product is untabled for this activity, so
-            # the running total is abandoned and the internal casilla
-            # resolves to zero (no partial/mixed tabled-untabled fabrication).
-            return _ZERO
-        ctx.operand_values.append(coefficient)
-        total += units * coefficient
+    for module, value in zip(activity.modulos, active_units, strict=True):
+        if value > _ZERO and module.coefficient <= _ZERO:
+            raise RegistryValidationError(
+                f"annual Orden activity {activity.orden_id!r} module {module.identity!r} has no positive coefficient",
+            )
+        ctx.operand_values.append(module.coefficient)
+        total += value * module.coefficient
     return total
 
 
-@dataclass(frozen=True, slots=True)
-class _M303ResolveModulosIvaCuotaMinimaPctArgs:
-    """Resolved registry ids for the M303 régimen-simplificado IVA cuota-mínima percentage dispatcher."""
-
-    epigrafe_casilla_id: CasillaId
-    percentage_parameter: ParameterId
-
-
-def _m303_resolve_modulos_iva_cuota_minima_pct_args(
-    expression: FormulaExpression,
-) -> _M303ResolveModulosIvaCuotaMinimaPctArgs:
+def _m303_orden_id_casilla_arg(expression: FormulaExpression) -> CasillaId:
     op = "m303_resolve_modulos_iva_cuota_minima_pct"
-    if len(expression.args) != 2:
+    if len(expression.args) != 1:
         raise RegistryValidationError(
-            f"formula op {op!r} expects 2 args, got {len(expression.args)}",
+            f"formula op {op!r} expects 1 arg, got {len(expression.args)}",
             translated_message="errors.calc.lookup_dispatch_arg_count",
-            context={"op": op, "expected": "2"},
+            context={"op": op, "expected": "1"},
         )
-    epigrafe_arg = expression.args[0]
-    percentage_arg = expression.args[1]
-    if epigrafe_arg.casilla_id is None:
+    orden_id_arg = expression.args[0]
+    if orden_id_arg.casilla_id is None:
         raise RegistryValidationError(
             f"formula op {op!r} requires args[0] to be a casilla leaf",
             translated_message="errors.calc.lookup_dispatch_arg_kind",
             context={"op": op, "position": "args[0]", "expected_kind": "casilla"},
         )
-    if percentage_arg.parameter is None:
-        raise RegistryValidationError(
-            f"formula op {op!r} requires args[1] to be a parameter leaf",
-            translated_message="errors.calc.lookup_dispatch_arg_kind",
-            context={"op": op, "position": "args[1]", "expected_kind": "parameter"},
-        )
-    return _M303ResolveModulosIvaCuotaMinimaPctArgs(
-        epigrafe_casilla_id=epigrafe_arg.casilla_id,
-        percentage_parameter=percentage_arg.parameter,
-    )
+    return orden_id_arg.casilla_id
 
 
 def _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
-    """Resolve the M303 régimen-simplificado de IVA cuota-mínima percentage por epígrafe.
+    """Read the annual-Orden cuota-mínima percentage for the selected activity."""
+    if ctx.m303_regimen_simplificado_scope is None:
+        raise RegistryValidationError("Modelo 303 module formula lacks a simplified-regime scope decision")
+    if ctx.m303_regimen_simplificado_scope.is_not_claimed:
+        return _ZERO
+    activity = _m303_activity_for_orden_id(_m303_orden_id_casilla_arg(expression), ctx)
+    ctx.operand_values.append(activity.cuota_minima_pct)
+    return activity.cuota_minima_pct
 
-    Orden HAC/1347/2024 Anexo II fixes, per IAE epígrafe, the "cuota mínima
-    por operaciones corrientes" percentage applied over the cuota devengada
-    (LIVA art. 123.Dos.1, Orden Anexo I apartado 2.3). The percentage is a
-    single-key (epígrafe-only, not epígrafe:módulo) keyed-bracket-table
-    lookup — structurally simpler than
-    :func:`_evaluate_m303_resolve_modulos_iva_cuota_devengada`, which sums a
-    per-módulo product. An untabled or blank epígrafe resolves to
-    ``Decimal('0')`` (no-silent-under-declaration: this op feeds the same
-    internal-only advisory-support casilla chain, never the filed casilla 48
-    directly, so a zero here means "no table coverage", not "cuota mínima is
-    zero").
-    """
-    args = _m303_resolve_modulos_iva_cuota_minima_pct_args(expression)
-    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
-    ctx.operand_refs.append(args.epigrafe_casilla_id)
-    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
-    ctx.operand_refs.append(args.percentage_parameter)
-    parameter = ctx.parameters.get(args.percentage_parameter)
-    if not epigrafe or parameter is None:
-        return _ZERO
-    value = _resolve_keyed_bracket(parameter, key=epigrafe, filing_year=ctx.filing_year)
-    if value is None:
-        return _ZERO
-    ctx.operand_values.append(value)
-    return value
+
+def _m303_activity_for_orden_id(
+    orden_id_casilla_id: CasillaId,
+    ctx: _EvalContext,
+) -> ActividadOrdenAnual:
+    """Resolve an exact annual-Orden activity and record its regulatory lineage."""
+    orden_id = ctx.text_values.get(orden_id_casilla_id, "").strip()
+    ctx.operand_refs.append(orden_id_casilla_id)
+    ctx.operand_casilla_refs.append(orden_id_casilla_id)
+    if not orden_id:
+        raise RegistryValidationError("M303 annual Orden activity requires a canonical orden_id")
+    projection = ctx.m303_annual_orden
+    if projection is None:
+        raise RegistryValidationError("M303 annual Orden projection was not selected for formula evaluation")
+    if projection.ejercicio != ctx.filing_year:
+        raise RegistryValidationError("M303 annual Orden projection does not match the formula filing year")
+    activities = tuple(activity for activity in projection.activities if activity.orden_id == orden_id)
+    if len(activities) != 1:
+        raise RegistryValidationError(
+            f"M303 annual Orden has no unique activity for canonical orden_id {orden_id!r}",
+        )
+    activity = activities[0]
+    ctx.operand_refs.append(activity.orden_id)
+    ctx.provenance_legal_refs.extend(activity.legal_refs)
+    ctx.provenance_source_refs.extend(activity.source_refs)
+    for module in activity.modulos:
+        ctx.operand_refs.append(module.identity)
+        ctx.provenance_legal_refs.extend(module.legal_refs)
+        ctx.provenance_source_refs.extend(module.source_refs)
+    return activity
+
+
+def _validate_m303_module_projection(modulos: tuple[ModuloOrdenAnual, ...]) -> None:
+    """Refuse a partial, reordered, or out-of-range annual module projection."""
+    if not 1 <= len(modulos) <= _M303_MODULOS_IVA_INPUT_COUNT:
+        raise RegistryValidationError("M303 annual Orden activity has an invalid module count")
+    orders = tuple(module.order for module in modulos)
+    if orders != tuple(range(1, len(modulos) + 1)):
+        raise RegistryValidationError("M303 annual Orden activity module identities are missing or reordered")
 
 
 def _evaluate_lookup_parameter_by_entity_type(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

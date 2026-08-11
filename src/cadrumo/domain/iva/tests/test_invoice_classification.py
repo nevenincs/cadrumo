@@ -8,12 +8,14 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.resources import resources
 from ...calculations.registry import IvaLedgerObservation
 from ...invoices import IvaRate
 from .. import (
     InvoiceKind,
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaFlowDirection,
     IvaRateKind,
     IvaSettlementSide,
@@ -294,10 +296,33 @@ def test_invoice_line_to_iva_observation_builds_soportado_record_for_received() 
         iva_rate=IvaRate.RATE_10,
         base_amount=Decimal("500"),
         iva_amount=Decimal("50"),
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator="invoice:bill-77",
+            evidence_digest="a" * 64,
+        ),
     )
     assert obs.flow_direction is IvaFlowDirection.SOPORTADO
     assert obs.category is IvaCategory.DOMESTIC_REDUCED
     assert obs.rate_kind is IvaRateKind.REDUCED
+    assert obs.deduction_fact_kind is IvaDeductionFactKind.DOMESTIC_CURRENT
+
+
+def test_received_invoice_line_refuses_missing_deduction_authority() -> None:
+    from datetime import date
+
+    from ...invoices import invoice_line_to_iva_observation
+
+    with pytest.raises(ValidationError, match="input IVA facts require exact deduction authority"):
+        invoice_line_to_iva_observation(
+            invoice_id="bill-without-authority",
+            issued_at=date(2025, 7, 1),
+            invoice_kind=InvoiceKind.RECEIVED,
+            iva_rate=IvaRate.RATE_10,
+            base_amount=Decimal("500"),
+            iva_amount=Decimal("50"),
+        )
 
 
 def test_invoice_line_to_iva_observation_rejects_non_decimal_amounts() -> None:
