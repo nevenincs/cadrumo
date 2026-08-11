@@ -21,6 +21,7 @@ from ....application.overview import (
     OverviewStatusReport,
     build_overview_calendar,
 )
+from ....core.json_contract import ResolvedNoticeAction
 from ....domain.deadlines import (
     EntityType,
     IrpfEstimationRegime,
@@ -99,9 +100,10 @@ def test_coverage_notice_uses_typed_explain_action_without_command_prose() -> No
     [notice] = overview_coverage_notices(coverage)
 
     assert "aeat app" not in notice.message.lower()
-    assert notice.action is not None
-    assert notice.action.action_id == "operator.overview.explain"
-    assert notice.action.target_command_key == "overview.explain"
+    notice_action = notice.action
+    assert isinstance(notice_action, ResolvedNoticeAction)
+    assert notice_action.action.action_id == "operator.overview.explain"
+    assert notice_action.action.target_command_key == "overview.explain"
 
 
 def test_next_step_not_import_once_ledger_has_transactions() -> None:

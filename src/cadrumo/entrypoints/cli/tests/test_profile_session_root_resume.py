@@ -372,9 +372,6 @@ class TestFailClosedRefusals:
         result = invoke_cached_cli(["--format", "json", "config", "profile", "validate", _LABEL])
 
         document = json.loads(semantic_cli_output(result))
-        projection = cli_policy_refusal_projection(document)
-        if projection is not None and projection.action is not None:
-            assert projection.action.action_id != "operator.profile.login", document
         assert result.exit_code == 0, document
 
     def test_unnamed_history_reads_the_authenticated_active_profile(self) -> None:

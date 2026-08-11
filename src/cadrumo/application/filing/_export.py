@@ -320,6 +320,7 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
         FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
+        FilingProducerKey.TAXPAYER_TAX_ID: str(snapshot.taxpayer_tax_id),
         FilingProducerKey.TAXPAYER_LEGAL_NAME: identity.legal_name,
         FilingProducerKey.TAXPAYER_GIVEN_NAME: identity.given_name,
         FilingProducerKey.TAXPAYER_SURNAMES: identity.surnames,

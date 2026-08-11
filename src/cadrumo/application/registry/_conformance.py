@@ -602,7 +602,7 @@ class RevisionCasillaProducerTrace(ConformanceModel):
 
     casilla_id: _CasillaId
     input_kind: _InputKind
-    producer_kind: Literal["formula", "manual", "upstream", "relation", "informational"]
+    producer_kind: Literal["formula", "manual", "upstream", "relation", "informational", "projection_only"]
     reason: str = Field(min_length=1, max_length=1024)
     formula_id: _FormulaId | None = None
     binding_id: _BindingId | None = None

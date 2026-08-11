@@ -139,14 +139,14 @@ class M303RegimenSimplificadoFactProjectionRef(BaseModel):
 
 
 class M303RegimenSimplificadoModuleProjectionRef(BaseModel):
-    """One typed value on an annual-Orden module address."""
+    """One typed value at an annual-Orden module ordinal."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m303_regimen_simplificado_module"] = "m303_regimen_simplificado_module"
     cohort: Literal[M303RegimenSimplificadoCohort.NO_AGRICOLA] = M303RegimenSimplificadoCohort.NO_AGRICOLA
     slot: int = Field(ge=1, le=2)
-    module_identity: _Identity
+    module_order: int = Field(ge=1, le=7)
     value: M303RegimenSimplificadoModuleValue
 
 
@@ -187,7 +187,6 @@ _STRING_WIRE_FIELDS = frozenset(
         "cohort",
         "fact_identity",
         "field",
-        "module_identity",
         "projection_kind",
         "value",
     },
@@ -207,8 +206,9 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
     for field_name in _STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
             raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
-    if "slot" in payload and type(payload["slot"]) is not int:
-        raise ValueError("filing projection reference 'slot' must be an exact integer")
+    for integer_field in ("slot", "module_order"):
+        if integer_field in payload and type(payload[integer_field]) is not int:
+            raise ValueError(f"filing projection reference {integer_field!r} must be an exact integer")
     return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
 
 
