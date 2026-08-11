@@ -4442,29 +4442,25 @@ cli:
         exclusively_non_deductible sense deducció; common al percentatge general de
         prorrata); només rellevant per a operacions suportades en un bucket amb prorrata
         especial.'
-      input_classification_inert: '--input-classification és inert per a l''exercici
+      input_classification_inert: '--input-classification no té efecte per a l''exercici
         {ejercicio}: no s''aplica cap elecció de prorrata especial, de manera que
-        l''input es dedueix al percentatge general. Classificar tots els inputs de
-        l''exercici també habilita la comprovació de prorrata especial obligatòria
-        (LIVA art. 103.Dos.2) en la liquidació per a un règim general. Executa ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons
-        LIVA art. 106.'
+        l''input es dedueix al percentatge general. La classificació només és operativa
+        mentre s''aplica una elecció de prorrata especial.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
-      prorrata_sector_help: Identificador del sector diferenciat (LIVA arts. 9.1.c
-        / 101) al qual pertany aquest input; ha de coincidir amb un sector declarat
-        amb 'app ledger prorrata declare-sector'.
+      prorrata_sector_help: Identificador del sector diferenciat (arts. 9.1.c i 101
+        LIVA) al qual pertany aquest input; ha de coincidir amb un sector ja declarat.
       purchase_invoice_evidence_help: Id de justificant de factura de compra
       recargo_amount_help: Quota del recàrrec d'equivalència repercutida en aquesta
         venda a un minorista en recàrrec (art. 161 LIVA); s'agrega a la quota de recàrrec
         del Model 303 per tipus d'IVA
       sector_unmatched: --sector '{sector_id}' no coincideix amb cap sector diferenciat
-        declarat (LIVA arts. 9.1.c / 101), de manera que aquest input es dedueix al
-        percentatge d'ús comú en lloc del propi del sector. Executa 'app ledger prorrata
-        declare-sector --sector-id {sector_id} ...' per enrutar-lo, o corregeix l'etiqueta.
+        declarat (arts. 9.1.c i 101 LIVA), de manera que aquest input es dedueix al
+        percentatge d'ús comú i no al percentatge del sector. El sector ha d'existir
+        abans que se li pugui assignar l'input.
       source_jurisdiction_help: Codi de país ISO 3166-1 alfa-2 (dues lletres) que
         identifica la jurisdicció fiscal d'origen de l'ingrés o despesa (p. ex. ES
         per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre
@@ -4480,10 +4476,8 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
-      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
-        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
-        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
-        <ràtio>'. No és text lliure.
+      usage_ratio_help: Identificador d'una proporció d'ús ja configurada per a ús
+        professional proporcional; la categoria ha de tenir una proporció d'ús.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -4495,10 +4489,8 @@ cli:
         llibre
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
-      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
-        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
-        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
-        <ràtio>'. No és text lliure.
+      usage_ratio_help: Identificador d'una proporció d'ús ja configurada per a ús
+        professional proporcional; la categoria ha de tenir una proporció d'ús.
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -4513,12 +4505,10 @@ cli:
       finalized_revision_stale: El justificant es va desar al moviment del llibre,
         però el Model %{modelo} %{filing_year} %{period} es va verificar abans que
         existís i conserva el conjunt de justificants anterior.
-      help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
-        un id de justificant de factura de compra amb 'aeat app ledger evidence add
-        PATH'.
+      help: Adjunta evidència existent a un moviment del llibre.
       id_help: Id del moviment del llibre al qual adjuntar evidència
-      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
-        el moviment; crea'l amb 'aeat app ledger evidence add PATH'
+      purchase_invoice_evidence_help: Identificador d'evidència de factura de compra
+        existent que acredita el moviment.
     categories:
       family_column: família
       header: CATEGORIES DE DESPESA RECONEGUDES DEL LLIBRE
@@ -4591,11 +4581,11 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
-      irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories.
-        Factures professionals cobrades netes usen actividad_economica; lloguers pagats
-        nets usen arrendamiento_local / arrendamiento_vivienda_afecto. Royalties/SGAE:
-        art. 25.4 pot ser capital mobiliario quan el contribuent no és l''autor; usa
-        actividad_economica només per activitat per compte propi sota LIRPF art. 27.'
+      irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
+        cobrades en net usen actividad_economica; els lloguers pagats en net usen
+        arrendamiento_local o arrendamiento_vivienda_afecto. Els drets d'autor i els
+        ingressos de la SGAE poden ser capital o activitat econòmica segons l'activitat
+        subjacent.
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4706,8 +4696,7 @@ cli:
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
       invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories
-        conegudes: {known}. Executa ''aeat app ledger categories'' per veure valors
-        vàlids de --category-id.'
+        conegudes: {known}.'
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el
         punt com a separador decimal i sense separador de milers, p. ex. 1234.56.'
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
@@ -4716,9 +4705,9 @@ cli:
       period_year_pairing: Els filtres de període del llibre requereixen període i
         exercici junts. Per a un any complet useu --period 0A --year %{year}, o --filter
         period=0A --filter year=%{year}.
-      unknown_category: --category-id {category!r} no reconegut. Passa un id de categoria
-        sense prefix com {example!r}, no una clau composta ni amb prefix de família.
-        Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
+      unknown_category: --category-id {category!r} no reconegut. Indica un identificador
+        de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
+        de família.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     exclude:
@@ -4755,9 +4744,9 @@ cli:
       file_refused: '{path} no s''ha importat: {reason}'
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
-        amb una transacció que ja és al llibre però tenen una descripció diferent:
-        un probable duplicat del mateix moviment importat des d''un altre arxiu o
-        format. Revisa-les amb `aeat app ledger list`.'
+        amb una transacció ja present al llibre, però tenen una descripció diferent,
+        fet que indica un probable duplicat del mateix moviment procedent d''un altre
+        fitxer o format. Aquestes files requereixen revisió.'
       no_rows_imported: 'No s''ha importat cap entrada: l''arxiu s''ha analitzat però
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de

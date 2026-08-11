@@ -178,6 +178,75 @@ def test_pinned_boe_orden_compiler_refuses_noncanonical_sidecar_shape(
         )
 
 
+@pytest.mark.parametrize(
+    ("invalid_value", "expected_refusal"),
+    (
+        ([], "contains a non-object unit"),
+        (7, "contains a non-text unit"),
+    ),
+)
+def test_pinned_boe_orden_compiler_refuses_invalid_units_before_pair_comparison(
+    tmp_path: Path,
+    invalid_value: object,
+    expected_refusal: str,
+) -> None:
+    """Unit-envelope defects retain precedence over the sidecar-pair comparison."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source_path = bundled_path() / source.corpus_path
+    copied_path = tmp_path / source.corpus_path
+    copied_path.parent.mkdir(parents=True)
+    copyfile(source_path, copied_path)
+    json_source = source_path.with_name(source_path.name + ".extracted.json")
+    json_copy = copied_path.with_name(copied_path.name + ".extracted.json")
+    payload = json.loads(json_source.read_text(encoding="utf-8"))
+    if isinstance(invalid_value, list):
+        payload["units"][0] = invalid_value
+    else:
+        payload["units"][0]["anchor"] = invalid_value
+    json_copy.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    copyfile(
+        source_path.with_name(source_path.name + ".extracted.md"),
+        copied_path.with_name(copied_path.name + ".extracted.md"),
+    )
+
+    with pytest.raises(RegistryLoadError, match=expected_refusal):
+        extract_m303_annual_orden_source(
+            ejercicio=2026,
+            source=source,
+            source_root=tmp_path,
+        )
+
+
+def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(tmp_path: Path) -> None:
+    """The complete sidecar pair cannot collapse two official tables onto one anchor."""
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source_path = bundled_path() / source.corpus_path
+    copied_path = tmp_path / source.corpus_path
+    copied_path.parent.mkdir(parents=True)
+    copyfile(source_path, copied_path)
+    json_source = source_path.with_name(source_path.name + ".extracted.json")
+    json_copy = copied_path.with_name(copied_path.name + ".extracted.json")
+    payload = json.loads(json_source.read_text(encoding="utf-8"))
+    first_anchor = "#m303-anexo-ii-iva-419-1-industrias-del-pan-y-de-la-bolleria"
+    second_anchor = "#m303-anexo-ii-iva-419-2-industrias-de-la-bolleria-pasteleria-y-galletas"
+    second_unit = next(unit for unit in payload["units"] if unit["anchor"] == second_anchor)
+    second_unit["anchor"] = first_anchor
+    json_copy.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+    copyfile(
+        source_path.with_name(source_path.name + ".extracted.md"),
+        copied_path.with_name(copied_path.name + ".extracted.md"),
+    )
+
+    with pytest.raises(RegistryLoadError, match="extra, missing, or cross-year table units"):
+        extract_m303_annual_orden_source(
+            ejercicio=2026,
+            source=source,
+            source_root=tmp_path,
+        )
+
+
 def test_resolved_annual_orden_snapshot_refuses_reference_coordinate_drift() -> None:
     """A reference cannot retain its Orden id while changing source provenance."""
     registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="4T")

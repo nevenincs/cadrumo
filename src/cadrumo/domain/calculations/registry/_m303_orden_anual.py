@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from hashlib import sha256
@@ -475,6 +475,14 @@ def _validate_sidecar_metadata(payload: Mapping[str, object], source: SourceRefe
 def _sidecar_units(
     payload: Mapping[str, object], source: SourceReference
 ) -> tuple[tuple[Mapping[str, object], ...], list[tuple[str | None, str]]]:
+    units = _sidecar_unit_mappings(payload, source)
+    return units, [_rendered_sidecar_unit(unit, source) for unit in units]
+
+
+def _sidecar_unit_mappings(
+    payload: Mapping[str, object],
+    source: SourceReference,
+) -> tuple[Mapping[str, object], ...]:
     raw = payload.get("units")
     if not isinstance(raw, list):
         raise RegistryLoadError(f"annual Orden sidecar has no units list for {source.id!r}")
@@ -482,43 +490,70 @@ def _sidecar_units(
     units = tuple(unit for value in raw_values if (unit := _sidecar_mapping(value)) is not None)
     if len(units) != len(raw_values):
         raise RegistryLoadError(f"annual Orden sidecar contains a non-object unit for {source.id!r}")
-    rendered: list[tuple[str | None, str]] = []
-    for unit in units:
-        if frozenset(unit) != _SIDECAR_UNIT_KEYS:
-            raise RegistryLoadError(f"annual Orden sidecar unit has extra or missing fields for {source.id!r}")
-        title, section, anchor, text = (unit.get(key) for key in ("title", "section", "anchor", "text"))
-        if (
-            (title is not None and not isinstance(title, str))
-            or (section is not None and not isinstance(section, str))
-            or (anchor is not None and not isinstance(anchor, str))
-            or not isinstance(text, str)
-        ):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
-        rendered.append((title, text))
-    return units, rendered
+    return units
+
+
+def _rendered_sidecar_unit(
+    unit: Mapping[str, object],
+    source: SourceReference,
+) -> tuple[str | None, str]:
+    if frozenset(unit) != _SIDECAR_UNIT_KEYS:
+        raise RegistryLoadError(f"annual Orden sidecar unit has extra or missing fields for {source.id!r}")
+    title = _optional_sidecar_text(unit.get("title"), source)
+    _optional_sidecar_text(unit.get("section"), source)
+    _optional_sidecar_text(unit.get("anchor"), source)
+    return title, _required_sidecar_text(unit.get("text"), source)
+
+
+def _optional_sidecar_text(value: object, source: SourceReference) -> str | None:
+    if value is None or isinstance(value, str):
+        return value
+    raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
+
+
+def _required_sidecar_text(value: object, source: SourceReference) -> str:
+    if isinstance(value, str):
+        return value
+    raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
 
 
 def _validate_sidecar_tables(
     units: tuple[Mapping[str, object], ...], activities: tuple[M303AnnualOrdenRawActivity, ...], source: SourceReference
 ) -> None:
-    anchors = orden_anual_iva_activity_anchors(tuple(_shared_activity_table(activity) for activity in activities))
-    if len(set(anchors)) != _EXPECTED_ACTIVITY_COUNT:
-        raise RegistryLoadError(f"annual Orden sidecar anchors are ambiguous for {source.id!r}")
-    annual_units = [
-        unit
-        for unit in units
-        if isinstance(unit.get("anchor"), str) and str(unit["anchor"]).startswith("#m303-anexo-ii-iva-")
-    ]
-    if len(annual_units) != _EXPECTED_ACTIVITY_COUNT or {unit["anchor"] for unit in annual_units} != set(anchors):
-        raise RegistryLoadError(f"annual Orden sidecar has extra, missing, or cross-year table units for {source.id!r}")
+    anchors = _validated_annual_orden_anchors(activities, source)
+    units_by_anchor = _annual_sidecar_units_by_anchor(units, anchors=anchors, source=source)
     for activity, anchor in zip(activities, anchors, strict=True):
-        matches = [unit for unit in units if unit.get("anchor") == anchor]
-        if len(matches) != 1 or normalise_corpus_text(str(matches[0].get("text"))) != normalise_corpus_text(
-            m303_annual_orden_table_text(activity)
-        ):
+        unit_text = normalise_corpus_text(str(units_by_anchor[anchor].get("text")))
+        if unit_text != normalise_corpus_text(m303_annual_orden_table_text(activity)):
             raise RegistryLoadError(
                 f"annual Orden sidecar table cells differ from the pinned BOE source for {source.id!r} {anchor!r}"
             )
+
+
+def _validated_annual_orden_anchors(
+    activities: tuple[M303AnnualOrdenRawActivity, ...],
+    source: SourceReference,
+) -> tuple[str, ...]:
+    anchors = orden_anual_iva_activity_anchors(tuple(_shared_activity_table(activity) for activity in activities))
+    if len(set(anchors)) != _EXPECTED_ACTIVITY_COUNT:
+        raise RegistryLoadError(f"annual Orden sidecar anchors are ambiguous for {source.id!r}")
+    return anchors
+
+
+def _annual_sidecar_units_by_anchor(
+    units: tuple[Mapping[str, object], ...],
+    *,
+    anchors: tuple[str, ...],
+    source: SourceReference,
+) -> dict[str, Mapping[str, object]]:
+    annual_units = tuple(
+        unit
+        for unit in units
+        if isinstance(unit.get("anchor"), str) and str(unit["anchor"]).startswith("#m303-anexo-ii-iva-")
+    )
+    if len(annual_units) != _EXPECTED_ACTIVITY_COUNT or {unit["anchor"] for unit in annual_units} != set(anchors):
+        raise RegistryLoadError(f"annual Orden sidecar has extra, missing, or cross-year table units for {source.id!r}")
+    return {str(unit["anchor"]): unit for unit in annual_units}
 
 
 def _sidecar_mapping(value: object) -> Mapping[str, object] | None:
@@ -663,40 +698,82 @@ def load_m303_annual_orden_authority(
     legal: dict[LegalRefId, LegalReference] = {}
     projections: list[M303AnnualOrdenProjection] = []
     for generated_source in manifest.sources:
-        source = sources.get(generated_source.source_ref)
-        if source is None:
-            raise RegistryLoadError(f"annual Orden manifest names unknown source {generated_source.source_ref!r}")
-        census = extract_m303_annual_orden_source(
-            ejercicio=generated_source.ejercicio,
-            source=source,
+        source, census, table_legal_refs = _compile_generated_annual_orden_source(
+            generated_source,
             source_root=source_root,
+            sources=sources,
         )
-        _validate_generated_source_matches_census(generated_source, census)
-        table_legal_refs = _compile_table_legal_references(census, source=source)
-        for legal_ref in table_legal_refs.values():
-            if legal_ref.id in legal:
-                raise RegistryValidationError(f"annual Orden compiler generated duplicate legal ref {legal_ref.id!r}")
-            legal[legal_ref.id] = legal_ref
-        for revision in modelo_303.revisions.values():
-            if not revision.period_selector.includes_year(generated_source.ejercicio):
-                continue
-            if source.id not in revision.source_refs:
-                raise RegistryValidationError(
-                    f"Modelo 303 revision {revision.id!r} does not cite annual Orden source {source.id!r}",
-                )
-            cited_annual_sources = frozenset(revision.source_refs).intersection(annual_source_refs)
-            if cited_annual_sources != frozenset({source.id}):
-                raise RegistryValidationError(
-                    f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
-                )
-            projections.append(
-                compile_m303_annual_orden_projection(
-                    census=census,
-                    registry_revision_id=revision.id,
-                    legal_refs_by_activity={identity: legal_ref.id for identity, legal_ref in table_legal_refs.items()},
-                ),
+        _merge_annual_orden_legal_refs(legal, table_legal_refs.values())
+        projections.extend(
+            _annual_orden_projections_for_source(
+                census=census,
+                source=source,
+                modelo_303=modelo_303,
+                annual_source_refs=annual_source_refs,
+                table_legal_refs=table_legal_refs,
             )
+        )
     return M303AnnualOrdenCompilation(authority=M303AnnualOrdenAuthority(projections=tuple(projections)), legal=legal)
+
+
+def _compile_generated_annual_orden_source(
+    generated_source: M303AnnualOrdenGeneratedSource,
+    *,
+    source_root: Path,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> tuple[SourceReference, M303AnnualOrdenSourceCensus, dict[str, LegalReference]]:
+    source = sources.get(generated_source.source_ref)
+    if source is None:
+        raise RegistryLoadError(f"annual Orden manifest names unknown source {generated_source.source_ref!r}")
+    census = extract_m303_annual_orden_source(
+        ejercicio=generated_source.ejercicio,
+        source=source,
+        source_root=source_root,
+    )
+    _validate_generated_source_matches_census(generated_source, census)
+    table_legal_refs = _compile_table_legal_references(census, source=source)
+    return source, census, table_legal_refs
+
+
+def _annual_orden_projections_for_source(
+    *,
+    census: M303AnnualOrdenSourceCensus,
+    source: SourceReference,
+    modelo_303: ModeloDefinition,
+    annual_source_refs: frozenset[SourceRefId],
+    table_legal_refs: Mapping[str, LegalReference],
+) -> tuple[M303AnnualOrdenProjection, ...]:
+    projections: list[M303AnnualOrdenProjection] = []
+    for revision in modelo_303.revisions.values():
+        if not revision.period_selector.includes_year(census.ejercicio):
+            continue
+        if source.id not in revision.source_refs:
+            raise RegistryValidationError(
+                f"Modelo 303 revision {revision.id!r} does not cite annual Orden source {source.id!r}",
+            )
+        cited_annual_sources = frozenset(revision.source_refs).intersection(annual_source_refs)
+        if cited_annual_sources != frozenset({source.id}):
+            raise RegistryValidationError(
+                f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
+            )
+        projections.append(
+            compile_m303_annual_orden_projection(
+                census=census,
+                registry_revision_id=revision.id,
+                legal_refs_by_activity={identity: legal_ref.id for identity, legal_ref in table_legal_refs.items()},
+            ),
+        )
+    return tuple(projections)
+
+
+def _merge_annual_orden_legal_refs(
+    legal: dict[LegalRefId, LegalReference],
+    generated_refs: Iterable[LegalReference],
+) -> None:
+    for legal_ref in generated_refs:
+        if legal_ref.id in legal:
+            raise RegistryValidationError(f"annual Orden compiler generated duplicate legal ref {legal_ref.id!r}")
+        legal[legal_ref.id] = legal_ref
 
 
 def collect_m303_annual_orden_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:

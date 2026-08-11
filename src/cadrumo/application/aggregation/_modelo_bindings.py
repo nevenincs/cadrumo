@@ -1597,20 +1597,13 @@ def _invoice_line_iva_observation(
     """
     ledger_id = f"invoice:{invoice.invoice_id}:{line_index}"
     if line.iva_amount > Decimal("0"):
-        return invoice_line_to_iva_observation(
-            invoice_id=ledger_id,
-            issued_at=devengo_date,
-            invoice_kind=invoice.kind,
-            iva_rate=line.iva_rate,
-            base_amount=line.subtotal,
-            iva_amount=line.iva_amount,
+        return _standard_invoice_line_iva_observation(
+            ledger_id=ledger_id,
+            invoice=invoice,
+            line=line,
+            devengo_date=devengo_date,
             recargo_amount=recargo_amount,
-            deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
-            deduction_provenance=(
-                deduction_authority.deduction_provenance if deduction_authority is not None else None
-            ),
-            investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
-            rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+            deduction_authority=deduction_authority,
         )
     category = invoice.iva_category
     declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
@@ -1645,22 +1638,14 @@ def _invoice_line_iva_observation(
         # reported through `_reverse_charge_cuota_not_derivable` rather than
         # closed here, because closing it means asserting a rate the record does
         # not carry.
-        return IvaLedgerObservation(
+        return _declared_category_unrouted_observation(
             ledger_id=ledger_id,
-            transaction_date=devengo_date,
-            category=category,
-            rate_kind=_rate_kind_for_slot(line.iva_rate),
-            applied_rate=None,
-            flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
-            base_amount=line.subtotal,
-            iva_amount=line.iva_amount,
+            invoice=invoice,
+            line=line,
+            devengo_date=devengo_date,
             recargo_amount=recargo_amount,
-            deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
-            deduction_provenance=(
-                deduction_authority.deduction_provenance if deduction_authority is not None else None
-            ),
-            investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
-            rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+            category=category,
+            deduction_authority=deduction_authority,
         )
     if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there
@@ -1670,13 +1655,11 @@ def _invoice_line_iva_observation(
         # ``_BASE_ONLY_ROUTED_CATEGORIES`` so the outcome is unchanged, but the
         # explicit check is what lets every use of ``category`` from here on
         # narrow to non-``None``.
-        return invoice_line_to_iva_observation(
-            invoice_id=ledger_id,
-            issued_at=devengo_date,
-            invoice_kind=invoice.kind,
-            iva_rate=line.iva_rate,
-            base_amount=line.subtotal,
-            iva_amount=line.iva_amount,
+        return _standard_invoice_line_iva_observation(
+            ledger_id=ledger_id,
+            invoice=invoice,
+            line=line,
+            devengo_date=devengo_date,
             recargo_amount=recargo_amount,
         )
     if invoice.kind is not InvoiceKind.ISSUED:
@@ -1704,6 +1687,59 @@ def _invoice_line_iva_observation(
         base_amount=line.subtotal,
         iva_amount=Decimal("0"),
         recargo_amount=recargo_amount,
+    )
+
+
+def _standard_invoice_line_iva_observation(
+    *,
+    ledger_id: str,
+    invoice: Invoice,
+    line: InvoiceLine,
+    devengo_date: date,
+    recargo_amount: Decimal,
+    deduction_authority: IvaLedgerObservation | None = None,
+) -> IvaLedgerObservation:
+    """Project a rate-classified line, preserving linked ledger deduction facts."""
+    return invoice_line_to_iva_observation(
+        invoice_id=ledger_id,
+        issued_at=devengo_date,
+        invoice_kind=invoice.kind,
+        iva_rate=line.iva_rate,
+        base_amount=line.subtotal,
+        iva_amount=line.iva_amount,
+        recargo_amount=recargo_amount,
+        deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
+        deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
+        investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
+        rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+    )
+
+
+def _declared_category_unrouted_observation(
+    *,
+    ledger_id: str,
+    invoice: Invoice,
+    line: InvoiceLine,
+    devengo_date: date,
+    recargo_amount: Decimal,
+    category: IvaCategory,
+    deduction_authority: IvaLedgerObservation | None,
+) -> IvaLedgerObservation:
+    """Retain a declared non-base-only category without inventing a rate."""
+    return IvaLedgerObservation(
+        ledger_id=ledger_id,
+        transaction_date=devengo_date,
+        category=category,
+        rate_kind=_rate_kind_for_slot(line.iva_rate),
+        applied_rate=None,
+        flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
+        base_amount=line.subtotal,
+        iva_amount=line.iva_amount,
+        recargo_amount=recargo_amount,
+        deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
+        deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
+        investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
+        rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
     )
 
 
@@ -2025,6 +2061,17 @@ class _InvoiceIvaSilenceReport:
     storage_degraded: bool = False
 
 
+@dataclass(frozen=True, slots=True)
+class _ScreenedInvoiceIvaResult:
+    """One invoice's screen facts, kept separate from the aggregate result."""
+
+    observations: tuple[IvaLedgerObservation, ...]
+    reverse_charge_underivable: bool
+    recargo_rate_divergence: _RecargoRateDivergence | None
+    deduction_authority_missing: bool
+    category_counterparty_mismatch: bool
+
+
 def _screened_invoice_iva_observations(
     *,
     context: CalculationSourceContext,
@@ -2054,61 +2101,22 @@ def _screened_invoice_iva_observations(
     for invoice in catalogue.values():
         if not _screened_invoice_in_period(invoice, context=context, period=period):
             continue
-        if _reverse_charge_cuota_not_derivable(invoice):
-            # Collected regardless of whether the line still produces an
-            # observation: the record is now correct about the treatment and
-            # still short of the cuota, so the advisory is about the missing
-            # figure, not about a withheld line.
-            reverse_charge_underivable.append(invoice)
-        # The date the observation carries must be the date it was SELECTED on,
-        # or the record would state one quarter while being declared in another.
-        devengo = resolve_invoice_devengo(invoice)
-        # Read before the observation loop and independently of it: the
-        # comparison is about the figure the operator recorded, so it must not
-        # depend on whether a line went on to contribute an observation.
-        divergence = _recargo_rate_divergence(invoice, devengo_date=devengo.devengo_date)
-        if divergence is not None:
-            recargo_rate_divergences.append(divergence)
-        recargo_line_index = _sole_recargo_bearing_line_index(invoice)
-        deduction_authority = _linked_invoice_deduction_authority(
+        screened = _screened_invoice_iva_result(
             invoice,
             ledger_observations=ledger_observations,
         )
-        if (
-            invoice.kind is InvoiceKind.RECEIVED
-            and any(line.iva_amount > Decimal("0") for line in invoice.lines)
-            and deduction_authority is None
-        ):
+        if screened.reverse_charge_underivable:
+            reverse_charge_underivable.append(invoice)
+        if screened.recargo_rate_divergence is not None:
+            recargo_rate_divergences.append(screened.recargo_rate_divergence)
+        if screened.deduction_authority_missing:
             deduction_authority_missing.append(invoice)
             continue
-        contributed = False
-        for line_index, line in enumerate(invoice.lines):
-            if not _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
-                continue
-            if invoice.kind is InvoiceKind.RECEIVED and line.iva_amount == Decimal("0"):
-                continue
-            observation = _invoice_line_iva_observation(
-                invoice=invoice,
-                line=line,
-                line_index=line_index,
-                devengo_date=devengo.devengo_date,
-                recargo_amount=(
-                    invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
-                ),
-                deduction_authority=deduction_authority,
-            )
-            if observation is None:
-                continue
-            observations.append(observation)
+        if screened.observations:
+            observations.extend(screened.observations)
             invoice_ids.add(invoice.invoice_id)
-            contributed = True
-        if contributed:
             compared_invoices.append(invoice)
-        elif _claims_a_base_only_category(invoice) and not _counterparty_supports_the_declared_category(invoice):
-            # Withheld because the category and the counterparty disagree.
-            # Collected so the resolver can say so: an operation removed from a
-            # declaration without the operator being told is the shape this
-            # whole screen exists to prevent.
+        elif screened.category_counterparty_mismatch:
             category_counterparty_mismatches.append(invoice)
     return _ScreenedInvoiceIva(
         observations=tuple(observations),
@@ -2119,6 +2127,78 @@ def _screened_invoice_iva_observations(
         deduction_authority_missing=tuple(deduction_authority_missing),
         recargo_rate_divergences=tuple(recargo_rate_divergences),
     )
+
+
+def _screened_invoice_iva_result(
+    invoice: Invoice,
+    *,
+    ledger_observations: Sequence[IvaLedgerObservation],
+) -> _ScreenedInvoiceIvaResult:
+    """Resolve one already-period-selected invoice into its IVA screen facts."""
+    reverse_charge_underivable = _reverse_charge_cuota_not_derivable(invoice)
+    # The date the observation carries must be the date it was SELECTED on,
+    # or the record would state one quarter while being declared in another.
+    devengo = resolve_invoice_devengo(invoice)
+    # Read independently of the line projection: comparison is about the
+    # recorded figure, not whether a line goes on to contribute an observation.
+    recargo_rate_divergence = _recargo_rate_divergence(invoice, devengo_date=devengo.devengo_date)
+    deduction_authority = _linked_invoice_deduction_authority(
+        invoice,
+        ledger_observations=ledger_observations,
+    )
+    deduction_authority_missing = (
+        invoice.kind is InvoiceKind.RECEIVED
+        and any(line.iva_amount > Decimal("0") for line in invoice.lines)
+        and deduction_authority is None
+    )
+    observations = ()
+    if not deduction_authority_missing:
+        observations = _screened_invoice_line_observations(
+            invoice,
+            devengo_date=devengo.devengo_date,
+            deduction_authority=deduction_authority,
+        )
+    return _ScreenedInvoiceIvaResult(
+        observations=observations,
+        reverse_charge_underivable=reverse_charge_underivable,
+        recargo_rate_divergence=recargo_rate_divergence,
+        deduction_authority_missing=deduction_authority_missing,
+        category_counterparty_mismatch=(
+            not observations
+            and not deduction_authority_missing
+            and _claims_a_base_only_category(invoice)
+            and not _counterparty_supports_the_declared_category(invoice)
+        ),
+    )
+
+
+def _screened_invoice_line_observations(
+    invoice: Invoice,
+    *,
+    devengo_date: date,
+    deduction_authority: IvaLedgerObservation | None,
+) -> tuple[IvaLedgerObservation, ...]:
+    """Return the line observations eligible for one invoice comparison."""
+    recargo_line_index = _sole_recargo_bearing_line_index(invoice)
+    observations: list[IvaLedgerObservation] = []
+    for line_index, line in enumerate(invoice.lines):
+        if not _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount):
+            continue
+        if invoice.kind is InvoiceKind.RECEIVED and line.iva_amount == Decimal("0"):
+            continue
+        observation = _invoice_line_iva_observation(
+            invoice=invoice,
+            line=line,
+            line_index=line_index,
+            devengo_date=devengo_date,
+            recargo_amount=(
+                invoice.recargo_amount or Decimal("0") if line_index == recargo_line_index else Decimal("0")
+            ),
+            deduction_authority=deduction_authority,
+        )
+        if observation is not None:
+            observations.append(observation)
+    return tuple(observations)
 
 
 def _linked_invoice_deduction_authority(

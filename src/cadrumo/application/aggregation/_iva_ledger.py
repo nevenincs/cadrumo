@@ -1410,6 +1410,29 @@ class _IvaTransactionOutcome:
     prorrata_issue: IvaLedgerAggregationIssue | None = None
 
 
+@dataclass(frozen=True)
+class _IvaTransactionContext:
+    transaction_id: str
+    operation_date: date
+    cash_treatment: IvaCashAccountingTreatment
+    invoice_kind: InvoiceKind
+    proportionality: Decimal
+
+
+@dataclass(frozen=True)
+class _IvaTransactionAmounts:
+    rate_kind: IvaRateKind
+    base_amount: Decimal
+    iva_amount: Decimal
+    recargo_amount: Decimal
+
+
+@dataclass(frozen=True)
+class _IvaTransactionClassification:
+    category: IvaCategory
+    flow_direction: IvaFlowDirection
+
+
 # Categories that never produce a declarable IVA observation: recargo de
 # equivalencia (the IVA + RE surcharge is non-deductible acquisition cost for the
 # retailer, settled via the supplier) and the unknown/erroneous sentinels.
@@ -1553,21 +1576,11 @@ def _declared_category_issue(
     return None
 
 
-def _classify_iva_transaction(
+def _resolve_iva_transaction_context(
     transaction: Transaction,
     *,
     resolved_period: Period,
-) -> _IvaTransactionOutcome:
-    """Filter + classify one ledger transaction against the IVA aggregation pipeline.
-
-    Returns an :class:`_IvaTransactionOutcome` carrying the typed
-    sinks the orchestrator drains. Each pre-observation gate projects
-    to ``gate_issue`` with a typed
-    :class:`IvaLedgerAggregationIssueReason`. The observation-eligible
-    path constructs the observation and (when present) the prorrata
-    reference; an invalid prorrata reference is reported as a
-    ``prorrata_issue`` alongside the observation.
-    """
+) -> _IvaTransactionContext | _IvaTransactionOutcome:
     transaction_id = transaction.transaction_id
     ledger_date = transaction.raw.value_date or transaction.raw.booked_date
     operation_date = transaction.operation_date or ledger_date
@@ -1589,10 +1602,6 @@ def _classify_iva_transaction(
                 detail=f"transaction direction {transaction.direction.value!r} is not an IVA settlement flow",
             ),
         )
-    # Which side of the operation the taxpayer is on. Read once here because two
-    # things below need it: the component-table screen on the declared category,
-    # and the canonical flow derivation. Cannot be None -- the direction screen
-    # immediately above already refused every non-settlement direction.
     invoice_kind = invoice_kind_for_direction(transaction.direction)
     assert invoice_kind is not None
     proportionality = _business_proportionality(transaction)
@@ -1602,15 +1611,30 @@ def _classify_iva_transaction(
             if transaction.business_classification is BusinessClassification.PERSONAL
             else IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
         )
+        business_classification = transaction.business_classification.value
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
                 reason=reason,
-                detail=(
-                    f"business classification {transaction.business_classification.value!r} cannot feed IVA aggregation"
-                ),
+                detail=f"business classification {business_classification!r} cannot feed IVA aggregation",
             ),
         )
+    return _IvaTransactionContext(
+        transaction_id=transaction_id,
+        operation_date=operation_date,
+        cash_treatment=cash_treatment,
+        invoice_kind=invoice_kind,
+        proportionality=proportionality,
+    )
+
+
+def _resolve_iva_transaction_amounts(
+    transaction: Transaction,
+    *,
+    operation_date: date,
+    proportionality: Decimal,
+) -> _IvaTransactionAmounts | _IvaTransactionOutcome:
+    transaction_id = transaction.transaction_id
     iva_category = transaction.iva_category
     if iva_category is not None and iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
         return _IvaTransactionOutcome(
@@ -1636,20 +1660,6 @@ def _classify_iva_transaction(
     assert transaction.iva_amount is not None
     assert transaction.iva_rate is not None
     if transaction.iva_rate == Decimal("0") and transaction.iva_amount != Decimal("0"):
-        # This refusal is also what keeps Modelo 390's zero-rate cuota box
-        # consistent with its own total, so do NOT "fix" that box by adding a
-        # term to the total instead.
-        #
-        # Measured: ``iva.anual.repercutido.tipo-0.cuota`` is official box 701
-        # and carries an export ref, but it is NOT one of the seven operands of
-        # ``modelo-390-iva-anual-cuota-devengada-total``. That exclusion is
-        # correct -- a zero tipo yields a zero cuota, so the term would be zero
-        # on every legitimate row and adding it edits a money-bearing total for
-        # no benefit. It is only a problem for a row that contradicts itself,
-        # where the amount would be exported to 701 while absent from the
-        # declared total, and the filed return would disagree with itself
-        # visibly. Refusing the row at ingest closes that: 701 can then only
-        # ever carry zero, which is what the design expects.
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
                 transaction_id=transaction_id,
@@ -1684,12 +1694,21 @@ def _classify_iva_transaction(
                 ),
             ),
         )
-    base_amount = transaction.taxable_base * proportionality
-    iva_amount = transaction.iva_amount * proportionality
-    recargo_amount = (transaction.recargo_amount or Decimal("0")) * proportionality
+    return _IvaTransactionAmounts(
+        rate_kind=rate_kind,
+        base_amount=transaction.taxable_base * proportionality,
+        iva_amount=transaction.iva_amount * proportionality,
+        recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality,
+    )
 
-    # Resolve the effective IVA category: explicit override takes priority over
-    # the rate-kind-derived domestic category.
+
+def _resolve_iva_transaction_classification(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    invoice_kind: InvoiceKind,
+    rate_kind: IvaRateKind,
+) -> _IvaTransactionClassification | _IvaTransactionOutcome:
     explicit_category = transaction.iva_category
     if explicit_category is not None:
         declared_issue = _declared_category_issue(
@@ -1703,7 +1722,7 @@ def _classify_iva_transaction(
         effective_category = explicit_category
     else:
         effective_category = domestic_categories_by_rate_kind()[rate_kind]
-
+    cash_treatment = transaction.cash_accounting_treatment
     if (
         cash_treatment is not IvaCashAccountingTreatment.NONE
         and effective_category in _CASH_ACCOUNTING_EXCLUDED_CATEGORIES
@@ -1718,14 +1737,6 @@ def _classify_iva_transaction(
                 ),
             ),
         )
-
-    # Recompute the IVA flow now the effective category is known. The
-    # direction-only screen above only rejects non-settlement directions;
-    # the canonical flow routes reverse-charge categories
-    # (DOMESTIC_REVERSE_CHARGE, INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE)
-    # to INVERSION_SUJETO_PASIVO and leaves every other category on its
-    # repercutido/soportado direction. ``invoice_kind`` was resolved beside the
-    # direction screen above, which is what guarantees it is not None.
     flow_direction = derive_flow_for_classification(
         category=effective_category,
         invoice_direction=invoice_kind,
@@ -1742,25 +1753,77 @@ def _classify_iva_transaction(
                 detail="IVA deduction facts require an exact kind and immutable evidence provenance before calculation",
             ),
         )
+    return _IvaTransactionClassification(category=effective_category, flow_direction=flow_direction)
 
+
+def _classify_iva_transaction(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+) -> _IvaTransactionOutcome:
+    """Filter + classify one ledger transaction against the IVA aggregation pipeline.
+
+    Returns an :class:`_IvaTransactionOutcome` carrying the typed
+    sinks the orchestrator drains. Each pre-observation gate projects
+    to ``gate_issue`` with a typed
+    :class:`IvaLedgerAggregationIssueReason`. The observation-eligible
+    path constructs the observation and (when present) the prorrata
+    reference; an invalid prorrata reference is reported as a
+    ``prorrata_issue`` alongside the observation.
+    """
+    context = _resolve_iva_transaction_context(transaction, resolved_period=resolved_period)
+    if isinstance(context, _IvaTransactionOutcome):
+        return context
+    amounts = _resolve_iva_transaction_amounts(
+        transaction,
+        operation_date=context.operation_date,
+        proportionality=context.proportionality,
+    )
+    if isinstance(amounts, _IvaTransactionOutcome):
+        return amounts
+    classification = _resolve_iva_transaction_classification(
+        transaction,
+        transaction_id=context.transaction_id,
+        invoice_kind=context.invoice_kind,
+        rate_kind=amounts.rate_kind,
+    )
+    if isinstance(classification, _IvaTransactionOutcome):
+        return classification
+    return _project_iva_transaction(
+        transaction,
+        resolved_period=resolved_period,
+        context=context,
+        amounts=amounts,
+        classification=classification,
+    )
+
+
+def _project_iva_transaction(
+    transaction: Transaction,
+    *,
+    resolved_period: Period,
+    context: _IvaTransactionContext,
+    amounts: _IvaTransactionAmounts,
+    classification: _IvaTransactionClassification,
+) -> _IvaTransactionOutcome:
     prorrata_reference, prorrata_issue, linked_prorrata_id = _resolve_iva_prorrata_attachment(
         transaction,
-        flow_direction=flow_direction,
-        operation_date=operation_date,
-        base_amount=base_amount,
-        iva_amount=iva_amount,
+        flow_direction=classification.flow_direction,
+        operation_date=context.operation_date,
+        base_amount=amounts.base_amount,
+        iva_amount=amounts.iva_amount,
     )
-    if cash_treatment is not IvaCashAccountingTreatment.NONE:
+    if context.cash_treatment is not IvaCashAccountingTreatment.NONE:
         observations = _cash_accounting_observations(
             transaction,
             resolved_period=resolved_period,
-            operation_date=operation_date,
-            category=effective_category,
-            rate_kind=rate_kind,
-            flow_direction=flow_direction,
-            proportionality=proportionality,
-            full_base_amount=base_amount,
-            full_iva_amount=iva_amount,
+            operation_date=context.operation_date,
+            category=classification.category,
+            rate_kind=amounts.rate_kind,
+            flow_direction=classification.flow_direction,
+            proportionality=context.proportionality,
+            full_base_amount=amounts.base_amount,
+            full_iva_amount=amounts.iva_amount,
             linked_prorrata_id=linked_prorrata_id,
             deduction_fact_kind=transaction.deduction_fact_kind,
             deduction_provenance=transaction.deduction_provenance,
@@ -1768,7 +1831,7 @@ def _classify_iva_transaction(
         if not observations:
             return _IvaTransactionOutcome(
                 gate_issue=IvaLedgerAggregationIssue(
-                    transaction_id=transaction_id,
+                    transaction_id=context.transaction_id,
                     reason=IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                     detail=(
                         "cash-accounting operation date, payment evidence dates, and fallback date "
@@ -1783,14 +1846,14 @@ def _classify_iva_transaction(
         )
     observation = _iva_observation(
         ledger_id=transaction.transaction_id,
-        transaction_date=operation_date,
-        category=effective_category,
+        transaction_date=context.operation_date,
+        category=classification.category,
         exemption_article=transaction.exemption_article,
-        rate_kind=rate_kind,
-        flow_direction=flow_direction,
-        base_amount=base_amount,
-        iva_amount=iva_amount,
-        recargo_amount=recargo_amount,
+        rate_kind=amounts.rate_kind,
+        flow_direction=classification.flow_direction,
+        base_amount=amounts.base_amount,
+        iva_amount=amounts.iva_amount,
+        recargo_amount=amounts.recargo_amount,
         prorrata_reference_id=linked_prorrata_id,
         input_classification=transaction.input_classification,
         prorrata_sector_id=transaction.prorrata_sector_id,

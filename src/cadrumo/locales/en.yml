@@ -4132,27 +4132,25 @@ cli:
         per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible:
         no deduction; common: deducted at the general prorrata percentage); meaningful
         only for input rows in a bucket under prorrata especial.'
-      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}:
-        no prorrata especial election applies, so the input deducts under the general
-        percentage. Classifying every input of the ejercicio also enables the settlement
-        LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' to route it by LIVA
-        art. 106.'
+      input_classification_inert: 'Input classification has no effect for ejercicio
+        {ejercicio}: no special-prorrata election applies, so the input is deducted
+        at the general percentage. Classification becomes operative only while a special-prorrata
+        election applies.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
       notes_help: Operator notes stored with the transaction
       prorrata_reference_help: IVA prorrata substrate reference
-      prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) this
-        input belongs to; must match a sector declared via 'app ledger prorrata declare-sector'.
+      prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) to which
+        this input belongs; it must match an already declared sector.
       purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
       recargo_amount_help: Recargo de equivalencia cuota charged on this sale to a
         recargo-regime retailer (LIVA art. 161); aggregated into the Modelo 303 recargo
         cuota by IVA rate tier
       sector_unmatched: --sector '{sector_id}' matches no declared differentiated
-        sector (LIVA arts. 9.1.c / 101), so this input deducts under the common-use
-        percentage rather than the sector's own. Run 'app ledger prorrata declare-sector
-        --sector-id {sector_id} ...' to route it, or correct the tag.
+        sector (LIVA arts. 9.1.c / 101), so this input is deducted at the common-use
+        percentage rather than the sector percentage. The sector must exist before
+        it can own the input.
       source_jurisdiction_help: Two-letter ISO 3166-1 alpha-2 country code identifying
         the regulatory source jurisdiction of the income or expense (e.g. ES for Spanish-source,
         FR for French-source). Required for IRNR scope and the Art. 93 LIRPF Beckham
@@ -4169,9 +4167,7 @@ cli:
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
       usage_ratio_help: Existing configured usage-ratio id for proportional business
-        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
-        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
-        <ratio>'. Not arbitrary prose.
+        use; the category must already have a usage ratio.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       actor_help: Operator name recorded on the bucket event
@@ -4183,9 +4179,7 @@ cli:
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for IVA workflows
       usage_ratio_help: Existing configured usage-ratio id for proportional business
-        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
-        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
-        <ratio>'. Not arbitrary prose.
+        use; the category must already have a usage ratio.
     app_help: Management of accounting ledgers and IVA records
     archive:
       actor_help: Operator name recorded on the bucket event
@@ -4200,11 +4194,10 @@ cli:
       finalized_revision_stale: Evidence was stored on the ledger row, but Modelo
         %{modelo} %{filing_year} %{period} was verified before that evidence existed
         and retains its earlier evidence bundle.
-      help: Attach secure evidence objects to one ledger transaction. Create a purchase
-        invoice evidence id first with 'aeat app ledger evidence add PATH'.
+      help: Attach existing evidence to a ledger transaction.
       id_help: Ledger transaction id to attach evidence to
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
-        transaction; create one with 'aeat app ledger evidence add PATH'
+      purchase_invoice_evidence_help: Existing purchase-invoice evidence id supporting
+        the transaction.
     categories:
       family_column: family
       header: RECOGNISED LEDGER SPENDING CATEGORIES
@@ -4275,11 +4268,10 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
-      irpf_category_help: 'IRPF category id. Use aeat app ledger categories. Net-paid
-        professional invoices use actividad_economica; net-paid rent uses arrendamiento_local
-        / arrendamiento_vivienda_afecto. Royalties/SGAE: Art. 25.4 can be capital
-        mobiliario when the taxpayer is not the author; use actividad_economica only
-        for own-account activity under LIRPF Art. 27.'
+      irpf_category_help: IRPF category id. Net-paid professional invoices use actividad_economica;
+        net-paid rent uses arrendamiento_local or arrendamiento_vivienda_afecto. Royalties
+        and SGAE income may be capital or economic activity depending on the underlying
+        activity.
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4382,7 +4374,7 @@ cli:
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
-        {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
+        {known}.'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
         separator with no thousands grouping, e.g. 1234.56.'
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
@@ -4391,9 +4383,8 @@ cli:
       period_year_pairing: Ledger period filters require period and year together.
         For a full year use --period 0A --year %{year}, or --filter period=0A --filter
         year=%{year}.
-      unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
-        id such as {example!r} - not a family-prefixed or compound key. Run `aeat
-        app ledger categories` to list every recognised id.
+      unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
+        id such as {example!r}, not a family-prefixed or compound key.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
@@ -4428,9 +4419,9 @@ cli:
       file_refused: '{path} was not imported: {reason}'
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
-        already in the ledger but have a different description - a likely duplicate
-        of the same movement imported from another file or format. Review them with
-        `aeat app ledger list`.'
+        already in the ledger but have a different description, indicating a likely
+        duplicate of the same movement from another file or format. These rows require
+        review.'
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
