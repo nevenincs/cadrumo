@@ -112,7 +112,12 @@ from ._config_state_root import (
     live_state_root_inputs,
     platform_user_data_root,
 )
-from ._confirmation_gate import ConfirmationBlockReason, FindingResolutionAction, ReviewAdvisoryKind
+from ._confirmation_gate import (
+    OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON,
+    ConfirmationBlockReason,
+    FindingResolutionAction,
+    ReviewAdvisoryKind,
+)
 from ._corpus_sidecar import render_corpus_sidecar_text
 from ._credentials import (
     LENGTH_ALONE_IS_STRONG,
@@ -469,6 +474,7 @@ __all__: list[str] = [
     "OBSERVATION_BACKED_BINDING_SOURCE_KINDS",
     "OFFICIAL_M210_TIPO_RENTA_CODES",
     "OFX_EXTRA",
+    "OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON",
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
     "PDF_CONTAINER_SHAPES",

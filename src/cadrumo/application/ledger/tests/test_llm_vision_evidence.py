@@ -22,6 +22,7 @@ from ....core.config import Settings
 from ....domain.transactions import prompt_spec_with_saturation_fields
 from ....llm import LocalVisionLLMClassifier, MultimodalImageInput
 from ....tests.secure_sql import TestRuntimeProfile
+from ...provisioning import ProvisioningPreconditionCondition
 from .._evidence import PurchaseInvoiceEvidenceInputError
 from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
 from .._preconditions import LedgerPreconditionCondition
@@ -174,5 +175,5 @@ def test_unreachable_reader_preserves_the_provisioning_refusal(
 
     verdict = raised.value.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == "provisioning.runtime.reachable"
+    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
     assert verdict.evidence[0].values["runtime_reachable"] is False

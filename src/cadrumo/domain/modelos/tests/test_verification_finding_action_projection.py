@@ -4,8 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core import OperatorActionAxis
-
+from ....core import OperatorActionAxis
 from .. import (
     OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND,
     ModeloVerificationFindingKind,

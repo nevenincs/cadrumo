@@ -25,9 +25,18 @@ and a bulk escape hatch converts every blocker into a keystroke.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
+from types import MappingProxyType
 
-__all__ = ["ConfirmationBlockReason", "FindingResolutionAction", "ReviewAdvisoryKind"]
+from ._operator_action_enums import OperatorActionAxis
+
+__all__ = [
+    "OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON",
+    "ConfirmationBlockReason",
+    "FindingResolutionAction",
+    "ReviewAdvisoryKind",
+]
 
 
 class ConfirmationBlockReason(StrEnum):
@@ -82,6 +91,30 @@ class ConfirmationBlockReason(StrEnum):
     Territory decides the IVA treatment, so the resolution is to supply the
     value rather than to attest that a disagreement is acceptable.
     """
+
+
+OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON: Mapping[ConfirmationBlockReason, OperatorActionAxis] = MappingProxyType(
+    {
+        ConfirmationBlockReason.CLOSURE_DISCREPANCY: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        ConfirmationBlockReason.AMBIGUOUS_IDENTITY: OperatorActionAxis.RESOLVE_IDENTITY,
+        ConfirmationBlockReason.UNRESOLVED_DIRECTION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        ConfirmationBlockReason.CONTRADICTED_REGIME: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+    },
+)
+"""Total operator-action projection for the native confirmation blocker axis."""
+
+if set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) != set(ConfirmationBlockReason):
+    missing = sorted(
+        reason.value for reason in set(ConfirmationBlockReason) - set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON)
+    )
+    stale = sorted(
+        str(reason) for reason in set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) - set(ConfirmationBlockReason)
+    )
+    raise RuntimeError(
+        "every ConfirmationBlockReason must declare an OperatorActionAxis; "
+        f"missing={missing}; stale={stale}",
+    )
 
 
 class ReviewAdvisoryKind(StrEnum):

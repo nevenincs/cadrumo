@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.ledger import LedgerPreflightIssue, LedgerPreflightIssueReason
-from cadrumo.application.state_projection import (
+from ....application.ledger import LedgerPreflightIssue, LedgerPreflightIssueReason
+from ....application.state_projection import (
     MODELO_READINESS_MISSING_PROFILE_ACTION,
     OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
     OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
     ProjectionModeloBindingRequirement,
     ProjectionModeloReadiness,
 )
-from cadrumo.application.user_profile import ProfilePreflightRequirement
-from cadrumo.core import BindingSourceKind, OperatorActionAxis, Period
-
+from ....application.user_profile import ProfilePreflightRequirement
+from ....core import BindingSourceKind, OperatorActionAxis, Period
 from .._modelo_readiness_cli import _readiness_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

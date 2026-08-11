@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.core as core
-from cadrumo.core import OperatorActionAxis
-from cadrumo.core import _operator_action_enums as owner
+from ... import core
+from .. import OperatorActionAxis
+from .. import _operator_action_enums as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

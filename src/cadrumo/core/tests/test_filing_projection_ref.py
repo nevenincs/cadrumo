@@ -8,8 +8,8 @@ import inspect
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-import cadrumo.core as core_facade
-from cadrumo.core import (
+from ... import core
+from .. import (
     FilingProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
@@ -20,18 +20,18 @@ from cadrumo.core import (
     M303RegimenSimplificadoModuleValue,
     compile_filing_projection_ref,
 )
-from cadrumo.core import _filing_projection_ref as owner
+from .. import _filing_projection_ref as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_core_facade_exposes_the_single_projection_union_owner() -> None:
-    assert core_facade.FilingProjectionRef is owner.FilingProjectionRef
+    assert core.FilingProjectionRef is owner.FilingProjectionRef
     declarations = {
         node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)
     }
     assert "M303ProrrataActivityProjectionRef" in declarations
-    assert core_facade.M303ProrrataActivityProjectionRef is owner.M303ProrrataActivityProjectionRef
+    assert core.M303ProrrataActivityProjectionRef is owner.M303ProrrataActivityProjectionRef
 
 
 def test_discriminator_hydrates_one_exact_member_and_rejects_unknown_shapes() -> None:

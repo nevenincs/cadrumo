@@ -7,9 +7,9 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo.core as core
-from cadrumo.core import OfficialBoxStatus
-from cadrumo.core import _official_box_status as owner
+from ... import core
+from .. import OfficialBoxStatus
+from .. import _official_box_status as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -27,6 +27,7 @@ from ....application.provisioning import (
     AcceleratorDevice,
     AcceleratorReading,
     HardwareProfile,
+    ProvisioningPreconditionCondition,
     SystemMemoryReading,
     probe_hardware_profile,
 )
@@ -510,8 +511,8 @@ class TestInferencePacing:
 
         assert [item.status for item in result.items] == ["paused"] * 3
         assert result.inference_pause is not None, "three paused documents must carry one stated cause"
-        assert (
-            result.inference_pause.precondition_verdict.failed_condition_id == "provisioning.load_headroom.measurable"
+        assert result.inference_pause.precondition_verdict.failed_condition_id == (
+            ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE.value
         )
         assert result.inference_pause.facts["binding_free_measured"] is False
         # No per-item refusal text: the model forbids a reason under a non-refused
@@ -615,7 +616,9 @@ class TestInferencePacing:
         assert statuses.count("refused") == 1, f"exactly one document should pay for the discovery: {statuses}"
         assert statuses.count("paused") == 2, f"every later document must be deferred, not re-refused: {statuses}"
         assert result.inference_pause is not None
-        assert result.inference_pause.precondition_verdict.failed_condition_id == "provisioning.runtime.reachable"
+        assert result.inference_pause.precondition_verdict.failed_condition_id == (
+            ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+        )
         assert result.inference_pause.facts["runtime_reachable"] is False
 
     def test_a_document_needing_a_reader_is_read_when_one_is_there(

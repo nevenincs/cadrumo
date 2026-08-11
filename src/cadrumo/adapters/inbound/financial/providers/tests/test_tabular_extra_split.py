@@ -105,11 +105,11 @@ def _probe_worker(
         logging.disable(logging.CRITICAL)
         os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = storage_root
 
-        from cadrumo.core import LLM_EXTRA, optional_extra_available
+        from ......core import LLM_EXTRA, optional_extra_available
 
         result: _ProbeResult = {"extra_available": optional_extra_available(LLM_EXTRA)}
         if case == "known":
-            from cadrumo.adapters.inbound.financial.providers._detection import detect_provider
+            from .._detection import detect_provider
 
             provider = detect_provider(_KNOWN_LAYOUT)
             result["provider"] = type(provider).__name__ if provider else None
@@ -118,7 +118,7 @@ def _probe_worker(
             result["rows"] = len(rows)
             result["directions"] = [row.direction.value for row in rows]
         else:
-            from cadrumo.adapters.inbound.financial.providers._mapped_tabular import MappedTabularProvider
+            from .._mapped_tabular import MappedTabularProvider
 
             try:
                 list(MappedTabularProvider().ingest(_UNKNOWN_VOCABULARY))
