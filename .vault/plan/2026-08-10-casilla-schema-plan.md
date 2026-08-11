@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:3a285eb8b46910708bf97dff0c5e02269dcddf6a0386038d9835dcd25391e1b1'
+body_hash: 'sha256:970724f46c98cab0c81c493bef0d5e1ae19b4f1c964ca25be3d15aa454878efb'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -124,7 +124,7 @@ One small action vocabulary with total, import-asserted projections; the duplica
 
 - [x] `W02.P06.S16` - add the OperatorActionAxis StrEnum to core seeded from the blocker-spine ADR's provisional member list, amending members as the projection mapping steps demand; `src/cadrumo/core/`.
 - [x] `W02.P06.S17` - declare a total import-asserted spine projection for the 21 cross-period clean-state blockers; `src/cadrumo/application/calculations/_cross_period_models.py`.
-- [ ] `W02.P06.S18` - declare total import-asserted spine projections for the verification finding kinds and for the modelo.readiness payload's three lists (missing, missing_bindings, ledger_issues); `src/cadrumo/domain/modelos/_verification_report.py`.
+- [x] `W02.P06.S18` - declare total import-asserted spine projections for the verification finding kinds and for the modelo.readiness payload's three lists (missing, missing_bindings, ledger_issues); `src/cadrumo/domain/modelos/_verification_report.py`.
 - [ ] `W02.P06.S19` - declare total import-asserted spine projections for IvaLedgerAggregationIssueReason on the preflight path and for ConfirmationBlockReason beside its core enum; `src/cadrumo/application/ledger/_preflight.py`.
 - [ ] `W02.P06.S20` - reconcile DiscrepancyCause (application verification schema) and VerificationDiscrepancyCause (registry verification schema) into one enum, sweep every consumer, and delete the loser in one commit, coordinating with the P09 package deletion that owns one of the two homes; `src/cadrumo/domain/calculations/registry/_schema_verification.py`.
 - [ ] `W02.P06.S21` - copy finding message_facts into Notice context on the envelope emission path so blocker codes reach the wire as data; `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`.
