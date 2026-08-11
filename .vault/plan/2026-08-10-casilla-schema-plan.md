@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:b620114f845edc64045891691213f6c3f885bf405d5b9e323d1246ff62a0ed57'
+body_hash: 'sha256:10adf8bb51fcecb3c0118bb678d42032ef2c55afeb3cb6cd1db6cd65f3e64919'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -148,7 +148,7 @@ Open-ended by design: every mid-campaign discovery lands here as an appended Ste
 - [ ] `W05.P11.S37` - reconcile the stale export-exemption docstring describing M720 design positions 5-8 against the layout whose records carry zero inline fields; `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`.
 - [ ] `W05.P11.S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it; `src/cadrumo/core/`.
 - [ ] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
-- [ ] `W05.P11.S80` - reconcile the invalid S08 manifest worklist against canonical calculation closure, retire false-positive steps S42-S79, correct plan prose, S08 execution, research A-09, and the exact-count test, and prove absent manifests remain canonical for empty closures; `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py`.
+- [x] `W05.P11.S80` - reconcile the invalid S08 manifest worklist against canonical calculation closure, retire false-positive steps S42-S79, correct plan prose, S08 execution, research A-09, and the exact-count test, and prove absent manifests remain canonical for empty closures; `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py`.
 
 ### Phase `W05.P12` - campaign close
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:d6f757fbe3fc0675ee7085896425bc7e24a4555d73859ef11df2be5b5893f07b'
+body_hash: 'sha256:b38e59d51e0cfeb8bb623a0826253732e7ced5d078d6fce37dc702b812a9c1dd'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-W05-P11-S80]]"
@@ -42,3 +42,31 @@ The S80 Notes say both code and vault semantic searches succeeded and that no me
 ## Verdict
 
 **CHANGES REQUESTED.** The semantic adjudication, independent `38/38/0` measurement, fallback implementation evidence, and no-fabrication conclusion pass review. Acceptance is blocked by the plan sequencing hazard, the inaccurate RAG execution note, and the exact-count test-quality violation, none of which the current S81 wording and placement fully resolves.
+## Re-review resolution
+
+### plan-sequencing resolution
+
+Resolved. `W01.P02.S42` through `S79` and the unexecuted `W05.P11.S81` are retired and absent from the live step rows, while their identifiers remain recorded in the CLI-maintained retired-id annotation. S80 now owns the cleanup. `vaultspec-core status casilla-schema` reports 42 live steps, 23 complete, and next open `W03.P07.S24`; no false-positive manifest-authoring row can be selected before the correction.
+
+### rag-evidence-record resolution
+
+Resolved. The S80 execution record now states the exact discovery boundary: vault RAG succeeded, code RAG was blocked by metadata job `c85efeb1`, and whole-file reads, targeted `rg`, and the public `bundled_authority` plus `calculation_closure_casilla_ids` runtime probe supplied the fallback. It also records that external commit `a3c07ef209` absorbed the initial S80/S81 lifecycle files with unrelated work and carries that non-atomic history forward without rewriting it.
+
+### exact-count-gate resolution
+
+Resolved. The fleet test no longer asserts `dormant == 38` and no longer embeds the hand-maintained dormant-revision inventory. It still loads the real committed registry tree and checks every revision bidirectionally: non-empty calculation closure requires a manifest and empty closure forbids one. Independent positive evidence remains for at least one calculation-bearing revision and at least one zero-closure revision. The focused zero-closure schema validation remains real and unchanged.
+
+## Re-review verification
+
+- The two focused tests passed: `2 passed in 12.75s`.
+- Focused Ruff passed for `test_record_design_completeness.py`.
+- Plan status reports 42 live steps, 23 complete, and next open `W03.P07.S24`.
+- Feature-scoped modified-stamp and exec-mapping checks are clean.
+- Feature-scoped body-sections reports only the pre-existing out-of-scope empty Description warning in the S02 execution record.
+- Scoped `git diff --check` passed for the S80 repair files.
+- No registry data or production code was added, and this review modified only this audit through the VaultSpec CLI.
+- Delivery integrity is recorded without history rewriting: `3dfbd2b036` externally absorbed the initial audit, `cfb57c1325` absorbed the lifecycle retirements and document corrections, and `efeb24cb7a` absorbed the exact-count test repair, each with unrelated work; the final bounded closure retains only the execution correction, audit resolution, and checked plan state.
+
+## Final verdict
+
+**PASS.** All three review findings are resolved. The corrected lifecycle no longer exposes false-positive authoring work, the execution record accurately preserves the discovery and external-history boundary, and the real-registry property test complies with the no-exact-count rule.
