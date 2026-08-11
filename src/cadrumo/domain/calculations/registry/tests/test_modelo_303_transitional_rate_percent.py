@@ -97,6 +97,7 @@ def _calculate(*, filing_year: int, period: str) -> RegistryCalculationResult:
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
 

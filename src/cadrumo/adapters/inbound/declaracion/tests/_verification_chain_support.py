@@ -163,6 +163,7 @@ def _calculate_engine_values_from_inputs(
             m303_regimen_simplificado_scope=None,
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
+            m303_annual_orden=None,
         )
     except RegistryValidationError as exc:
         detail = f"\n  binding_values: {sorted(binding_values)}" if binding_values is not None else ""
@@ -271,6 +272,7 @@ def _assert_annual_relation_closure_chain(
             binding_values=binding_values,
             m303_regimen_simplificado_scope=None,
             relation_values=relation_values,
+            m303_annual_orden=None,
         )
     except RegistryValidationError as exc:
         pytest.fail(
@@ -391,6 +393,7 @@ def _calculate_m303_engine_values_from_inputs(
             m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
                 scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
             ),
+            m303_annual_orden=None,
         )
     except RegistryValidationError as exc:
         pytest.fail(

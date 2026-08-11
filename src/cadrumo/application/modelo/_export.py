@@ -99,7 +99,6 @@ from ..filing import (
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
-    M303ExportApplicabilityEnvelope,
     Modelo111ProfileFacts,
     Modelo202ProducerProfile,
     PresenterIdentity,
@@ -130,7 +129,12 @@ from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
 from ._result_disposition_resolution import resolve_modelo_result_disposition
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import (
+    emit_modelo_bucket_event as _emit_bucket_event,
+)
+from ._revision_persistence import (
+    require_filing_instance_evidence_for_work_unit,
+)
 from ._revision_replay_inputs import revision_filing_replay_inputs
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
@@ -256,10 +260,6 @@ class ModeloExportCommand(BaseModel):
             ``INGRESO`` retains the standard declaration type, while a supported
             Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
             sign-incompatible elections are refused by the shared resolver.
-        m303_applicability: Typed authoritative arrival envelope required for
-            Modelo 303. Other modelos must leave it absent; callers without
-            these facts receive an instructive refusal and must not synthesize
-            applicability from the taxpayer profile.
     """
 
     model_config = _STRICT_FROZEN
@@ -273,7 +273,6 @@ class ModeloExportCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
-    m303_applicability: M303ExportApplicabilityEnvelope | None = None
 
 
 class ModeloExportResult(BaseModel):
@@ -594,7 +593,11 @@ def _approve_export_draft(
             profile=filing_profile_from_taxpayer(workflow_profile),
             inputs=inputs,
             schema_provider=schema_provider,
-            m303_regimen_simplificado_scope=None,
+            m303_regimen_simplificado_scope=(
+                revision.filing_instance_evidence.m303.regimen_simplificado.scope_decision
+                if revision.filing_instance_evidence is not None
+                else None
+            ),
         )
         approved = approve_draft(
             draft,
@@ -642,8 +645,19 @@ def _build_export_producer_snapshot(
         )
     try:
         modelo = Modelo(str(work_unit.modelo))
+        iva_profile = workflow_profile.iva
         if modelo is Modelo.M303:
-            model_profile = workflow_profile.iva
+            model_profile = iva_profile
+            if model_profile is None:
+                raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
+            require_filing_instance_evidence_for_work_unit(
+                work_unit=work_unit,
+                revision=revision,
+            )
+            raise FilingProducerSnapshotError(
+                "modelo 303 export awaits the canonical S55 producer snapshot; "
+                "S58 filing evidence does not assemble producer facts",
+            )
         elif modelo is Modelo.M202:
             model_profile = Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=())
         elif modelo is Modelo.M111:
@@ -663,8 +677,8 @@ def _build_export_producer_snapshot(
                 prior_domiciliation=prior_domiciliation_election.election,
             ),
             amendment_evidence=evidence,
-            refund_account=workflow_profile.iva.refund_account,
-            charge_account=workflow_profile.iva.charge_account,
+            refund_account=iva_profile.refund_account if iva_profile is not None else None,
+            charge_account=iva_profile.charge_account if iva_profile is not None else None,
         )
     except (FilingProducerSnapshotError, ValueError) as exc:
         raise ModeloExportError(
@@ -841,7 +855,6 @@ def _write_export_tmp(
             dictionary_values=dictionary_values,
             prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=schema_provider,
-            m303_applicability=command.m303_applicability,
         )
     except filing_domain.FilingExportError as exc:
         _discard_tmp_output_after_failure(tmp_output, stage="draft-write")
@@ -1061,22 +1074,13 @@ def export_modelo_revision(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    if work_unit.modelo == Modelo.M303.value and command.m303_applicability is None:
+    try:
+        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
+    except ModeloError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "modelo 303 export requires an explicit applicability envelope",
-            },
-        )
-    if work_unit.modelo != Modelo.M303.value and command.m303_applicability is not None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "modelo 303 applicability envelope is forbidden for non-303 exports",
-            },
-        )
+            context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+        ) from exc
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",

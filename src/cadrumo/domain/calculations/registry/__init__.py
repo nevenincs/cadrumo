@@ -289,7 +289,6 @@ from ._coverage import (
 from ._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ._errors import (
     AmbiguousRevisionSelectionError,
-    M303RegimenSimplificadoEvidenceRequiredError,
     NoRevisionForPeriodError,
     RegistryError,
     RegistryLoadError,
@@ -881,7 +880,6 @@ __all__ = [
     "M303DifferentiatedDeductionRowProjection",
     "M303ProrrataActivityEndpointValue",
     "M303ProrrataActivityRowProjection",
-    "M303RegimenSimplificadoEvidenceRequiredError",
     "M303RegimenSimplificadoFieldProjection",
     "M303RegimenSimplificadoRecordProjection",
     "M303RegimenSimplificadoSnapshot",

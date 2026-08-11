@@ -220,6 +220,7 @@ def _calculate_123(
         binding_values={},
         date_context={"filing_period": date(filing_year, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -251,6 +252,7 @@ def _calculate_193(
         relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result, len(result.values)
 

@@ -142,6 +142,7 @@ def test_modelo_117_126_128_136_official_form_arithmetic(case: _ModeloArithmetic
         inputs=case.inputs,
         date_context={"filing_period": case.filing_period},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     for casilla_id, expected in case.expected_values.items():

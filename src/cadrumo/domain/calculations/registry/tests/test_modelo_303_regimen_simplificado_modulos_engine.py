@@ -18,7 +18,6 @@ from .....domain.iva import (
     M303RegimenSimplificadoScopeDecision,
 )
 from .. import (
-    M303RegimenSimplificadoEvidenceRequiredError,
     _formula_runtime,
     bundled_authority,
     resolve_m303_regimen_simplificado_snapshot,
@@ -55,6 +54,7 @@ def _calculate_general_m303(
         m303_regimen_simplificado_scope=_general_scope(),
         binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0")},
         date_context={"filing_period": snapshot.filing_period.end_date},
+        m303_annual_orden=None,
     )
 
 
@@ -82,20 +82,70 @@ def test_general_scope_rejects_any_orden_or_module_row(
         _calculate_general_m303(2025, inputs=inputs, text_inputs=text_inputs)
 
 
-def test_evidence_required_scope_blocks_before_formula_evaluation() -> None:
+def test_evidence_required_scope_calculates_with_exact_canonical_orden() -> None:
     snapshot = _snapshot(2025)
     assert snapshot.filing_period is not None
     scope = M303RegimenSimplificadoScopeDecision(
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
     )
 
-    with pytest.raises(M303RegimenSimplificadoEvidenceRequiredError, match="S58 annual-Orden evidence snapshot"):
+    resolved = resolve_m303_regimen_simplificado_snapshot(registry_snapshot=snapshot, scope_decision=scope)
+    activity = resolved.orden.activities[0]
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={"modulos-iva-1-unidades": Decimal("1")},
+        text_inputs={"modulos-iva-orden-id": activity.orden_id},
+        binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0")},
+        date_context={"filing_period": snapshot.filing_period.end_date},
+        m303_regimen_simplificado_scope=scope,
+        m303_annual_orden=resolved.orden,
+    )
+
+    assert result.values["modulos-iva-cuota-devengada"] > Decimal("0")
+
+
+def test_evidence_required_scope_rejects_missing_or_wrong_orden() -> None:
+    snapshot = _snapshot(2025)
+    assert snapshot.filing_period is not None
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+    )
+    resolved = resolve_m303_regimen_simplificado_snapshot(registry_snapshot=snapshot, scope_decision=scope)
+    with pytest.raises(RegistryValidationError, match="requires the canonical annual-Orden"):
         calculate_registry_snapshot(
             snapshot,
             inputs={},
             binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0")},
             date_context={"filing_period": snapshot.filing_period.end_date},
             m303_regimen_simplificado_scope=scope,
+            m303_annual_orden=None,
+        )
+    wrong = resolved.orden.model_copy(update={"registry_revision_id": "2026-y-siguientes"})
+    with pytest.raises(RegistryValidationError, match="exact scope-selected registry snapshot"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={},
+            binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0")},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+            m303_regimen_simplificado_scope=scope,
+            m303_annual_orden=wrong,
+        )
+
+
+def test_general_scope_rejects_annual_orden_even_without_module_inputs() -> None:
+    snapshot = _snapshot(2025)
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=snapshot,
+        scope_decision=_general_scope(),
+    )
+    with pytest.raises(RegistryValidationError, match="rejects annual-Orden evidence"):
+        calculate_registry_snapshot(
+            snapshot,
+            inputs={},
+            binding_values={"modelo-303-compensacion-pendiente-anteriores": Decimal("0")},
+            date_context={"filing_period": snapshot.filing_period.end_date},
+            m303_regimen_simplificado_scope=_general_scope(),
+            m303_annual_orden=resolved.orden,
         )
 
 
@@ -109,6 +159,7 @@ def test_missing_scope_blocks_any_m303_calculation() -> None:
             inputs={},
             date_context={"filing_period": snapshot.filing_period.end_date},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -184,6 +235,7 @@ def test_formula_runtime_and_registry_fragments_cannot_reintroduce_retired_dispa
     function_names = {node.name for node in ast.walk(runtime_tree) if isinstance(node, ast.FunctionDef)}
     assert "_m303_resolve_modulos_iva_cuota_devengada_args" not in function_names
     assert "_m303_resolve_modulos_iva_cuota_minima_pct_args" not in function_names
+    assert "M303RegimenSimplificadoEvidenceRequiredError" not in Path(_formula_runtime.__file__).read_text(encoding="utf-8")
     assert FORMULA_OPERATOR_ARITIES["m303_resolve_modulos_iva_cuota_devengada"].minimum == 8
     assert FORMULA_OPERATOR_ARITIES["m303_resolve_modulos_iva_cuota_devengada"].maximum == 8
     assert FORMULA_OPERATOR_ARITIES["m303_resolve_modulos_iva_cuota_minima_pct"].minimum == 1
@@ -252,7 +304,10 @@ def test_production_registry_runtime_caller_census_keeps_m303_scope_explicit() -
                 isinstance(node, ast.Call)
                 and isinstance(node.func, ast.Name)
                 and node.func.id in {"calculate_registry_snapshot", "_calculate_registry_snapshot"}
-                and not any(keyword.arg == "m303_regimen_simplificado_scope" for keyword in node.keywords)
+                and not all(
+                    any(keyword.arg == required for keyword in node.keywords)
+                    for required in ("m303_regimen_simplificado_scope", "m303_annual_orden")
+                )
             ):
                 omissions.append(f"{relative_path}:{node.lineno}")
     assert omissions == []
@@ -286,7 +341,8 @@ def test_all_source_registry_runtime_callers_state_explicit_intent() -> None:
                 continue
             direct_call_count += 1
             scope_keywords = [keyword for keyword in node.keywords if keyword.arg == "m303_regimen_simplificado_scope"]
-            if not scope_keywords:
+            orden_keywords = [keyword for keyword in node.keywords if keyword.arg == "m303_annual_orden"]
+            if not scope_keywords or not orden_keywords:
                 omissions.append(f"{relative_path}:{node.lineno}")
                 continue
             enclosing = max(
@@ -302,7 +358,7 @@ def test_all_source_registry_runtime_callers_state_explicit_intent() -> None:
             if m303_focused and explicit_none and (relative_path, enclosing.name) not in allowed_none:
                 unintentional_m303_none.append(f"{relative_path}:{node.lineno}")
 
-    assert direct_call_count == 248
+    assert direct_call_count == 251
     assert omissions == []
     assert unintentional_m303_none == []
 
@@ -311,5 +367,31 @@ def test_registry_runtime_signature_has_no_scope_default_or_omission_escape() ->
     """The runtime boundary requires every caller to state its M303 scope decision."""
     signature = inspect.signature(calculate_registry_snapshot)
     assert signature.parameters["m303_regimen_simplificado_scope"].default is inspect.Parameter.empty
+    assert signature.parameters["m303_annual_orden"].default is inspect.Parameter.empty
     with pytest.raises(TypeError, match="m303_regimen_simplificado_scope"):
         signature.bind(_snapshot(2026), inputs={}, date_context={})
+    with pytest.raises(TypeError, match="m303_annual_orden"):
+        signature.bind(
+            _snapshot(2026),
+            inputs={},
+            date_context={},
+            m303_regimen_simplificado_scope=None,
+        )
+
+
+def test_m303_prorrata_registry_helpers_cannot_blanket_pass_none_scope() -> None:
+    """Prorrata helpers execute M303 and must carry typed general-regime intent."""
+    test_root = Path(__file__).parent
+    offenders: list[str] = []
+    for path in test_root.glob("test_prorrata_porcentaje_*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
+            if name != "calculate_registry_snapshot":
+                continue
+            scope = next((keyword.value for keyword in node.keywords if keyword.arg == "m303_regimen_simplificado_scope"), None)
+            if isinstance(scope, ast.Constant) and scope.value is None:
+                offenders.append(f"{path.name}:{node.lineno}")
+    assert offenders == []

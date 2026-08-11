@@ -565,6 +565,7 @@ def _calculation_revision_id_for(label: str) -> str:
         binding_overrides={},
         casilla_values={_CALCULATION_OUTPUT_CASILLA: Decimal("100.00")},
         source_transaction_ids=(),
+        filing_instance_evidence=None,
     )
 
 
@@ -591,6 +592,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
         ),
         created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
+        filing_instance_evidence=None,
     )
     return CalculationRevisionCatalogue(revisions={revision_id: revision})
 

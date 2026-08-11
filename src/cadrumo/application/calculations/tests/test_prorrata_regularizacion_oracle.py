@@ -191,6 +191,7 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedEx
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
     return result.values[_PORCENTAJE_ID]
 

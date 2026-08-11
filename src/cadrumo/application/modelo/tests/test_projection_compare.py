@@ -84,6 +84,7 @@ def _seed_revision(
         input_values_by_casilla_id={_M130_INGRESOS_CASILLA: str(value)},
         binding_overrides={},
         casilla_values=values,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -102,6 +103,7 @@ def _seed_revision(
         updated_at=clock,
         verified_at=clock,
         verified_by="operator",
+        filing_instance_evidence=None,
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision

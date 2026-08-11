@@ -1068,6 +1068,7 @@ application:
         com a mínim un valor de casella; el mapatge aportat és buit.
       external_import_duplicate_revision: La revisió de càlcul %{calculation_revision_id}
         ja existeix al catàleg; ja s'havia registrat una importació idèntica.
+      external_import_m303_filing_evidence_required: La importació externa del model 303 requereix evidència tipada completa de la instància de declaració i no la pot inferir dels valors de caselles.
       external_import_justificante_mismatch: L'evidència d'importació externa %{evidence_reference_id}
         no coincideix amb el modelo %{modelo}, exercici %{filing_year}, període %{period}.
       external_import_justificante_missing: L'evidència d'importació externa %{evidence_reference_id}

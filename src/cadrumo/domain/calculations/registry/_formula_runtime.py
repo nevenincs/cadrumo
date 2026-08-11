@@ -43,7 +43,6 @@ from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
 from ._errors import (
     CasillaConstraintViolationError,
-    M303RegimenSimplificadoEvidenceRequiredError,
     RegistryValidationError,
 )
 from ._formula_initial_values import (
@@ -105,7 +104,7 @@ from ._ids import (
     RelationId,
     SourceRefId,
 )
-from ._m303_orden_anual import M303AnnualOrdenSnapshot
+from ._m303_orden_anual import M303AnnualOrdenSnapshot, resolve_m303_regimen_simplificado_snapshot
 from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
@@ -343,6 +342,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     date_binding_values: Mapping[BindingId, date] | None = None,
     text_inputs: Mapping[TextInputKey, TextInputValue] | None = None,
     m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
+    m303_annual_orden: M303AnnualOrdenSnapshot | None,
 ) -> RegistryCalculationResult:
     """Evaluate all computed formulas for a registry snapshot.
 
@@ -397,6 +397,8 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
             id; consumed by text-routed ops.
         m303_regimen_simplificado_scope: Closed IVA-profile scope decision
             required for Modelo 303 and prohibited for every other modelo.
+        m303_annual_orden: Exact S59 annual Orden snapshot selected by the
+            persisted filing evidence; ``None`` for non-M303 or not-claimed scope.
     """
     revision = snapshot.revision
     resolved_m303_scope = _require_m303_regimen_simplificado_scope(
@@ -448,11 +450,12 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
     parameters = {parameter.id: parameter for parameter in revision.parameters}
     casillas_by_id = _casillas_by_id(revision)
     resolved_text_inputs = _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
-    m303_annual_orden = _resolve_m303_formula_orden_context(
+    resolved_m303_annual_orden = _resolve_m303_formula_orden_context(
         snapshot=snapshot,
         scope_decision=resolved_m303_scope,
         inputs=resolved_inputs,
         text_inputs=resolved_text_inputs,
+        m303_annual_orden=m303_annual_orden,
     )
     # Per-casilla provenance accumulator. Formula-computed casillas overwrite
     # the input/bound placeholder with the full operand lineage; non-computed
@@ -489,7 +492,7 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                     filing_year=snapshot.filing_year,
                     text_values=resolved_text_inputs,
                     convenio=snapshot.convenio,
-                    m303_annual_orden=m303_annual_orden,
+                    m303_annual_orden=resolved_m303_annual_orden,
                     m303_regimen_simplificado_scope=resolved_m303_scope,
                     provenance_legal_refs=provenance_legal_refs,
                     provenance_source_refs=provenance_source_refs,
@@ -618,16 +621,29 @@ def _resolve_m303_formula_orden_context(
     scope_decision: M303RegimenSimplificadoScopeDecision | None,
     inputs: Mapping[CasillaId, Decimal],
     text_inputs: Mapping[CasillaId, str],
+    m303_annual_orden: M303AnnualOrdenSnapshot | None,
 ) -> M303AnnualOrdenSnapshot | None:
     """Resolve the canonical S59 authority after enforcing general-scope neutrality."""
     if snapshot.modelo.id != Modelo.M303:
+        if m303_annual_orden is not None:
+            raise RegistryValidationError("M303 annual-Orden evidence applies only to Modelo 303")
         return None
     if scope_decision is None:
         raise RegistryValidationError("Modelo 303 formula evaluation requires a simplified-regime scope decision")
     if not scope_decision.is_not_claimed:
-        raise M303RegimenSimplificadoEvidenceRequiredError(
-            "Modelo 303 simplified or mixed scope requires the S58 annual-Orden evidence snapshot",
-        )
+        expected = resolve_m303_regimen_simplificado_snapshot(
+            registry_snapshot=snapshot,
+            scope_decision=scope_decision,
+        ).orden
+        if m303_annual_orden is None:
+            raise RegistryValidationError(
+                "Modelo 303 simplified or mixed scope requires the canonical annual-Orden evidence snapshot",
+            )
+        if m303_annual_orden != expected:
+            raise RegistryValidationError(
+                "Modelo 303 annual-Orden evidence must equal the exact scope-selected registry snapshot",
+            )
+        return m303_annual_orden
     forbidden_numeric_ids = frozenset(
         validated_casilla_id(f"modulos-iva-{index}-unidades", surface="M303 scope input") for index in range(1, 8)
     )
@@ -641,6 +657,8 @@ def _resolve_m303_formula_orden_context(
                 "module_input_ids": ",".join(supplied_numeric_ids),
             },
         )
+    if m303_annual_orden is not None:
+        raise RegistryValidationError("general Modelo 303 scope rejects annual-Orden evidence")
     return None
 
 

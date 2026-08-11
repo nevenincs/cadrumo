@@ -92,6 +92,7 @@ def _seed_borrador(
         binding_overrides={},
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -110,6 +111,7 @@ def _seed_borrador(
         ),
         created_at=_T0,
         updated_at=_T0,
+        filing_instance_evidence=None,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     return revision, work_unit

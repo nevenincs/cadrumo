@@ -126,6 +126,7 @@ def test_modelo_216_resultado_is_retenciones_total_minus_anteriores() -> None:
         },
         date_context={"filing_period": date(2025, 3, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert result.values[_BASE_TOTAL] == Decimal("1500.00")
     assert result.values[_RET_TOTAL] == Decimal("285.00")

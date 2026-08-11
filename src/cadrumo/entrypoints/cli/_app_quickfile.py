@@ -34,6 +34,7 @@ from ._common import (
     _no_active_profile_refusal,
     activate_subcommand_output_language,
 )
+from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import (
     OutputLanguageOpt,
     unsupported_local_work_period_refusal,
@@ -108,6 +109,10 @@ def quickfile(
     refund_election: _RefundElectionOpt = RefundElection.COMPENSAR,
     payment_election: _PaymentElectionOpt = PaymentElection.INGRESO,
     prior_domiciliation_election: _PriorDomiciliationElectionOpt = PriorDomiciliationElection.KEEP,
+    m303_filing_evidence: Annotated[
+        Path | None,
+        typer.Option("--m303-filing-evidence", help=tr("cli.app.modelo.work.m303_filing_evidence_help")),
+    ] = None,
     output_language: OutputLanguageOpt = None,
 ) -> None:
     """Run readiness -> create -> calculate -> verify -> export for one modelo target."""
@@ -131,6 +136,11 @@ def quickfile(
     resolved_year = resolved_period.filing_year
     resolved_actor = actor or "operator"
     workflow_profile = _filing_taxpayer_or_refuse(workflow_state_repository().load())
+    filing_instance_evidence = m303_filing_instance_evidence_from_cli(
+        modelo=modelo,
+        period=resolved_period,
+        evidence_file=m303_filing_evidence,
+    )
 
     def _build_inputs(work_unit_id: str):
         return work_calculate_input_bundle_from_cli(
@@ -140,6 +150,7 @@ def quickfile(
             relation=relation,
             row=row,
             borrador_snapshot_id=None,
+            filing_instance_evidence=filing_instance_evidence,
             prestacion_inss_exenta=None,
             rescate_plan_pensiones_capital=None,
             rescate_plan_pensiones_aportaciones_pre_2007=None,

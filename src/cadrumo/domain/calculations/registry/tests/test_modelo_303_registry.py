@@ -828,6 +828,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
     # Structural wiring: all compensation casillas must be present in the result.
@@ -1006,6 +1007,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
     # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
@@ -1090,6 +1092,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
             m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
                 scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
             ),
+            m303_annual_orden=None,
         )
         return r.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA]
 

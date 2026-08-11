@@ -203,6 +203,7 @@ def test_modelo_130_requires_external_previous_year_income_binding_for_minoracio
             date_context={"filing_period": date(2026, 4, 20)},
             binding_values={"modelo-130-resultados-negativos-anteriores": Decimal("0")},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -225,6 +226,7 @@ def test_modelo_130_first_period_carry_forward_defaults_to_zero_for_capped_formu
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
@@ -266,6 +268,7 @@ def test_modelo_130_capped_carry_forward_casilla_input_is_rejected(
                 # modelo-130-resultados-negativos-anteriores deliberately omitted
             },
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -365,6 +368,7 @@ def test_modelo_130_third_and_fourth_quarter_carry_forward_picks_up_prior_quarte
             **resolved_bindings,
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
@@ -399,6 +403,7 @@ def test_modelo_130_previous_filing_bound_inputs_must_match_binding_values(model
                 "modelo-130-resultados-negativos-anteriores": Decimal("0"),
             },
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -451,6 +456,7 @@ def test_modelo_130_carry_forward_caps_prior_negative_seed_at_positive_c14(
         date_context={"filing_period": date(2026, 7, 20)},
         binding_values=resolved_bindings,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M130_DIFERENCIA_PREVIA_CASILLA] == Decimal("37.40")
@@ -535,6 +541,7 @@ def test_modelo_130_second_period_carry_forward_picks_up_first_period_saldo(
             **resolved_bindings,
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     casilla_15 = next(obs for obs in result.observations if obs.casilla_id == _M130_CARRY_FORWARD_CASILLA)
@@ -591,6 +598,7 @@ def test_modelo_130_high_casilla_06_amount_does_not_zero_casilla_17(
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)
@@ -635,6 +643,7 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     casilla_17 = next(obs for obs in result.observations if obs.casilla_id == _M130_DIFERENCIA_CASILLA)

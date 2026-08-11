@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -704,6 +706,7 @@ def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
     work_unit = _work_unit()
+    filing_instance_evidence = general_m303_filing_evidence(work_unit.period, reference="test:m303-deductible-evidence")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -711,6 +714,7 @@ def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
         relation_overrides={},
         casilla_values={},
         source_transaction_ids=(sale.transaction_id,),
+        filing_instance_evidence=filing_instance_evidence,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -719,6 +723,7 @@ def test_output_vat_evidence_hint_is_advisory_and_names_current_cli_limit(
         source_transaction_ids=(sale.transaction_id,),
         created_at=_T0,
         updated_at=_T0,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
     findings = _missing_evidence_findings(

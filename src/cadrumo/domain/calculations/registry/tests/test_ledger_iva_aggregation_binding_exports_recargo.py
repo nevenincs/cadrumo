@@ -391,6 +391,7 @@ def _calculate_303_2009_from_observations(
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
 

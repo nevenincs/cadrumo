@@ -164,6 +164,7 @@ def _calculate_131(
         binding_values=carry_binding,
         date_context={"filing_period": snapshot.revision.valid_from},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result, len(result.values)
 

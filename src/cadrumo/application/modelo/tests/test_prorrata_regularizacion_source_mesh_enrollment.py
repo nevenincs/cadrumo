@@ -38,6 +38,7 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import bundled_path, resources
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
@@ -168,6 +169,7 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
 def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh invokes prorrata without requiring unrelated carry bindings."""
     snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    assert snapshot.filing_period is not None
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -184,7 +186,11 @@ def test_source_mesh_resolves_prorrata_regularizacion_binding(tmp_path: Path) ->
                 _VOLUMEN_CON_DERECHO_ID: _MANUAL_CURRENT_YEAR_CON_DERECHO,
                 _VOLUMEN_TOTAL_ID: _MANUAL_CURRENT_YEAR_TOTAL,
             },
-            filing_period_date=_CREATED_AT.date(),
+            filing_period_date=snapshot.filing_period.end_date,
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
+            m303_annual_orden=None,
         )
 
     prorrata_diagnostics = tuple(
@@ -221,6 +227,8 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
             invoice_repository=None,
             foreign_asset_observations=(),
             filing_period_date=_CREATED_AT.date(),
+            m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
     prorrata_diagnostics = tuple(

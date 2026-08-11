@@ -16,6 +16,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....core import Period
 from ....domain.modelos import (
     CalculationRevision,
@@ -97,12 +99,18 @@ def _revision(
     snapshot: LedgerFilingSnapshot | None,
 ) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
+    filing_instance_evidence = (
+        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage")
+        if modelo == "303"
+        else None
+    )
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=source_ids,
+        filing_instance_evidence=filing_instance_evidence,
     )
     return CalculationRevision(
         calculation_revision_id=rid,
@@ -112,6 +120,7 @@ def _revision(
         ledger_filing_snapshot=snapshot,
         created_at=_NOW,
         updated_at=_NOW,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 
@@ -166,12 +175,18 @@ def _verified_revision(
     snapshot: LedgerFilingSnapshot,
 ) -> CalculationRevision:
     wid = derive_work_unit_id(bucket_id="bkt", modelo=modelo, filing_year=2026, period=_P_2026_1T, revision_id="r1")
+    filing_instance_evidence = (
+        general_m303_filing_evidence(_P_2026_1T, reference="test:filing-snapshot-coverage")
+        if modelo == "303"
+        else None
+    )
     rid = derive_calculation_revision_id(
         work_unit_id=wid,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=source_ids,
+        filing_instance_evidence=filing_instance_evidence,
     )
     return CalculationRevision(
         calculation_revision_id=rid,
@@ -183,6 +198,7 @@ def _verified_revision(
         updated_at=_NOW,
         verified_at=_NOW,
         verified_by="operator",
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 

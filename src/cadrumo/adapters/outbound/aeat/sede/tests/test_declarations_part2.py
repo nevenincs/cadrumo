@@ -224,6 +224,7 @@ class TestSubmittedFileObservation:
             date_context={"filing_period": date(2026, 3, 31)},
             binding_values=binding_values,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
         assert {casilla_id: calculated.values[casilla_id] for casilla_id in _MODELO_130_COMPUTED_CASILLAS} == {
@@ -315,6 +316,7 @@ class TestSubmittedFileObservation:
             },
             date_context={},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
         parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
         parsed_fields = {field.field_id: field.value for field in parsed.fields}

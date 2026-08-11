@@ -140,6 +140,7 @@ def _run_modulos_engine_2026(
         text_inputs=text_inputs,
         date_context={"filing_period": snapshot.filing_period.end_date},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     values = result.values
     return (
@@ -246,6 +247,7 @@ class TestModulos2026PartialTableCoverageDoesNotSilentlyMisattribute:
             text_inputs={"modulos-epigrafe": "972.1"},
             date_context={"filing_period": snapshot_2025.filing_period.end_date},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
         _previo_2026, _minorado_2026, _modulos_2026, actividad_2026 = _run_modulos_engine_2026(
             "972.1",

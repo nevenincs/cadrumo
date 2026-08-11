@@ -40,7 +40,7 @@ with the same data is naturally idempotent.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, override
@@ -52,6 +52,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     CasillaId,
     M210GrossIncomeSourceMode,
+    Period,
     validated_casilla_id,
 )
 from ...core.aggregation import BindingSourceKind
@@ -62,9 +63,12 @@ from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
     BindingId,
     CasillaObservation,
+    M303RegimenSimplificadoSnapshot,
     RegistryCalculationUnresolvedOutcome,
     RelationId,
 )
+from ..filing_evidence import FilingEvidenceReference
+from ..iva import M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ._errors import ModeloError, ModeloValidationError
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ._row_models import ModeloDetailRow
@@ -105,6 +109,103 @@ class CalculationRevisionAmendmentKind(StrEnum):
     COMPLEMENTARIA = "complementaria"
     SUSTITUTIVA = "sustitutiva"
     RECTIFICATIVA = "rectificativa"
+
+
+class M303InsolvencyFilingSubtype(StrEnum):
+    """Official Modelo 303 insolvency declaration subtype."""
+
+    PRE_ORDER = "pre_order"
+    POST_ORDER = "post_order"
+
+
+class M303InsolvencyFilingFact(BaseModel):
+    """Atomic judicial-order evidence for one Modelo 303 filing instance."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    judicial_order_date: date
+    subtype: M303InsolvencyFilingSubtype
+
+
+class M303Exonerado390EndpointEvidence(BaseModel):
+    """One evidenced annual-summary endpoint selected for the filing revision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    casilla_id: CasillaId
+    value: Decimal
+    evidence_reference: FilingEvidenceReference
+
+
+class M303Exonerado390FilingEvidence(BaseModel):
+    """Resolved A28 applicability and its complete evidenced annual population."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    applicable: bool
+    applicability_reference: FilingEvidenceReference
+    endpoints: tuple[M303Exonerado390EndpointEvidence, ...]
+
+    @model_validator(mode="after")
+    def _applicability_matches_endpoint_population(self) -> M303Exonerado390FilingEvidence:
+        endpoint_ids = tuple(endpoint.casilla_id for endpoint in self.endpoints)
+        if len(set(endpoint_ids)) != len(endpoint_ids):
+            raise ModeloValidationError("M303 exonerado-390 evidence contains duplicate endpoint casillas")
+        if self.applicable:
+            if not self.endpoints:
+                raise ModeloValidationError("applicable M303 exonerado-390 evidence requires endpoint facts")
+        elif self.endpoints:
+            raise ModeloValidationError("non-applicable M303 exonerado-390 evidence must not carry annual facts")
+        return self
+
+
+class M303RegimenSimplificadoFilingEvidence(BaseModel):
+    """Taxpayer rows bound to the exact S59 Orden and record-design snapshot."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    scope_decision: M303RegimenSimplificadoScopeDecision
+    rows: RegimenSimplificadoFilingRows
+    regimen_snapshot: M303RegimenSimplificadoSnapshot
+
+    @model_validator(mode="after")
+    def _rows_match_scope_and_snapshot(self) -> M303RegimenSimplificadoFilingEvidence:
+        if self.scope_decision != self.regimen_snapshot.scope_decision:
+            raise ModeloValidationError("M303 simplified-regime evidence scope disagrees with its S59 snapshot")
+        if self.rows.ejercicio != self.regimen_snapshot.orden.ejercicio:
+            raise ModeloValidationError("M303 simplified-regime evidence year disagrees with its S59 snapshot")
+        if self.scope_decision.is_not_claimed:
+            if self.rows.activities:
+                raise ModeloValidationError("general M303 scope must not carry simplified-regime activity evidence")
+        elif not self.rows.activities:
+            raise ModeloValidationError("simplified or mixed M303 scope requires activity evidence")
+        return self
+
+
+class M303FilingInstanceEvidence(BaseModel):
+    """Complete operator-selected facts bound to one Modelo 303 revision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    period: Period
+    joint_return_elected: bool
+    insolvency: M303InsolvencyFilingFact | None = None
+    exonerado_390: M303Exonerado390FilingEvidence
+    regimen_simplificado: M303RegimenSimplificadoFilingEvidence
+
+    @model_validator(mode="after")
+    def _all_evidence_uses_the_filing_year(self) -> M303FilingInstanceEvidence:
+        if self.regimen_simplificado.rows.ejercicio != self.period.filing_year:
+            raise ModeloValidationError("M303 filing evidence must use the work-period filing year")
+        return self
+
+
+class FilingInstanceEvidence(BaseModel):
+    """Closed filing-instance evidence envelope persisted on a revision."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    m303: M303FilingInstanceEvidence
 
 
 ModeloActorLabel = Annotated[
@@ -291,6 +392,15 @@ def _source_issues_revision_id_payload(
     return {}
 
 
+def _filing_instance_evidence_revision_id_payload(
+    evidence: FilingInstanceEvidence | None,
+) -> dict[str, object]:
+    """Build the immutable filing-instance evidence identity payload."""
+    if evidence is None:
+        return {}
+    return {"filing_instance_evidence": evidence.model_dump(mode="json")}
+
+
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
@@ -306,6 +416,7 @@ def derive_calculation_revision_id(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
+    filing_instance_evidence: FilingInstanceEvidence | None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -326,7 +437,9 @@ def derive_calculation_revision_id(
 
     ``source_issues`` carries unresolved source conditions that block
     verification. It participates in identity so distinct resolution outcomes
-    cannot collapse to one revision.
+    cannot collapse to one revision. Typed filing-instance evidence likewise
+    participates, so changing Modelo 303 joint-return or insolvency facts creates
+    a distinct immutable revision rather than mutating a draft.
     """
     payload: dict[str, object] = _base_revision_id_payload(
         work_unit_id=work_unit_id,
@@ -361,6 +474,7 @@ def derive_calculation_revision_id(
     if canonical_rows:
         payload["detail_rows"] = canonical_rows
     payload.update(_source_issues_revision_id_payload(source_issues))
+    payload.update(_filing_instance_evidence_revision_id_payload(filing_instance_evidence))
     return content_hash_hex(payload)
 
 
@@ -576,6 +690,10 @@ class CalculationRevision(BaseModel):
     # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
     # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
+    # Complete filing-instance facts are selected before calculation and take
+    # part in the content-addressed revision identity. They are never authored
+    # or replaced on an existing BORRADOR.
+    filing_instance_evidence: FilingInstanceEvidence | None
     # Resolver-level source-mesh provenance: the typed
     # resolver→source-object→fingerprint trace projected
     # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist
@@ -649,6 +767,7 @@ class CalculationRevision(BaseModel):
             bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
             detail_rows=self.detail_rows,
             source_issues=self.source_issues,
+            filing_instance_evidence=self.filing_instance_evidence,
         )
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(
@@ -893,7 +1012,14 @@ __all__ = [
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
     "CalculationSourceRef",
+    "FilingInstanceEvidence",
     "LedgerFilingCoverageError",
+    "M303Exonerado390EndpointEvidence",
+    "M303Exonerado390FilingEvidence",
+    "M303FilingInstanceEvidence",
+    "M303InsolvencyFilingFact",
+    "M303InsolvencyFilingSubtype",
+    "M303RegimenSimplificadoFilingEvidence",
     "assert_revision_snapshot_evidence_coverage",
     "derive_calculation_revision_id",
 ]

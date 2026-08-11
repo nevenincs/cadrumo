@@ -439,6 +439,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
+            filing_instance_evidence=None,
         ),
         work_unit_id=_WORK_UNIT_ID,
         state=CalculationRevisionState.BORRADOR,
@@ -446,6 +447,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
         observations=(absent, declared_zero),
         created_at=_REVISION_TIMESTAMP,
         updated_at=_REVISION_TIMESTAMP,
+        filing_instance_evidence=None,
     )
 
     payload = calculation_revision_payload(revision)

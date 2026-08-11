@@ -172,6 +172,7 @@ def test_modelo_714_cuota_integra_escala_matches_boe_table(base_liquidable: str,
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=_zero_m100_relation_values(),
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
 
@@ -347,6 +348,7 @@ def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations()
             _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA: Decimal("4000.00"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal("5490.36")
@@ -410,6 +412,7 @@ def test_modelo_714_reduccion_limite_80_is_80pct_of_cuota_integra(
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=_zero_m100_relation_values(),
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert result.values[_PATRIMONIO_CUOTA_INTEGRA_CASILLA] == Decimal(expected_cuota)
     assert result.values[_PATRIMONIO_REDUCCION_LIMITE_80_CASILLA] == Decimal(expected_suelo_80)

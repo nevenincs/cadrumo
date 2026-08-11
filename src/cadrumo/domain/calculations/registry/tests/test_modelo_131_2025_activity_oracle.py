@@ -64,6 +64,7 @@ def _calculate_activity_value(period: str, epigrafe: str, module_inputs: dict[st
         text_inputs={"modulos-epigrafe": epigrafe},
         date_context={"filing_period": snapshot.filing_period.end_date},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result.values["modulos-rendimiento-neto-actividad"]
 

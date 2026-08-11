@@ -23,6 +23,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -93,11 +95,13 @@ def _seed_verified_m303_revision(
         period=period,
         revision_id=revision_id,
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:prorrata-settlement-writeback")
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     verified_at = _T0 + timedelta(hours=1)
     revision = CalculationRevision(
@@ -112,6 +116,7 @@ def _seed_verified_m303_revision(
         updated_at=verified_at,
         verified_at=verified_at,
         verified_by="aeat.test.modelo.verify",
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,

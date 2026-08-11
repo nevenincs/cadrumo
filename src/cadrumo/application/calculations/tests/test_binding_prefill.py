@@ -161,6 +161,7 @@ def _calculate_303_from_observations(
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
 
@@ -326,6 +327,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             binding_values=binding_values,
             date_context={"filing_period": date(2025, 12, 31)},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
         assert (

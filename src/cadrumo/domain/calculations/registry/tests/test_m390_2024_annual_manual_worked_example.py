@@ -372,6 +372,7 @@ def _calculate(
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 1, 30)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -538,6 +539,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 1, 30)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

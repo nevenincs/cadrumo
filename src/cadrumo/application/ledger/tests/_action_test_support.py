@@ -13,6 +13,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....application.ledger import (
     ExportSerializationFormat,
     LedgerExportCommand,
@@ -35,7 +37,6 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....domain.attachments import Attachment, AttachmentKind, AttachmentSource
 from ....domain.buckets import BucketEvent, BucketEventObjectType, BucketEventType
-
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from ....domain.iva import InvoiceKind
@@ -324,12 +325,14 @@ def _persist_verified_revision_citing_transaction(
         period=period,
         revision_id="2009-y-siguientes",
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-action-support")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=source_transaction_ids,
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -361,6 +364,7 @@ def _persist_verified_revision_citing_transaction(
         updated_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         verified_at=datetime(2026, 5, 2, 9, 0, tzinfo=UTC),
         verified_by="operator-A",
+        filing_instance_evidence=filing_instance_evidence,
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     CalculationRevisionCatalogueRepository(objects=objects).save(

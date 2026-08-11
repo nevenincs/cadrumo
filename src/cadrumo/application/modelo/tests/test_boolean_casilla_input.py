@@ -67,6 +67,7 @@ def _calculate(snapshot: RegistrySnapshot, inputs: dict[CasillaId, Decimal]) -> 
         date_binding_values={binding.id: date(1980, 1, 2) for binding in revision.bindings},
         text_inputs={},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return {observation.casilla_id: observation.value for observation in result.observations}
 

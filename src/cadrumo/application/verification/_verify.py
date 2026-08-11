@@ -195,6 +195,7 @@ def verify_declaracion(
         date_context={"filing_period": calculation_filing_date(period)},
         binding_values=supplied_bindings,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     unreliable_ids = {
         warning.casilla_id

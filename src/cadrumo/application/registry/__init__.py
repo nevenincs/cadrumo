@@ -413,6 +413,7 @@ def verify_filed_state(
         binding_values=binding_values,
         relation_values=relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     casilla_ids = requested_required_casilla_ids or tuple(
         casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED

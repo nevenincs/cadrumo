@@ -256,6 +256,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -263,6 +264,7 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
         state=CalculationRevisionState.BORRADOR,
         created_at=now,
         updated_at=now,
+        filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))

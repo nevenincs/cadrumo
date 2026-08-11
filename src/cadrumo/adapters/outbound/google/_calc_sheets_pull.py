@@ -1209,6 +1209,7 @@ def compute_from_pull(
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

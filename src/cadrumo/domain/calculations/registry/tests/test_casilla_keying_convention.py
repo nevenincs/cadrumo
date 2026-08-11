@@ -62,6 +62,7 @@ def test_runtime_accepts_canonical_casilla_id_for_semantic_input(_m303_2025_1t_s
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
     assert result.values[casilla.id] == Decimal("1")
@@ -81,6 +82,7 @@ def test_runtime_rejects_casilla_number_for_semantic_input(_m303_2025_1t_snapsho
             m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
                 scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
             ),
+            m303_annual_orden=None,
         )
 
     assert exc_info.value.context == {"casilla_ids": casilla.number}

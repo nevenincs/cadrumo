@@ -331,6 +331,7 @@ def _calculation(
             input_values_by_casilla_id={},
             binding_overrides=overrides,
             casilla_values=values,
+            filing_instance_evidence=None,
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
@@ -344,6 +345,7 @@ def _calculation(
         ),
         created_at=_CREATED_AT,
         updated_at=_UPDATED_AT,
+        filing_instance_evidence=None,
     )
 
 

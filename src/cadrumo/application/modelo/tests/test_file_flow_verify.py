@@ -469,6 +469,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casillas,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=rid,
@@ -487,6 +488,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         ),
         created_at=T1,
         updated_at=T1,
+        filing_instance_evidence=None,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 

@@ -211,6 +211,7 @@ def test_0587_cuota_liquida_total_is_computed(m100_2024_snapshot: RegistrySnapsh
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_CUOTA_LIQUIDA_TOTAL_CASILLA] != Decimal("0"), (
@@ -247,6 +248,7 @@ def test_0609_total_pagos_a_cuenta_computed_from_0598(m100_2024_snapshot: Regist
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_ARRENDAMIENTOS_URBANOS_CASILLA] == _EXPECTED_0598, (
@@ -279,6 +281,7 @@ def test_0610_cuota_diferencial_computed(m100_2024_snapshot: RegistrySnapshot) -
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert abs(result.values[_M100_CUOTA_DIFERENCIAL_CASILLA] - _EXPECTED_0610) <= _TOLERANCE, (
@@ -307,6 +310,7 @@ def test_0670_resultado_declaracion_computed(m100_2024_snapshot: RegistrySnapsho
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert abs(result.values[_M100_RESULTADO_DECLARACION_CASILLA] - _EXPECTED_0670) <= _TOLERANCE, (
@@ -333,6 +337,7 @@ def test_settlement_chain_not_zero_for_non_zero_base(m100_2024_snapshot: Registr
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_CUOTA_LIQUIDA_TOTAL_CASILLA] > Decimal("0"), (
@@ -369,6 +374,7 @@ def test_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: Reg
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     _higher_retenciones = Decimal("3000")
     result_high = calculate_registry_snapshot(
@@ -380,6 +386,7 @@ def test_anti_tautology_retenciones_change_affects_chain(m100_2024_snapshot: Reg
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     cuota_diferencial_low = result_low.values[_M100_CUOTA_DIFERENCIAL_CASILLA]

@@ -241,6 +241,7 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
             binding_values={},
             date_context={"filing_period": date(_YEAR, 12, 31)},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
@@ -462,6 +463,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values=relay_resolution.relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     relay_casilla_values = relay_engine_result.values
 
@@ -602,6 +604,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
     assert purchase.iva_amount is not None

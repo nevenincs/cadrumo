@@ -47,6 +47,7 @@ def _draft_revision() -> CalculationRevision:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -54,6 +55,7 @@ def _draft_revision() -> CalculationRevision:
         state=CalculationRevisionState.BORRADOR,
         created_at=_NOW,
         updated_at=_NOW,
+        filing_instance_evidence=None,
     )
 
 
@@ -66,6 +68,7 @@ def _verified_revision() -> CalculationRevision:
         updated_at=_NOW,
         verified_at=_NOW,
         verified_by="operator",
+        filing_instance_evidence=None,
     )
 
 

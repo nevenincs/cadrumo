@@ -129,6 +129,7 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
             "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     # C03 is now bound (not computed) so it does not appear in
@@ -164,6 +165,7 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
             date_context={"filing_period": date(2026, 3, 31)},
             binding_values={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -250,6 +252,7 @@ def test_registry_formula_runtime_preserves_signed_intermediate_results_from_off
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M130_DIFERENCIA_ACTIVIDADES_CASILLA] < Decimal("0")
@@ -277,6 +280,7 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert {_M130_MINORACION_CASILLA, _M130_RESULTADO_FINAL_CASILLA} <= set(result.values)

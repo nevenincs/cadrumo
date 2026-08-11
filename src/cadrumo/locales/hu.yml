@@ -1005,6 +1005,7 @@ application:
         egy mező értéke szükséges; a megadott leképezés üres.
       external_import_duplicate_revision: A(z) %{calculation_revision_id} számítási
         revízió már létezik a katalógusban; egy azonos import már rögzítve van.
+      external_import_m303_filing_evidence_required: A Modelo 303 külső importjához teljes, típusos bevallási bizonyíték szükséges; ez nem következtethető ki a mezőértékekből.
       external_import_justificante_mismatch: A(z) %{evidence_reference_id} külső bevallásimport-bizonyíték
         nem egyezik a(z) %{modelo} modelóval, a(z) %{filing_year} bevallási évvel
         és a(z) %{period} időszakkal.

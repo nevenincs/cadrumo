@@ -583,6 +583,7 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
     relay_boxes = {box: relay.values[box] for box in _BOX_SOURCE_MAP}
 

@@ -255,6 +255,7 @@ def run_registry_calculation_scenario(
         date_binding_values=scenario.date_binding_values or None,
         unresolved_binding_ids=unresolved_profile_binding_ids,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     entries_by_target = {entry.target_casilla_id: entry for entry in calculation.entries}
     comparisons = tuple(

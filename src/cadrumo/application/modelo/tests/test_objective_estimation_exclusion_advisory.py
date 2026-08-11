@@ -65,6 +65,7 @@ def _calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -74,6 +75,7 @@ def _calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         casilla_values={},
         created_at=_T0,
         updated_at=_T0,
+        filing_instance_evidence=None,
     )
 
 

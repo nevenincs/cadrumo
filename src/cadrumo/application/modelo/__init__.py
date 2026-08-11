@@ -450,7 +450,7 @@ from ._review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ._revision_persistence import persist_filed_revision
+from ._revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
 from ._selectors import (
     ModeloCalculationRevisionCandidate,
     ModeloCalculationRevisionDefault,
@@ -918,6 +918,7 @@ __all__ = [
     "registry_support_matrix",
     "rename_work_unit",
     "require_existing_profile_baseline_ready_for_modelo_work",
+    "require_filing_instance_evidence_for_work_unit",
     "require_persisted_iva_compensation_decision_matches_revision",
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",

@@ -145,6 +145,7 @@ def _calculate_190(
         relation_values=relation_values,
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

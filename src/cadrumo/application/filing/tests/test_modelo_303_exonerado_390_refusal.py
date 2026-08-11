@@ -92,7 +92,7 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
     )
     output = tmp_path / "modelo-303-exonerado.txt"
 
-    with pytest.raises(FilingExportError, match="explicit applicability envelope"):
+    with pytest.raises(FilingExportError, match="canonical S55 producer snapshot"):
         export_draft(
             draft,
             output_path=output,
@@ -101,3 +101,4 @@ def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_in
         )
 
     assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".tmp").exists()

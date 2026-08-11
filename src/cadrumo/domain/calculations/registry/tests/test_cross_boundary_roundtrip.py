@@ -613,6 +613,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
+            filing_instance_evidence=None,
         ),
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,
@@ -620,6 +621,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
         observations=(observation,),
         created_at=_CALCULATION_REVISION_TIMESTAMP,
         updated_at=_CALCULATION_REVISION_TIMESTAMP,
+        filing_instance_evidence=None,
     )
 
     roundtripped = CalculationRevision.model_validate_json(revision.model_dump_json())

@@ -171,6 +171,7 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
         binding_values=binding_values,
         relation_values=relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}

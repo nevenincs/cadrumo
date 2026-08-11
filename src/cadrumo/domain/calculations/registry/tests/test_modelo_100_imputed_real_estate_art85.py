@@ -83,6 +83,7 @@ def _calculate(
         },
         date_binding_values={f"renta-{year}-profile-taxpayer-birth-date": date(1985, 6, 15)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -157,4 +158,5 @@ def test_m100_art85_casilla_0089_is_no_longer_manual_input() -> None:
             inputs={"0089": Decimal("448.80")},
             date_context={"filing_period": date(2025, 12, 31)},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )

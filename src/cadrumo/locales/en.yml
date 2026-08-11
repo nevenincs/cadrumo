@@ -969,6 +969,7 @@ application:
         one casilla value; the supplied mapping is empty.
       external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
         already exists in the catalogue; an identical import was already recorded.
+      external_import_m303_filing_evidence_required: Modelo 303 external import requires complete typed filing-instance evidence and cannot infer it from casilla values.
       external_import_justificante_mismatch: External-filing import evidence %{evidence_reference_id}
         does not match modelo %{modelo}, filing year %{filing_year}, period %{period}.
       external_import_justificante_missing: External-filing import evidence %{evidence_reference_id}

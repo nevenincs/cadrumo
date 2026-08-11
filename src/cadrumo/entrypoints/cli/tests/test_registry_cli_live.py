@@ -781,6 +781,7 @@ def _modelo_130_filed_state_observations() -> tuple[FiledDeclaracionObservation,
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     primary_values = {**_modelo_130_inputs(), **calculation.values}
     return (

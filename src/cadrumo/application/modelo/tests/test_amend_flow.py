@@ -28,6 +28,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import AuthProviderKind, CasillaId, Period, validated_casilla_id
 from ....core.config import Settings
+from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.modelos import (
     CalculationRevision,
@@ -35,6 +36,7 @@ from ....domain.modelos import (
     CalculationRevisionState,
     ExternalEvidence,
     ExternalEvidenceKind,
+    FilingInstanceEvidence,
     ModeloRecord,
     ModeloRecordStatus,
     WorkUnit,
@@ -44,6 +46,7 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
@@ -204,6 +207,7 @@ def _seed_external_baseline(
     period_code: str = "1T",
     revision_id_value: str = "2019-y-siguientes",
     member_nif: str | None = None,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT filing record carrying ``external_evidence`` plus
     its underlying calculation revision and work unit.
@@ -228,6 +232,7 @@ def _seed_external_baseline(
         input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     filing_id = derive_filing_record_id(
         work_unit_id=work_unit.work_unit_id,
@@ -254,6 +259,7 @@ def _seed_external_baseline(
         verified_by="aeat-import",
         filed_at=_T1,
         filed_by="aeat-import",
+        filing_instance_evidence=filing_instance_evidence,
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 
@@ -319,6 +325,33 @@ def _seed_local_filing_record(
     )
     filing_repository.save(upsert_filing_record(filing_repository.load(), filing))
     return filing
+
+
+def test_amend_refuses_evidence_less_m303_external_baseline(repos: _Repos) -> None:
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    _, _, baseline = _seed_external_baseline(
+        repos,
+        modelo="303",
+        filing_year=2026,
+        period_code="1T",
+        revision_id_value=snapshot.revision.id,
+        casilla_values={_M303_RESULT_CASILLA: Decimal("0")},
+        filing_instance_evidence=None,
+    )
+
+    with pytest.raises(AmendmentEvidenceMissingError, match="evidence-less Modelo 303"):
+        amend_modelo_revision(
+            from_filing_record_id=baseline.filing_record_id,
+            overrides={_M303_RESULT_CASILLA: Decimal("1")},
+            amendment_kind=CalculationRevisionAmendmentKind.RECTIFICATIVA,
+            reason="correction requires immutable filing evidence",
+            actor="operator-A",
+            work_unit_repository=repos[0],
+            calculation_repository=repos[1],
+            filing_repository=repos[2],
+            bucket_event_repository=repos[4],
+            clock=_T4,
+        )
 
 
 def test_amend_refuses_without_external_evidence(repos: _Repos) -> None:
@@ -668,7 +701,7 @@ def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
     wu_repo, cr_repo, fr_repo, _, bv_repo = repos
     _, _, baseline = _seed_external_baseline(repos, casilla_values={_AMEND_INCOME_CASILLA: Decimal("1000")})
 
-    with pytest.raises(CalculationRevisionStateError, match=r"already exists|no-op"):
+    with pytest.raises(CalculationRevisionStateError) as exc_info:
         amend_modelo_revision(
             from_filing_record_id=baseline.filing_record_id,
             overrides={_AMEND_INCOME_CASILLA: Decimal("1000")},
@@ -681,6 +714,7 @@ def test_amend_refuses_no_op_overrides(repos: _Repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T4,
         )
+    assert exc_info.value.translated_message == "errors.error.error_modelo_calculation_revision_state"
 
 
 def test_amend_refuses_overrides_with_casilla_ids_not_in_registry(repos: _Repos) -> None:
@@ -723,6 +757,10 @@ def test_amend_refuses_printed_number_metadata_token(repos: _Repos) -> None:
         period_code="1T",
         revision_id_value="2025",
         casilla_values={_M303_RESULT_CASILLA: Decimal("100")},
+        filing_instance_evidence=general_m303_filing_evidence(
+            Period.from_year_and_code(2025, "1T"),
+            reference="test:amend:printed-token",
+        ),
     )
 
     with pytest.raises(AmendmentOverrideCasillaError, match="non-canonical reference tokens") as exc_info:

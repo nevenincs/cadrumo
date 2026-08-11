@@ -107,6 +107,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -114,6 +115,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         state=CalculationRevisionState.BORRADOR,
         created_at=now,
         updated_at=now,
+        filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -151,6 +153,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -160,6 +163,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
         updated_at=now,
         verified_at=now,
         verified_by="operator",
+        filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -271,6 +275,7 @@ def _seed_modelo_111_revisions(
             input_values_by_casilla_id=inputs,
             binding_overrides={},
             casilla_values={},
+            filing_instance_evidence=None,
         )
         revision_ids.append(calculation_revision_id)
         revisions.append(
@@ -289,6 +294,7 @@ def _seed_modelo_111_revisions(
                 else None,
                 filed_at=now if state_value is CalculationRevisionState.PRESENTADO else None,
                 filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
+                filing_instance_evidence=None,
             ),
         )
 
@@ -338,6 +344,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
         input_values_by_casilla_id=inputs,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     now = datetime.now(UTC)
     work_unit = WorkUnit(
@@ -370,6 +377,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
         updated_at=now,
         verified_at=now,
         verified_by="Emilio",
+        filing_instance_evidence=None,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -649,7 +657,7 @@ def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert "Traceback" not in result.output
 
 
-def test_export_modelo_303_cli_refuses_without_typed_applicability(tmp_path: Path) -> None:
+def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(tmp_path: Path) -> None:
     work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="303", filing_year=2026, period="1T")
     out = tmp_path / "modelo-303.txt"
 
@@ -666,11 +674,12 @@ def test_export_modelo_303_cli_refuses_without_typed_applicability(tmp_path: Pat
         ],
     )
 
-    assert result.exit_code == 5, result.output
+    assert result.exit_code == 1, result.output
     payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"]["context"]["cause"] == (
-        "modelo 303 export requires an explicit applicability envelope"
+    assert payload["error"]["code"] == "ERROR_MODELOS"
+    assert payload["error"]["message"] == (
+        "modelo 303 filing-instance evidence is required before verification or export"
     )
     assert not out.exists()
     assert not out.with_name(out.name + ".tmp").exists()

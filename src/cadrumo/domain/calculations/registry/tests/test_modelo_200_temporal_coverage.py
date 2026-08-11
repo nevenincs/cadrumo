@@ -132,6 +132,7 @@ def test_pyme_sl_2024_cuota_resolves_without_bracket_no_window() -> None:
         },
         date_context={"filing_period": date(2024, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     # The cuota íntegra for a micro-empresa SL at the 2024 flat pyme rate
     # (23 %, LIS Art. 29 pre-2025 regime) on a 100.000 EUR base must be
@@ -317,6 +318,7 @@ def test_cuota_integra_is_emitted_by_engine_without_user_input() -> None:
         },
         date_context={"filing_period": date(2024, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert _M200_CUOTA_INTEGRA_CASILLA in result.values, (
         "formula engine must emit DP200014:00562 in result.values; "

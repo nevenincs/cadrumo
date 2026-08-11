@@ -144,7 +144,12 @@ from ._registry_resources import authority_via_resources as _authority_via_resou
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
-from ._revision_persistence import emit_modelo_bucket_event as _emit_bucket_event
+from ._revision_persistence import (
+    emit_modelo_bucket_event as _emit_bucket_event,
+)
+from ._revision_persistence import (
+    require_filing_instance_evidence_for_work_unit,
+)
 from ._verification_cross_period import (
     CROSS_PERIOD_ACTIVITY_START_LEGAL_REFS,
     CROSS_PERIOD_DEPENDENCY_LEGAL_REFS,
@@ -929,6 +934,7 @@ def verify_modelo_revision_with_preconditions(
         )
 
     _assert_revision_content_integrity(target)
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
 
     from ._profile_readiness_gate import require_profile_ready_for_work_unit
 

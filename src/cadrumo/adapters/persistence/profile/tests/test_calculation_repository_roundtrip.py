@@ -29,17 +29,29 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, Period, validated_casilla_id
+from .....core.resources import resources
 from .....domain.calculations.registry import (
     CasillaObservation,
     RegistryCalculationUnresolvedOutcome,
     RegistryUnresolvedOutcomeReason,
+    resolve_m303_regimen_simplificado_snapshot,
+)
+from .....domain.filing_evidence import FilingEvidenceReference
+from .....domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
 )
 from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionPersistenceError,
     CalculationRevisionState,
+    FilingInstanceEvidence,
+    M303Exonerado390FilingEvidence,
+    M303FilingInstanceEvidence,
+    M303RegimenSimplificadoFilingEvidence,
     derive_calculation_revision_id,
 )
 from .....tests.secure_sql import isolated_runtime_profile
@@ -73,6 +85,33 @@ def _hex(seed: str) -> str:
     return base[:64]
 
 
+def _filing_instance_evidence() -> FilingInstanceEvidence:
+    period = Period.from_year_and_code(2026, "1T")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
+        scope_decision=scope,
+    )
+    return FilingInstanceEvidence(
+        m303=M303FilingInstanceEvidence(
+            period=period,
+            joint_return_elected=True,
+            exonerado_390=M303Exonerado390FilingEvidence(
+                applicable=False,
+                applicability_reference=FilingEvidenceReference(reference="test:persistence:exonerado-390"),
+                endpoints=(),
+            ),
+            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+                scope_decision=scope,
+                rows=RegimenSimplificadoFilingRows(ejercicio=2026, activities=()),
+                regimen_snapshot=snapshot,
+            ),
+        ),
+    )
+
+
 def _populated_catalogue() -> CalculationRevisionCatalogue:
     """Build a catalogue whose every defaultable field is non-default.
 
@@ -99,6 +138,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     binding_overrides = {"modelo-303-compensacion-pendiente-anteriores": "50.00"}
     casilla_values = {_CASILLA_01: Decimal("1000.00"), _CASILLA_12: Decimal("210.00")}
     source_transaction_ids = (_hex("d"), _hex("e"))
+    filing_instance_evidence = _filing_instance_evidence()
 
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -106,6 +146,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
     observations = (
@@ -154,6 +195,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
         binding_overrides=binding_overrides,
         source_transaction_ids=source_transaction_ids,
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
         created_at=created_at,
@@ -186,6 +228,9 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert revision.updated_at.utcoffset() == UTC.utcoffset(revision.updated_at)
     assert revision.verified_at is not None
     assert revision.verified_at.utcoffset() == UTC.utcoffset(revision.verified_at)
+    assert revision.filing_instance_evidence == _filing_instance_evidence()
+    assert revision.filing_instance_evidence is not None
+    assert revision.filing_instance_evidence.m303.regimen_simplificado.regimen_snapshot.orden.activity_refs
     # The non-decimal ``period_code`` entry must survive verbatim: the string
     # replay channel is where every text-family casilla persists.
     assert revision.input_values_by_casilla_id[_DECL_PERIODO_CASILLA] == _DECL_PERIODO_CODE
@@ -206,6 +251,52 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert outcome.legal_refs == ("ley-37-1992:art-90",)
     assert outcome.context == {"tipo_renta": "interest", "country": "ZW"}
     assert profile.paths.database_file.is_file()
+
+
+def test_changed_filing_evidence_persists_as_a_distinct_revision_without_replacing_the_original(
+    tmp_path: Path,
+) -> None:
+    """Editing filing evidence creates a new durable identity and preserves the old row."""
+
+    original_catalogue = _populated_catalogue()
+    original = next(iter(original_catalogue.values()))
+    assert original.filing_instance_evidence is not None
+    changed_evidence = FilingInstanceEvidence(
+        m303=original.filing_instance_evidence.m303.model_copy(
+            update={"joint_return_elected": not original.filing_instance_evidence.m303.joint_return_elected},
+        ),
+    )
+    changed_revision_id = derive_calculation_revision_id(
+        work_unit_id=original.work_unit_id,
+        input_values_by_casilla_id=original.input_values_by_casilla_id,
+        binding_overrides=original.binding_overrides,
+        casilla_values=original.casilla_values,
+        source_transaction_ids=original.source_transaction_ids,
+        filing_instance_evidence=changed_evidence,
+    )
+    changed = original.model_copy(
+        update={
+            "calculation_revision_id": changed_revision_id,
+            "filing_instance_evidence": changed_evidence,
+        },
+    )
+    two_revisions = CalculationRevisionCatalogue(
+        revisions={
+            original.calculation_revision_id: original,
+            changed.calculation_revision_id: changed,
+        },
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        repo.save(original_catalogue)
+        repo.save(two_revisions)
+        loaded = repo.load()
+
+    assert changed.calculation_revision_id != original.calculation_revision_id
+    assert loaded.get(original.calculation_revision_id) == original
+    assert loaded.get(changed.calculation_revision_id) == changed
+    assert loaded.get(original.calculation_revision_id).filing_instance_evidence != changed_evidence
 
 
 def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
@@ -256,6 +347,39 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
         )
 
         with pytest.raises(ValidationError, match="must carry typed observations"):
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+
+def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
+    tmp_path: Path,
+) -> None:
+    """Dropping immutable M303 evidence must be observable at the encrypted boundary."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        original = _populated_catalogue()
+        repo.save(original)
+        record = profile.repository.load(
+            _CALCULATION_NAMESPACE,
+            _CALCULATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        ((_revision_id, persisted_revision),) = envelope["payload"]["revisions"].items()
+        assert persisted_revision["filing_instance_evidence"] is not None
+        del persisted_revision["filing_instance_evidence"]
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(ValidationError, match="filing_instance_evidence"):
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
@@ -324,6 +448,56 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
     assert raised.value.context == {
         "reason": "unsupported_envelope_version",
         "stored_schema_version": stored_schema_version,
+        "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
+    }
+
+
+def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
+    tmp_path: Path,
+) -> None:
+    """The V2 cutover admits no evidence-less pre-S58 calculation catalogue."""
+
+    from ...storage import Envelope
+
+    original = next(iter(_populated_catalogue().values()))
+    legacy_revision_id = derive_calculation_revision_id(
+        work_unit_id=original.work_unit_id,
+        input_values_by_casilla_id=original.input_values_by_casilla_id,
+        binding_overrides=original.binding_overrides,
+        casilla_values=original.casilla_values,
+        source_transaction_ids=original.source_transaction_ids,
+        filing_instance_evidence=None,
+    )
+    legacy_revision = original.model_copy(
+        update={
+            "calculation_revision_id": legacy_revision_id,
+            "filing_instance_evidence": None,
+        },
+    )
+    legacy_catalogue = CalculationRevisionCatalogue(revisions={legacy_revision_id: legacy_revision})
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        envelope = Envelope[CalculationRevisionCatalogue](
+            schema_version=1,
+            written_at=_FUTURE_ENVELOPE_WRITTEN_AT,
+            classification=SensitivityClass.FINANCIAL,
+            payload=legacy_catalogue,
+        )
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=_CALCULATION_CATALOGUE_VERSION,
+            written_at=envelope.written_at,
+            payload=envelope.model_dump_json().encode("utf-8"),
+        )
+
+        with pytest.raises(CalculationRevisionPersistenceError) as raised:
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.context == {
+        "reason": "unsupported_envelope_version",
+        "stored_schema_version": 1,
         "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
     }
 

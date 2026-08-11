@@ -68,6 +68,7 @@ from ...domain.contribuyente import descendant_list_from_facts
 from ...domain.modelos import (
     CalculationRevision,
     Dt12WindowEligibility,
+    FilingInstanceEvidence,
     Modelo184MemberRow,
     Modelo184ShareSumError,
     Modelo347ContraparteRow,
@@ -174,6 +175,7 @@ class WorkCalculateInputBundle:
     detail_rows: tuple[ModeloDetailRow, ...]
     borrador_snapshot_id: str | None
     m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL
+    filing_instance_evidence: FilingInstanceEvidence | None = None
     shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
     """Non-blocking advisories raised while resolving shortcut inputs.
 
@@ -198,6 +200,7 @@ class WorkCalculateInputBundle:
         m210_official_tipo_renta_code: str | None = None,
         m210_gross_income_source_mode: M210GrossIncomeSourceMode = M210GrossIncomeSourceMode.MANUAL,
         shortcut_diagnostics: tuple[CalculationSourceDiagnostic, ...] = (),
+        filing_instance_evidence: FilingInstanceEvidence | None = None,
     ) -> WorkCalculateInputBundle:
         """Freeze CLI-assembled mappings before crossing into calculation services.
 
@@ -217,6 +220,7 @@ class WorkCalculateInputBundle:
             borrador_snapshot_id=borrador_snapshot_id.strip() if borrador_snapshot_id else None,
             m210_gross_income_source_mode=m210_gross_income_source_mode,
             shortcut_diagnostics=shortcut_diagnostics,
+            filing_instance_evidence=filing_instance_evidence,
         )
 
     def optional_binding_values(self) -> Mapping[BindingId, Decimal] | None:
@@ -325,6 +329,7 @@ def calculate_modelo_work_revision(
         borrador_snapshot_id=inputs.borrador_snapshot_id,
         relation_values=inputs.optional_relation_values(),
         detail_rows=inputs.detail_rows,
+        filing_instance_evidence=inputs.filing_instance_evidence,
     )
     revision = calculation.revision
     work_unit = get_work_unit(revision.work_unit_id)
@@ -357,6 +362,7 @@ def build_work_calculate_input_bundle(
     sal_reserva_dotada: Decimal | None = None,
     sal_capital_social: Decimal | None = None,
     autoconsumo_promotor_base: Decimal | None = None,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from operator-supplied tokens.
 
@@ -463,6 +469,7 @@ def build_work_calculate_input_bundle(
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_income_source_mode,
         shortcut_diagnostics=shortcut_diagnostics,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 

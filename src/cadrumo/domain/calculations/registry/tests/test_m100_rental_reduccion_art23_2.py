@@ -66,6 +66,7 @@ def _calculate(
         },
         date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 1, 1)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

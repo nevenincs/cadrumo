@@ -100,10 +100,7 @@ from ._export_xml_dictionary import (
     read_xml_dictionary_root_identity,
     render_xml_dictionary_layout,
 )
-from ._m303_export_applicability import (
-    M303ExportApplicabilityEnvelope,
-    validate_m303_export_applicability,
-)
+from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
@@ -367,7 +364,6 @@ def export_draft(
     dictionary_values: Mapping[str, object] | None = None,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     schema_provider: RegistrySchemaAccessor | None = None,
-    m303_applicability: M303ExportApplicabilityEnvelope | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
@@ -389,8 +385,6 @@ def export_draft(
         prior_domiciliation_election: Typed M303 page-three election used by
             the shared Nota-3 DID page predicate.
         schema_provider: Optional registry schema provider override.
-        m303_applicability: Exhaustive typed applicability and authoritative
-            payload envelope required for every Modelo 303 export.
 
     Returns:
         A :class:`DeclaracionExportResult` with the output path, digest,
@@ -413,16 +407,11 @@ def export_draft(
     if draft.status is not ModeloDraftStatus.APROBADO:
         raise FilingExportError("declaration export requires an approved draft")
     if draft.modelo == "303":
-        if m303_applicability is None:
-            raise FilingExportError("modelo 303 export requires an explicit applicability envelope")
         validate_m303_export_applicability(
             period=draft.period,
             schema_provider=provider,
             producer_snapshot=producer_snapshot,
-            envelope=m303_applicability,
         )
-    elif m303_applicability is not None:
-        raise FilingExportError("modelo 303 applicability envelope is forbidden for non-303 exports")
     if not subview.export_layout_ids:
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]

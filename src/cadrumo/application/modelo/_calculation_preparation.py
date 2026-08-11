@@ -28,6 +28,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...domain.calculations.registry import BindingId, ModeloRevision, RegistrySnapshot, RelationId
 from ...domain.deadlines import IVARegime
+from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -80,6 +81,7 @@ class PreparedCalculation:
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None
     period_date: date
     channels: ResolvedCalculationChannels
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None
 
 
 def prepare_calculation(
@@ -99,6 +101,7 @@ def prepare_calculation(
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
 ) -> PreparedCalculation:
     """Prepare validated inputs, source channels, and gates for calculation.
 
@@ -206,6 +209,7 @@ def prepare_calculation(
         backend_casilla_inputs=backend_casilla_inputs,
         period_date=period_date,
         channels=channels,
+        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
     )
 
 

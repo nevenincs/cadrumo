@@ -1076,6 +1076,7 @@ application:
         al menos un valor de casilla; el mapeo aportado está vacío.
       external_import_duplicate_revision: La revisión de cálculo %{calculation_revision_id}
         ya existe en el catálogo; ya se había registrado una importación idéntica.
+      external_import_m303_filing_evidence_required: La importación externa del modelo 303 requiere evidencia tipada completa de la instancia de declaración y no puede inferirla de los valores de casillas.
       external_import_justificante_mismatch: La evidencia de importación externa %{evidence_reference_id}
         no coincide con el modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}.
       external_import_justificante_missing: La evidencia de importación externa %{evidence_reference_id}

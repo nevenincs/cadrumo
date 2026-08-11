@@ -183,6 +183,7 @@ def _calculate_2024(
         },
         date_context={"filing_period": date(2024, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -295,6 +296,7 @@ def test_m123_2019_2023_casilla_06_invariant_to_nperceptores_and_base() -> None:
         },
         date_context={"filing_period": date(2022, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     casilla_06 = result.values[_M123_2019_2023_RESULTADO_CASILLA]
     assert casilla_06 == Decimal("100.00"), (

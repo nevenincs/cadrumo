@@ -88,6 +88,7 @@ def _m130_revision(work_unit: WorkUnit) -> CalculationRevision:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -102,6 +103,7 @@ def _m130_revision(work_unit: WorkUnit) -> CalculationRevision:
         ),
         created_at=_NOW,
         updated_at=_NOW,
+        filing_instance_evidence=None,
     )
 
 

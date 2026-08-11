@@ -90,6 +90,7 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
         binding_values=binding_values,
         relation_values=relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values["decl.total-perceptores"] == binding_values["modelo-193-123-perceptores-anual"]

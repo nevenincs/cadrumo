@@ -83,6 +83,7 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values=binding_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values["01"] == Decimal("1")

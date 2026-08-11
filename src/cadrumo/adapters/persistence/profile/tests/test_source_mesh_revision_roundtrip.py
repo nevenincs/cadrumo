@@ -103,6 +103,7 @@ def _revision(source_provenance: tuple[CalculationSourceRef, ...]) -> Calculatio
         binding_overrides={},
         casilla_values={_CASILLA: Decimal("140000.00")},
         source_transaction_ids=(_TX_ID,),
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -122,6 +123,7 @@ def _revision(source_provenance: tuple[CalculationSourceRef, ...]) -> Calculatio
         source_provenance=source_provenance,
         created_at=_NOW,
         updated_at=_NOW,
+        filing_instance_evidence=None,
     )
 
 

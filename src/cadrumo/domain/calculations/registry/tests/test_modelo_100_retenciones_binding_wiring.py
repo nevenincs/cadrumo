@@ -169,6 +169,7 @@ def test_m190_annual_retenciones_binding_populates_2025_casilla_0596(
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == annual_retenciones, (
@@ -199,6 +200,7 @@ def test_salary_certificate_retenciones_binding_populates_2024_casilla_0596(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
@@ -225,6 +227,7 @@ def test_conflicting_2024_m111_and_salary_certificate_retenciones_refuse_before_
             relation_values=_RELATION_VALUES_2024,
             date_binding_values=_DATE_BINDINGS_2024,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -243,6 +246,7 @@ def test_salary_certificate_retenciones_binding_populates_2025_casilla_0596(
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == suffered_retenciones
@@ -263,6 +267,7 @@ def test_conflicting_2025_m111_and_m190_retenciones_refuse_before_calculation(
             relation_values=_RELATION_VALUES_2025,
             date_binding_values=_DATE_BINDINGS_2025,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -281,6 +286,7 @@ def test_m193_annual_retenciones_binding_populates_2025_casilla_0597(
         relation_values=_RELATION_VALUES_2025,
         date_binding_values=_DATE_BINDINGS_2025,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
@@ -306,6 +312,7 @@ def test_conflicting_2025_m123_and_m193_retenciones_refuse_before_calculation(
             relation_values=_RELATION_VALUES_2025,
             date_binding_values=_DATE_BINDINGS_2025,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -329,6 +336,7 @@ def test_m123_retenciones_binding_populates_casilla_0597(m100_2024_snapshot: Reg
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == m123_retenciones, (
@@ -353,6 +361,7 @@ def test_m193_annual_retenciones_binding_populates_2024_casilla_0597(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == annual_retenciones, (
@@ -378,6 +387,7 @@ def test_conflicting_2024_m123_and_m193_retenciones_refuse_before_calculation(
             relation_values=_RELATION_VALUES_2024,
             date_binding_values=_DATE_BINDINGS_2024,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -398,6 +408,7 @@ def test_m111_retenciones_binding_populates_casilla_0596(m100_2024_snapshot: Reg
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M111_CASILLA] == m111_retenciones, (
@@ -426,6 +437,7 @@ def test_m123_retenciones_flows_into_0609_total_pagos_a_cuenta(m100_2024_snapsho
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     # 0609 = sum of all retenciones operands; only 0597 is non-zero here.
@@ -453,6 +465,7 @@ def test_zero_m123_retenciones_gives_zero_0597(m100_2024_snapshot: RegistrySnaps
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M100_RETENCIONES_M123_CASILLA] == Decimal("0"), (
@@ -476,6 +489,7 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     result_high = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -486,6 +500,7 @@ def test_m123_retenciones_change_reflects_proportionally_in_0610(m100_2024_snaps
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     delta_0597 = result_high.values[_M100_RETENCIONES_M123_CASILLA] - result_low.values[_M100_RETENCIONES_M123_CASILLA]

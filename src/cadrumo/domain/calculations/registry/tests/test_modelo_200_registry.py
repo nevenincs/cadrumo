@@ -438,6 +438,7 @@ def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> 
         },
         date_context={"filing_period": date(2024, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M200_CUOTA_EJERCICIO_CASILLA] == Decimal("-20000.00"), (
@@ -531,6 +532,7 @@ def test_modelo_200_cuota_liquida_is_computed_and_rejects_direct_input() -> None
             },
             date_context={"filing_period": date(2024, 12, 31)},
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
 
@@ -590,6 +592,7 @@ def test_modelo_200_cuota_integra_chain_applies_dispatched_rate_to_post_nivelaci
         },
         date_context={"filing_period": date(2024, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (

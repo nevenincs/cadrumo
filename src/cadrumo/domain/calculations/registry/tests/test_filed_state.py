@@ -86,6 +86,7 @@ def _modelo_130_calculation() -> RegistryCalculationResult:
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
         },
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

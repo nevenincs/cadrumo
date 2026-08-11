@@ -62,7 +62,7 @@ from ._errors import CliRefusedBoundaryError
 from ._modelo_rendering import short_id
 
 if TYPE_CHECKING:
-    from ...domain.modelos import CalculationRevision, WorkUnit
+    from ...domain.modelos import CalculationRevision, FilingInstanceEvidence, WorkUnit
 
 _log = get_logger(__name__)
 
@@ -485,6 +485,7 @@ def work_calculate_input_bundle_from_cli(
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
     casilla_pairs = dict(parse_work_calculate_casilla_override(spec) for spec in (casilla or ()))
@@ -568,6 +569,7 @@ def work_calculate_input_bundle_from_cli(
                     "Use a dot decimal separator with no thousands grouping, e.g. 1234.56."
                 ),
             ),
+            filing_instance_evidence=filing_instance_evidence,
         )
     except CadrumoError:
         raise

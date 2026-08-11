@@ -528,6 +528,7 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
         },
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert result.values, "the M100/2025 calculation must close before the policy fold is meaningful"
 

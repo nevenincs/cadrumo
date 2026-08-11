@@ -191,6 +191,7 @@ def _calculate_303_from_observations(
         m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
             scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
         ),
+        m303_annual_orden=None,
     )
 
 
@@ -256,4 +257,5 @@ def _calculate_390_from_observations_and_303_filings(
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )

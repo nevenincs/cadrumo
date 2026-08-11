@@ -268,6 +268,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
                 input_values_by_casilla_id={},
                 binding_overrides={},
                 casilla_values=casilla_values,
+                filing_instance_evidence=None,
             ),
             work_unit_id=work_unit_id,
             state=CalculationRevisionState.BORRADOR,
@@ -275,6 +276,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             observations=(observation,),
             created_at=_DRAFT_TIMESTAMP,
             updated_at=_DRAFT_TIMESTAMP,
+            filing_instance_evidence=None,
         )
         catalogue = CalculationRevisionCatalogue(
             revisions={revision.calculation_revision_id: revision},

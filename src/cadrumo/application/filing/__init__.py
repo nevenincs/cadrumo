@@ -214,17 +214,7 @@ from ._export_parity import did_page_required, required_applicable_casilla_ids
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
-from ._m303_export_applicability import (
-    M303DifferentiatedSectorValueArrival,
-    M303Exonerado390EndpointValue,
-    M303Exonerado390ValueArrival,
-    M303ExportApplicabilityEnvelope,
-    validate_m303_export_applicability,
-)
-from ._m303_regimen_simplificado import (
-    M303RegimenSimplificadoValueArrival,
-    project_m303_regimen_simplificado_value_arrival,
-)
+from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
@@ -362,6 +352,7 @@ def build_draft(
             date_binding_values=date_binding_inputs or None,
             text_inputs=text_casilla_inputs or None,
             m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
+            m303_annual_orden=None,
         )
     except _RegistryValidationError as exc:
         raise _ModeloBuilderError(f"registry calculation failed: {exc}") from exc
@@ -991,11 +982,6 @@ __all__ = [
     "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",
-    "M303DifferentiatedSectorValueArrival",
-    "M303Exonerado390EndpointValue",
-    "M303Exonerado390ValueArrival",
-    "M303ExportApplicabilityEnvelope",
-    "M303RegimenSimplificadoValueArrival",
     "Modelo111ProfileFacts",
     "Modelo202ActivityFacts",
     "Modelo202ProducerProfile",
@@ -1031,7 +1017,6 @@ __all__ = [
     "list_amendments",
     "load_amendment",
     "load_default_filing_profile",
-    "project_m303_regimen_simplificado_value_arrival",
     "refresh_review_status",
     "render_layout",
     "required_applicable_casilla_ids",

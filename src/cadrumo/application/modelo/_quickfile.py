@@ -384,7 +384,6 @@ def run_modelo_quickfile(
                 refund_election=command.refund_election,
                 payment_election=command.payment_election,
                 prior_domiciliation_election=command.prior_domiciliation_election,
-                m303_applicability=None,
             ),
             workflow_profile=workflow_profile,
         )

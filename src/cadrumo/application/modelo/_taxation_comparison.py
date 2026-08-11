@@ -264,6 +264,7 @@ def compare_taxation_modes(
             relation_values=resolved_relations,
             date_binding_values=resolved_dates or None,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
         return result.values
 

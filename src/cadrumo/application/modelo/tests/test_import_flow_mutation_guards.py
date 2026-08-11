@@ -13,6 +13,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import Period, validated_casilla_id
+from ....core.resources import resources
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionAmendmentKind,
@@ -29,6 +30,7 @@ from ...user_profile import UserProfileLifecycleRepository
 from .. import (
     AmendmentEvidenceMissingError,
     CalculationRevisionNotFoundError,
+    ExternalModeloImportError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
     amend_modelo_revision,
@@ -119,6 +121,37 @@ def test_import_refuses_unknown_work_unit(repos: _Repos) -> None:
             bucket_event_repository=bv_repo,
             clock=_T1,
         )
+
+
+def test_external_import_refuses_m303_without_complete_filing_evidence(repos: _Repos) -> None:
+    wu_repo, cr_repo, fr_repo, _, bv_repo = repos
+    period = Period.from_year_and_code(2026, "1T")
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    work_unit = create_work_unit(
+        bucket_id=_PROFILE_ID,
+        modelo="303",
+        filing_year=2026,
+        period=period,
+        revision_id=snapshot.revision.id,
+        repository=wu_repo,
+        clock=_T0,
+    )
+
+    with pytest.raises(ExternalModeloImportError, match="external_import_m303_filing_evidence_required"):
+        import_external_filing_evidence(
+            work_unit_id=work_unit.work_unit_id,
+            casilla_values={_casilla_id("07"): Decimal("0")},
+            evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+            evidence_reference_id="operator:m303:no-filing-evidence",
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=fr_repo,
+            bucket_event_repository=bv_repo,
+            clock=_T1,
+        )
+
+    assert len(cr_repo.load()) == 0
+    assert len(fr_repo.load()) == 0
 
 
 def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repos) -> None:
@@ -308,6 +341,7 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
                 input_values_by_casilla_id={},
                 binding_overrides={},
                 casilla_values={},
+                filing_instance_evidence=None,
             ),
             work_unit_id=foreign.work_unit_id,
             state=CalculationRevisionState.BORRADOR,
@@ -315,6 +349,7 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
             casilla_values={},
             created_at=_GUARD_CLOCK,
             updated_at=_GUARD_CLOCK,
+            filing_instance_evidence=None,
         )
         cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 

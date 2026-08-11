@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -29,6 +31,8 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....core import (
     BindingSourceKind,
     CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
     Modelo,
     Period,
     ProrrataProvisionalProvenance,
@@ -43,6 +47,7 @@ from ....domain.calculations.registry import (
 )
 from ....domain.iva import (
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
@@ -103,6 +108,18 @@ def _ledger_observation(
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     exemption_article: IvaExemptionArticle | None = None,
 ) -> IvaLedgerObservation:
+    deduction = (
+        {
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="d" * 64,
+            ),
+        }
+        if flow is IvaFlowDirection.SOPORTADO
+        else {}
+    )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=transaction_date,
@@ -112,6 +129,7 @@ def _ledger_observation(
         flow_direction=flow,
         base_amount=Decimal(base),
         iva_amount=Decimal("0.00"),
+        **deduction,
     )
 
 
@@ -144,11 +162,13 @@ def _seed_verified_m303_settlement(
         period=period,
         revision_id=revision_id,
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:prorrata-regularizacion")
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     verified_at = _T0 + timedelta(hours=1)
     revision = CalculationRevision(
@@ -168,6 +188,7 @@ def _seed_verified_m303_settlement(
         updated_at=verified_at,
         verified_at=verified_at,
         verified_by="aeat.test.modelo.verify",
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -444,15 +465,17 @@ def test_generic_domestic_exempt_output_only_increases_prorrata_denominator() ->
 
 
 @pytest.mark.parametrize(
-    ("filing_year", "revision_id"),
+    ("filing_year", "period", "revision_id"),
     (
-        (2020, "2009-y-siguientes"),
-        (2024, "2024-hasta-08-y-2t"),
-        (2026, "2026-y-siguientes"),
+        (2020, "4T", "2009-y-siguientes"),
+        (2024, "2T", "2024-hasta-08-y-2t"),
+        (2024, "4T", "2024-desde-09-y-3t"),
+        (2026, "4T", "2026-y-siguientes"),
     ),
 )
 def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     filing_year: int,
+    period: str,
     revision_id: str,
 ) -> None:
     """Every shipped M303 revision refuses casilla 61 as a form or binding route.
@@ -460,7 +483,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
     One year per shipped revision window, so a newly-shipped revision cannot
     slip past this refusal by simply not being enumerated here.
     """
-    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period="4T")
+    snapshot = resources().modelos.authority.snapshot(Modelo.M303.value, filing_year=filing_year, period=period)
 
     assert str(snapshot.revision.id) == revision_id
     assert "61" not in declared_casilla_ids(snapshot.revision)

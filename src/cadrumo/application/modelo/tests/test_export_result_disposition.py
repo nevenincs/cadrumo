@@ -78,6 +78,7 @@ def _result_disposition_revision(
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -95,6 +96,7 @@ def _result_disposition_revision(
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
+        filing_instance_evidence=None,
     )
 
 

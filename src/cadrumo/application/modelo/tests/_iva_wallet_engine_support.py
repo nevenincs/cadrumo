@@ -9,6 +9,8 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -284,11 +286,13 @@ def _work_unit_and_revision_for_wallet_gate(
     casilla_values: dict[CasillaId, Decimal] = {
         _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: compensation_amount,
     }
+    filing_instance_evidence = general_m303_filing_evidence(target_period, reference="test:iva-wallet-engine")
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -316,6 +320,7 @@ def _work_unit_and_revision_for_wallet_gate(
         ),
         created_at=_DECIDED_AT,
         updated_at=_DECIDED_AT,
+        filing_instance_evidence=filing_instance_evidence,
     )
     return work_unit, revision
 

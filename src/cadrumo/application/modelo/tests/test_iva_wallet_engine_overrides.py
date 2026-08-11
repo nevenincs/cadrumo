@@ -168,6 +168,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                     input_values_by_casilla_id={},
                     binding_overrides={},
                     casilla_values=casilla_values,
+                    filing_instance_evidence=None,
                 ),
                 "work_unit_id": work_unit.work_unit_id,
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,

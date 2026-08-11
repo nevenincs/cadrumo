@@ -475,6 +475,7 @@ def test_tampered_revision_raises_drift_error(repos: _Repos) -> None:
         state=original.state,
         input_values_by_casilla_id=original.input_values_by_casilla_id,
         binding_overrides=original.binding_overrides,
+        filing_instance_evidence=original.filing_instance_evidence,
         source_transaction_ids=original.source_transaction_ids,
         borrador_snapshot_id=original.borrador_snapshot_id,
         bindings_sourced_from_borrador=original.bindings_sourced_from_borrador,

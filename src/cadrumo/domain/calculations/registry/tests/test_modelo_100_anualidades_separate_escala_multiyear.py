@@ -136,6 +136,7 @@ def _run(
         binding_values=binding_values,
         relation_values=relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return {_c(k): result.values[_c(k)] for k in ("0505", "0521", "0527", "0528", "0530", "0532", "0545")}
 
@@ -290,6 +291,7 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
         binding_values=binding_values,
         relation_values=relation_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert stray_result.values[_c("0527")] == Decimal("0"), (
         f"2021: casilla 0527 = {stray_result.values[_c('0527')]!r}; expected 0 — the Anexo C "

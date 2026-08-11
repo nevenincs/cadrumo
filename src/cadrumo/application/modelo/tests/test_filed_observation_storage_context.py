@@ -81,6 +81,7 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
+            filing_instance_evidence=None,
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.PRESENTADO,
@@ -105,6 +106,7 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
         verified_by="operator",
         filed_at=_CAPTURED_AT,
         filed_by="operator",
+        filing_instance_evidence=None,
     )
 
 

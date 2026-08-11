@@ -324,6 +324,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -333,6 +334,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         casilla_values={},
         created_at=_T0,
         updated_at=_T0,
+        filing_instance_evidence=None,
     )
 
 
@@ -900,6 +902,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         relation_values=relation_values,
         date_binding_values=date_binding_values,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert result.values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == Decimal("10000.00")
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
@@ -912,6 +915,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
             relation_values=relation_values,
             date_binding_values=date_binding_values,
             m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
     binding_overrides = {
@@ -927,6 +931,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         binding_overrides=binding_overrides,
         relation_overrides=relation_overrides,
         casilla_values=result.values,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -939,6 +944,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         observations=result.observations,
         created_at=_T0,
         updated_at=_T0,
+        filing_instance_evidence=None,
     )
 
     informational_replay_inputs = _informational_casilla_replay_inputs(

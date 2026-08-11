@@ -143,6 +143,7 @@ def test_m100_2024_minimo_contribuyente_computed_not_zero(m100_2024_snapshot: Re
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA] == _EXPECTED_MINIMO_CONTRIBUYENTE, (
@@ -178,6 +179,7 @@ def test_m100_2024_cuota_integra_estatal_matches_lirpf_tables(m100_2024_snapshot
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     cuota_estatal = result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
@@ -206,6 +208,7 @@ def test_m100_2024_cuota_integra_autonomica_cataluna_matches_lirpf_tables(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     cuota_autonomica = result.values[_CUOTA_INTEGRA_AUTONOMICA_CASILLA]
@@ -232,6 +235,7 @@ def test_m100_2024_cuota_integra_estatal_is_positive(m100_2024_snapshot: Registr
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA] > Decimal("0"), (
@@ -393,6 +397,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_PERE_AGE_70_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     minimo_contribuyente_estatal = result.values[_MINIMO_CONTRIBUYENTE_ESTATAL_CASILLA]
@@ -444,6 +449,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     minimo_descendientes_estatal = result.values[_MINIMO_DESCENDIENTES_CASILLA]
@@ -481,6 +487,7 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     cuota_estatal = result.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
@@ -557,6 +564,7 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnap
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == _EXPECTED_0505_NO_ANUALIDADES, (
@@ -597,6 +605,7 @@ def test_anualidades_alimentos_separate_escala(m100_2024_snapshot: RegistrySnaps
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_ANUALIDADES_TOTAL_CASILLA] == _ANUALIDADES_3000, (
@@ -639,6 +648,7 @@ def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySn
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     result_with_anualidades = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -652,6 +662,7 @@ def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySn
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     cuota_no = result_no_anualidades.values[_CUOTA_INTEGRA_ESTATAL_CASILLA]
@@ -696,6 +707,7 @@ def test_anualidades_regime_off_shared_custody_reduces_to_single_escala(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == _EXPECTED_0505_NO_ANUALIDADES
@@ -728,6 +740,7 @@ def test_anualidades_regime_off_when_anualidades_exceed_base(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values[_BASE_LIQUIDABLE_GENERAL_GRAVAMEN_CASILLA] == _EXPECTED_0505_NO_ANUALIDADES
@@ -785,6 +798,7 @@ def test_0587_equals_sum_of_liquida_incrementada(m100_2024_snapshot: RegistrySna
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     c0585 = result.values[_CUOTA_LIQUIDA_INCREMENTADA_ESTATAL_CASILLA]
@@ -821,6 +835,7 @@ def test_0609_equals_retencion_trabajo_operand(m100_2024_snapshot: RegistrySnaps
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     c0609 = result.values[_TOTAL_PAGOS_A_CUENTA_CASILLA]
@@ -851,6 +866,7 @@ def test_0610_equals_0595_minus_0609(m100_2024_snapshot: RegistrySnapshot) -> No
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     c0595 = result.values[_CUOTA_RESULTANTE_CASILLA]
@@ -886,6 +902,7 @@ def test_anti_tautology_higher_retencion_reduces_cuota_diferencial(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     result_high = calculate_registry_snapshot(
         m100_2024_snapshot,
@@ -899,6 +916,7 @@ def test_anti_tautology_higher_retencion_reduces_cuota_diferencial(
         relation_values=_RELATION_VALUES_2024,
         date_binding_values=_BIRTH_DATE_BINDINGS_2024,
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     c0610_low = result_low.values[_CUOTA_DIFERENCIAL_CASILLA]

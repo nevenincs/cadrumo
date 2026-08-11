@@ -95,6 +95,7 @@ def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -
         text_inputs={_M210_TIPO_RENTA_CASILLA: "general"},
         date_context={"filing_period": date(2025, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert _M210_TIPO_GRAVAMEN_CASILLA not in result.values
@@ -140,6 +141,7 @@ def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
         text_inputs={_M210_TIPO_RENTA_CASILLA: "dividend"},
         date_context={"filing_period": date(2025, 12, 31)},
         m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.unresolved_outcomes == ()

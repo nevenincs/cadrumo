@@ -92,6 +92,7 @@ def _revision(
             relation_overrides=relations,
             casilla_values=values,
             detail_rows=detail_rows,
+            filing_instance_evidence=None,
         ),
         work_unit_id=work_unit.work_unit_id,
         state=state,
@@ -111,6 +112,7 @@ def _revision(
         updated_at=_CLOCK,
         verified_at=_CLOCK if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
+        filing_instance_evidence=None,
     )
 
 
