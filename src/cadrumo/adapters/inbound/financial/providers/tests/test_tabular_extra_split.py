@@ -14,7 +14,7 @@ operator edits a CSV that was never wrong, and the one command that would fix it
 is never named.
 
 **Absence is real here, not simulated with a stub.** Each case runs in a
-subprocess whose import system genuinely cannot find ``pynvml`` -- the module
+fresh spawned interpreter whose import system genuinely cannot find ``pynvml`` -- the module
 the extra's registry record probes -- so the production guard fires for the
 production reason. Every case asserts that precondition before asserting
 anything else: a run where the extra was quietly present would otherwise report
@@ -31,11 +31,18 @@ with nothing.
 
 from __future__ import annotations
 
-import json
-import subprocess
+import logging
+import multiprocessing
+import os
 import sys
-import textwrap
+from collections.abc import Sequence
+from importlib.abc import MetaPathFinder
+from importlib.machinery import ModuleSpec
+from multiprocessing.queues import Queue
 from pathlib import Path
+from queue import Empty
+from types import ModuleType
+from typing import Literal, TypedDict, override
 
 import pytest
 
@@ -49,107 +56,137 @@ _UNKNOWN_VOCABULARY = _FIXTURES / "tabular-dialects" / "expenses_app_export_2026
 #: the reader, so a parser that silently dropped one would fail this.
 _KNOWN_LAYOUT_ROWS = 2
 
-_BLOCK_EXTRA = """
-import sys
-class _AbsentPynvml:
-    def find_spec(self, name, path=None, target=None):
-        if name == "pynvml" or name.startswith("pynvml."):
-            raise ModuleNotFoundError("No module named %r" % name)
+
+class _AbsentPynvml(MetaPathFinder):
+    """Make the child interpreter genuinely unable to discover ``pynvml``."""
+
+    @override
+    def find_spec(
+        self,
+        fullname: str,
+        path: Sequence[str] | None = None,
+        target: ModuleType | None = None,
+    ) -> ModuleSpec | None:
+        del path, target
+        if fullname == "pynvml" or fullname.startswith("pynvml."):
+            raise ModuleNotFoundError(f"No module named {fullname!r}")
         return None
-sys.meta_path.insert(0, _AbsentPynvml())
-"""
 
 
-def _run_case(body: str, *, extra_absent: bool, tmp_path: Path) -> dict[str, object]:
-    """Run ``body`` in a subprocess and return the JSON object it prints.
+class _ProbeResult(TypedDict, total=False):
+    """Typed payload returned by one fresh optional-extra probe."""
 
-    ``extra_absent`` selects whether the child's import system can find the
-    extra's probe module, which is the only difference between the two
-    environments the split is defined over.
-    """
-    preamble = textwrap.dedent(f"""
-        import json, logging
+    extra_available: bool
+    provider: str | None
+    rows: int
+    directions: list[str]
+    raised: str | None
+    message: str
+
+
+class _ProbeMessage(TypedDict):
+    """Typed queue envelope separating a probe payload from worker failure."""
+
+    payload: _ProbeResult | None
+    error: str | None
+
+
+def _probe_worker(
+    case: Literal["known", "unknown"],
+    *,
+    extra_absent: bool,
+    storage_root: str,
+    results: Queue[_ProbeMessage],
+) -> None:
+    """Run one probe in a genuinely fresh multiprocessing spawn interpreter."""
+    try:
+        if extra_absent:
+            sys.meta_path.insert(0, _AbsentPynvml())
         logging.disable(logging.CRITICAL)
-        from pathlib import Path
+        os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = storage_root
+
         from cadrumo.core import LLM_EXTRA
         from cadrumo.core._optional_extras import optional_extra_available
-        result = {{"extra_available": optional_extra_available(LLM_EXTRA)}}
-        known = Path({str(_KNOWN_LAYOUT)!r})
-        unknown = Path({str(_UNKNOWN_VOCABULARY)!r})
-    """)
-    # Assembled from flush-left segments rather than one interpolated f-string:
-    # embedding a multi-line block inside an indented template makes
-    # ``dedent`` compute a common prefix of zero and misalign every other line.
-    script = "\n".join(
-        (
-            _BLOCK_EXTRA if extra_absent else "",
-            preamble,
-            textwrap.dedent(body),
-            'print("__RESULT__" + json.dumps(result))',
-        )
-    )
-    completed = subprocess.run(  # noqa: S603 - resolved interpreter, test-authored script, no shell
-        [sys.executable, "-c", script],
-        capture_output=True,
-        text=True,
-        timeout=300,
-        env={
-            **_child_env(),
-            "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
+
+        result: _ProbeResult = {"extra_available": optional_extra_available(LLM_EXTRA)}
+        if case == "known":
+            from cadrumo.adapters.inbound.financial.providers._detection import detect_provider
+
+            provider = detect_provider(_KNOWN_LAYOUT)
+            result["provider"] = type(provider).__name__ if provider else None
+            assert provider is not None, "known layout did not resolve to a provider"
+            rows = list(provider.ingest(_KNOWN_LAYOUT))
+            result["rows"] = len(rows)
+            result["directions"] = [row.direction.value for row in rows]
+        else:
+            from cadrumo.adapters.inbound.financial.providers._mapped_tabular import MappedTabularProvider
+
+            try:
+                list(MappedTabularProvider().ingest(_UNKNOWN_VOCABULARY))
+                result["raised"] = None
+            except BaseException as exc:
+                result["raised"] = type(exc).__name__
+                result["message"] = str(exc)
+        results.put({"payload": result, "error": None})
+    except BaseException as exc:
+        results.put({"payload": None, "error": f"{type(exc).__name__}: {exc}"})
+
+
+def _run_case(case: Literal["known", "unknown"], *, extra_absent: bool, tmp_path: Path) -> _ProbeResult:
+    """Run one probe in a fresh spawn interpreter and return its typed payload."""
+    context = multiprocessing.get_context("spawn")
+    results: Queue[_ProbeMessage] = context.Queue()
+    process = context.Process(
+        target=_probe_worker,
+        kwargs={
+            "case": case,
+            "extra_absent": extra_absent,
+            "storage_root": str(tmp_path / "storage"),
+            "results": results,
         },
     )
-    marker = [line for line in completed.stdout.splitlines() if line.startswith("__RESULT__")]
-    assert marker, f"child produced no result:\nstdout={completed.stdout}\nstderr={completed.stderr}"
-    payload = json.loads(marker[0].removeprefix("__RESULT__"))
-    assert payload["extra_available"] is (not extra_absent), (
-        "the child's environment did not carry the extra state the case is defined over; "
-        "every assertion below would be meaningless"
-    )
-    return payload
-
-
-def _child_env() -> dict[str, str]:
-    """Return the parent environment minus any storage-root override."""
-    import os
-
-    return {key: value for key, value in os.environ.items() if key != "CADRUMO_LOCAL_STORAGE_ROOT"}
+    process.start()
+    try:
+        try:
+            message = results.get(timeout=300)
+        except Empty as exc:
+            process.join(timeout=1)
+            raise AssertionError(f"child produced no result; exitcode={process.exitcode}") from exc
+        process.join(timeout=300)
+        assert not process.is_alive(), "child probe exceeded its timeout"
+        assert process.exitcode == 0, f"child probe exited with {process.exitcode}: {message['error']}"
+        assert message["error"] is None, message["error"]
+        payload = message["payload"]
+        assert payload is not None, "child probe returned no payload"
+        assert payload["extra_available"] is (not extra_absent), (
+            "the child's environment did not carry the extra state the case is defined over; "
+            "every assertion below would be meaningless"
+        )
+        return payload
+    finally:
+        if process.is_alive():
+            process.terminate()
+            process.join(timeout=5)
+        process.close()
+        results.close()
+        results.join_thread()
 
 
 def test_known_fixed_layout_imports_fully_without_the_extra(tmp_path: Path) -> None:
     """The core side of the split: a recognised layout needs no extra at all."""
-    result = _run_case(
-        """
-        from cadrumo.adapters.inbound.financial.providers._detection import detect_provider
-        provider = detect_provider(known)
-        result["provider"] = type(provider).__name__ if provider else None
-        rows = list(provider.ingest(known))
-        result["rows"] = len(rows)
-        result["directions"] = [row.direction for row in rows]
-        """,
-        extra_absent=True,
-        tmp_path=tmp_path,
-    )
+    result = _run_case("known", extra_absent=True, tmp_path=tmp_path)
 
     assert result["provider"] == "CsvProvider", "a known layout must take its exact parser"
     assert result["rows"] == _KNOWN_LAYOUT_ROWS, "every row of a known layout must import on a core install"
-    assert all(result["directions"]), "each imported row must carry a direction"
+    directions = result["directions"]
+    assert isinstance(directions, list)
+    assert all(isinstance(direction, str) for direction in directions)
+    assert all(directions), "each imported row must carry a direction"
 
 
 def test_unknown_vocabulary_refuses_at_the_mapping_call_naming_the_extra(tmp_path: Path) -> None:
     """The gated side: the refusal must name the install, not blame the file."""
-    result = _run_case(
-        """
-        from cadrumo.adapters.inbound.financial.providers._mapped_tabular import MappedTabularProvider
-        try:
-            list(MappedTabularProvider().ingest(unknown))
-            result["raised"] = None
-        except BaseException as exc:
-            result["raised"] = type(exc).__name__
-            result["message"] = str(exc)
-        """,
-        extra_absent=True,
-        tmp_path=tmp_path,
-    )
+    result = _run_case("unknown", extra_absent=True, tmp_path=tmp_path)
 
     assert result["raised"] == "MissingOptionalExtraError", (
         f"the mapping call must refuse instructively; got {result['raised']!r}"
@@ -169,19 +206,7 @@ def test_the_refusal_is_caused_by_absence_and_not_by_the_file(tmp_path: Path) ->
     raised" just as well, and the gate would pass while proving nothing about
     the extra boundary.
     """
-    result = _run_case(
-        """
-        from cadrumo.adapters.inbound.financial.providers._mapped_tabular import MappedTabularProvider
-        try:
-            list(MappedTabularProvider().ingest(unknown))
-            result["raised"] = None
-        except BaseException as exc:
-            result["raised"] = type(exc).__name__
-            result["message"] = str(exc)
-        """,
-        extra_absent=False,
-        tmp_path=tmp_path,
-    )
+    result = _run_case("unknown", extra_absent=False, tmp_path=tmp_path)
 
     assert result["raised"] != "MissingOptionalExtraError", (
         "with the extra installed the missing-extra refusal must not fire; "

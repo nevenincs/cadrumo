@@ -56,7 +56,7 @@ def _production_files() -> list[Path]:
     return [path for path in _PRODUCTION_ROOT.rglob("*.py") if "tests" not in path.parts and "_data" not in path.parts]
 
 
-def _enclosing_function(tree: ast.Module, target: ast.AST) -> str:
+def _enclosing_function(tree: ast.Module, target: ast.Call) -> str:
     best = "<module>"
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
