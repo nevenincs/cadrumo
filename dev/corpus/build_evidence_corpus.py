@@ -100,6 +100,7 @@ def _save(name: str, data: bytes, *, source_url: str, licence: str, title: str, 
 
 
 def main() -> None:
+    """Download licensed evidence images and write their provenance sidecars."""
     # Image invoices (png/jpeg) -> exercise the on-host image/vision evidence path.
     images = _search("invoice OR receipt OR factura filetype:bitmap", ("image/png", "image/jpeg"))
     saved_images = 0
