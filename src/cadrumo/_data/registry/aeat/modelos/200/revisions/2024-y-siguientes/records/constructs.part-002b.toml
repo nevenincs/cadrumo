@@ -740,7 +740,7 @@ relations = ["modelo-200-2024-rel-202-pagos-fraccionados", "modelo-200-2024-rel-
 dependency_classifications = ["modelo-200-2024-dep-202-instalments", "modelo-200-2024-dep-self-bin-pendiente"]
 workbook_parity_refs = ["modelo-200-2024-dr-xls"]
 live_cross_references = ["modelo-200-2024-static-documentation"]
-export_layouts = ["modelo-200-fichero-boe"]
+support_removal_decisions = ["modelo-200-fichero-boe-support-removal"]
 application_links = [
     "modelo-200-2024-portal",
     "modelo-200-2024-calculation",

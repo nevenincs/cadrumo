@@ -1,0 +1,9 @@
+[[revisions."2024-y-siguientes".support_removal_decisions]]
+id = "modelo-200-fichero-boe-support-removal"
+subject_type = "export_layout"
+subject_id = "modelo-200-fichero-boe"
+decision = "remove_from_filing_grade"
+reason = "unsupported_official_format"
+evidence_note = "This filing-grade fixed-width layout is withdrawn atomically because its official record design contains producer fields that do not yet have canonical typed producer authority; retaining a partial layout would permit silent under-declaration."
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-41", "ley-27-2014:art-29", "ley-27-2014:art-30", "ley-27-2014:art-39", "ley-27-2014:art-19", "ley-27-2014:art-36", "ley-27-2014:art-100", "rd-634-2015:art-3", "ley-27-2014:art-12", "ley-27-2014:art-15", "ley-27-2014:art-21", "ley-27-2014:art-22", "ley-27-2014:art-31", "ley-27-2014:art-32", "ley-27-2014:art-13", "ley-27-2014:art-16", "ley-27-2014:art-25", "ley-27-2014:art-26"]
+source_refs = ["aeat-dr-200-2025"]
