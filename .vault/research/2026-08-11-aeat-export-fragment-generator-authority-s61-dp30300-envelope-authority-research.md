@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:f55fbf4366ca86db74b186ca95a74edaa5a6a3e9661849cb5f9f5457e1f16641'
+body_hash: 'sha256:2efd1a958153ca0578ca06a0b2a1fa7fe8b552120e37d19c14a956953e9205ba'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
   - "[[2026-08-08-m200-export-envelope-tag-adr]]"
@@ -26,7 +26,7 @@ Across the five reviewed Modelo 303 sources in `src/cadrumo/_data/registry/aeat/
 
 The official design directly supplies the `<T`, `303`, discriminant `0`, `0000>`, `<AUX>`, three reserved blank spans, and `</AUX>` values; filing year and period are existing draft coordinates. These eleven positions need no new filing producer identity. The body is an ordered composition of generated page records, and the closing tag is a computed function of the same modelo, discriminant, year, and period coordinates; the relative closer and Variable total are codec/composition facts, not business producers.
 
-The remaining four-character “Versión del programa” and nine-character “NIF Empresa Desarrollo” slots are not literals. AEAT introduces both with “A cumplimentar por las entidades desarrolladoras (EEDD)”, states that the former identifies the version of the software developed by the development entity, and states that the latter is that entity's NIF (`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:24-27`). The extracted Markdown is only a review locator; the hash-pinned workbook remains the wire authority. The source does not by itself decide whether Cadrumo, a locally authored tool, or another filing product is an EEDD or when non-EEDD producers leave these slots blank.
+The remaining four-character "Version del programa" and nine-character "NIF Empresa Desarrollo" slots are not literals. AEAT introduces both with "A cumplimentar por las entidades desarrolladoras (EEDD)", states that the former identifies the version of the software developed by the development entity, and states that the latter is that entity's NIF (`src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx.extracted.md:24-27`). The extracted Markdown is only a review locator; the hash-pinned workbook remains the wire authority. The source does not by itself decide whether Cadrumo, a locally authored tool, or another filing product is an EEDD or when non-EEDD producers leave these slots blank.
 
 ### Program version has a dormant candidate but no accepted four-byte derivation
 
@@ -36,7 +36,7 @@ The package exposes version `0.2.2`, but AEAT's field is four characters and exi
 
 `FilingProducerSnapshot` keeps `taxpayer_tax_id` and `presenter` as distinct facts (`src/cadrumo/application/filing/_producer_snapshot.py:279-290`), and `FilingProducerKey` now has separate `presenter.tax_id` and `taxpayer.tax_id` identities (`src/cadrumo/core/_filing_producer_key.py:18-20`). Neither denotes the software-development entity. Exact production census finds no developer-company NIF authority or configuration.
 
-The accepted M200 envelope ADR currently describes “NIF empresa desarrollo” as `presenter_nif`-equivalent and instructs a `presenter_nif` header at offset 101 (`.vault/adr/2026-08-08-m200-export-envelope-tag-adr.md:88-94`, `:193-201`). That conflicts with the official definition above. S61 must not propagate this mapping. The ADR corpus must amend or supersede that statement and any implementation depending on it; M303 generation must refuse when an explicit developer-company NIF is required but unavailable.
+The accepted M200 envelope ADR currently describes "NIF empresa desarrollo" as `presenter_nif`-equivalent and instructs a `presenter_nif` header at offset 101 (`.vault/adr/2026-08-08-m200-export-envelope-tag-adr.md:88-94`, `:193-201`). That conflicts with the official definition above. S61 must not propagate this mapping. The ADR corpus must amend or supersede that statement and any implementation depending on it; M303 generation must refuse when an explicit developer-company NIF is required but unavailable.
 
 ### The evidence favors a dedicated envelope semantic and composition authority
 
@@ -50,9 +50,9 @@ Under the favored option, source constants, reserved blanks, filing year, period
 
 The ADR must also settle record occurrence and order inside the Variable body rather than infer it from parser sheet order: which of `DP30301` through `DP30305` and `DP303DID` are always emitted, which are applicability-selected, and how repeated `DP30302` rows are ordered. It must bind the composition and product-identity authority to provenance, and it must specify whether embedding a developer NIF in a public distribution is owner-approved.
 
-### Spanish IVA naming is clean internally; the remaining `IVA/IVA` occurrence is external vocabulary
+### Spanish IVA naming is clean internally; the doubled locator segment is external vocabulary
 
-The current Spanish-stem conformance gate passes and exact production identifier census finds no authored `VAT` stem. The only production `IVA/IVA` text is the official AEAT locator path mirrored in the legal catalogue and external-constants authority; it must remain byte-exact as external wire vocabulary. S61 introduces only Spanish internal `iva` names and must not create `vat`, `iva_iva`, or mixed aliases.
+The current Spanish-stem conformance gate passes and exact production identifier census finds no authored English tax stem. The only doubled production path segment belongs to the official AEAT locator mirrored in the legal catalogue and external-constants authority; it must remain byte-exact as external wire vocabulary. S61 introduces only Spanish internal `iva` names and must not create a retired English stem, a duplicated internal alias, or mixed aliases.
 
 ## Sources
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed7c3fe53de1614e3f9d140ac3bc2abf985985468a991598eaab8c108a8cbf9d'
+body_hash: 'sha256:90b0cb2795ec32d7ec6b60550f618639f385dfc4a9084cbb6f54f239258d7317'
 step_id: 'S38'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -27,6 +27,7 @@ related:
 - Remove the filer-establishment `str(refusal)` conversion that flattened `PurchaseInvoiceEvidenceInputError` into review-item prose.
 - Propagate the original filer postcode refusal so its exception identity, failed condition, evidence facts, null action, and closed outcome reach the shared CLI boundary unchanged.
 - Scan the ledger application scope for equivalent typed `PurchaseInvoiceEvidenceInputError` stringification bridges.
+- Remove the evidence-reader boundary's remaining `MissingOptionalExtraError` and provider-exception prose bridges at both text and vision call sites.
 
 ## Outcome
 
@@ -34,13 +35,18 @@ related:
 - Batch and vision contracts derive reviewed condition identities from the canonical provisioning enum.
 - Exact runtime lookup resolves the operation-failure leaf to a native value in Catalan, English, Spanish, and Hungarian.
 - Filer postcode setup failure reaches the shared CLI projection as `ledger.filer.postcode_valid`, evidence `filer_postcode_present=false`, no action, and `operator_decision`.
-- The exact ledger scan reports zero remaining `PurchaseInvoiceEvidenceInputError` stringification bridges.
-- Nineteen filer-establishment tests, three real confirm-path tests, and one CLI projection test pass; Ruff check and format, basedpyright, and diff whitespace validation pass.
+- Missing optional reader dependencies now preserve the canonical optional-extra registry identity as `extra`, `import_name`, and `importable=false`; provider failures preserve availability and error-type facts.
+- Text and vision evidence-reader refusals carry no exception string, install command, or independently authored English recovery message.
+- The exact ledger scan reports zero remaining `PurchaseInvoiceEvidenceInputError` stringification bridges and no `MissingOptionalExtraError` recovery-prose bridge.
+- The focused reader suite passes 30 tests; Ruff, basedpyright, and the broader S38 evidence checks pass.
 - S38 remains open for independent re-review.
 
 ## Notes
 
 - The removed string was not presentation-only: it discarded the terminal verdict and moved potentially sensitive malformed profile data into ordinary review-notice context.
-- The read-only historical rehoming join remains red for the S38 target `PurchaseInvoiceEvidenceInputError` plus four unrelated Modelo error fingerprints. No rehoming ledger write was made.
+- The reader boundary now reports facts only. Any future recovery action must be linked by the canonical action catalogue, not reconstructed from `MissingOptionalExtraError.install_hint` or exception text.
+- Other ledger `str(exc)` sites are row-level validation diagnostics and not optional-reader/precondition-envelope conversions; they remain separate campaign candidates rather than being silently broadened into S38.
+- The read-only historical rehoming join remains red for the S38 target `PurchaseInvoiceEvidenceInputError` plus four unrelated Modelo error fingerprints and `LedgerStorageError`. No rehoming ledger write was made.
 - The full locale audit and scaffold checks remain red on unrelated catalogue debt, with zero findings for `ledger.evidence.reader.operation_failed`.
 - S90 and S94 were not edited.
+
