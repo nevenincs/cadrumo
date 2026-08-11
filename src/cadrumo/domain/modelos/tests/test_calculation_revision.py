@@ -24,6 +24,7 @@ from .._calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
+    M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
@@ -79,10 +80,14 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
     return M303FilingInstanceEvidence(
         period=period,
         joint_return_elected=True,
+        insolvency=None,
         exonerado_390=M303Exonerado390FilingEvidence(
             applicable=False,
             applicability_reference=FilingEvidenceReference(reference="test:exonerado-390:not-applicable"),
             endpoints=(),
+            activity_rows=(),
+            operaciones_terceros_declarables=None,
+            operaciones_terceros_reference=None,
         ),
         regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
             scope_decision=scope,
@@ -218,9 +223,9 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
     with pytest.raises(ValidationError, match="frozen"):
         joint.m303.joint_return_elected = False
 
-    reference = FilingEvidenceReference(reference="test:revision-id:exonerado-endpoint")
+    reference = FilingEvidenceReference(reference="test:revision-id:exonerado-activity")
 
-    def annual_evidence(value: str) -> FilingInstanceEvidence:
+    def annual_evidence(codigo_actividad: str) -> FilingInstanceEvidence:
         annual_m303 = _general_m303_filing_evidence(Period.from_year_and_code(2026, "4T"))
         return FilingInstanceEvidence(
             m303=annual_m303.model_copy(
@@ -231,19 +236,44 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
                         endpoints=(
                             M303Exonerado390EndpointEvidence(
                                 casilla_id=_casilla_id("79"),
-                                value=Decimal(value),
+                                value=Decimal("0"),
                                 evidence_reference=reference,
                             ),
                         ),
+                        activity_rows=(
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=1,
+                                codigo_actividad=codigo_actividad,
+                                epigrafe_iae="4101",
+                                evidence_reference=reference,
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=2, codigo_actividad="A02", epigrafe_iae="4102", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=3, codigo_actividad="A03", epigrafe_iae="4103", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=4, codigo_actividad="A04", epigrafe_iae="4104", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=5, codigo_actividad="A05", epigrafe_iae="4105", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=6, codigo_actividad="A06", epigrafe_iae="4106", evidence_reference=reference
+                            ),
+                        ),
+                        operaciones_terceros_declarables=False,
+                        operaciones_terceros_reference=reference,
                     ),
                 },
             ),
         )
 
-    assert revision_id_for(annual_evidence("0")) != revision_id_for(annual_evidence("1"))
+    assert revision_id_for(annual_evidence("A01")) != revision_id_for(annual_evidence("B01"))
 
 
-def test_exonerado_evidence_rejects_s56_fields_instead_of_accepting_legacy_surface() -> None:
+def test_exonerado_evidence_rejects_legacy_marker_surface() -> None:
     reference = FilingEvidenceReference(reference="test:no-s56-fields")
     with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
         M303Exonerado390FilingEvidence.model_validate(
@@ -252,17 +282,30 @@ def test_exonerado_evidence_rejects_s56_fields_instead_of_accepting_legacy_surfa
                 "applicability_reference": reference,
                 "endpoints": (),
                 "activity_rows": (),
+                "operaciones_terceros_declarables": None,
+                "operaciones_terceros_reference": None,
+                "marker_reference": "legacy-marker",
             },
         )
 
 
-def test_exonerado_evidence_requires_explicit_endpoint_population() -> None:
-    with pytest.raises(ValidationError, match="endpoints"):
+@pytest.mark.parametrize(
+    "missing_field",
+    ("endpoints", "activity_rows", "operaciones_terceros_declarables", "operaciones_terceros_reference"),
+)
+def test_exonerado_evidence_requires_every_explicit_s56_field(missing_field: str) -> None:
+    payload = {
+        "applicable": False,
+        "applicability_reference": FilingEvidenceReference(reference="test:explicit-s56-fields"),
+        "endpoints": (),
+        "activity_rows": (),
+        "operaciones_terceros_declarables": None,
+        "operaciones_terceros_reference": None,
+    }
+    del payload[missing_field]
+    with pytest.raises(ValidationError, match=missing_field):
         M303Exonerado390FilingEvidence.model_validate(
-            {
-                "applicable": False,
-                "applicability_reference": FilingEvidenceReference(reference="test:explicit-endpoints"),
-            },
+            payload,
         )
 
 

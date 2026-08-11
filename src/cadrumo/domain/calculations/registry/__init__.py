@@ -330,6 +330,11 @@ from ._m303_differentiated_deduction_projection import (
     M303DifferentiatedDeductionRowProjection,
     project_m303_differentiated_deduction_rows,
 )
+from ._m303_exonerado_390_projection import (
+    M303Exonerado390FieldProjection,
+    M303Exonerado390RecordProjection,
+    project_m303_exonerado_390_activity_rows,
+)
 from ._m303_orden_anual import (
     ActividadOrdenAnualRef,
     M303AnnualOrdenAuthority,
@@ -878,6 +883,8 @@ __all__ = [
     "M303AnnualOrdenSourceCensus",
     "M303DifferentiatedDeductionEndpointValue",
     "M303DifferentiatedDeductionRowProjection",
+    "M303Exonerado390FieldProjection",
+    "M303Exonerado390RecordProjection",
     "M303ProrrataActivityEndpointValue",
     "M303ProrrataActivityRowProjection",
     "M303RegimenSimplificadoFieldProjection",
@@ -1155,6 +1162,7 @@ __all__ = [
     "profile_condition_matches",
     "project_export_value",
     "project_m303_differentiated_deduction_rows",
+    "project_m303_exonerado_390_activity_rows",
     "project_m303_prorrata_activity_rows",
     "project_m303_regimen_simplificado_rows",
     "rate_box_coverage_shortfalls",

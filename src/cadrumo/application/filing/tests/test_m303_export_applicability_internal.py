@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from inspect import signature
 from pathlib import Path
 
@@ -12,40 +13,91 @@ from .. import export_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_CANONICAL_S56_OWNER = "cadrumo/domain/modelos/_calculation_revision.py"
+_S56_ACTIVITY_ROW_CLASS = "M303Exonerado390ActivityRowEvidence"
+_S56_FILING_EVIDENCE_CLASS = "M303Exonerado390FilingEvidence"
+_S56_FILING_EVIDENCE_FIELDS = frozenset(
+    {
+        "activity_rows",
+        "operaciones_terceros_declarables",
+        "operaciones_terceros_reference",
+    }
+)
+_RETIRED_M303_EXPORT_SYMBOLS = (
+    "m303_applicability",
+    "M303ExportApplicabilityEnvelope",
+    "M303FilingFacts",
+    "resolve_m303_filing_facts",
+    "M303RegimeComposition",
+    "m303_regimen_simplificado_scope_for_profile",
+    "resolve_m303_regimen_simplificado_scope",
+    "M303DifferentiatedSectorValueArrival",
+    "M303Exonerado390EndpointValue",
+    "M303Exonerado390ValueArrival",
+    "M303RegimenSimplificadoValueArrival",
+    "project_m303_regimen_simplificado_value_arrival",
+    "author_or_replace_filing_instance_evidence",
+    "M303RegimenSimplificadoEvidenceRequiredError",
+    "explicit applicability envelope",
+)
+
 
 def test_m303_export_applicability_is_internal_to_revision_backed_filing_facts() -> None:
     assert "m303_applicability" not in ModeloExportCommand.model_fields
     assert "m303_applicability" not in signature(export_draft).parameters
 
 
+def _production_python_sources(source_root: Path) -> tuple[Path, ...]:
+    return tuple(path for path in source_root.rglob("*.py") if "tests" not in path.parts)
+
+
+def _s56_owner_definitions(path: Path) -> frozenset[str]:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    definitions: set[str] = set()
+    for class_node in (node for node in tree.body if isinstance(node, ast.ClassDef)):
+        if class_node.name == _S56_ACTIVITY_ROW_CLASS:
+            definitions.add(class_node.name)
+        if class_node.name.startswith("M303Exonerado390"):
+            for statement in class_node.body:
+                if (
+                    isinstance(statement, ast.AnnAssign)
+                    and isinstance(statement.target, ast.Name)
+                    and statement.target.id in _S56_FILING_EVIDENCE_FIELDS
+                ):
+                    definitions.add(f"{class_node.name}.{statement.target.id}")
+    return frozenset(definitions)
+
+
 def test_retired_m303_export_override_has_no_production_surface() -> None:
     source_root = Path(__file__).parents[4]
+    production_sources = _production_python_sources(source_root)
     offenders = {
         path.relative_to(source_root).as_posix()
-        for path in source_root.rglob("*.py")
-        if "tests" not in path.parts
-        and any(
-            retired in path.read_text(encoding="utf-8")
-            for retired in (
-                "m303_applicability",
-                "M303ExportApplicabilityEnvelope",
-                "M303FilingFacts",
-                "resolve_m303_filing_facts",
-                "M303RegimeComposition",
-                "m303_regimen_simplificado_scope_for_profile",
-                "resolve_m303_regimen_simplificado_scope",
-                "M303Exonerado390ActivityRowEvidence",
-                "operaciones_terceros_declarables",
-                "operaciones_terceros_reference",
-                "M303DifferentiatedSectorValueArrival",
-                "M303Exonerado390EndpointValue",
-                "M303Exonerado390ValueArrival",
-                "M303RegimenSimplificadoValueArrival",
-                "project_m303_regimen_simplificado_value_arrival",
-                "author_or_replace_filing_instance_evidence",
-                "M303RegimenSimplificadoEvidenceRequiredError",
-                "explicit applicability envelope",
-            )
-        )
+        for path in production_sources
+        if any(retired in path.read_text(encoding="utf-8") for retired in _RETIRED_M303_EXPORT_SYMBOLS)
     }
     assert offenders == set()
+
+
+def test_s56_exonerado_390_evidence_owner_is_unique_and_typed() -> None:
+    source_root = Path(__file__).parents[4]
+    definitions_by_path = {
+        path.relative_to(source_root).as_posix(): _s56_owner_definitions(path)
+        for path in _production_python_sources(source_root)
+        if _s56_owner_definitions(path)
+    }
+    assert definitions_by_path == {
+        _CANONICAL_S56_OWNER: frozenset(
+            {
+                _S56_ACTIVITY_ROW_CLASS,
+                f"{_S56_FILING_EVIDENCE_CLASS}.activity_rows",
+                f"{_S56_FILING_EVIDENCE_CLASS}.operaciones_terceros_declarables",
+                f"{_S56_FILING_EVIDENCE_CLASS}.operaciones_terceros_reference",
+            }
+        )
+    }
+
+    owner_source = (source_root / _CANONICAL_S56_OWNER).read_text(encoding="utf-8")
+    assert "activity_rows: tuple[M303Exonerado390ActivityRowEvidence, ...]" in owner_source
+    assert "operaciones_terceros_declarables: bool | None" in owner_source
+    assert "operaciones_terceros_reference: FilingEvidenceReference | None" in owner_source

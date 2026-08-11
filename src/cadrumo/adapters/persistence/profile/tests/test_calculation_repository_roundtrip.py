@@ -98,10 +98,14 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=True,
+            insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(reference="test:persistence:exonerado-390"),
                 endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,

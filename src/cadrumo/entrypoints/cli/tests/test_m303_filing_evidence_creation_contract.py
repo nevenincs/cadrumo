@@ -54,6 +54,9 @@ def _write_evidence(path: Path, period: Period, *, joint_return_elected: bool = 
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(reference="test:exonerado-390:not-applicable"),
                 endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,

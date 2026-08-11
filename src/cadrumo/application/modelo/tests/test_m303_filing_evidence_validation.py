@@ -19,6 +19,7 @@ from ....domain.iva import (
 )
 from ....domain.modelos import (
     FilingInstanceEvidence,
+    M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
@@ -81,10 +82,14 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
+            insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(reference="test:validation:exonerado-390"),
                 endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,
@@ -115,6 +120,29 @@ def _store_profile() -> None:
             ),
             created_at=_CLOCK,
             updated_at=_CLOCK,
+        ),
+    )
+
+
+def _activity_rows(reference: FilingEvidenceReference) -> tuple[M303Exonerado390ActivityRowEvidence, ...]:
+    return (
+        M303Exonerado390ActivityRowEvidence(
+            slot=1, codigo_actividad="A01", epigrafe_iae="4101", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=2, codigo_actividad="A02", epigrafe_iae="4102", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=3, codigo_actividad="A03", epigrafe_iae="4103", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=4, codigo_actividad="A04", epigrafe_iae="4104", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=5, codigo_actividad="A05", epigrafe_iae="4105", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=6, codigo_actividad="A06", epigrafe_iae="4106", evidence_reference=reference
         ),
     )
 
@@ -180,6 +208,9 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
                         )
                         for casilla_id, value in values.items()
                     ),
+                    activity_rows=_activity_rows(reference),
+                    operaciones_terceros_declarables=False,
+                    operaciones_terceros_reference=reference,
                 ),
             },
         ),
@@ -227,6 +258,9 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
                             evidence_reference=reference,
                         ),
                     ),
+                    activity_rows=_activity_rows(reference),
+                    operaciones_terceros_declarables=False,
+                    operaciones_terceros_reference=reference,
                 ),
             },
         ),

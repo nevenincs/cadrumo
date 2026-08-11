@@ -33,10 +33,14 @@ def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingIns
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
+            insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(reference=reference),
                 endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,

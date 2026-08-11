@@ -214,6 +214,7 @@ from ._export_parity import did_page_required, required_applicable_casilla_ids
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
+from ._m303_exonerado_390 import project_m303_exonerado_390_value_arrival
 from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
@@ -1017,6 +1018,7 @@ __all__ = [
     "list_amendments",
     "load_amendment",
     "load_default_filing_profile",
+    "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
     "render_layout",
     "required_applicable_casilla_ids",

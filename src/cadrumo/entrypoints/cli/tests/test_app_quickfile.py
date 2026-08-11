@@ -172,12 +172,16 @@ def _write_m303_filing_evidence(path: Path) -> None:
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
+            insolvency=None,
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(
                     reference="test:quickfile:exonerado-390:not-applicable",
                 ),
                 endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,
@@ -253,6 +257,7 @@ def _m303_transaction(
 def _seed_m303_ledger_and_wallet(bucket_id: str) -> None:
     from ....application.calculations import IvaWalletDecisionRepository
     from ....application.user_profile import profile_storage_session
+
     sale = _m303_transaction(
         "quickfile-sale-general",
         direction=TransactionDirection.INCOMING,
