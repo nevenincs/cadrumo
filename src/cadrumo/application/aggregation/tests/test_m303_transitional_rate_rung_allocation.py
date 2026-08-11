@@ -55,8 +55,8 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import aggregate_iva_ledger_observations
 from .._iva_ledger import resolve_iva_ledger_binding_values
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -122,7 +122,6 @@ class MissingOptionalExtraError(CoreError, ImportError):
         super().__init__(
             message,
             context={"extra": extra.extra, "import_name": extra.import_name, "feature": extra.feature},
-            suggestion=extra.install_hint,
         )
         self.name = extra.import_name
         self.path = None

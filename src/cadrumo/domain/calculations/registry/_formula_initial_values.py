@@ -99,7 +99,7 @@ def initial_values(
     """
     casillas = casillas_by_id(revision)
     _reject_unknown_inputs(inputs, casillas)
-    _reject_computed_inputs(inputs, casillas, {formula.target_casilla_id for formula in revision.formulas})
+    _reject_non_input_kind_inputs(inputs, casillas, {formula.target_casilla_id for formula in revision.formulas})
 
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     _reject_smuggled_previous_filing_inputs(
@@ -134,7 +134,11 @@ def initial_value_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     :class:`ModeloRevision` whose casillas are scanned for their declared
     ``input_kind``.
     """
-    return frozenset(casilla.id for casilla in revision.casillas if casilla.input_kind != InputKind.COMPUTED)
+    return frozenset(
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.input_kind not in {InputKind.COMPUTED, InputKind.PROJECTION_ONLY}
+    )
 
 
 def binding_values_with_absent_by_design_defaults(
@@ -184,12 +188,12 @@ def _reject_unknown_inputs(
         )
 
 
-def _reject_computed_inputs(
+def _reject_non_input_kind_inputs(
     inputs: Mapping[CasillaId, Decimal],
     casillas: Mapping[CasillaId, CasillaDefinition],
     formula_targets: set[CasillaId],
 ) -> None:
-    """Reject caller-supplied values for computed registry casillas."""
+    """Reject caller values for computed and projection-only registry casillas."""
     computed = sorted(
         casilla_id
         for casilla_id in inputs
@@ -200,6 +204,14 @@ def _reject_computed_inputs(
             f"computed registry casillas cannot be supplied as inputs: {computed!r}",
             translated_message="errors.calc.computed_supplied_as_input",
             context={"casilla_ids": ",".join(computed)},
+        )
+    projection_only = sorted(
+        casilla_id for casilla_id in inputs if casillas[casilla_id].input_kind == InputKind.PROJECTION_ONLY
+    )
+    if projection_only:
+        raise RegistryValidationError(
+            "projection-only registry casillas cannot be supplied as inputs; "
+            f"their canonical typed row projection owns the values: {projection_only!r}",
         )
 
 
@@ -302,7 +314,7 @@ def _initial_values_for_casillas(
     values: dict[CasillaId, Decimal] = {}
     absent_by_design: set[CasillaId] = set()
     for casilla in casillas:
-        if casilla.input_kind == InputKind.COMPUTED:
+        if casilla.input_kind in {InputKind.COMPUTED, InputKind.PROJECTION_ONLY}:
             continue
         value, absent = _initial_value_for_casilla(
             casilla,

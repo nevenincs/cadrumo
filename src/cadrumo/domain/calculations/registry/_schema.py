@@ -1002,7 +1002,7 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
-type CasillaProducerKind = Literal["formula", "manual", "upstream", "relation", "informational"]
+type CasillaProducerKind = Literal["formula", "manual", "upstream", "relation", "informational", "projection_only"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1206,6 +1206,9 @@ def _casilla_producer(
             bindings_by_id=bindings_by_id,
             relations_by_binding=relations_by_binding,
         )
+    if casilla.input_kind is InputKind.PROJECTION_ONLY:
+        reason = "projection-only casilla is populated exclusively from its canonical typed row"
+        return "projection_only", reason, _producer_provenance(casilla, "projection_only", reason)
     reason = "informational casilla is intentionally not a calculation producer"
     return "informational", reason, _producer_provenance(casilla, "informational", reason)
 

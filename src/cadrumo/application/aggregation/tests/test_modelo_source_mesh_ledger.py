@@ -15,11 +15,20 @@ from sqlalchemy import text
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
+from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE, EnvelopeVersionError
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
-from ....core import BindingSourceKind, NoRecoveryOutcome, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import (
+    BindingSourceKind,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    NoRecoveryOutcome,
+    Period,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+)
 from ....core.classification import SensitivityClass
 from ....core.resources import resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import ModeloRevision
 from ....domain.categories import SpendingCategory
 from ....domain.invoices import (
@@ -33,6 +42,7 @@ from ....domain.invoices import (
 from ....domain.iva import (
     EUMemberState,
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
@@ -58,20 +68,41 @@ from .. import (
     AggregationValidationError,
     CalculationSourceContext,
     IvaLedgerAggregationIssueReason,
-    LedgerIvaAggregationSourceResolver,
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     OssIossLedgerCandidate,
     OssIossLedgerSourceResolver,
-    aggregate_iva_ledger_observations,
     aggregate_oss_ioss_bindings,
     merge_source_resolutions,
 )
+from .. import (
+    LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver,
+)
 from .._preconditions import AggregationPreconditionCondition
 from .._source_mesh import CalculationSourceResolution
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
+
+
+class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
+    """Bind injected real repositories to an explicit empty Bienes authority."""
+
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepository | None = None,
+        invoice_repository: InvoiceCatalogueRepository | None = None,
+    ) -> None:
+        super().__init__(
+            transaction_repository=transaction_repository,
+            invoice_repository=invoice_repository,
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id=(
+                transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
+            ),
+        )
 
 
 @pytest.fixture
@@ -145,6 +176,13 @@ def _iva_transaction(
         fields["iva_category"] = iva_category
     if counterparty_country is not None:
         fields["counterparty_country"] = counterparty_country
+    if direction is TransactionDirection.OUTGOING:
+        fields["deduction_fact_kind"] = IvaDeductionFactKind.DOMESTIC_CURRENT
+        fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator=f"invoice:{provider_id}",
+            evidence_digest="a" * 64,
+        )
     return Transaction.model_validate(fields)
 
 
@@ -870,44 +908,20 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
 
 
-def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
+def test_transaction_catalogue_refuses_new_legacy_drift_fixture(
     secure_objects: SecureObjectRepository,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     from ....domain.transactions import transaction_index_object_key
 
-    revision = _revision("303", "2009-y-siguientes")
-    # Per-row catalogue: a corrupt membership-index row makes load() fail closed
-    # with StoredTransactionDriftError, the drift the resolver must degrade on.
-    secure_objects.save(
-        namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-        object_key=transaction_index_object_key(_BUCKET_ID),
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=1,
-        written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
-        payload=b"{}",
-    )
-    tx_repo = TransactionCatalogueRepository(
-        bucket_id=_BUCKET_ID,
-        objects=secure_objects,
-    )
-
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation._source_mesh"):
-        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                revision=revision,
-            ),
+    with pytest.raises(EnvelopeVersionError):
+        secure_objects.save(
+            namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+            object_key=transaction_index_object_key(_BUCKET_ID),
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=1,
+            written_at=datetime(2026, 6, 4, 12, 0, tzinfo=UTC),
+            payload=b"{}",
         )
-
-    assert resolution.binding_values == {}
-    assert resolution.source_transaction_ids == ()
-    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["storage_degraded"]
-    assert resolution.diagnostics[0].source_kind == "ledger_iva_aggregation"
-    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
 
 
 def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenance(

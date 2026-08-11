@@ -135,7 +135,6 @@ def test_require_accepted_root_uses_registered_application_error() -> None:
 
     error = exc_info.value
     assert error.reason == "The CLI accepts only the config and app roots."
-    assert error.suggestion == "aeat --help"
     assert get_registered_error_code(error).code == "REFUSED_OPERATOR_SURFACE_CONTRACT"
 
 

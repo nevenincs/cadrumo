@@ -46,12 +46,24 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
+from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, ElidedProse, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ...core import (
+    BindingSourceKind,
+    ElidedProse,
+    IvaDeductionFactKind,
+    Period,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+)
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...domain.bienes_inversion import (
+    BienesInversionIvaRegister,
+    validate_investment_asset_reciprocity,
+)
 from ...domain.calculations.registry import (
     BindingId,
     IvaLedgerObservation,
@@ -65,6 +77,7 @@ from ...domain.iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
     IvaKindApplicability,
@@ -82,6 +95,7 @@ from ...domain.iva import (
     rate_table_covers_any_positive_tier,
     stated_country_code_status,
     territorial_scope_for_country,
+    validate_iva_deduction_fact,
     validate_prorrata_reference,
 )
 from ...domain.prorrata_register import ProrrataRegister, ProrrataRegisterRepositoryProtocol
@@ -199,6 +213,7 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # malformed or ISO-unassigned code.
     MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT = "missing_counterparty_establishment_on_export"
     CASH_ACCOUNTING_EXCLUDED_CATEGORY = "cash_accounting_excluded_category"
+    MISSING_DEDUCTION_CLASSIFICATION = "missing_deduction_classification"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -319,20 +334,6 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
     regime: ProrrataRegisterRegime
 
 
-class IvaLedgerInputKind(StrEnum):
-    """Business role of a pre-classified IVA ledger candidate.
-
-    ``ADJUSTMENT`` rows may carry negative bases or cuotas because
-    rectification and regularisation entries reverse or correct prior
-    operations. The registry consumes the resulting signed observation;
-    the model keeps the adjustment axis visible at the application
-    boundary where source provenance still exists.
-    """
-
-    ORDINARY_OPERATION = "ordinary_operation"
-    ADJUSTMENT = "adjustment"
-
-
 class IvaLedgerCandidate(BaseModel):
     """One pre-classified ledger line for generic IVA aggregation.
 
@@ -355,9 +356,14 @@ class IvaLedgerCandidate(BaseModel):
     flow_direction: IvaFlowDirection
     base_amount: Decimal
     iva_amount: Decimal
-    input_kind: IvaLedgerInputKind = IvaLedgerInputKind.ORDINARY_OPERATION
+    deduction_fact_kind: IvaDeductionFactKind | None = None
+    deduction_provenance: IvaDeductionClassificationProvenance | None = None
+    investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
     prorrata_reference_id: _LedgerId | None = None
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    input_classification: InputClassification | None = None
+    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerCandidate:
@@ -370,6 +376,30 @@ class IvaLedgerCandidate(BaseModel):
                     "exemption_article": self.exemption_article.value,
                 },
             )
+        if (
+            self.flow_direction
+            not in {
+                IvaFlowDirection.SOPORTADO,
+                IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+            }
+            or self.category is IvaCategory.RECARGO_EQUIVALENCIA
+        ):
+            if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
+                raise AggregationValidationError(t("output IVA facts cannot carry deduction authority"))
+            return self
+        if self.deduction_fact_kind is None or self.deduction_provenance is None:
+            raise AggregationValidationError(t("input IVA facts require exact deduction authority"))
+        validate_iva_deduction_fact(
+            kind=self.deduction_fact_kind,
+            provenance=self.deduction_provenance,
+            category=self.category,
+            rate_kind=self.rate_kind,
+            flow_direction=self.flow_direction,
+            base_amount=self.base_amount,
+            iva_amount=self.iva_amount,
+            investment_asset_id=self.investment_asset_id,
+            rectifies_ledger_id=self.rectifies_ledger_id,
+        )
         return self
 
 
@@ -419,6 +449,17 @@ class IvaLedgerAggregation(BaseModel):
     def _freeze_issues(cls, value: Sequence[IvaLedgerAggregationIssue]) -> tuple[IvaLedgerAggregationIssue, ...]:
         return tuple(value)
 
+    @model_validator(mode="after")
+    def _rectifications_are_consumed_once(self) -> IvaLedgerAggregation:
+        rectified_ids = [
+            observation.rectifies_ledger_id
+            for observation in self.observations
+            if observation.deduction_fact_kind is IvaDeductionFactKind.RECTIFICATION
+        ]
+        if len(rectified_ids) != len(set(rectified_ids)):
+            raise AggregationValidationError(t("a corrected IVA ledger fact may be rectified only once"))
+        return self
+
     @field_serializer("observations")
     def _serialize_observations(
         self,
@@ -447,6 +488,8 @@ def aggregate_iva_ledger_observations_from_repositories(
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+    investment_asset_register: BienesInversionIvaRegister | None = None,
+    investment_asset_profile_id: str | None = None,
 ) -> IvaLedgerAggregation:
     """Load the bucket-local transaction catalogue and project IVA observations.
 
@@ -457,7 +500,21 @@ def aggregate_iva_ledger_observations_from_repositories(
             Repository consulted for the active general-prorrata provisional
             percentage when no explicit repository is supplied.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    if transaction_repository is None:
+        concrete_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
+        concrete_repository.migrate_iva_deduction_authority(asset_profile_id=bucket_id)
+        repository: TransactionCatalogueRepositoryProtocol = concrete_repository
+        investment_asset_register = BienesInversionIvaRegisterRepository(bucket_id=bucket_id).load()
+        investment_asset_profile_id = bucket_id
+    else:
+        repository = transaction_repository
+        if repository.bucket_id != bucket_id:
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.bucket_mismatch"),
+                context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
+            )
+        if investment_asset_register is None or investment_asset_profile_id is None:
+            raise AggregationValidationError(t("injected IVA repositories require explicit bienes-inversion authority"))
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
@@ -474,22 +531,68 @@ def aggregate_iva_ledger_observations_from_repositories(
     # for those rows. A period with no calendar span falls back to the
     # unfiltered load.
     if not period.has_date_span():
-        return aggregate_iva_ledger_observations(
+        result = aggregate_iva_ledger_observations(
             repository.load(),
             period=period,
             prorrata_apportionment=prorrata_apportionment,
+            ledger_profile_id=bucket_id,
+            investment_asset_register=investment_asset_register,
+            investment_asset_profile_id=investment_asset_profile_id,
         )
-    partition = repository.partition_by_date_range(period.start_date, period.end_date)
-    result = aggregate_iva_ledger_observations(
-        partition.in_window,
+    else:
+        partition = repository.partition_by_date_range(period.start_date, period.end_date)
+        result = aggregate_iva_ledger_observations(
+            partition.in_window,
+            period=period,
+            prorrata_apportionment=prorrata_apportionment,
+            ledger_profile_id=bucket_id,
+            investment_asset_register=investment_asset_register,
+            investment_asset_profile_id=investment_asset_profile_id,
+        )
+        out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
+            partition.out_of_window,
+        )
+        result = result.model_copy(
+            update={"out_of_window_summary": out_of_window_summary},
+        )
+    _validate_investment_asset_authority(
+        result.observations,
         period=period,
-        prorrata_apportionment=prorrata_apportionment,
+        ledger_profile_id=bucket_id,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
     )
-    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
-        partition.out_of_window,
+    return result
+
+
+def _validate_investment_asset_authority(
+    observations: Sequence[IvaLedgerObservation],
+    *,
+    period: Period,
+    ledger_profile_id: str | None,
+    investment_asset_register: BienesInversionIvaRegister | None,
+    investment_asset_profile_id: str | None,
+) -> None:
+    """Require explicit owner inputs before an investment fact can aggregate."""
+    has_investment_observation = any(
+        observation.deduction_fact_kind is not None and observation.deduction_fact_kind.is_investment_acquisition
+        for observation in observations
     )
-    return result.model_copy(
-        update={"out_of_window_summary": out_of_window_summary},
+    if not has_investment_observation and investment_asset_register is None:
+        return
+    if ledger_profile_id is None or investment_asset_register is None or investment_asset_profile_id is None:
+        raise AggregationValidationError(
+            t(
+                "investment IVA observations require the explicit bienes-inversion "
+                "register and matching profile authority"
+            )
+        )
+    validate_investment_asset_reciprocity(
+        observations=observations,
+        register=investment_asset_register,
+        ledger_profile_id=ledger_profile_id,
+        asset_profile_id=investment_asset_profile_id,
+        filing_year=period.filing_year,
     )
 
 
@@ -520,6 +623,12 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
         iva_amount=candidate.iva_amount,
         prorrata_reference_id=candidate.prorrata_reference_id,
         cash_accounting_treatment=candidate.cash_accounting_treatment,
+        input_classification=candidate.input_classification,
+        prorrata_sector_id=candidate.prorrata_sector_id,
+        deduction_fact_kind=candidate.deduction_fact_kind,
+        deduction_provenance=candidate.deduction_provenance,
+        investment_asset_id=candidate.investment_asset_id,
+        rectifies_ledger_id=candidate.rectifies_ledger_id,
     )
 
 
@@ -535,6 +644,9 @@ def aggregate_iva_ledger_candidates(
     candidates: Iterable[IvaLedgerCandidate],
     *,
     period: Period,
+    ledger_profile_id: str,
+    investment_asset_register: BienesInversionIvaRegister,
+    investment_asset_profile_id: str,
 ) -> IvaLedgerAggregation:
     """Project pre-classified IVA candidates into period-scoped observations.
 
@@ -561,11 +673,19 @@ def aggregate_iva_ledger_candidates(
             )
             continue
         observations.append(validate_iva_ledger_observation(candidate))
-    return IvaLedgerAggregation(
+    result = IvaLedgerAggregation(
         period=resolved_period,
         observations=tuple(observations),
         issues=tuple(issues),
     )
+    _validate_investment_asset_authority(
+        result.observations,
+        period=period,
+        ledger_profile_id=ledger_profile_id,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
+    )
+    return result
 
 
 def aggregate_iva_ledger_candidate_bindings(
@@ -574,6 +694,9 @@ def aggregate_iva_ledger_candidate_bindings(
     *,
     period: Period,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
+    ledger_profile_id: str,
+    investment_asset_register: BienesInversionIvaRegister,
+    investment_asset_profile_id: str,
 ) -> dict[BindingId, Decimal]:
     """Validate pre-classified candidates and resolve registry bindings.
 
@@ -585,8 +708,18 @@ def aggregate_iva_ledger_candidate_bindings(
             candidate set.
         prorrata_apportionment: Optional active general-prorrata percentage to
             apply to deducible IVA cuota bindings after selector resolution.
+        ledger_profile_id: Secure profile that owns the candidate ledger facts.
+        investment_asset_register: Explicit typed Bienes register authority for
+            investment acquisition facts.
+        investment_asset_profile_id: Secure profile that owns that register.
     """
-    aggregation = aggregate_iva_ledger_candidates(candidates, period=period)
+    aggregation = aggregate_iva_ledger_candidates(
+        candidates,
+        period=period,
+        ledger_profile_id=ledger_profile_id,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
+    )
     if aggregation.issues:
         first = aggregation.issues[0]
         raise AggregationValidationError(
@@ -621,6 +754,9 @@ def aggregate_iva_ledger_observations(
     transactions: TransactionCatalogue,
     *,
     period: Period,
+    ledger_profile_id: str,
+    investment_asset_register: BienesInversionIvaRegister,
+    investment_asset_profile_id: str,
     prorrata_apportionment: IvaLedgerProrrataApportionment | None = None,
 ) -> IvaLedgerAggregation:
     """Project classified ledger transaction tax facts into an :class:`IvaLedgerAggregation`.
@@ -628,6 +764,9 @@ def aggregate_iva_ledger_observations(
     Args:
         transactions: The :class:`TransactionCatalogue` supplying active ledger entries.
         period: Filing period as a typed :class:`Period` instance.
+        ledger_profile_id: Profile that owns the ledger facts.
+        investment_asset_register: Explicit Bienes register authority.
+        investment_asset_profile_id: Profile that owns the Bienes register.
         prorrata_apportionment: Optional active general-prorrata percentage to
             apply later to deducible IVA cuota binding values.
     """
@@ -661,7 +800,7 @@ def aggregate_iva_ledger_observations(
         # ledger id recorded here.
         if transaction.art_104_tres_exclusion is not None:
             art_104_tres_excluded_ledger_ids.append(transaction.transaction_id)
-    return IvaLedgerAggregation(
+    result = IvaLedgerAggregation(
         period=resolved_period,
         observations=tuple(observations),
         prorrata_references=tuple(prorrata_references),
@@ -669,6 +808,14 @@ def aggregate_iva_ledger_observations(
         issues=tuple(issues),
         art_104_tres_excluded_ledger_ids=tuple(art_104_tres_excluded_ledger_ids),
     )
+    _validate_investment_asset_authority(
+        result.observations,
+        period=period,
+        ledger_profile_id=ledger_profile_id,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
+    )
+    return result
 
 
 def resolve_iva_ledger_binding_values(
@@ -1445,6 +1592,18 @@ def _classify_iva_transaction(
         category=effective_category,
         invoice_direction=invoice_kind,
     )
+    if (
+        flow_direction in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
+        and effective_category is not IvaCategory.RECARGO_EQUIVALENCIA
+        and (transaction.deduction_fact_kind is None or transaction.deduction_provenance is None)
+    ):
+        return _IvaTransactionOutcome(
+            gate_issue=IvaLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
+                detail="IVA deduction facts require an exact kind and immutable evidence provenance before calculation",
+            ),
+        )
 
     prorrata_reference, prorrata_issue, linked_prorrata_id = _resolve_iva_prorrata_attachment(
         transaction,
@@ -1465,6 +1624,8 @@ def _classify_iva_transaction(
             full_base_amount=base_amount,
             full_iva_amount=iva_amount,
             linked_prorrata_id=linked_prorrata_id,
+            deduction_fact_kind=transaction.deduction_fact_kind,
+            deduction_provenance=transaction.deduction_provenance,
         )
         if not observations:
             return _IvaTransactionOutcome(
@@ -1501,6 +1662,10 @@ def _classify_iva_transaction(
         # would answer "what does this tier mean today" when the question is
         # "what was this line actually charged".
         applied_rate=transaction.iva_rate,
+        deduction_fact_kind=transaction.deduction_fact_kind,
+        deduction_provenance=transaction.deduction_provenance,
+        investment_asset_id=transaction.investment_asset_id,
+        rectifies_ledger_id=transaction.rectifies_ledger_id,
     )
     return _IvaTransactionOutcome(
         observations=(observation,),
@@ -1525,6 +1690,10 @@ def _iva_observation(
     input_classification: InputClassification | None = None,
     prorrata_sector_id: str | None = None,
     applied_rate: Decimal | None = None,
+    deduction_fact_kind: IvaDeductionFactKind | None,
+    deduction_provenance: IvaDeductionClassificationProvenance | None,
+    investment_asset_id: str | None = None,
+    rectifies_ledger_id: str | None = None,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id=ledger_id,
@@ -1541,6 +1710,10 @@ def _iva_observation(
         cash_accounting_treatment=cash_accounting_treatment,
         input_classification=input_classification,
         prorrata_sector_id=prorrata_sector_id,
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
+        investment_asset_id=investment_asset_id,
+        rectifies_ledger_id=rectifies_ledger_id,
     )
 
 
@@ -1556,6 +1729,8 @@ def _cash_accounting_observations(
     full_base_amount: Decimal,
     full_iva_amount: Decimal,
     linked_prorrata_id: str | None,
+    deduction_fact_kind: IvaDeductionFactKind | None,
+    deduction_provenance: IvaDeductionClassificationProvenance | None,
 ) -> tuple[IvaLedgerObservation, ...]:
     # Carried onto every observation this producer emits, exactly as the
     # ordinary path carries it. ``applied_rate is None`` is a claim that the
@@ -1584,6 +1759,10 @@ def _cash_accounting_observations(
                 input_classification=transaction.input_classification,
                 prorrata_sector_id=transaction.prorrata_sector_id,
                 applied_rate=applied_rate,
+                deduction_fact_kind=deduction_fact_kind,
+                deduction_provenance=deduction_provenance,
+                investment_asset_id=transaction.investment_asset_id,
+                rectifies_ledger_id=transaction.rectifies_ledger_id,
             ),
         )
     if resolved_period.contains(operation_date):
@@ -1601,6 +1780,10 @@ def _cash_accounting_observations(
                 input_classification=transaction.input_classification,
                 prorrata_sector_id=transaction.prorrata_sector_id,
                 applied_rate=applied_rate,
+                deduction_fact_kind=deduction_fact_kind,
+                deduction_provenance=deduction_provenance,
+                investment_asset_id=transaction.investment_asset_id,
+                rectifies_ledger_id=transaction.rectifies_ledger_id,
             ),
         )
     return tuple(observations)
@@ -1960,7 +2143,6 @@ __all__ = [
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerCandidate",
-    "IvaLedgerInputKind",
     "IvaLedgerProrrataApportionment",
     "IvaLedgerSectorApportionment",
     "ProrrataLedgerReference",

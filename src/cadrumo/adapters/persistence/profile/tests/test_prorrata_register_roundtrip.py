@@ -35,12 +35,13 @@ import pytest
 
 from .....core import (
     ABSENT_SECURE_OBJECT_REVISION_ID,
+    ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
 from .....core.external_constants import UTF_8_ENCODING
-from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from .....tests.secure_sql import isolated_runtime_profile
 from ....persistence.storage.errors import SecureObjectRevisionConflictError
 from ....persistence.storage.sql.engine import get_engine
@@ -81,6 +82,20 @@ def _populated_register() -> ProrrataRegister:
     return ProrrataRegister(
         entries=(carried_settled, authorised_sector, interrupted),
         sector_definitions=(sector_definition,),
+    )
+
+
+def _activity_row(*, activity_id: str, slot: int) -> ProrrataActivityRow:
+    return ProrrataActivityRow(
+        ejercicio=2024,
+        activity_id=activity_id,
+        slot=slot,
+        cnae_code="471",
+        operaciones_total=Decimal("1000.00"),
+        operaciones_con_derecho=Decimal("800.00"),
+        prorrata_type=ProrrataActivityRowType.GENERAL,
+        percentage=Decimal("80.00"),
+        evidence_reference=f"operator-evidence:{activity_id}",
     )
 
 
@@ -142,6 +157,35 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
         register = declare_prorrata_entry(settled)
         assert len(register.entries_for_ejercicio(2024)) == 1
         assert register.entry_for(2024) == settled
+
+
+def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None:
+    """All singleton mutations retain the canonical per-activity row substrate."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-activity-row"):
+        repo = ProrrataRegisterRepository()
+        retail = _activity_row(activity_id="retail", slot=1)
+        repo.upsert_activity_row(retail)
+        repo.upsert_entry(
+            ProrrataRegisterEntry(
+                ejercicio=2024,
+                regime=ProrrataRegisterRegime.GENERAL,
+            ),
+        )
+        repo.upsert_sector_definition(
+            SectorDefinition(
+                sector_id="retail",
+                letra=SectorDiferenciadoLetra.A,
+                member_activity_codes=("471",),
+            ),
+        )
+        replacement = retail.model_copy(update={"operaciones_total": Decimal("1250.00")})
+        saved = repo.upsert_activity_row(replacement)
+
+        assert saved.activity_rows_for_ejercicio(2024) == (replacement,)
+        loaded = repo.load()
+        assert loaded.activity_rows_for_ejercicio(2024) == (replacement,)
+        assert loaded.entry_for(2024) is not None
+        assert loaded.sector_definition_for("retail") is not None
 
 
 def test_register_secure_object_write_keeps_a_conflicted_batch_atomic(tmp_path: Path) -> None:

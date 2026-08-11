@@ -171,6 +171,7 @@ from ._irnr import (
 )
 from ._iva_category_resolution import IvaCategoryOutcome
 from ._iva_compensation_provenance import IvaCompensationStateProvenance
+from ._iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._model_catalogue import (
     ANTHROPIC_COMMERCIAL_TERMS,
@@ -254,6 +255,7 @@ from ._prorrata_exclusions import (
     Art104TresExclusion,
 )
 from ._prorrata_register import (
+    ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -512,6 +514,8 @@ __all__: list[str] = [
     "IntracomOperationType",
     "IvaCategoryOutcome",
     "IvaCompensationStateProvenance",
+    "IvaDeductionEvidenceAuthority",
+    "IvaDeductionFactKind",
     "LedgerSortField",
     "LedgerSortOrder",
     "LicenceVerification",
@@ -547,6 +551,7 @@ __all__: list[str] = [
     "PriorDomiciliationElection",
     "ProductIdentity",
     "ProfileSessionRefusalReason",
+    "ProrrataActivityRowType",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",

@@ -370,6 +370,17 @@ class CasillaDefinition(RegistryModel):
             raise RegistryValidationError(f"casilla {self.id!r} alternate_bindings must be unique")
         if self.input_kind == InputKind.BOUND and self.formula is not None:
             raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
+        if self.input_kind == InputKind.PROJECTION_ONLY and any(
+            value
+            for value in (
+                self.formula,
+                self.binding,
+                self.alternate_bindings,
+            )
+        ):
+            raise RegistryValidationError(
+                f"projection-only casilla {self.id!r} must not declare formula, binding, or alternate_bindings",
+            )
         self._validate_export_exposure()
         self._validate_singleton_role_declaration()
         return self

@@ -553,8 +553,8 @@ def require_accepted_root(name: str) -> RootSurface:
     """Return the :class:`RootSurface` for an accepted root.
 
     Raises :class:`OperatorSurfaceContractError` when ``name`` is outside the
-    backend-owned root contract. The refusal carries localized reason and
-    suggestion text, while the accepted path returns the exact
+    backend-owned root contract. The refusal carries localized reason text,
+    while the accepted path returns the exact
     :class:`RootSurface` record from :func:`get_operator_surface_contract`.
     """
     normalized = name.strip().lower()
@@ -567,7 +567,6 @@ def require_accepted_root(name: str) -> RootSurface:
             "cli.operator_surface.errors.accepted_roots_only",
             default="accepted operator roots are config and app",
         ),
-        suggestion="aeat --help",
     )
 
 
@@ -589,8 +588,4 @@ def resolve_source_kind_alias(value: str) -> BindingSourceKind:
     raise OperatorSurfaceContractError(
         value,
         reason=tr("cli.operator_surface.errors.unknown_source_kind", kind=value),
-        suggestion=tr(
-            "cli.operator_surface.errors.source_kind_options",
-            options=", ".join(source_kind.value for source_kind in SOURCE_KINDS),
-        ),
     )

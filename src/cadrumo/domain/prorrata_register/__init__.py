@@ -49,6 +49,9 @@ from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG,
 )
 from ...core import (
+    ProrrataActivityRowType as _ProrrataActivityRowType,
+)
+from ...core import (
     ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance,
 )
 from ...core import (
@@ -142,6 +145,39 @@ class SectorDefinition(BaseModel):
             if not code.strip():
                 raise ProrrataRegisterValidationError("member_activity_codes must not contain a blank code")
         return value
+
+
+class ProrrataActivityRow(BaseModel):
+    """One canonical Modelo 303 per-activity prorrata filing row.
+
+    The five official DP30305 rows are taxpayer facts, not copies of the
+    register's global percentage or five families of numbered scalar inputs.
+    ``activity_id`` gives a durable operator identity while ``slot`` records
+    the reviewed fixed-row projection (1 through 5).  The registry owns the
+    revision-specific boxes and byte geometry; this child owns only the typed
+    row facts and their evidence reference.
+    """
+
+    model_config = _STRICT_FROZEN_CONFIG
+
+    ejercicio: int = Field(ge=_MIN_EJERCICIO, le=_MAX_EJERCICIO)
+    activity_id: str = Field(min_length=1, max_length=128)
+    slot: int = Field(ge=1, le=5)
+    cnae_code: str = Field(min_length=3, max_length=4, pattern=r"^\d{3,4}$")
+    operaciones_total: Decimal = Field(ge=Decimal("0"))
+    operaciones_con_derecho: Decimal = Field(ge=Decimal("0"))
+    prorrata_type: _ProrrataActivityRowType
+    percentage: Decimal = Field(ge=Decimal("0"), le=_HUNDRED)
+    evidence_reference: str = Field(min_length=1, max_length=256)
+
+    @model_validator(mode="after")
+    def _deductible_operations_do_not_exceed_total(self) -> ProrrataActivityRow:
+        """Reject a row whose declared right-bearing volume exceeds its total."""
+        if self.operaciones_con_derecho > self.operaciones_total:
+            raise ProrrataRegisterValidationError(
+                "operaciones_con_derecho must not exceed operaciones_total for an activity row",
+            )
+        return self
 
 
 class ProrrataRegisterEntry(BaseModel):
@@ -380,6 +416,10 @@ class ProrrataRegister(BaseModel):
             fail-closed default; when non-empty every per-sector
             :class:`ProrrataRegisterEntry` ``sector_id`` and every sectored
             ledger row references one of these declared sectors.
+        activity_rows: Canonical, evidence-carrying Modelo 303 per-activity
+            prorrata rows.  They are keyed by ``(ejercicio, activity_id)`` and
+            retain their fixed official row slot without owning any global
+            prorrata result.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -387,6 +427,7 @@ class ProrrataRegister(BaseModel):
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
     entries: tuple[ProrrataRegisterEntry, ...] = ()
     sector_definitions: tuple[SectorDefinition, ...] = ()
+    activity_rows: tuple[ProrrataActivityRow, ...] = ()
 
     @field_validator("schema_version")
     @classmethod
@@ -410,6 +451,17 @@ class ProrrataRegister(BaseModel):
         sector_ids = [definition.sector_id for definition in self.sector_definitions]
         if len(sector_ids) != len(set(sector_ids)):
             raise ProrrataRegisterValidationError("register carries duplicate sector_id definitions")
+        return self
+
+    @model_validator(mode="after")
+    def _activity_row_keys_unique(self) -> ProrrataRegister:
+        """Keep each activity identity and fixed row slot unambiguous per year."""
+        activity_keys = [(row.ejercicio, row.activity_id) for row in self.activity_rows]
+        if len(activity_keys) != len(set(activity_keys)):
+            raise ProrrataRegisterValidationError("register carries duplicate (ejercicio, activity_id) activity rows")
+        slot_keys = [(row.ejercicio, row.slot) for row in self.activity_rows]
+        if len(slot_keys) != len(set(slot_keys)):
+            raise ProrrataRegisterValidationError("register carries duplicate (ejercicio, slot) activity rows")
         return self
 
     @property
@@ -436,6 +488,25 @@ class ProrrataRegister(BaseModel):
     def entries_for_ejercicio(self, ejercicio: int) -> tuple[ProrrataRegisterEntry, ...]:
         """Return every entry recorded for ``ejercicio`` across all sectors."""
         return tuple(entry for entry in self.entries if entry.ejercicio == ejercicio)
+
+    def activity_rows_for_ejercicio(self, ejercicio: int) -> tuple[ProrrataActivityRow, ...]:
+        """Return the year's canonical activity rows in official fixed-slot order."""
+        rows = (row for row in self.activity_rows if row.ejercicio == ejercicio)
+        return tuple(sorted(rows, key=lambda row: row.slot))
+
+    def requires_activity_rows_for(self, ejercicio: int) -> bool:
+        """Whether the recorded prorrata regime makes the five rows applicable."""
+        return any(
+            not entry.interrupted and entry.regime is not _ProrrataRegisterRegime.NINGUNA
+            for entry in self.entries_for_ejercicio(ejercicio)
+        )
+
+    def activity_rows_complete_for(self, ejercicio: int) -> bool:
+        """Whether an applicable year has exactly the five declared official rows."""
+        if not self.requires_activity_rows_for(ejercicio):
+            return True
+        rows = self.activity_rows_for_ejercicio(ejercicio)
+        return len(rows) == 5 and {row.slot for row in rows} == {1, 2, 3, 4, 5}
 
     def entry_for(self, ejercicio: int, *, sector_id: str | None = None) -> ProrrataRegisterEntry | None:
         """Return the entry for a ``(ejercicio, sector_id)`` key, or ``None`` when absent."""
@@ -507,6 +578,7 @@ class ProrrataRegister(BaseModel):
 
 __all__ = [
     "PRORRATA_REGISTER_SCHEMA_VERSION",
+    "ProrrataActivityRow",
     "ProrrataProvisionalResolution",
     "ProrrataRegister",
     "ProrrataRegisterEntry",
