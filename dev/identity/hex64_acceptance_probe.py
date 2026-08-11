@@ -1,6 +1,6 @@
 """Behavioural probe for the hex-64 census: does a field actually accept non-hex?
 
-WHY A SECOND INSTRUMENT. ``dev/hex64_redeclaration_census.py`` reads
+WHY A SECOND INSTRUMENT. ``dev/identity/hex64_redeclaration_census.py`` reads
 DECLARATIONS. It can prove a field declares a length and no pattern; it cannot
 prove what that field accepts at runtime, because a hand-written
 ``field_validator`` elsewhere in the class may enforce the shape the annotation
@@ -30,8 +30,8 @@ acceptance is measuring its own harness.
 
 Usage::
 
-    python -m dev.hex64_acceptance_probe HEAD
-    python -m dev.hex64_acceptance_probe HEAD --json
+    python -m dev.identity.hex64_acceptance_probe HEAD
+    python -m dev.identity.hex64_acceptance_probe HEAD --json
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Annotated, Final
 
-from dev.hex64_redeclaration_census import DeclarationKind, census
+from dev.identity.hex64_redeclaration_census import DeclarationKind, census
 
 #: A real digest. The probe must accept this or it has not reached the constraint.
 VALID_DIGEST: Final[str] = hashlib.sha256(b"probe").hexdigest()

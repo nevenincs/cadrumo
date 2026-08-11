@@ -41,7 +41,7 @@ def test_command_targets_the_configured_paths() -> None:
         "--config",
         "pyproject.toml",
         "src/cadrumo",
-        "dev/vulture_whitelist.py",
+        "dev/audit/vulture_whitelist.py",
     ]
 
 

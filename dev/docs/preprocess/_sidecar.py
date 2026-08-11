@@ -134,7 +134,7 @@ def load_sidecar(source: Path) -> PreprocessOutput:
             ``schema_version``), or its recorded ``source_sha256`` no longer
             matches the origin file's live content hash.
     """
-    _, json_path = sidecar_paths_for(source)
+    text_path, json_path = sidecar_paths_for(source)
     try:
         raw = json_path.read_text(encoding=_UTF_8)
     except OSError as exc:
@@ -152,4 +152,10 @@ def load_sidecar(source: Path) -> PreprocessOutput:
             f"sidecar for {source} is stale: recorded source_sha256={output.source_sha256} "
             f"but the source file now hashes to {live_sha256}"
         )
+    try:
+        rendered_text = text_path.read_text(encoding=_UTF_8)
+    except OSError as exc:
+        raise PreprocessSidecarError(f"text sidecar missing or unreadable for {source}: {exc}") from exc
+    if rendered_text != output.render_text():
+        raise PreprocessSidecarError(f"sidecar pair for {source} has divergent rendered text")
     return output

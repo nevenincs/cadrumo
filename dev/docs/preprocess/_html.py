@@ -57,7 +57,7 @@ HTML_EXTRACTOR_ID = "normatives-html"
 
 #: Version of this extractor; part of the cache identity. Bump when the
 #: rendering changes so a regeneration is distinguishable from a no-op.
-HTML_EXTRACTOR_VERSION = "1.1"
+HTML_EXTRACTOR_VERSION = "1.3"
 _UTF_8: Final[str] = "utf-8"
 
 #: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
@@ -158,38 +158,20 @@ _ANNEX_FRAGMENT_SPECS: Final[dict[str, tuple[tuple[str, str, str], ...]]] = {
     ),
 }
 
-_IVA_2025_INSTRUCTION_FRAGMENT_SPEC: Final[tuple[str, str, str]] = (
+_IVA_ANNUAL_INSTRUCTION_FRAGMENT_SPEC: Final[tuple[str, str, str]] = (
     "#anexo-i-instrucciones-iva",
     "instrucciones para la aplicacion de los indices y modulos en el impuesto sobre el valor anadido",
     "cuotas trimestrales",
 )
 
-# The IVA activity tables repeat some IRPF activity titles earlier in ANEXO II.
-# The occurrence number is therefore source structure, not a text-content
-# heuristic: select the stated caption occurrence and stop at the next stated
-# peer activity caption.
-_ANNEX_OCCURRENCE_FRAGMENT_SPECS: Final[dict[str, tuple[tuple[str, str, int, str], ...]]] = {
-    "ANEXO II": (
-        (
-            "#anexo-i-iva-721-2",
-            "actividad: transporte por autotaxis",
-            2,
-            "actividad: transporte de mercancias por carretera, excepto residuos",
-        ),
-        (
-            "#anexo-i-iva-722",
-            "actividad: transporte de mercancias por carretera, excepto residuos",
-            1,
-            "actividad: transporte de residuos por carretera",
-        ),
-        (
-            "#anexo-i-iva-972-1",
-            "actividad: servicios de peluqueria de senora y caballero",
-            2,
-            "actividad: salones e institutos de belleza",
-        ),
-    ),
-}
+_M303_ANNUAL_ORDEN_SOURCES: Final[frozenset[str]] = frozenset(
+    {
+        "orden-hfp-1172-2022.html",
+        "orden-hfp-1359-2023.html",
+        "orden-hac-1347-2024.html",
+        "orden-hac-1425-2025.html",
+    },
+)
 
 
 def _clip_to_content(markup: str) -> str:
@@ -326,7 +308,7 @@ def _fold_fragment_heading(text: str) -> str:
 def _derived_annex_fragment_units(
     unit: PreprocessUnit,
     *,
-    include_iva_2025_fragments: bool,
+    include_iva_annual_fragments: bool,
 ) -> list[PreprocessUnit]:
     """Derive citation-sized units from source-stated annex instruction headings."""
     if unit.title not in _ANNEX_FRAGMENT_SPECS:
@@ -335,8 +317,8 @@ def _derived_annex_fragment_units(
     folded = tuple(_fold_fragment_heading(line) for line in lines)
     derived: list[PreprocessUnit] = []
     fragment_specs = _ANNEX_FRAGMENT_SPECS[unit.title]
-    if include_iva_2025_fragments and unit.title == "ANEXO II":
-        fragment_specs = (_IVA_2025_INSTRUCTION_FRAGMENT_SPEC, *fragment_specs)
+    if include_iva_annual_fragments and unit.title == "ANEXO II":
+        fragment_specs = (_IVA_ANNUAL_INSTRUCTION_FRAGMENT_SPEC, *fragment_specs)
     for anchor, start_prefix, end_prefix in fragment_specs:
         starts = [index for index, line in enumerate(folded) if line.startswith(start_prefix)]
         ends = [index for index, line in enumerate(folded) if line.startswith(end_prefix)]
@@ -356,35 +338,13 @@ def _derived_annex_fragment_units(
                 anchor=anchor,
             ),
         )
-    occurrence_specs = _ANNEX_OCCURRENCE_FRAGMENT_SPECS.get(unit.title, ()) if include_iva_2025_fragments else ()
-    for anchor, start_prefix, occurrence, end_prefix in occurrence_specs:
-        starts = [index for index, line in enumerate(folded) if line.startswith(start_prefix)]
-        if len(starts) < occurrence:
-            continue
-        start = starts[occurrence - 1]
-        ends = [index for index, line in enumerate(folded[start + 1 :], start=start + 1) if line.startswith(end_prefix)]
-        if not ends or ends[0] <= start + 1:
-            continue
-        end = ends[0]
-        title = lines[start].strip()
-        body = "\n".join(lines[start + 1 : end]).strip()
-        if not title or not body:
-            continue
-        derived.append(
-            PreprocessUnit(
-                text=body,
-                title=title,
-                section=f"{unit.title}: {title}",
-                anchor=anchor,
-            ),
-        )
     return derived
 
 
 def _with_derived_annex_fragments(
     units: list[PreprocessUnit],
     *,
-    include_iva_2025_fragments: bool,
+    include_iva_annual_fragments: bool,
 ) -> list[PreprocessUnit]:
     """Append citation-sized derived fragments in parent-annex order."""
     derived = [
@@ -392,10 +352,32 @@ def _with_derived_annex_fragments(
         for unit in units
         for fragment in _derived_annex_fragment_units(
             unit,
-            include_iva_2025_fragments=include_iva_2025_fragments,
+            include_iva_annual_fragments=include_iva_annual_fragments,
         )
     ]
     return [*units, *derived]
+
+
+def _m303_annual_orden_table_units(source: Path) -> list[PreprocessUnit]:
+    """Project the canonical annual-Orden parser into exact legal-corpus units."""
+    if source.name not in _M303_ANNUAL_ORDEN_SOURCES:
+        return []
+    from cadrumo.core import (
+        extract_orden_anual_iva_tables,
+        orden_anual_iva_activity_anchors,
+        orden_anual_iva_table_text,
+    )
+
+    activities = extract_orden_anual_iva_tables(source.read_bytes(), source_label=source.name)
+    return [
+        PreprocessUnit(
+            text=orden_anual_iva_table_text(activity),
+            title=activity.activity_name,
+            section=f"{activity.annex_heading}: IVA anual: {activity.activity_name}",
+            anchor=anchor,
+        )
+        for activity, anchor in zip(activities, orden_anual_iva_activity_anchors(activities), strict=True)
+    ]
 
 
 def _document_boe_url(markup: str) -> str:
@@ -474,8 +456,9 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
 
     units = _with_derived_annex_fragments(
         units,
-        include_iva_2025_fragments=source.name == "orden-hac-1347-2024.html",
+        include_iva_annual_fragments=source.name == "orden-hac-1347-2024.html",
     )
+    units.extend(_m303_annual_orden_table_units(source))
 
     if not units:
         return [

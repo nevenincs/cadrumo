@@ -28,8 +28,8 @@ default and reclaimed only under an explicit ``--apply``, because automating a
 deletion decided by inference is a different risk from automating one decided
 by observation.
 
-Run ``python -m dev.temp_reaper`` for the report and
-``python -m dev.temp_reaper --apply`` to act on it.
+Run ``python -m dev.env.temp_reaper`` for the report and
+``python -m dev.env.temp_reaper --apply`` to act on it.
 """
 
 from __future__ import annotations

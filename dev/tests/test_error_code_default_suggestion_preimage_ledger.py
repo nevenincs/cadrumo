@@ -7,7 +7,7 @@ from dataclasses import replace
 import pytest
 
 from cadrumo.core.errors import ErrorCode
-from dev.error_code_default_suggestion_preimage_ledger import (
+from dev.quality.error_code_default_suggestion_preimage_ledger import (
     DEFAULT_PREIMAGE_LEDGER_PATH,
     SOURCE_COMMIT,
     ErrorCodeDefaultPreimageError,

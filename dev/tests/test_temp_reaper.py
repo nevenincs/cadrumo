@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.temp_reaper import (
+from dev.env.temp_reaper import (
     IDLE_CEILING_SECONDS,
     assess_claude_sessions,
     assess_session,

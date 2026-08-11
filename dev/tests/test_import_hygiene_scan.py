@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from ..import_hygiene_scan import (
+from ..quality.import_hygiene_scan import (
     REPO_ROOT,
     FacadeInfo,
     discover_facades,
@@ -153,7 +153,7 @@ def test_module_body_defs_sees_a_class_defined_only_inside_a_try_except_branch(t
     Fallback: ...`` branch -- so this test does not depend on
     ``_playwright.py`` continuing to exist in this exact shape.
     """
-    from ..import_hygiene_scan import module_body_defs
+    from ..quality.import_hygiene_scan import module_body_defs
 
     synthetic = tmp_path / "synthetic_optional_dependency_fallback.py"
     synthetic.write_text(
@@ -185,7 +185,7 @@ def test_module_body_defs_still_ignores_a_bare_alias_inside_a_conditional_branch
     branch-flattening fix would itself manufacture false negatives (a genuine
     shim built entirely from conditional aliases escaping detection).
     """
-    from ..import_hygiene_scan import module_body_defs
+    from ..quality.import_hygiene_scan import module_body_defs
 
     synthetic = tmp_path / "synthetic_conditional_alias_only.py"
     synthetic.write_text(

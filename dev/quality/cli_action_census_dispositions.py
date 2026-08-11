@@ -1,6 +1,6 @@
 """Parse and reconcile adjudications for CLI action-census candidates.
 
-``dev.cli_action_census`` owns mechanical discovery.  This module deliberately
+``dev.quality.cli_action_census`` owns mechanical discovery.  This module deliberately
 does not repeat that walk: it turns the census's stable candidate identity into
 a versioned TOML record and refuses an incomplete, stale, or ambiguous
 adjudication set.  The checked-in ledger is populated by the next campaign
@@ -22,7 +22,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
-from dev.cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
+from dev.quality.cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
 
 __all__ = [
     "DEFAULT_DISPOSITIONS_PATH",

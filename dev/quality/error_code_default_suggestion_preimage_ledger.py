@@ -34,8 +34,8 @@ __all__ = [
     "validate_preimage_ledger",
 ]
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
-DEFAULT_PREIMAGE_LEDGER_PATH: Final[Path] = REPO_ROOT / "dev" / "error_code_default_suggestion_preimage.json"
+REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
+DEFAULT_PREIMAGE_LEDGER_PATH: Final[Path] = REPO_ROOT / "dev" / "quality" / "error_code_default_suggestion_preimage.json"
 SOURCE_COMMIT: Final[str] = "930ef9f4017a23cccaf4990d287beb014fc9723c"
 _SCHEMA_VERSION: Final[int] = 1
 _UTF_8: Final[str] = "utf-8"

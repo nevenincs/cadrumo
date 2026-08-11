@@ -25,7 +25,7 @@ peers commit, silently mixes trees: an enumeration performed against a
 partially-repaired tree reports the repaired symbols as sound and the run reads
 as a clean HEAD audit. Every read here is pinned to the revision passed in.
 
-Companion to :mod:`dev.import_hygiene_scan`, which governs *which* module a
+Companion to :mod:`dev.quality.import_hygiene_scan`, which governs *which* module a
 consumer may import a symbol from. This scanner asks the prior question --
 whether the symbol exists at all.
 """
@@ -38,9 +38,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from dev.import_hygiene_scan import dunder_all_assignment_value
+from dev.quality.import_hygiene_scan import dunder_all_assignment_value
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 PKG_PREFIX = "src/cadrumo"
 _UTF_8 = "utf-8"
 
@@ -161,7 +161,7 @@ def _exported_names(tree: ast.Module) -> list[str] | None:
     """Return ``__all__`` for a module, or ``None`` when it declares none.
 
     Delegates the assignment-shape question to
-    :func:`dev.import_hygiene_scan.dunder_all_assignment_value`, which is the
+    :func:`dev.quality.import_hygiene_scan.dunder_all_assignment_value`, which is the
     project's one authority on it and already handles the annotated form
     ``__all__: list[str] = [...]``. Re-deriving that here is how the two
     scanners would drift: an ``__all__`` read as absent makes every mirror

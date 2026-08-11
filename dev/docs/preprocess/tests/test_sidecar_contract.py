@@ -226,6 +226,20 @@ def test_load_sidecar_refuses_a_source_changed_since_extraction(tmp_path: Path) 
         load_sidecar(source_copy)
 
 
+def test_load_sidecar_refuses_a_corrupted_real_rendered_text_copy(tmp_path: Path) -> None:
+    """The committed markdown half must remain the exact JSON rendering."""
+    source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name
+    source_copy.write_bytes(_WORKED_EXAMPLE_HTML.read_bytes())
+    output = build_outputs(source_copy, repo_root=tmp_path)[0]
+    text_path, _ = write_sidecar(source_copy, output)
+
+    original = text_path.read_text(encoding="utf-8")
+    text_path.write_text(original.replace("modelo 184", "modelo 999", 1), encoding="utf-8")
+
+    with pytest.raises(PreprocessSidecarError, match="divergent rendered text"):
+        load_sidecar(source_copy)
+
+
 def test_load_sidecar_accepts_an_unchanged_source(tmp_path: Path) -> None:
     """A source file untouched since extraction loads cleanly."""
     source_copy = tmp_path / _WORKED_EXAMPLE_HTML.name

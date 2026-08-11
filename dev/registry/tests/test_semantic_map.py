@@ -44,8 +44,18 @@ def _entry_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
         ("casilla", {"casilla_id": "casilla.03"}, "casilla_id", "casilla.03"),
         ("binding", {"binding": "declarante.nif"}, "binding", "declarante.nif"),
         ("literal", {"literal": "T"}, "literal", "T"),
-        ("header", {"producer_key": FilingProducerKey.PRESENTER_TAX_ID}, "producer_key", FilingProducerKey.PRESENTER_TAX_ID),
-        ("draft", {"draft_attribute": ExportDraftAttribute.FILING_YEAR}, "draft_attribute", ExportDraftAttribute.FILING_YEAR),
+        (
+            "header",
+            {"producer_key": FilingProducerKey.PRESENTER_TAX_ID},
+            "producer_key",
+            FilingProducerKey.PRESENTER_TAX_ID,
+        ),
+        (
+            "draft",
+            {"draft_attribute": ExportDraftAttribute.FILING_YEAR},
+            "draft_attribute",
+            ExportDraftAttribute.FILING_YEAR,
+        ),
         (
             "computed",
             {"computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG},

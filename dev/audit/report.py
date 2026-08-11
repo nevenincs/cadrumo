@@ -6,7 +6,7 @@ red/amber/green dashboard, so a contributor gets a single command and a single
 verdict instead of four unrelated tool invocations with no shared severity
 model:
 
-* **Shadowing** (D1) -- reuses ``dev.import_hygiene_scan.find_multi_sourced_symbols``
+* **Shadowing** (D1) -- reuses ``dev.quality.import_hygiene_scan.find_multi_sourced_symbols``
   against the checked-in ``dev/import_hygiene_baseline.json`` Family-3 pinned
   set (the same authority ``src/cadrumo/tests/test_import_hygiene_gate.py``
   enforces). A genuine multi-facade duplicate symbol not in the pinned set is
@@ -46,7 +46,7 @@ convention: RED is "new/regressed", AMBER is "grandfathered debt", GREEN is
 "clean".
 
 See Also:
-    :func:`~dev.import_hygiene_scan.find_multi_sourced_symbols`
+    :func:`~dev.quality.import_hygiene_scan.find_multi_sourced_symbols`
         Symbol-shadowing scanner reused for the D1 dimension.
     :func:`~dev.audit.duplication.run_duplication_scan`
         The single duplication runner consumed for the D2 dimension.
@@ -90,7 +90,7 @@ from dev.audit.complexity import (
 )
 from dev.audit.complexity_allowlist import load_allowlist as load_complexity_allowlist
 from dev.audit.duplication import DuplicationOutcome, run_duplication_scan
-from dev.import_hygiene_scan import (
+from dev.quality.import_hygiene_scan import (
     PKG_ROOT,
     discover_facades,
     find_multi_sourced_symbols,
@@ -98,7 +98,7 @@ from dev.import_hygiene_scan import (
 )
 
 _UTF_8: Final[str] = "utf-8"
-_IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = Path(__file__).resolve().parents[1] / "import_hygiene_baseline.json"
+_IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = Path(__file__).resolve().parents[1] / "quality" / "import_hygiene_baseline.json"
 _PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
 _PRODUCTION_EXCLUDE: Final[str] = (
     "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"

@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.hex64_redeclaration_census import (
+from dev.identity.hex64_redeclaration_census import (
     ALLOWLIST,
     CANONICAL_HOME,
     DeclarationKind,
@@ -171,7 +171,7 @@ def test_an_exemption_can_actually_excuse_a_pattern_declaration() -> None:
     # The end-to-end proof, and the one that fails if the binding is ever
     # dropped again: an allowlist entry naming an alias must remove that
     # alias's pattern declaration from the open set.
-    from dev.hex64_redeclaration_census import Exemption
+    from dev.identity.hex64_redeclaration_census import Exemption
 
     source = 'Excused = r"^[0-9a-f]{64}$"\nOpen = r"^[0-9a-f]{64}$"\n'
     found = census_sources(_sources(**{"src__a.py": source}))

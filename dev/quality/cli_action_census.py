@@ -14,8 +14,8 @@ operator surface; those concerns are intentionally not hidden in this scanner.
 
 Usage::
 
-    python -m dev.cli_action_census HEAD
-    python -m dev.cli_action_census HEAD --json
+    python -m dev.quality.cli_action_census HEAD
+    python -m dev.quality.cli_action_census HEAD --json
 """
 
 from __future__ import annotations
@@ -36,7 +36,7 @@ from typing import Final, cast
 import yaml
 from yaml.nodes import MappingNode, Node, ScalarNode, SequenceNode
 
-REPO_ROOT: Final[Path] = Path(__file__).resolve().parent.parent
+REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[2]
 SOURCE_ROOT: Final[str] = "src/cadrumo"
 _UTF_8: Final[str] = "utf-8"
 

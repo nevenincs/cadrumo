@@ -7,7 +7,7 @@ directory, so a test module under ``src/`` is not shipped code.
 
 What remained unguarded is the rest: a non-test module under ``src/`` DOES ship,
 to every operator, in the wheel. The existing companion gate
-(``DevToolingImportViolation`` in ``dev/import_hygiene_scan.py``) catches a
+(``DevToolingImportViolation`` in ``dev/quality/import_hygiene_scan.py``) catches a
 shipped module importing this repo's own ``dev/`` tree. This one catches the
 other half, which is how harness code actually announces itself: it reaches for
 the tooling that only ever exists on a developer's machine.

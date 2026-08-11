@@ -211,12 +211,12 @@ env-rag-stop:
 # Report what the temp directory is holding, and which sessions still own it. Deletes nothing.
 [group('environment')]
 env-temp-report:
-    uv run --no-sync python -m dev.temp_reaper
+    uv run --no-sync python -m dev.env.temp_reaper
 
 # Reclaim the session scratchpads the report judged abandoned. Read the report first.
 [group('environment')]
 env-temp-reap:
-    uv run --no-sync python -m dev.temp_reaper --apply
+    uv run --no-sync python -m dev.env.temp_reaper --apply
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
@@ -250,7 +250,7 @@ check-relative-imports:
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
 check-dependencies:
-    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo --known-first-party cadrumo --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
+    @uv run --no-sync python -m dev.quality.quiet deptry src/cadrumo dev/registry --known-first-party cadrumo --extend-exclude ".*test_.*[.]py" --extend-exclude ".*_test_.*[.]py" --extend-exclude ".*[\\/]tests[\\/].*"
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.

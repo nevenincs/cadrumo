@@ -27,6 +27,8 @@ from pathlib import PurePosixPath
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from cadrumo.core import render_corpus_sidecar_text
+
 #: Current sidecar schema version. Bump on any breaking field change; the
 #: loader refuses an unknown version rather than silently coercing.
 PREPROCESS_SCHEMA_VERSION = "1.0"
@@ -183,10 +185,4 @@ class PreprocessOutput(BaseModel):
         form is deterministic so the sidecar text round-trips and a drift
         gate can compare a regenerated render against the committed one.
         """
-        blocks: list[str] = []
-        for unit in self.units:
-            if unit.title:
-                blocks.append(f"# {unit.title}\n\n{unit.text}")
-            else:
-                blocks.append(unit.text)
-        return "\n\n".join(blocks)
+        return render_corpus_sidecar_text((unit.title, unit.text) for unit in self.units)

@@ -18,7 +18,7 @@
         "reason": "flat guard/dispatch chain, max nesting depth 3; long but linear, never regressed from baseline",
         "score": 13
       },
-      "src/cadrumo/adapters/inbound/einvoice/_parsers.py::_vat_id": {
+      "src/cadrumo/adapters/inbound/einvoice/_parsers.py::_iva_id": {
         "reason": "flat guard/dispatch chain, max nesting depth 2; long but linear, never regressed from baseline",
         "score": 13
       },
