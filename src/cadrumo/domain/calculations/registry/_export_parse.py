@@ -38,6 +38,9 @@ _BOOLEAN_DICTIONARY_TYPES = frozenset({"LGC", "S_N"})
 _DICTIONARY_LINE_RE = re.compile(
     r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
 )
+_DICTIONARY_NUMERIC_CASILLA_ID_RE = re.compile(r"^\d+$")
+_DICTIONARY_LETTER_CASILLA_ID_RE = re.compile(r"^[A-Z]$")
+_M100_LETTER_CASILLA_ID_FIRST_YEAR = 2024
 
 
 class ParsedExportFieldValue(RegistryModel):
@@ -198,7 +201,12 @@ def xml_dictionary_entries(
         match = _DICTIONARY_LINE_RE.match(stripped)
         if match is None:
             continue
-        casilla_id = _parse_dictionary_casilla_id(match["casilla"])
+        casilla_id = _parse_dictionary_casilla_id(
+            match["casilla"],
+            allow_letter_id=(
+                source.applies_from is not None and source.applies_from.year >= _M100_LETTER_CASILLA_ID_FIRST_YEAR
+            ),
+        )
         field_id = match["field"].strip()
         entries.append(
             XmlDictionaryEntry(
@@ -252,11 +260,13 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
         return body.decode(_LATIN_1_ENCODING)
 
 
-def _parse_dictionary_casilla_id(value: str) -> CasillaId | None:
+def _parse_dictionary_casilla_id(value: str, *, allow_letter_id: bool = False) -> CasillaId | None:
     text = value.strip()
     if not text or text.startswith("*"):
         return None
-    if not text.isdigit():
+    is_numeric = _DICTIONARY_NUMERIC_CASILLA_ID_RE.fullmatch(text) is not None
+    is_grounded_letter = allow_letter_id and _DICTIONARY_LETTER_CASILLA_ID_RE.fullmatch(text) is not None
+    if not is_numeric and not is_grounded_letter:
         return None
     return validated_casilla_id(text, surface="XML dictionary casilla id")
 
