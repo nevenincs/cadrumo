@@ -575,7 +575,9 @@ def __getattr__(name: str):
     module_path = _LAZY_EXPORTS.get(name)
     if module_path is None:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    return getattr(importlib.import_module(module_path, __name__), name)
+    # module_path is resolved from this package's own closed _LAZY_EXPORTS
+    # mapping above, never from caller-supplied input.
+    return getattr(importlib.import_module(module_path, __name__), name)  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import
 
 
 __all__ = [

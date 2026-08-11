@@ -26,7 +26,7 @@ from __future__ import annotations
 import zipfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import ClassVar, override
+from typing import ClassVar, NamedTuple, override
 
 from pydantic import BaseModel, Field
 
@@ -101,6 +101,75 @@ class EvidenceBundleVerificationReport(BaseModel):
     verification_state: BundleVerificationState
     findings: tuple[EvidenceBundleCheckResult, ...] = Field(default_factory=tuple)
     completeness_ratio: float = Field(ge=0.0, le=1.0)
+
+
+class _PayloadScan(NamedTuple):
+    """What one pass over a manifest's records found in the supplied payloads."""
+
+    reachable: int
+    reachable_bytes: int
+    digest_passes: int
+    digest_failures: list[str]
+
+
+def _scan_record_payloads(
+    records: tuple[EvidenceRecordRef, ...],
+    record_payloads: Mapping[tuple[str, str], bytes],
+) -> _PayloadScan:
+    """Recompute every reachable record's digest against its registered value.
+
+    A record absent from ``record_payloads`` is unreachable rather than failed:
+    it degrades completeness, while only a digest that disagrees fails
+    verification.
+    """
+    reachable = 0
+    reachable_bytes = 0
+    digest_passes = 0
+    digest_failures: list[str] = []
+    for record in records:
+        key = (record.object_type.value, record.object_id)
+        if key not in record_payloads:
+            continue
+        reachable += 1
+        reachable_bytes += record.payload_size_bytes
+        if _hash_payload(record_payloads[key]) == record.content_sha256:
+            digest_passes += 1
+        else:
+            digest_failures.append(record.object_id)
+    return _PayloadScan(reachable, reachable_bytes, digest_passes, digest_failures)
+
+
+def _completeness_ratio(*, total: int, total_bytes: int, reachable: int, reachable_bytes: int) -> float:
+    """Return the byte-weighted share of manifest payload actually reached.
+
+    completeness_ratio is documented (EvidenceRecordRef.payload_size_bytes) as
+    the byte-weighted share of manifest payload reached, not a bare record
+    count: a bundle dominated by one large unreachable record must not read as
+    "mostly complete" because the other, tiny records were present. Fall back to
+    the count-based ratio only when every record legitimately declares zero
+    bytes (nothing to weight by).
+    """
+    if not total:
+        return 1.0
+    if total_bytes:
+        return reachable_bytes / total_bytes
+    return reachable / total
+
+
+def _verification_state(
+    *,
+    all_passed: bool,
+    digest_failures: list[str],
+    completeness: float,
+) -> BundleVerificationState:
+    """Classify a bundle from its checks: a disagreeing digest always fails."""
+    if all_passed:
+        return BundleVerificationState.VERIFIED
+    if digest_failures:
+        return BundleVerificationState.FAILED
+    if completeness < 1.0:
+        return BundleVerificationState.INCOMPLETE
+    return BundleVerificationState.FAILED
 
 
 def _hash_payload(payload: bytes) -> str:
@@ -284,34 +353,16 @@ class EvidenceBundleService:
 
         total = len(bundle.records)
         total_bytes = sum(record.payload_size_bytes for record in bundle.records)
-        reachable = 0
-        reachable_bytes = 0
-        digest_passes = 0
-        digest_failures: list[str] = []
-        for record in bundle.records:
-            key = (record.object_type.value, record.object_id)
-            if key not in record_payloads:
-                continue
-            reachable += 1
-            reachable_bytes += record.payload_size_bytes
-            actual = _hash_payload(record_payloads[key])
-            if actual == record.content_sha256:
-                digest_passes += 1
-            else:
-                digest_failures.append(record.object_id)
-
-        # completeness_ratio is documented (EvidenceRecordRef.payload_size_bytes)
-        # as the byte-weighted share of manifest payload reached, not a bare
-        # record count: a bundle dominated by one large unreachable record
-        # must not read as "mostly complete" because the other, tiny records
-        # were present. Fall back to the count-based ratio only when every
-        # record legitimately declares zero bytes (nothing to weight by).
-        if not total:
-            completeness = 1.0
-        elif total_bytes:
-            completeness = reachable_bytes / total_bytes
-        else:
-            completeness = reachable / total
+        reachable, reachable_bytes, digest_passes, digest_failures = _scan_record_payloads(
+            bundle.records,
+            record_payloads,
+        )
+        completeness = _completeness_ratio(
+            total=total,
+            total_bytes=total_bytes,
+            reachable=reachable,
+            reachable_bytes=reachable_bytes,
+        )
         findings.append(
             EvidenceBundleCheckResult(
                 check=VerificationCheck.OBJECT_REACHABILITY,
@@ -347,19 +398,13 @@ class EvidenceBundleService:
             ),
         )
 
-        all_passed = all(f.passed for f in findings)
-        if all_passed:
-            state = BundleVerificationState.VERIFIED
-        elif digest_failures:
-            state = BundleVerificationState.FAILED
-        elif completeness < 1.0:
-            state = BundleVerificationState.INCOMPLETE
-        else:
-            state = BundleVerificationState.FAILED
-
         return EvidenceBundleVerificationReport(
             bundle_id=bundle.bundle_id,
-            verification_state=state,
+            verification_state=_verification_state(
+                all_passed=all(f.passed for f in findings),
+                digest_failures=digest_failures,
+                completeness=completeness,
+            ),
             findings=tuple(findings),
             completeness_ratio=completeness,
         )

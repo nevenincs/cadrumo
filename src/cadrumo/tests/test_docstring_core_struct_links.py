@@ -268,11 +268,38 @@ _DOTTED_ROLE = re.compile(r":(?:class|func|meth|attr|data|exc|obj|mod):`~?([A-Za
 # CORRECT. Each of those five sat one or two lines from a sibling role that had the
 # module path right.
 #
-# The 2 that remain are one symbol, ``PeriodCode``, whose owning package publishes
-# its sibling ``PeriodSelector`` but not it. The fix is promotion to the registry
-# facade rather than a repoint at the private module that defines it -- deferred
-# only because it is a facade edit, not because the answer is unclear.
-_UNRESOLVED_DOTTED_REFERENCE_CEILING = 2
+# What remains is one symbol, ``PeriodCode``, whose owning package publishes its
+# sibling ``PeriodSelector`` but not it. The fix is promotion to the registry facade
+# rather than a repoint at the private module that defines it -- deferred only
+# because it is a facade edit, not because the answer is unclear.
+#
+# THIS WAS A COUNTING CEILING (``len(unresolved) <= 2``) AND THAT COULD NOT SAY WHAT
+# IT MEANT. A ``<=`` passes identically at two, one or zero, so the gate could not
+# distinguish "the known allowance" from "something else broke while the allowance
+# got fixed", and once the population dropped the ceiling would have gone silently
+# slack -- a shrink-only ratchet that stops ratcheting is indistinguishable from one
+# that is holding. It also gated a tally, which is the thing this project's
+# quality-gate rule forbids: a count encodes a moment and trains everyone to edit
+# the constant.
+#
+# So the allowance is keyed by SYMBOL with a stated reason, and it is enforced from
+# both ends: an unresolved reference to anything else fails, AND an allowance whose
+# symbol has stopped being unresolved fails. The second half is what closes the
+# ratchet -- promoting ``PeriodCode`` reds this gate until its entry is deleted,
+# instead of leaving a permanently-satisfied ceiling behind.
+_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE: dict[str, str] = {
+    "PeriodCode": (
+        "cited against the registry package facade, which publishes its sibling "
+        "PeriodSelector but not PeriodCode. The fix is promotion to that facade, not "
+        "a repoint at the private module that defines it."
+    ),
+}
+
+# Anchored to the exact report format built in _scan_dotted_references. A report the
+# pattern cannot read is counted as a VIOLATION rather than skipped: if the format
+# changes, this gate must fail loudly instead of quietly matching nothing and
+# passing.
+_REPORT_SYMBOL = re.compile(r"does not define '([^']+)'$")
 
 # A derived scan selecting nothing satisfies the ceiling assertion perfectly.
 # These floors sit far below the real figures so ordinary churn never moves them.
@@ -419,13 +446,41 @@ def test_dotted_reference_detector_still_discriminates() -> None:
     )
 
 
-def test_dotted_cross_references_resolve_within_the_ceiling() -> None:
+def test_dotted_cross_references_resolve_to_a_defining_module() -> None:
     """A role naming a module path must name a symbol that module defines."""
     unresolved, _, _ = _unresolved_dotted_references()
 
-    assert len(unresolved) <= _UNRESOLVED_DOTTED_REFERENCE_CEILING, (
-        f"{len(unresolved)} dotted cross-reference(s) name a symbol their cited module does not "
-        f"define, above the shrink-only ceiling of {_UNRESOLVED_DOTTED_REFERENCE_CEILING}. "
-        "Repoint the reference at the module that owns the symbol; never raise the ceiling.\n"
-        + "\n".join(sorted(unresolved)[:40])
+    unexpected = [
+        report
+        for report in unresolved
+        if (match := _REPORT_SYMBOL.search(report)) is None
+        or match.group(1) not in _UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE
+    ]
+
+    assert not unexpected, (
+        f"{len(unexpected)} dotted cross-reference(s) name a symbol their cited module does not "
+        "define, and are not in the stated allowance. Repoint the reference at the module that "
+        "owns the symbol; do not add an allowance entry to silence it.\n"
+        + "\n".join(sorted(unexpected)[:40])
+    )
+
+
+def test_every_unresolved_reference_allowance_is_still_live() -> None:
+    """The other half of the ratchet: a fixed allowance must be deleted, not left standing.
+
+    Without this, the allowance degrades into exactly what the counting ceiling it
+    replaced was -- a permanently-satisfied constant that no longer describes the
+    tree. Promoting ``PeriodCode`` to the registry facade reds this test, and the
+    fix is to delete its entry.
+    """
+    unresolved, _, _ = _unresolved_dotted_references()
+    live = {
+        match.group(1) for report in unresolved if (match := _REPORT_SYMBOL.search(report)) is not None
+    }
+
+    stale = sorted(set(_UNRESOLVED_DOTTED_REFERENCE_ALLOWANCE) - live)
+
+    assert not stale, (
+        f"allowance entries no longer describe any unresolved reference: {stale}. "
+        "The citation was fixed; delete the entry rather than leaving it standing."
     )

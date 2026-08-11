@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-10'
-body_hash: 'sha256:8d3adb9808a2df93b94a4d2463d3d205c19e3b885fb235b49ee068a28bc08a8e'
+modified: '2026-08-11'
+body_hash: 'sha256:bf61ce6ebac6cbd70e4c4340a290de0aa9e9d6c16f90c9a03bef38410e71c395'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -26,19 +26,20 @@ is intentionally not routed through the user-documentation pipeline.
 
 Error-default migration is staged and rehome-first. `S50` preserves the
 immutable 612-row preimage while it requires a disposition only for each of the
-238 historical non-null keys. The current set has 111 keys: 106 physical
-constructors, including direct or alias-resolved constructions in `raise`,
-`return`, and assignment contexts, and five nonconstructing references. A
-current import-and-alias-resolved physical constructor or reference may be
-recorded only as evidence-only `migration_required` with one open scope-valid
-current owner; it is not a recovery outcome. The five nonconstructing
-references start in that state and may become `verified_nonproducer_reference`
-only after no emitting, dynamic, or re-export route is proven. The final kinds
-are `verified_typed_action`, `verified_terminal_no_recovery`,
-`verified_nonproducer_reference`, and `retired_or_unreachable`; the last is
-restricted to the source-proven 127-row zero-reference set. The rehoming ledger
-carries source locators and ownership evidence only, never action, command,
-condition, prose, or locale policy.
+238 historical non-null keys. The current set has 106 keys: 101 physical
+constructors and five nonconstructing references. The lexical fixed-point
+resolver accepts explicit imports, aliases, and re-exports, including only
+statically enumerable PEP-562 export maps; it rejects ambiguity and nested-
+scope leakage, and records every resolved call context. A current physical
+constructor or reference may be recorded only as evidence-only
+`migration_required` with one open scope-valid current owner; it is not a
+recovery outcome. The five nonconstructing references start in that state and
+may become `verified_nonproducer_reference` only after no emitting, dynamic,
+or re-export route is proven. The final kinds are `verified_typed_action`,
+`verified_terminal_no_recovery`, `verified_nonproducer_reference`, and
+`retired_or_unreachable`; the last is restricted to the source-proven 132-row
+zero-reference set. The rehoming ledger carries source locators and ownership
+evidence only, never action, command, condition, prose, or locale policy.
 
 Historic shard Steps retain immutable allocation evidence and may retire only
 after every allocated historical non-null row has a final disposition. `S51`
@@ -275,4 +276,5 @@ cross-Wave exceptions.
   xfails, or tautological expected actions.
 - A fresh-context Terra xhigh honesty review is persisted and every finding is
   closed or formally deferred with a follow-up reference before S48 is checked.
+
 

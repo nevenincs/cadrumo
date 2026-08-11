@@ -412,14 +412,12 @@ class VerifyService:
         if not matches:
             raise VerifyObservationNotFoundError(
                 "no verify observation matches the requested id",
-                suggestion="aeat app live verify nif-iva",
                 translated_message="application.live.verify.errors.observation_not_found",
                 context={"observation_id": observation_id},
             )
         if len(matches) > 1:
             raise VerifyObservationNotFoundError(
                 "verify observation prefix matches multiple observations",
-                suggestion="provide a longer prefix",
                 translated_message="application.live.verify.errors.observation_prefix_ambiguous",
                 context={"observation_id": observation_id, "match_count": len(matches)},
             )

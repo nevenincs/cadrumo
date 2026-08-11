@@ -5,23 +5,6 @@ adapters:
         pending_petition_blocked: L'AEAT s'ha negat a emetre una nova petició push
           de Cl@ve Móvil perquè una sol·licitud d'autenticació anterior encara està
           pendent al servidor.
-      suggestions:
-        reject_pending_request: Obre l'app Cl@ve al teu mòbil, rebutja totes les sol·licituds
-          pendents i torna a executar `aeat config auth test` (o espera fins a 5 minuts
-          que l'AEAT les caduqui automàticament).
-    sede:
-      groi:
-        suggestions:
-          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
-            ha canviat el formulari GROI.
-      nif_iva:
-        suggestions:
-          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
-            ha canviat el formulari NIF-IVA.
-      renta_web_open:
-        suggestions:
-          shape_change: Torna a executar l'oracle en viu després de comprovar si l'AEAT
-            ha canviat la pàgina Renta WEB Open.
   auth:
     authenticator:
       errors:
@@ -461,8 +444,6 @@ application:
         lock_held: Ja hi ha una altra operació d'autenticació AEAT en curs per a aquest
           perfil. No iniciïs una segona petició de Cl@ve; espera que acabi el procés
           en curs o deixa expirar el bloqueig si aquest procés ha fallat.
-        lock_held_suggestion: Executa `aeat config auth status --format json` per
-          inspeccionar el bloqueig d'autenticació actiu.
     certificate:
       health:
         file_missing: El fitxer de certificat configurat (%{path}) no existeix. Recupera
@@ -789,11 +770,14 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: Ja existeix un llibre d inventari per a l activitat %{actividad_id}
-          i l exercici %{year}.
-        actividad_not_found: No existeix cap llibre d inventari per a l activitat
-          %{actividad_id} i l exercici %{year}.
-        duplicate_movement_id: El llibre d inventari ja conté el moviment %{movement_id}.
+        actividad_conflict: Ja existeix un llibre d'inventari per a l'activitat %{actividad_id}
+          i l'exercici %{year}. Executeu `aeat app ledger inventory list` per veure
+          els llibres existents.
+        actividad_not_found: No existeix cap llibre d'inventari per a l'activitat
+          %{actividad_id} i l'exercici %{year}. Executeu `aeat app ledger inventory
+          list` per veure els llibres existents.
+        duplicate_movement_id: El llibre d'inventari ja conté el moviment %{movement_id}.
+          Executeu `aeat app ledger inventory list` per veure els moviments registrats.
         invalid_valuation_method: 'El mètode de valoració d inventari no està admès:
           %{valuation_method}.'
   invoices:
@@ -4438,10 +4422,12 @@ cli:
           not_root_scoped: una destinació seleccionada no pertany a l'arrel
           protected_descendant: una destinació seleccionada conté dades declarades
             protegides
-        reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. Les %{entries}
-          entrades romanen intactes.'
+        reclaim_area_refused: 'Es rebutja alliberar %{area}: %{reason}. %{entries}
+          entrades queden intactes. Executeu `aeat config storage list` per inspeccionar
+          les àrees emmagatzemades.'
         reclaim_area_unconfirmed: Alliberar %{area} elimina %{entries} entrades i
-          requereix confirmació explícita.
+          requereix confirmació explícita. Torneu a executar l'ordre amb `--yes` per
+          confirmar.
       help: Inspecciona i manté l'arbre d'emmagatzematge local
       init:
         already_materialised: Tots els directoris declarats ja existien; no se n'ha
@@ -5323,9 +5309,8 @@ cli:
       accepted_roots_only: Només s'accepten les ordres arrel 'app' i 'config'.
       contract_not_accepted: 'La superfície %{surface} no ha acceptat el contracte
         de l''operador: %{reason}.'
-      source_kind_options: 'Opcions de tipus de font disponibles: %{options}.'
-      unknown_source_kind: 'Tipus de font desconegut: %{kind}. Useu --help per veure
-        les opcions disponibles.'
+      unknown_source_kind: 'Tipus de font desconegut: %{kind}. Opcions de tipus de
+        font disponibles: %{options}.'
     help:
       app:
         footer: Executeu 'aeat app <ordre> --help' per obtenir més informació sobre
@@ -7072,8 +7057,10 @@ errors:
       encara no està disponible.
     reconciliation_drift: La conciliació ha detectat una discrepància aritmètica o
       d'identitat entre declaracions. Revisa els imports abans de continuar.
-    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comprova que el
-      fitxer és el justificant d'AEAT i no un altre document, i que no estigui malmès.
+    reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comproveu que el
+      fitxer és el justificant de l'AEAT i no un altre document, i que no està malmès.
+      Torneu a executar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      amb el fitxer correcte.
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
@@ -7370,6 +7357,9 @@ errors:
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'
+    ambiguous_revision_selection_year_only: 'Més d''una revisió del registre coincideix
+      amb el model %{modelo_id}: %{candidate_ids}. Indiqueu el període de declaració,
+      o una data de referència, per seleccionar-ne una.'
     modelo_not_registered: El model no està registrat al registre.
     no_revision_for_period: Cap revisió del registre cobreix el model %{modelo_id}
       exercici %{filing_year} període %{period}.
@@ -69804,6 +69794,7 @@ profile:
       (Guipúscoa), araba.eus/ogasun (Àlaba) o hacienda.navarra.es (Navarra) segons
       el vostre territori.
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
+      Executeu `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` per configurar-lo.
   keys:
     description: Claus de configuració del perfil i les seves descripcions
     tax:

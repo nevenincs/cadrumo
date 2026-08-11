@@ -553,6 +553,25 @@ correct.
 """
 
 
+def _validate_catalogue_runtime_role(
+    runtime: ModelRuntime,
+    role: ModelRole,
+    defaults: Mapping[ModelRole, str],
+) -> None:
+    """Refuse a runtime/role pair with no candidate, or an absent or ineligible default."""
+    if not any(c.serves(role) and c.runtime is runtime for c in MODEL_CATALOGUE):
+        msg = f"the catalogue declares no {runtime.value!r} candidate for role {role.value!r}"
+        raise ValueError(msg)
+    default_id = defaults.get(role)
+    if default_id is None:
+        msg = f"no {runtime.value!r} default for role {role.value!r}"
+        raise ValueError(msg)
+    default = next((c for c in MODEL_CATALOGUE if c.runtime_id == default_id), None)
+    if default is None or not default.serves(role) or default.runtime is not runtime:
+        msg = f"the default {default_id!r} is not a catalogued {runtime.value!r} candidate for {role.value!r}"
+        raise ValueError(msg)
+
+
 def _validate_catalogue() -> None:
     """Refuse an internally inconsistent catalogue at import.
 
@@ -572,17 +591,7 @@ def _validate_catalogue() -> None:
             msg = f"the model catalogue declares no defaults for runtime {runtime.value!r}"
             raise ValueError(msg)
         for role in ModelRole:
-            if not any(c.serves(role) and c.runtime is runtime for c in MODEL_CATALOGUE):
-                msg = f"the catalogue declares no {runtime.value!r} candidate for role {role.value!r}"
-                raise ValueError(msg)
-            default_id = defaults.get(role)
-            if default_id is None:
-                msg = f"no {runtime.value!r} default for role {role.value!r}"
-                raise ValueError(msg)
-            default = next((c for c in MODEL_CATALOGUE if c.runtime_id == default_id), None)
-            if default is None or not default.serves(role) or default.runtime is not runtime:
-                msg = f"the default {default_id!r} is not a catalogued {runtime.value!r} candidate for {role.value!r}"
-                raise ValueError(msg)
+            _validate_catalogue_runtime_role(runtime, role, defaults)
 
 
 _validate_catalogue()

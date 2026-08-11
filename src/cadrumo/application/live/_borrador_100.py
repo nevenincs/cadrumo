@@ -54,7 +54,7 @@ class BorradorSnapshotNotFoundError(SnapshotNotFoundError):
 
     :class:`SnapshotNotFoundError` inherits ``CadrumoError`` first, so MRO
     routes ``__init__`` through the structured constructor (accepts
-    ``suggestion=`` / ``context=`` kwargs) rather than
+    ``context=`` / ``translated_message=`` kwargs) rather than
     :class:`KeyError`'s C-level constructor. Listing ``CadrumoError``
     explicitly here would violate C3 linearization.
     """
@@ -156,11 +156,9 @@ class Borrador100SnapshotRepository:
             object_key=borrador_100_snapshot_object_key,
             not_found_factory=lambda snapshot_id: BorradorSnapshotNotFoundError(
                 f"borrador snapshot {snapshot_id!r} not found in bucket {trimmed!r}",
-                suggestion="aeat app live borrador 100 list",
             ),
             ambiguous_prefix_factory=lambda snapshot_id, _full_ids: BorradorSnapshotNotFoundError(
                 f"borrador snapshot prefix {snapshot_id!r} is ambiguous",
-                suggestion="provide a longer snapshot id",
             ),
             domain_label="borrador",
             input_error_cls=LiveApplicationInputError,

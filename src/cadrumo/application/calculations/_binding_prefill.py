@@ -45,9 +45,8 @@ from typing import Final
 
 from pydantic import BaseModel, TypeAdapter
 
-from ...core import STR_KEYED_MAPPING_ADAPTER
+from ...core import STR_KEYED_MAPPING_ADAPTER, BindingSourceKind, CasillaId, Modelo, Period
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BindingSourceKind, CasillaId, Modelo, Period
 from ...core.resources import resources
 from ...core.time import now
 from ...domain.calculations.registry import (
@@ -695,6 +694,72 @@ def _source_kind_for_binding(
     return _LOCAL_FILING_PROVENANCE
 
 
+def _prefilled_bindings(
+    snapshot: RegistrySnapshot,
+    resolved_map: Mapping[BindingId, Decimal],
+    *,
+    observations: tuple[_GatheredObservation, ...],
+    activity_start_date: date | None,
+    resolved_at: datetime,
+) -> tuple[PrefilledBinding, ...]:
+    """Project each resolved previous-filing binding into its provenance record.
+
+    A binding the revision no longer declares is dropped rather than reported
+    with a synthesised definition. The source coordinate prefers the registry
+    requirement the resolver already matched and falls back to the binding's own
+    selector, so a binding resolved outside a requirement still names where its
+    value came from.
+    """
+    binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
+    # The registry declares treatment per SOURCE modelo, which is the same key the
+    # relation resolver reads it under. Absent means the revision declared none.
+    treatment_by_source = {
+        str(classification.source_modelo): str(classification.treatment)
+        for classification in (snapshot.revision.dependency_classifications or ())
+    }
+    requirement_index = _requirements_by_binding(snapshot)
+    pre_activity_zero_binding_ids = _pre_activity_scoped_binding_ids(snapshot, activity_start_date)
+
+    prefilled: list[PrefilledBinding] = []
+    for binding_id, value in resolved_map.items():
+        binding = binding_index.get(binding_id)
+        if binding is None:
+            continue
+        selector = binding.selector
+        source_modelo, source_filing_year, source_periods = requirement_index.get(
+            binding_id,
+            (
+                str(_selector_value(selector, "source_modelo", "") or ""),
+                snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
+                _selector_periods(_selector_value(selector, "source_periods", ())),
+            ),
+        )
+        source_kind = (
+            _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND
+            if binding_id in pre_activity_zero_binding_ids
+            else _source_kind_for_binding(
+                observations,
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                source_casilla_ids=binding_source_casilla_ids(binding),
+            )
+        )
+        prefilled.append(
+            PrefilledBinding(
+                binding_id=binding_id,
+                value=Decimal(value),
+                source_kind=source_kind,
+                source_modelo=source_modelo,
+                source_filing_year=source_filing_year,
+                source_periods=source_periods,
+                dependency_treatment=treatment_by_source.get(source_modelo, ""),
+                resolved_at=resolved_at,
+            ),
+        )
+    return tuple(prefilled)
+
+
 def resolve_bindings_from_local_store(
     snapshot: RegistrySnapshot,
     *,
@@ -784,55 +849,14 @@ def resolve_bindings_from_local_store(
         excluded_binding_ids=excluded_binding_ids,
     )
 
-    prefilled: list[PrefilledBinding] = []
-    binding_index = {binding.id: binding for binding in snapshot.revision.bindings}
-    # The registry declares treatment per SOURCE modelo, which is the same key the
-    # relation resolver reads it under. Absent means the revision declared none.
-    treatment_by_source = {
-        str(classification.source_modelo): str(classification.treatment)
-        for classification in (snapshot.revision.dependency_classifications or ())
-    }
-    requirement_index = _requirements_by_binding(snapshot)
-    pre_activity_zero_binding_ids = _pre_activity_scoped_binding_ids(snapshot, activity_start_date)
-    for binding_id, value in resolved_map.items():
-        binding = binding_index.get(binding_id)
-        if binding is None:
-            continue
-        selector = binding.selector
-        source_modelo, source_filing_year, source_periods = requirement_index.get(
-            binding_id,
-            (
-                str(_selector_value(selector, "source_modelo", "") or ""),
-                snapshot.filing_year + _selector_year_delta(_selector_value(selector, "filing_year_delta", 0)),
-                _selector_periods(_selector_value(selector, "source_periods", ())),
-            ),
-        )
-        source_casilla_ids = binding_source_casilla_ids(binding)
-        source_kind = (
-            _PRE_ACTIVITY_NO_PRIOR_OBLIGATION_SOURCE_KIND
-            if binding_id in pre_activity_zero_binding_ids
-            else _source_kind_for_binding(
-                observations,
-                source_modelo=source_modelo,
-                source_filing_year=source_filing_year,
-                source_periods=source_periods,
-                source_casilla_ids=source_casilla_ids,
-            )
-        )
-        prefilled.append(
-            PrefilledBinding(
-                binding_id=binding_id,
-                value=Decimal(value),
-                source_kind=source_kind,
-                source_modelo=source_modelo,
-                source_filing_year=source_filing_year,
-                source_periods=source_periods,
-                dependency_treatment=treatment_by_source.get(source_modelo, ""),
-                resolved_at=when,
-            ),
-        )
     return BindingPrefillReport(
-        prefilled=tuple(prefilled),
+        prefilled=_prefilled_bindings(
+            snapshot,
+            resolved_map,
+            observations=observations,
+            activity_start_date=activity_start_date,
+            resolved_at=when,
+        ),
         binding_values=dict(resolved_map),
         unsatisfied=_unsatisfied_previous_filing_bindings(
             snapshot,

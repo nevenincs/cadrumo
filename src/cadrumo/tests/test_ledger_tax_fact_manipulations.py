@@ -25,14 +25,16 @@ from pathlib import Path
 import pytest
 
 from ..application.aggregation import (
+    IvaLedgerAggregationIssueReason,
     aggregate_iva_ledger_observations,
     aggregate_renta_income_ledger,
     aggregate_renta_ledger_expenses,
 )
 from ..core import Period
+from ..domain.bienes_inversion import BienesInversionIvaRegister
 from ..domain.categories import SpendingCategory
 from ..domain.invoices import InvoiceCatalogue
-from ..domain.iva import IvaCategory, IvaFlowDirection
+from ..domain.iva import IvaCategory
 from ..domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -89,7 +91,7 @@ def _gross_split(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
 
 
 # --- behavior contract: gross→base/IVA at 21/10/4 routes to M303 soportado ----------------
-def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
+def test_base_iva_rederivation_without_invoice_evidence_is_refused() -> None:
     cases = [
         (Decimal("0.21"), IvaCategory.DOMESTIC_GENERAL),
         (Decimal("0.10"), IvaCategory.DOMESTIC_REDUCED),
@@ -118,12 +120,17 @@ def test_base_iva_rederivation_at_21_10_4_routes_to_m303_soportado() -> None:
             ),
         )
     catalogue = TransactionCatalogue.from_transactions(tuple(txns))
-    result = aggregate_iva_ledger_observations(catalogue, period=_Q1_2025)
-    by_cat = {o.category: o for o in result.observations}
-    for _rate, category in cases:
-        assert category in by_cat, f"{category} did not reach M303"
-        # An OUTGOING purchase is input (soportado) IVA.
-        assert by_cat[category].flow_direction is IvaFlowDirection.SOPORTADO
+    result = aggregate_iva_ledger_observations(
+        catalogue,
+        period=_Q1_2025,
+        ledger_profile_id="manipulation-test",
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id="manipulation-test",
+    )
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [
+        IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
+    ] * len(cases)
 
 
 # --- behavior contract: business_pct / usage-ratio proportionality propagates -------------

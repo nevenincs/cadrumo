@@ -228,7 +228,6 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
         "false",
     ),
     "bienes_extranjero_above_threshold": SetupFieldSpec("obligations.bienes_extranjero_above_threshold", bool, "false"),
-    "charge_iban": SetupFieldSpec("filing_export.charge_iban", str),
     "country_of_fiscal_residence": SetupFieldSpec("taxpayer_type.country_of_fiscal_residence", str),
     "does_intracomunitario": SetupFieldSpec("iva.does_intracomunitario", bool, "false"),
     "enrollment_large_company": SetupFieldSpec("censo.large_company", bool, "false"),
@@ -342,7 +341,7 @@ SETUP_ANSWER_FIELDS: Mapping[str, SetupFieldSpec] = {
     "surnames": SetupFieldSpec("identity.surnames", str),
     "tax_id": SetupFieldSpec("identity.tax_id", str),
     "tax_residence_ccaa": SetupFieldSpec("tax_residence.ccaa", str, "madrid"),
-    "taxation_type": SetupFieldSpec("filing_export.declaration_type", str),
+    "taxation_type": SetupFieldSpec("renta_filing.declaration_type", str),
     "taxpayer_birth_date": SetupFieldSpec("renta_taxpayer.birth_date", str),
     "taxpayer_death_date": SetupFieldSpec("renta_taxpayer.death_date", str),
     "taxpayer_disability_grade": SetupFieldSpec("renta_taxpayer.disability_grade", str),
@@ -467,8 +466,6 @@ class SetupAnswers(BaseModel):
     activity_start_date: str = ""
     """Optional ISO-8601 censo alta date for the economic activity."""
     taxation_type: Any = ""
-    charge_iban: str = ""
-    """IBAN AEAT may debit for an elected Modelo 303 domiciliación."""
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE
 
     @field_validator("output_language", mode="before")
@@ -775,7 +772,9 @@ class SetupAnswers(BaseModel):
     def _parse_taxation_type(cls, value: object) -> Any:  # ANY-RETURN-RATIONALE-PROFILE-PYDANTIC-VALIDATOR
         if value == "":
             return ""
-        renta_declaracion_type_cls = _p().RentaDeclaracionType
+        from ._renta_declaracion_type import RentaDeclaracionType
+
+        renta_declaracion_type_cls = RentaDeclaracionType
         if isinstance(value, renta_declaracion_type_cls):
             return value
         if isinstance(value, str):
@@ -950,7 +949,9 @@ class SetupAnswers(BaseModel):
 
     @model_validator(mode="after")
     def _validate_spouse_fields_when_joint(self) -> SetupAnswers:
-        renta_declaracion_type_cls = _p().RentaDeclaracionType
+        from ._renta_declaracion_type import RentaDeclaracionType
+
+        renta_declaracion_type_cls = RentaDeclaracionType
         if self.taxation_type == renta_declaracion_type_cls.JOINT and not self.spouse_tax_id:
             # A stable custom error type (not the generic ``value_error``) lets
             # the operator-facing boundary route this cross-field refusal to its

@@ -142,6 +142,7 @@ from ._field_grounding import FieldGroundingOutcome
 from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
 from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
+from ._filing_producer_key import FilingProducerKey
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hardware import (
@@ -170,6 +171,7 @@ from ._irnr import (
 )
 from ._iva_category_resolution import IvaCategoryOutcome
 from ._iva_compensation_provenance import IvaCompensationStateProvenance
+from ._iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ._ledger_sort import LedgerSortField, LedgerSortOrder
 from ._model_catalogue import (
     ANTHROPIC_COMMERCIAL_TERMS,
@@ -253,6 +255,7 @@ from ._prorrata_exclusions import (
     Art104TresExclusion,
 )
 from ._prorrata_register import (
+    ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -265,6 +268,7 @@ from ._provenance_stamp import (
 )
 from ._refund_election import RefundElection
 from ._register_scoping_signal import RegisterScopingSignal
+from ._renta_declaracion_type import RentaDeclaracionType
 from ._rescate_type import RescateType
 from ._result_disposition import (
     ResultDisposition,
@@ -496,6 +500,7 @@ __all__: list[str] = [
     "FieldRole",
     "FiledHistoryDiscoverySignal",
     "FilingPeriodCode",
+    "FilingProducerKey",
     "FindingResolutionAction",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",
@@ -509,6 +514,8 @@ __all__: list[str] = [
     "IntracomOperationType",
     "IvaCategoryOutcome",
     "IvaCompensationStateProvenance",
+    "IvaDeductionEvidenceAuthority",
+    "IvaDeductionFactKind",
     "LedgerSortField",
     "LedgerSortOrder",
     "LicenceVerification",
@@ -544,12 +551,14 @@ __all__: list[str] = [
     "PriorDomiciliationElection",
     "ProductIdentity",
     "ProfileSessionRefusalReason",
+    "ProrrataActivityRowType",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "RefundElection",
     "RegisterScopingSignal",
     "RegistryPeriodCode",
     "RegistrySelectorPeriodCode",
+    "RentaDeclaracionType",
     "RescateType",
     "ResultDisposition",
     "ReviewAdvisoryKind",

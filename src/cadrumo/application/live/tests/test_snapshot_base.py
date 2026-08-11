@@ -423,12 +423,56 @@ def test_borrador_snapshot_not_found_error_inherits_shared_base() -> None:
 
 
 def test_borrador_snapshot_not_found_error_accepts_structured_kwargs() -> None:
-    # CadrumoError-first MRO means suggestion= is accepted (KeyError.__init__ rejects kwargs).
+    # CadrumoError-first MRO means the structured kwargs reach CadrumoError at
+    # all: KeyError.__init__ rejects every keyword, so an MRO that put KeyError
+    # first would raise TypeError here rather than fail somewhere subtler.
+    #
+    # This asserted the same property through suggestion= until that transport
+    # was deleted. The kwarg was only ever the vehicle -- the property is the
+    # MRO -- so it is re-expressed through the surviving structured kwargs
+    # rather than dropped, which would have retired a real capability check
+    # along with the evidence that it was ever made.
     error = BorradorSnapshotNotFoundError(
         f"borrador snapshot 'abc' not found in bucket {_BUCKET_ID!r}",
-        suggestion="aeat app live borrador 100 list",
+        context={"snapshot_id": "abc"},
+        translated_message="application.live.borrador.errors.snapshot_not_found",
     )
-    assert error.suggestion == "aeat app live borrador 100 list"
+    assert error.context == {"snapshot_id": "abc"}
+    assert error.translated_message == "application.live.borrador.errors.snapshot_not_found"
+
+
+def test_the_structured_kwargs_depend_on_the_base_order_and_not_on_luck() -> None:
+    """Positive control for the test above: prove the MRO is what carries it.
+
+    The sibling passes structured kwargs and reads them back. On its own that
+    is satisfiable without the base order mattering at all -- if ``KeyError``
+    tolerated keywords, or if some other base absorbed them, the assertion
+    would read identically and the comment above it would be a story rather
+    than a mechanism.
+
+    So the load-bearing half is asserted on its own: ``KeyError``'s C-level
+    constructor genuinely refuses these keywords. That is what makes the base
+    ORDER matter, and it is asserted against the real builtin rather than
+    through a throwaway subclass -- defining one would run
+    ``CadrumoError.__init_subclass__``, which binds an error code into a
+    process-wide registry, so the control would leave a synthetic member behind
+    for whatever gate walks that registry next. A control is not allowed to
+    cost more than it proves.
+    """
+    with pytest.raises(TypeError):
+        KeyError(
+            "probe",
+            context={"snapshot_id": "abc"},
+            translated_message="application.live.borrador.errors.snapshot_not_found",
+        )
+
+    # The other half: the real class puts CadrumoError ahead of KeyError, so
+    # the constructor the kwargs reach is the structured one. Asserted rather
+    # than left to a reader to confirm from the class statement, because the
+    # sibling above is what would silently stop meaning anything if this ever
+    # changed.
+    mro = SnapshotNotFoundError.__mro__
+    assert mro.index(CadrumoError) < mro.index(KeyError)
 
 
 # ---- SnapshotRepository structural-conformance gate (contract) -----------------

@@ -240,28 +240,55 @@ def _parse_rows(
 
     rows: list[RemoteNotification] = []
     for table in soup.find_all("table"):
-        header_cells = [th.get_text(" ", strip=True) for th in table.find_all("th")]
-        if not header_cells:
+        rows.extend(_certificate_table_rows(table, source_url=source_url, is_summary=is_summary))
+    return rows
+
+
+def _certificate_table_rows(
+    table: object,
+    *,
+    source_url: str,
+    is_summary: bool,
+) -> list[RemoteNotification]:
+    """Yield typed rows from one table, or nothing when it bears no certificate column."""
+    header_cells = [th.get_text(" ", strip=True) for th in table.find_all("th")]
+    if not header_cells:
+        return []
+    normalised = [h.lower() for h in header_cells]
+    if not any("certificado" in h for h in normalised):
+        return []
+    return _rows_from_table_body(
+        table,
+        header_index=_index_columns(normalised),
+        source_url=source_url,
+        is_summary=is_summary,
+        summary_table_tipo=_summary_table_tipo(table) if is_summary else None,
+    )
+
+
+def _rows_from_table_body(
+    table: object,
+    *,
+    header_index: dict[str, int],
+    source_url: str,
+    is_summary: bool,
+    summary_table_tipo: str | None,
+) -> list[RemoteNotification]:
+    """Project every populated body row of one certificate-bearing table."""
+    rows: list[RemoteNotification] = []
+    for table_row in table.find_all("tr"):
+        cells = [td.get_text(" ", strip=True) for td in table_row.find_all("td")]
+        if not cells:
             continue
-        normalised = [h.lower() for h in header_cells]
-        has_cert = any("certificado" in h for h in normalised)
-        if not has_cert:
-            continue
-        header_index = _index_columns(normalised)
-        summary_table_tipo = _summary_table_tipo(table) if is_summary else None
-        for table_row in table.find_all("tr"):
-            cells = [td.get_text(" ", strip=True) for td in table_row.find_all("td")]
-            if not cells:
-                continue
-            row = _row_from_cells(
-                cells,
-                header_index=header_index,
-                source_url=source_url,
-                is_summary=is_summary,
-                summary_table_tipo=summary_table_tipo,
-            )
-            if row is not None:
-                rows.append(row)
+        row = _row_from_cells(
+            cells,
+            header_index=header_index,
+            source_url=source_url,
+            is_summary=is_summary,
+            summary_table_tipo=summary_table_tipo,
+        )
+        if row is not None:
+            rows.append(row)
     return rows
 
 

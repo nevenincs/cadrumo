@@ -5,23 +5,6 @@ adapters:
         pending_petition_blocked: La AEAT rechazó emitir una nueva solicitud push
           de Cl@ve Móvil porque una petición de autenticación anterior aún está pendiente
           en el servidor.
-      suggestions:
-        reject_pending_request: Abre la app Cl@ve en tu móvil, rechaza todas las peticiones
-          pendientes y vuelve a ejecutar `aeat config auth test` (o espera hasta 5
-          minutos a que la AEAT las cancele automáticamente).
-    sede:
-      groi:
-        suggestions:
-          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
-            si la AEAT ha cambiado el formulario GROI.
-      nif_iva:
-        suggestions:
-          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
-            si la AEAT ha cambiado el formulario NIF-IVA.
-      renta_web_open:
-        suggestions:
-          shape_change: Vuelve a ejecutar el oráculo en vivo después de comprobar
-            si la AEAT ha cambiado la página Renta WEB Open.
   auth:
     authenticator:
       errors:
@@ -467,8 +450,6 @@ application:
         lock_held: Ya hay otra operación de autenticación AEAT en curso para este
           perfil. No inicies una segunda petición de Cl@ve; espera a que termine el
           proceso en curso o deja expirar el bloqueo si ese proceso ha fallado.
-        lock_held_suggestion: Ejecuta `aeat config auth status --format json` para
-          inspeccionar el bloqueo de autenticación activo.
     certificate:
       health:
         file_missing: El archivo de certificado configurado (%{path}) no existe. Recupera
@@ -796,10 +777,13 @@ application:
     service:
       errors:
         actividad_conflict: Ya existe un libro de inventario para la actividad %{actividad_id}
-          y el ejercicio %{year}.
+          y el ejercicio %{year}. Ejecute `aeat app ledger inventory list` para ver
+          los libros existentes.
         actividad_not_found: No existe ningún libro de inventario para la actividad
-          %{actividad_id} y el ejercicio %{year}.
+          %{actividad_id} y el ejercicio %{year}. Ejecute `aeat app ledger inventory
+          list` para ver los libros existentes.
         duplicate_movement_id: El libro de inventario ya contiene el movimiento %{movement_id}.
+          Ejecute `aeat app ledger inventory list` para ver los movimientos registrados.
         invalid_valuation_method: 'El método de valoración de inventario no está admitido:
           %{valuation_method}.'
   invoices:
@@ -4480,10 +4464,11 @@ cli:
           not_root_scoped: un destino seleccionado no pertenece a la raíz
           protected_descendant: un destino seleccionado contiene datos declarados
             protegidos
-        reclaim_area_refused: 'Se rechaza liberar %{area}: %{reason}. Las %{entries}
-          entradas permanecen intactas.'
+        reclaim_area_refused: 'Se rechaza liberar %{area}: %{reason}. %{entries} entradas
+          permanecen intactas. Ejecute `aeat config storage list` para inspeccionar
+          las áreas almacenadas.'
         reclaim_area_unconfirmed: Liberar %{area} elimina %{entries} entradas y requiere
-          confirmación explícita.
+          confirmación explícita. Vuelva a ejecutar el comando con `--yes` para confirmar.
       help: Inspecciona y mantiene el árbol de almacenamiento local
       init:
         already_materialised: Todos los directorios declarados ya existían; no se
@@ -5368,9 +5353,8 @@ cli:
       accepted_roots_only: Solo se aceptan los comandos raíz 'app' y 'config'.
       contract_not_accepted: 'La superficie %{surface} no aceptó el contrato del operador:
         %{reason}.'
-      source_kind_options: 'Opciones de tipo de fuente disponibles: %{options}.'
-      unknown_source_kind: 'Tipo de fuente desconocido: %{kind}. Use --help para ver
-        las opciones disponibles.'
+      unknown_source_kind: 'Tipo de fuente desconocido: %{kind}. Opciones de tipo
+        de fuente disponibles: %{options}.'
     help:
       app:
         footer: Ejecute 'aeat app <comando> --help' para obtener más información sobre
@@ -7125,8 +7109,10 @@ errors:
       declaración todavía no está disponible.
     reconciliation_drift: La conciliación detectó una discrepancia aritmética o de
       identidad entre declaraciones. Revisa los importes antes de continuar.
-    reconciliation_evidence_invalid: No se pudo leer el PDF. Comprueba que el archivo
-      es el justificante de AEAT y no otro documento, y que no esté dañado.
+    reconciliation_evidence_invalid: No se ha podido leer el PDF. Compruebe que el
+      archivo es el justificante de la AEAT y no otro documento, y que no está dañado.
+      Vuelva a ejecutar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      con el archivo correcto.
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
@@ -7425,6 +7411,9 @@ errors:
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
+    ambiguous_revision_selection_year_only: 'Más de una revisión del registro coincide
+      con el modelo %{modelo_id}: %{candidate_ids}. Indique el periodo de declaración,
+      o una fecha de referencia, para seleccionar una de ellas.'
     modelo_not_registered: El modelo no está registrado en el registro.
     no_revision_for_period: Ninguna revisión del registro cubre el modelo %{modelo_id}
       ejercicio %{filing_year} periodo %{period}.
@@ -72181,6 +72170,7 @@ profile:
       (Gipuzkoa), araba.eus/ogasun (Álava) o hacienda.navarra.es (Navarra) según su
       territorio.
     not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
+      Ejecute `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` para configurarlo.
   keys:
     description: Claves de configuración del perfil y sus descripciones
     tax:

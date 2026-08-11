@@ -35,6 +35,7 @@ from ...domain.user_profile import (
     UserProfileRecord,
     UserProfileStatus,
 )
+from ...domain.calculations.registry import RevisionId
 
 # ---------------------------------------------------------------------------
 # Lifecycle commands
@@ -216,7 +217,7 @@ class ProfilePreflightReport(BaseModel):
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
@@ -249,7 +250,7 @@ class ProfileSnapshotRequest(BaseModel):
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
 
@@ -269,7 +270,7 @@ class ProfileSnapshot(BaseModel):
     profile_id: ProfileId
     schema_version: int = Field(ge=1)
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
     canonical_hash: Hex64Str

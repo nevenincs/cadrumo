@@ -171,10 +171,9 @@ def _revision_for_year(
         # than one revision, so there is no single "the revision for this year" to
         # diff against and picking either side would silently diff the wrong pair.
         #
-        # The remedy is SURFACED, not restated: the selector's own suggestion and its
-        # candidate-id tuple ride on the error, so this refusal quotes them rather
-        # than composing a second copy of the advice that could drift from the
-        # selector's.
+        # The candidates are SURFACED, not restated: the selector's own candidate-id
+        # tuple rides on the error, so this refusal quotes it rather than composing a
+        # second copy that could drift from the selector's.
         raise RegistryApplicationInputError(
             translated_message="application.registry.errors.no_revision_for_diff_year",
             context={
@@ -182,7 +181,6 @@ def _revision_for_year(
                 "filing_year": filing_year,
                 "available_revisions": ", ".join(exc.candidate_ids),
             },
-            suggestion=exc.suggestion,
         ) from exc
     except _NoRevisionForPeriodError as exc:
         available = ", ".join(sorted(definition.revisions))

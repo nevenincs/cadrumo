@@ -4,23 +4,6 @@ adapters:
       errors:
         pending_petition_blocked: Az AEAT elutasította az új Cl@ve Móvil push kiadását,
           mert egy korábbi hitelesítési kérelem még szerver oldalon függőben van.
-      suggestions:
-        reject_pending_request: 'Nyissa meg a Cl@ve alkalmazást a telefonján, utasítson
-          el minden függőben lévő kérelmet, majd futtassa: `aeat config auth test`
-          (vagy várjon legfeljebb 5 percet, amíg az AEAT automatikusan lejáratja azokat).'
-    sede:
-      groi:
-        suggestions:
-          shape_change: Futtassa újra az élő orákulumot, miután ellenőrizte, hogy
-            az AEAT módosította-e a GROI-űrlap szerkezetét.
-      nif_iva:
-        suggestions:
-          shape_change: Futtassa újra az élő orákulumot, miután ellenőrizte, hogy
-            az AEAT módosította-e a NIF-IVA-űrlap szerkezetét.
-      renta_web_open:
-        suggestions:
-          shape_change: Futtassa újra az élő orákulumot, miután ellenőrizte, hogy
-            az AEAT módosította-e a Renta WEB Open oldal szerkezetét.
   auth:
     authenticator:
       errors:
@@ -433,8 +416,6 @@ application:
         lock_held: Egy másik AEAT hitelesítési műveletet már folyamatban van ehhez
           a profilhoz. Ne kezdjen el egy második Cl@ve kérést; várja meg az előző
           befejezését.
-        lock_held_suggestion: Futtassa a `aeat config auth status --format json` parancsot
-          az aktív hitelesítési zár megvizsgálásához.
     certificate:
       health:
         file_missing: A konfigurált tanúsítványfájl (%{path}) nem létezik. Állítsa
@@ -740,11 +721,14 @@ application:
     service:
       errors:
         actividad_conflict: Már létezik készletnapló a(z) %{actividad_id} tevékenységhez
-          és a(z) %{year} évhez.
+          és a(z) %{year} évhez. Futtassa a(z) `aeat app ledger inventory list` parancsot
+          a meglévő naplók megtekintéséhez.
         actividad_not_found: Nincs készletnapló a(z) %{actividad_id} tevékenységhez
-          és a(z) %{year} évhez.
+          és a(z) %{year} évhez. Futtassa a(z) `aeat app ledger inventory list` parancsot
+          a meglévő naplók megtekintéséhez.
         duplicate_movement_id: A készletnapló már tartalmazza a(z) %{movement_id}
-          mozgást.
+          mozgást. Futtassa a(z) `aeat app ledger inventory list` parancsot a rögzített
+          mozgások megtekintéséhez.
         invalid_valuation_method: 'A készlet értékelési mód nem támogatott: %{valuation_method}.'
   invoices:
     bulk_import:
@@ -4378,9 +4362,11 @@ cli:
           not_root_scoped: egy kijelölt cél nem gyökérhatókörű
           protected_descendant: egy kijelölt cél védett deklarált adatot tartalmaz
         reclaim_area_refused: 'A(z) %{area} felszabadítása elutasítva: %{reason}.
-          %{entries} bejegyzés érintetlen maradt.'
+          %{entries} bejegyzés érintetlen marad. Futtassa a(z) `aeat config storage
+          list` parancsot a tárolt területek megtekintéséhez.'
         reclaim_area_unconfirmed: A(z) %{area} felszabadítása %{entries} bejegyzést
-          töröl, és kifejezett megerősítést igényel.
+          töröl, és kifejezett megerősítést igényel. Futtassa újra a parancsot a(z)
+          `--yes` kapcsolóval a megerősítéshez.
       help: A helyi tárolófa vizsgálata és karbantartása
       init:
         already_materialised: Minden deklarált könyvtár már létezett; egyet sem hoztunk
@@ -5271,9 +5257,8 @@ cli:
         el.
       contract_not_accepted: 'A(z) %{surface} üzemeltetői felület elutasította a szerződést:
         %{reason}.'
-      source_kind_options: 'Elérhető forrástípusok: %{options}.'
-      unknown_source_kind: 'Ismeretlen forrástípus: %{kind}. Az elérhető lehetőségekhez
-        használja a --help kapcsolót.'
+      unknown_source_kind: 'Ismeretlen forrástípus: %{kind}. Elérhető forrástípusok:
+        %{options}.'
     help:
       app:
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
@@ -6961,8 +6946,10 @@ errors:
       nem elérhető.
     reconciliation_drift: Az egyeztetés számtani vagy azonossági eltérést észlelt
       a bevallások között. A folytatás előtt tekintse át az összegeket.
-    reconciliation_evidence_invalid: A PDF nem volt olvasható. Ellenőrizd, hogy a
-      fájl az AEAT-igazolás, és nem más dokumentum, és hogy nem sérült-e.
+    reconciliation_evidence_invalid: A PDF nem olvasható. Ellenőrizze, hogy a fájl
+      az AEAT justificante és nem más dokumentum, és hogy nem sérült. Futtassa újra
+      a(z) `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` parancsot a helyes
+      fájllal.
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
@@ -7243,6 +7230,9 @@ errors:
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
+    ambiguous_revision_selection_year_only: 'Egynél több nyilvántartási revízió illeszkedik
+      a(z) %{modelo_id} modellhez: %{candidate_ids}. Adja meg a bevallási időszakot
+      vagy egy vonatkozási dátumot az egyik kiválasztásához.'
     modelo_not_registered: A modell nincs regisztrálva a nyilvántartásban.
     no_revision_for_period: A nyilvántartásban nincs a(z) %{modelo_id} modellt %{filing_year}
       adóévben %{period} időszakban lefedő revízió.
@@ -69910,7 +69900,9 @@ profile:
       Ez a CLI nem kezeli a forális adóbevallásokat. Lásd: sede.bizkaia.eus (Vizcaya),
       gipuzkoa.eus/ogasuna (Guipúzcoa), araba.eus/ogasun (Álava) vagy hacienda.navarra.es
       (Navarra) az Ön területének megfelelően.'
-    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil.
+    not_configured: Nincs RENTA-hoz konfigurált adóilletékességi profil. Futtassa
+      a(z) `aeat config profile edit NAME --tax-residence-ccaa <ccaa>` parancsot a
+      beállításához.
   keys:
     description: Profilkonfigurációs kulcsok és leírásaik
     tax:

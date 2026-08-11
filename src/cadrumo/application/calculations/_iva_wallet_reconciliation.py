@@ -129,6 +129,38 @@ class IvaWalletDecisionSourceResolver:
         )
 
 
+def _resolve_reconciliation_repositories(
+    *,
+    repository: CalculationObservationRepository | None,
+    decision_repository: IvaWalletDecisionRepository | None,
+    persist: bool,
+) -> tuple[CalculationObservationRepository, IvaWalletDecisionRepository]:
+    """Resolve both repositories, refusing an explicit pair that would split the encrypted backend.
+
+    A decision repository defaulted from the observation repository shares its
+    backend by construction; only an explicitly supplied one can diverge, and a
+    divergence is refused whenever the decision will actually be persisted.
+    """
+    from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+
+    repo = repository if repository is not None else CalculationObservationRepository()
+    decision_repo = (
+        decision_repository
+        if decision_repository is not None
+        else IvaWalletDecisionRepository(objects=repo.secure_object_repository)
+    )
+    if (
+        persist
+        and decision_repository is not None
+        and decision_repo.secure_object_repository.engine is not repo.secure_object_repository.engine
+    ):
+        raise IvaCompensationReconciliationInputError(
+            "IVA wallet decision repository must use the same encrypted storage backend "
+            "as the calculation observation repository",
+        )
+    return repo, decision_repo
+
+
 def reconcile_modelo_303_iva_compensation(
     snapshot: RegistrySnapshot,
     *,
@@ -227,23 +259,12 @@ def reconcile_modelo_303_iva_compensation(
         )
 
     from ._binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
-    from ._observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
-    repo = repository if repository is not None else CalculationObservationRepository()
-    decision_repo = (
-        decision_repository
-        if decision_repository is not None
-        else IvaWalletDecisionRepository(objects=repo.secure_object_repository)
+    repo, decision_repo = _resolve_reconciliation_repositories(
+        repository=repository,
+        decision_repository=decision_repository,
+        persist=persist,
     )
-    if (
-        persist
-        and decision_repository is not None
-        and decision_repo.secure_object_repository.engine is not repo.secure_object_repository.engine
-    ):
-        raise IvaCompensationReconciliationInputError(
-            "IVA wallet decision repository must use the same encrypted storage backend "
-            "as the calculation observation repository",
-        )
     # The selection happens BEFORE the work, not after it. The two producers of
     # this recurrence are not substitutable: the generic reconstruction below
     # accepts envelopes the caller-supplied strict path deliberately refuses, so

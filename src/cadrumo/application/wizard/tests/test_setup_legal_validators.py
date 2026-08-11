@@ -25,7 +25,8 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
-from ....domain.contribuyente import RentaDeclaracionType, SituacionFamiliar
+from ....core import RentaDeclaracionType
+from ....domain.contribuyente import SituacionFamiliar
 from ...flows import (
     SECTION_VERDICT_PREFIX,
     CopyRef,

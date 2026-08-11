@@ -21,6 +21,7 @@ from ...domain.iva_compensation import (
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
+    M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
 from ._observations_repository import (
@@ -266,31 +267,13 @@ def _normalize_carry_observation(
         supplied_rows.get(M303_COMPENSATION_AVAILABLE_CASILLA) is not None
         and supplied_rows[M303_COMPENSATION_AVAILABLE_CASILLA].formula_id is not None
     )
-    if current_available is not None and current_available != derivation.available and not available_was_calculated:
-        raise M303CarryIngressError(
-            "Modelo 303 supplied available compensation contradicts the disposition-aware derivation",
-            context={
-                "supplied_available": str(current_available),
-                "derived_available": str(derivation.available),
-                "basis": derivation.basis,
-            },
-        )
     current_generated = values.get(M303_COMPENSATION_GENERADA_CASILLA)
-    if (
-        current_available is not None
-        and current_generated is not None
-        and current_generated != derivation.generated
-        and not available_was_calculated
-    ):
-        raise M303CarryIngressError(
-            "Modelo 303 supplied available/generated pair contradicts the disposition-aware derivation",
-            context={
-                "supplied_available": str(current_available),
-                "supplied_generated": str(current_generated),
-                "derived_generated": str(derivation.generated),
-                "basis": derivation.basis,
-            },
-        )
+    _require_supplied_pair_matches_derivation(
+        derivation,
+        current_available=current_available,
+        current_generated=current_generated,
+        available_was_calculated=available_was_calculated,
+    )
 
     snapshot = resources().modelos.authority.snapshot(
         Modelo.M303.value,
@@ -298,26 +281,7 @@ def _normalize_carry_observation(
         period=observation.period,
     )
     casillas = casillas_by_id(snapshot.revision)
-    formula = next(
-        (item for item in snapshot.revision.formulas if item.target_casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA),
-        None,
-    )
-    formula_id = None
-    if derivation.operand_refs:
-        if formula is None:
-            raise M303CarryIngressError(
-                "Modelo 303 registry has no formula for the generated-basis available compensation projection",
-            )
-        expected_operands = expression_casilla_refs(formula.expression)
-        if derivation.operand_refs != expected_operands:
-            raise M303CarryIngressError(
-                "Modelo 303 generated-basis carry operands disagree with the registry formula",
-                context={
-                    "derivation_operands": derivation.operand_refs,
-                    "registry_operands": expected_operands,
-                },
-            )
-        formula_id = formula.id
+    formula_id = _resolve_available_compensation_formula_id(snapshot.revision, derivation)
 
     available = CasillaObservation(
         casilla_id=M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -336,10 +300,88 @@ def _normalize_carry_observation(
         source_refs=tuple(casillas[M303_COMPENSATION_GENERADA_CASILLA].source_refs),
     )
 
+    normalized = _spliced_carry_observations(observation.observations, available, generated)
+    return observation.model_copy(update={"observations": normalized}), derivation.basis
+
+
+def _require_supplied_pair_matches_derivation(
+    derivation: M303CompensationAvailableDerivation,
+    *,
+    current_available: Decimal | None,
+    current_generated: Decimal | None,
+    available_was_calculated: bool,
+) -> None:
+    """Refuse a supplied carry pair that contradicts the disposition-aware derivation.
+
+    A supplied row that the filer's own engine calculated is not a contradiction:
+    it is the same derivation arriving pre-computed, so it never blocks ingress.
+    """
+    if current_available is not None and current_available != derivation.available and not available_was_calculated:
+        raise M303CarryIngressError(
+            "Modelo 303 supplied available compensation contradicts the disposition-aware derivation",
+            context={
+                "supplied_available": str(current_available),
+                "derived_available": str(derivation.available),
+                "basis": derivation.basis,
+            },
+        )
+    if (
+        current_available is not None
+        and current_generated is not None
+        and current_generated != derivation.generated
+        and not available_was_calculated
+    ):
+        raise M303CarryIngressError(
+            "Modelo 303 supplied available/generated pair contradicts the disposition-aware derivation",
+            context={
+                "supplied_available": str(current_available),
+                "supplied_generated": str(current_generated),
+                "derived_generated": str(derivation.generated),
+                "basis": derivation.basis,
+            },
+        )
+
+
+def _resolve_available_compensation_formula_id(
+    revision: object,
+    derivation: M303CompensationAvailableDerivation,
+) -> str | None:
+    """Return the registry formula id backing a generated-basis available projection.
+
+    A resultado-basis derivation carries no operands and so cites no formula.
+    """
+    if not derivation.operand_refs:
+        return None
+    formula = next(
+        (item for item in revision.formulas if item.target_casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA),
+        None,
+    )
+    if formula is None:
+        raise M303CarryIngressError(
+            "Modelo 303 registry has no formula for the generated-basis available compensation projection",
+        )
+    expected_operands = expression_casilla_refs(formula.expression)
+    if derivation.operand_refs != expected_operands:
+        raise M303CarryIngressError(
+            "Modelo 303 generated-basis carry operands disagree with the registry formula",
+            context={
+                "derivation_operands": derivation.operand_refs,
+                "registry_operands": expected_operands,
+            },
+        )
+    return formula.id
+
+
+def _spliced_carry_observations(
+    supplied: tuple[CasillaObservation, ...],
+    available: CasillaObservation,
+    generated: CasillaObservation,
+) -> tuple[CasillaObservation, ...]:
+    """Replace the carry pair in place, appending whichever row the envelope lacked."""
     normalized: list[CasillaObservation] = []
     seen_available = False
     seen_generated = False
-    for item in observation.observations:
+    for item in supplied:
         if item.casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA:
             normalized.append(available)
             seen_available = True
@@ -352,7 +394,7 @@ def _normalize_carry_observation(
         normalized.append(available)
     if not seen_generated:
         normalized.append(generated)
-    return observation.model_copy(update={"observations": tuple(normalized)}), derivation.basis
+    return tuple(normalized)
 
 
 __all__ = [

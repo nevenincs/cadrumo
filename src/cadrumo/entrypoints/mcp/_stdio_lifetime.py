@@ -779,24 +779,33 @@ def _posix_parent_map() -> dict[int, int] | None:
     """
     proc_root = "/proc"
     if os.path.isdir(proc_root):
-        parents: dict[int, int] = {}
-        try:
-            for name in os.listdir(proc_root):
-                if not name.isdigit():
-                    continue
-                try:
-                    with open(f"{proc_root}/{name}/stat", encoding=_UTF_8) as handle:
-                        fields = handle.read().rsplit(")", 1)[-1].split()
-                    # After the comm field, fields are: state, ppid, ...
-                    parents[int(name)] = int(fields[1])
-                except (OSError, IndexError, ValueError):
-                    # The process exited between listdir and read; skip it.
-                    continue
-        except OSError:
-            logger.debug("watchdog: /proc snapshot failed", exc_info=True)
-            return None
-        return parents or None
+        return _proc_parent_map(proc_root)
+    return _ps_parent_map()
 
+
+def _proc_parent_map(proc_root: str) -> dict[int, int] | None:
+    """Snapshot pid-to-ppid from ``/proc``, or ``None`` when the directory walk fails."""
+    parents: dict[int, int] = {}
+    try:
+        for name in os.listdir(proc_root):
+            if not name.isdigit():
+                continue
+            try:
+                with open(f"{proc_root}/{name}/stat", encoding=_UTF_8) as handle:
+                    fields = handle.read().rsplit(")", 1)[-1].split()
+                # After the comm field, fields are: state, ppid, ...
+                parents[int(name)] = int(fields[1])
+            except (OSError, IndexError, ValueError):
+                # The process exited between listdir and read; skip it.
+                continue
+    except OSError:
+        logger.debug("watchdog: /proc snapshot failed", exc_info=True)
+        return None
+    return parents or None
+
+
+def _ps_parent_map() -> dict[int, int] | None:
+    """Snapshot pid-to-ppid through ``ps`` on a POSIX platform that has no ``/proc``."""
     # Imported lazily: this branch is only reached on a POSIX platform without
     # /proc (macOS, the BSDs), and the module must stay import-cheap on the
     # startup path.
@@ -852,6 +861,19 @@ def _posix_ancestor_pids() -> list[int] | None:
     return [pid for pid in _walk_ancestor_pids(os.getpid(), parents) if pid not in _POSIX_NON_ANCHOR_PIDS]
 
 
+def _posix_round_is_anchored() -> bool | None:
+    """Whether any discovered ancestor is alive, or ``None`` when the snapshot is unreadable.
+
+    The tri-state is load-bearing: an unreadable snapshot must stay
+    distinguishable from a confirmed absence of live ancestors, so it can never
+    be mistaken for orphanhood.
+    """
+    ancestors = _posix_ancestor_pids()
+    if ancestors is None:
+        return None
+    return bool(ancestors) and any(_pid_alive(pid) for pid in ancestors)
+
+
 def _posix_watchdog(
     initial_ppid: int,
     extra_pids: tuple[int, ...],
@@ -881,14 +903,11 @@ def _posix_watchdog(
         for pid in extra_pids:
             if not _pid_alive(pid):
                 _exit_on_watched_death(pid, "explicit-client")
-        ancestors = _posix_ancestor_pids()
-        if ancestors is None:
-            # Ambiguous: the snapshot failed or the platform declined. Never
-            # count an unreadable observation toward a reap, so a race can only
-            # ever extend protection.
-            unanchored_polls = 0
-            continue
-        if ancestors and any(_pid_alive(pid) for pid in ancestors):
+        anchored = _posix_round_is_anchored()
+        if anchored is None or anchored:
+            # Either an ancestor is alive, or the snapshot failed and the answer
+            # is ambiguous. Never count an unreadable observation toward a reap,
+            # so a race can only ever extend protection.
             unanchored_polls = 0
             continue
         unanchored_polls += 1

@@ -117,6 +117,7 @@ from .workflow import (
     WorkflowState,
     assess_active_profile_health,
 )
+from ..domain.calculations.registry import RevisionId
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import RegistrySnapshot
@@ -384,7 +385,7 @@ class ModeloReadinessRequest(BaseModel):
     model_config = _STRICT_FROZEN
 
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period | None = None
 
@@ -457,7 +458,7 @@ class ProjectionModeloReadiness(BaseModel):
 
     profile_id: ProfileId
     modelo: str = Field(min_length=1, max_length=16)
-    revision_id: str = Field(min_length=1, max_length=64)
+    revision_id: RevisionId = Field(min_length=1, max_length=64)
     filing_year: int = Field(ge=2000, le=2100)
     period: Period
     missing: tuple[ProfilePreflightRequirement, ...] = ()
@@ -698,7 +699,7 @@ def _registry_readiness_revision_mismatch_refusal(
     request: ModeloReadinessRequest,
     *,
     period_token: str,
-    resolved_revision_id: str,
+    resolved_revision_id: RevisionId,
 ) -> str:
     return (
         "registry snapshot unresolved for modelo "

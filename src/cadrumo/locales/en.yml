@@ -4,23 +4,6 @@ adapters:
       errors:
         pending_petition_blocked: AEAT refused to issue a new Cl@ve Móvil push because
           a prior authentication request is still pending server-side.
-      suggestions:
-        reject_pending_request: Open the Cl@ve app on your phone, reject every pending
-          request, then run `aeat config auth test` (or wait up to 5 minutes for AEAT
-          to time them out automatically).
-    sede:
-      groi:
-        suggestions:
-          shape_change: Re-run the live oracle after checking whether AEAT changed
-            the GROI form shape.
-      nif_iva:
-        suggestions:
-          shape_change: Re-run the live oracle after checking whether AEAT changed
-            the NIF-IVA form shape.
-      renta_web_open:
-        suggestions:
-          shape_change: Re-run the live oracle after checking whether AEAT changed
-            the Renta WEB Open page shape.
   auth:
     authenticator:
       errors:
@@ -414,8 +397,6 @@ application:
         lock_held: Another AEAT auth operation is already in progress for this profile.
           Do not start a second Cl@ve request; wait for the running process to finish
           or let the lock expire if that process crashed.
-        lock_held_suggestion: Run `aeat config auth status --format json` to inspect
-          the active auth lock.
     certificate:
       health:
         file_missing: The configured certificate file (%{path}) does not exist. Restore
@@ -713,10 +694,13 @@ application:
     service:
       errors:
         actividad_conflict: An inventory ledger already exists for activity %{actividad_id}
-          and year %{year}.
+          and year %{year}. Run `aeat app ledger inventory list` to see the existing
+          ledgers.
         actividad_not_found: No inventory ledger exists for activity %{actividad_id}
-          and year %{year}.
+          and year %{year}. Run `aeat app ledger inventory list` to see the existing
+          ledgers.
         duplicate_movement_id: The inventory ledger already contains movement %{movement_id}.
+          Run `aeat app ledger inventory list` to see the recorded movements.
         invalid_valuation_method: 'The inventory valuation method is not supported:
           %{valuation_method}.'
   invoices:
@@ -4143,9 +4127,10 @@ cli:
           not_root_scoped: a selected target is not root-scoped
           protected_descendant: a selected target contains protected declared data
         reclaim_area_refused: 'Refusing to reclaim %{area}: %{reason}. %{entries}
-          entries remain untouched.'
+          entries remain untouched. Run `aeat config storage list` to inspect the
+          stored areas.'
         reclaim_area_unconfirmed: Reclaiming %{area} deletes %{entries} entries and
-          needs explicit confirmation.
+          needs explicit confirmation. Re-run the command with `--yes` to confirm.
       help: Inspect and maintain the local storage tree
       init:
         already_materialised: Every declared directory already existed; nothing was
@@ -4977,9 +4962,8 @@ cli:
     errors:
       accepted_roots_only: The CLI accepts only the config and app roots.
       contract_not_accepted: 'Operator surface %{surface} rejected the contract: %{reason}.'
-      source_kind_options: 'Available source kinds: %{options}.'
-      unknown_source_kind: 'Unknown source kind: %{kind}. Use --help to see available
-        options.'
+      unknown_source_kind: 'Unknown source kind: %{kind}. Available source kinds:
+        %{options}.'
     help:
       app:
         footer: Run aeat --help for the full overview.
@@ -6633,6 +6617,8 @@ errors:
       declarations. Review the amounts before continuing.
     reconciliation_evidence_invalid: The PDF could not be read. Check that the file
       is the AEAT justificante and not a different document, and that it is not corrupt.
+      Re-run `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` with the correct
+      file.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
     refused_aeat_record_multi_recipient: The declared record names more than one recipient,
@@ -6910,6 +6896,9 @@ errors:
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'
+    ambiguous_revision_selection_year_only: 'More than one registry revision matches
+      modelo %{modelo_id}: %{candidate_ids}. Supply the filing period, or an as-of
+      date, to select one of them.'
     modelo_not_registered: Model is not registered in the registry.
     no_revision_for_period: No registry revision covers modelo %{modelo_id} filing
       year %{filing_year} period %{period}.
@@ -69339,7 +69328,8 @@ profile:
       not model foral declarations. See sede.bizkaia.eus (Bizkaia), gipuzkoa.eus/ogasuna
       (Gipuzkoa), araba.eus/ogasun (Álava), or hacienda.navarra.es (Navarra) depending
       on your territory.
-    not_configured: No tax-residence profile is configured for RENTA.
+    not_configured: No tax-residence profile is configured for RENTA. Run `aeat config
+      profile edit NAME --tax-residence-ccaa <ccaa>` to configure it.
   keys:
     description: Profile configuration keys and their descriptions
     tax:
