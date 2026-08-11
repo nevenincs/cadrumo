@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-11'
-body_hash: 'sha256:a009a8fb886f9742fe76b5c2ef0bf7554a320fdb971e63d9909d7806f8563d39'
+body_hash: 'sha256:b47f5b00d9a7ac59257151e98f2a9abadebc6711b32fe2d4579a2a45aeb1824d'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -155,7 +155,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S51` - Retire remaining recovery-authority claims from the first application registry shard and prove its ErrorCode tuples are taxonomy-only with zero S51-owned structural or locator impact while historical defaults and dispositions remain exclusively in immutable preimage evidence and later producer migrations and unrelated peer locator refreshes are refused; `src/cadrumo/core/errors/registry/_application_part1.py`.
 - [x] `W05.P08.S52` - Prove the second application registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger and 62 migration_required rows exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_application_part2.py`.
 - [x] `W05.P08.S53` - Prove the first domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 44 migration_required rows are exclusively owned by later producer steps and 3 rows are retired_or_unreachable; `src/cadrumo/core/errors/registry/_domain_part1.py`.
-- [ ] `W05.P08.S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row; `src/cadrumo/core/errors/registry/_domain_part2.py`.
+- [x] `W05.P08.S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row; `src/cadrumo/core/errors/registry/_domain_part2.py`.
 - [ ] `W05.P08.S55` - Migrate third domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part3.py`.
 - [ ] `W05.P08.S56` - Migrate first adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part1.py`.
 - [ ] `W05.P08.S57` - Migrate second adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part2.py`.
