@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#semantic-cluster-hardening'
 date: '2026-06-01'
-modified: '2026-07-17'
-body_hash: 'sha256:5e3284fcbb341d58a9fb90c370c3f43fa114b120d61a46d3feed58fbb6fb5d10'
+modified: '2026-08-11'
+body_hash: 'sha256:57d7db6d15c2b03eca99bd97c4ac2f72228152ffa51c899b88316dd53463d032'
 related:
   - "[[2026-06-01-semantic-cluster-hardening-plan]]"
 ---
@@ -308,7 +308,7 @@ duplications.
 
 ### CORRECTION - English tax-term drift is NOT sanctioned
 
-An earlier draft of this section wrongly called IVA/VAT "sanctioned
+An earlier draft of this section wrongly called the English VAT alias for IVA "sanctioned
 vocabulary." That is FALSE. The accepted `spanish-stem-terminology-authority`
 ADR (2026-05-19) makes Spanish stems authoritative for tax-domain identifiers:
 `iva` supersedes `vat`/`value_added_tax`; English tax terms are drift to be

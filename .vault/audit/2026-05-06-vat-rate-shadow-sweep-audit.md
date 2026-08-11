@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#vat-rate-shadow-sweep'
 date: '2026-05-06'
-modified: '2026-07-17'
-body_hash: 'sha256:78e71ceb214d30b17e30124ee6eeeb44838732c0d3c2e67fc836b9904025a400'
+modified: '2026-08-11'
+body_hash: 'sha256:6cd998fc4a74a94bcb779fbd2c4a760fb8259348f2d71540988d7ff7d7c6863a'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
@@ -14,16 +14,16 @@ related:
 
 ## Scope
 
-This is the second loop iteration of the Modelo 369 VAT centralization
-audit. The first iteration (`vat-iva-surface-and-modelo-369-readiness`)
-established that `aeat.domain.vat` is the centralized substrate but
+This is the second loop iteration of the Modelo 369 IVA centralization
+audit. The first surface-and-Modelo-369 readiness iteration
+established that `cadrumo.domain.iva` is the centralized substrate but
 that no committed modelo registry yet consumes it; recommendation 5 of
 that audit deferred a literal-sweep across the codebase to confirm
-that `registry/aeat/vat/rates.toml` is the only authority for VAT and
+that `registry/aeat/iva/rates.toml` is the only authority for IVA and
 adjacent filing-grade rate values.
 
 This audit runs that sweep. It enumerates every Python module under
-`src/aeat/` that hardcodes a filing-grade rate value (VAT, IRPF
+`src/aeat/` that hardcodes a filing-grade rate value (IVA, IRPF
 imputación, IRPF retention, or any other rate that owns legal truth)
 and classifies each as a violation of the calculation-truth-registry
 ADR's Decision 6 ("Forbid filing-grade legal values, thresholds, rates,
@@ -47,7 +47,7 @@ hardcodes the Decimal percentages: `RATE_4 → Decimal("0.04")`,
 
 Severity: **high**. This is a direct violation of ADR Decision 6.
 Spanish IVA rate values live in Python rather than being looked up
-through `registry/aeat/vat/rates.toml` and the `lookup_rate` substrate
+through `registry/aeat/iva/rates.toml` and the `lookup_rate` substrate
 helper. The enum values are also written into invoice records and
 ledger lines, so the shadow propagates into persisted state.
 
@@ -98,7 +98,7 @@ model whose `iva_rate` and `retention_rate` fields are typed as
 registry-backed enum). The review path therefore accepts arbitrary
 user-edit Decimal values, allowing review operations to write
 non-canonical rate values into ledger records that bypass both the
-`IvaRate` shadow (V-1) and the substrate's `VAT_RATE_TABLE`.
+`IvaRate` shadow (V-1) and the substrate's registry-backed IVA rate table.
 
 Severity: **medium**. This is not a new rate authority but a
 boundary-leak: a user-driven review surface can introduce arbitrary
@@ -184,7 +184,7 @@ Concrete actions for the ADR:
 1. Migrate `IvaRate` to a registry-backed enum / factory. The enum
    shape can stay (it gives Pydantic a closed taxonomy for serialised
    ledger lines), but the percentage mapping must come from
-   `registry/aeat/vat/rates.toml` via `lookup_rate`. Update every
+   `registry/aeat/iva/rates.toml` via `lookup_rate`. Update every
    consumer in `aeat.domain.invoices`, `aeat.application.review.*`,
    and the CLI invoice parser to call the substrate.
 2. Migrate the rental imputación constants to

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-17'
-body_hash: 'sha256:d27743cd57f0d0ac4f2bf5725b838fbc2621c397a4fdc369cbf7c8fa5cdcc545'
+modified: '2026-08-11'
+body_hash: 'sha256:ca0f44e5af4a067e6e45c12ad280ec9ab36768676456d4deb3fd454eeb3c4873'
 related:
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-research]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
@@ -51,7 +51,7 @@ model-ready export:
 - provider ingestion with diagnostics and duplicate protection
 - listing and status visibility
 - review and classification, including `split` and `business_pct`
-- category and readiness state required for deductible, VAT/IVA, and IRPF
+- category and readiness state required for deductible, IVA, and IRPF
   preparation: `category`, `business_pct`, `taxable_base`, rates, and
   proportionality context
 - attachment and evidence lifecycle for each transaction through
@@ -109,7 +109,7 @@ different objects with different roles.
   or additional references, but only one evidence anchor is canonical per row.
 - Model-ready rows require class/category consistency. Mixed-use rows require a
   valid `business_pct` and split rationale before export.
-- Tax readiness requires explicit taxable base, VAT/IVA amount or rate where
+- Tax readiness requires explicit taxable base, IVA amount or rate where
   relevant, IRPF category, and proportionality context before modelo
   calculation consumes the row.
 - `purchase_invoice_evidence` is evidence only. `payable_invoice` and

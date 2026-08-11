@@ -3,15 +3,20 @@ tags:
   - '#plan'
   - '#honest-all-green'
 date: '2026-07-14'
-modified: '2026-07-15'
-body_hash: 'sha256:6cb60645f3fa06a79416eacc988f4c471c2707e62df3f01c980ed6b46bbf9e96'
+modified: '2026-08-11'
+body_hash: 'sha256:f500d5c8c900dff4cec3022c18aa9452ab4e2f3b25709923afa99b3293e1e9a2'
 tier: L2
 related:
   - '[[2026-07-14-data-output-standardization-audit]]'
   - '[[2026-07-14-honest-all-green-adr]]'
   - '[[2026-07-13-data-output-standardization-research]]'
 ---
+
 # `honest-all-green` plan
+
+## Description
+
+## Steps
 
 ### Phase `P01` - Renta registry grounding cluster
 
@@ -53,13 +58,9 @@ Fix the companion-wheel build errors and make the loader-cache and import-hygien
 
 Full-suite verification runs to a genuinely green state with zero skips and no new baselines or allowlist mutes.
 
-- [x] `P06.S11` - Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence; `full-tree gates`.
+- [ ] `P06.S11` - Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence; `full-tree gates`.
 - [x] `P06.S13` - Extend the period-gate allowlist for the landed docs sequences WorkUnit display frames per the established narrow-rule precedent; `src/cadrumo/core/tests/test_period_combined_string_gate.py`.
 - [x] `P06.S14` - Complete the landed CLI-identity rename's locale sweep so codebase-to-locale parity and the two locale-audit tests are green; `src/cadrumo/locales`.
-
-## Description
-
-## Steps
 
 ## Parallelization
 

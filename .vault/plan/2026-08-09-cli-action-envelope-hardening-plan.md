@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-11'
-body_hash: 'sha256:bf61ce6ebac6cbd70e4c4340a290de0aa9e9d6c16f90c9a03bef38410e71c395'
+body_hash: 'sha256:a009a8fb886f9742fe76b5c2ef0bf7554a320fdb971e63d9909d7806f8563d39'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -13,6 +13,8 @@ related:
 ---
 
 # `cli-action-envelope-hardening` plan
+
+## Steps
 
 ## Description
 
@@ -26,20 +28,33 @@ is intentionally not routed through the user-documentation pipeline.
 
 Error-default migration is staged and rehome-first. `S50` preserves the
 immutable 612-row preimage while it requires a disposition only for each of the
-238 historical non-null keys. The current set has 106 keys: 101 physical
-constructors and five nonconstructing references. The lexical fixed-point
-resolver accepts explicit imports, aliases, and re-exports, including only
-statically enumerable PEP-562 export maps; it rejects ambiguity and nested-
-scope leakage, and records every resolved call context. A current physical
-constructor or reference may be recorded only as evidence-only
-`migration_required` with one open scope-valid current owner; it is not a
-recovery outcome. The five nonconstructing references start in that state and
-may become `verified_nonproducer_reference` only after no emitting, dynamic,
-or re-export route is proven. The final kinds are `verified_typed_action`,
-`verified_terminal_no_recovery`, `verified_nonproducer_reference`, and
-`retired_or_unreachable`; the last is restricted to the source-proven 132-row
-zero-reference set. The rehoming ledger carries source locators and ownership
-evidence only, never action, command, condition, prose, or locale policy.
+238 historical non-null keys. The current observed-key set, its
+constructor/reference partition, scanner-absent set, and structural fingerprint
+multiset are always derived afresh from the current source tree at validation
+time. A structural fingerprint identity is
+`(path, lexical_owner, role, recovery-ast-v1 normalized AST SHA-256,
+identical_site_ordinal)`. Canonical `recovery-ast-v1` JSON includes every
+semantic field and their order, excluding coordinates only. The locator
+`(line, column, end_line, end_column)` is diagnostic metadata only and never
+gates a match or owner binding. The lexical fixed-point resolver accepts
+explicit imports, aliases, and re-exports, including only statically enumerable
+PEP-562 export maps; it rejects ambiguity and nested-scope leakage, and records
+every resolved call context. Acceptance compares the derived exact key and
+structural-fingerprint multisets, never a count alone. Every observed key begins
+as evidence-only `migration_required` with one open scope-valid current owner
+bound by structural identity; a scanner-absent key is only eligible for
+`retired_or_unreachable` after absence is proven. Reference-only keys start in
+`migration_required` and may become `verified_nonproducer_reference` only after
+no emitting, dynamic, or re-export route is proven. The final kinds are
+`verified_typed_action`, `verified_terminal_no_recovery`,
+`verified_nonproducer_reference`, and `retired_or_unreachable`. Line identity
+is rejected in this shared campaign because independent worktree edits can shift
+coordinates without changing a producer's semantics, so treating a locator as
+identity would create false missing or duplicate evidence. The rehoming ledger
+carries immutable provenance, structural identity, diagnostic locators, and
+ownership evidence only; it remains policy- and locale-neutral and never carries
+action, command, condition, prose, or locale policy. Snapshot discovery totals
+are evidence only and never architecture.
 
 Historic shard Steps retain immutable allocation evidence and may retire only
 after every allocated historical non-null row has a final disposition. `S51`
@@ -136,34 +151,35 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection; `src/cadrumo/core/errors/_registry.py`.
 - [x] `W05.P08.S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step; `dev/cli_action_census_dispositions.py`.
 - [x] `W05.P08.S30` - Prove registered error recovery resolves against the live command and input surface; `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`.
-- [ ] `W05.P08.S50` - Build a fail-closed per-record historical-default rehoming join before any registry-shard owner is retired; `dev/error_code_default_recovery_rehoming.py; dev/error_code_default_recovery_rehoming.toml; dev/tests/test_error_code_default_recovery_rehoming.py`.
-- [ ] `W05.P08.S51` - Migrate first application error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_application_part1.py`.
-- [ ] `W05.P08.S52` - Migrate second application error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_application_part2.py`.
-- [ ] `W05.P08.S53` - Migrate first domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part1.py`.
-- [ ] `W05.P08.S54` - Migrate second domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part2.py`.
+- [x] `W05.P08.S50` - Build a fail-closed per-record historical-default rehoming join keyed by structural fingerprints before any registry-shard owner is retired; `dev/quality/error_code_default_recovery_rehoming.py; dev/quality/error_code_default_recovery_rehoming.toml; dev/tests/test_error_code_default_recovery_rehoming.py`.
+- [x] `W05.P08.S51` - Retire remaining recovery-authority claims from the first application registry shard and prove its ErrorCode tuples are taxonomy-only with zero S51-owned structural or locator impact while historical defaults and dispositions remain exclusively in immutable preimage evidence and later producer migrations and unrelated peer locator refreshes are refused; `src/cadrumo/core/errors/registry/_application_part1.py`.
+- [x] `W05.P08.S52` - Prove the second application registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger and 62 migration_required rows exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_application_part2.py`.
+- [x] `W05.P08.S53` - Prove the first domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 44 migration_required rows are exclusively owned by later producer steps and 3 rows are retired_or_unreachable; `src/cadrumo/core/errors/registry/_domain_part1.py`.
+- [ ] `W05.P08.S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row; `src/cadrumo/core/errors/registry/_domain_part2.py`.
 - [ ] `W05.P08.S55` - Migrate third domain error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_domain_part3.py`.
 - [ ] `W05.P08.S56` - Migrate first adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part1.py`.
 - [ ] `W05.P08.S57` - Migrate second adapter error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_adapters_part2.py`.
 - [ ] `W05.P08.S63` - Delete the retired CadrumoError suggestion parameter and attribute so every unmigrated exception producer fails loudly; `src/cadrumo/core/errors/__init__.py`.
 - [ ] `W05.P08.S64` - Migrate entrypoint error-code defaults to catalogue action identities or explicit no-recovery outcomes; `src/cadrumo/core/errors/registry/_entrypoints.py`.
 - [ ] `W05.P08.S65` - Replace ancillary core install and repair suggestion producers with canonical action references or explicit no-recovery outcomes; `src/cadrumo/core/_optional_extras.py; src/cadrumo/core/external_constants.py`.
-- [ ] `W05.P08.S96` - Migrate residual Modelo exception recovery producers and forwarding bridges to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/modelo/_export.py; src/cadrumo/application/modelo/_profile_readiness_gate.py; src/cadrumo/application/modelo/_projection.py; src/cadrumo/application/modelo/_reconcile.py; src/cadrumo/application/modelo/_work_addressing.py; src/cadrumo/application/modelo/_registry_helpers.py; src/cadrumo/application/modelo/_required_binding_gate.py; src/cadrumo/application/modelo/_workflow_gate.py; src/cadrumo/application/modelo/_result_disposition_resolution.py; src/cadrumo/application/modelo/_work_lifecycle.py; src/cadrumo/application/modelo/_calculation_helpers.py; src/cadrumo/application/modelo/_calculation_actions.py; src/cadrumo/application/modelo/_calculation_preparation.py; src/cadrumo/application/modelo/_m349_ledger_guard.py; src/cadrumo/application/modelo/_calculation_modelo_adjustments.py; src/cadrumo/application/modelo/_verification_cross_period.py; src/cadrumo/application/modelo/_amendment_actions.py; src/cadrumo/application/modelo/_amendment_kind_resolution.py; src/cadrumo/application/modelo/_external_import_actions.py; src/cadrumo/application/modelo/_filed_revision_observation.py; src/cadrumo/application/modelo/_filing_actions.py; src/cadrumo/application/modelo/_local_observation_actions.py; src/cadrumo/application/modelo/_local_observation_spreadsheet.py; src/cadrumo/application/modelo/_selectors.py; src/cadrumo/application/modelo/_semantic_role_resolution.py`.
-- [ ] `W05.P08.S97` - Migrate workflow exception precondition and continuation producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/workflow/_models.py; src/cadrumo/application/workflow/_engine.py; src/cadrumo/application/workflow/_profile_bucket_scan.py`.
+- [ ] `W05.P08.S96` - Migrate residual Modelo exception recovery producers and forwarding bridges including M303 profile-status, IVA-composition, and filing-evidence active-profile raw-English refusal producers through the canonical locale-neutral precondition/action contract or explicit terminal/no-recovery dispositions and record _preconditions.py as an upstream cross-feature dependency owned by open casilla-schema W01.P01.S01 for reconciliation after release; `src/cadrumo/application/modelo/_export.py; src/cadrumo/application/modelo/_profile_readiness_gate.py; src/cadrumo/application/modelo/_projection.py; src/cadrumo/application/modelo/_reconcile.py; src/cadrumo/application/modelo/_work_addressing.py; src/cadrumo/application/modelo/_registry_helpers.py; src/cadrumo/application/modelo/_required_binding_gate.py; src/cadrumo/application/modelo/_workflow_gate.py; src/cadrumo/application/modelo/_result_disposition_resolution.py; src/cadrumo/application/modelo/_work_lifecycle.py; src/cadrumo/application/modelo/_calculation_helpers.py; src/cadrumo/application/modelo/_calculation_actions.py; src/cadrumo/application/modelo/_calculation_preparation.py; src/cadrumo/application/modelo/_m349_ledger_guard.py; src/cadrumo/application/modelo/_calculation_modelo_adjustments.py; src/cadrumo/application/modelo/_verification_cross_period.py; src/cadrumo/application/modelo/_amendment_actions.py; src/cadrumo/application/modelo/_amendment_kind_resolution.py; src/cadrumo/application/modelo/_external_import_actions.py; src/cadrumo/application/modelo/_filed_revision_observation.py; src/cadrumo/application/modelo/_filing_actions.py; src/cadrumo/application/modelo/_local_observation_actions.py; src/cadrumo/application/modelo/_local_observation_spreadsheet.py; src/cadrumo/application/modelo/_selectors.py; src/cadrumo/application/modelo/_semantic_role_resolution.py; src/cadrumo/application/modelo/_art20_advisory.py; src/cadrumo/application/modelo/_art52_advisory.py; src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py; src/cadrumo/application/modelo/_binding_resolution.py; src/cadrumo/application/modelo/_borrador_binding.py; src/cadrumo/application/modelo/_calculate_input.py; src/cadrumo/application/modelo/_dt12_advisory.py; src/cadrumo/application/modelo/_dt12_antiquity_advisory.py; src/cadrumo/application/modelo/_history.py; src/cadrumo/application/modelo/_iva_wallet_gate.py; src/cadrumo/application/modelo/_iva_wallet_seed.py; src/cadrumo/application/modelo/_m036_lifecycle.py; src/cadrumo/application/modelo/_m145_communication_records.py; src/cadrumo/application/modelo/_m210_convenio_lob_advisory.py; src/cadrumo/application/modelo/_prior_domiciliation.py; src/cadrumo/application/modelo/_profile_binding.py; src/cadrumo/application/modelo/_review_package.py; src/cadrumo/application/modelo/_review_package_feedback.py; src/cadrumo/application/modelo/_review_package_recipient_encryption.py; src/cadrumo/application/modelo/_review_package_review_only_workspace.py; src/cadrumo/application/modelo/_review_package_signing.py; src/cadrumo/application/modelo/_taxation_comparison.py; src/cadrumo/application/modelo/_verification_actions.py; src/cadrumo/application/modelo/_revision_persistence.py; src/cadrumo/application/modelo/_action_errors.py; src/cadrumo/application/modelo/_m303_regimen_simplificado_scope.py; src/cadrumo/application/modelo/tests/test_m303_regimen_simplificado_scope.py; src/cadrumo/application/modelo/_m303_filing_evidence.py`.
+- [ ] `W05.P08.S97` - Migrate workflow exception precondition and continuation producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/workflow/_models.py; src/cadrumo/application/workflow/_engine.py; src/cadrumo/application/workflow/_profile_bucket_scan.py; src/cadrumo/application/workflow/_deadline_stage.py; src/cadrumo/application/workflow/_resume.py`.
 - [ ] `W05.P08.S99` - Migrate justificante exception action forwarding through cooperative MRO to the retired-error boundary and canonical typed actions; `src/cadrumo/domain/justificante/_errors.py`.
-- [ ] `W05.P08.S100` - Migrate core corpus, access-gate, and active-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/core/corpus_manifest/__init__.py; src/cadrumo/core/access_gate/__init__.py; src/cadrumo/core/config.py`.
-- [ ] `W05.P08.S101` - Migrate application user-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/user_profile/_profile_repository.py; src/cadrumo/application/user_profile/_bundle.py`.
+- [ ] `W05.P08.S100` - Migrate core corpus, access-gate, and active-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/core/corpus_manifest/__init__.py; src/cadrumo/core/access_gate/__init__.py; src/cadrumo/core/config.py; src/cadrumo/core/corpus_manifest/_errors.py`.
+- [ ] `W05.P08.S101` - Migrate application user-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/user_profile/_profile_repository.py; src/cadrumo/application/user_profile/_bundle.py; src/cadrumo/application/user_profile/_bundle_encryption.py; src/cadrumo/application/user_profile/_censo_sync.py; src/cadrumo/application/user_profile/_custody.py; src/cadrumo/application/user_profile/_integrity.py; src/cadrumo/application/user_profile/_login_session.py; src/cadrumo/application/user_profile/_orchestration.py; src/cadrumo/application/user_profile/_registration.py; src/cadrumo/application/user_profile/_repository.py`.
 - [ ] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
 - [ ] `W05.P08.S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/export/_tabular.py`.
-- [ ] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py`.
-- [ ] `W05.P08.S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/invoices/_service.py; src/cadrumo/domain/iva/_lookup.py; src/cadrumo/domain/portals/_registry.py`.
-- [ ] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py`.
+- [ ] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py; src/cadrumo/application/storage/calc_sheets/_translator.py`.
+- [ ] `W05.P08.S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/invoices/_service.py; src/cadrumo/domain/iva/_lookup.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/invoices/_enums.py; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/domain/iva/_saturation.py`.
+- [ ] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py; src/cadrumo/application/config_reset.py`.
+- [x] `W05.P08.S116` - Replace runtime pkgutil result-schema discovery with one canonical schema-module declaration reconciled bidirectionally to the live command and result-schema surface; `src/cadrumo/entrypoints/cli/_app_contract.py; src/cadrumo/entrypoints/schema_surface.py; src/cadrumo/entrypoints/cli/tests/test_app_contract_resilience.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
 Migrate high-density operational guidance and prove blank-state and readiness recovery.
 
 - [ ] `W05.P09.S31` - Migrate overview next-step producers and blank-state advisories to typed actions; `src/cadrumo/application/overview`.
-- [ ] `W05.P09.S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes; `src/cadrumo/application/diagnostics.py`.
+- [x] `W05.P09.S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes; `src/cadrumo/application/diagnostics.py`.
 - [ ] `W05.P09.S33` - Migrate provisioning recovery guidance to typed conditions and actions; `src/cadrumo/application/provisioning.py`.
 - [ ] `W05.P09.S34` - Render overview text and JSON from one typed action projection; `src/cadrumo/entrypoints/cli/_overview.py`.
 - [ ] `W05.P09.S35` - Prove blank-state diagnostics and provisioning negative-recovery-retry journeys; `src/cadrumo/entrypoints/cli/tests/test_overview_provisioning_action_recovery.py`.
@@ -180,7 +196,7 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S40` - Migrate live-read recovery producers with explicit safety dispositions; `src/cadrumo/application/live`.
 - [ ] `W05.P10.S41` - Remove canonical command identity from locale prose and retain derived message templates; `src/cadrumo/locales`.
 - [ ] `W05.P10.S58` - Migrate AEAT adapter recovery producers with explicit external-system safety dispositions; `src/cadrumo/adapters/outbound/aeat`.
-- [ ] `W05.P10.S59` - Remove independently authored command identity from remaining renderer-only CLI files; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py`.
+- [ ] `W05.P10.S59` - Remove independently authored command identity from remaining renderer-only CLI files and stale lazy schema-owner-table claims from _config_payloads.py; `src/cadrumo/entrypoints/cli/_config_payloads.py; src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py`.
 - [ ] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
 - [ ] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
 - [ ] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
@@ -204,14 +220,23 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
 - [ ] `W05.P10.S86` - Migrate transaction-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/transactions`.
 - [ ] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
-- [ ] `W05.P10.S88` - Migrate residual root CLI boundary action producers outside the root-guard and error-boundary owners; `src/cadrumo/entrypoints/cli/__init__.py; src/cadrumo/entrypoints/cli/_app_diagnostics.py; src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py; src/cadrumo/entrypoints/cli/_app_maintenance.py; src/cadrumo/entrypoints/cli/_tty.py`.
+- [ ] `W05.P10.S88` - Migrate residual root, live, and portal CLI boundary action producers outside the root-guard and error-boundary owners; `src/cadrumo/entrypoints/cli/__init__.py; src/cadrumo/entrypoints/cli/_app_diagnostics.py; src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py; src/cadrumo/entrypoints/cli/_app_maintenance.py; src/cadrumo/entrypoints/cli/_tty.py; src/cadrumo/entrypoints/cli/_app_live.py; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`.
 - [ ] `W05.P10.S89` - Migrate config CLI action producers and co-located renderers to resolved typed actions; `src/cadrumo/entrypoints/cli/_config`.
-- [ ] `W05.P10.S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose; `src/cadrumo/entrypoints/cli/_ledger.py; src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py; src/cadrumo/entrypoints/cli/_ledger_classify_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py; src/cadrumo/entrypoints/cli/_ledger_import_cli.py; src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py; src/cadrumo/entrypoints/cli/_ledger_llm_cli.py; src/cadrumo/entrypoints/cli/_ledger_read_cli.py; src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`.
-- [ ] `W05.P10.S91` - Migrate residual modelo CLI action producers and co-located renderers and delete suggestion-accepting notice helper arguments; `src/cadrumo/entrypoints/cli/_modelo.py; src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py; src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py; src/cadrumo/entrypoints/cli/_modelo_export_cli.py; src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py; src/cadrumo/entrypoints/cli/_modelo_rendering.py`.
+- [ ] `W05.P10.S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose; `src/cadrumo/entrypoints/cli/_ledger.py; src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py; src/cadrumo/entrypoints/cli/_ledger_classify_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_batch_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py; src/cadrumo/entrypoints/cli/_ledger_evidence_review_cli.py; src/cadrumo/entrypoints/cli/_ledger_import_cli.py; src/cadrumo/entrypoints/cli/_ledger_lifecycle_cli.py; src/cadrumo/entrypoints/cli/_ledger_llm_cli.py; src/cadrumo/entrypoints/cli/_ledger_read_cli.py; src/cadrumo/entrypoints/cli/_ledger_rules_cli.py; src/cadrumo/entrypoints/cli/_ledger_counterparty_cli.py; src/cadrumo/entrypoints/cli/_ledger_ratios_cli.py; src/cadrumo/entrypoints/cli/_ledger_review_cli.py; src/cadrumo/entrypoints/cli/_ledger_support.py`.
+- [ ] `W05.P10.S91` - Migrate residual modelo CLI action producers and co-located renderers and delete suggestion-accepting notice helper arguments; `src/cadrumo/entrypoints/cli/_modelo.py; src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py; src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py; src/cadrumo/entrypoints/cli/_modelo_export_cli.py; src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py; src/cadrumo/entrypoints/cli/_modelo_rendering.py; src/cadrumo/entrypoints/cli/_modelo_amend_wizard_cli.py; src/cadrumo/entrypoints/cli/_modelo_cli_support.py; src/cadrumo/entrypoints/cli/_modelo_iva_wallet_cli.py; src/cadrumo/entrypoints/cli/_modelo_projection_cli.py; src/cadrumo/entrypoints/cli/_modelo_records_cli.py; src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py; src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py; src/cadrumo/entrypoints/cli/_modelo_work_revision_cli.py; src/cadrumo/entrypoints/cli/_modelo_work_wizard_cli.py`.
 - [ ] `W05.P10.S92` - Replace overview renderer action producers and co-located renderers with the shared resolved action projection; `src/cadrumo/entrypoints/cli/_overview_rendering.py`.
-- [ ] `W05.P10.S93` - Migrate residual MCP action producers and transport notices to the shared resolved action projection; `src/cadrumo/entrypoints/mcp/_tools.py; src/cadrumo/entrypoints/mcp/_transport.py`.
+- [ ] `W05.P10.S93` - Migrate residual MCP action producers and transport notices to the shared resolved action projection; `src/cadrumo/entrypoints/mcp/_tools.py; src/cadrumo/entrypoints/mcp/_transport.py; src/cadrumo/entrypoints/mcp/_resources.py`.
 - [ ] `W05.P10.S94` - Migrate LLM recovery and continuation producers to typed conditions and canonical actions; `src/cadrumo/llm`.
-- [ ] `W05.P10.S98` - Migrate application-registry exception-action forwarding to the retired-error boundary and canonical typed actions; `src/cadrumo/application/registry/_diff.py`.
+- [ ] `W05.P10.S98` - Migrate application-registry exception recovery producers and forwarding to the retired-error boundary and canonical typed actions; `src/cadrumo/application/registry/_diff.py; src/cadrumo/application/registry/__init__.py; src/cadrumo/application/registry/_conformance.py; src/cadrumo/application/registry/_corpus.py; src/cadrumo/application/registry/_corpus_manual_helpers.py`.
+- [ ] `W05.P10.S107` - Migrate bucket-maintenance recovery producers to typed conditions and canonical actions; `src/cadrumo/application/bucket_maintenance/_sandbox.py; src/cadrumo/application/bucket_maintenance/_service.py`.
+- [ ] `W05.P10.S108` - Migrate application invoice-lifecycle recovery producers to typed conditions and canonical actions; `src/cadrumo/application/invoices/_lifecycle.py`.
+- [ ] `W05.P10.S109` - Migrate application setup recovery producers to typed conditions and canonical actions; `src/cadrumo/application/setup/_service.py`.
+- [ ] `W05.P10.S110` - Migrate application state-projection recovery producers to typed conditions and canonical actions; `src/cadrumo/application/state_projection.py`.
+- [ ] `W05.P10.S111` - Migrate core output-rendering recovery producers to typed conditions and canonical actions; `src/cadrumo/core/output_rendering.py`.
+- [ ] `W05.P10.S112` - Migrate core topics recovery producers to typed conditions and canonical actions; `src/cadrumo/core/topics/__init__.py`.
+- [ ] `W05.P10.S113` - Migrate domain-bucket recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/buckets/_errors.py`.
+- [ ] `W05.P10.S114` - Migrate residual shared CLI boundary recovery producers outside completed root-guard/error-boundary Steps; `src/cadrumo/entrypoints/cli/_common.py; src/cadrumo/entrypoints/cli/_errors.py`.
+- [ ] `W05.P10.S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome; `src/cadrumo/application/diagnostics.py`.
 
 ## Wave `W06` - Prove action chains and close honestly
 
@@ -233,6 +258,7 @@ campaign closure. `W06` rejects `migration_required` and ambiguous rehoming
 rows, revalidates each final typed-producer resolver or terminal proof, proves
 retired absence and reference-only status, and preserves the complete immutable
 612-row history.
+
 - [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/cli_action_census.py`.
 - [ ] `W06.P12.S47` - Fail closure on unclassified sites unresolved actions insufficient bindings missing proofs or ungrounded exclusions; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
@@ -276,5 +302,3 @@ cross-Wave exceptions.
   xfails, or tautological expected actions.
 - A fresh-context Terra xhigh honesty review is persisted and every finding is
   closed or formally deferred with a follow-up reference before S48 is checked.
-
-

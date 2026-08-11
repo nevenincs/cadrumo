@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0138a6de5bd08b3f66e3f66cc0092e201d86577aecd47beeaf6d8978dc80620'
+body_hash: 'sha256:bbb05096912e3a7bed8c917421657058b6b693ae92578f72e33d174f5c330449'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S49]]"
 ---

@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#renta-scope-audit'
 date: '2026-05-07'
-modified: '2026-07-17'
-body_hash: 'sha256:3f702e391b14cd28b3197d435798481185cea2061a475f479e705efe332621db'
+modified: '2026-08-11'
+body_hash: 'sha256:d1b3ae6e452f98ae9fa16a6cac2b02a4f3612c05b7a4e2c293ab40aa30886616'
 related:
   - "[[2026-05-06-renta-cuota-chain-rollout-plan]]"
   - "[[2026-05-03-calculation-truth-registry-pending-adr]]"
@@ -167,7 +167,7 @@ agent's slice or sourced from a parallel modelo's foundation work) but
 no Renta registry element cites them. The Renta-relevant subset includes
 `ley-35-2006:art-31` (estimación objetiva), `ley-35-2006:art-68.4`
 (maternity), `ley-35-2006:art-85` (imputación de rentas), and many
-LIVA/IVA articles that belong to the IVA substrate, not Renta.
+LIVA articles that belong to the IVA substrate, not Renta.
 
 **No broken citations** — every `legal_refs` entry in the registry
 resolves to a catalogue article. This is a strong signal that the cuota

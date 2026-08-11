@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-10'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:8e52ff44a7c55bc2d54f22d4516f674a819240c08af73a35ad4ccdefab8bad6d'
+body_hash: 'sha256:0a4959ae7999175b564ca739e3e4d8b6077581995e5e55917a12f06df0ba74c2'
 related: []
 ---
 # `cli-action-envelope-hardening` reference: `Blast-radius census method and baseline`
@@ -150,8 +150,8 @@ than fake execution.
 The live candidate-disposition ledger deliberately contains only the current
 source universe. Retired `ErrorCode.default_suggestion` declarations remain in
 the dedicated non-runtime preimage ledger
-`dev/error_code_default_suggestion_preimage.json`. Its parser
-`dev/error_code_default_suggestion_preimage_ledger.py` reads immutable source
+`dev/quality/error_code_default_suggestion_preimage.json`. Its parser
+`dev/quality/error_code_default_suggestion_preimage_ledger.py` reads immutable source
 commit `930ef9f4017a23cccaf4990d287beb014fc9723c` through Git, AST-extracts every
 former declaration, and requires ordered multiset equality with the checked-in
 rows.

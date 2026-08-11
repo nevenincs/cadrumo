@@ -5,7 +5,7 @@ tags:
 date: '2026-08-09'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:2f5d0f637f673e33ab4ba3430174db07a74434364090c909e92e20b468f92e63'
+body_hash: 'sha256:7720175125a5b2e11a789a08e4b88e6ae7a0956e16eefadfd434b1babdd3e439'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-research]]"
   - "[[2026-08-09-cli-action-envelope-hardening-reference]]"
@@ -69,23 +69,36 @@ are executable. The scope and blast radius are grounded in
 - The immutable retired-default preimage is discovery evidence, not runtime
   policy.
 - Every historical non-null default must join its exact immutable key and a
-  fail-closed, lexical fixed-point physical producer or reference fingerprint.
-  The resolver accepts explicit import aliases and re-exports, including only
-  statically enumerable PEP-562 export maps; it rejects ambiguity and nested-
-  scope leakage, and it records every resolved call context. Each current row
-  has exactly one current owner Step.
-- The current set has 106 keys: 101 physical constructors and five
-  nonconstructing references. Before producer migration, only evidence-only
-  `migration_required` is allowed for a current fingerprint with exactly one
-  open, scope-valid owner; it is not a final recovery outcome.
+  fail-closed structural producer or reference fingerprint:
+  `(path, lexical_owner, role, recovery-ast-v1 normalized AST SHA-256,
+  identical_site_ordinal)`. Canonical `recovery-ast-v1` JSON contains every
+  semantic field and their ordering, and excludes coordinates only. The
+  locator `(line, column, end_line, end_column)` is diagnostic metadata only:
+  it never identifies a gate match or owner. The resolver accepts explicit
+  import aliases and re-exports, including only statically enumerable PEP-562
+  export maps; it rejects ambiguity and nested-scope leakage, and it records
+  every resolved call context. Each current structural fingerprint has exactly
+  one current owner Step, keyed by that structural identity. Acceptance compares
+  the derived exact key and structural-fingerprint multisets, never an
+  aggregate count alone. Line identity is explicitly rejected in the shared
+  campaign because independent worktree edits can shift coordinates without
+  changing a producer's semantics; using it as identity would manufacture false
+  missing or duplicate evidence.
+- The current observed-key set, constructor/reference partition, scanner-absent
+  set, and physical fingerprint multiset are derived afresh from the current
+  source tree at validation time. Every observed key begins as evidence-only
+  `migration_required` with exactly one open, scope-valid owner; it is not a
+  final recovery outcome. A scanner-absent key is only eligible for
+  `retired_or_unreachable` after absence is proven. Snapshot discovery totals
+  are evidence only and never architecture.
 - The final kinds are `verified_typed_action`,
   `verified_terminal_no_recovery`, `verified_nonproducer_reference`, and
-  `retired_or_unreachable`. The five nonconstructing references begin as
-  `migration_required` and can become `verified_nonproducer_reference` only
+  `retired_or_unreachable`. Reference-only keys begin as `migration_required`
+  and can become `verified_nonproducer_reference` only
   after proof that no emitting, dynamic, or re-export route remains.
-- `retired_or_unreachable` is allowed only for the source-proven 127-row
-  zero-reference set; a historical `None` does not itself establish a terminal
-  outcome.- Rehoming evidence carries no action, condition, command, or localized-text
+- `retired_or_unreachable` is allowed only for a source-proven scanner-absent
+  key; a historical `None` does not itself establish a terminal outcome.
+  Rehoming evidence carries no action, condition, command, or localized-text
   authority; user-facing rendering uses locale keys plus typed facts only.
 ## Implementation
 
@@ -97,9 +110,10 @@ human rendering as a derived view. Migrate producer-to-projection slices by beha
 storage/profile guards, then workflow and modelo, diagnostics/overview/provisioning,
 and remaining adjudicated clusters. Rehome every retired non-null default at its
 current producer or guard before changing any registry-shard ownership. The
-rehoming join records only provenance, locator, current owner Step, and disposition;
-runtime policy remains in the producer verdict and its catalogue/live-schema
-projection.
+rehoming join records only immutable provenance, structural identity, diagnostic
+locator, current owner Step, and disposition; it is policy- and locale-neutral
+and carries no action, command, condition, prose, or locale policy. Runtime
+policy remains in the producer verdict and its catalogue/live-schema projection.
 
 Add an AST-backed census and a live coverage join. New unclassified action sites,
 unresolved action identities, insufficient bindings, undeclared preconditions,
@@ -123,5 +137,3 @@ MCP share one semantic contract. The migration is broad and cannot be represente
 as one envelope edit; each cluster requires real negative and positive proof.
 Temporary coexistence of migrated typed records and adjudicated legacy sites is
 allowed only while the census makes the remainder explicit and shrinking.
-
-

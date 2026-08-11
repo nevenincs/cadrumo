@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#cli-action-envelope-hardening'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-11'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:6d10ebd452c412f1c65c19ca5909d54874b7ab032dc64e2901e5ba8f54fc716c'
+body_hash: 'sha256:0fa8b7cb1f97107397ae9633ce1a5a246070292ea142f316ba435cbcd4833f49'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -39,9 +39,16 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S25]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S26]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W04-P07-S27]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S116]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S28]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S29]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S30]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S50]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S51]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S52]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S53]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S54]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
   - '[[2026-08-09-cli-action-envelope-hardening-reference]]'
@@ -78,6 +85,12 @@ related:
   - '[[2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit]]'
   - '[[2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s51-application-part1-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s52-application-part2-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s53-domain-part1-review-audit]]'
+  - '[[2026-08-11-cli-action-envelope-hardening-s54-domain-part2-review-audit]]'
 ---
 
 # `cli-action-envelope-hardening` feature index
@@ -124,6 +137,12 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit` - 2026-08-10-cli-action-envelope-hardening-s29-exception-override-owner-audit
 - `2026-08-10-cli-action-envelope-hardening-s30-error-recovery-contract-audit` - `cli-action-envelope-hardening` audit: `S30 error recovery contract independent review`
 - `2026-08-10-cli-action-envelope-hardening-workflow-producers-renderer-audit` - `cli-action-envelope-hardening` audit: `S22-S23 typed workflow producer and renderer review`
+- `2026-08-11-cli-action-envelope-hardening-s116-schema-owner-review-audit` - `cli-action-envelope-hardening` audit: `S116 schema-owner lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s50-rehoming-join-review-audit` - `cli-action-envelope-hardening` audit: `S50 rehoming join review`
+- `2026-08-11-cli-action-envelope-hardening-s51-application-part1-review-audit` - `cli-action-envelope-hardening` audit: `S51 application-part1 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s52-application-part2-review-audit` - `cli-action-envelope-hardening` audit: `S52 application-part2 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s53-domain-part1-review-audit` - `cli-action-envelope-hardening` audit: `S53 domain-part1 lifecycle review`
+- `2026-08-11-cli-action-envelope-hardening-s54-domain-part2-review-audit` - `cli-action-envelope-hardening` audit: `S54 domain-part2 lifecycle review`
 
 ### exec
 
@@ -161,6 +180,13 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S30` - Prove registered error recovery resolves against the live command and input surface
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S116` - 2026-08-09-cli-action-envelope-hardening-W05-P08-S116
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S50` - Build a fail-closed per-record historical-default rehoming join keyed by structural fingerprints before any registry-shard owner is retired
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S51` - 2026-08-09-cli-action-envelope-hardening-W05-P08-S51
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S52` - Prove the second application registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger and 62 migration_required rows exclusively owned by later producer steps
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S53` - Prove the first domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 44 migration_required rows are exclusively owned by later producer steps and 3 rows are retired_or_unreachable
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S54` - Prove the second domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 34 migration_required rows are exclusively owned by later producer steps and 5 rows are retired_or_unreachable while preserving the peer-owned M303RegimenSimplificadoEvidenceRequiredError taxonomy row
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S32` - Migrate diagnostic remediation records to resolved actions or explicit no-recovery outcomes
 
 ### plan
 

@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#profile-setup-flow'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-11'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:1bbaecc36af4157caaef0a291477ff44c4928f76dd4eceb367c024c2d205195f'
+body_hash: 'sha256:00802db3ee262b1e58761961300705961486c79c6842f12633b1bce630e20314'
 related:
   - '[[2026-07-23-profile-setup-flow-W01-P01-S01]]'
   - '[[2026-07-23-profile-setup-flow-W01-P01-S02]]'
@@ -51,6 +51,7 @@ related:
   - '[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]'
   - '[[2026-07-24-profile-setup-flow-close-honesty-review-audit]]'
   - '[[2026-08-02-profile-setup-flow-tui-trigger-audit]]'
+  - '[[2026-08-11-profile-setup-flow-critical-baseline-research]]'
 ---
 
 # `profile-setup-flow` feature index
@@ -119,3 +120,4 @@ Auto-generated index of all documents tagged with `#profile-setup-flow`.
 ### research
 
 - `2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research` - `profile-setup-flow` research: `setup flow design hypothesis`
+- `2026-08-11-profile-setup-flow-critical-baseline-research` - `profile-setup-flow` research: `Current profile manager information architecture and population pathways`

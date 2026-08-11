@@ -3,8 +3,8 @@ tags:
   - '#research'
   - '#ledger-amount-direction'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:a63d3634aff9d14bc1c69c8654aae5029706387cb544b52eeacef32fc6916885'
+modified: '2026-08-11'
+body_hash: 'sha256:870209633e6a7cc5867ec990dd64382781028e182700ad51bd124fefcdf96b2b'
 related: []
 ---
 
@@ -65,7 +65,7 @@ import has no way to emit it.
 
 Aggregation everywhere takes the magnitude and routes on `direction`:
 
-- IVA aggregation (`src/aeat/application/iva/_iva_ledger.py`) routes purely
+- IVA aggregation (`src/cadrumo/application/aggregation/_iva_ledger.py`) routes purely
   by `direction`.
 - Renta aggregation (`src/aeat/application/renta/_renta_ledger.py` and
   `_renta_income_ledger.py`) uses `abs()` on the amount.
