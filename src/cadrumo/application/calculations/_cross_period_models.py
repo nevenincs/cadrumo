@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from enum import StrEnum
 from typing import Protocol, Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ...core import STRICT_FROZEN_CONFIG, CasillaId, Period
+from ...core import STRICT_FROZEN_CONFIG, CasillaId, OperatorActionAxis, Period
 from ...core.identity import CalculationRevisionId, FilingRecordId
 from ...domain.calculations.registry import LegalRefId, RegistryModeloObservation, RevisionId, SourceRefId
 from ...domain.modelos import (
@@ -89,6 +90,45 @@ class CrossPeriodCleanStateBlocker(StrEnum):
     norms. The carry is refused until the operator re-files and re-stamps
     under the current revision.
     """
+
+
+OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER: Mapping[
+    CrossPeriodCleanStateBlocker,
+    OperatorActionAxis,
+] = {
+    CrossPeriodCleanStateBlocker.MISSING_OBSERVATION: OperatorActionAxis.FILE_PRIOR_PERIOD,
+    CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+    CrossPeriodCleanStateBlocker.MISSING_CURRENT_FILING_RECORD: OperatorActionAxis.FILE_PRIOR_PERIOD,
+    CrossPeriodCleanStateBlocker.DUPLICATE_CURRENT_FILING_RECORD: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.SUPERSEDED_DEPENDENCY: OperatorActionAxis.FILE_PRIOR_PERIOD,
+    CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION: OperatorActionAxis.FILE_PRIOR_PERIOD,
+    CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION: OperatorActionAxis.FILE_PRIOR_PERIOD,
+    CrossPeriodCleanStateBlocker.MISSING_COMPLETE_VERIFICATION_REPORT: OperatorActionAxis.RE_VERIFY,
+    CrossPeriodCleanStateBlocker.LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE: (OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE),
+    CrossPeriodCleanStateBlocker.MISSING_AEAT_ACCEPTANCE: OperatorActionAxis.FILE_PRIOR_PERIOD,
+    CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+    CrossPeriodCleanStateBlocker.MISSING_EXTERNAL_EVIDENCE_RECORD: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+    CrossPeriodCleanStateBlocker.MISMATCHED_EXTERNAL_EVIDENCE_RECORD: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.UNRESOLVED_TAXPAYER_IDENTITY: OperatorActionAxis.RESOLVE_IDENTITY,
+    CrossPeriodCleanStateBlocker.MISSING_JUSTIFICANTE_VERIFICATION: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+    CrossPeriodCleanStateBlocker.OBSERVATION_REVISION_VALUE_DIVERGENCE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+    CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE: OperatorActionAxis.CAPTURE_EXTERNAL_EVIDENCE,
+    CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
+    CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
+    CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE: OperatorActionAxis.CONFIRM_GROUP_MEMBERSHIP,
+    CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE: OperatorActionAxis.RESOLVE_REVISION_MISMATCH,
+}
+"""Total operator-action projection retaining each native clean-state blocker."""
+
+if set(OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER) != set(CrossPeriodCleanStateBlocker):
+    _unmapped_cross_period_blockers = sorted(
+        blocker.value
+        for blocker in set(CrossPeriodCleanStateBlocker) - set(OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER)
+    )
+    raise RuntimeError(
+        "every CrossPeriodCleanStateBlocker must declare an OperatorActionAxis; "
+        f"unmapped: {', '.join(_unmapped_cross_period_blockers)}",
+    )
 
 
 class NoPriorObligationProvenanceKind(StrEnum):

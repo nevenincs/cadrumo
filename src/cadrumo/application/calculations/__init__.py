@@ -92,7 +92,10 @@ from ._cross_period_clean_state import (
     filing_external_evidence_blockers,
     partition_cross_period_requirements_by_activity_start,
 )
-from ._cross_period_models import period_strictly_before_activity_start
+from ._cross_period_models import (
+    OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER,
+    period_strictly_before_activity_start,
+)
 from ._foreign_asset_redeclaration import (
     modelo_720_declared_observation,
     modelo_720_evidence_observation,
@@ -205,6 +208,7 @@ __all__ = [
     "M303_DISPONIBLE_CASILLA",
     "M303_GENERADA_CASILLA",
     "M303_POSTERIOR_CASILLA",
+    "OPERATOR_ACTION_BY_CROSS_PERIOD_CLEAN_STATE_BLOCKER",
     "AssembledObservations",
     "BienesInversionRegularizacionSourceResolver",
     "BindingPrefillReport",
