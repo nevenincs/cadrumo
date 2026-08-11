@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:bcdccf0055e21fe85e15ed07b8627b9aafff0d1313586c6dc16109df93aec415'
+body_hash: 'sha256:49b4c90cf2c4183ad105a38bfb7cb95a59dad61648fb2540148c5dd65289f92d'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-research]]"
@@ -46,3 +46,35 @@ The campaign plan states that every closed step has an execution record under th
 - After those repairs, rerun the focused lane and the clean full collect-only gate, author the required `W01.P01.S01` execution record with the exact current-tree evidence, and only then check S01 in the plan.
 
 Verdict: **CHANGES REQUESTED.** The `NoRecoveryOutcome` import and the REAGP legal grounding are sound, no compatibility surface was restored, and the current tree demonstrably imports and collects 28,934 tests. S01 cannot honestly close yet because two medium test-truthfulness defects remain and its mandatory execution record is absent.
+
+## Resolution review
+
+### export-refusal-coverage | resolved | The false export claim and its dead constants were deleted
+
+The misleading `test_export_declarant_identity_grounding.py` was deleted instead of being renamed into a claim it did not prove. The six profile-path and entity constants that existed only for the retired path were deleted from `_export.py`. Searches find neither the test nor any of those constants in the current tree. This resolution removes dead test capacity and production residue without restoring a private helper or compatibility facade.
+
+### complexity-baseline-namespace | resolved | Every retained baseline key is live and measured
+
+`test_complexity_baseline_keys_reference_current_owner_namespaces` now loads both baseline scopes through public `load_baseline`, requires a non-empty key set, requires every key to begin with `src/cadrumo/`, and requires every path portion to resolve to a current file. The regenerated baseline contains 531 unique keys. An independent production import probe confirmed all 531 satisfy the prefix and live-file predicates. No `dev/registry/`, `src/aeat`, or deleted-path baseline row remains.
+
+### complexity-private-import | resolved | The test uses only the public owner API
+
+The `_BASELINE_PATH` import and its alias are gone. The gate calls public `load_baseline` with its owner-defined default path, so the test verifies the canonical baseline without crossing a private package boundary.
+
+### s01-execution-record | resolved | The step is checked with its matching execution record
+
+The CLI-authored `W01.P01.S01` execution record now exists with `step_id = S01`, relates to the `casilla-schema` plan, records the canonical import, the removal of false collection repairs, and the clean repository-wide collection outcome. The plan marks `W01.P01.S01` checked and retains the exact original step text. The plan and execution record therefore satisfy the campaign's structural close protocol.
+
+## Resolution verification
+
+Independent current-tree verification produced these results:
+
+- `cadrumo.application.modelo` imported successfully.
+- A direct public-API baseline probe validated 531 unique keys, all under `src/cadrumo/` and all resolving to live files.
+- The focused developer-audit file passed 5 tests in 7.83 seconds.
+- Scoped Ruff reported all checks passed.
+- Scoped BasedPyright reported zero errors, zero warnings, and zero notes.
+- Scoped `git diff --check` passed.
+- Full serial repository collection with project `addopts` cleared, `uv run --no-sync pytest --collect-only -q -n 0 --override-ini=addopts=`, exited zero with 28,927 tests collected in 69.87 seconds. A first independent run of the same gate also exited zero.
+
+Resolution verdict: **PASS.** All four original findings are resolved. The deletion-first repair preserves the no-legacy rule, the complexity gate now measures only live canonical owners through a public API, the execution record and plan state agree, and the current repository imports and collects cleanly. `W01.P01.S01` can honestly remain closed.

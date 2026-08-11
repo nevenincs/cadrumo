@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-10'
-body_hash: 'sha256:e8573097b19f161bdc3cadf0ce69c2c0b0a913d7983468dfd7d1ef1e2e2af6da'
+modified: '2026-08-11'
+body_hash: 'sha256:350bab487fbc9655fbad62667a4e18bc91b9f6a38eb6a378c2fff7d74898a292'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -40,7 +40,7 @@ Deliver a base that imports cleanly and registry data whose derivations can be t
 
 The tree imports and a measurement reference point exists.
 
-- [ ] `W01.P01.S01` - land the NoRecoveryOutcome import fix via the apply-cached drive (the file carries unrelated peer WIP) and prove the tree imports with a clean collect-only run; `src/cadrumo/application/modelo/_preconditions.py`.
+- [x] `W01.P01.S01` - land the NoRecoveryOutcome import fix via the apply-cached drive (the file carries unrelated peer WIP) and prove the tree imports with a clean collect-only run; `src/cadrumo/application/modelo/_preconditions.py`.
 - [x] `W01.P01.S02` - confirm the registry restructure (91 to 94 revisions, the M303 split) is committed, pin that commit as the measurement SHA, and re-take the six basis-tracked numbers (registry revisions, relation pairs, relation-declaring revisions, export-exemption casillas, manifest-bearing revisions, manifest-less revisions) with a bundled-authority probe, recording the command and outputs in the exec record; `src/cadrumo/_data/registry/aeat/`.
 
 ### Phase `W01.P02` - registry data corrections
