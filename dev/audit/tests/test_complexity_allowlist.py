@@ -103,7 +103,7 @@ def _committed_keys() -> list[str]:
     """Every ``path::function`` key in the committed file, across scopes and metrics."""
     raw = json.loads(ALLOWLIST_PATH.read_text(encoding="utf-8"))
     keys: list[str] = []
-    for scope, metrics in raw.items():
+    for _scope, metrics in raw.items():
         if not isinstance(metrics, dict):
             continue
         for entries in metrics.values():
