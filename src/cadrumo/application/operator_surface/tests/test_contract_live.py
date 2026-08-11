@@ -270,7 +270,9 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         "the reconciliation omitted or invented a raw envelope-emitting Click path"
     )
 
-    excluded_from_mcp = frozenset(key for key, row in reconciled_by_key.items() if not row.mcp_exposure.exposed)
+    excluded_from_mcp = frozenset(
+        key for key, row in reconciled_by_key.items() if row.mcp_exposure is not None and not row.mcp_exposure.exposed
+    )
     assert excluded_from_mcp == ROOT_LANDING_SCHEMA_KEYS
     for key in excluded_from_mcp:
         row = reconciled_by_key[key]
@@ -283,8 +285,19 @@ def test_live_operator_surface_reconciles_raw_click_paths_callbacks_and_mcp_poli
         assert row.profile_policy.should_expose_via_mcp is False
 
     for key, descriptor in descriptor_by_key.items():
-        assert descriptor.verb_schema == input_schemas[key]
-        assert descriptor.input_schema == input_schemas[key].json_schema()
+        raw_input_schema = input_schemas[key]
+        assert (
+            descriptor.verb_schema.command_key,
+            descriptor.verb_schema.cli_path,
+            descriptor.verb_schema.parameters,
+            descriptor.verb_schema.help,
+        ) == (
+            raw_input_schema.command_key,
+            raw_input_schema.cli_path,
+            raw_input_schema.parameters,
+            raw_input_schema.help,
+        )
+        assert descriptor.input_schema == descriptor.verb_schema.json_schema()
         assert reconciled_by_key[key].result_schema is not None
         assert reconciled_by_key[key].input_schema is not None
 

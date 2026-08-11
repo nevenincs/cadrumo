@@ -39,18 +39,6 @@ def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
         assert last_column in {"True", "False"}, line
 
 
-def test_bindings_list_missing_filter_excludes_constant_value_bindings() -> None:
-    """``--missing`` filters to bindings that require runtime
-    resolution. Constant-valued bindings are inherently always
-    available so they drop out of the missing-bindings view."""
-
-    result = invoke_cached_cli(
-        ["app", "modelo", "bindings", "list", "--modelo", "303", "--year", "2026", "--period", "1T", "--missing"],
-    )
-    assert result.exit_code == 0, result.output
-    assert "missing_filter\tTrue" in result.output
-
-
 def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     """Unscoped binding ids are discoverable but unsafe to copy into work calculate."""
 

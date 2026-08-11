@@ -199,8 +199,8 @@ def data_inventory_checklist(
                 profile_derivable.append(entry)
                 profile_binding_ids.append(casilla.binding)
         # COMPUTED, INFORMATIONAL, and non-ledger/non-profile BOUND casillas
-        # (previous_filing, relation_prefill, live_observation,
-        # constant_value, ...) need no operator data-gathering action.
+        # (previous_filing, relation_prefill, ...) need no operator
+        # data-gathering action.
 
     unresolved_profile_bindings: tuple[BindingId, ...] = ()
     unresolved_profile_keys: tuple[str, ...] = ()

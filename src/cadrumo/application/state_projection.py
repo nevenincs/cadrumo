@@ -719,7 +719,7 @@ def _missing_calculation_bindings_for_readiness(
     modelo: str,
     period: Period,
 ) -> tuple[ProjectionModeloBindingRequirement, ...]:
-    """Return non-constant registry bindings not available to calculation readiness.
+    """Return registry bindings not available to calculation readiness.
 
     Ledger aggregation bindings are the source kinds declared by
     :data:`~cadrumo.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS`;
@@ -780,8 +780,6 @@ def _missing_calculation_bindings_for_readiness(
     for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
         binding_id = str(binding.id)
         source = binding_source_value(binding.source)
-        if source == "constant_value":
-            continue
         if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
             continue
         if binding.source == BindingSourceKind.PROFILE and binding_id in profile_resolved:

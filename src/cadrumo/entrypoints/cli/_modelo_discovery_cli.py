@@ -636,7 +636,6 @@ def _unresolved_profile_requirements(checklist) -> str:
 
 
 _BINDING_SOURCE_TO_READINESS: dict[str, str] = {
-    "constant_value": "casilla",
     "previous_filing": "prior filed revision",
     "relation_prefill": "relation input",
     "live_observation": "live observation",
@@ -759,9 +758,7 @@ def _binding_list_rows_for_report(
         rows = tuple(
             row
             for row in rows
-            if row.source != "constant_value"
-            and row.binding_id not in profile_resolved
-            and getattr(row, "operator_input_required", True)
+            if row.binding_id not in profile_resolved and getattr(row, "operator_input_required", True)
         )
 
     merged_rows: list[BindingListRowPayload] = []

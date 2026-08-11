@@ -227,6 +227,12 @@ def test_bogus_source_string_is_rejected_by_the_typed_field() -> None:
         _SourceEnvelope.model_validate({"source": "not_a_real_source_kind"})
 
 
+def test_retired_literal_source_string_is_rejected_by_the_typed_field() -> None:
+    """The removed literal-value pseudo-source cannot re-enter the registry."""
+    with pytest.raises(ValidationError):
+        _SourceEnvelope.model_validate({"source": "constant_value"})
+
+
 def test_every_enum_member_round_trips_through_the_typed_field() -> None:
     """Each canonical token validates to its member and back, byte-stable.
 

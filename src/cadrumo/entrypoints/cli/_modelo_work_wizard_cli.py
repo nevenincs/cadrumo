@@ -370,8 +370,6 @@ def _drive_wizard_calculation(
 #:   ``--binding``; those rows are asked through the ``relation`` channel
 #:   below, driven off each row's declared ``relation_inputs`` rather than
 #:   its ``source`` value.
-#: * ``constant_value`` carries a literal value; ``bindings list --missing``
-#:   already excludes it and this filter mirrors that exclusion.
 #: * ``borrador`` / ``iva_wallet_decision`` are pre-mesh decisions with no
 #:   registry binding declaration an operator could target.
 #:

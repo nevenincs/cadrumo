@@ -12,7 +12,7 @@ silent-zero advisory in
 :func:`~cadrumo.application.modelo._calculation_source_staging.expected_but_missing_binding_ids`,
 which explicitly excludes those three source kinds. The two gates answer
 different questions for different reasons: this one refuses M202 lifecycle
-actions outright when a declared non-constant binding has no resolved value at
+actions outright when a declared binding has no resolved value at
 all (Ley 27/2014 art. 40.2/40.3 modalidad-cuota requires every input present
 before a pago fraccionado can be computed), while the generic advisory flags a
 narrower "present source produced no value" silent-zero shape across every
@@ -38,8 +38,6 @@ from ._action_errors import ModeloRequiredBindingsMissingError
 from ._preconditions import build_modelo_precondition_failure
 from ._profile_binding import profile_fact_index, resolve_profile_binding_value
 
-_CONSTANT_VALUE_SOURCE = "constant_value"
-
 
 def require_modelo_required_bindings_resolved(
     *,
@@ -48,7 +46,7 @@ def require_modelo_required_bindings_resolved(
     resolved_binding_ids: Iterable[BindingId],
     action: str,
 ) -> None:
-    """Refuse M202 lifecycle work when declared non-constant bindings are absent.
+    """Refuse M202 lifecycle work when declared bindings are absent.
 
     Args:
         work_unit: Modelo work unit whose action is being gated.
@@ -103,7 +101,7 @@ def missing_modelo_required_binding_ids(
     registry_revision: ModeloRevision,
     resolved_binding_ids: Iterable[BindingId],
 ) -> tuple[BindingId, ...]:
-    """Return required non-constant M202 binding ids absent from a resolved channel set.
+    """Return required M202 binding ids absent from a resolved channel set.
 
     Args:
         work_unit: Modelo work unit whose target determines whether the M202
@@ -117,11 +115,7 @@ def missing_modelo_required_binding_ids(
         return ()
     resolved = frozenset(str(binding_id) for binding_id in resolved_binding_ids)
     return tuple(
-        sorted(
-            binding.id
-            for binding in registry_revision.bindings
-            if _binding_source_value(binding.source) != _CONSTANT_VALUE_SOURCE and str(binding.id) not in resolved
-        ),
+        sorted(binding.id for binding in registry_revision.bindings if str(binding.id) not in resolved),
     )
 
 

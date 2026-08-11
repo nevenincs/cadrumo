@@ -3,8 +3,7 @@
 ``bindings list`` reports the registry bindings a modelo revision
 declares. ``--missing`` narrows that list to the bindings an operator
 still owes — the ones not yet resolvable from the workspace's current
-state. A binding is resolvable when it carries its own literal value
-(``constant_value``) or when the active profile already holds the fact
+state. A binding is resolvable when the active profile already holds the fact
 the binding selects (``source = "profile"``). Every other binding —
 ledger aggregations, prior-filing pulls, live observations — needs data
 the operator has not supplied yet and is therefore *missing*.
@@ -61,13 +60,11 @@ def profile_resolvable_binding_ids(
     projects the bucket's user profile onto its ``source = "profile"`` bindings.
     A supplied :class:`Period` must match ``filing_year`` and contributes the
     registry token used at the snapshot boundary. The returned set is the binding
-    ids the profile already satisfies; ``constant_value`` bindings are handled
-    separately by the caller because they carry a literal value independent of
-    any profile.
+    ids the profile already satisfies.
 
     Returns an empty set when the snapshot cannot be resolved or the
-    bucket has no profile — the caller then treats every non-constant
-    binding as missing, which is the correct conservative answer.
+    bucket has no profile — the caller then treats every binding as missing,
+    which is the correct conservative answer.
     """
     authority = authority_via_resources()
     if period is not None and period.filing_year != filing_year:

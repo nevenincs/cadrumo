@@ -1,8 +1,7 @@
 """Strict-subset behaviour proof for ``aeat app modelo bindings list --missing``.
 
 ``bindings list --missing`` narrows the binding list to the bindings the
-operator still owes: it drops ``constant_value`` bindings (always
-available) and any binding the active profile already resolves
+operator still owes: it drops any binding the active profile already resolves
 (``source = "profile"``). The pre-existing surface test only asserted the
 ``missing_filter\tTrue`` echo line — it never proved the filter actually
 removed rows, so a no-op could not be told from a working filter.
