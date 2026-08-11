@@ -27,7 +27,11 @@ is the wrong home for the thing the command exists to produce
 
 from __future__ import annotations
 
-from ...core.json_contract import OutputSchema, register_schema
+from collections.abc import Mapping
+
+from pydantic import Field
+
+from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 
 __all__ = [
     "EvidenceBatchItemPayload",
@@ -70,20 +74,15 @@ class EvidenceBatchUnresolvedPayload(OutputSchema):
 
 
 class EvidenceBatchPausePayload(OutputSchema):
-    """Why the run's inference lane closed, stated once for the whole run.
+    """One typed inference-lane refusal projected for the batch wire result.
 
-    ``remediation`` is carried through from the provisioning probe rather than
-    rewritten here. Memory the local runtime holds and memory a peer process
-    holds have different answers, and only one of them is this application's to
-    offer; ``causes`` carries the snapshot's own cause tokens so that
-    distinction survives to a machine consumer instead of being flattened into
-    a generic "unavailable".
+    The application owns the measured facts and failed-condition verdict. This
+    CLI-owned DTO resolves the verdict against the live action surface without
+    adding an instruction or rendered explanation of its own.
     """
 
-    reason: str
-    detail: str
-    remediation: str
-    causes: list[str] = []
+    facts: Mapping[str, str | int | bool] = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction
 
 
 @register_schema("ledger.evidence.batch")

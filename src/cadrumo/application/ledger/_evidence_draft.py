@@ -1507,12 +1507,20 @@ def _extract_invoice_fields_via_vision(
         ) from exc
     except (httpx.HTTPError, LLMProviderError, LLMPdfRasterisationError) as exc:
         status = probe_ollama_vision(settings)
-        detail = status.detail if not status.available else str(exc)
+        if status.precondition_verdict is not None:
+            raise PurchaseInvoiceEvidenceInputError(
+                "on-host vision reading is unavailable",
+                precondition_verdict=status.precondition_verdict,
+            ) from exc
         raise PurchaseInvoiceEvidenceInputError(
-            f"on-host vision reading failed: {detail}",
+            "on-host vision reading failed",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
-                facts={"vision_reader_available": False},
+                facts={
+                    "vision_reader_available": False,
+                    "vision_reader_probe_available": True,
+                    "vision_reader_error_type": exc.__class__.__name__,
+                },
             ),
         ) from exc
 

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
 
+import anyio
 import pytest
 
 from ....application.operator_actions import (
@@ -23,6 +23,7 @@ from ....core.json_contract import (
     Notice,
     NoticeSeverity,
     ResolvedActionArgument,
+    ResolvedNoticeAction,
 )
 from .._common import (
     _action_text_lines,
@@ -33,6 +34,24 @@ from .._common import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_POWERSHELL_LITERAL_SCRIPT = "& { param([string]$Value) [Console]::Out.Write($Value) }"
+
+
+async def _run_powershell_literal(resolved_powershell: str, rendered: str) -> str:
+    completed = await anyio.run_process(
+        [
+            resolved_powershell,
+            "-NoProfile",
+            "-NonInteractive",
+            "-Command",
+            _POWERSHELL_LITERAL_SCRIPT,
+            rendered,
+        ],
+        check=True,
+    )
+    assert completed.stdout is not None
+    return completed.stdout.decode("utf-8")
 
 
 def _render_action_line(
@@ -208,19 +227,7 @@ def test_powershell_action_token_is_literal_under_the_real_shell(value: str, ren
 
     powershell = shutil.which("pwsh") or shutil.which("powershell")
     assert powershell is not None
-    completed = subprocess.run(  # noqa: S603 - real-shell injection regression
-        [
-            powershell,
-            "-NoProfile",
-            "-NonInteractive",
-            "-Command",
-            f"& {{ param([string]$Value) [Console]::Out.Write($Value) }} {rendered}",
-        ],
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    assert completed.stdout == value
+    assert anyio.run(_run_powershell_literal, powershell, rendered) == value
 
 
 @pytest.mark.parametrize(
@@ -257,6 +264,7 @@ def test_action_text_uses_powershell_literal_arguments_and_preserves_json_bindin
     )
 
     assert line == f"next_action\taeat {expected_tail}"
-    assert notice.action is not None
-    assert notice.action.argument_bindings[0].value == value
-    assert notice.action.action.cli_path is not None
+    notice_action = notice.action
+    assert isinstance(notice_action, ResolvedNoticeAction)
+    assert notice_action.argument_bindings[0].value == value
+    assert notice_action.action.cli_path is not None

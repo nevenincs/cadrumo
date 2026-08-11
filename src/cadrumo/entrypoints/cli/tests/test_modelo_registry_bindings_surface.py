@@ -67,6 +67,7 @@ def test_bindings_list_warns_when_period_scope_filters_are_missing() -> None:
     assert notice["action"]["action"] == {
         "action_id": "operator.modelo.bindings.list",
         "target_command_key": "modelo.bindings.list",
+        "cli_path": ["app", "modelo", "bindings", "list"],
     }
     assert notice["action"]["argument_bindings"] == [
         {

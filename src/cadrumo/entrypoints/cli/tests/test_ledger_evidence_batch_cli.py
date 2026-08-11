@@ -37,10 +37,12 @@ from ....application.ledger import (
     UnresolvedBatchSource,
     batch_item_identity,
 )
+from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
+from ....core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.config import override_settings
-from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction
+from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....domain.iva import InvoiceKind
-from .._ledger_evidence_batch_cli import _run_notices
+from .._ledger_evidence_batch_cli import _batch_payload, _batch_text_lines, _run_notices
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -295,10 +297,20 @@ def _refused_row(name: str) -> BatchItemResult:
 
 
 _PAUSE = InferencePause(
-    reason="no_reader_available",
-    detail="the local runtime is not reachable",
-    remediation="start the local runtime",
-    causes=("runtime_unreachable",),
+    facts={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},
+    precondition_verdict=PreconditionVerdict(
+        failed_condition_id="provisioning.ollama.runtime_reachable",
+        evidence=(
+            ConditionEvidence(
+                condition_id="provisioning.ollama.runtime_reachable",
+                evidence_id="provisioning.ollama.runtime_reachable.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
 )
 
 
@@ -319,11 +331,22 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
     codes = {notice.code for notice in _run_notices(deferred)}
     assert codes == {"ledger.evidence.batch.work_deferred"}
     deferred_notice = _run_notices(deferred)[0]
-    assert deferred_notice.action is None
+    assert isinstance(deferred_notice.action, ResolvedPreconditionAction)
+    assert deferred_notice.action.failed_condition_id == "provisioning.ollama.runtime_reachable"
     deferred_context = deferred_notice.context
     assert deferred_context is not None, "the deferral notice carries no structured cause"
-    assert deferred_context["causes"] == "runtime_unreachable"
-    assert deferred_context["actionability"] == "runtime_remediation_requires_operator_assessment"
+    assert deferred_context == {"paused": "1"}
+
+    pause_payload = _batch_payload(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    assert pause_payload.inference_pause is not None
+    assert pause_payload.inference_pause.facts == _PAUSE.facts
+    assert (
+        pause_payload.inference_pause.precondition_action.failed_condition_id == "provisioning.ollama.runtime_reachable"
+    )
+
+    lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
+    assert "paused.facts.runtime_reachable\tfalse" in lines
+    assert any(line.startswith("paused.precondition_action.failed_condition_id\t") for line in lines)
 
     failed = BatchRunResult(items=(_refused_row("broken.pdf"),))
     assert {notice.code for notice in _run_notices(failed)} == {"ledger.evidence.batch.items_refused"}
