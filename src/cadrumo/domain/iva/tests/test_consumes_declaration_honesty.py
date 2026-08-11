@@ -55,6 +55,7 @@ import pytest
 
 from .. import _classification
 from .._classification import (
+    EUMemberState,
     IvaInvoiceClassificationCriteria,
     PartyFact,
 )
@@ -141,13 +142,21 @@ def _criteria_attributes_read(
             helper = getattr(module, node.func.id, None)
             if not inspect.isfunction(helper):
                 continue
-            # Only a helper handed the criteria, or one of its attributes, can
-            # be reading a party fact on the predicate's behalf.
-            handed_criteria = any(
-                _is_subject(argument) or (isinstance(argument, ast.Attribute) and _is_subject(argument.value))
-                for argument in node.args
-            )
-            if handed_criteria:
+            # Only a helper handed the CRITERIA ITSELF may be followed. A helper
+            # handed a criteria ATTRIBUTE must not be, and the distinction is
+            # not pedantry: this function attributes every read to the callee's
+            # FIRST PARAMETER, which for such a helper is the attribute's VALUE
+            # rather than the criteria. Following it would record the fields
+            # that value happens to expose as though they were criteria
+            # attributes, and the exhaustive-mapping check would then refuse an
+            # unknown attribute on a CORRECT predicate.
+            #
+            # Nothing is lost by declining: the attribute handed over is already
+            # recorded by the attribute walk above, and the attribute IS the
+            # fact. What the branch exists for -- a predicate delegating a read
+            # it never spells out -- can only happen when the whole criteria is
+            # passed, which is the case still followed.
+            if any(_is_subject(argument) for argument in node.args):
                 found |= _criteria_attributes_read(helper, seen=seen | {name}, module=module)
     return found
 
@@ -329,6 +338,61 @@ def test_the_helper_following_branch_finds_a_read_the_plain_walk_misses() -> Non
         _predicate_reading_some_and_delegating_the_rest,
         module=module,
     )
+
+
+def _reads_a_field_off_whatever_it_was_handed(state: EUMemberState) -> bool:
+    """A helper handed a criteria ATTRIBUTE, not the criteria.
+
+    Its parameter is the attribute's VALUE, and ``value`` is a field of the
+    enum rather than of the criteria. Nothing about this helper is wrong; it is
+    the shape that used to make the extractor wrong. Read as an attribute
+    rather than through ``getattr``, because the extractor walks attribute
+    ACCESS and a dynamic lookup would leave the branch unexercised -- which the
+    first draft of this case did, passing while proving nothing.
+
+    Never called, like its sibling synthetic predicates: it exists to be read.
+    """
+    return state.value is not None
+
+
+def _predicate_handing_an_attribute_to_a_helper(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Reads one criteria attribute and hands its VALUE to a helper."""
+    return _reads_a_field_off_whatever_it_was_handed(criteria.customer_identification_state)
+
+
+def test_a_helper_handed_an_attribute_contributes_only_that_attribute() -> None:
+    """The latent fragility this hardening removes, pinned in both directions.
+
+    The extractor attributes every read to the callee's FIRST PARAMETER. For a
+    helper handed ``criteria.customer_identification_state`` that parameter is
+    the STATE, not the criteria -- so following it recorded ``value``, a field
+    of the enum, as though a criteria attribute of that name had been read. The
+    exhaustive-mapping check would then refuse an unknown attribute, and the
+    author whose predicate it refused would have done nothing wrong.
+
+    That is the loud direction rather than the silent one, which is why this was
+    recorded before it was fixed rather than treated as urgent. It still had to
+    be fixed: a gate that reds a correct predicate is one an author works around
+    rather than trusts, and no shipped helper triggering it today is a fact
+    about today.
+
+    Nothing is lost by declining to follow. The handed attribute is already
+    recorded by the plain walk, and the attribute IS the fact -- asserted below
+    rather than argued, since a fix that also stopped seeing the read would be a
+    regression wearing a fix.
+    """
+    module = sys.modules[__name__]
+
+    extracted = _criteria_attributes_read(_predicate_handing_an_attribute_to_a_helper, module=module)
+
+    assert extracted == {"customer_identification_state"}, (
+        f"extracted {sorted(extracted)}; a helper handed an ATTRIBUTE must contribute that attribute "
+        "and nothing off the value's own type"
+    )
+    assert PartyFact.IVA_IDENTIFICATION_STATE in _facts_read_by(
+        _predicate_handing_an_attribute_to_a_helper,
+        module=module,
+    ), "the delegated read must still resolve to the fact it turns on"
 
 
 def test_without_following_the_mixed_shape_would_pass_while_reading_undeclared() -> None:
