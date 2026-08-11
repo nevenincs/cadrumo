@@ -1146,7 +1146,7 @@ def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     # smoke workflow literally rather than through a parameter, because the
     # cohort has exactly one producing lane.
     assert '!= ".github/workflows/packaging-smoke.yml|success" ]; then' in surface
-    assert "gh run download \"$PACKAGING_RUN_ID\" --name cadrumo-release-cohort" in surface
+    assert 'gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort' in surface
     # D8: the published release is self-evidencing — it carries the verified
     # rows themselves, so a shipped version's audit trail outlives the
     # producing runs' artifact retention. The per-lane manifest filenames that
