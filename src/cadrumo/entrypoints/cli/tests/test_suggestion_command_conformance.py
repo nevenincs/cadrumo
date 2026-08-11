@@ -957,7 +957,9 @@ def test_scanner_flags_a_dead_option_citation() -> None:
 #: would have rotted on the first of them.
 _REDACTABLE_IDENTIFIER_TOKENS: dict[str, frozenset[str]] = {
     "nif-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
+    "nif-separated-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
     "cif-hash": frozenset({"cif"}),
+    "nif-iva-hash": frozenset({"nif_iva", "vat_id", "vat_number"}),
     "iban-hash": frozenset({"iban"}),
     "url-host-only": frozenset({"url", "endpoint", "href"}),
     # Bare ``token`` is deliberately absent. It is ordinary computing
