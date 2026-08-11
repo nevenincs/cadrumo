@@ -7,7 +7,7 @@ generated output envelopes.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -166,12 +166,8 @@ __all__ = [
     "DependencyClassificationDefinition",
     "EvidenceTier",
     "ExportComputedKey",
-    "ExportComputedKeyValue",
     "ExportDraftAttribute",
-    "ExportDraftAttributeValue",
     "ExportFieldDefinition",
-    "ExportHeaderKey",
-    "ExportHeaderKeyValue",
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
     "ExportSemanticPayloadAxis",
@@ -269,12 +265,8 @@ from ._schema_surfaces import (
     CasillaContinuidadEvolutionDefinition,
     CasillaDefinition,
     ExportComputedKey,
-    ExportComputedKeyValue,
     ExportDraftAttribute,
-    ExportDraftAttributeValue,
     ExportFieldDefinition,
-    ExportHeaderKey,
-    ExportHeaderKeyValue,
     ExportLayoutDefinition,
     ExportRecordDefinition,
     ExportSemanticPayloadAxis,
@@ -1010,7 +1002,7 @@ class FormulaDefinition(RegistryModel):
     source_citations: tuple[SourceCitation, ...] = Field(default_factory=tuple)
 
 
-type CasillaProducerKind = Literal["formula", "manual", "upstream", "relation", "informational"]
+type CasillaProducerKind = Literal["formula", "manual", "upstream", "relation", "informational", "projection_only"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -1078,6 +1070,147 @@ class CasillaProducerInventory:
     producer_kind_by_casilla: Mapping[CasillaId, CasillaProducerKind]
     producer_reason_by_casilla: Mapping[CasillaId, str]
     producer_provenance_by_casilla: Mapping[CasillaId, tuple[CasillaProducerProvenance, ...]]
+
+
+def _frozen_index[K, V](index: Mapping[K, Sequence[V]]) -> dict[K, tuple[V, ...]]:
+    """Freeze an accumulating list-valued index into its published immutable form.
+
+    Every producer index accumulates into lists rather than overwriting, so a
+    duplicate declaration stays visible instead of being hidden by a
+    last-write-wins assignment; freezing is the last step before publication.
+    """
+    return {key: tuple(values) for key, values in index.items()}
+
+
+def _producer_provenance(
+    casilla: CasillaDefinition,
+    kind: CasillaProducerKind,
+    reason: str,
+    *,
+    formulas: Sequence[FormulaDefinition] = (),
+    binding: DataBindingDefinition | None = None,
+    relations: Sequence[RelationDefinition] = (),
+) -> tuple[CasillaProducerProvenance, ...]:
+    """Build the provenance records for one classified production path.
+
+    A declaration that resolves to several real registry rows -- several formula
+    declarations sharing one id, several relations targeting one binding -- emits
+    one record per row, so their independent legal provenance stays visible. A
+    declaration that resolves to none still emits a single record carrying the
+    reason, which is what keeps an unresolved producer auditable instead of
+    absent.
+    """
+    if formulas:
+        return tuple(
+            CasillaProducerProvenance(
+                casilla=casilla,
+                producer_kind=kind,
+                reason=reason,
+                formula=formula,
+            )
+            for formula in formulas
+        )
+    if relations:
+        return tuple(
+            CasillaProducerProvenance(
+                casilla=casilla,
+                producer_kind=kind,
+                reason=reason,
+                binding=binding,
+                relation=relation,
+            )
+            for relation in relations
+        )
+    return (
+        CasillaProducerProvenance(
+            casilla=casilla,
+            producer_kind=kind,
+            reason=reason,
+            binding=binding,
+        ),
+    )
+
+
+def _bound_casilla_producer(
+    casilla: CasillaDefinition,
+    *,
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    relations_by_binding: Mapping[BindingId, Sequence[RelationDefinition]],
+) -> tuple[CasillaProducerKind, str, tuple[CasillaProducerProvenance, ...]]:
+    """Classify a ``bound`` casilla from the binding its declaration names.
+
+    A binding declaring :attr:`~core.BindingSourceKind.RELATION_PREFILL` is a
+    relation handoff; any other binding is an ordinary upstream value. A missing
+    binding declaration stays ``upstream`` and says so in its reason rather than
+    silently reclassifying -- the declaration, not the resolution, is what the
+    inventory reports.
+    """
+    binding = bindings_by_id.get(casilla.binding) if casilla.binding is not None else None
+    if binding is None:
+        reason = "upstream production is declared by input_kind='bound' but its binding declaration is missing"
+        return "upstream", reason, _producer_provenance(casilla, "upstream", reason)
+    if binding.source is BindingSourceKind.RELATION_PREFILL:
+        reason = f"relation production uses binding {binding.id!r} with source {binding.source.value!r}"
+        return (
+            "relation",
+            reason,
+            _producer_provenance(
+                casilla,
+                "relation",
+                reason,
+                binding=binding,
+                relations=relations_by_binding.get(binding.id, ()),
+            ),
+        )
+    reason = f"upstream production uses binding {binding.id!r} with source {binding.source.value!r}"
+    return "upstream", reason, _producer_provenance(casilla, "upstream", reason, binding=binding)
+
+
+def _casilla_producer(
+    casilla: CasillaDefinition,
+    *,
+    formulas_by_id: Mapping[FormulaId, Sequence[FormulaDefinition]],
+    bindings_by_id: Mapping[BindingId, DataBindingDefinition],
+    relations_by_binding: Mapping[BindingId, Sequence[RelationDefinition]],
+) -> tuple[CasillaProducerKind, str, tuple[CasillaProducerProvenance, ...]]:
+    """Classify one casilla's declared production path, with its reason.
+
+    An explicit formula declaration wins over the input kind, because it is the
+    narrower statement of the same fact. The classification is descriptive:
+    validation still owns whether a formula direction is closed.
+    """
+    if casilla.formula is not None:
+        reason = f"deterministic formula producer declaration {casilla.formula!r}"
+        return (
+            "formula",
+            reason,
+            _producer_provenance(
+                casilla,
+                "formula",
+                reason,
+                formulas=formulas_by_id.get(casilla.formula, ()),
+            ),
+        )
+    if casilla.input_kind is InputKind.COMPUTED:
+        reason = "computed casilla requires a deterministic formula producer"
+        return "formula", reason, _producer_provenance(casilla, "formula", reason)
+    if casilla.input_kind is InputKind.MANUAL:
+        reason = (
+            "manual production is intentional operator-supplied input; "
+            "casilla legal_refs/source_refs remain its provenance"
+        )
+        return "manual", reason, _producer_provenance(casilla, "manual", reason)
+    if casilla.input_kind is InputKind.BOUND:
+        return _bound_casilla_producer(
+            casilla,
+            bindings_by_id=bindings_by_id,
+            relations_by_binding=relations_by_binding,
+        )
+    if casilla.input_kind is InputKind.PROJECTION_ONLY:
+        reason = "projection-only casilla is populated exclusively from its canonical typed row"
+        return "projection_only", reason, _producer_provenance(casilla, "projection_only", reason)
+    reason = "informational casilla is intentionally not a calculation producer"
+    return "informational", reason, _producer_provenance(casilla, "informational", reason)
 
 
 class ModeloRevision(RegistryModel):
@@ -1192,129 +1325,27 @@ class ModeloRevision(RegistryModel):
         for casilla in self.casillas:
             if casilla.input_kind is InputKind.COMPUTED:
                 computed_casilla_ids.add(casilla.id)
-
             if casilla.formula is not None:
                 formula_declarations_by_casilla.setdefault(casilla.id, []).append(casilla.formula)
-                producer_kind_by_casilla[casilla.id] = "formula"
-                producer_reason_by_casilla[casilla.id] = (
-                    f"deterministic formula producer declaration {casilla.formula!r}"
-                )
-                formula_declarations = formulas_by_id.get(casilla.formula, ())
-                if formula_declarations:
-                    for formula in formula_declarations:
-                        producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                            CasillaProducerProvenance(
-                                casilla=casilla,
-                                producer_kind="formula",
-                                reason=producer_reason_by_casilla[casilla.id],
-                                formula=formula,
-                            ),
-                        )
-                else:
-                    producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                        CasillaProducerProvenance(
-                            casilla=casilla,
-                            producer_kind="formula",
-                            reason=producer_reason_by_casilla[casilla.id],
-                        ),
-                    )
-            elif casilla.input_kind is InputKind.COMPUTED:
-                producer_kind_by_casilla[casilla.id] = "formula"
-                producer_reason_by_casilla[casilla.id] = "computed casilla requires a deterministic formula producer"
-                producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                    CasillaProducerProvenance(
-                        casilla=casilla,
-                        producer_kind="formula",
-                        reason=producer_reason_by_casilla[casilla.id],
-                    ),
-                )
-            elif casilla.input_kind is InputKind.MANUAL:
-                producer_kind_by_casilla[casilla.id] = "manual"
-                producer_reason_by_casilla[casilla.id] = (
-                    "manual production is intentional operator-supplied input; "
-                    "casilla legal_refs/source_refs remain its provenance"
-                )
-                producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                    CasillaProducerProvenance(
-                        casilla=casilla,
-                        producer_kind="manual",
-                        reason=producer_reason_by_casilla[casilla.id],
-                    ),
-                )
-            elif casilla.input_kind is InputKind.BOUND:
-                binding = bindings_by_id.get(casilla.binding) if casilla.binding is not None else None
-                if binding is not None and binding.source is BindingSourceKind.RELATION_PREFILL:
-                    producer_kind_by_casilla[casilla.id] = "relation"
-                    producer_reason_by_casilla[casilla.id] = (
-                        f"relation production uses binding {binding.id!r} with source {binding.source.value!r}"
-                    )
-                    relation_declarations = relations_by_binding.get(binding.id, ())
-                    if relation_declarations:
-                        for relation in relation_declarations:
-                            producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                                CasillaProducerProvenance(
-                                    casilla=casilla,
-                                    producer_kind="relation",
-                                    reason=producer_reason_by_casilla[casilla.id],
-                                    binding=binding,
-                                    relation=relation,
-                                ),
-                            )
-                    else:
-                        producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                            CasillaProducerProvenance(
-                                casilla=casilla,
-                                producer_kind="relation",
-                                reason=producer_reason_by_casilla[casilla.id],
-                                binding=binding,
-                            ),
-                        )
-                elif binding is not None:
-                    producer_kind_by_casilla[casilla.id] = "upstream"
-                    producer_reason_by_casilla[casilla.id] = (
-                        f"upstream production uses binding {binding.id!r} with source {binding.source.value!r}"
-                    )
-                    producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                        CasillaProducerProvenance(
-                            casilla=casilla,
-                            producer_kind="upstream",
-                            reason=producer_reason_by_casilla[casilla.id],
-                            binding=binding,
-                        ),
-                    )
-                else:
-                    producer_kind_by_casilla[casilla.id] = "upstream"
-                    producer_reason_by_casilla[casilla.id] = (
-                        "upstream production is declared by input_kind='bound' but its binding declaration is missing"
-                    )
-                    producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                        CasillaProducerProvenance(
-                            casilla=casilla,
-                            producer_kind="upstream",
-                            reason=producer_reason_by_casilla[casilla.id],
-                        ),
-                    )
-            else:
-                producer_kind_by_casilla[casilla.id] = "informational"
-                producer_reason_by_casilla[casilla.id] = (
-                    "informational casilla is intentionally not a calculation producer"
-                )
-                producer_provenance_by_casilla.setdefault(casilla.id, []).append(
-                    CasillaProducerProvenance(
-                        casilla=casilla,
-                        producer_kind="informational",
-                        reason=producer_reason_by_casilla[casilla.id],
-                    ),
-                )
+
+            kind, reason, provenance = _casilla_producer(
+                casilla,
+                formulas_by_id=formulas_by_id,
+                bindings_by_id=bindings_by_id,
+                relations_by_binding=relations_by_binding,
+            )
+            producer_kind_by_casilla[casilla.id] = kind
+            producer_reason_by_casilla[casilla.id] = reason
+            producer_provenance_by_casilla.setdefault(casilla.id, []).extend(provenance)
 
         return CasillaProducerInventory(
-            formula_ids_by_target={key: tuple(value) for key, value in formulas_by_target.items()},
-            formula_ids_by_id={key: tuple(value) for key, value in formulas_by_id.items()},
-            formula_ids_by_casilla={key: tuple(value) for key, value in formula_declarations_by_casilla.items()},
+            formula_ids_by_target=_frozen_index(formulas_by_target),
+            formula_ids_by_id=_frozen_index(formulas_by_id),
+            formula_ids_by_casilla=_frozen_index(formula_declarations_by_casilla),
             computed_casilla_ids=frozenset(computed_casilla_ids),
             producer_kind_by_casilla=producer_kind_by_casilla,
             producer_reason_by_casilla=producer_reason_by_casilla,
-            producer_provenance_by_casilla={key: tuple(value) for key, value in producer_provenance_by_casilla.items()},
+            producer_provenance_by_casilla=_frozen_index(producer_provenance_by_casilla),
         )
 
     @model_validator(mode="after")
@@ -1404,6 +1435,19 @@ class ModeloDefinition(RegistryModel):
             if key != revision.id:
                 raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
         return self
+
+
+def _union_across_expectations[T](
+    expectations: Sequence[VerificationExpectationDefinition],
+    select: Callable[[VerificationExpectationDefinition], Iterable[T]],
+) -> frozenset[T]:
+    """Union one declared set across every expectation folded into a policy.
+
+    The fold is a union rather than an intersection on purpose: an id any single
+    expectation declares is in scope for the snapshot's policy, so a second
+    expectation cannot narrow the first one's declared coverage away.
+    """
+    return frozenset(value for expectation in expectations for value in select(expectation))
 
 
 class RegistryCatalogues(RegistryModel):
@@ -1516,23 +1560,25 @@ class RegistrySnapshot(RegistryModel):
             raise RegistryValidationError("registry verification requires verification expectations")
         return RegistryVerificationPolicy(
             expectation_ids=tuple(expectation.id for expectation in expectations),
-            computed_casilla_ids=frozenset(
-                casilla_id for expectation in expectations for casilla_id in expectation.computed_casilla_ids
+            computed_casilla_ids=_union_across_expectations(
+                expectations,
+                lambda expectation: expectation.computed_casilla_ids,
             ),
-            reconcile_when_present_casilla_ids=frozenset(
-                casilla_id
-                for expectation in expectations
-                for casilla_id in expectation.reconcile_when_present_casilla_ids
+            reconcile_when_present_casilla_ids=_union_across_expectations(
+                expectations,
+                lambda expectation: expectation.reconcile_when_present_casilla_ids,
             ),
-            externally_grounded_casilla_ids=frozenset(
-                casilla_id for expectation in expectations for casilla_id in expectation.externally_grounded_casilla_ids
+            externally_grounded_casilla_ids=_union_across_expectations(
+                expectations,
+                lambda expectation: expectation.externally_grounded_casilla_ids,
             ),
             reconciliation_total_casilla_ids=fold_reconciliation_total_casilla_ids(expectations),
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
             rounding_codes=frozenset(expectation.rounding for expectation in expectations),
-            discrepancy_causes=frozenset(
-                cause for expectation in expectations for cause in expectation.discrepancy_causes
+            discrepancy_causes=_union_across_expectations(
+                expectations,
+                lambda expectation: expectation.discrepancy_causes,
             ),
         )
 

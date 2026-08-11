@@ -34,6 +34,7 @@ from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references
 from ._validate_revision_identity import revision_reference_identity_failures
+from ._ids import RevisionId
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
 _SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
@@ -92,7 +93,7 @@ def build_snapshot(
     filing_year: int,
     period: str,
     on: date | None = None,
-    revision_id: str | None = None,
+    revision_id: RevisionId | None = None,
 ) -> RegistrySnapshot:
     """Validate ``modelo`` and return the selected immutable snapshot.
 
@@ -149,7 +150,7 @@ def _build_validated_snapshot(
     filing_year: int,
     period: str,
     on: date | None = None,
-    revision_id: str | None = None,
+    revision_id: RevisionId | None = None,
 ) -> RegistrySnapshot:
     """Return a selected snapshot after the caller has validated ``modelo``."""
     _install_cross_domain_snapshot_checks()
@@ -224,7 +225,7 @@ def build_validated_snapshot(
     filing_year: int,
     period: str,
     on: date | None = None,
-    revision_id: str | None = None,
+    revision_id: RevisionId | None = None,
 ) -> RegistrySnapshot:
     """Return a selected :class:`RegistrySnapshot` for an already validated modelo.
 

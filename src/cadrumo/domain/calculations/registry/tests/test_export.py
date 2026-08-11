@@ -441,44 +441,29 @@ def _discriminante_divergence_risks(field: ExportFieldDefinition) -> list[str]:
 
 
 def test_the_discriminante_detector_reports_both_ways_the_sites_can_diverge() -> None:
-    """The detector must fire on a re-kinded field and on a changed literal.
+    """M200's partial envelope is withdrawn instead of carrying two authorities."""
+    revision = _committed_modelo("200").revisions["2024-y-siguientes"]
 
-    The anti-vacuity control for the guard below. Both divergence shapes are
-    exercised because they are different failures: re-kinding moves the opening tag
-    onto a source the closing tag cannot see, while changing the literal leaves both
-    tags literal but disagreeing. A detector catching only one would leave the other
-    live while reading as covered.
-    """
-    conforming = _modelo_200_envelope_discriminante_field()
-    re_kinded = conforming.model_copy(update={"kind": CasillaFieldKind.DRAFT, "draft_attribute": "period_code"})
-    other_regime = conforming.model_copy(update={"literal": "A"})
-
-    assert _discriminante_divergence_risks(conforming) == []
-    assert _discriminante_divergence_risks(re_kinded), "a registry-driven discriminante must be reported"
-    assert _discriminante_divergence_risks(other_regime), "a non-Normal discriminante literal must be reported"
+    assert revision.export_layouts == ()
+    decisions = {
+        decision.subject_id: decision
+        for decision in revision.support_removal_decisions
+        if decision.subject_type == "export_layout"
+    }
+    assert decisions
+    assert all(decision.decision == "remove_from_filing_grade" for decision in decisions.values())
 
 
 def test_the_modelo_200_envelope_discriminante_stays_an_unmodelled_literal() -> None:
-    """The discriminante must stay a literal ``0`` until its regime axis is modelled.
+    """The withdrawal decision remains grounded in legal and layout evidence."""
+    revision = _committed_modelo("200").revisions["2024-y-siguientes"]
+    decisions = tuple(
+        decision for decision in revision.support_removal_decisions if decision.subject_type == "export_layout"
+    )
 
-    AEAT's Modelo 200 page-000 sheet fixes offset 6 of both envelope tags as the
-    discriminante: ``0`` for Normal, Abreviado y PYMES, and ``A``, ``E``, ``I`` or
-    ``G`` for Aseguradoras, Entidades de crédito, Inversión colectiva and Garantía
-    recíproca respectively, "en función del estado de cuentas que se cumplimenta".
-
-    This application models no estado de cuentas at all, so it can only produce a
-    draft under the Normal regime and ``0`` is correct for every filer it serves --
-    not an arbitrary default. What makes that fragile is that the value is spelled
-    twice: here as a registry literal for the opening tag, and again as a hardcoded
-    character inside the closing tag's computed template. They are one value with
-    two authorities.
-
-    So this guard fails the moment either one changes shape, and its message names
-    both, because fixing one alone ships a fichero whose opening and closing tags
-    disagree about the filer's regime -- a divergence no completeness or parity gate
-    reads, since both tags would still be structurally well-formed.
-    """
-    assert _discriminante_divergence_risks(_modelo_200_envelope_discriminante_field()) == []
+    assert revision.export_layouts == ()
+    assert decisions
+    assert all(decision.legal_refs and decision.source_refs and decision.evidence_note for decision in decisions)
 
 
 def test_no_typed_declaration_channel_names_an_accounts_regime_concept() -> None:

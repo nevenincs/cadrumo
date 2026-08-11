@@ -242,6 +242,7 @@ __all__ = [
     "binding_source_casilla_ids",
     "binding_source_modelo",
     "bound_casilla_binding_ids",
+    "casillas_by_binding",
     "compute_modelo_349_operador_totals_parity",
     "compute_withholding_totals_parity",
     "counterpart_binding_requirements",
@@ -496,6 +497,30 @@ def bound_casilla_binding_ids(casilla: CasillaDefinition) -> tuple[BindingId, ..
     if casilla.binding is None:
         raise RegistryValidationError(f"bound casilla {casilla.id!r} has no binding")
     return (casilla.binding, *casilla.alternate_bindings)
+
+
+def casillas_by_binding(revision: ModeloRevision) -> Mapping[BindingId, tuple[CasillaId, ...]]:
+    """Return each binding id mapped to the casillas that may populate it.
+
+    The exact dual of :func:`bound_casilla_binding_ids`. That function answers
+    "which bindings feed this casilla"; this one answers "which casillas does
+    this binding feed". Both read the same predicate, so the two directions
+    cannot disagree about which pairs exist.
+
+    Every consequence is inherited from the forward primitive rather than
+    decided again here: a BOUND
+    :class:`~domain.calculations.registry.CasillaDefinition` with no binding
+    raises, and a non-BOUND casilla carrying a binding contributes nothing.
+    Casilla ids keep the revision's declaration order and are de-duplicated, so
+    a casilla naming one binding as both primary and alternate appears once.
+    """
+    mapping: dict[BindingId, list[CasillaId]] = {}
+    for casilla in revision.casillas:
+        for binding_id in bound_casilla_binding_ids(casilla):
+            populated_by = mapping.setdefault(binding_id, [])
+            if casilla.id not in populated_by:
+                populated_by.append(casilla.id)
+    return {binding_id: tuple(casilla_ids) for binding_id, casilla_ids in mapping.items()}
 
 
 def resolve_bound_casilla_binding_value(

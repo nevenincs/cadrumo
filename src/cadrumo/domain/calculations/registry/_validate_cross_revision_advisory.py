@@ -13,6 +13,7 @@ from ._cross_revision_divergence import (
 )
 from ._errors import RegistryValidationError
 from ._schema import ModeloDefinition
+from ._ids import RevisionId
 
 __all__ = (
     "CrossRevisionCasillaDriftSummary",
@@ -25,8 +26,8 @@ class CrossRevisionCasillaDriftSummary:
     """Grouped advisory drift inventory for non-overlapping revisions."""
 
     modelo_id: str
-    left_revision_id: str
-    right_revision_id: str
+    left_revision_id: RevisionId
+    right_revision_id: RevisionId
     field: str
     drift_count: int
     example_casilla_ids: tuple[CasillaId, ...]

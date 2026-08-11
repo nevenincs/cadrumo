@@ -8,6 +8,7 @@ from typing import Final, Literal
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n import MissingTranslationError, lookup_translation
+from ._ids import RevisionId
 
 ModeloLocalizationField = Literal["label", "help", "title", "official_name"]
 
@@ -30,7 +31,7 @@ def modelo_locale_key(modelo_id: str, field: Literal["title", "official_name"]) 
     return f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.field.{field}"
 
 
-def revision_locale_key(modelo_id: str, revision_id: str, field: Literal["label"] = "label") -> str:
+def revision_locale_key(modelo_id: str, revision_id: RevisionId, field: Literal["label"] = "label") -> str:
     """Derive a revision-level presentation key."""
     return (
         f"modelo.schema.{encode_modelo_locale_segment(modelo_id)}.revision."
@@ -40,7 +41,7 @@ def revision_locale_key(modelo_id: str, revision_id: str, field: Literal["label"
 
 def construct_locale_key(
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     construct_id: str,
     field: Literal["title"] = "title",
 ) -> str:
@@ -59,7 +60,7 @@ def construct_locale_key(
 
 def casilla_occurrence_locale_key(
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     casilla_id: str,
     field: Literal["label", "help"],
 ) -> str:
@@ -85,7 +86,7 @@ def casilla_continuity_locale_key(
 
 def casilla_alias_locale_key(
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
     casilla_id: str,
     alias_id: str,
     field: Literal["label"] = "label",

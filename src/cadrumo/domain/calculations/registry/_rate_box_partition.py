@@ -46,6 +46,7 @@ from pydantic import Field
 
 from ....core import CasillaId
 from ....core.aggregation import BindingSourceKind
+from ._bindings import casillas_by_binding
 from ._ids import BindingId
 from ._ledger_bindings import iva_ledger_selector
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -161,25 +162,6 @@ def _iva_selector_axes(binding: DataBindingDefinition) -> Mapping[str, object]:
     return iva_ledger_selector(binding).model_dump()
 
 
-def _casillas_by_binding(revision: ModeloRevision) -> dict[BindingId, list[CasillaId]]:
-    """Map every binding id to the casillas it may populate, primary or alternate.
-
-    Alternate bindings are included because a casilla reached only through one is
-    still that binding's money; omitting it would understate the box layer and
-    manufacture a shortfall. The caller de-duplicates, so a casilla naming the
-    same binding twice contributes once.
-    """
-    mapping: dict[BindingId, list[CasillaId]] = {}
-    for casilla in revision.casillas:
-        binding_ids = (
-            *((casilla.binding,) if casilla.binding is not None else ()),
-            *casilla.alternate_bindings,
-        )
-        for binding_id in binding_ids:
-            mapping.setdefault(binding_id, []).append(casilla.id)
-    return mapping
-
-
 def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartition, ...]:
     """Return every two-layer rate partition the revision declares.
 
@@ -228,7 +210,7 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
         Partitions in canonical total-casilla order; empty when the revision
         declares no rate-specific ledger-IVA binding at all.
     """
-    casillas_by_binding = _casillas_by_binding(revision)
+    populated_casillas = casillas_by_binding(revision)
     exports = {casilla.id: bool(casilla.export_refs) for casilla in revision.casillas}
 
     grouped = _ledger_iva_bindings_by_partition_key(revision)
@@ -240,9 +222,9 @@ def derive_rate_box_partitions(revision: ModeloRevision) -> tuple[RateBoxPartiti
         if len(blind) != 1 or not rated:
             continue
         blind_binding, blind_axes = blind[0]
-        total_casillas = _distinct(casillas_by_binding.get(blind_binding.id, ()))
+        total_casillas = _distinct(populated_casillas.get(blind_binding.id, ()))
         box_casillas = _distinct(
-            casilla_id for binding, _ in rated for casilla_id in casillas_by_binding.get(binding.id, ())
+            casilla_id for binding, _ in rated for casilla_id in populated_casillas.get(binding.id, ())
         )
         if len(total_casillas) != 1 or not box_casillas:
             continue
@@ -351,7 +333,7 @@ def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscree
         order; empty when every rate-split group the revision declares formed a
         partition.
     """
-    casillas_by_binding = _casillas_by_binding(revision)
+    populated_casillas = casillas_by_binding(revision)
     exports = {casilla.id: bool(casilla.export_refs) for casilla in revision.casillas}
     grouped = _ledger_iva_bindings_by_partition_key(revision)
 
@@ -364,7 +346,7 @@ def rate_box_unscreened_groups(revision: ModeloRevision) -> tuple[RateBoxUnscree
         reason = _unscreened_reason(
             rated=rated,
             blind=blind,
-            casillas_by_binding=casillas_by_binding,
+            casillas_by_binding=populated_casillas,
             exports=exports,
         )
         if reason is None:

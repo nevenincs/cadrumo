@@ -14,11 +14,12 @@ from ._validate_semantic_role_axes import (
     semantic_roles_are_axis_siblings,
     semantic_roles_are_tax_domain_siblings,
 )
+from ._ids import RevisionId
 
 
 class _RoleObservationLike(Protocol):
     modelo_id: str
-    revision_id: str
+    revision_id: RevisionId
     casilla_id: CasillaId
     semantic_role_cardinality: str
 

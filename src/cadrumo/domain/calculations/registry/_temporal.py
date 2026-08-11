@@ -50,7 +50,7 @@ def select_revision_for_year(
     if len(candidates) > 1:
         # A year-only answer for a year covered by more than one revision is wrong
         # in whichever direction it is given, so this refuses rather than picking.
-        # The REMEDY rides with the raiser rather than in the shared message: the
+        # The REMEDY is selected by naming a locale key of its own: the
         # period-scoped selector raises the same error, and telling that caller to
         # supply a period would send it to redo what it already did.
         raise AmbiguousRevisionSelectionError(
@@ -61,7 +61,7 @@ def select_revision_for_year(
                 "this filing year carries a mid-year AEAT design boundary, so more than one "
                 "revision covers it and no year-only answer is correct"
             ),
-            suggestion="supply the filing period, or an as-of date, to select one of these revisions",
+            translated_message="errors.snapshot.ambiguous_revision_selection_year_only",
         )
     return candidates[0]
 
