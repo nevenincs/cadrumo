@@ -334,6 +334,12 @@ from ._m303_prorrata_activity_projection import (
     M303ProrrataActivityRowProjection,
     project_m303_prorrata_activity_rows,
 )
+from ._m303_regimen_simplificado_projection import (
+    M303RegimenSimplificadoFieldProjection,
+    M303RegimenSimplificadoRecordProjection,
+    m303_regimen_simplificado_nonnumbered_fields,
+    project_m303_regimen_simplificado_rows,
+)
 from ._legal import (
     legal_reference_quotes_corpus,
     verify_legal_catalogue,
@@ -851,6 +857,8 @@ __all__ = [
     "M303DifferentiatedDeductionRowProjection",
     "M303ProrrataActivityEndpointValue",
     "M303ProrrataActivityRowProjection",
+    "M303RegimenSimplificadoFieldProjection",
+    "M303RegimenSimplificadoRecordProjection",
     "ModeloApplicability",
     "ModeloApplicabilityRule",
     "ModeloBindingQueryRow",
@@ -1092,6 +1100,7 @@ __all__ = [
     "load_modelo_path",
     "load_modelo_source",
     "load_registry_tree",
+    "m303_regimen_simplificado_nonnumbered_fields",
     "materialize_relation_binding_values",
     "modelo_202_modality_from_inputs",
     "modelo_locale_key",
@@ -1107,6 +1116,7 @@ __all__ = [
     "project_export_value",
     "project_m303_differentiated_deduction_rows",
     "project_m303_prorrata_activity_rows",
+    "project_m303_regimen_simplificado_rows",
     "rate_box_coverage_shortfalls",
     "rate_box_unscreened_groups",
     "read_parameter",

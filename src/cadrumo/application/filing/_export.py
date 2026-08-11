@@ -102,6 +102,10 @@ from ._export_xml_dictionary import (
     render_xml_dictionary_layout,
 )
 from ._m303_prorrata_activity_rows import assert_m303_prorrata_activity_rows_complete
+from ._m303_regimen_simplificado import (
+    M303RegimenSimplificadoValueArrival,
+    project_m303_regimen_simplificado_value_arrival,
+)
 from ._producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
@@ -366,6 +370,7 @@ def export_draft(
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     schema_provider: RegistrySchemaAccessor | None = None,
     prorrata_register: ProrrataRegister | None = None,
+    regimen_simplificado: M303RegimenSimplificadoValueArrival | None = None,
 ) -> DeclaracionExportResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
@@ -390,6 +395,9 @@ def export_draft(
         prorrata_register: Canonical encrypted prorrata-register view for a
             Modelo 303 filing.  When supplied, an applicable year must carry
             all five typed per-activity rows before any layout-target check.
+        regimen_simplificado: Typed canonical activity rows, annual Orden
+            taxonomy, applicability/censo facts, and exact record-design source
+            selection projected before any layout-target check.
 
     Returns:
         A :class:`DeclaracionExportResult` with the output path, digest,
@@ -413,6 +421,12 @@ def export_draft(
         raise FilingExportError("declaration export requires an approved draft")
     if draft.modelo == "303" and prorrata_register is not None:
         assert_m303_prorrata_activity_rows_complete(period=draft.period, register=prorrata_register)
+    if draft.modelo == "303" and regimen_simplificado is not None:
+        project_m303_regimen_simplificado_value_arrival(
+            period=draft.period,
+            schema_provider=provider,
+            value_arrival=regimen_simplificado,
+        )
     if not subview.export_layout_ids:
         raise FilingExportError(_missing_export_layout_message(draft.modelo))
     layout = subview.export_layouts[0]

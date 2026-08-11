@@ -190,6 +190,17 @@ from ._refund_eligibility import (
     refund_eligibility_reason,
 )
 from ._regime_legend import REGIME_LEGENDS, RegimeLegend, regime_legend_phrases
+from ._regimen_simplificado_rows import (
+    ActividadAgricolaSimplificado,
+    ActividadNoAgricolaSimplificado,
+    ActividadOrdenAnual,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    ModuloOrdenAnual,
+    RegimenSimplificadoActivity,
+    RegimenSimplificadoFilingRows,
+    validate_regimen_simplificado_rows,
+)
 from ._saturation import (
     IvaRateResolution,
     resolve_category_rate,
@@ -248,10 +259,15 @@ __all__ = [
     "SEPA_ZONE_COUNTRY_CODES",
     "SPAIN_COUNTRY_CODE",
     "STATUTORY_CITATIONS",
+    "ActividadAgricolaSimplificado",
+    "ActividadNoAgricolaSimplificado",
+    "ActividadOrdenAnual",
     "CustomerTaxStatus",
     "DeductionScope",
     "EUMemberState",
+    "EntradaModuloSimplificado",
     "EspecialMandatoryRule",
+    "HechoActividadSimplificado",
     "InputClassification",
     "InvoiceKind",
     "IossFilerRole",
@@ -293,6 +309,7 @@ __all__ = [
     "LegendDerivation",
     "LegendDerivationOutcome",
     "LivaArt161RecargoRates",
+    "ModuloOrdenAnual",
     "OssIossRegime",
     "PartyFact",
     "ProrrataError",
@@ -309,6 +326,8 @@ __all__ = [
     "RefundEligibilityReason",
     "RegimeLegend",
     "RegimePeriodicity",
+    "RegimenSimplificadoActivity",
+    "RegimenSimplificadoFilingRows",
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
     "SepaMarca",
@@ -384,6 +403,7 @@ __all__ = [
     "territorial_scope_for_spanish_postal_code",
     "validate_iva_deduction_fact",
     "validate_prorrata_reference",
+    "validate_regimen_simplificado_rows",
     "vat_identification_state_for_printed_tax_identifier",
     "verify_catalogue",
 ]
