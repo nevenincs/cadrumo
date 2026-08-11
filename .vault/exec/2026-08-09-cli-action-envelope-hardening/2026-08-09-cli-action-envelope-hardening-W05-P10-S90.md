@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:491e55fedc93647630eb46e02de3fbdae0108a2d6a9d57537cbd27bf6782a06f'
+body_hash: 'sha256:45304647efa0adbf31dc81613fbb03e5bf811eb31eefc0a630bef858bb20ae9f'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -41,6 +41,17 @@ Ruff, formatting, compileall, and diff checks pass. Real console checks for loca
 - BasedPyright remains externally red on pre-existing CLI private-usage and unknown-type diagnostics; no diagnostic points to a changed line.
 - The locale audit no longer reports an S90 orphan but remains externally red on unrelated missing schema/profile leaves.
 - No compatibility bridge, manual disposition mutation, Git operation, or plan closure was added.
+
+### S90 locale command-prose fixed point
+
+The remaining eleven command-bearing `cli.ledger.*` catalogue leaves were rewritten through the canonical locale authority in Catalan, English, Spanish, and Hungarian. They now state neutral input, validation, and duplicate-review facts; executable command identity is no longer duplicated in localized help or refusal prose. A concurrent Hungarian catalogue writer was handled by the authority's guarded batch verb, without bypassing the write guard.
+
+The conformance gate now resolves every `cli.ledger.*` leaf in ca/en/es/hu and rejects raw `aeat app ledger` or `app ledger` command tokens. Notice analysis follows module-bound names and local helper returns, so indirect raw strings and runtime translation defaults cannot evade the check. Runtime command literals in the covered modules are admitted only when their AST field is explicitly `source_command`; docstrings remain non-runtime documentation.
+
+Verification: the strengthened integration module passes 5 tests; a separate fixed-point scan reports `COMMAND_VALUES ca 0`, `COMMAND_VALUES en 0`, `COMMAND_VALUES es 0`, and `COMMAND_VALUES hu 0`; real `add --help`, `attach --help`, and `classify --help` succeed in all four locales (12 direct console checks); Ruff and format checks pass. Locale scaffold remains globally red only on separately owned schema/profile omissions, one Modelo-work leaf, and the concurrent IVA-wallet cluster.
+
+S90 remains open for final independent review.
+
 ## Coordinated rehoming reconciliation
 
 After three identical read-only boundaries separated by at least sixty seconds, the canonical S50 migration wrote one 238-row postimage. The isolated target delta was exactly eight removals, four additions, and thirty-eight preserved target identities. The additions were exactly three `PurchaseInvoiceEvidenceInputError` fingerprints owned by S38 and one `LLMContentionError` fingerprint owned by S94; thirty-one separately recorded locator-only refreshes were incidental metadata.
