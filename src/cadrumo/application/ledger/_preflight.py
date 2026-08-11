@@ -690,8 +690,7 @@ if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregat
         for reason in set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) - set(IvaLedgerAggregationIssueReason)
     )
     raise RuntimeError(
-        "every IvaLedgerAggregationIssueReason must declare an OperatorActionAxis; "
-        f"missing={missing}; stale={stale}",
+        f"every IvaLedgerAggregationIssueReason must declare an OperatorActionAxis; missing={missing}; stale={stale}",
     )
 
 # Fails the import, not a test run, so an unclassified member cannot reach a

@@ -1,7 +1,7 @@
 """Registration settles the identifying State and settles NO place, on either side.
 
 The ladder these facts feed once answered two legally distinct questions with one
-output, and the conflation had a direction. A printed foreign VAT prefix was read
+output, and the conflation had a direction. A printed foreign IVA prefix was read
 as decisive evidence of PLACE, so a German-identified entity actually established
 in Spain resolved silently to ``EU_MEMBER`` and reached the table as settled
 fact — while the mirror case, a non-resident holding a Spanish registration,
@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _DATE = date(2026, 3, 10)
 
-#: A structurally valid German VAT number, and a Spanish CIF for the same party
+#: A structurally valid German IVA number, and a Spanish CIF for the same party
 #: shape. Both are registrations; the point of every case below is that they are
 #: registrations and nothing more.
 _GERMAN_IVA_NUMBER = "DE811234567"

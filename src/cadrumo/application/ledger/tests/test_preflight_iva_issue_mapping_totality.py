@@ -48,6 +48,7 @@ from .. import _preflight
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 def _transaction(
     *,
     iva_category: IvaCategory | None,

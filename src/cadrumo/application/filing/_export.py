@@ -105,6 +105,7 @@ from ._m303_export_applicability import validate_m303_export_applicability
 from ._producer_snapshot import (
     ChargeAccountSelection,
     FilingProducerSnapshot,
+    M303FilingFacts,
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
     RefundAccountSelection,
@@ -121,6 +122,46 @@ _SHA256_HEX_LENGTH = 64
 class _RecordRenderRow:
     row_index: int | None
     active_binding_ids: frozenset[BindingId]
+
+
+@dataclass(frozen=True)
+class _SelectedAccountLexicals:
+    iban: str | None = None
+    swift_bic: str | None = None
+    bank_name: str | None = None
+    bank_address: str | None = None
+    bank_city: str | None = None
+    bank_country_code: str | None = None
+
+
+@dataclass(frozen=True)
+class _M303ProfileLexicals:
+    redeme_enrolled: str | None = None
+    exclusively_foral: str | None = None
+    regime_composition_code: str | None = None
+    cash_accounting_regime_enrolled: str | None = None
+    voluntary_sii_enrolled: str | None = None
+    hydrocarbon_deposit_advance_payment_deduction_entitled: str | None = None
+    is_foral: bool = False
+
+
+@dataclass(frozen=True)
+class _M303FilingLexicals:
+    joint_return_elected: str | None = None
+    recipient_of_cash_accounting_operations: str | None = None
+    prorrata_special_option: str | None = None
+    prorrata_special_revocation: str | None = None
+    insolvency_declared: str | None = None
+    insolvency_judicial_order_date: str | None = None
+    insolvency_filing_subtype: str | None = None
+    exonerado_390_applicable: str | None = None
+    prorrata_transition_applicable: bool = False
+
+
+@dataclass(frozen=True)
+class _M303ForalLexicals:
+    prorrata_special_option: str | None
+    prorrata_special_revocation: str | None
 
 
 class DeclaracionExportFormat(StrEnum):
@@ -312,11 +353,10 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
     """Resolve every canonical producer identity from one immutable snapshot."""
     identity = snapshot.taxpayer_identity
     amendment = snapshot.amendment_evidence
+    account = _selected_account_lexicals(snapshot)
     iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
-    m303_facts = snapshot.m303_filing_facts
-    m303_period = m303_facts.period if m303_facts is not None else None
-    m303_is_final_period = is_last_filing_period_of_year(m303_period) if m303_period is not None else False
-    insolvency = m303_facts.insolvency if m303_facts is not None else None
+    m303_profile = _m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
+    m303_filing = _m303_filing_lexicals(snapshot.m303_filing_facts)
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
         FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
@@ -328,89 +368,32 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
         FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
         FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
         FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
-        FilingProducerKey.SELECTED_ACCOUNT_IBAN: None,
-        FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: None,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: None,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS: None,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY: None,
-        FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: None,
+        FilingProducerKey.SELECTED_ACCOUNT_IBAN: account.iban,
+        FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: account.swift_bic,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: account.bank_name,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS: account.bank_address,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY: account.bank_city,
+        FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: account.bank_country_code,
         FilingProducerKey.PRIOR_DOMICILIATION_ACTION: (
             "X" if snapshot.elections.prior_domiciliation is PriorDomiciliationElection.CANCEL_OR_MODIFY else None
         ),
-        FilingProducerKey.M303_REDEME_ENROLLED: (
-            _m303_yes_no(iva_profile.redeme_enrolled) if iva_profile is not None else None
-        ),
-        FilingProducerKey.M303_EXCLUSIVELY_FORAL: (
-            "1"
-            if iva_profile is not None and iva_profile.tax_territory is M303TaxTerritory.FORAL
-            else "2"
-            if iva_profile is not None
-            else None
-        ),
-        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: (
-            {
-                M303RegimeComposition.SIMPLIFIED: "1",
-                M303RegimeComposition.MIXED: "2",
-                M303RegimeComposition.GENERAL: "3",
-            }[iva_profile.regime_composition]
-            if iva_profile is not None
-            else None
-        ),
-        FilingProducerKey.M303_JOINT_RETURN_ELECTED: (
-            _m303_yes_no(m303_facts.joint_return_elected) if m303_facts is not None else None
-        ),
-        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: (
-            _m303_yes_no(iva_profile.cash_accounting_regime_enrolled) if iva_profile is not None else None
-        ),
+        FilingProducerKey.M303_REDEME_ENROLLED: m303_profile.redeme_enrolled,
+        FilingProducerKey.M303_EXCLUSIVELY_FORAL: m303_profile.exclusively_foral,
+        FilingProducerKey.M303_REGIME_COMPOSITION_CODE: m303_profile.regime_composition_code,
+        FilingProducerKey.M303_JOINT_RETURN_ELECTED: m303_filing.joint_return_elected,
+        FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: m303_profile.cash_accounting_regime_enrolled,
         FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: (
-            _m303_yes_no(m303_facts.supplier_regime.recipient_of_cash_accounting_operations)
-            if m303_facts is not None
-            else None
+            m303_filing.recipient_of_cash_accounting_operations
         ),
-        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: (
-            _m303_yes_no(
-                m303_facts.prorrata_transition.transition is ProrrataEspecialTransitionKind.OPCION,
-            )
-            if m303_facts is not None and m303_facts.prorrata_transition.is_applicable
-            else None
-        ),
-        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: (
-            _m303_yes_no(
-                m303_facts.prorrata_transition.transition is ProrrataEspecialTransitionKind.REVOCACION,
-            )
-            if m303_facts is not None and m303_facts.prorrata_transition.is_applicable
-            else None
-        ),
-        FilingProducerKey.M303_INSOLVENCY_DECLARED: (
-            "1" if insolvency is not None else "2" if m303_facts is not None else None
-        ),
-        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: (
-            insolvency.judicial_order_date.strftime("%d%m%Y") if insolvency is not None else None
-        ),
-        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: (
-            {
-                M303InsolvencyFilingSubtype.PRE_ORDER: "1",
-                M303InsolvencyFilingSubtype.POST_ORDER: "2",
-            }[insolvency.subtype]
-            if insolvency is not None
-            else None
-        ),
-        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: (
-            _m303_yes_no(iva_profile.voluntary_sii_enrolled) if iva_profile is not None else None
-        ),
-        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: (
-            _m303_yes_no(m303_facts.exonerado_390.applicable)
-            if m303_facts is not None and m303_is_final_period
-            else "0"
-            if m303_facts is not None
-            else None
-        ),
+        FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: m303_filing.prorrata_special_option,
+        FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: m303_filing.prorrata_special_revocation,
+        FilingProducerKey.M303_INSOLVENCY_DECLARED: m303_filing.insolvency_declared,
+        FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: m303_filing.insolvency_judicial_order_date,
+        FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: m303_filing.insolvency_filing_subtype,
+        FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: m303_profile.voluntary_sii_enrolled,
+        FilingProducerKey.M303_EXONERADO_390_APPLICABLE: m303_filing.exonerado_390_applicable,
         FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
-            _m303_yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
-            if iva_profile is not None and m303_period is not None and _m303_a30_entitlement_applicable(m303_period)
-            else "0"
-            if iva_profile is not None and m303_period is not None
-            else None
+            m303_profile.hydrocarbon_deposit_advance_payment_deduction_entitled
         ),
         FilingProducerKey.M111_COLEGIO_CONCERTADO: (
             snapshot.model_profile.colegio_concertado
@@ -418,20 +401,8 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
             else None
         ),
     }
-    selected = snapshot.selected_account
-    if isinstance(selected, (ChargeAccountSelection, RefundAccountSelection)):
-        values[FilingProducerKey.SELECTED_ACCOUNT_IBAN] = selected.account.iban
-    if isinstance(selected, RefundAccountSelection):
-        values.update(
-            {
-                FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: selected.account.swift_bic,
-                FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: selected.account.bank_name,
-                FilingProducerKey.SELECTED_ACCOUNT_BANK_ADDRESS: selected.account.bank_address,
-                FilingProducerKey.SELECTED_ACCOUNT_BANK_CITY: selected.account.bank_city,
-                FilingProducerKey.SELECTED_ACCOUNT_BANK_COUNTRY_CODE: selected.account.bank_country_code,
-            },
-        )
-    if iva_profile is not None and iva_profile.tax_territory is M303TaxTerritory.FORAL:
+    if m303_profile.is_foral:
+        foral = _m303_foral_lexicals(m303_filing)
         # DP30301 Nota 5 uses a lexical foral branch.  It overrides the normal
         # profile and filing-instance projections; A22/A23 remain blank until
         # their Nota 6 final-period applicability is established above.
@@ -443,12 +414,8 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
                 FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
                 FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
                 FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
-                FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: (
-                    "2" if m303_facts is not None and m303_facts.prorrata_transition.is_applicable else None
-                ),
-                FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: (
-                    "2" if m303_facts is not None and m303_facts.prorrata_transition.is_applicable else None
-                ),
+                FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
+                FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
                 FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
                 FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
                 FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
@@ -460,6 +427,101 @@ def _filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProd
     if set(values) != set(FilingProducerKey):
         raise FilingExportValidationError("filing producer resolver is not exhaustive")
     return values
+
+
+def _selected_account_lexicals(snapshot: FilingProducerSnapshot) -> _SelectedAccountLexicals:
+    selected = snapshot.selected_account
+    if isinstance(selected, RefundAccountSelection):
+        return _SelectedAccountLexicals(
+            iban=selected.account.iban,
+            swift_bic=selected.account.swift_bic,
+            bank_name=selected.account.bank_name,
+            bank_address=selected.account.bank_address,
+            bank_city=selected.account.bank_city,
+            bank_country_code=selected.account.bank_country_code,
+        )
+    if isinstance(selected, ChargeAccountSelection):
+        return _SelectedAccountLexicals(iban=selected.account.iban)
+    return _SelectedAccountLexicals()
+
+
+def _m303_profile_lexicals(
+    iva_profile: ModeloIVAProfile | None,
+    m303_facts: M303FilingFacts | None,
+) -> _M303ProfileLexicals:
+    if iva_profile is None:
+        return _M303ProfileLexicals()
+    period = m303_facts.period if m303_facts is not None else None
+    a30 = (
+        _m303_yes_no(iva_profile.hydrocarbon_deposit_advance_payment_deduction_entitled)
+        if period is not None and _m303_a30_entitlement_applicable(period)
+        else "0"
+        if period is not None
+        else None
+    )
+    return _M303ProfileLexicals(
+        redeme_enrolled=_m303_yes_no(iva_profile.redeme_enrolled),
+        exclusively_foral="1" if iva_profile.tax_territory is M303TaxTerritory.FORAL else "2",
+        regime_composition_code={
+            M303RegimeComposition.SIMPLIFIED: "1",
+            M303RegimeComposition.MIXED: "2",
+            M303RegimeComposition.GENERAL: "3",
+        }[iva_profile.regime_composition],
+        cash_accounting_regime_enrolled=_m303_yes_no(iva_profile.cash_accounting_regime_enrolled),
+        voluntary_sii_enrolled=_m303_yes_no(iva_profile.voluntary_sii_enrolled),
+        hydrocarbon_deposit_advance_payment_deduction_entitled=a30,
+        is_foral=iva_profile.tax_territory is M303TaxTerritory.FORAL,
+    )
+
+
+def _m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> _M303FilingLexicals:
+    if m303_facts is None:
+        return _M303FilingLexicals()
+    transition = m303_facts.prorrata_transition
+    insolvency = m303_facts.insolvency
+    transition_applicable = transition.is_applicable
+    return _M303FilingLexicals(
+        joint_return_elected=_m303_yes_no(m303_facts.joint_return_elected),
+        recipient_of_cash_accounting_operations=_m303_yes_no(
+            m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
+        ),
+        prorrata_special_option=(
+            _m303_yes_no(transition.transition is ProrrataEspecialTransitionKind.OPCION)
+            if transition_applicable
+            else None
+        ),
+        prorrata_special_revocation=(
+            _m303_yes_no(transition.transition is ProrrataEspecialTransitionKind.REVOCACION)
+            if transition_applicable
+            else None
+        ),
+        insolvency_declared="1" if insolvency is not None else "2",
+        insolvency_judicial_order_date=(
+            insolvency.judicial_order_date.strftime("%d%m%Y") if insolvency is not None else None
+        ),
+        insolvency_filing_subtype=(
+            {
+                M303InsolvencyFilingSubtype.PRE_ORDER: "1",
+                M303InsolvencyFilingSubtype.POST_ORDER: "2",
+            }[insolvency.subtype]
+            if insolvency is not None
+            else None
+        ),
+        exonerado_390_applicable=(
+            _m303_yes_no(m303_facts.exonerado_390.applicable)
+            if is_last_filing_period_of_year(m303_facts.period)
+            else "0"
+        ),
+        prorrata_transition_applicable=transition_applicable,
+    )
+
+
+def _m303_foral_lexicals(m303_filing: _M303FilingLexicals) -> _M303ForalLexicals:
+    value = "2" if m303_filing.prorrata_transition_applicable else None
+    return _M303ForalLexicals(
+        prorrata_special_option=value,
+        prorrata_special_revocation=value,
+    )
 
 
 def _m303_yes_no(value: bool) -> str:

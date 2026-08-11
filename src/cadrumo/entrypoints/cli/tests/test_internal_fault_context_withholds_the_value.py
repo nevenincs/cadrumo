@@ -32,7 +32,7 @@ from .._errors import internal_record_fault_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-#: An intra-community VAT identifier: real taxpayer data, and the exact shape the
+#: An intra-community IVA identifier: real taxpayer data, and the exact shape the
 #: CLI redaction funnel has historically passed through unaltered.
 _TAXPAYER_VALUE = "SE556677889901"
 

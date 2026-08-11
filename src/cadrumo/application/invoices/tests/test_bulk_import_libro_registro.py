@@ -106,7 +106,7 @@ def test_the_libro_registro_imports_with_no_column_resolution_failure(tmp_path: 
 
     Four of the eight rows are still refused, and each one is refused by a
     pre-existing domain rule that has nothing to do with reading the file: a
-    rectificativa's negative total, two EU VAT identifiers held to the nine-
+    rectificativa's negative total, two EU IVA identifiers held to the nine-
     character Spanish NIF shape, and a factura simplificada to a consumidor
     final carrying no NIF at all. They are named in
     :data:`_ROWS_REFUSED_BY_DOMAIN_RULES` so this test states which failures it

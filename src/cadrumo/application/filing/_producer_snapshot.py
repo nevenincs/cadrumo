@@ -295,50 +295,62 @@ class FilingProducerSnapshot(BaseModel):
 
     @model_validator(mode="after")
     def _validate_model_profile(self) -> FilingProducerSnapshot:
-        if self.modelo is Modelo.M111:
-            if not isinstance(self.model_profile, Modelo111ProfileFacts):
-                raise ValueError("modelo 111 requires Modelo111ProfileFacts")
-            if self.model_profile.colegio_concertado is None:
-                raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
-        elif self.modelo is Modelo.M202:
-            if not isinstance(self.model_profile, Modelo202ProducerProfile):
-                raise ValueError("modelo 202 requires Modelo202ProducerProfile")
-            unsupported = ", ".join(item.value for item in self.model_profile.unsupported_producer_ids)
-            raise ValueError(f"Modelo 202 producer snapshot is incomplete: {unsupported}")
-        elif self.modelo is Modelo.M303:
-            if not isinstance(self.model_profile, ModeloIVAProfile):
-                raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
-            if self.m303_filing_facts is None:
-                raise ValueError("modelo 303 requires complete M303FilingFacts")
-        elif not isinstance(self.model_profile, GeneralFilingProfileFacts):
-            raise ValueError(f"modelo {self.modelo.value} requires GeneralFilingProfileFacts")
-        elif self.m303_filing_facts is not None:
-            raise ValueError("M303FilingFacts are valid only for modelo 303")
-        disposition = self.elections.result_disposition
-        if disposition is ResultDisposition.DOMICILIACION:
-            if self.elections.payment is not PaymentElection.DOMICILIACION:
-                raise ValueError("domiciliacion disposition requires the matching payment election")
-            if not isinstance(self.selected_account, ChargeAccountSelection):
-                raise ValueError("domiciliacion disposition requires a selected charge account")
-        elif self.elections.payment is PaymentElection.DOMICILIACION:
-            raise ValueError("domiciliacion payment election requires the matching result disposition")
-        elif result_disposition_is_refund(disposition):
-            if not isinstance(self.selected_account, RefundAccountSelection):
-                raise ValueError("refund disposition requires a selected refund account")
-        elif self.selected_account is not None:
-            raise ValueError("a result disposition without an account must not retain one")
-        profile_iva = (
-            self.model_profile
-            if isinstance(self.model_profile, ModeloIVAProfile)
-            else self.model_profile.taxpayer_profile.iva
-            if isinstance(self.model_profile, Modelo202ProducerProfile)
-            else None
-        )
-        if profile_iva is not None and (
-            profile_iva.refund_account is not None or profile_iva.charge_account is not None
-        ):
-            raise ValueError("model profile must not retain accounts outside selected_account")
+        _validate_snapshot_model_profile(self)
+        _validate_snapshot_account_selection(self)
+        _validate_snapshot_profile_secrecy(self)
         return self
+
+
+def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
+    if snapshot.modelo is Modelo.M111:
+        if not isinstance(snapshot.model_profile, Modelo111ProfileFacts):
+            raise ValueError("modelo 111 requires Modelo111ProfileFacts")
+        if snapshot.model_profile.colegio_concertado is None:
+            raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
+    elif snapshot.modelo is Modelo.M202:
+        if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
+            raise ValueError("modelo 202 requires Modelo202ProducerProfile")
+        unsupported = ", ".join(item.value for item in snapshot.model_profile.unsupported_producer_ids)
+        raise ValueError(f"Modelo 202 producer snapshot is incomplete: {unsupported}")
+    elif snapshot.modelo is Modelo.M303:
+        if not isinstance(snapshot.model_profile, ModeloIVAProfile):
+            raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
+        if snapshot.m303_filing_facts is None:
+            raise ValueError("modelo 303 requires complete M303FilingFacts")
+    elif not isinstance(snapshot.model_profile, GeneralFilingProfileFacts):
+        raise ValueError(f"modelo {snapshot.modelo.value} requires GeneralFilingProfileFacts")
+    elif snapshot.m303_filing_facts is not None:
+        raise ValueError("M303FilingFacts are valid only for modelo 303")
+
+
+def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> None:
+    disposition = snapshot.elections.result_disposition
+    if disposition is ResultDisposition.DOMICILIACION:
+        if snapshot.elections.payment is not PaymentElection.DOMICILIACION:
+            raise ValueError("domiciliacion disposition requires the matching payment election")
+        if not isinstance(snapshot.selected_account, ChargeAccountSelection):
+            raise ValueError("domiciliacion disposition requires a selected charge account")
+    elif snapshot.elections.payment is PaymentElection.DOMICILIACION:
+        raise ValueError("domiciliacion payment election requires the matching result disposition")
+    elif result_disposition_is_refund(disposition):
+        if not isinstance(snapshot.selected_account, RefundAccountSelection):
+            raise ValueError("refund disposition requires a selected refund account")
+    elif snapshot.selected_account is not None:
+        raise ValueError("a result disposition without an account must not retain one")
+
+
+def _validate_snapshot_profile_secrecy(snapshot: FilingProducerSnapshot) -> None:
+    profile_iva = _profile_iva(snapshot.model_profile)
+    if profile_iva is not None and (profile_iva.refund_account is not None or profile_iva.charge_account is not None):
+        raise ValueError("model profile must not retain accounts outside selected_account")
+
+
+def _profile_iva(model_profile: FilingModelProfileFacts) -> ModeloIVAProfile | None:
+    if isinstance(model_profile, ModeloIVAProfile):
+        return model_profile
+    if isinstance(model_profile, Modelo202ProducerProfile):
+        return model_profile.taxpayer_profile.iva
+    return None
 
 
 def build_filing_producer_snapshot(

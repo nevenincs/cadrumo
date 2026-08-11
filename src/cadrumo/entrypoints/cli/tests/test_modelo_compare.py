@@ -354,8 +354,8 @@ def test_compare_delta_rows_carry_provenance() -> None:
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     # Simulate the obs_by_id lookup from modelo_compare.

@@ -14,7 +14,7 @@ from ...core.json_contract import (
     ResolvedActionReference,
     ResolvedNoticeAction,
 )
-from ..operator_actions import ActionCatalogue, ActionReference
+from ..operator_actions import ActionArgumentBindingSpecification, ActionCatalogue, ActionReference
 from ._manifest import OperatorSurfaceReconciliation, ResolvedCatalogueAction
 
 
@@ -61,37 +61,9 @@ def resolve_notice_action(
     input_schema = resolved_catalogue_action.target_leaf.input_schema
     assert input_schema is not None
 
-    argument_names = tuple(argument.argument_name for argument in argument_bindings)
-    if len(set(argument_names)) != len(argument_names):
-        raise ValueError("notice action argument names must be unique")
-    if any(argument.status is not ActionArgumentStatus.RESOLVED for argument in argument_bindings):
-        raise ValueError("success notice actions cannot carry unresolved argument bindings")
-
-    for argument in argument_bindings:
-        specifications = tuple(
-            specification
-            for specification in declaration.argument_specifications
-            if specification.argument_name == argument.argument_name
-        )
-        if not specifications:
-            raise ValueError(
-                f"notice action argument is not declared by the catalogue: {argument.argument_name}",
-            )
-        assert argument.source is not None
-        assert argument.source_key is not None
-        matching_specifications = tuple(
-            specification
-            for specification in specifications
-            if argument.source.value == specification.source.value
-            and argument.source_key == specification.source_key
-            and argument.source_evidence_id == specification.source_evidence_id
-        )
-        if len(matching_specifications) != 1:
-            raise ValueError(
-                f"notice action argument provenance does not match the catalogue: {argument.argument_name}",
-            )
-
-    missing_required_names = sorted(set(input_schema.required_input_names) - set(argument_names))
+    argument_names = _validated_notice_bindings(argument_bindings)
+    _validate_notice_binding_provenance(argument_bindings, declaration.argument_specifications)
+    missing_required_names = _missing_required_notice_inputs(input_schema.required_input_names, argument_names)
     if missing_required_names:
         raise ValueError(
             f"success notice action is missing required input bindings for "
@@ -105,6 +77,44 @@ def resolve_notice_action(
         ),
         argument_bindings=argument_bindings,
     )
+
+
+def _validated_notice_bindings(bindings: tuple[ResolvedActionArgument, ...]) -> tuple[str, ...]:
+    names = tuple(argument.argument_name for argument in bindings)
+    if len(set(names)) != len(names):
+        raise ValueError("notice action argument names must be unique")
+    if any(argument.status is not ActionArgumentStatus.RESOLVED for argument in bindings):
+        raise ValueError("success notice actions cannot carry unresolved argument bindings")
+    return names
+
+
+def _validate_notice_binding_provenance(
+    bindings: tuple[ResolvedActionArgument, ...],
+    specifications: tuple[ActionArgumentBindingSpecification, ...],
+) -> None:
+    for argument in bindings:
+        declared = tuple(
+            specification for specification in specifications if specification.argument_name == argument.argument_name
+        )
+        if not declared:
+            raise ValueError(f"notice action argument is not declared by the catalogue: {argument.argument_name}")
+        matching = tuple(
+            specification
+            for specification in declared
+            if argument.source is not None
+            and argument.source_key is not None
+            and argument.source.value == specification.source.value
+            and argument.source_key == specification.source_key
+            and argument.source_evidence_id == specification.source_evidence_id
+        )
+        if len(matching) != 1:
+            raise ValueError(
+                f"notice action argument provenance does not match the catalogue: {argument.argument_name}"
+            )
+
+
+def _missing_required_notice_inputs(required: tuple[str, ...], names: tuple[str, ...]) -> list[str]:
+    return sorted(set(required) - set(names))
 
 
 __all__ = [

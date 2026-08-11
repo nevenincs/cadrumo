@@ -14,7 +14,7 @@ zero-rated export legitimately carries no cuota.
 Two things this must NOT become, both tested here as controls:
 
 * A refusal of legitimate exports. A genuine third-country counterparty must
-  still classify, and so must one that happens to hold an EU VAT number -- art.
+  still classify, and so must one that happens to hold an EU IVA number -- art.
   21 exempts on the goods leaving, never on the acquirer's registrations.
 * A refusal driven by OUR data gaps. A well-formed code naming a real country
   the bundled vocabulary has not catalogued is spared, on the same authority
@@ -131,8 +131,8 @@ def test_a_genuine_third_country_export_still_classifies(category: IvaCategory) 
 def test_an_eu_iva_number_does_not_disqualify_a_third_country_export(category: IvaCategory) -> None:
     """Establishment decides an export; registration does not.
 
-    A US-established company can hold an Irish VAT number, and art. 21 exempts
-    on the goods leaving the Community rather than on who VAT-identifies the
+    A US-established company can hold an Irish IVA number, and art. 21 exempts
+    on the goods leaving the Community rather than on who IVA-identifies the
     acquirer. Reading identification here would be the same
     identification-for-establishment substitution the intra-community branch
     exists to prevent, run in the opposite direction.
@@ -177,14 +177,14 @@ def test_an_eu_established_counterparty_keeps_its_own_refusal(category: IvaCateg
 def test_the_intra_community_branch_is_untouched_by_the_export_rule() -> None:
     """Establishment must not leak into the identification-keyed branch.
 
-    Art. 25 exempts on the acquirer's VAT identification in another Member
+    Art. 25 exempts on the acquirer's IVA identification in another Member
     State and says nothing about its sede, so recording a country must neither
     satisfy nor break that branch.
     """
     unidentified = _row(category=IvaCategory.INTRA_COMMUNITY_SUPPLY, counterparty_country="US")
     issue = validate_iva_ledger_counterparty_category(unidentified)
 
-    assert issue is not None, "a country was accepted in place of a VAT identification"
+    assert issue is not None, "a country was accepted in place of an IVA identification"
     assert issue.reason is IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE
 
     identified = _row(

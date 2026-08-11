@@ -94,7 +94,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
         updated_at=_T0,
         verified_at=_T0,
         verified_by="aeat.cli.modelo.verify",
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
 
@@ -139,6 +139,6 @@ def test_non_ledger_revision_passes_trivially() -> None:
         input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         created_at=_T0,
         updated_at=_T0,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     assert_revision_snapshot_evidence_coverage(revision)  # does not raise

@@ -108,7 +108,7 @@ def _revision(*, work_unit: WorkUnit, state: CalculationRevisionState, txids: tu
         verified_by=verified_by,
         filed_at=filed_at,
         filed_by=filed_by,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
 

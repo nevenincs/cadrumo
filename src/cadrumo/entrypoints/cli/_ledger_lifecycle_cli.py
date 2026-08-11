@@ -62,7 +62,7 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
             "cli.ledger.pull_folder.help",
             default=(
                 "Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted "
-                "evidence (unlinked to any transaction; link with 'aeat app ledger attach' or 'link')."
+                "evidence, unlinked to any transaction."
             ),
         ),
     )(ledger_pull_folder)
@@ -156,13 +156,6 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 modelo=blocker.modelo,
                 filing_year=str(blocker.filing_year),
                 period=blocker.period,
-                default=(
-                    f"Evidence stored on the ledger row, but Modelo {blocker.modelo} "
-                    f"{blocker.filing_year} {blocker.period} was verified before this evidence "
-                    "existed and keeps the evidence bundle captured then. This filing will not "
-                    "pick it up; recalculating does not change that. Link invoices before "
-                    "running work calculate."
-                ),
             ),
             context={
                 "work_unit_id": blocker.work_unit_id,
@@ -172,7 +165,6 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 "filing_year": str(blocker.filing_year),
                 "period": blocker.period,
                 "reason": "finalized_revision_predates_evidence",
-                "actionability": "finalized_revision_has_no_safe_recovery_action",
             },
         )
         for blocker in result.stale_finalized_revisions
@@ -234,7 +226,7 @@ def ledger_doclink(
     **refused** — a link is never stored as evidence.
     """
     from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
-    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...application.ledger import attach_manual_transaction_evidence
     from ...domain.attachments import (
@@ -250,33 +242,12 @@ def ledger_doclink(
     resolved_id = _resolve_id(transaction_repository, transaction_id)
 
     profile = resolve_active_profile()
-    try:
-        credentials = build_google_credentials(profile=profile)
-        data = resolve_document_link(
-            source=attachment_source,
-            reference=reference,
-            credentials=credentials,
-        )
-    except OutboundStorageError as exc:
-        required_scope = ""
-        if exc.context is not None:
-            required_scope = str(exc.context.get("required_scope", ""))
-        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
-        raise _bad(
-            tr(
-                "cli.ledger.doclink.refused",
-                source=attachment_source.value,
-                reference=reference,
-                scope_hint=scope_hint,
-                default=(
-                    f"Cannot fetch the {attachment_source.value} document for {reference!r}"
-                    f"{scope_hint}: evidence must carry the document's encrypted bytes, and a "
-                    "link is never stored on its own. Download the document and attach it with "
-                    "'aeat app ledger attach --attachment-id ...', or grant the required Google "
-                    "scope and retry."
-                ),
-            ),
-        ) from exc
+    credentials = build_google_credentials(profile=profile)
+    data = resolve_document_link(
+        source=attachment_source,
+        reference=reference,
+        credentials=credentials,
+    )
 
     store = AttachmentStore()
     attachment = add_attachment(
@@ -369,8 +340,7 @@ def ledger_pull_folder(
     fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
     here. Fetched attachments are content-addressed and deduplicate by
     SHA-256, so re-running the sweep is idempotent. Attachments are stored
-    unlinked to any transaction; bind them afterwards with
-    ``aeat app ledger attach --attachment-id`` or ``aeat app ledger link``.
+    unlinked to any transaction; binding is a separate operator action.
 
     A file the app cannot reach under the ``drive.file`` scope is refused
     individually — evidence bytes are never stored as a link-only pointer,
@@ -513,11 +483,6 @@ def ledger_pull_folder(
                 message=tr(
                     "cli.ledger.pull_folder.notices.files_refused",
                     refused_count=refused_count,
-                    default=(
-                        f"{refused_count} file(s) in this folder could not be fetched under the "
-                        "drive.file scope; download them manually before selecting the matching "
-                        "transaction and attachment."
-                    ),
                 ),
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},
             ),
@@ -876,8 +841,8 @@ def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerS
     ``ledger merge`` requires the full child ids and refuses a partial cohort,
     so a persisted split must surface them (audit M11). The short ``display_id``
     is the shortest unique prefix within the child cohort — the same
-    display-width convention the ledger list surface uses — so the operator can
-    read or copy either form into ``aeat app ledger merge --child-id ...``.
+    display-width convention the ledger list surface uses, so the operator can
+    distinguish and copy either form.
     """
     from ._ledger_payloads import LedgerSplitChildIdPayload
 
@@ -911,7 +876,6 @@ def _split_classification_dropped_notices(
             ),
             context={
                 "parent_classification": parent_classification.value,
-                "actionability": "child_classification_requires_operator_decision",
             },
         ),
     ]

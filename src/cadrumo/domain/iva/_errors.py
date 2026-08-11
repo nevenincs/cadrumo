@@ -33,7 +33,7 @@ class IvaCategoryNotFoundError(IvaError):
 
 
 class IvaCatalogueError(IvaError):
-    """Raised when a IVA catalogue cannot be loaded, resolved, or validated."""
+    """Raised when an IVA catalogue cannot be loaded, resolved, or validated."""
 
 
 class IvaRateOverlapError(IvaError):

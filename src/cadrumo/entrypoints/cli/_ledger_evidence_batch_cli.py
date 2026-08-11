@@ -202,7 +202,6 @@ def _item_notice(item: BatchItemResult) -> Notice:
             "cli.app.ledger.evidence.batch_progress_message",
             source=item.source_name,
             status=item.status,
-            default=f"{item.source_name}: {item.status}",
         ),
         context={
             "source_name": item.source_name,
@@ -228,10 +227,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 code="ledger.evidence.batch.items_refused",
                 message=tr(
                     "cli.app.ledger.evidence.batch_items_refused_message",
-                    default=(
-                        "Some documents were refused. Every other document in the run still completed; "
-                        "the refused rows name what was seen."
-                    ),
                 ),
                 context={
                     "refused": str(run.count_of("refused")),
@@ -247,10 +242,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 code="ledger.evidence.batch.work_deferred",
                 message=tr(
                     "cli.app.ledger.evidence.batch_work_deferred_message",
-                    default=(
-                        "Some documents were not read because no reading model could be run. Nothing was "
-                        "guessed from them and nothing failed; re-run once the cause below is cleared."
-                    ),
                 ),
                 action=resolve_cli_precondition_action(pause.precondition_verdict),
                 context={
@@ -266,10 +257,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 code="ledger.evidence.batch.pending_review",
                 message=tr(
                     "cli.app.ledger.evidence.batch_pending_review_message",
-                    default=(
-                        "Some drafts carry a finding a person must adjudicate before an invoice is minted. "
-                        "They are held, not failed."
-                    ),
                 ),
                 action=resolve_notice_action(
                     action=ActionReference(action_id="operator.ledger.evidence.review.list"),

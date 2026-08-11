@@ -7,12 +7,12 @@ and the obvious way to widen it is the dangerous one: take an ISO 3166-1 registe
 or a CLDR territory list and admit every code in it.
 
 **That would create a new silent zero-rating, in the same direction as the one
-the narrowing closed.** The EU VAT territory is not the EU Member State set. The
+the narrowing closed.** The EU IVA territory is not the EU Member State set. The
 Directive carves territories in and out of it (2006/112/EC arts. 5-7, mirrored
 for Spain by Ley 37/1992 art. 3.Dos), and neither ISO nor CLDR encodes any of
 that:
 
-* Monaco is treated as FRANCE for VAT, so a Monegasque customer is an EU-member
+* Monaco is treated as FRANCE for IVA, so a Monegasque customer is an EU-member
   operation. Admitted from a plain ISO register it becomes a third country, and
   on the issued side that is export treatment -- exempt, on a supply that is not.
 * ``IC`` and ``EA`` are exceptionally-reserved codes for the Canary Islands and
@@ -23,7 +23,7 @@ that:
 * ``EU``, ``EZ`` and ``UN`` are in CLDR's territory list and name a union, a
   currency area and an organisation. None is a country and none can establish
   where a party is.
-* ``GI`` is a territory rather than a state and levies no VAT at all, and
+* ``GI`` is a territory rather than a state and levies no IVA at all, and
   ``XK`` sits in the ISO user-assigned range, so admitting it would make one
   code both catalogued and reserved. Both are named exclusions in the
   vocabulary's own header, and this is what holds them to it.
@@ -54,17 +54,17 @@ from .._establishment import territorial_scope_for_country
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: Codes inside the EU VAT territory despite naming no Member State, or naming a
+#: Codes inside the EU IVA territory despite naming no Member State, or naming a
 #: Spanish territory, or naming no country at all. Each is a code a general
 #: register carries and a bulk widening would therefore admit.
 NEVER_THIRD_COUNTRY = (
-    "MC",  # Monaco: treated as France for VAT (Directive 2006/112/EC art. 7.1).
+    "MC",  # Monaco: treated as France for IVA (Directive 2006/112/EC art. 7.1).
     "IC",  # Exceptionally reserved for the Canary Islands: Spanish.
     "EA",  # Exceptionally reserved for Ceuta y Melilla: Spanish.
     "EU",  # The Union itself. Not a country, and not somewhere a party is.
     "EZ",  # The euro area. A currency zone, not a jurisdiction.
     "UN",  # The United Nations. An organisation.
-    "GI",  # Gibraltar: a territory rather than a state, and it levies no VAT.
+    "GI",  # Gibraltar: a territory rather than a state, and it levies no IVA.
     "XK",  # Kosovo: its code is user-assigned, so the axis reads it as denoting nothing.
 )
 

@@ -9,9 +9,6 @@ from types import MappingProxyType
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
-from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, CasillaId, OfficialBoxStatus, OperatorActionAxis, Period
 from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...domain.calculations.registry import (
@@ -340,16 +337,16 @@ def build_modelo_work_review(
     period: Period,
     *,
     authority: ValidatedRegistryAuthority | None = None,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
 ) -> ModeloWorkReview:
     """Assemble the sole read record for a persisted modelo work target."""
     resolved_authority = authority or bundled_authority()
     snapshot = resolved_authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
-    work_repo = work_unit_repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
-    calculation_repo = calculation_repository or CalculationRevisionCatalogueRepository(bucket_id=bucket_id)
-    verification_repo = verification_repository or VerificationReportCatalogueRepository(bucket_id=bucket_id)
+    work_repo = work_unit_repository
+    calculation_repo = calculation_repository
+    verification_repo = verification_repository
     work_unit = _work_unit_for_target(
         bucket_id=bucket_id,
         modelo=modelo,

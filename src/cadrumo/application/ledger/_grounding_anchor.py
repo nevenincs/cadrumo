@@ -179,7 +179,7 @@ def _continues_the_token(edge: str, neighbour: str) -> bool:
 
     A letter edge continues into any alphanumeric, digits included, because a
     word running into a digit is exactly how identifiers are built: ``ES``
-    against ``ESB12345674`` is a fragment of a IVA identifier, not an occurrence
+    against ``ESB12345674`` is a fragment of an IVA identifier, not an occurrence
     of the country code. The symmetric rule was tried first and refused
     ``EUR100,00``, which is how the asymmetry was found rather than reasoned.
 

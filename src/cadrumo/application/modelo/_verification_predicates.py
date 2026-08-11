@@ -251,6 +251,137 @@ def _evaluate_applicability_filter(filter_name: str, profile: TaxpayerProfile) -
     raise ModeloApplicabilityFilterError(f"Unknown applicability filter: {filter_name!r}")
 
 
+_BlockingPredicateEvaluator = Callable[
+    [ParsedVerificationPredicate, Mapping[CasillaId, Decimal], TaxpayerProfile],
+    bool,
+]
+
+
+def _evaluate_all_nonzero(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+
+def _evaluate_any_nonzero(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
+
+
+def _evaluate_at_most_one_positive(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) < 2:
+        return True
+    return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
+
+
+def _evaluate_cap_le_when_positive(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) != 2:
+        return True
+    limited_id, ceiling_id = ids
+    ceiling = casilla_values.get(ceiling_id, Decimal(0))
+    if ceiling <= Decimal(0):
+        return True
+    limited = casilla_values.get(limited_id, Decimal(0))
+    return limited <= ceiling
+
+
+def _evaluate_equals(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) != 2:
+        return True
+    lhs, rhs = (casilla_values.get(cid, Decimal(0)) for cid in ids)
+    return lhs == rhs
+
+
+def _evaluate_implies_nonzero(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) != 2:
+        return True
+    antecedent_id, consequent_id = ids
+    antecedent = casilla_values.get(antecedent_id, Decimal(0))
+    if antecedent <= Decimal(0):
+        return True
+    consequent = casilla_values.get(consequent_id, Decimal(0))
+    return consequent != Decimal(0)
+
+
+def _evaluate_implies_any_nonzero(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    ids = _predicate_casilla_ids(predicate)
+    if len(ids) < 2:
+        return True
+    antecedent_id, *consequent_ids = ids
+    antecedent = casilla_values.get(antecedent_id, Decimal(0))
+    if antecedent <= Decimal(0):
+        return True
+    return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in consequent_ids)
+
+
+def _evaluate_profile_field_required(
+    predicate: ParsedVerificationPredicate,
+    _casilla_values: Mapping[CasillaId, Decimal],
+    profile: TaxpayerProfile,
+) -> bool:
+    if not _evaluate_applicability_filter(predicate.applicability_filter, profile):
+        return True
+    field_value = getattr(profile, predicate.profile_field, None)
+    return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
+
+
+def _evaluate_roll_forward_balances(
+    predicate: ParsedVerificationPredicate,
+    casilla_values: Mapping[CasillaId, Decimal],
+    _profile: TaxpayerProfile,
+) -> bool:
+    reconciles = _roll_forward_balance_reconciles(_predicate_casilla_ids(predicate), casilla_values)
+    if reconciles is None:
+        return True
+    return reconciles
+
+
+_BLOCKING_PREDICATE_EVALUATORS: Mapping[VerificationPredicateOperator, _BlockingPredicateEvaluator] = MappingProxyType(
+    {
+        VerificationPredicateOperator.ALL_NONZERO: _evaluate_all_nonzero,
+        VerificationPredicateOperator.ANY_NONZERO: _evaluate_any_nonzero,
+        VerificationPredicateOperator.AT_MOST_ONE_POSITIVE: _evaluate_at_most_one_positive,
+        VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE: _evaluate_cap_le_when_positive,
+        VerificationPredicateOperator.EQUALS: _evaluate_equals,
+        VerificationPredicateOperator.IMPLIES_NONZERO: _evaluate_implies_nonzero,
+        VerificationPredicateOperator.IMPLIES_ANY_NONZERO: _evaluate_implies_any_nonzero,
+        VerificationPredicateOperator.PROFILE_FIELD_REQUIRED: _evaluate_profile_field_required,
+        VerificationPredicateOperator.ROLL_FORWARD_BALANCES: _evaluate_roll_forward_balances,
+    }
+)
+
+
 def _evaluate_predicate_expression(
     expression: str,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -289,118 +420,10 @@ def _evaluate_predicate_expression(
     predicate = parse_verification_predicate_expression(expression)
     if predicate is None:
         return True
-    operator = predicate.operator
-
-    if operator is VerificationPredicateOperator.ALL_NONZERO:
-        ids = _predicate_casilla_ids(predicate)
-        return all(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
-
-    if operator is VerificationPredicateOperator.ANY_NONZERO:
-        ids = _predicate_casilla_ids(predicate)
-        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids)
-
-    if operator is VerificationPredicateOperator.AT_MOST_ONE_POSITIVE:
-        ids = _predicate_casilla_ids(predicate)
-        if len(ids) < 2:
-            return True
-        return sum(1 for cid in ids if casilla_values.get(cid, Decimal(0)) > Decimal(0)) <= 1
-
-    if operator is VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE:
-        # cap_le_when_positive(["limited_id", "ceiling_id"]) — when the
-        # ceiling casilla is strictly positive, the limited casilla value
-        # MUST NOT exceed the ceiling, enforcing AEAT cap rules like
-        # Modelo 131 C11 ≤ C10 (and Modelo 130 C15 ≤ C14) "en ningún
-        # caso podrá figurar... un importe superior a la cantidad positiva
-        # consignada".
-        ids = _predicate_casilla_ids(predicate)
-        if len(ids) != 2:
-            return True
-        limited_id, ceiling_id = ids[0], ids[1]
-        ceiling = casilla_values.get(ceiling_id, Decimal(0))
-        if ceiling <= Decimal(0):
-            return True
-        limited = casilla_values.get(limited_id, Decimal(0))
-        return limited <= ceiling
-
-    if operator is VerificationPredicateOperator.EQUALS:
-        # equals(["lhs_id", "rhs_id"]) — binary consistency check. Predicate holds
-        # (returns True, no violation) iff the two named casillas hold the same
-        # value. A malformed arity reads as holding (defensive, same convention as
-        # the other operators); the authoring-time validator in
-        # _validate_surfaces rejects a malformed equals at registry load, so a
-        # bad arity cannot reach here from a validated registry. A missing casilla
-        # reads as Decimal(0) via .get. The violation case (returns False) is
-        # "the two casillas differ" — a projected box that has drifted from its
-        # semantic source (a future mis-edit).
-        ids = _predicate_casilla_ids(predicate)
-        if len(ids) != 2:
-            return True
-        lhs = casilla_values.get(ids[0], Decimal(0))
-        rhs = casilla_values.get(ids[1], Decimal(0))
-        return lhs == rhs
-
-    if operator is VerificationPredicateOperator.IMPLIES_NONZERO:
-        # implies_nonzero(["antecedent_id", "consequent_id"]) — material
-        # implication "antecedent strictly positive → consequent non-zero".
-        # Predicate holds (returns True) when:
-        #   - the expression is malformed (defensive — same shape as
-        #     cap_le_when_positive),
-        #   - the antecedent is <= 0 (implication trivially holds with
-        #     non-positive antecedent — mirrors AEAT phrasing "cuando C01
-        #     sea positivo"),
-        #   - or the consequent is non-zero.
-        # The violation case (returns False) is "antecedent strictly
-        # positive AND consequent == 0". A missing consequent reads as
-        # Decimal(0) via the .get default — same convention as the other
-        # operators.
-        ids = _predicate_casilla_ids(predicate)
-        if len(ids) != 2:
-            return True
-        antecedent_id, consequent_id = ids[0], ids[1]
-        antecedent = casilla_values.get(antecedent_id, Decimal(0))
-        if antecedent <= Decimal(0):
-            return True
-        consequent = casilla_values.get(consequent_id, Decimal(0))
-        return consequent != Decimal(0)
-
-    if operator is VerificationPredicateOperator.IMPLIES_ANY_NONZERO:
-        # implies_any_nonzero(["antecedent_id", "c1_id", ...]) — material
-        # implication "antecedent strictly positive → at least one consequent
-        # non-zero". Predicate holds (returns True) when the expression names
-        # no consequents (defensive), the antecedent is <= 0 (implication
-        # trivially holds), or ANY consequent is non-zero. The violation case
-        # (returns False) is "antecedent strictly positive AND every consequent
-        # == 0" — the M303 silent-under-declaration shape. Missing consequents
-        # read as Decimal(0) via .get, same convention as the other operators.
-        ids = _predicate_casilla_ids(predicate)
-        if len(ids) < 2:
-            return True
-        antecedent = casilla_values.get(ids[0], Decimal(0))
-        if antecedent <= Decimal(0):
-            return True
-        return any(casilla_values.get(cid, Decimal(0)) != Decimal(0) for cid in ids[1:])
-
-    if operator is VerificationPredicateOperator.PROFILE_FIELD_REQUIRED:
-        field_name = predicate.profile_field
-        filter_name = predicate.applicability_filter
-        # Applicability dispatch: filter_name -> profile-predicate function.
-        # An unknown filter raises ValueError (single source of truth in the
-        # dispatch table) rather than silently passing the predicate.
-        if not _evaluate_applicability_filter(filter_name, profile):
-            return True  # rule doesn't apply; predicate trivially holds
-        field_value = getattr(profile, field_name, None)
-        return not (field_value is None or (isinstance(field_value, str) and not field_value.strip()))
-
-    if operator is VerificationPredicateOperator.ROLL_FORWARD_BALANCES:
-        # roll_forward_balances(["closing", "opening", "applied", "base"]) — as a
-        # BLOCKING_RULE the predicate HOLDS (returns True) when the closing
-        # balance reconciles to opening − applied + max(0, −base) within a cent.
-        # A malformed arity reads as holding (defensive, like the other
-        # operators); the authoring validator rejects it at registry load.
-        reconciles = _roll_forward_balance_reconciles(_predicate_casilla_ids(predicate), casilla_values)
-        return True if reconciles is None else reconciles
-
-    return True
+    evaluator = _BLOCKING_PREDICATE_EVALUATORS.get(predicate.operator)
+    if evaluator is None:
+        return True
+    return evaluator(predicate, casilla_values, profile)
 
 
 _M210_UNRESOLVED_RATE_REASONS = frozenset(

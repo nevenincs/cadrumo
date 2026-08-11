@@ -177,7 +177,7 @@ class RedactionStrategy(StrEnum):
             opaque ids, and tokens; the checksum is what makes matching
             one safe.
         SHA256_PREFIX_IF_NIF_IVA: As ``SHA256_PREFIX``, but only when the
-            matched span is a IVA identification number -- an ``ES``-prefixed
+            matched span is an IVA identification number -- an ``ES``-prefixed
             Spanish identity, or another Member State's number matching the
             structure its own prefix claims. The bare Spanish shapes are
             covered by the two strategies above and this one covers the

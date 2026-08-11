@@ -647,7 +647,7 @@ class TestTheTwoDocumentsAreNoLongerIdentical:
 
 
 #: The authored UBL export specimen. It declares UNTDID ``G`` -- free export
-#: item, VAT not charged -- and prints NO country for either party, so as
+#: item, IVA not charged -- and prints NO country for either party, so as
 #: authored it exercises the guard's refusal path and never its sparing. That is
 #: consistent with the sparing having gone unnoticed: nothing in the corpus
 #: reached it.

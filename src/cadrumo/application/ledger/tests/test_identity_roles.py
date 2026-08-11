@@ -45,7 +45,7 @@ _THIRD_VALID_CIF = "B10000016"
 #: why a validating scan walks past it and reaches the unrelated one.
 _SUPPLIER_CIF_FAILING_CHECKSUM = "B17283945"
 
-#: A filer whose own identifier is a French VAT number. Nothing about a Spanish
+#: A filer whose own identifier is a French IVA number. Nothing about a Spanish
 #: filing obligation requires the filer's stored identifier to be Spanish, and
 #: no checksum-asserting exclusion can see this one at all.
 _FOREIGN_OWN_IVA = "FR52422961982"
@@ -228,7 +228,7 @@ def test_the_own_identifier_exclusion_survives_printed_separators() -> None:
 def test_a_foreign_filer_identifier_still_excludes_the_filer_from_candidacy() -> None:
     """Exclusion is identity, not validity.
 
-    A profile whose own identifier is a French VAT number cannot pass the AEAT
+    A profile whose own identifier is a French IVA number cannot pass the AEAT
     control-character algorithm, so an exclusion routed through the checksum
     validator produces an EMPTY exclusion set -- and the identifier printed on
     every invoice this filer holds competes for the counterparty role. Here the

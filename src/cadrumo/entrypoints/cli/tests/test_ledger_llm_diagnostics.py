@@ -228,6 +228,13 @@ def test_llm_diagnostics_empty_is_instructive(_isolated_backend: None) -> None:
 
     codes = {notice["code"] for notice in unwrap_envelope_notices(result.output)}
     assert "ledger.llm_diagnostics.no_data" in codes
+    (notice,) = [
+        notice
+        for notice in unwrap_envelope_notices(result.output)
+        if notice["code"] == "ledger.llm_diagnostics.no_data"
+    ]
+    assert notice.get("action") is None
+    assert notice["context"] == {}
 
 
 def test_llm_diagnostics_rejects_out_of_range_threshold(_isolated_backend: None) -> None:

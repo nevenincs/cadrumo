@@ -1027,6 +1027,32 @@ def _apply_sector_apportionment(
     deducible_binding_ids = _deducible_cuota_binding_ids(revision)
     if not deducible_binding_ids:
         return binding_values
+    by_sector, partitions = _sectorized_deduction_partitions(apportionment, observations)
+    apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
+    for sector_key, partition_observations in partitions.items():
+        percentage, regime = _partition_apportionment(apportionment, by_sector, sector_key)
+        partition_deducible = _apportioned_deducible_cuota(
+            revision,
+            partition_observations,
+            percentage=percentage,
+            regime=regime,
+            deducible_binding_ids=deducible_binding_ids,
+        )
+        for binding_id in deducible_binding_ids:
+            apportioned[binding_id] += partition_deducible[binding_id]
+    return {
+        binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
+        for binding_id, value in binding_values.items()
+    }
+
+
+def _sectorized_deduction_partitions(
+    apportionment: IvaLedgerProrrataApportionment,
+    observations: Sequence[IvaLedgerObservation],
+) -> tuple[
+    dict[str, IvaLedgerSectorApportionment],
+    dict[str | None, list[IvaLedgerObservation]],
+]:
     by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
     if len(by_sector) != len(apportionment.sector_apportionments):
         raise AggregationValidationError(t("sectorized IVA apportionment carries duplicate sector definitions"))
@@ -1052,28 +1078,18 @@ def _apply_sector_apportionment(
         if sector.regime is ProrrataRegisterRegime.ESPECIAL and observation.input_classification is None:
             raise AggregationValidationError(t("sectorized prorrata especial requires explicit input classification"))
         partitions.setdefault(sector_key, []).append(observation)
-    apportioned: dict[BindingId, Decimal] = dict.fromkeys(deducible_binding_ids, Decimal("0"))
-    for sector_key, partition_observations in partitions.items():
-        if sector_key is None:
-            percentage = apportionment.percentage
-            regime = apportionment.regime
-        else:
-            sector = by_sector[sector_key]
-            percentage = sector.percentage
-            regime = sector.regime
-        partition_deducible = _apportioned_deducible_cuota(
-            revision,
-            partition_observations,
-            percentage=percentage,
-            regime=regime,
-            deducible_binding_ids=deducible_binding_ids,
-        )
-        for binding_id in deducible_binding_ids:
-            apportioned[binding_id] += partition_deducible[binding_id]
-    return {
-        binding_id: apportioned[binding_id] if binding_id in deducible_binding_ids else value
-        for binding_id, value in binding_values.items()
-    }
+    return by_sector, partitions
+
+
+def _partition_apportionment(
+    apportionment: IvaLedgerProrrataApportionment,
+    sectors: dict[str, IvaLedgerSectorApportionment],
+    sector_key: str | None,
+) -> tuple[Decimal, ProrrataRegisterRegime]:
+    if sector_key is None:
+        return apportionment.percentage, apportionment.regime
+    sector = sectors[sector_key]
+    return sector.percentage, sector.regime
 
 
 def resolve_iva_differentiated_deduction_contributions(
@@ -1086,11 +1102,28 @@ def resolve_iva_differentiated_deduction_contributions(
     if not apportionment.sector_apportionments:
         return ()
     rows = tuple(observations)
+    _validate_differentiated_observation_identities(rows)
+    by_sector = _validated_differentiated_sectors(apportionment, rows)
+    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
+    return tuple(
+        _differentiated_sector_contribution(revision, rows, sector_id, sector, kind, deducible_binding_ids)
+        for sector_id, sector in by_sector.items()
+        for kind in IvaDeductionFactKind
+        if kind is not IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
+    )
+
+
+def _validate_differentiated_observation_identities(rows: tuple[IvaLedgerObservation, ...]) -> None:
     ledger_ids = tuple(row.ledger_id for row in rows)
     if len(ledger_ids) != len(set(ledger_ids)):
         raise ValueError("differentiated deduction observations contain duplicate ledger identity")
     if any(row.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION for row in rows):
         raise ValueError("investment-goods regularisation is owned only by the bienes-inversion register")
+
+
+def _validated_differentiated_sectors(
+    apportionment: IvaLedgerProrrataApportionment, rows: tuple[IvaLedgerObservation, ...]
+) -> dict[str, IvaLedgerSectorApportionment]:
     by_sector = {item.sector_id: item for item in apportionment.sector_apportionments}
     if len(by_sector) != len(apportionment.sector_apportionments):
         raise ValueError("differentiated deduction apportionment carries duplicate sectors")
@@ -1106,32 +1139,32 @@ def resolve_iva_differentiated_deduction_contributions(
             raise ValueError(f"differentiated deduction sector {sector.sector_id!r} is inactive")
         if sector.regime is ProrrataRegisterRegime.ESPECIAL and row.input_classification is None:
             raise ValueError("common-use classification must be explicit under differentiated prorrata especial")
-    deducible_binding_ids = _deducible_cuota_binding_ids(revision)
-    contributions: list[IvaDifferentiatedDeductionContribution] = []
-    for sector_id, sector in by_sector.items():
-        for kind in IvaDeductionFactKind:
-            if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
-                continue
-            selected = tuple(
-                row for row in rows if row.prorrata_sector_id == sector_id and row.deduction_fact_kind is kind
-            )
-            apportioned = _apportioned_deducible_cuota(
-                revision,
-                selected,
-                percentage=sector.percentage,
-                regime=sector.regime,
-                deducible_binding_ids=deducible_binding_ids,
-            )
-            contributions.append(
-                IvaDifferentiatedDeductionContribution(
-                    sector_id=sector_id,
-                    deduction_fact_kind=kind,
-                    source_ledger_ids=tuple(row.ledger_id for row in selected),
-                    base_amount=sum((row.base_amount for row in selected), Decimal("0")),
-                    deducible_iva_amount=sum(apportioned.values(), Decimal("0")),
-                )
-            )
-    return tuple(contributions)
+    return by_sector
+
+
+def _differentiated_sector_contribution(
+    revision: ModeloRevision,
+    rows: tuple[IvaLedgerObservation, ...],
+    sector_id: str,
+    sector: IvaLedgerSectorApportionment,
+    kind: IvaDeductionFactKind,
+    deducible_binding_ids: frozenset[str],
+) -> IvaDifferentiatedDeductionContribution:
+    selected = tuple(row for row in rows if row.prorrata_sector_id == sector_id and row.deduction_fact_kind is kind)
+    apportioned = _apportioned_deducible_cuota(
+        revision,
+        selected,
+        percentage=sector.percentage,
+        regime=sector.regime,
+        deducible_binding_ids=deducible_binding_ids,
+    )
+    return IvaDifferentiatedDeductionContribution(
+        sector_id=sector_id,
+        deduction_fact_kind=kind,
+        source_ledger_ids=tuple(row.ledger_id for row in selected),
+        base_amount=sum((row.base_amount for row in selected), Decimal("0")),
+        deducible_iva_amount=sum(apportioned.values(), Decimal("0")),
+    )
 
 
 def _active_prorrata_apportionment(
@@ -2031,7 +2064,7 @@ def _validate_intracom_export_counterparty(
       ``EUMemberState``.
 
     The two rules read DIFFERENT facts, deliberately. Ley 37/1992 art. 25
-    exempts on the acquirer holding a IVA identification assigned by another
+    exempts on the acquirer holding an IVA identification assigned by another
     Member State and says nothing about where it has its sede, so the
     intra-community rule reads identification and establishment does not enter
     it at all. The export rule is the one genuinely about place -- an export

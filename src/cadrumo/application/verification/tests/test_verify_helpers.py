@@ -80,6 +80,7 @@ def test_discrepancy_cause_has_one_registry_owner_and_no_application_facade() ->
     assert not hasattr(verification_package, "DiscrepancyCause")
     assert DiscrepancyCause.CORRECTNESS_DIVERGENCE.value == "correctness_divergence"
 
+
 _DEFAULT_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("01", surface="_DEFAULT_DISCREPANCY_CASILLA")
 _SECOND_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("02", surface="_SECOND_DISCREPANCY_CASILLA")
 _THIRD_DISCREPANCY_CASILLA: CasillaId = validated_casilla_id("03", surface="_THIRD_DISCREPANCY_CASILLA")

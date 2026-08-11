@@ -876,32 +876,41 @@ def validate_investment_asset_reciprocity(
     applicable_asset_ids = {record.identifier for record in register.records if record.acquisition_year == filing_year}
     seen_assets: set[str] = set()
     for observation in observations:
-        kind = observation.deduction_fact_kind
-        asset_id = observation.investment_asset_id
-        if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
-            raise BienInversionValidationError("regularisation is not a ledger acquisition observation")
-        if kind is None or not kind.is_investment_acquisition:
-            if asset_id is not None:
-                raise BienInversionValidationError("non-investment observation cannot carry investment_asset_id")
-            continue
-        if asset_id is None or asset_id not in records_by_id:
-            raise BienInversionValidationError("investment observation has no reciprocal bienes-inversion record")
-        if asset_id in seen_assets:
-            raise BienInversionValidationError("multiple investment observations reference one bienes-inversion asset")
-        record = records_by_id[asset_id]
-        if record.acquisition_ledger_id != observation.ledger_id:
-            raise BienInversionValidationError("investment asset acquisition_ledger_id is not reciprocal")
-        if record.acquisition_year != filing_year or observation.transaction_date.year != filing_year:
-            raise BienInversionValidationError("investment asset and observation must share the filing year")
-        if record.prorrata_sector_id != observation.prorrata_sector_id:
-            raise BienInversionValidationError("investment asset and observation must share the prorrata sector")
-        seen_assets.add(asset_id)
+        _validate_investment_observation(observation, records_by_id, filing_year, seen_assets)
     missing_observations = sorted(applicable_asset_ids - seen_assets)
     if missing_observations:
         raise BienInversionValidationError(
             "bienes-inversion assets acquired in the filing year have no reciprocal ledger observation: "
             + ", ".join(missing_observations)
         )
+
+
+def _validate_investment_observation(
+    observation: _InvestmentAssetLink,
+    records_by_id: Mapping[str, BienInversionIvaRecord],
+    filing_year: int,
+    seen_assets: set[str],
+) -> None:
+    kind = observation.deduction_fact_kind
+    asset_id = observation.investment_asset_id
+    if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
+        raise BienInversionValidationError("regularisation is not a ledger acquisition observation")
+    if kind is None or not kind.is_investment_acquisition:
+        if asset_id is not None:
+            raise BienInversionValidationError("non-investment observation cannot carry investment_asset_id")
+        return
+    if asset_id is None or asset_id not in records_by_id:
+        raise BienInversionValidationError("investment observation has no reciprocal bienes-inversion record")
+    if asset_id in seen_assets:
+        raise BienInversionValidationError("multiple investment observations reference one bienes-inversion asset")
+    record = records_by_id[asset_id]
+    if record.acquisition_ledger_id != observation.ledger_id:
+        raise BienInversionValidationError("investment asset acquisition_ledger_id is not reciprocal")
+    if record.acquisition_year != filing_year or observation.transaction_date.year != filing_year:
+        raise BienInversionValidationError("investment asset and observation must share the filing year")
+    if record.prorrata_sector_id != observation.prorrata_sector_id:
+        raise BienInversionValidationError("investment asset and observation must share the prorrata sector")
+    seen_assets.add(asset_id)
 
 
 __all__ = [

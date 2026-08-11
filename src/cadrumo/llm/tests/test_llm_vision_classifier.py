@@ -19,8 +19,14 @@ from ...application.ledger.tests._llm_vision_evidence_support import (
 from ...application.ledger.tests._llm_vision_evidence_support import (
     profile as profile,
 )
-from ...application.provisioning import ProvisioningPreconditionCondition
-from ...core import ImageMediaType
+from ...application.provisioning import (
+    AcceleratorReading,
+    HardwareProfile,
+    ProvisioningPreconditionCondition,
+    SystemMemoryReading,
+    probe_hardware_profile,
+)
+from ...core import AcceleratorKind, ImageMediaType, model_candidate
 from ...core.config import load_settings
 from ...domain.categories import SpendingCategory
 from ...domain.iva import IvaCategory
@@ -30,12 +36,30 @@ from ...domain.transactions import (
     prompt_spec_with_saturation_fields,
 )
 from ...tests.secure_sql import TestRuntimeProfile
+from .. import LLMClient
 from .._models import MultimodalImageInput
 from .._vision_classifier import LocalVisionLLMClassifier
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 __all__ = ["profile"]
+
+
+def _admissible_measured_hardware_profile(model: str) -> HardwareProfile:
+    """Build an injected measurement that admits this catalogued model.
+
+    The production contention authority still reads the runtime's resident set
+    and makes the admission decision.  This only keeps the test independent of
+    the host GPU's transient state, as the hardware-contract suite does.
+    """
+    candidate = model_candidate(model)
+    assert candidate is not None
+    assert candidate.memory_requirement_bytes is not None
+    required = candidate.memory_requirement_bytes + load_settings().cadrumo_llm_contention_safety_margin_bytes
+    return probe_hardware_profile(
+        memory=SystemMemoryReading(total_bytes=required, free_bytes=required),
+        accelerator=AcceleratorReading(kind=AcceleratorKind.NONE),
+    )
 
 
 def test_vision_classifier_classifies_from_images(profile: TestRuntimeProfile) -> None:
@@ -188,17 +212,28 @@ def test_vision_model_override_selects_the_named_model(profile: TestRuntimeProfi
     )
 
     def _call() -> tuple[LLMClassificationResponse, str]:
+        settings = load_settings()
+        classifier = LocalVisionLLMClassifier(
+            spec=prompt_spec_with_saturation_fields(),
+            model="qwen2.5vl:7b",
+            client=LLMClient(
+                settings=settings,
+                hardware_profile=_admissible_measured_hardware_profile("qwen2.5vl:7b"),
+            ),
+            settings=settings,
+        )
         return _classify_with_evidence(
             _transaction("ev-1"),
             evidence,
             text_classifier=None,
             spec=prompt_spec_with_saturation_fields(),
-            vision_classifier=None,
+            vision_classifier=classifier,
             vision_model="qwen2.5vl:7b",
-            settings=load_settings(),
+            settings=settings,
         )
 
     observed, (_response, provenance) = _run_against_loopback_ollama(classification_json, _call)
     assert provenance == "llm:local-vision:qwen2.5vl:7b"
     body = _json_object(observed["body"])
     assert body["model"] == "qwen2.5vl:7b"
+    assert observed["runtime_requests"] == [{"method": "GET", "path": "/api/ps"}]

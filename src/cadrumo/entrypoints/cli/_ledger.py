@@ -866,8 +866,7 @@ register_lifecycle_commands(app)
         "cli.ledger.link.help",
         default=(
             "Bind a ledger transaction to a reconciliation-catalogue invoice in one "
-            "atomic call. Refuses cross-bucket links. To attach purchase-invoice "
-            "evidence, use 'aeat app ledger attach'. Local-only; never contacts AEAT."
+            "atomic call. Refuses cross-bucket links. Local-only; never contacts AEAT."
         ),
     ),
 )

@@ -227,7 +227,7 @@ def test_zugferd_structured_record_parses_to_its_exact_printed_values() -> None:
     correctly", and only the second is a gate.
 
     The tax identifier is pinned deliberately. ZUGFeRD is a Franco-German
-    format whose supplier block carries a Steuernummer alongside the VAT id,
+    format whose supplier block carries a Steuernummer alongside the IVA id,
     and selecting the wrong one accounted for 22 of the 34 wrong fields
     measured corpus-wide with ZERO missing fields -- the parser was finding
     every field and choosing the wrong one, which is a selection bug this
@@ -237,7 +237,7 @@ def test_zugferd_structured_record_parses_to_its_exact_printed_values() -> None:
 
     assert parsed.shape is DocumentShape.XML_CII
     assert parsed.invoice_number == "471102"
-    assert parsed.supplier_tax_id == "DE123456789", "the VAT number, never the Steuernummer"
+    assert parsed.supplier_tax_id == "DE123456789", "the IVA number, never the Steuernummer"
     assert parsed.currency == "EUR"
     assert parsed.taxable_base == Decimal("473.00")
     assert parsed.iva_amount == Decimal("56.87")
@@ -312,9 +312,9 @@ def test_the_cii_specimen_reads_to_its_own_printed_values() -> None:
     The parties are asserted individually rather than as a pair. A CII party
     subtree carries a ``SpecifiedTaxRegistration`` whose id opens with the two
     letters of a country, so a reader searching the subtree for a short code
-    finds the VAT prefix and returns something that looks right -- and here
+    finds the IVA prefix and returns something that looks right -- and here
     ``CHE116281277`` and ``CH`` agree, which is exactly why the postal code is
-    pinned beside the country: a VAT-prefix read recovers no postal code.
+    pinned beside the country: an IVA-prefix read recovers no postal code.
     """
     parsed = parse_einvoice_document(_read("en16931_cii_export_third_country_invoice.xml"))
 

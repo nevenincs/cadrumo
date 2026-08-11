@@ -1288,9 +1288,7 @@ def _raise_if_invoice_iva_would_be_silent(
         invoice_repository=invoice_repository,
     )
     if screened.deduction_authority_missing:
-        missing_invoice_ids = tuple(
-            sorted(invoice.invoice_id for invoice in screened.deduction_authority_missing)
-        )
+        missing_invoice_ids = tuple(sorted(invoice.invoice_id for invoice in screened.deduction_authority_missing))
         raise AggregationValidationError(
             t("errors.error.error_modelo_aggregation_binding"),
             context={
@@ -1426,7 +1424,7 @@ def _counterparty_supports_the_declared_category(invoice: Invoice) -> bool:
 
     The same coupling the bank-transaction path gates, and reading the same two
     facts it reads -- which are NOT one fact. Ley 37/1992 art. 25 exempts an
-    intra-community supply on the acquirer holding a IVA IDENTIFICATION assigned
+    intra-community supply on the acquirer holding an IVA IDENTIFICATION assigned
     by another Member State, so that arm reads
     ``counterparty_identification_state``. The export arm is the one genuinely
     about place -- an export leaves the Union -- so it keeps reading the
@@ -1607,18 +1605,12 @@ def _invoice_line_iva_observation(
             base_amount=line.subtotal,
             iva_amount=line.iva_amount,
             recargo_amount=recargo_amount,
-            deduction_fact_kind=(
-                deduction_authority.deduction_fact_kind if deduction_authority is not None else None
-            ),
+            deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
             deduction_provenance=(
                 deduction_authority.deduction_provenance if deduction_authority is not None else None
             ),
-            investment_asset_id=(
-                deduction_authority.investment_asset_id if deduction_authority is not None else None
-            ),
-            rectifies_ledger_id=(
-                deduction_authority.rectifies_ledger_id if deduction_authority is not None else None
-            ),
+            investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
+            rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
         )
     category = invoice.iva_category
     declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
@@ -1663,18 +1655,12 @@ def _invoice_line_iva_observation(
             base_amount=line.subtotal,
             iva_amount=line.iva_amount,
             recargo_amount=recargo_amount,
-            deduction_fact_kind=(
-                deduction_authority.deduction_fact_kind if deduction_authority is not None else None
-            ),
+            deduction_fact_kind=(deduction_authority.deduction_fact_kind if deduction_authority is not None else None),
             deduction_provenance=(
                 deduction_authority.deduction_provenance if deduction_authority is not None else None
             ),
-            investment_asset_id=(
-                deduction_authority.investment_asset_id if deduction_authority is not None else None
-            ),
-            rectifies_ledger_id=(
-                deduction_authority.rectifies_ledger_id if deduction_authority is not None else None
-            ),
+            investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
+            rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
         )
     if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # No declared treatment at all: the rate slot is the only signal there

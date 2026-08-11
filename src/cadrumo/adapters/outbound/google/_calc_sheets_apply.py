@@ -39,6 +39,7 @@ into the local store, the registry, or an AEAT submission.
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Final
 
@@ -1088,6 +1089,14 @@ def _ensure_plan_tabs_and_grid(
 _TAB_TITLES: frozenset[str] = frozenset(tab.value for tab in TabName)
 
 
+@dataclass(frozen=True, slots=True)
+class _OccupiedAddressRange:
+    """One managed tab and its pre-resize A1 range, kept positionally aligned."""
+
+    tab: TabName
+    address: str
+
+
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets JSON response body.
 def _grid_by_tab(spreadsheet: Mapping[str, Any]) -> dict[str, tuple[int, int]]:
     """Map each existing tab title to its ``(rowCount, columnCount)`` grid."""
@@ -1119,11 +1128,7 @@ def _occupied_addresses(
     than a convenient one: the resize step only ever grows a tab, so no
     surviving value can sit outside the grid as it stood before this run.
     """
-    ranges = [
-        f"'{tab}'!A1:{SheetCellAddress.at(TabName(tab), rows, columns).a1}"
-        for tab, (rows, columns) in sorted(grid_by_tab.items())
-        if rows > 0 and columns > 0
-    ]
+    ranges = _occupied_address_ranges(grid_by_tab)
     if not ranges:
         return frozenset()
     response = execute_request(
@@ -1131,22 +1136,47 @@ def _occupied_addresses(
         .values()
         .batchGet(
             spreadsheetId=spreadsheet_id,
-            ranges=ranges,
+            ranges=[item.address for item in ranges],
             valueRenderOption="UNFORMATTED_VALUE",
         ),
         action="sheets.spreadsheets.values.batchGet",
     )
+    return _occupied_addresses_from_response(ranges, response)
+
+
+def _occupied_address_ranges(
+    grid_by_tab: Mapping[str, tuple[int, int]],
+) -> tuple[_OccupiedAddressRange, ...]:
+    """Build sorted managed-tab read ranges, omitting nonpositive dimensions."""
+    return tuple(
+        _OccupiedAddressRange(
+            tab=TabName(tab),
+            address=f"'{tab}'!A1:{SheetCellAddress.at(TabName(tab), rows, columns).a1}",
+        )
+        for tab, (rows, columns) in sorted(grid_by_tab.items())
+        if tab in _TAB_TITLES and rows > 0 and columns > 0
+    )
+
+
+def _occupied_addresses_from_response(
+    ranges: tuple[_OccupiedAddressRange, ...],
+    response: Mapping[str, Any],
+) -> frozenset[str]:
+    """Combine aligned response blocks, truncating missing and extra ranges safely."""
     occupied: set[str] = set()
-    tabs = [tab for tab, (rows, columns) in sorted(grid_by_tab.items()) if rows > 0 and columns > 0]
-    for cursor, value_range in enumerate(response.get("valueRanges", []) or []):
-        if cursor >= len(tabs):
-            break
-        tab = TabName(tabs[cursor])
-        for row_offset, row_values in enumerate(value_range.get("values", []) or []):
-            for column_offset, cell in enumerate(row_values):
-                if cell == "" or cell is None:
-                    continue
-                occupied.add(SheetCellAddress.at(tab, row_offset + 1, column_offset + 1).qualified())
+    for address_range, value_range in zip(ranges, response.get("valueRanges", []) or [], strict=False):
+        occupied.update(_occupied_addresses_in_range(address_range.tab, value_range))
+    return frozenset(occupied)
+
+
+def _occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -> frozenset[str]:
+    """Return non-empty cells from one A1-anchored managed-tab response block."""
+    occupied: set[str] = set()
+    for row_offset, row_values in enumerate(value_range.get("values", []) or []):
+        for column_offset, cell in enumerate(row_values):
+            if cell == "" or cell is None:
+                continue
+            occupied.add(SheetCellAddress.at(tab, row_offset + 1, column_offset + 1).qualified())
     return frozenset(occupied)
 
 

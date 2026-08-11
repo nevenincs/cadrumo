@@ -207,7 +207,7 @@ def test_the_country_rung_stops_the_ladder_before_a_territory_outside_liva(
 def test_a_registration_disagreeing_with_the_address_settles_neither(
     repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
-    """A German VAT number on a page addressed to Las Palmas settles NOTHING.
+    """A German IVA number on a page addressed to Las Palmas settles NOTHING.
 
     The same page this file once used to prove the identifier rung outranked the
     others. That ordering is retired, and the retirement inverts the verdict
@@ -240,7 +240,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
 def test_a_greek_iva_prefix_resolves_through_its_iso_code(
     repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
-    """``EL`` is Greece's VAT prefix while ``GR`` is its ISO code, and the catalogues are ISO-keyed.
+    """``EL`` is Greece's IVA prefix while ``GR`` is its ISO code, and the catalogues are ISO-keyed.
 
     Left untranslated, a Greek party matches no Member State and is placed in a
     third country -- an intra-community acquisition reclassified as an import.
@@ -288,7 +288,7 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
 def test_a_prefix_on_arbitrary_text_is_not_a_country(
     repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
-    """Two leading letters are not a VAT number, so the body must match its own State's shape."""
+    """Two leading letters are not an IVA number, so the body must match its own State's shape."""
     resolved = _resolve(repository, tax_identifier="FRANCISCO")
 
     assert resolved.scope is None
@@ -307,7 +307,7 @@ def test_the_bare_domestic_invoice_exhausts_to_nothing(
     invisible.
 
     **Both spellings are driven, and the prefixed one is the composed claim the
-    ruling actually makes.** A Spanish VAT prefix beside a Spanish postal code is
+    ruling actually makes.** A Spanish IVA prefix beside a Spanish postal code is
     the shape a fiscal representative's address takes for an entidad no
     residente: registration in Spain, establishment elsewhere. Each half is
     refused at its own rung, but "refused at the rung" and "refused by the

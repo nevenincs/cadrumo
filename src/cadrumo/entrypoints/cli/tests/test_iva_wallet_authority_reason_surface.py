@@ -29,6 +29,7 @@ import pytest
 
 from ....core import Period
 from ....domain.iva_compensation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
+from .._app_live import _iva_wallet_decision_reason_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -78,3 +79,9 @@ def test_a_genuinely_absent_prior_record_still_reads_as_nothing_available() -> N
 def test_the_two_situations_do_not_carry_the_same_sentence() -> None:
     """The point of the row is that the two can be told apart at all."""
     assert _reason(found_but_unusable=True) != _reason(found_but_unusable=False)
+
+
+@pytest.mark.parametrize("reason", tuple(IvaCompensationDecisionReason))
+def test_every_wallet_decision_reason_has_a_live_localized_text(reason: IvaCompensationDecisionReason) -> None:
+    """Every closed reason reaches the live surface's locale boundary."""
+    assert _iva_wallet_decision_reason_text(reason)

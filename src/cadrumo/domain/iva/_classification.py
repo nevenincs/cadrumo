@@ -168,7 +168,7 @@ class CustomerTaxStatus(StrEnum):
 
     Attributes:
         B2B_IVA_REGISTERED: Business customer with a valid IVA-ID.
-        B2B_NOT_REGISTERED: Business customer without a IVA-ID.
+        B2B_NOT_REGISTERED: Business customer without an IVA-ID.
         B2C_CONSUMER: Private individual.
         PUBLIC_ADMINISTRATION: Public-sector body.
         UNKNOWN: Counterparty status unresolved.
@@ -545,7 +545,7 @@ def _r05_domestic_at_rate(criteria: IvaInvoiceClassificationCriteria) -> bool:
 
 
 def _identified_in_another_member_state(state: EUMemberState | None) -> bool:
-    """Whether a party holds a IVA identification assigned by a State other than Spain.
+    """Whether a party holds an IVA identification assigned by a State other than Spain.
 
     The literal condition art. 25.Uno places on the acquirer — "que disponga de un
     número de identificación a efectos del Impuesto sobre el Valor Añadido
@@ -565,7 +565,7 @@ def _r10_ic_supply_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match an intra-community B2B goods supply out of the peninsula (Art. 25 exempt).
 
     **The acquirer's condition is its REGISTRATION, not its place.** Art. 25.Uno
-    exempts on the acquirer holding a IVA identification assigned by another
+    exempts on the acquirer holding an IVA identification assigned by another
     Member State, and says nothing about where it has its sede — which arts. 69-70
     govern and which this row therefore does not read of the customer. Keyed on
     establishment instead, this row silently dropped every acquirer buying under a

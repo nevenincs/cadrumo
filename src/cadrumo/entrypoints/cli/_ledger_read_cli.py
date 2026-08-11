@@ -253,29 +253,14 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
             )
         notices: list[Notice] = []
         if not report.has_data:
-            notices.append(
-                Notice(
-                    severity=NoticeSeverity.INFO,
-                    code="ledger.llm_diagnostics.no_data",
-                    message=tr(
-                        "cli.ledger.llm_diagnostics.no_data_message",
-                        default=(
-                            "No LLM usage or classification-confidence metrics recorded yet. "
-                            "Run an LLM-assisted classification to populate them."
-                        ),
-                    ),
-                    context={"actionability": "provider_and_transaction_selection_required"},
-                ),
+            notice = Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.llm_diagnostics.no_data",
+                message=tr("cli.ledger.llm_diagnostics.no_data_message"),
+                context={},
             )
-            lines.append(
-                tr(
-                    "cli.ledger.llm_diagnostics.no_data_message",
-                    default=(
-                        "No LLM usage or classification-confidence metrics recorded yet. "
-                        "Run an LLM-assisted classification to populate them."
-                    ),
-                ),
-            )
+            notices.append(notice)
+            lines.append(notice.message)
         _emit_envelope(ctx, command="ledger.llm_diagnostics", result=result, lines=lines, notices=notices)
 
 
@@ -410,8 +395,6 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
                 ),
             ),
         )
-    else:
-        context["actionability"] = "multiple_link_pairs_require_operator_selection"
     return [
         Notice(
             severity=NoticeSeverity.WARNING,
@@ -419,10 +402,6 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
             message=tr(
                 "cli.ledger.check.link_inconsistency_notice",
                 link_count=len(rows),
-                default=(
-                    f"{len(rows)} invoice link(s) disagree between the invoice and transaction "
-                    f"catalogues; the affected invoice association cannot be trusted."
-                ),
             ),
             action=action,
             context=context,
@@ -660,11 +639,6 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
         if report.checked_transaction_count == 0 and not report.issues:
             message = tr(
                 "cli.ledger.preflight.empty_ledger_advisory",
-                default=(
-                    "No active ledger transactions were checked for this period. If activity occurred, add or "
-                    "import ledger rows before calculating; if there was genuinely no activity, the empty ledger "
-                    "can support a zero-activity local filing."
-                ),
             )
             notices.append(
                 Notice(
@@ -674,7 +648,6 @@ def _register_ledger_preflight_command(app: typer.Typer) -> None:
                     context={
                         "period": canonical.registry_token,
                         "year": str(canonical.filing_year),
-                        "actionability": "activity_assessment_requires_operator_input",
                     },
                 ),
             )
@@ -1217,14 +1190,8 @@ def _latest_llm_rejection_notice(
         code="ledger.view.llm_suggestion_rejected",
         message=tr(
             "cli.ledger.view.llm_rejected_notice",
-            default=(
-                "The most recent LLM suggestion for this transaction was rejected; classify it manually when ready."
-            ),
         ),
-        context={
-            **context,
-            "actionability": "manual_classification_requires_category_selection",
-        },
+        context=context,
     )
 
 

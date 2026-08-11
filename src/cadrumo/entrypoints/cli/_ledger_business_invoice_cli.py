@@ -220,18 +220,11 @@ def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
         Notice(
             severity=NoticeSeverity.WARNING,
             code="ledger.invoice.simplificada_tax_id_expected",
-            message=(
-                "This factura simplificada names no counterparty NIF. For a domestic "
-                "operation issued by a taxpayer established in the TAI, RD 1619/2012 "
-                "art. 6.1.d case 3.o expects the destinatario's NIF. The invoice was "
-                "recorded; if the customer identified themselves, their NIF must be "
-                "checked against the invoice before the record can be corrected."
-            ),
+            message=tr("cli.app.ledger.invoice.simplificada_tax_id_expected_message"),
             context={
                 "invoice_id": invoice.invoice_id,
                 "invoice_class": invoice.invoice_class.value,
                 "legal_ref": "rd-1619-2012:art-6.1.d",
-                "actionability": "counterparty_tax_id_requires_operator_verification",
             },
         ),
     ]
@@ -471,8 +464,8 @@ def invoice_add(
 
     The slim ``invoice add`` record cannot be linked to a transaction; this
     verb mints the rich :class:`Invoice` whose
-    content-addressed ``invoice_id`` is the value
-    ``aeat app ledger link --invoice-id`` resolves. Supplying an intra-community
+    content-addressed ``invoice_id`` is the value the canonical ledger-link
+    action resolves. Supplying an intra-community
     ``--operation-type`` stamps the invoice so the Modelo 349 recapitulative
     calculation can read it. Supplying ``--retention-amount`` (optionally with
     ``--retention-rate``) records a RIRPF art. 95 withholding, which
@@ -759,7 +752,6 @@ def invoice_import(
                 message=tr(
                     "cli.app.ledger.invoice.import_column_role_not_applied",
                     detail=reason,
-                    default=f"a proposed column role was not applied: {reason}",
                 ),
                 context={"detail": reason, "index": str(index)},
             ),
@@ -913,8 +905,8 @@ def invoice_view(
 ) -> None:
     """Show one rich catalogue invoice, resolving a full id or unambiguous prefix.
 
-    The catalogue invoice carries a long content-addressed id that
-    ``aeat app ledger link --invoice-id`` resolves; this verb lets an operator
+    The catalogue invoice carries a long content-addressed id that the
+    canonical ledger-link action resolves; this verb lets an operator
     confirm that id and inspect the invoice's linked transactions before
     linking or removing it. A not-found id, or a prefix matching more than one
     invoice, is a typed refusal naming the candidates — never a silent miss.

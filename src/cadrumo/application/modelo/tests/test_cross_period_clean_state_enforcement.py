@@ -227,7 +227,7 @@ def _seed_verified_revision(
         updated_at=_CLOCK,
         verified_at=_CLOCK,
         verified_by="operator-test",
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))
@@ -293,7 +293,7 @@ def _seed_draft_revision(
         casilla_values=resolved_casilla_values,
         created_at=_CLOCK,
         updated_at=_CLOCK,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     repo = CalculationRevisionCatalogueRepository()
     repo.save(upsert_calculation_revision(repo.load(), revision))

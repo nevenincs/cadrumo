@@ -1,7 +1,7 @@
-"""Nothing derives a VAT identification from a country of establishment.
+"""Nothing derives an IVA identification from a country of establishment.
 
 The two facts answer different questions -- where a party IS, and which Member
-State VAT-identifies it -- and they diverge in real trade. Ley 37/1992 art. 25
+State IVA-identifies it -- and they diverge in real trade. Ley 37/1992 art. 25
 exempts on the second. Substituting the first for it lands in money in both
 directions, so this module keeps the substitution out rather than trusting each
 consumer to remember which fact it holds.

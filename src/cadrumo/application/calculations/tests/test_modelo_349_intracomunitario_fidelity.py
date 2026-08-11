@@ -2,7 +2,7 @@
 
 Modelo 349 (Declaración recapitulativa de operaciones intracomunitarias —
 Orden HAC/174/2020) is a periodic recapitulative statement for intra-EU B2B
-operations: suppliers of goods or services to VAT-registered counterparties
+operations: suppliers of goods or services to IVA-registered counterparties
 in other EU member states declare each counterparty's NIF, country code,
 operation code, and base imponible (Orden EHA/769/2010 art. 1, Orden
 HAC/174/2020 art. 1, Ley 58/2003 art. 93). The period can be monthly
@@ -15,7 +15,7 @@ The casilla schema (``2020-y-siguientes`` revision) includes:
 - ``decl.numero-rectificaciones`` — number of operators with rectifications
 - ``decl.importe-rectificaciones`` — importe of rectifications
 - ``op.codigo-pais`` — EU country code of the counterparty
-- ``op.nif-comunitario`` — VAT NIF of the EU counterparty
+- ``op.nif-comunitario`` — IVA NIF of the EU counterparty
 - ``op.clave-operacion`` — operation code (E=entregas, S=servicios,
   A=adquisiciones, etc.)
 - ``op.base-imponible`` — base imponible / importe of the intracomunitario

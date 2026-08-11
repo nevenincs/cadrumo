@@ -93,7 +93,7 @@ class MetaExecuteResult(BaseModel):
 _COMMAND_ALIASES: dict[str, str] = {
     "quickfile": (
         "file my taxes do my taxes file my return file quarterly taxes "
-        "submit quarterly IVA IVA tax return declaration "
+        "submit quarterly IVA tax return declaration "
         "presentar la declaración trimestral autoliquidación de impuestos "
         "one command full filing chain"
     ),

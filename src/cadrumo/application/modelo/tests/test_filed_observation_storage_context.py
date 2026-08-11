@@ -105,7 +105,7 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
         verified_by="operator",
         filed_at=_CAPTURED_AT,
         filed_by="operator",
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
 

@@ -1919,7 +1919,7 @@ cli:
         confirm_invoice_number_help: Sobrescribe el número de factura extraido.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
           el valor extraido).
-        confirm_link_hint_message: Esta factura aún no está vinculada a un movimiento
+        confirm_link_hint_message: La factura se registró sin un movimiento coincidente
           del libro.
         confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
           Obligatoria cuando el documento declara una entrega intracomunitaria: la
@@ -1989,8 +1989,8 @@ cli:
           envía su contenido a un tercero. Añade --acknowledge-off-host para confirmarlo,
           solo para esta lectura.
         extract_reference_required: Indique exactamente uno de --evidence-id o --attachment-id.
-        extract_review_hint_message: Este es un borrador aproximado; confirme cada
-          campo antes de crear una factura.
+        extract_review_hint_message: Esta extracción es un borrador aproximado y sus
+          campos no están confirmados.
         field_ambiguous: '{field}: varias lecturas compitieron y no se pudo decidir
           entre ({candidates}). Elija una en lugar de aceptar el borrador tal cual.'
         field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece
@@ -2137,6 +2137,9 @@ cli:
           el pagador (0,15 para el 15% general, o 0,07 durante el periodo de inicio
           de actividad). Requiere --retention-amount; una fracción sola se rechaza.
         series_help: Serie de numeración de la factura, cuando el emisor utiliza una.
+        simplificada_tax_id_expected_message: Esta factura simplificada no contiene
+          el identificador fiscal de la contraparte, aunque el contexto legal registrado
+          lo exige.
         update_help: Actualiza los datos de una factura de negocio
         view_help: Muestra una factura del catálogo de conciliación por identificador
           o prefijo no ambiguo.
@@ -4585,11 +4588,9 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
-      finalized_revision_stale: Justificante guardado en el movimiento del libro,
+      finalized_revision_stale: El justificante se guardó en el movimiento del libro,
         pero el Modelo %{modelo} %{filing_year} %{period} se verificó antes de que
-        existiera y conserva la evidencia agrupada entonces. Esta declaración no lo
-        recogerá; recalcular no lo cambia. Vincula las facturas antes de ejecutar
-        work calculate.
+        existiera y conserva su conjunto de justificantes anterior.
       help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
         un id de justificante de factura de compra con 'aeat app ledger evidence add
         PATH'.
@@ -4683,13 +4684,12 @@ cli:
       llm_confidence_label: confianza
       llm_exclusive: --llm no puede combinarse con --classification ni --file; la
         ruta manual es la anulación explícita del operador.
-      llm_failed: 'La clasificación por LLM falló: {reason}'
       llm_help: Pide al lector local on-host que clasifique la transacción; vista
         previa por defecto, persiste con --apply.
       llm_reason_label: motivo
       llm_rejected_label: rechazada
       llm_rejected_message: Sugerencia del modelo rechazada y registrada. La transacción
-        no cambia; clasifícala manualmente cuando quieras.
+        no cambia.
       llm_review_hint: Revisa la sugerencia anterior. Vuelve a ejecutar con --apply
         para aceptarla, con --classification para anularla manualmente, o no hagas
         nada para rechazarla.
@@ -4737,8 +4737,7 @@ cli:
         --llm con un proveedor.
       split_recommended_label: división recomendada
       split_recommended_message: La factura adjunta parece contener varias líneas
-        de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
-        hijos de base e IVA declarables de forma independiente.
+        de tipo o categoría.
       system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED.'
@@ -4748,9 +4747,6 @@ cli:
         configurado.
     counterparty:
       errors:
-        confirmation_conflict: Ya hay confirmada una respuesta distinta para '{identifier}',
-          de modo que confirmar esta descartaría la respuesta anterior. Retírala primero
-          con 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Para confirmar ''{identifier}'' hace falta al menos una
           respuesta: ''--scope'' para dónde está establecida la contraparte, ''--identification-state''
           para qué Estado miembro la identifica a efectos de IVA, o ambas. Son hechos
@@ -4777,11 +4773,6 @@ cli:
       id_help: Identificador de transacción del libro mayor.
       note_help: Nota opcional.
       reference_help: Referencia del enlace al documento.
-      refused: 'No se puede descargar el documento de %{source} para %{reference}%{scope_hint}:
-        la evidencia debe contener los bytes cifrados del documento, y un enlace nunca
-        se guarda por sí solo. Descarga el documento y adjúntalo con ''aeat app ledger
-        attach --attachment-id ...'', o concede el permiso de Google requerido e inténtalo
-        de nuevo.'
       source_help: 'Origen del enlace: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
@@ -4926,17 +4917,13 @@ cli:
       errors:
         cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
           activo.
-        invoice_not_found: Este id no existe en el catálogo de facturas. Crea antes
-          la factura con 'aeat app ledger invoice add' y después vincúlala; el id
-          que muestra ese verbo es el que debes indicar aquí.
-      help: Vincula un movimiento contable con una factura del catálogo de reconciliación
-        en una única llamada canónica. Para adjuntar evidencia de factura de compra,
-        usa 'aeat app ledger attach'. Rechaza vínculos entre buckets. Local; nunca
-        contacta con AEAT.
+        invoice_not_found: No se encontró el id de factura en el catálogo de facturas
+          del perfil activo.
+      help: Vincula una transacción del libro registro con una factura del catálogo
+        de conciliación en una sola operación atómica. Rechaza vínculos entre buckets.
+        Solo local; nunca contacta con la AEAT.
       id_help: Id de transacción del libro (SHA-256 o prefijo inequívoco).
-      invoice_id_help: Id de factura procedente de una factura importada, reconciliada
-        o añadida manualmente, vinculado bidireccionalmente con el movimiento. Todo
-        id de 'aeat app ledger invoice add' se puede vincular aquí.
+      invoice_id_help: Id de factura que se vinculará bidireccionalmente con la transacción.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
@@ -4961,8 +4948,8 @@ cli:
       bad_date: '%{option} debe ser una fecha ISO (AAAA-MM-DD); se recibió %{value}.'
       help: Muestra las métricas existentes de uso, coste y confianza de clasificación
         del LLM.
-      no_data_message: Aún no hay métricas de uso o confianza de clasificación del
-        LLM. Ejecuta una clasificación asistida por LLM para generarlas.
+      no_data_message: Aún no hay métricas registradas de uso del LLM ni de confianza
+        de clasificación.
       since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
         uso.
       threshold_help: Umbral de confianza por debajo del cual una clasificación se
@@ -4979,10 +4966,8 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la fusión de las transacciones hijas
     preflight:
-      empty_ledger_advisory: No se comprobaron transacciones activas del libro para
-        este periodo. Si hubo actividad, añade o importa filas del libro antes de
-        calcular; si realmente no hubo actividad, el libro vacío puede respaldar una
-        presentación local sin actividad.
+      empty_ledger_advisory: No se comprobó ningún movimiento activo del libro para
+        este período.
       help: Informa de los datos contables que faltan (categoría, base imponible,
         importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
         del perfil activo en un período dado. Local; nunca contacta con AEAT.
@@ -5000,9 +4985,8 @@ cli:
           requerido y vuelve a intentarlo.'
       folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
         PDF/imagen.
-      help: Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y
-        guarda cada una como evidencia cifrada (sin vincular a ningún movimiento;
-        vincula con 'aeat app ledger attach' o 'link').
+      help: Obtiene en lote todas las facturas PDF o imagen de una carpeta de Drive
+        y guarda cada una como evidencia cifrada, sin vincularla a ninguna transacción.
       labels:
         fetched: obtenidos
         folder_id: id_carpeta
@@ -5048,9 +5032,8 @@ cli:
       child_amount_help: Importe de una transacción hija como magnitud no negativa;
         se puede repetir
       child_description_help: Descripción de una transacción hija; se puede repetir
-      classification_dropped: La clasificación del padre %{classification} no se copió
-        a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita
-        reclasificarse.
+      classification_dropped: La clasificación %{classification} del movimiento padre
+        no se heredó en los hijos de la división; cada hijo permanece como NOT_YET_PROCESSED.
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
@@ -5101,8 +5084,8 @@ cli:
     view:
       help: Muestra una transacción del libro
       llm_rejected_label: Sugerencia del modelo
-      llm_rejected_notice: La sugerencia más reciente del modelo para esta transacción
-        fue rechazada; clasifícala manualmente cuando quieras.
+      llm_rejected_notice: Se rechazó la sugerencia más reciente del modelo para esta
+        transacción.
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   log_levels:
     errors:

@@ -142,8 +142,8 @@ def _calculate() -> object:
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2024, 3, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

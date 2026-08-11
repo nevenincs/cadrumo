@@ -186,12 +186,6 @@ def _party_attribution_notice(advisory: PartyAttributionAdvisory) -> Notice:
         code="ledger.evidence.review.party_attribution_unverified",
         message=tr(
             "cli.app.ledger.evidence.review.party_attribution_unverified_message",
-            default=(
-                "Nothing verifies which party these address values belong to. Were two address "
-                "blocks read the wrong way round, both parties would be placed in an IVA territory "
-                "neither is established in and no check would catch it. Confirm each value against "
-                "the document before confirming this draft."
-            ),
         ),
         context=context,
     )
@@ -366,11 +360,6 @@ def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
                 code="ledger.evidence.review.advised_pending",
                 message=tr(
                     "cli.app.ledger.evidence.review.advised_pending_message",
-                    default=(
-                        "Some pending documents carry advisories. These block nothing and will "
-                        "confirm as they are, so nothing else will raise them again. Use the listed "
-                        "advisory kinds to focus review, then inspect each affected document."
-                    ),
                 ),
                 action=resolve_notice_action(
                     action=ActionReference(action_id="operator.ledger.evidence.review.list"),
@@ -391,10 +380,6 @@ def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
                 code="ledger.evidence.review.blocked_pending",
                 message=tr(
                     "cli.app.ledger.evidence.review.blocked_pending_message",
-                    default=(
-                        "Some pending documents carry findings that must each be answered before "
-                        "they can be confirmed. Inspect each affected draft before resolving its findings."
-                    ),
                 ),
                 action=resolve_notice_action(
                     action=ActionReference(action_id="operator.ledger.evidence.review.list"),
@@ -589,14 +574,9 @@ def _register_review_show_command() -> None:
                     code="ledger.evidence.review.blocked",
                     message=tr(
                         "cli.app.ledger.evidence.review.blocked_message",
-                        default=(
-                            "This document cannot be confirmed until every finding below is answered "
-                            "individually. Each answer names one finding by its id."
-                        ),
                     ),
                     context={
                         "blocker_ids": ",".join(blocker.blocker_id for blocker in blockers),
-                        "actionability": "per_blocker_operator_resolution_required",
                     },
                 ),
             )

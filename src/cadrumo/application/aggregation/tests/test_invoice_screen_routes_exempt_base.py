@@ -70,9 +70,9 @@ def _invoice(
             "counterparty_name": "Cliente Exterior",
             "counterparty_tax_id": tax_id,
             "counterparty_country": country,
-            # Ley 37/1992 art. 25 exempts on the acquirer's VAT IDENTIFICATION,
+            # Ley 37/1992 art. 25 exempts on the acquirer's IVA IDENTIFICATION,
             # so the screen reads this rather than the address above. A US
-            # counterparty prints no Member State VAT number, and absent stays
+            # counterparty prints no Member State IVA number, and absent stays
             # absent -- it is never resolved from the country.
             "counterparty_identification_state": identification,
             "base_total": format(_BASE, "f"),

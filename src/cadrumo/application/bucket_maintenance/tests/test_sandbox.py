@@ -112,7 +112,7 @@ def _modelo_history(
             verified_by="sandbox-merge-test",
             filed_at=_MERGE_AT,
             filed_by="sandbox-merge-test",
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
         filing_record_id = derive_filing_record_id(
             work_unit_id=work_unit_id,
@@ -152,7 +152,7 @@ def _modelo_history(
         state=CalculationRevisionState.BORRADOR,
         created_at=_MERGE_AT,
         updated_at=_MERGE_AT,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,

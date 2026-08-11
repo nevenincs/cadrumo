@@ -500,7 +500,7 @@ class TestAShortCodeIsNotAFragmentOfAnIdentifier:
     The boundary rule keyed on NUMBER characters only, on the reasoning that a
     word-shaped anchor is distinctive enough for substring matching to be safe.
     That holds for an invoice number or a party name and collapses for a SHORT
-    CODE. ``ES`` is the worst case this domain has: it prefixes every Spanish VAT
+    CODE. ``ES`` is the worst case this domain has: it prefixes every Spanish IVA
     identifier, so a record stating no country at all anchored a country against
     the supplier's own NIF, and the envelope reported the document as evidence
     for a value it never states.

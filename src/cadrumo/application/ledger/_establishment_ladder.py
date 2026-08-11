@@ -564,7 +564,7 @@ def _printed_evidence(
     ):
         # The registration's OWN State, and only because something else agreed.
         # `None` here is not a failure to look up a country: Northern Ireland
-        # carries a IVA prefix without being an ISO jurisdiction the catalogue
+        # carries an IVA prefix without being an ISO jurisdiction the catalogue
         # resolves, and a registration whose territory cannot be named is one
         # this walk cannot corroborate into a scope.
         concordant = territorial_scope_for_country(identification.value.upper())

@@ -49,8 +49,8 @@ def test_committed_modelo_130_registry_snapshot_is_calculable(
             "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert snapshot.revision.id == "2019-y-siguientes"
@@ -94,8 +94,8 @@ def test_committed_modelo_111_registry_snapshot_calculates_liquidacion_from_rete
             },
         ),
         date_context={"filing_period": date(2026, 3, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert {entry.target_casilla_id for entry in result.entries} == {"28", "30"}
@@ -124,8 +124,8 @@ def test_committed_modelo_115_registry_snapshot_calculates_rental_withholding(
             },
         ),
         date_context={"filing_period": date(2026, 3, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -161,8 +161,8 @@ def test_committed_modelo_123_registry_snapshot_calculates_current_totals(
             },
         ),
         date_context={"filing_period": date(2026, 3, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -191,8 +191,8 @@ def test_committed_modelo_123_registry_snapshot_uses_2019_2023_shape(
             },
         ),
         date_context={"filing_period": date(2023, 12, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert snapshot.revision.id == "2019-2023"
@@ -244,8 +244,8 @@ def test_committed_modelo_131_registry_snapshot_calculates_objective_estimation_
         ),
         date_context={"filing_period": filing_period},
         binding_values={f"modelo-131-{revision_id}-resultados-negativos-anteriores": Decimal("10")},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert snapshot.revision.id == revision_id
@@ -323,8 +323,8 @@ def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_m
         date_context={"filing_period": date(2026, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}

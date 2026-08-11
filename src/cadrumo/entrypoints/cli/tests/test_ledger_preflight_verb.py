@@ -51,7 +51,7 @@ def test_preflight_empty_catalogue_is_ready() -> None:
     assert "issues\t0" in result.output
     assert "ready\ttrue" in result.output
     assert "advisory\tempty_ledger" in result.output
-    assert "activity occurred" in result.output
+    assert "No active ledger transactions were checked for this period." in result.output
 
 
 def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
@@ -71,7 +71,6 @@ def test_preflight_empty_catalogue_json_notice_marks_warning() -> None:
     assert notice["context"] == {
         "period": "1T",
         "year": "2026",
-        "actionability": "activity_assessment_requires_operator_input",
     }
     assert "suggestion" not in notice
 

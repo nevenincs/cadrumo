@@ -170,10 +170,9 @@ def test_review_joins_real_persisted_calculation_into_origin_layers(repos: Repos
     assert rows[M130_NET_RESULT_CASILLA].value == Decimal("7000")
     assert rows[M130_NET_RESULT_CASILLA].origin_anomaly is None
     assert rows[M130_CARRY_FORWARD_CASILLA].realised_kind is ModeloValueKind.COMPUTED
-    assert rows[M130_CARRY_FORWARD_CASILLA].concrete_formula is not None
-    assert (
-        "modelo-130-resultados-negativos-anteriores" in rows[M130_CARRY_FORWARD_CASILLA].concrete_formula.operand_refs
-    )
+    carry_forward_formula = rows[M130_CARRY_FORWARD_CASILLA].concrete_formula
+    assert carry_forward_formula is not None
+    assert "modelo-130-resultados-negativos-anteriores" in carry_forward_formula.operand_refs
 
     equal_value_revision = calculate_modelo_revision(
         work_unit.work_unit_id,

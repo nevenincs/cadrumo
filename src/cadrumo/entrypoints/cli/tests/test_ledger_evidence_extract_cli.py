@@ -124,7 +124,7 @@ def test_extract_by_evidence_id_recovers_every_grounded_field(tmp_path: Path) ->
         notice for notice in envelope["notices"] if notice["code"] == "ledger.evidence.extract.review_hint"
     )
     assert review_notice["action"] is None
-    assert review_notice["context"]["actionability"] == "review_and_required_invoice_fields_need_operator_input"
+    assert review_notice["context"] == {"reference": evidence_id}
     assert "suggestion" not in review_notice
 
 

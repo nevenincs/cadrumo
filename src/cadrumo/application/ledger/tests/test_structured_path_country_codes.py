@@ -250,14 +250,14 @@ class TestTheCountryReachesTheDraft:
 
         On the corpus specimen the two agree -- ``CHE116281277`` beside
         ``CountryID`` ``CH`` -- as they do on realistic data generally, so that
-        document cannot tell an address read from a VAT-prefix read. Which
+        document cannot tell an address read from an IVA-prefix read. Which
         means the claim that the country is scoped to the address block is
         untested exactly where it matters and would stay untested however many
         realistic fixtures were added.
 
         So the divergence is constructed: the same Swiss-established buyer,
-        carrying a German VAT registration. That is an ordinary arrangement --
-        a company registers for VAT wherever it must account for tax, which is
+        carrying a German IVA registration. That is an ordinary arrangement --
+        a company registers for IVA wherever it must account for tax, which is
         routinely not where it sits -- and it is the case that separates the two
         readers. A prefix reader answers ``DE`` and settles an EU member; the
         address reader answers ``CH`` and settles a third country. The rung
@@ -286,7 +286,7 @@ class TestTheCountryReachesTheDraft:
 
         draft = _draft(evidence_id, isolated_settings)
 
-        assert draft.customer_country_code == "CH", "the ADDRESS country, never the VAT prefix"
+        assert draft.customer_country_code == "CH", "the ADDRESS country, never the IVA prefix"
         assert draft.customer_tax_id == "DE811569869", "the registration is still read, just not as a place"
 
     def test_a_document_stating_no_country_carries_none(
@@ -741,9 +741,9 @@ class TestTheProvenanceTellsTheTwoApart:
 
         Taken from the CUSTOMER rather than the supplier on purpose. A supplier
         assertion here would read ``ES``, a string this document states in
-        several places including the seller's VAT prefix, so an envelope
+        several places including the seller's IVA prefix, so an envelope
         pointing anywhere would anchor. ``CH`` occurs in the buyer's country
-        element and in its VAT id and nowhere else, so the anchor has to come
+        element and in its IVA id and nowhere else, so the anchor has to come
         from that party's own block.
         """
         evidence_id = _stored(

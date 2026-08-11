@@ -209,7 +209,7 @@ def test_catalogue_create_refuses_an_omitted_country_code() -> None:
 
     Both canonical entry verbs used to default it to ``ES``. The slim verb they
     replace defaults it to nothing and either derives the country from the EU
-    VAT-ID prefix or raises, so repointing the operator's bare verbs onto the
+    IVA-ID prefix or raises, so repointing the operator's bare verbs onto the
     canonical aggregate would have converted a derive-or-raise into a silent
     domestic assumption.
 
@@ -217,7 +217,7 @@ def test_catalogue_create_refuses_an_omitted_country_code() -> None:
     filters on the counterparty country being ``ES``, so a foreign invoice
     stamped domestic is pulled INTO M347 and can carry a party over the
     declaration floor, while M349 declares the wrong member state. The
-    canonical record has no EU VAT-ID field to derive a country from -- by
+    canonical record has no EU IVA-ID field to derive a country from -- by
     design, since the tax id already IS the NIF-IVA for a non-ES country -- so
     the honest remedy is to require the operator to state it.
     """

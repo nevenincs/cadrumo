@@ -5,7 +5,7 @@ registered in another Member State may still be established in Spain through a
 sede or establecimiento permanente, so the registration needs a second, printed
 signal agreeing that the issuer did not tax here. That second signal had exactly
 one source -- the reverse-charge mention -- and the ordinary cross-border invoice
-does not print one. A German-registered supplier that simply charged German VAT
+does not print one. A German-registered supplier that simply charged German IVA
 corroborated nothing and fell to an operator question.
 
 That gap was SAFE and it was still a gap: an unanswered question is never a wrong
@@ -48,12 +48,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _DATE = date(2026, 4, 2)
 
-#: A structurally valid German VAT number. Germany is the useful registration
+#: A structurally valid German IVA number. Germany is the useful registration
 #: State here because its general rate is NOT one Spain carries, which is what
 #: lets the charged rate discriminate at all.
 _GERMAN_IVA = "DE811234567"
 
-#: A structurally valid Dutch VAT number. The Netherlands shares Spain's general
+#: A structurally valid Dutch IVA number. The Netherlands shares Spain's general
 #: rate, which is what makes it the control rather than a second example.
 _DUTCH_IVA = "NL123456789B01"
 
@@ -100,7 +100,7 @@ def test_a_registration_alone_still_settles_nothing() -> None:
 def test_the_issuers_own_rate_corroborates_the_registration() -> None:
     """The widening: what the issuer DID is evidence, not only what it said.
 
-    A German-registered supplier charging German VAT has taxed under the law it
+    A German-registered supplier charging German IVA has taxed under the law it
     is established under, which is precisely the claim the registration makes and
     the paper could not previously confirm.
     """

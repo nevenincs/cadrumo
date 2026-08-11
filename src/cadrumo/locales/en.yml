@@ -1766,7 +1766,8 @@ cli:
         confirm_invoice_number_help: Override the extracted invoice number.
         confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
           value).
-        confirm_link_hint_message: This invoice is not yet linked to a ledger transaction.
+        confirm_link_hint_message: The invoice was recorded without a matching ledger
+          transaction.
         confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
           Required when the document states an intra-community supply: the category
           cannot say whether it followed an exempt importation.'
@@ -1826,8 +1827,8 @@ cli:
           its contents to a third party. Add --acknowledge-off-host to confirm that,
           for this one read.
         extract_reference_required: Supply exactly one of --evidence-id or --attachment-id.
-        extract_review_hint_message: This is a best-effort draft; confirm every field
-          before minting an invoice.
+        extract_review_hint_message: This extraction is a best-effort draft and its
+          fields are not confirmed.
         field_ambiguous: '{field}: several readings competed and none could be decided
           between ({candidates}). Choose one rather than accepting the draft as read.'
         field_anchor_not_found: '{field}: the reader points at ''{anchor}'', which
@@ -1967,6 +1968,8 @@ cli:
           (0.15 for the general 15%, or 0.07 during the inicio-de-actividad window).
           Requires --retention-amount; a rate alone is refused.
         series_help: Invoice numbering series, when the issuer uses one.
+        simplificada_tax_id_expected_message: This simplified invoice has no counterparty
+          tax identifier even though the recorded legal context expects one.
         update_help: Update business invoice details
         view_help: Show one reconciliation catalogue invoice by id or unambiguous
           prefix.
@@ -4230,10 +4233,9 @@ cli:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
-      finalized_revision_stale: Evidence stored on the ledger row, but Modelo %{modelo}
-        %{filing_year} %{period} was verified before this evidence existed and keeps
-        the evidence bundle captured then. This filing will not pick it up; recalculating
-        does not change that. Link invoices before running work calculate.
+      finalized_revision_stale: Evidence was stored on the ledger row, but Modelo
+        %{modelo} %{filing_year} %{period} was verified before that evidence existed
+        and retains its earlier evidence bundle.
       help: Attach secure evidence objects to one ledger transaction. Create a purchase
         invoice evidence id first with 'aeat app ledger evidence add PATH'.
       id_help: Ledger transaction id to attach evidence to
@@ -4323,13 +4325,12 @@ cli:
       llm_confidence_label: confidence
       llm_exclusive: --llm cannot be combined with --classification or --file; the
         manual path is the explicit operator override.
-      llm_failed: 'LLM classification failed: {reason}'
       llm_help: Ask the on-host local reader to classify the transaction; preview
         by default, persist with --apply.
       llm_reason_label: reason
       llm_rejected_label: rejected
       llm_rejected_message: LLM suggestion rejected and recorded. The transaction
-        is unchanged; classify it manually when ready.
+        is unchanged.
       llm_review_hint: Review the suggestion above. Re-run with --apply to accept
         it, with --classification to override manually, or do nothing to reject it.
       llm_suggestion_label: llm-suggestion
@@ -4373,8 +4374,7 @@ cli:
         --llm with a provider.
       split_recommended_label: split recommended
       split_recommended_message: The attached invoice appears to carry multiple rate
-        or category lines. Re-run with --auto-split to separate them into independently-filable
-        base and IVA children.
+        or category lines.
       system_state_not_assignable: 'Classification ''%{value}'' is set automatically
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED.'
@@ -4383,9 +4383,6 @@ cli:
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
     counterparty:
       errors:
-        confirmation_conflict: A different answer is already confirmed for '{identifier}',
-          so confirming this one would discard the earlier answer. Withdraw it first
-          with 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Confirming ''{identifier}'' needs at least one answer:
           ''--scope'' for where the counterparty is established, ''--identification-state''
           for which Member State VAT-identifies it, or both. They are independent
@@ -4412,10 +4409,6 @@ cli:
       id_help: Ledger transaction id.
       note_help: Optional note.
       reference_help: The document link reference.
-      refused: 'Cannot fetch the %{source} document for %{reference}%{scope_hint}:
-        evidence must carry the document''s encrypted bytes, and a link is never stored
-        on its own. Download the document and attach it with ''aeat app ledger attach
-        --attachment-id ...'', or grant the required Google scope and retry.'
       source_help: 'Link source: gmail, google_drive, or url.'
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
@@ -4554,16 +4547,11 @@ cli:
       errors:
         cross_bucket_invoice: Invoice belongs to a different bucket than the active
           profile.
-        invoice_not_found: This id was not found in the invoice catalogue. Create
-          the invoice first with 'aeat app ledger invoice add', then link it; the
-          id that verb reports is the one to pass here.
+        invoice_not_found: Invoice id not found in the active profile invoice catalogue.
       help: Bind a ledger transaction to a reconciliation-catalogue invoice in one
-        atomic call. To attach purchase-invoice evidence, use 'aeat app ledger attach'.
-        Refuses cross-bucket links. Local-only; never contacts AEAT.
+        atomic call. Refuses cross-bucket links. Local-only; never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
-      invoice_id_help: Invoice id from an imported, reconciled, or manually added
-        invoice, bound bidirectionally to the transaction. Every 'aeat app ledger
-        invoice add' id is linkable here.
+      invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
@@ -4587,8 +4575,8 @@ cli:
     llm_diagnostics:
       bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
       help: Report existing LLM usage, cost, and classification-confidence metrics.
-      no_data_message: No LLM usage or classification-confidence metrics recorded
-        yet. Run an LLM-assisted classification to populate them.
+      no_data_message: No LLM usage or classification-confidence metrics are recorded
+        yet.
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.
       threshold_help: Confidence floor below which a classification counts as low-confidence.
       threshold_range: --low-confidence-below must be within the inclusive 0..1 range.
@@ -4605,9 +4593,6 @@ cli:
         fresh content-addressed merged transaction)
     preflight:
       empty_ledger_advisory: No active ledger transactions were checked for this period.
-        If activity occurred, add or import ledger rows before calculating; if there
-        was genuinely no activity, the empty ledger can support a zero-activity local
-        filing.
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active profile's transactions
         in a given period. Local-only; never contacts AEAT.
@@ -4626,8 +4611,7 @@ cli:
       folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
         from.
       help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
-        encrypted evidence (unlinked to any transaction; link with 'aeat app ledger
-        attach' or 'link').
+        encrypted evidence, unlinked to any transaction.
       labels:
         fetched: fetched_count
         folder_id: folder_id
@@ -4673,8 +4657,8 @@ cli:
         currency. Repeat once per child; the count must match --child-description.
       child_description_help: One child narrative. Repeat once per child; the count
         must match --child-amount.
-      classification_dropped: Parent classification %{classification} was not copied
-        to the split children; each child is NOT_YET_PROCESSED and needs re-classification.
+      classification_dropped: The parent %{classification} classification was not
+        inherited by the split children; each child remains NOT_YET_PROCESSED.
       errors:
         child_args_mismatch: ledger split requires the same number of --child-amount
           and --child-description arguments
@@ -4728,7 +4712,7 @@ cli:
       help: View one ledger transaction in the active profile
       llm_rejected_label: LLM suggestion
       llm_rejected_notice: The most recent LLM suggestion for this transaction was
-        rejected; classify it manually when ready.
+        rejected.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   log_levels:
     errors:

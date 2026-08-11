@@ -203,7 +203,7 @@ def test_an_unverifiable_identifier_refuses_rather_than_storing_a_key_for_nothin
 def test_an_identification_only_conflict_refuses_instead_of_raising() -> None:
     """The refusal must survive the axis the operator did NOT answer.
 
-    Establishment and VAT-identification are independent axes and either may
+    Establishment and IVA-identification are independent axes and either may
     stand alone, so a conflict is reachable with no ``--scope`` in the call at
     all. The refusal path read the unanswered axis to name what was asserted,
     which raises on the very invocation that most needs the instruction --

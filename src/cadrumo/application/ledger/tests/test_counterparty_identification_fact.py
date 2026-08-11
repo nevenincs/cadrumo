@@ -1,6 +1,6 @@
-"""The counterparty row remembers a VAT identification, once, for every document.
+"""The counterparty row remembers an IVA identification, once, for every document.
 
-Ley 37/1992 art. 25 exempts an intra-community supply on the acquirer's VAT
+Ley 37/1992 art. 25 exempts an intra-community supply on the acquirer's IVA
 IDENTIFICATION in another Member State. That is a stable fact about an entity,
 not about a page, so asking it per document would put the same question to the
 operator on every invoice and every manual row for the same counterparty.

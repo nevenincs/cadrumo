@@ -182,7 +182,6 @@ def counterparty_confirm(
     """Persist the operator's answer, or report the stored one unchanged."""
     from ...application.ledger import (
         ConfirmedCounterpartyFactsInputError,
-        CounterpartyEstablishmentConflictError,
         record_confirmed_counterparty_facts,
     )
 
@@ -230,25 +229,6 @@ def counterparty_confirm(
                 ),
             ),
         ) from exc
-    except CounterpartyEstablishmentConflictError as exc:
-        # The refusal names neither axis itself: the conflict is raised for a
-        # changed territory OR a changed identification State, and an
-        # identification-only assertion carries no scope to name. The writer's
-        # own message states which axis diverged and both of its values, so the
-        # wrapper carries the actionable route and defers the diagnosis.
-        raise _bad(
-            tr(
-                "cli.ledger.counterparty.errors.confirmation_conflict",
-                identifier=tax_identifier,
-                detail=str(exc),
-                default=(
-                    f"A different answer is already confirmed for '{tax_identifier}', so confirming this "
-                    f"one would discard the earlier answer. Withdraw it first with "
-                    f"'aeat app ledger counterparty withdraw'. {exc}"
-                ),
-            ),
-        ) from exc
-
     recorded = fact.asserted_at == stamped_at
     notices: list[Notice] = []
     if not recorded:

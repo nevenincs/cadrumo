@@ -898,10 +898,9 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
     where escalation IS right is the opposite one, handled above: a document
     with no text layer genuinely needs a reader that works on pixels.
 
-    The refusal names the provisioning verb, because "no reader" is a gap the
-    operator can close and a message that does not say how is a dead end. It
-    never routes to a cloud provider as a consolation: that decision belongs to
-    the operator, per invocation, and is not this path's to make.
+    The refusal carries only application-observed machine facts. Recovery is
+    resolved later from the canonical action catalogue; this boundary neither
+    invents a command nor copies dependency-owned presentation prose.
 
     Args:
         exc: The provider or dependency failure that prevented the read.
@@ -909,13 +908,27 @@ def _refuse_a_text_read_with_no_reader(exc: Exception) -> NoReturn:
     Raises:
         PurchaseInvoiceEvidenceInputError: Always.
     """
+    _refuse_with_unavailable_reader(exc, availability_fact="semantic_reader_available")
+
+
+def _refuse_with_unavailable_reader(exc: Exception, *, availability_fact: str) -> NoReturn:
+    """Preserve a reader refusal as typed facts, without presentation prose."""
+    if isinstance(exc, MissingOptionalExtraError):
+        facts: dict[str, str | bool] = {
+            "extra": exc.extra.extra,
+            "import_name": exc.extra.import_name,
+            "importable": False,
+        }
+    else:
+        facts = {
+            availability_fact: False,
+            "reader_error_type": exc.__class__.__name__,
+        }
     raise PurchaseInvoiceEvidenceInputError(
-        "this document was transcribed successfully, but the semantic reader that turns that text "
-        f"into fields could not be run ({exc}). The document was not read, and no value was guessed "
-        "from it. Provision an on-host reading model, then extract again.",
+        context=facts,
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
-            facts={"semantic_reader_available": False},
+            facts=facts,
         ),
     ) from exc
 
@@ -1432,18 +1445,18 @@ def _extract_invoice_fields_via_vision(
     empty draft. A missing/unreachable local Ollama runtime, or an unrasterisable
     PDF, is converted to the same instructive refusal the classification vision
     path uses (:func:`~application.provisioning.probe_ollama_vision`). An absent
-    ``llm`` extra is reported separately, with its install hint, so a dependency
-    gap is never remediated as a daemon-reachability problem.
+    ``llm`` extra is reported separately as typed dependency facts, so a
+    dependency gap is never mistaken for a daemon-reachability problem.
     """
     import httpx
 
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
+        facts = {"llm_vision_enabled": False}
         raise PurchaseInvoiceEvidenceInputError(
-            "on-host LLM vision reading is disabled for this profile; enable it to read a scan-only "
-            "PDF or image evidence",
+            context=facts,
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED,
-                facts={"llm_vision_enabled": False},
+                facts=facts,
             ),
         )
 
@@ -1496,32 +1509,23 @@ def _extract_invoice_fields_via_vision(
     except MissingOptionalExtraError as exc:
         # Ordered ahead of the runtime-failure branch deliberately. A missing
         # `llm` extra is a dependency problem, not a reachability problem: the
-        # branch below probes the Ollama runtime and answers "ensure the local
-        # Ollama vision model is reachable", which is the wrong remedy and
-        # sends the operator to restart a daemon that was never the fault.
-        raise PurchaseInvoiceEvidenceInputError(
-            f"on-host vision reading is unavailable: {exc}",
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
-                facts={"vision_reader_dependency_available": False},
-            ),
-        ) from exc
+        # branch below probes runtime reachability, which is a different failed
+        # condition and must not replace the dependency identity.
+        _refuse_with_unavailable_reader(exc, availability_fact="vision_reader_available")
     except (httpx.HTTPError, LLMProviderError, LLMPdfRasterisationError) as exc:
         status = probe_ollama_vision(settings)
         if status.precondition_verdict is not None:
-            raise PurchaseInvoiceEvidenceInputError(
-                "on-host vision reading is unavailable",
-                precondition_verdict=status.precondition_verdict,
-            ) from exc
+            raise PurchaseInvoiceEvidenceInputError(precondition_verdict=status.precondition_verdict) from exc
+        facts: dict[str, str | bool] = {
+            "vision_reader_available": False,
+            "vision_reader_probe_available": True,
+            "vision_reader_error_type": exc.__class__.__name__,
+        }
         raise PurchaseInvoiceEvidenceInputError(
-            "on-host vision reading failed",
+            context=facts,
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
-                facts={
-                    "vision_reader_available": False,
-                    "vision_reader_probe_available": True,
-                    "vision_reader_error_type": exc.__class__.__name__,
-                },
+                facts=facts,
             ),
         ) from exc
 
@@ -1873,7 +1877,7 @@ def _agreed_counterparty_tax_id(
 
     **The second axis is the COUNTRY PREFIX, and it is handled here rather than
     in the shared predicate.** A document routinely states an identifier in its
-    VAT form while an operator supplies the bare national form -- ``ESB12345674``
+    IVA form while an operator supplies the bare national form -- ``ESB12345674``
     against ``B12345674`` -- and those name one bearer. The shared predicate
     cannot know that: stripping a leading alpha-2 from both sides unconditionally
     would merge bearers ACROSS States, since the same national body can exist

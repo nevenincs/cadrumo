@@ -568,7 +568,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_casilla_keys() -> 
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
 
 
@@ -617,7 +617,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ValidationError, match="String should match pattern"):
@@ -629,7 +629,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
 
 
@@ -656,7 +656,7 @@ def test_calculation_revision_normalises_row_binding_values() -> None:
         casilla_values={},
         created_at=created,
         updated_at=created,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
     assert revision.row_binding_values == {"modelo-720-asset-row-class": {"1": "C", "2": "V"}}
@@ -685,7 +685,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
             created_at=created,
             updated_at=created,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
 
 
@@ -731,7 +731,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
         observations=observations,
         created_at=created,
         updated_at=created,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     assert rev.observations == observations
     assert dict(rev.casilla_values) == casilla_values
@@ -776,7 +776,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
             observations=observations,
             created_at=created,
             updated_at=created,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
 
 
@@ -805,7 +805,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
             casilla_values=casilla_values,
             created_at=created,
             updated_at=created,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
 
 

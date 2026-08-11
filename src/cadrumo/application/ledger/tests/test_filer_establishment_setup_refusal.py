@@ -31,8 +31,10 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import NoRecoveryOutcome
 from ....domain.iva import IvaTerritorialScope
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from .._confirm_establishment import _filer_scope
 from .._evidence_draft import PurchaseInvoiceEvidenceInputError
 from .._filer_establishment import FILER_POSTCODE_FACT_PATH, resolve_filer_territorial_scope
 from .._preconditions import LedgerPreconditionCondition
@@ -120,6 +122,19 @@ def test_a_missing_profile_refuses_rather_than_assuming_a_territory() -> None:
     """No profile is not an empty profile, and neither is a territory."""
     with pytest.raises(PurchaseInvoiceEvidenceInputError):
         resolve_filer_territorial_scope(profile_record=None)
+
+
+def test_confirm_boundary_preserves_the_exact_profile_precondition_refusal() -> None:
+    """Confirm does not flatten a profile precondition into review-item prose."""
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        _filer_scope(_profile(None))
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.FILER_POSTCODE_VALID.value
+    assert verdict.evidence[0].values == {"filer_postcode_present": False}
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
 
 
 class TestTheRefusalIsActionable:

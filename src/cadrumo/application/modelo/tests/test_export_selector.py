@@ -76,7 +76,7 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         updated_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
         verified_at=datetime(2026, 6, 4, 10, 1, tzinfo=UTC),
         verified_by="operator",
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     draft = CalculationRevision(
         calculation_revision_id=draft_id,
@@ -92,7 +92,7 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         ),
         created_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
         updated_at=datetime(2026, 6, 4, 10, 2, tzinfo=UTC),
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     catalogue = upsert_calculation_revision(calc_repo.load(), verified)
     calc_repo.save(upsert_calculation_revision(catalogue, draft))

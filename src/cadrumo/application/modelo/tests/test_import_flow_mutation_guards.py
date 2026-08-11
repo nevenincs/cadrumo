@@ -315,7 +315,7 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
             casilla_values={},
             created_at=_GUARD_CLOCK,
             updated_at=_GUARD_CLOCK,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
         cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
 

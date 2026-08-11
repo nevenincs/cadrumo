@@ -591,7 +591,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
         ),
         created_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 26, 9, 0, tzinfo=UTC),
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     return CalculationRevisionCatalogue(revisions={revision_id: revision})
 

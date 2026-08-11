@@ -115,7 +115,6 @@ def test_split_recommendation_notice_is_info_without_an_invented_action() -> Non
     assert notice.context == {
         "transaction_id": transaction_id,
         "source": "evidence_read",
-        "actionability": "split_requires_operator_review",
     }
 
 

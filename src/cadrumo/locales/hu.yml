@@ -1829,8 +1829,8 @@ cli:
         confirm_invoice_number_help: Felülírja a kinyert számlaszámot.
         confirm_iva_rate_help: Felülírja a kinyert ÁFA-kulcsot (hagyja ki a kinyert
           érték megtartásához).
-        confirm_link_hint_message: Ez a számla még nincs összekapcsolva könyvelési
-          tétellel.
+        confirm_link_hint_message: A számla megfelelő főkönyvi tranzakció nélkül került
+          rögzítésre.
         confirm_operation_type_help: 'A 349-es modell kulcsa kozossegen beluli termekertekesiteshez.
           Kotelezo, ha a dokumentum kozossegen beluli ertekesitest jelol: a kategoria
           nem mondja meg, hogy adomentes behozatalt kovetett-e.'
@@ -1899,8 +1899,8 @@ cli:
           kapcsolót ennek az egy beolvasásnak a megerősítéséhez.
         extract_reference_required: 'Adja meg pontosan az egyiket: --evidence-id vagy
           --attachment-id.'
-        extract_review_hint_message: Ez egy hozzávetőleges piszkozat; minden mezőt
-          erősítsen meg, mielőtt számlát hoz létre belőle.
+        extract_review_hint_message: Ez a kinyerés hozzávetőleges piszkozat, és a
+          mezői nincsenek megerősítve.
         field_ambiguous: '{field}: több olvasat versengett, és nem lehetett dönteni
           közülük ({candidates}). Válasszon egyet ahelyett, hogy a piszkozatot változatlanul
           elfogadná.'
@@ -2053,6 +2053,8 @@ cli:
           időszakában). A --retention-amount megadása kötelező; önmagában a hányad
           megadása elutasításra kerül.
         series_help: A számla sorozatjele, ha a kibocsátó használ ilyet.
+        simplificada_tax_id_expected_message: Ez az egyszerűsített számla nem tartalmazza
+          a partner adóazonosítóját, noha a rögzített jogi környezet ezt elvárja.
         update_help: Üzleti számla adatainak frissítése.
         view_help: Egy egyeztetési katalógusbeli számla megjelenítése azonosító vagy
           egyértelmű előtag alapján.
@@ -4467,10 +4469,9 @@ cli:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételje meg.
-      finalized_revision_stale: A bizonylat elmentve a főkönyvi sorhoz, de a(z) %{modelo}
-        %{filing_year} %{period} nyomtatványt már a bizonylat létrejötte előtt verifikálták,
-        és az akkor rögzített bizonylatokat őrzi. Ez a bevallás nem veszi át; az újraszámolás
-        ezen nem változtat. A számlákat a work calculate előtt kapcsold hozzá.
+      finalized_revision_stale: A bizonylat bekerült a főkönyvi sorba, de a(z) %{modelo}
+        %{filing_year} %{period} modellt korábban ellenőrizték, ezért a korábbi bizonylatcsomagot
+        őrzi.
       help: Biztonságos bizonyítékobjektumok csatolása egyetlen főkönyvi tranzakcióhoz.
         Vásárlásiszámla-bizonyíték azonosítója előbb a 'aeat app ledger evidence add
         PATH' paranccsal hozható létre.
@@ -4567,13 +4568,12 @@ cli:
       llm_confidence_label: bizonyossag
       llm_exclusive: --llm nem kombinálható a --classification vagy --file kapcsolóval;
         a kézi út a kezelő kifejezett felülbírálása.
-      llm_failed: 'Az LLM osztályozás sikertelen: {reason}'
       llm_help: A gepen futo helyi olvasoval osztalyozza a tranzakciot; alapertelmezetten
         elonezet, --apply kapcsoloval menti.
       llm_reason_label: indok
       llm_rejected_label: elutasítva
       llm_rejected_message: A modell javaslata elutasítva és rögzítve. A tranzakció
-        változatlan; osztályozd kézzel, amikor készen állsz.
+        változatlan.
       llm_review_hint: Tekintsd át a fenti javaslatot. Futtasd újra --apply kapcsolóval
         az elfogadásához, --classification kapcsolóval a kézi felülbírálásához, vagy
         ne tegy semmit az elutasításához.
@@ -4620,8 +4620,7 @@ cli:
         ki a kategóriát.'
       split_recommended_label: bontás javasolt
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
-        sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
-        bevallható alap- és áfa-gyermekekre váljon szét.
+        sort tartalmazhat.
       system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED.'
       taxable_base_help: Adóköteles alapösszeg.
@@ -4630,9 +4629,6 @@ cli:
         modellt használja.
     counterparty:
       errors:
-        confirmation_conflict: A(z) '{identifier}' esetében már más válasz van megerősítve,
-          ezért ennek megerősítése eldobná a korábbi választ. Előbb vonja vissza az
-          'aeat app ledger counterparty withdraw' paranccsal. {detail}
         nothing_asserted: 'A(z) ''{identifier}'' megerősítéséhez legalább egy válasz
           kell: a ''--scope'' azt adja meg, hol letelepedett az ügyfél, az ''--identification-state''
           pedig azt, melyik tagállam adja áfa-azonosítóját; bármelyik önmagában is
@@ -4660,11 +4656,6 @@ cli:
       id_help: Főkönyvi tranzakció azonosítója.
       note_help: Opcionális megjegyzés.
       reference_help: A dokumentumhivatkozás referenciája.
-      refused: 'Nem tölthető le a(z) %{source} dokumentum ehhez: %{reference}%{scope_hint}:
-        a bizonyítéknak tartalmaznia kell a dokumentum titkosított bájtjait, és egy
-        hivatkozás önmagában soha nem kerül tárolásra. Töltsd le a dokumentumot, és
-        csatold a ''aeat app ledger attach --attachment-id ...'' paranccsal, vagy
-        add meg a szükséges Google hatókört, és próbáld újra.'
       source_help: 'Hivatkozás forrása: gmail, google_drive vagy url.'
     errors:
       business_pct_out_of_range: A(z) %{value} (= %{percent}) üzleti használati arány
@@ -4808,17 +4799,12 @@ cli:
       errors:
         cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
           profil.
-        invoice_not_found: Ez az azonosító nem szerepel a számlakatalógusban. Előbb
-          hozza létre a számlát az 'aeat app ledger invoice add' paranccsal, majd
-          kapcsolja össze; az itt megadandó azonosítót ez a parancs írja ki.
-      help: Főkönyvi tranzakció összekapcsolása egy reconciliációs katalógusszámlával
-        egyetlen kanonikus hívásban. Vásárlásiszámla-bizonyíték csatolásához használja
-        a 'aeat app ledger attach' parancsot. Keresztbucket-hivatkozásokat elutasít.
-        Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
+        invoice_not_found: A számlaazonosító nem található az aktív profil számlakatalógusában.
+      help: Egyetlen atomi művelettel összekapcsol egy főkönyvi tranzakciót egy egyeztetési
+        katalógusbeli számlával. Elutasítja a bucketek közötti hivatkozásokat. Csak
+        helyi; soha nem lép kapcsolatba az AEAT-tal.
       id_help: Könyvelési tranzakció azonosító (SHA-256 vagy egyértelmű előtag).
-      invoice_id_help: Importált, egyeztetett vagy kézzel felvett számla azonosítója,
-        kétirányúan összekapcsolva a tranzakcióval. Minden 'aeat app ledger invoice
-        add' azonosító összekapcsolható itt.
+      invoice_id_help: A tranzakcióhoz kétirányúan kapcsolandó számla azonosítója.
     list:
       by_group_help: A lista csoportosítása csoportcímke szerint.
       column_header: "id\tteljes_id\tdátum\tösszeg\tleírás\tellenőrzési_állapot"
@@ -4844,8 +4830,8 @@ cli:
         érték %{value}.
       help: A meglévő LLM használati, költség- és osztályozási megbízhatósági mutatók
         megjelenítése.
-      no_data_message: Még nincsenek LLM használati vagy osztályozási megbízhatósági
-        mutatók. Futtass egy LLM-alapú osztályozást a feltöltésükhöz.
+      no_data_message: Még nincsenek rögzített LLM-használati vagy osztályozási megbízhatósági
+        mutatók.
       since_help: A használati rekordok alsó, ISO dátumú (ÉÉÉÉ-HH-NN) inkluzív korlátja.
       threshold_help: Megbízhatósági küszöb, amely alatt az osztályozás alacsony megbízhatóságúnak
         számít.
@@ -4866,10 +4852,8 @@ cli:
       yes_help: Az egyesítés megerősítése (minden gyermeket és a szülőt archiválja,
         és megőriz egy friss tartalom-azonosítójú egyesített tranzakciót).
     preflight:
-      empty_ledger_advisory: Ebben az időszakban nem ellenőrzött aktív főkönyvi tranzakciókat.
-        Ha volt tevékenység, számítás előtt adjon hozzá vagy importáljon főkönyvi
-        sorokat; ha valóban nem volt tevékenység, az üres főkönyv alátámaszthat helyi
-        nulla tevékenységű bevallást.
+      empty_ledger_advisory: Ebben az időszakban egyetlen aktív főkönyvi tranzakciót
+        sem ellenőriztek.
       help: Hiányzó főkönyvi adatok (kategória, adóköteles alap, IVA-összeg/kulcs,
         pénznem, arányossági hivatkozás) jelentése az aktív profil tranzakcióira egy
         adott időszakra. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
@@ -4887,9 +4871,8 @@ cli:
           a szükséges Google hatókört, és próbáld újra.'
       folder_help: Drive mappa-URL vagy puszta mappaazonosító a PDF-/kép-számlák tömeges
         letöltéséhez.
-      help: Egy Drive mappa minden PDF-/kép-számláját tömegesen letölti, és mindegyiket
-        titkosított bizonyítékként tárolja (tranzakcióhoz nem kapcsolva; kapcsold
-        a 'aeat app ledger attach' vagy 'link' paranccsal).
+      help: Kötegelten lekéri egy Drive-mappa összes PDF- vagy képszámláját, és mindegyiket
+        titkosított, tranzakcióhoz nem kapcsolt bizonyítékként tárolja.
       labels:
         fetched: letoltott_db
         folder_id: mappa_azonosito
@@ -4939,9 +4922,8 @@ cli:
         értékekkel.
       child_description_help: Egy gyermek narratívája. Ismételje meg minden gyermek
         esetén; a darabszámnak egyeznie kell a --child-amount értékekkel.
-      classification_dropped: A szülő %{classification} besorolása nem öröklődött
-        át a felosztás gyermekeire; minden gyermek NOT_YET_PROCESSED állapotú, és
-        újra kell osztályozni.
+      classification_dropped: A szülő %{classification} besorolását a felosztás gyermekei
+        nem örökölték; minden gyermek NOT_YET_PROCESSED állapotban marad.
       errors:
         child_args_mismatch: A ledger split parancshoz ugyanannyi --child-amount és
           --child-description argumentum szükséges.
@@ -4999,8 +4981,7 @@ cli:
     view:
       help: Egyetlen főkönyvi tranzakció megtekintése az aktív profilban.
       llm_rejected_label: Modelljavaslat
-      llm_rejected_notice: A tranzakcióhoz tartozó legutóbbi modelljavaslat elutasításra
-        került; osztályozd kézzel, amikor készen állsz.
+      llm_rejected_notice: A tranzakcióhoz tartozó legutóbbi modelljavaslatot elutasították.
       transaction_id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
         előtag).
   log_levels:

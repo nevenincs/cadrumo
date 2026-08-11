@@ -465,9 +465,7 @@ def _register_evidence_extract_command() -> None:
         prints the best-effort :class:`InvoiceDraft` for operator review.
         Every field the heuristics could not ground in the extracted text is
         ``null`` rather than guessed. Extracting never mints or persists an
-        invoice; confirm the fields, then create the record explicitly with
-        ``aeat app ledger invoice add`` or ``aeat app ledger invoice
-        catalogue create``.
+        invoice; confirmation is a separate operator action.
         """
         if (evidence_id is None) == (attachment_id is None):
             raise _bad(
@@ -543,11 +541,9 @@ def _register_evidence_extract_command() -> None:
                 code="ledger.evidence.extract.review_hint",
                 message=tr(
                     "cli.app.ledger.evidence.extract_review_hint_message",
-                    default=("This is a best-effort draft; confirm every field before minting an invoice."),
                 ),
                 context={
                     "reference": reviewed_reference,
-                    "actionability": "review_and_required_invoice_fields_need_operator_input",
                 },
             ),
         ]
@@ -824,12 +820,6 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.printed_total_mismatch",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_printed_total_mismatch_message",
-                    default=(
-                        "The total printed on the document does not match the total recorded. "
-                        "The recorded total is derived from the taxable base and the IVA rate, so a "
-                        "difference means the document carries an amount this record does not, such "
-                        "as a recargo de equivalencia, or a figure was misread. Check the document."
-                    ),
                 ),
                 context={
                     "printed_total": format(discrepancy.printed_total, "f"),
@@ -846,10 +836,6 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.already_exists",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_already_exists_message",
-                    default=(
-                        "An invoice with this identity already exists; returning it unchanged "
-                        "rather than creating a duplicate."
-                    ),
                 ),
                 context={"invoice_id": invoice.invoice_id},
             ),
@@ -861,14 +847,9 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.linked_transaction_hint",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_link_hint_message",
-                    default=(
-                        "The invoice was recorded, but confirmation did not identify its matching ledger transaction. "
-                        "Verify the matching transaction before linking the two records."
-                    ),
                 ),
                 context={
                     "invoice_id": invoice.invoice_id,
-                    "actionability": "matching_transaction_requires_operator_selection",
                 },
             ),
         )

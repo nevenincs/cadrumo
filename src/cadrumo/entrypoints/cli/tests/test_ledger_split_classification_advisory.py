@@ -121,7 +121,6 @@ def test_split_of_classified_parent_emits_dropped_classification_advisory() -> N
     assert notice["action"] is None
     assert notice["context"] == {
         "parent_classification": "BUSINESS",
-        "actionability": "child_classification_requires_operator_decision",
     }
     assert "suggestion" not in notice
 

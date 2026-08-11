@@ -184,8 +184,8 @@ def _calculate_210_result(
         enum_binding_values=enum_binding_values,
         text_inputs=text_inputs,
         date_context={"filing_period": date(filing_year, 12, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

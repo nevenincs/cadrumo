@@ -139,9 +139,7 @@ def test_naming_the_field_keeps_everything_else_the_error_carried() -> None:
     assert caught.value.translated_message == "errors.identity.tax_id_invalid_length", (
         "the translation key did not survive; the exception was rebuilt rather than annotated"
     )
-    assert caught.value.context == {"candidate": "BADID", "length": 5}, (
-        "the structured context did not survive either"
-    )
+    assert caught.value.context == {"candidate": "BADID", "length": 5}, "the structured context did not survive either"
 
 
 def test_a_valid_counterparty_passes_through_unwrapped() -> None:

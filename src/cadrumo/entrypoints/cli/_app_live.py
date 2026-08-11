@@ -28,7 +28,7 @@ import subprocess
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any, Final
 
 import typer
 
@@ -454,41 +454,55 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
     return tuple(lines)
 
 
+_IVA_WALLET_DECISION_REASON_TRANSLATION_KEYS: Final[dict[IvaCompensationDecisionReason, str]] = {
+    IvaCompensationDecisionReason.TAXPAYER_OVERRIDE: "application.iva_wallet.decision_reason.taxpayer_override",
+    IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_AEAT_WALLET: (
+        "application.iva_wallet.decision_reason.first_period_zero_aeat_wallet"
+    ),
+    IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED: (
+        "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted"
+    ),
+    IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_LOCAL_RECURRENCE: (
+        "application.iva_wallet.decision_reason.first_period_zero_local_recurrence"
+    ),
+    IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE: (
+        "application.iva_wallet.decision_reason.local_evidence_unreadable"
+    ),
+    IvaCompensationDecisionReason.NO_USABLE_AUTHORITY: "application.iva_wallet.decision_reason.no_usable_authority",
+    IvaCompensationDecisionReason.FILED_HISTORY_ZERO: "application.iva_wallet.decision_reason.filed_history_zero",
+    IvaCompensationDecisionReason.FILED_HISTORY_REQUIRES_OVERRIDE: (
+        "application.iva_wallet.decision_reason.filed_history_requires_override"
+    ),
+    IvaCompensationDecisionReason.LOCAL_RECURRENCE_ZERO: "application.iva_wallet.decision_reason.local_recurrence_zero",
+    IvaCompensationDecisionReason.LOCAL_RECURRENCE_REQUIRES_OVERRIDE: (
+        "application.iva_wallet.decision_reason.local_recurrence_requires_override"
+    ),
+    IvaCompensationDecisionReason.STALE_WALLET_NO_LOCAL_RECURRENCE: (
+        "application.iva_wallet.decision_reason.stale_wallet_no_local_recurrence"
+    ),
+    IvaCompensationDecisionReason.STALE_WALLET_LOCAL_RECURRENCE_REQUIRES_OVERRIDE: (
+        "application.iva_wallet.decision_reason.stale_wallet_local_recurrence_requires_override"
+    ),
+    IvaCompensationDecisionReason.WALLET_LOCAL_RECURRENCE_DIVERGENCE: (
+        "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence"
+    ),
+    IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED: "application.iva_wallet.decision_reason.aeat_wallet_validated",
+    IvaCompensationDecisionReason.AEAT_WALLET_UNCROSSCHECKED: (
+        "application.iva_wallet.decision_reason.aeat_wallet_uncrosschecked"
+    ),
+    IvaCompensationDecisionReason.CALLER_ZERO_MATCHES_LOCAL_AUTHORITY: (
+        "application.iva_wallet.decision_reason.caller_zero_matches_local_authority"
+    ),
+}
+
+
 def _iva_wallet_decision_reason_text(reason: IvaCompensationDecisionReason) -> str:
     """Localize one closed decision-reason identity for operator output."""
-    if reason is IvaCompensationDecisionReason.TAXPAYER_OVERRIDE:
-        return tr("application.iva_wallet.decision_reason.taxpayer_override")
-    if reason is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_AEAT_WALLET:
-        return tr("application.iva_wallet.decision_reason.first_period_zero_aeat_wallet")
-    if reason is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_ACTIVITY_START_UNCONTRASTED:
-        return tr("application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted")
-    if reason is IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_LOCAL_RECURRENCE:
-        return tr("application.iva_wallet.decision_reason.first_period_zero_local_recurrence")
-    if reason is IvaCompensationDecisionReason.LOCAL_EVIDENCE_UNREADABLE:
-        return tr("application.iva_wallet.decision_reason.local_evidence_unreadable")
-    if reason is IvaCompensationDecisionReason.NO_USABLE_AUTHORITY:
-        return tr("application.iva_wallet.decision_reason.no_usable_authority")
-    if reason is IvaCompensationDecisionReason.FILED_HISTORY_ZERO:
-        return tr("application.iva_wallet.decision_reason.filed_history_zero")
-    if reason is IvaCompensationDecisionReason.FILED_HISTORY_REQUIRES_OVERRIDE:
-        return tr("application.iva_wallet.decision_reason.filed_history_requires_override")
-    if reason is IvaCompensationDecisionReason.LOCAL_RECURRENCE_ZERO:
-        return tr("application.iva_wallet.decision_reason.local_recurrence_zero")
-    if reason is IvaCompensationDecisionReason.LOCAL_RECURRENCE_REQUIRES_OVERRIDE:
-        return tr("application.iva_wallet.decision_reason.local_recurrence_requires_override")
-    if reason is IvaCompensationDecisionReason.STALE_WALLET_NO_LOCAL_RECURRENCE:
-        return tr("application.iva_wallet.decision_reason.stale_wallet_no_local_recurrence")
-    if reason is IvaCompensationDecisionReason.STALE_WALLET_LOCAL_RECURRENCE_REQUIRES_OVERRIDE:
-        return tr("application.iva_wallet.decision_reason.stale_wallet_local_recurrence_requires_override")
-    if reason is IvaCompensationDecisionReason.WALLET_LOCAL_RECURRENCE_DIVERGENCE:
-        return tr("application.iva_wallet.decision_reason.wallet_local_recurrence_divergence")
-    if reason is IvaCompensationDecisionReason.AEAT_WALLET_VALIDATED:
-        return tr("application.iva_wallet.decision_reason.aeat_wallet_validated")
-    if reason is IvaCompensationDecisionReason.AEAT_WALLET_UNCROSSCHECKED:
-        return tr("application.iva_wallet.decision_reason.aeat_wallet_uncrosschecked")
-    if reason is IvaCompensationDecisionReason.CALLER_ZERO_MATCHES_LOCAL_AUTHORITY:
-        return tr("application.iva_wallet.decision_reason.caller_zero_matches_local_authority")
-    raise AssertionError(f"unhandled IVA wallet decision reason {reason!r}")
+    try:
+        translation_key = _IVA_WALLET_DECISION_REASON_TRANSLATION_KEYS[reason]
+    except KeyError as exc:
+        raise AssertionError(f"unhandled IVA wallet decision reason {reason!r}") from exc
+    return tr(translation_key)
 
 
 @iva_wallet_app.command(

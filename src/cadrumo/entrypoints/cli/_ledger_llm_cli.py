@@ -117,14 +117,10 @@ def emit_llm_rejection(
         code="ledger.classify.llm_rejected",
         message=tr(
             "cli.ledger.classify.llm_rejected_message",
-            default=(
-                "LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready."
-            ),
         ),
         context={
             "transaction_id": result.transaction_id,
             "suggestion_kind": result.suggestion_kind,
-            "actionability": "manual_classification_requires_category_selection",
         },
     )
     lines = [
@@ -171,18 +167,10 @@ def split_recommendation_notice(transaction_id: str) -> Notice:
     return Notice(
         severity=NoticeSeverity.INFO,
         code="ledger.classify.split_recommended",
-        message=tr(
-            "cli.ledger.classify.split_recommended_message",
-            default=(
-                "The attached invoice appears to carry multiple rate or category lines. "
-                "Re-run with --auto-split to separate them into independently-filable "
-                "base and IVA children."
-            ),
-        ),
+        message=tr("cli.ledger.classify.split_recommended_message"),
         context={
             "transaction_id": transaction_id,
             "source": "evidence_read",
-            "actionability": "split_requires_operator_review",
         },
     )
 

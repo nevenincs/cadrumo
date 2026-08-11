@@ -7,9 +7,9 @@ directions.
 **Reading absence as "consumer"** would reclassify the entire factura
 simplificada population — documents that legitimately print no recipient at all.
 
-**Reading a printed VAT identifier as "IVA-registered"** would let an unverified
+**Reading a printed IVA identifier as "IVA-registered"** would let an unverified
 number satisfy the intra-community supply rule, which classifies the operation
-EXEMPT under LIVA art. 25. That exemption requires a VAT number *verified* as
+EXEMPT under LIVA art. 25. That exemption requires an IVA number *verified* as
 valid; a number printed on a page has been verified by nobody.
 """
 
@@ -35,7 +35,7 @@ def _profile(regime: IVARegime) -> TaxpayerProfile:
 
 
 def test_a_printed_counterparty_identifier_establishes_a_taxable_person() -> None:
-    """Someone who prints a VAT identifier is acting as a taxable person."""
+    """Someone who prints an IVA identifier is acting as a taxable person."""
     inputs = collect_classifier_inputs(InvoiceDraft(customer_tax_id=_CUSTOMER_NIF))
 
     assert inputs.counterparty_taxable_person is CounterpartyTaxablePersonStatus.TAXABLE_PERSON

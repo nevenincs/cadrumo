@@ -28,6 +28,7 @@ from .....application.storage.calc_sheets import (
     build_export_plan,
 )
 from .....core.resources import resources
+from .._calc_sheets_apply import _occupied_address_ranges, _occupied_addresses_from_response
 from .._calc_sheets_apply_values import (
     _build_evidence_value_data,
     _build_formula_data,
@@ -55,6 +56,61 @@ def _payload(plan) -> list[dict[str, object]]:
         + _build_evidence_value_data(plan)
         + _build_formula_data(plan.formula_cells)
     )
+
+
+def test_occupied_ranges_keep_only_sorted_managed_positive_grids() -> None:
+    """Operator tabs and zero-sized grids never enter the stale-clear read set."""
+    second_tab = next(tab for tab in TabName if tab is not TabName.EVIDENCIA)
+
+    ranges = _occupied_address_ranges(
+        {
+            "operator-notes": (99, 99),
+            TabName.EVIDENCIA.value: (3, 2),
+            second_tab.value: (0, 8),
+        },
+    )
+
+    assert len(ranges) == 1
+    assert ranges[0].tab is TabName.EVIDENCIA
+    assert ranges[0].address == "'Evidencia'!A1:B3"
+
+
+def test_occupied_response_preserves_zero_false_and_truncates_unaligned_blocks() -> None:
+    """Only empty-string/None cells are vacant; missing or extra blocks cannot misalign tabs."""
+    second_tab = next(tab for tab in TabName if tab is not TabName.EVIDENCIA)
+    ranges = _occupied_address_ranges(
+        {
+            TabName.EVIDENCIA.value: (2, 3),
+            second_tab.value: (2, 2),
+        },
+    )
+    evidence_range = next(item for item in ranges if item.tab is TabName.EVIDENCIA)
+
+    occupied = _occupied_addresses_from_response(
+        ranges,
+        {
+            "valueRanges": [
+                (
+                    {"values": [["", None, 0], [False, "occupied"]]}
+                    if address_range.tab is TabName.EVIDENCIA
+                    else {"values": [["second-tab"]]}
+                )
+                for address_range in ranges
+            ]
+            + [
+                {"values": [["must-not-map-to-any-tab"]]},
+            ],
+        },
+    )
+
+    assert occupied == {
+        SheetCellAddress.at(evidence_range.tab, 1, 3).qualified(),
+        SheetCellAddress.at(evidence_range.tab, 2, 1).qualified(),
+        SheetCellAddress.at(evidence_range.tab, 2, 2).qualified(),
+        SheetCellAddress.at(second_tab, 1, 1).qualified(),
+    }
+    missing_second = _occupied_addresses_from_response(ranges, {"valueRanges": [{"values": [["first"]]}]})
+    assert missing_second == {SheetCellAddress.at(ranges[0].tab, 1, 1).qualified()}
 
 
 class TestWrittenAddressesCoverThePayload:

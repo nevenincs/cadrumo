@@ -433,48 +433,8 @@ def _validate_annual_orden_sidecar(
     if not isinstance(payload_raw, dict):
         raise RegistryLoadError(f"annual Orden sidecar is not a JSON object for {source.id!r}")
     payload = cast(Mapping[str, object], payload_raw)
-    if frozenset(payload) != _SIDECAR_TOP_LEVEL_KEYS:
-        raise RegistryLoadError(f"annual Orden sidecar has extra or missing top-level fields for {source.id!r}")
-    if payload.get("schema_version") != _SIDECAR_SCHEMA_VERSION:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong schema version for {source.id!r}")
-    if payload.get("source_kind") != "normatives_html" or payload.get("status") != "ok":
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong source kind or status for {source.id!r}")
-    expected_source_relpath = f"src/cadrumo/_data/{source.corpus_path}"
-    if payload.get("source_relpath") != expected_source_relpath:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong source path for {source.id!r}")
-    attribution = payload.get("attribution")
-    if not isinstance(attribution, str) or not attribution.strip():
-        raise RegistryLoadError(f"annual Orden sidecar has no attribution for {source.id!r}")
-    if payload.get("source_sha256") != source.sha256:
-        raise RegistryLoadError(f"annual Orden sidecar source digest mismatch for {source.id!r}")
-    if payload.get("preprocessor_id") != _SIDECAR_PREPROCESSOR_ID:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong preprocessor id for {source.id!r}")
-    if payload.get("preprocessor_version") != _SIDECAR_PREPROCESSOR_VERSION:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong preprocessor version for {source.id!r}")
-    raw_units_value = payload.get("units")
-    if not isinstance(raw_units_value, list):
-        raise RegistryLoadError(f"annual Orden sidecar has no units list for {source.id!r}")
-    raw_units_values = cast(list[object], raw_units_value)
-    raw_units = tuple(unit for value in raw_units_values if (unit := _sidecar_mapping(value)) is not None)
-    if len(raw_units) != len(raw_units_values):
-        raise RegistryLoadError(f"annual Orden sidecar contains a non-object unit for {source.id!r}")
-    rendered_units: list[tuple[str | None, str]] = []
-    for unit in raw_units:
-        if frozenset(unit) != _SIDECAR_UNIT_KEYS:
-            raise RegistryLoadError(f"annual Orden sidecar unit has extra or missing fields for {source.id!r}")
-        title = unit.get("title")
-        section = unit.get("section")
-        anchor = unit.get("anchor")
-        text = unit.get("text")
-        if title is not None and not isinstance(title, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text title for {source.id!r}")
-        if section is not None and not isinstance(section, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text section for {source.id!r}")
-        if anchor is not None and not isinstance(anchor, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text anchor for {source.id!r}")
-        if not isinstance(text, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
-        rendered_units.append((title, text))
+    _validate_sidecar_metadata(payload, source)
+    raw_units, rendered_units = _sidecar_units(payload, source)
     text_sidecar_path = source_path.with_name(source_path.name + ".extracted.md")
     try:
         rendered_text = text_sidecar_path.read_text(encoding="utf-8")
@@ -485,29 +445,79 @@ def _validate_annual_orden_sidecar(
     if rendered_text != render_corpus_sidecar_text(rendered_units):
         raise RegistryLoadError(f"annual Orden sidecar pair diverges for {source.id!r}")
 
-    shared_activities = tuple(_shared_activity_table(activity) for activity in activities)
-    anchors = orden_anual_iva_activity_anchors(shared_activities)
+    _validate_sidecar_tables(raw_units, activities, source)
+
+
+def _validate_sidecar_metadata(payload: Mapping[str, object], source: SourceReference) -> None:
+    if frozenset(payload) != _SIDECAR_TOP_LEVEL_KEYS:
+        raise RegistryLoadError(f"annual Orden sidecar has extra or missing top-level fields for {source.id!r}")
+    checks = (
+        ("schema_version", _SIDECAR_SCHEMA_VERSION, "annual Orden sidecar has the wrong schema version"),
+        ("source_relpath", f"src/cadrumo/_data/{source.corpus_path}", "annual Orden sidecar has the wrong source path"),
+        ("source_sha256", source.sha256, "annual Orden sidecar source digest mismatch"),
+        ("preprocessor_id", _SIDECAR_PREPROCESSOR_ID, "annual Orden sidecar has the wrong preprocessor id"),
+        (
+            "preprocessor_version",
+            _SIDECAR_PREPROCESSOR_VERSION,
+            "annual Orden sidecar has the wrong preprocessor version",
+        ),
+    )
+    if payload.get("source_kind") != "normatives_html" or payload.get("status") != "ok":
+        raise RegistryLoadError(f"annual Orden sidecar has the wrong source kind or status for {source.id!r}")
+    for key, expected, message in checks:
+        if payload.get(key) != expected:
+            raise RegistryLoadError(f"{message} for {source.id!r}")
+    attribution = payload.get("attribution")
+    if not isinstance(attribution, str) or not attribution.strip():
+        raise RegistryLoadError(f"annual Orden sidecar has no attribution for {source.id!r}")
+
+
+def _sidecar_units(
+    payload: Mapping[str, object], source: SourceReference
+) -> tuple[tuple[Mapping[str, object], ...], list[tuple[str | None, str]]]:
+    raw = payload.get("units")
+    if not isinstance(raw, list):
+        raise RegistryLoadError(f"annual Orden sidecar has no units list for {source.id!r}")
+    raw_values = cast(list[object], raw)
+    units = tuple(unit for value in raw_values if (unit := _sidecar_mapping(value)) is not None)
+    if len(units) != len(raw_values):
+        raise RegistryLoadError(f"annual Orden sidecar contains a non-object unit for {source.id!r}")
+    rendered: list[tuple[str | None, str]] = []
+    for unit in units:
+        if frozenset(unit) != _SIDECAR_UNIT_KEYS:
+            raise RegistryLoadError(f"annual Orden sidecar unit has extra or missing fields for {source.id!r}")
+        title, section, anchor, text = (unit.get(key) for key in ("title", "section", "anchor", "text"))
+        if (
+            (title is not None and not isinstance(title, str))
+            or (section is not None and not isinstance(section, str))
+            or (anchor is not None and not isinstance(anchor, str))
+            or not isinstance(text, str)
+        ):
+            raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
+        rendered.append((title, text))
+    return units, rendered
+
+
+def _validate_sidecar_tables(
+    units: tuple[Mapping[str, object], ...], activities: tuple[M303AnnualOrdenRawActivity, ...], source: SourceReference
+) -> None:
+    anchors = orden_anual_iva_activity_anchors(tuple(_shared_activity_table(activity) for activity in activities))
     if len(set(anchors)) != _EXPECTED_ACTIVITY_COUNT:
         raise RegistryLoadError(f"annual Orden sidecar anchors are ambiguous for {source.id!r}")
     annual_units = [
         unit
-        for unit in raw_units
+        for unit in units
         if isinstance(unit.get("anchor"), str) and str(unit["anchor"]).startswith("#m303-anexo-ii-iva-")
     ]
     if len(annual_units) != _EXPECTED_ACTIVITY_COUNT or {unit["anchor"] for unit in annual_units} != set(anchors):
         raise RegistryLoadError(f"annual Orden sidecar has extra, missing, or cross-year table units for {source.id!r}")
     for activity, anchor in zip(activities, anchors, strict=True):
-        matches = [unit for unit in raw_units if unit.get("anchor") == anchor]
-        if len(matches) != 1:
-            raise RegistryLoadError(
-                f"annual Orden sidecar must contain exactly one complete table unit for {source.id!r} {anchor!r}",
-            )
-        text = matches[0].get("text")
-        if not isinstance(text, str) or normalise_corpus_text(text) != normalise_corpus_text(
-            m303_annual_orden_table_text(activity),
+        matches = [unit for unit in units if unit.get("anchor") == anchor]
+        if len(matches) != 1 or normalise_corpus_text(str(matches[0].get("text"))) != normalise_corpus_text(
+            m303_annual_orden_table_text(activity)
         ):
             raise RegistryLoadError(
-                f"annual Orden sidecar table cells differ from the pinned BOE source for {source.id!r} {anchor!r}",
+                f"annual Orden sidecar table cells differ from the pinned BOE source for {source.id!r} {anchor!r}"
             )
 
 
