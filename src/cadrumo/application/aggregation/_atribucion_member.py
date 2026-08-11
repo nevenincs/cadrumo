@@ -46,6 +46,12 @@ class _SocioFacts:
     values: Mapping[str, object]
 
 
+@dataclass(frozen=True, slots=True)
+class _AtribucionSocioProjection:
+    complete: tuple[_SocioFacts, ...]
+    diagnostics: tuple[CalculationSourceDiagnostic, ...]
+
+
 class AtribucionMemberSourceResolver:
     """Resolve M184 member rows from the active attribution-entity profile."""
 
@@ -72,41 +78,26 @@ class AtribucionMemberSourceResolver:
                     ),
                 )
 
-        socio_facts = _attribution_entity_socio_facts(record.facts)
-        # A row that is PRESENT but carries a value its declaration refuses is
-        # not usable, and used to be treated as though it were: an out-of-range
-        # share percentage reached the attribution calculation unchallenged, and
-        # a malformed one crashed inside it. Both now stop here, as a visible
-        # diagnostic naming the row -- never a silent number and never a
-        # domain-less traceback.
-        invalid = {socio.index: _invalid_value_refusals(socio) for socio in socio_facts}
-        diagnostics = (
-            *(_missing_field_diagnostic(socio) for socio in socio_facts if _missing_fields(socio)),
-            *(_invalid_value_diagnostic(socio, invalid[socio.index]) for socio in socio_facts if invalid[socio.index]),
+        projection = _project_attribution_socio_facts(_attribution_entity_socio_facts(record.facts))
+        observations = tuple(
+            _observation_from_socio(socio, filing_year=context.filing_year) for socio in projection.complete
         )
-        complete = tuple(
-            sorted(
-                (socio for socio in socio_facts if not _missing_fields(socio) and not invalid[socio.index]),
-                key=_socio_sort_key,
-            ),
-        )
-        observations = tuple(_observation_from_socio(socio, filing_year=context.filing_year) for socio in complete)
         row_binding_values = resolve_atribucion_binding_row_values(context.revision, observations)
-        detail_rows = tuple(_detail_row_from_socio(socio) for socio in complete)
-        fingerprint = _profile_record_fingerprint(record) if complete else None
+        detail_rows = tuple(_detail_row_from_socio(socio) for socio in projection.complete)
+        fingerprint = _profile_record_fingerprint(record) if projection.complete else None
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             row_binding_values=row_binding_values,
             detail_rows=detail_rows,
-            diagnostics=diagnostics,
+            diagnostics=projection.diagnostics,
             provenance=tuple(
                 CalculationSourceProvenance(
                     source_kind=BindingSourceKind.ATRIBUCION_MEMBER.value,
                     source_ref=f"profile:{context.bucket_id}:attribution_entity_socios:{socio.index}",
                     fingerprint=fingerprint,
                 )
-                for socio in complete
+                for socio in projection.complete
             ),
         )
 
@@ -124,6 +115,27 @@ def _attribution_entity_socio_facts(facts: tuple[UserProfileFact, ...]) -> tuple
         index = int(match.group("index"))
         grouped.setdefault(index, {})[match.group("field")] = fact.value
     return tuple(_SocioFacts(index=index, values=grouped[index]) for index in sorted(grouped))
+
+
+def _project_attribution_socio_facts(socio_facts: tuple[_SocioFacts, ...]) -> _AtribucionSocioProjection:
+    # A row that is PRESENT but carries a value its declaration refuses is
+    # not usable, and used to be treated as though it were: an out-of-range
+    # share percentage reached the attribution calculation unchallenged, and
+    # a malformed one crashed inside it. Both now stop here, as a visible
+    # diagnostic naming the row -- never a silent number and never a
+    # domain-less traceback.
+    invalid = {socio.index: _invalid_value_refusals(socio) for socio in socio_facts}
+    diagnostics = (
+        *(_missing_field_diagnostic(socio) for socio in socio_facts if _missing_fields(socio)),
+        *(_invalid_value_diagnostic(socio, invalid[socio.index]) for socio in socio_facts if invalid[socio.index]),
+    )
+    complete = tuple(
+        sorted(
+            (socio for socio in socio_facts if not _missing_fields(socio) and not invalid[socio.index]),
+            key=_socio_sort_key,
+        ),
+    )
+    return _AtribucionSocioProjection(complete=complete, diagnostics=diagnostics)
 
 
 def _missing_fields(socio: _SocioFacts) -> frozenset[str]:

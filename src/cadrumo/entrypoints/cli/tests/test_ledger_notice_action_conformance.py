@@ -25,7 +25,11 @@ from .. import (
     _ledger_import_cli,
     _ledger_lifecycle_cli,
     _ledger_llm_cli,
+    _ledger_ratios_cli,
     _ledger_read_cli,
+    _ledger_review_cli,
+    _ledger_rules_cli,
+    _ledger_support,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -43,7 +47,11 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
     _ledger_import_cli,
     _ledger_lifecycle_cli,
     _ledger_llm_cli,
+    _ledger_ratios_cli,
     _ledger_read_cli,
+    _ledger_review_cli,
+    _ledger_rules_cli,
+    _ledger_support,
 )
 
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
@@ -55,7 +63,7 @@ def _message_expressions(tree: ast.Module, expression: ast.expr) -> Iterator[ast
     """Resolve module-bound values and local helper returns used as notice prose."""
     assignments: dict[str, list[ast.expr]] = {}
     returns: dict[str, list[ast.expr]] = {}
-    for node in tree.body:
+    for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
                 if isinstance(target, ast.Name):
@@ -188,3 +196,45 @@ def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback(
             if any(keyword.arg == "default" for keyword in call.keywords):
                 failures.append(f"{path.name}:{call.lineno}")
     assert failures == []
+
+
+def test_s90_helpers_do_not_reintroduce_presentation_defaults() -> None:
+    """A translation helper cannot hide fallback prose from the direct ``tr`` gate."""
+    failures: list[str] = []
+    for module in _LEDGER_NOTICE_MODULES:
+        tree = ast.parse(inspect.getsource(module))
+        failures.extend(
+            f"{module.__name__}:{call.lineno}"
+            for call in ast.walk(tree)
+            if isinstance(call, ast.Call) and any(keyword.arg == "default" for keyword in call.keywords)
+        )
+    assert failures == []
+
+
+def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
+    """Ledger catalogue leaves are complete, symmetric, and consumed by source."""
+    manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
+    source_keys: set[str] = set()
+    for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        source_keys.update(
+            node.value
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.startswith("cli.ledger.")
+        )
+    key_sets = {
+        locale: {
+            key
+            for key in manager.get_yaml_keys(manager.load_locale(_LOCALES_DIR / f"{locale}.yml"))
+            if key.startswith("cli.ledger.")
+        }
+        for locale in ("ca", "en", "es", "hu")
+    }
+    canonical = key_sets["en"]
+    assert {locale: sorted(keys ^ canonical) for locale, keys in key_sets.items()} == {
+        "ca": [],
+        "en": [],
+        "es": [],
+        "hu": [],
+    }
+    assert sorted(canonical - source_keys) == []

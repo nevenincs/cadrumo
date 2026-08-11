@@ -27,6 +27,7 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
+from ....core.i18n import clear_output_language_cache, tr
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -244,6 +245,26 @@ def test_llm_diagnostics_rejects_out_of_range_threshold(_isolated_backend: None)
     )
     assert result.exit_code != 0
     assert "0..1" in result.output
+
+
+@pytest.mark.parametrize("locale", ("ca", "en", "es", "hu"))
+def test_llm_diagnostics_invalid_date_is_catalogue_localized(
+    _isolated_backend: None,
+    locale: str,
+) -> None:
+    """The real command refusal comes only from the selected catalogue leaf."""
+    with override_settings(cadrumo_output_language=locale):
+        clear_output_language_cache()
+        expected = tr(
+            "cli.ledger.llm_diagnostics.bad_date",
+            option="--since",
+            value="not-a-date",
+        )
+        result = _invoke(["app", "ledger", "llm-diagnostics", "--since", "not-a-date"])
+    clear_output_language_cache()
+
+    assert result.exit_code != 0
+    assert expected in result.output
 
 
 def test_llm_diagnostics_payloads_mirror_their_canonical_bounds() -> None:
