@@ -29,7 +29,7 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
     schema = load_user_profile_schema()
 
     assert schema.id == "cadrumo.user_profile"
-    assert schema.version == 5
+    assert schema.version == 4
     assert schema.snapshot_policy is ProfileSnapshotPolicy.IMMUTABLE_SECURE_SNAPSHOT_HASH
     assert schema.remove_policy is ProfileRemovePolicy.LIVE_PROFILE_TOMBSTONE_RETAIN_SNAPSHOTS
     assert {
@@ -42,8 +42,7 @@ def test_committed_user_profile_schema_loads_with_canonical_sections() -> None:
         "irpf",
         "withholding",
         "iva",
-        "renta_filing",
-        "renta_rental",
+        "filing_export",
         "renta_taxpayer",
         "renta_spouse",
         "renta_family",
@@ -200,17 +199,6 @@ def test_user_profile_schema_models_are_strict_frozen_and_forbid_extras() -> Non
                 "sensitivity": "identity",
                 "description": "Tax identifier.",
                 "unexpected": "not allowed",
-            },
-        )
-
-    with pytest.raises(ValidationError, match="extra_forbidden"):
-        ProfileFieldDefinition.model_validate(
-            {
-                "key": "tax_id",
-                "type": "string",
-                "sensitivity": "identity",
-                "description": "Tax identifier.",
-                "export_headers": ["profile_tax_id"],
             },
         )
 

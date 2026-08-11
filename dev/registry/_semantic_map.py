@@ -10,13 +10,14 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import CasillaId, FilingProducerKey
+from cadrumo.core import CasillaId
 from cadrumo.domain.calculations.registry import (
     BindingId,
     CasillaFieldKindValue,
-    ExportComputedKey,
-    ExportDraftAttribute,
+    ExportComputedKeyValue,
+    ExportDraftAttributeValue,
     ExportFieldId,
+    ExportHeaderKeyValue,
     ExportSemanticPayloadAxis,
     LegalRefs,
     ModeloId,
@@ -70,9 +71,9 @@ class SemanticMapEntry(_StrictModel):
     casilla_id: CasillaId | None = None
     binding: BindingId | None = None
     literal: str | None = None
-    producer_key: FilingProducerKey | None = None
-    draft_attribute: ExportDraftAttribute | None = None
-    computed_key: ExportComputedKey | None = None
+    header_key: ExportHeaderKeyValue | None = None
+    draft_attribute: ExportDraftAttributeValue | None = None
+    computed_key: ExportComputedKeyValue | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
 
@@ -83,7 +84,7 @@ class SemanticMapEntry(_StrictModel):
             ExportSemanticPayloadAxis.CASILLA_ID: self.casilla_id,
             ExportSemanticPayloadAxis.BINDING: self.binding,
             ExportSemanticPayloadAxis.LITERAL: self.literal,
-            ExportSemanticPayloadAxis.PRODUCER_KEY: self.producer_key,
+            ExportSemanticPayloadAxis.HEADER_KEY: self.header_key,
             ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
             ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
         }

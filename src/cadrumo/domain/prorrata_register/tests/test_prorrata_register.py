@@ -27,13 +27,11 @@ import pydantic
 import pytest
 
 from ....core import (
-    ProrrataActivityRowType,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
 from .. import (
-    ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -70,25 +68,6 @@ def _inicio_entry(ejercicio: int = 2024, pct: str = "50") -> ProrrataRegisterEnt
         provisional_percentage=Decimal(pct),
         provisional_provenance=ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
         authorisation_reference="INICIO-036-2024",
-    )
-
-
-def _activity_row(
-    *,
-    activity_id: str,
-    slot: int,
-    ejercicio: int = 2024,
-) -> ProrrataActivityRow:
-    return ProrrataActivityRow(
-        ejercicio=ejercicio,
-        activity_id=activity_id,
-        slot=slot,
-        cnae_code="471",
-        operaciones_total=Decimal("1000.00"),
-        operaciones_con_derecho=Decimal("800.00"),
-        prorrata_type=ProrrataActivityRowType.GENERAL,
-        percentage=Decimal("80.00"),
-        evidence_reference=f"operator-evidence:{activity_id}",
     )
 
 
@@ -346,53 +325,6 @@ def test_register_distinct_sectors_coexist() -> None:
     b = ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.ESPECIAL, sector_id="alquiler")
     register = ProrrataRegister(entries=(a, b))
     assert len(register.entries_for_ejercicio(2024)) == 2
-
-
-def test_activity_rows_keep_stable_identity_and_fixed_slots_unique() -> None:
-    """A year rejects duplicate activity identities and duplicate official slots."""
-    first = _activity_row(activity_id="retail", slot=1)
-    with pytest.raises(pydantic.ValidationError, match="activity_id"):
-        ProrrataRegister(activity_rows=(first, first.model_copy(update={"slot": 2})))
-    with pytest.raises(pydantic.ValidationError, match="slot"):
-        ProrrataRegister(activity_rows=(first, _activity_row(activity_id="leasing", slot=1)))
-
-
-def test_activity_rows_are_ordered_and_complete_only_when_prorrata_applies() -> None:
-    """An active prorrata year refuses the partial five-row substrate; none does not."""
-    active = ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL)
-    partial = ProrrataRegister(entries=(active,), activity_rows=(_activity_row(activity_id="retail", slot=3),))
-    assert partial.requires_activity_rows_for(2024) is True
-    assert partial.activity_rows_complete_for(2024) is False
-    complete = partial.model_copy(
-        update={
-            "activity_rows": tuple(
-                _activity_row(activity_id=f"activity-{slot}", slot=slot) for slot in (5, 2, 4, 1, 3)
-            ),
-        },
-    )
-    assert tuple(row.slot for row in complete.activity_rows_for_ejercicio(2024)) == (1, 2, 3, 4, 5)
-    assert complete.activity_rows_complete_for(2024) is True
-    inactive = ProrrataRegister(
-        entries=(ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA),),
-    )
-    assert inactive.requires_activity_rows_for(2024) is False
-    assert inactive.activity_rows_complete_for(2024) is True
-
-
-def test_activity_row_rejects_right_bearing_operations_above_total() -> None:
-    """A canonical row cannot claim more deductible operations than total operations."""
-    with pytest.raises(pydantic.ValidationError, match="must not exceed"):
-        ProrrataActivityRow(
-            ejercicio=2024,
-            activity_id="retail",
-            slot=1,
-            cnae_code="471",
-            operaciones_total=Decimal("100.00"),
-            operaciones_con_derecho=Decimal("100.01"),
-            prorrata_type=ProrrataActivityRowType.GENERAL,
-            percentage=Decimal("80.00"),
-            evidence_reference="operator-evidence:retail",
-        )
 
 
 def test_register_entry_for_returns_matching_key() -> None:

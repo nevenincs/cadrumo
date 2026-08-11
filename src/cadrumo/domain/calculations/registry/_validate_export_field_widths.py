@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ....core.identity import SPANISH_TAX_ID_WIDTH
 from ._schema import CasillaFieldKind, ExportDraftAttribute, ExportFieldDefinition
 
 #: Canonical character width of every export ``draft_attribute`` whose value is
@@ -34,6 +35,14 @@ from ._schema import CasillaFieldKind, ExportDraftAttribute, ExportFieldDefiniti
 #: fails validation rather than passing silently. That totality is what keeps the
 #: check keyed on the property instead of on the fields that happen to exist now.
 DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[ExportDraftAttribute, int | None] = {
+    # Every value routes through validate_spanish_tax_id, which refuses any
+    # identifier that is not exactly this wide, so a slot of a different width
+    # cannot be holding the declarant's own identifier. A WIDER AEAT slot at some
+    # offset is the tell that the slot belongs to a different party: Modelo 200's
+    # page 001B position 141 is 15 wide because it holds the foreign tax
+    # identification number of a mercantile group's ultimate parent company, and
+    # binding the declarant there declares the filer to be its own parent.
+    ExportDraftAttribute.PROFILE_TAX_ID: SPANISH_TAX_ID_WIDTH,
     # Neither of the two remaining abstentions is a shared "these vary" claim.
     # Recorded per attribute because an abstention that cites the wrong reason is
     # worse than none: it reads as a ruling that the slot widths are legitimately
@@ -58,10 +67,6 @@ DRAFT_ATTRIBUTE_CANONICAL_WIDTHS: Mapping[ExportDraftAttribute, int | None] = {
     # quarterly and monthly modelos carry. A per-period-kind width difference would
     # have been plausible, and the published examples rule it out.
     ExportDraftAttribute.PERIOD_CODE: 2,
-    # The application snapshot derives the canonical period span once.  The
-    # fichero layouts carrying either date declare the AEAT ``aaaammdd`` shape.
-    ExportDraftAttribute.PERIOD_START_DATE: 8,
-    ExportDraftAttribute.PERIOD_END_DATE: 8,
 }
 
 

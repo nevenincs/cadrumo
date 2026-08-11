@@ -182,7 +182,7 @@ def _seed_taxpayer_profile(secure_objects: SecureObjectRepository, *, bucket_id:
             UserProfileFact(path="renta_taxpayer.marriage_full_year", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
             UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
             UserProfileFact(path="renta_family.descendientes_count", value=Decimal("0")),
             UserProfileFact(path="renta_family.cotizaciones_ss_madre_2024", value=Decimal("0")),

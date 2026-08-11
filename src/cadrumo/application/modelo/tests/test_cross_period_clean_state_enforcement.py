@@ -169,7 +169,7 @@ def _seed_m100_profile_facts(bucket_id: str, objects: SecureObjectRepository | N
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
             UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
             UserProfileFact(path="renta_taxpayer.sex", value="M"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
         ),

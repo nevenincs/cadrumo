@@ -19,7 +19,6 @@ class InputKind(StrEnum):
     BOUND = "bound"
     COMPUTED = "computed"
     INFORMATIONAL = "informational"
-    PROJECTION_ONLY = "projection_only"
 
 
 def _coerce_input_kind(value: object) -> object:

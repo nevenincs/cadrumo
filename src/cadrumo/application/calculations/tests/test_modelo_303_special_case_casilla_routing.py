@@ -40,7 +40,6 @@ import pytest
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
@@ -242,9 +241,6 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) 
         report = aggregate_iva_ledger_observations(
             TransactionCatalogue.from_transactions((_recargo_purchase(),)),
             period=Period.from_year_and_code(_YEAR, _PERIOD),
-            ledger_profile_id="m303-special-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="m303-special-test",
         )
 
     # No declarable deducible observation was produced for the recargo purchase...

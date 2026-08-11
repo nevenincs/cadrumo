@@ -40,7 +40,7 @@ from ....domain.calculations.registry import (
     pad_fixed_width_text,
 )
 from .._export import _RecordRenderRow, _render_record
-from ._export_support import _approved_registry_draft, _typed_producer_snapshot
+from ._export_support import _approved_registry_draft
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -93,8 +93,7 @@ def _render(fields: tuple[ExportFieldDefinition, ...]) -> str:
     return _render_record(
         _record(fields),
         draft=_approved_registry_draft(),
-        producer_values={},
-        producer_snapshot=_typed_producer_snapshot(),
+        headers={},
         casilla_values={},
         binding_values={},
         row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),

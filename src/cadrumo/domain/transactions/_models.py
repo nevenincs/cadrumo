@@ -28,7 +28,6 @@ from ...core import (
     Art104TresExclusion,
     ConceptoIngreso,
     Hex64Str,
-    IvaDeductionFactKind,
     TipoActividad,
     fold_diacritics,
 )
@@ -47,7 +46,6 @@ from ..iva import (
     IvaCashAccountingPaymentEvidence,
     IvaCashAccountingTreatment,
     IvaCategory,
-    IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
 )
 from ._enums import BusinessClassification, SplitRole, TransactionDirection, TransactionLifecycleState
@@ -866,10 +864,6 @@ class Transaction(BaseModel):
     classification_confidence: Decimal | None = None
     classification_history: tuple[ClassificationHistoryEntry, ...] = ()
     iva_category: IvaCategory | None = None
-    deduction_fact_kind: IvaDeductionFactKind | None = None
-    deduction_provenance: IvaDeductionClassificationProvenance | None = None
-    investment_asset_id: str | None = None
-    rectifies_ledger_id: str | None = None
     exemption_article: IvaExemptionArticle | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
@@ -924,7 +918,6 @@ class Transaction(BaseModel):
         "business_classification",
         "lifecycle_state",
         "iva_category",
-        "deduction_fact_kind",
         "exemption_article",
         "counterparty_identification_state",
         "cash_accounting_treatment",
@@ -950,7 +943,6 @@ class Transaction(BaseModel):
             "business_classification": BusinessClassification,
             "lifecycle_state": TransactionLifecycleState,
             "iva_category": IvaCategory,
-            "deduction_fact_kind": IvaDeductionFactKind,
             "exemption_article": IvaExemptionArticle,
             "counterparty_identification_state": EUMemberState,
             "cash_accounting_treatment": IvaCashAccountingTreatment,

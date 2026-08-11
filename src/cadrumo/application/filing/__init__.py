@@ -211,10 +211,6 @@ from ._export_parity import did_page_required, required_applicable_casilla_ids
 from ._history_models import ModeloHistory, ModeloHistoryEntry
 from ._history_repository import ModeloHistoryRepository
 from ._import import JustificanteImportResult, import_filing_from_justificante
-from ._m303_regimen_simplificado import (
-    M303RegimenSimplificadoValueArrival,
-    project_m303_regimen_simplificado_value_arrival,
-)
 from ._producer_snapshot import (
     M202_UNSUPPORTED_PRODUCER_IDS,
     AmendmentEvidence,
@@ -223,7 +219,6 @@ from ._producer_snapshot import (
     FilingModelProfileFacts,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
-    GeneralFilingProfileFacts,
     M202UnsupportedProducerId,
     Modelo111ProfileFacts,
     Modelo202ActivityFacts,
@@ -231,7 +226,6 @@ from ._producer_snapshot import (
     PresenterIdentity,
     RefundAccountSelection,
     SelectedFilingAccount,
-    TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
 )
 from ._review import (
@@ -974,10 +968,8 @@ __all__ = [
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
-    "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",
-    "M303RegimenSimplificadoValueArrival",
     "Modelo111ProfileFacts",
     "Modelo202ActivityFacts",
     "Modelo202ProducerProfile",
@@ -991,7 +983,6 @@ __all__ = [
     "PresenterIdentity",
     "RefundAccountSelection",
     "SelectedFilingAccount",
-    "TaxpayerIdentityFacts",
     "approval_stale_reasons",
     "approve_draft",
     "assert_export_artifact_matches_receipt",
@@ -1013,7 +1004,6 @@ __all__ = [
     "list_amendments",
     "load_amendment",
     "load_default_filing_profile",
-    "project_m303_regimen_simplificado_value_arrival",
     "refresh_review_status",
     "render_layout",
     "required_applicable_casilla_ids",

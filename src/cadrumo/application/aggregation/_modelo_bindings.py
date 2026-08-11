@@ -52,7 +52,6 @@ from ...core import (
     validated_casilla_id,
 )
 from ...core.money import round_to_cents
-from ...domain.bienes_inversion import BienesInversionIvaRegister
 from ...domain.calculations.registry import (
     BindingId,
     CasillaDefinition,
@@ -245,13 +244,9 @@ class LedgerIvaAggregationSourceResolver:
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
         invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
-        investment_asset_register: BienesInversionIvaRegister | None = None,
-        investment_asset_profile_id: str | None = None,
     ) -> None:
         self._transaction_repository = transaction_repository
         self._invoice_repository = invoice_repository
-        self._investment_asset_register = investment_asset_register
-        self._investment_asset_profile_id = investment_asset_profile_id
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "ledger_iva_aggregation"):
@@ -266,8 +261,6 @@ class LedgerIvaAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
                 transaction_repository=self._transaction_repository,
-                investment_asset_register=self._investment_asset_register,
-                investment_asset_profile_id=self._investment_asset_profile_id,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(

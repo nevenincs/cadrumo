@@ -5,8 +5,8 @@ profile bindings. They are intentionally domain-owned so CLI and wizard
 surfaces can expose accepted values without hard-coding tax vocabulary
 in the presentation layer.
 
-:class:`RentaSexCode`, :class:`RentaMaritalStatus`, and
-:class:`RentaDisabilityGrade` back Modelo 100
+:class:`RentaDeclaracionType`, :class:`RentaSexCode`,
+:class:`RentaMaritalStatus`, and :class:`RentaDisabilityGrade` back Modelo 100
 profile bindings; :class:`SituacionFamiliar` and
 :class:`SituacionFamiliarM145` keep the Art. 82 LIRPF joint-taxation axis
 separate from Modelo 145 withholding categories.
@@ -19,6 +19,13 @@ from enum import StrEnum
 from types import MappingProxyType
 
 from ._ccaa import CCAA
+
+
+class RentaDeclaracionType(StrEnum):
+    """Modelo 100 ``TIPOTRIBUTACION`` values."""
+
+    INDIVIDUAL = "1"
+    JOINT = "2"
 
 
 class RentaSexCode(StrEnum):
@@ -304,6 +311,7 @@ __all__ = [
     "RENTA_MODELO100_ECIVIL_EXPORT_CODES",
     "UE_EEA_COUNTRY_CODES",
     "FiscalResidency",
+    "RentaDeclaracionType",
     "RentaDisabilityGrade",
     "RentaMaritalStatus",
     "RentaSexCode",

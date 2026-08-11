@@ -55,33 +55,20 @@ from __future__ import annotations
 
 import json
 import weakref
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 from sqlalchemy import delete, select, update
 
-from ....core import STRICT_FROZEN_CONFIG, IvaDeductionFactKind
+from ....core import STRICT_FROZEN_CONFIG
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
 from ....core.time import now, validate_utc_aware
-from ....domain.bienes_inversion import (
-    BienesInversionIvaRegister,
-    InvestmentAssetAcquisitionLink,
-    validate_investment_asset_reciprocity,
-)
-from ....domain.iva import (
-    EUMemberState,
-    InvoiceKind,
-    IvaRateKind,
-    derive_flow_for_classification,
-    rate_kinds_for_declared_rate,
-    validate_iva_deduction_fact,
-)
 from ....domain.transactions import (
     LedgerDatePartition,
     LedgerStorageError,
@@ -90,19 +77,13 @@ from ....domain.transactions import (
     StoredTransactionDriftError,
     Transaction,
     TransactionCatalogue,
-    TransactionDirection,
     transaction_eligible_date_span,
     transaction_filing_date,
     transaction_index_object_key,
     transaction_object_key,
 )
-from ..storage import (
-    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
-    TRANSACTION_CATALOGUE_NAMESPACE,
-    SecureObjectMigrationTarget,
-    SecureObjectRowIdentityError,
-)
-from ..storage.sql import TransactionDateIndexRow
+from ..storage import TRANSACTION_CATALOGUE_NAMESPACE, SecureObjectRowIdentityError
+from ..storage.sql import _orm
 from ..storage.sql.session import session_scope
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -117,7 +98,7 @@ _log = get_logger(__name__)
 _TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
 _TX_CATALOGUE_SENSITIVITY = TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
 TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
-_JSON_OBJECT = TypeAdapter(dict[str, object])
+
 
 class _TransactionIndex(BaseModel):
     """Per-bucket membership list: the transaction ids this bucket owns.
@@ -170,13 +151,10 @@ def _decode_persisted_transaction_row(payload: bytes) -> dict[str, object] | Non
     ``application/aggregation/tests/test_ledger_scale_benchmark.py``).
     """
     try:
-        decoded: object = json.loads(payload.decode(UTF_8_ENCODING))
+        decoded = json.loads(payload.decode(UTF_8_ENCODING))
     except (UnicodeDecodeError, json.JSONDecodeError):
         return None
-    try:
-        return _JSON_OBJECT.validate_python(decoded)
-    except ValidationError:
-        return None
+    return decoded if isinstance(decoded, dict) else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -219,7 +197,7 @@ def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> No
     transaction_payload = decoded.get("payload")
     if not isinstance(transaction_payload, dict):
         return
-    _PersistedTransactionTimestampWitness.validate_payload(_JSON_OBJECT.validate_python(transaction_payload))
+    _PersistedTransactionTimestampWitness.validate_payload(transaction_payload)
 
 
 class TransactionCatalogueRepository:
@@ -312,28 +290,24 @@ class TransactionCatalogueRepository:
             inner_envelope_classification_is_expected,
             inner_envelope_version_is_current,
         )
+        from ..storage.crypto import secure_object_key_digest
+
         index_ids = self._load_index_ids()
         if not index_ids:
             return TransactionCatalogue.from_transactions([])
-        index_key = transaction_index_object_key(self._bucket_id)
-        transaction_keys = {
-            transaction_id: transaction_object_key(self._bucket_id, transaction_id)
+        wanted = {
+            secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)): transaction_id
             for transaction_id in index_ids
         }
-        self._require_current_rows(transaction_keys.values())
-        migrated = self._objects.migrate_many_atomically(
-            TX_BUCKET_NAMESPACE,
-            (index_key, *transaction_keys.values()),
-            expected_class=_TX_CATALOGUE_SENSITIVITY,
-            current_version=_TX_CATALOGUE_VERSION,
-            validate_upgraded_payloads=self._validate_migrated_catalogue_payloads,
-            write_provenance="transaction-catalogue:schema-migration",
-        )
         transactions: list[Transaction] = []
-        for transaction_id, object_key in transaction_keys.items():
-            record = migrated.get(object_key)
-            if record is None:
-                continue
+        for record in self._objects.list_records(
+            TX_BUCKET_NAMESPACE,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
+            max_supported_version=_TX_CATALOGUE_VERSION,
+        ):
+            transaction_id = wanted.get(bytes(record.object_key))
+            if transaction_id is None:
+                continue  # the index row, or (shared store) another bucket's row
             try:
                 decoded_row = _decode_persisted_transaction_row(record.payload)
                 if decoded_row is not None:
@@ -401,198 +375,6 @@ class TransactionCatalogueRepository:
             len(transactions),
         )
         return TransactionCatalogue.from_transactions(transactions)
-
-    def _validate_migrated_catalogue_payloads(self, payloads: Mapping[str, bytes]) -> None:
-        """Validate the whole upgraded catalogue before any v2 row replacement."""
-        transactions = self._validated_migrated_transactions(payloads)
-        if any(
-            transaction.deduction_fact_kind is not None
-            and transaction.deduction_fact_kind.is_investment_acquisition
-            for transaction in transactions
-        ):
-            raise LedgerStorageError(
-                "investment IVA v1 backfill requires explicit reciprocal bienes-inversion authority"
-            )
-
-    def _validated_migrated_transactions(self, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:
-        """Return the complete semantically validated upgraded transaction set."""
-        from ..storage import Envelope
-
-        index_key = transaction_index_object_key(self._bucket_id)
-        index_payload = payloads.get(index_key)
-        if index_payload is None:
-            raise LedgerStorageError("transaction index is absent during schema migration")
-        index = Envelope[_TransactionIndex].model_validate_json(index_payload).payload
-        missing = [
-            transaction_id
-            for transaction_id in index.transaction_ids
-            if transaction_object_key(self._bucket_id, transaction_id) not in payloads
-        ]
-        if missing:
-            raise LedgerStorageError(
-                "transaction rows absent for index ids during schema migration: " + ", ".join(sorted(missing)),
-            )
-        transactions: list[Transaction] = []
-        for transaction_id in index.transaction_ids:
-            payload = payloads[transaction_object_key(self._bucket_id, transaction_id)]
-            envelope = Envelope[Transaction].model_validate_json(payload)
-            self._assert_transaction_row_identity(envelope.payload, expected_transaction_id=transaction_id)
-            self._validate_migrated_deduction_fact(envelope.payload)
-            transactions.append(envelope.payload)
-        return tuple(transactions)
-
-    def _validate_migrated_deduction_fact(self, transaction: Transaction) -> None:
-        """Validate persisted v1 tax evidence without defaulting any semantic axis."""
-        carries_iva = any(
-            value is not None
-            for value in (
-                transaction.taxable_base,
-                transaction.iva_rate,
-                transaction.iva_amount,
-                transaction.iva_category,
-            )
-        )
-        if not carries_iva:
-            return
-        if (
-            transaction.deduction_fact_kind is None
-            or transaction.deduction_provenance is None
-            or transaction.taxable_base is None
-            or transaction.iva_rate is None
-            or transaction.iva_amount is None
-            or transaction.iva_category is None
-        ):
-            raise LedgerStorageError(
-                f"transaction {transaction.transaction_id}: exact IVA kind, provenance, "
-                "amounts, rate, and category are required"
-            )
-        operation_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-        if transaction.deduction_fact_kind is IvaDeductionFactKind.REAGP_COMPENSATION:
-            rate_kind = IvaRateKind.EXEMPT
-        else:
-            rate_kinds = rate_kinds_for_declared_rate(EUMemberState.ES, transaction.iva_rate, operation_date)
-            if len(rate_kinds) != 1:
-                raise LedgerStorageError(
-                    f"transaction {transaction.transaction_id}: persisted IVA rate does not "
-                    "resolve to exactly one legal tier"
-                )
-            rate_kind = next(iter(rate_kinds))
-        invoice_kind = (
-            InvoiceKind.RECEIVED
-            if transaction.direction is TransactionDirection.OUTGOING
-            else InvoiceKind.ISSUED
-        )
-        flow_direction = derive_flow_for_classification(
-            category=transaction.iva_category,
-            invoice_direction=invoice_kind,
-        )
-        validate_iva_deduction_fact(
-            kind=transaction.deduction_fact_kind,
-            provenance=transaction.deduction_provenance,
-            category=transaction.iva_category,
-            rate_kind=rate_kind,
-            flow_direction=flow_direction,
-            base_amount=transaction.taxable_base,
-            iva_amount=transaction.iva_amount,
-            investment_asset_id=transaction.investment_asset_id,
-            rectifies_ledger_id=transaction.rectifies_ledger_id,
-        )
-
-    def migrate_iva_deduction_authority(
-        self,
-        *,
-        asset_profile_id: str,
-    ) -> None:
-        """Atomically migrate the catalogue and its persisted reciprocal register."""
-        if asset_profile_id != self._bucket_id:
-            raise LedgerStorageError("transaction and bienes-inversion profiles must be identical")
-        index_ids = self._load_index_ids(require_current=False)
-        if not index_ids:
-            return
-        index_key = transaction_index_object_key(self._bucket_id)
-        transaction_keys = {
-            transaction_id: transaction_object_key(self._bucket_id, transaction_id)
-            for transaction_id in index_ids
-        }
-
-        bienes_definition = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
-        bienes_key = bienes_definition.require_default_object_key()
-
-        def validate(payloads: Mapping[tuple[str, str], bytes]) -> None:
-            transaction_payloads = {
-                key: payload
-                for (namespace, key), payload in payloads.items()
-                if namespace == TX_BUCKET_NAMESPACE
-            }
-            transactions = self._validated_migrated_transactions(transaction_payloads)
-            register_payload = payloads.get((bienes_definition.namespace, bienes_key))
-            if register_payload is None:
-                raise LedgerStorageError("bienes-inversion register is absent during IVA authority migration")
-            register = BienesInversionIvaRegister.model_validate_json(register_payload)
-            links_by_year: dict[int, list[InvestmentAssetAcquisitionLink]] = {}
-            for transaction in transactions:
-                if (
-                    transaction.deduction_fact_kind is not None
-                    and transaction.deduction_fact_kind.is_investment_acquisition
-                ):
-                    investment_asset_id = transaction.investment_asset_id
-                    if investment_asset_id is None:
-                        raise LedgerStorageError(
-                            f"transaction {transaction.transaction_id!r} has an investment "
-                            "deduction kind without an asset link"
-                        )
-                    transaction_date = (
-                        transaction.operation_date
-                        or transaction.raw.value_date
-                        or transaction.raw.booked_date
-                    )
-                    links = links_by_year.get(transaction_date.year)
-                    if links is None:
-                        links = []
-                        links_by_year[transaction_date.year] = links
-                    links.append(
-                        InvestmentAssetAcquisitionLink(
-                            ledger_id=transaction.transaction_id,
-                            transaction_date=transaction_date,
-                            deduction_fact_kind=transaction.deduction_fact_kind,
-                            investment_asset_id=investment_asset_id,
-                            prorrata_sector_id=transaction.prorrata_sector_id,
-                        )
-                    )
-            years = sorted(
-                set(links_by_year)
-                | {record.acquisition_year for record in register.records}
-            )
-            for filing_year in years:
-                validate_investment_asset_reciprocity(
-                    observations=tuple(links_by_year.get(filing_year, [])),
-                    register=register,
-                    ledger_profile_id=self._bucket_id,
-                    asset_profile_id=asset_profile_id,
-                    filing_year=filing_year,
-                )
-
-        self._objects.migrate_targets_atomically(
-            (
-                *(
-                    SecureObjectMigrationTarget(
-                        TX_BUCKET_NAMESPACE,
-                        key,
-                        _TX_CATALOGUE_SENSITIVITY,
-                        _TX_CATALOGUE_VERSION,
-                    )
-                    for key in (index_key, *transaction_keys.values())
-                ),
-                SecureObjectMigrationTarget(
-                    bienes_definition.namespace,
-                    bienes_key,
-                    bienes_definition.sensitivity,
-                    bienes_definition.schema_version,
-                ),
-            ),
-            validate_upgraded_payloads=validate,
-            write_provenance="transaction-catalogue:iva-deduction-migration",
-        )
 
     def save(self, catalogue: TransactionCatalogue) -> None:
         """Persist ``catalogue`` as per-transaction encrypted rows.
@@ -864,11 +646,11 @@ class TransactionCatalogueRepository:
         with session_scope(self._objects.engine) as session:
             rows = session.execute(
                 select(
-                    TransactionDateIndexRow.transaction_id,
-                    TransactionDateIndexRow.filing_date,
-                    TransactionDateIndexRow.eligible_from,
-                    TransactionDateIndexRow.eligible_to,
-                ).where(TransactionDateIndexRow.bucket_id == self._bucket_id),
+                    _orm.TransactionDateIndexRow.transaction_id,
+                    _orm.TransactionDateIndexRow.filing_date,
+                    _orm.TransactionDateIndexRow.eligible_from,
+                    _orm.TransactionDateIndexRow.eligible_to,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
             ).all()
             return {
                 str(transaction_id): _IndexedTransactionDates(
@@ -906,17 +688,17 @@ class TransactionCatalogueRepository:
         """
         with session_scope(self._objects.engine) as session:
             any_row = session.execute(
-                select(TransactionDateIndexRow.id)
-                .where(TransactionDateIndexRow.bucket_id == self._bucket_id)
+                select(_orm.TransactionDateIndexRow.id)
+                .where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id)
                 .limit(1),
             ).first()
             if any_row is None:
                 return None
             rows = session.execute(
-                select(TransactionDateIndexRow.transaction_id).where(
-                    TransactionDateIndexRow.bucket_id == self._bucket_id,
-                    TransactionDateIndexRow.filing_date >= start,
-                    TransactionDateIndexRow.filing_date <= end,
+                select(_orm.TransactionDateIndexRow.transaction_id).where(
+                    _orm.TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    _orm.TransactionDateIndexRow.filing_date >= start,
+                    _orm.TransactionDateIndexRow.filing_date <= end,
                 ),
             ).scalars()
             return set(rows)
@@ -951,12 +733,12 @@ class TransactionCatalogueRepository:
         with session_scope(self._objects.engine) as session:
             existing_rows = session.execute(
                 select(
-                    TransactionDateIndexRow.id,
-                    TransactionDateIndexRow.transaction_id,
-                    TransactionDateIndexRow.filing_date,
-                    TransactionDateIndexRow.eligible_from,
-                    TransactionDateIndexRow.eligible_to,
-                ).where(TransactionDateIndexRow.bucket_id == self._bucket_id),
+                    _orm.TransactionDateIndexRow.id,
+                    _orm.TransactionDateIndexRow.transaction_id,
+                    _orm.TransactionDateIndexRow.filing_date,
+                    _orm.TransactionDateIndexRow.eligible_from,
+                    _orm.TransactionDateIndexRow.eligible_to,
+                ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
             ).all()
             existing: dict[str, tuple[int, _IndexedTransactionDates]] = {
                 transaction_id: (
@@ -973,21 +755,21 @@ class TransactionCatalogueRepository:
             stale_ids = set(existing) - set(incoming)
             if stale_ids:
                 session.execute(
-                    delete(TransactionDateIndexRow).where(
-                        TransactionDateIndexRow.bucket_id == self._bucket_id,
-                        TransactionDateIndexRow.transaction_id.in_(stale_ids),
+                    delete(_orm.TransactionDateIndexRow).where(
+                        _orm.TransactionDateIndexRow.bucket_id == self._bucket_id,
+                        _orm.TransactionDateIndexRow.transaction_id.in_(stale_ids),
                     ),
                 )
 
-            new_rows: list[TransactionDateIndexRow] = []
+            new_rows: list[_orm.TransactionDateIndexRow] = []
             for transaction_id, dates in incoming.items():
                 current = existing.get(transaction_id)
                 if current is not None and current[1] == dates:
                     continue  # unchanged: leave the existing row untouched
                 if current is not None:
                     session.execute(
-                        update(TransactionDateIndexRow)
-                        .where(TransactionDateIndexRow.id == current[0])
+                        update(_orm.TransactionDateIndexRow)
+                        .where(_orm.TransactionDateIndexRow.id == current[0])
                         .values(
                             filing_date=dates.filing_date,
                             filing_year=dates.filing_date.year,
@@ -997,7 +779,7 @@ class TransactionCatalogueRepository:
                     )
                     continue
                 new_rows.append(
-                    TransactionDateIndexRow(
+                    _orm.TransactionDateIndexRow(
                         bucket_id=self._bucket_id,
                         transaction_id=transaction_id,
                         filing_date=dates.filing_date,
@@ -1096,33 +878,13 @@ class TransactionCatalogueRepository:
         weakref.finalize(transaction, cache.pop, key, None)
         cache[key] = payload_hash
 
-    def _require_current_rows(self, object_keys: Iterable[str]) -> None:
-        """Refuse an ordinary read until the explicit S54 cutover has persisted v2."""
-        from ..storage.crypto import secure_object_key_digest
-
-        digests = {secure_object_key_digest(key) for key in object_keys}
-        old = [
-            row.object_key
-            for row in self._objects.iter_all_records_raw()
-            if row.namespace == TX_BUCKET_NAMESPACE
-            and row.object_key in digests
-            and row.schema_version != _TX_CATALOGUE_VERSION
-        ]
-        if old:
-            raise LedgerStorageError(
-                "transaction catalogue requires explicit IVA authority migration before read"
-            )
-
-    def _load_index_ids(self, *, require_current: bool = True) -> set[str]:
+    def _load_index_ids(self) -> set[str]:
         """Return the transaction ids the per-bucket membership index records."""
         from ..storage import Envelope
 
-        index_key = transaction_index_object_key(self._bucket_id)
-        if require_current:
-            self._require_current_rows((index_key,))
         record = self._objects.load(
             TX_BUCKET_NAMESPACE,
-            index_key,
+            transaction_index_object_key(self._bucket_id),
             expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )

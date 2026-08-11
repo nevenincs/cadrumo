@@ -13,9 +13,9 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
-from cadrumo.core import FilingProducerKey, freeze_toml, read_toml
+from cadrumo.core import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError
 
 from ._semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRecord
@@ -29,7 +29,6 @@ __all__ = [
 
 SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION: Final[int] = 1
 _FRAGMENT_FILENAME = re.compile(r"^[0-9]{4}-(?P<fragment_id>[a-z0-9][a-z0-9-]*)$")
-_RAW_ENTRIES_ADAPTER = TypeAdapter(tuple[dict[str, object], ...], config=ConfigDict(strict=True))
 
 
 class _StrictModel(BaseModel):
@@ -95,37 +94,12 @@ def _semantic_map_fragment_paths(fragment_directory: Path) -> tuple[Path, ...]:
 
 
 def _load_fragment(path: Path) -> SemanticMapFragment:
-    frozen = freeze_toml(
+    data = freeze_toml(
         read_toml(
             path,
             error_factory=lambda message: RegistryValidationError(message),
         ),
     )
-    data: dict[str, object] = dict(frozen)
-    try:
-        raw_entries = _RAW_ENTRIES_ADAPTER.validate_python(data.get("entries", ()))
-    except ValidationError as exc:
-        raise RegistryValidationError(
-            f"invalid semantic-map fragment {path.name!r}: entries must be an array of tables",
-        ) from exc
-    compiled_entries: list[object] = []
-    for raw_entry in raw_entries:
-        entry = dict(raw_entry)
-        if "header_key" in entry:
-            raise RegistryValidationError(
-                f"invalid semantic-map fragment {path.name!r}: legacy header_key is not accepted; use producer_key",
-            )
-        raw_producer_key = entry.get("producer_key")
-        if isinstance(raw_producer_key, str):
-            try:
-                entry["producer_key"] = FilingProducerKey(raw_producer_key)
-            except ValueError as exc:
-                raise RegistryValidationError(
-                    f"invalid semantic-map fragment {path.name!r}: "
-                    f"{raw_producer_key!r} is not a canonical producer_key",
-                ) from exc
-        compiled_entries.append(entry)
-    data["entries"] = tuple(compiled_entries)
     try:
         fragment = SemanticMapFragment.model_validate(data)
     except ValidationError as exc:

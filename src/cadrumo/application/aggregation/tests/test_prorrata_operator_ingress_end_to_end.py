@@ -38,17 +38,14 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import (
-    IvaDeductionEvidenceAuthority,
-    IvaDeductionFactKind,
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
 from ....core.resources import resources
-from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import BindingId
-from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
+from ....domain.iva import InputClassification
 from ....domain.prorrata_register import ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
     BusinessClassification,
@@ -112,11 +109,6 @@ def _purchase(
             "taxable_base": Decimal("50.00"),
             "iva_rate": Decimal("0.21"),
             "iva_amount": _INPUT_CUOTA,
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
-            "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
-                source_locator=f"invoice:{provider_id}", evidence_digest="5" * 64,
-            ),
             "input_classification": classification,
             "prorrata_sector_id": sector_id,
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
@@ -140,8 +132,6 @@ def _deducible_cuota(tx_repo: TransactionCatalogueRepository) -> Decimal:
         bucket_id=_BUCKET_ID,
         period=_PERIOD,
         transaction_repository=tx_repo,
-        investment_asset_register=BienesInversionIvaRegister(),
-        investment_asset_profile_id=_BUCKET_ID,
     )
     values = resolve_iva_ledger_binding_values(
         revision,

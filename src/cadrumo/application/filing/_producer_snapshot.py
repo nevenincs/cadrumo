@@ -48,34 +48,12 @@ class PresenterIdentity(BaseModel):
     full_name: _NonBlankName
 
 
-class TaxpayerIdentityFacts(BaseModel):
-    """Explicit taxpayer name facts for one filing instance.
-
-    The four fields model distinct official producer meanings.  They are not
-    interchangeable aliases: a revision requiring one of them must receive
-    that exact fact, and an absent fact remains absent.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    legal_name: _NonBlankName | None
-    given_name: _NonBlankName | None
-    surnames: _NonBlankName | None
-    full_name: _NonBlankName | None
-
-
 class Modelo111ProfileFacts(BaseModel):
     """Stable Modelo 111 profile facts consumed by a filing producer."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     colegio_concertado: bool | None
-
-
-class GeneralFilingProfileFacts(BaseModel):
-    """Explicit absence of modelo-specific producer facts for a layout."""
-
-    model_config = STRICT_FROZEN_CONFIG
 
 
 class Modelo202ActivityFacts(BaseModel):
@@ -173,9 +151,7 @@ class ChargeAccountSelection(BaseModel):
 
 
 type SelectedFilingAccount = RefundAccountSelection | ChargeAccountSelection
-type FilingModelProfileFacts = (
-    GeneralFilingProfileFacts | Modelo111ProfileFacts | Modelo202ProducerProfile | ModeloIVAProfile
-)
+type FilingModelProfileFacts = Modelo111ProfileFacts | Modelo202ProducerProfile | ModeloIVAProfile
 
 
 class FilingProducerSnapshot(BaseModel):
@@ -185,7 +161,6 @@ class FilingProducerSnapshot(BaseModel):
 
     modelo: Modelo
     taxpayer_tax_id: SubjectTaxId
-    taxpayer_identity: TaxpayerIdentityFacts
     presenter: PresenterIdentity
     model_profile: FilingModelProfileFacts
     elections: FilingElectionFacts
@@ -207,8 +182,8 @@ class FilingProducerSnapshot(BaseModel):
         elif self.modelo is Modelo.M303:
             if not isinstance(self.model_profile, ModeloIVAProfile):
                 raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
-        elif not isinstance(self.model_profile, GeneralFilingProfileFacts):
-            raise ValueError(f"modelo {self.modelo.value} requires GeneralFilingProfileFacts")
+        else:
+            raise ValueError(f"modelo {self.modelo.value} has no typed filing producer profile")
         disposition = self.elections.result_disposition
         if disposition is ResultDisposition.DOMICILIACION:
             if self.elections.payment is not PaymentElection.DOMICILIACION:
@@ -240,7 +215,6 @@ def build_filing_producer_snapshot(
     *,
     modelo: Modelo,
     taxpayer_tax_id: SubjectTaxId,
-    taxpayer_identity: TaxpayerIdentityFacts,
     presenter: PresenterIdentity,
     model_profile: FilingModelProfileFacts,
     elections: FilingElectionFacts,
@@ -266,7 +240,6 @@ def build_filing_producer_snapshot(
         return FilingProducerSnapshot(
             modelo=modelo,
             taxpayer_tax_id=taxpayer_tax_id,
-            taxpayer_identity=taxpayer_identity,
             presenter=presenter,
             model_profile=safe_model_profile,
             elections=elections,
@@ -296,7 +269,6 @@ __all__ = [
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
-    "GeneralFilingProfileFacts",
     "M202UnsupportedProducerId",
     "Modelo111ProfileFacts",
     "Modelo202ActivityFacts",
@@ -304,6 +276,5 @@ __all__ = [
     "PresenterIdentity",
     "RefundAccountSelection",
     "SelectedFilingAccount",
-    "TaxpayerIdentityFacts",
     "build_filing_producer_snapshot",
 ]

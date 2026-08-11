@@ -5,11 +5,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
     ExportComputedKey,
     ExportDraftAttribute,
+    ExportHeaderKey,
 )
 
 from .._semantic_map import SemanticMap, SemanticMapEntry
@@ -44,11 +44,11 @@ def _entry_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
         ("casilla", {"casilla_id": "casilla.03"}, "casilla_id", "casilla.03"),
         ("binding", {"binding": "declarante.nif"}, "binding", "declarante.nif"),
         ("literal", {"literal": "T"}, "literal", "T"),
-        ("header", {"producer_key": FilingProducerKey.PRESENTER_TAX_ID}, "producer_key", FilingProducerKey.PRESENTER_TAX_ID),
-        ("draft", {"draft_attribute": ExportDraftAttribute.FILING_YEAR}, "draft_attribute", ExportDraftAttribute.FILING_YEAR),
+        ("header", {"header_key": "program_version"}, "header_key", ExportHeaderKey.PROGRAM_VERSION),
+        ("draft", {"draft_attribute": "filing_year"}, "draft_attribute", ExportDraftAttribute.FILING_YEAR),
         (
             "computed",
-            {"computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG},
+            {"computed_key": "envelope_closing_tag"},
             "computed_key",
             ExportComputedKey.ENVELOPE_CLOSING_TAG,
         ),
@@ -60,7 +60,7 @@ def test_semantic_entry_accepts_only_the_registry_meaning_for_each_field_kind(
     kind: str,
     semantic_payload: dict[str, object],
     expected_name: str | None,
-    expected_value: object | None,
+    expected_value: str | None,
 ) -> None:
     """Every production export kind maps to its one permitted semantic payload."""
     entry = SemanticMapEntry.model_validate(_entry_payload(kind, **semantic_payload))
@@ -72,7 +72,7 @@ def test_semantic_entry_accepts_only_the_registry_meaning_for_each_field_kind(
         assert entry.casilla_id is None
         assert entry.binding is None
         assert entry.literal is None
-        assert entry.producer_key is None
+        assert entry.header_key is None
         assert entry.draft_attribute is None
         assert entry.computed_key is None
 
@@ -129,7 +129,7 @@ def test_semantic_map_supports_exact_pdf_anchors_without_a_workbook_cell() -> No
         ("casilla", {}, "only casilla_id; declared none"),
         ("binding", {"binding": "declarante.nif", "casilla_id": "casilla.03"}, "only binding"),
         ("filler", {"literal": " "}, "must not declare semantic payloads"),
-        ("checksum", {"computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG}, "must not declare semantic payloads"),
+        ("checksum", {"computed_key": "envelope_closing_tag"}, "must not declare semantic payloads"),
     ],
 )
 def test_semantic_map_rejects_missing_or_conflicting_kind_semantics(
@@ -157,8 +157,7 @@ def test_semantic_map_rejects_parser_coordinates_and_renderer_shape() -> None:
 @pytest.mark.parametrize(
     ("kind", "payload", "deleted"),
     (
-        ("header", {"producer_key": "presenter.tax_id"}, "producer_key"),
-        ("header", {"header_key": "presenter_nif"}, "header_key"),
+        ("header", {"header_key": "presenter_nif"}, "presenter_nif"),
         ("draft", {"draft_attribute": "modelo"}, "modelo"),
         ("computed", {"computed_key": "record_checksum"}, "record_checksum"),
     ),

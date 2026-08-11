@@ -144,7 +144,7 @@ def test_madrid_count_is_overwritten_for_a_determinable_madrid_unit() -> None:
     seeded: dict[str, Any] = {
         "tax_residence.ccaa": "madrid",
         "renta_taxpayer.marital_status": "1",
-        "renta_filing.declaration_type": "1",
+        "filing_export.declaration_type": "1",
         "renta_family.descendiente.0.birth_date": f"{_MADRID_YEAR}-03-01",
         "renta_family.descendiente.0.convivencia": "true",
         _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY: _UNREACHABLE_COUNT,
@@ -162,7 +162,7 @@ def test_unidad_familiar_base_preserves_a_stored_value() -> None:
     determinable_madrid: dict[str, Any] = {
         "tax_residence.ccaa": "madrid",
         "renta_taxpayer.marital_status": "1",
-        "renta_filing.declaration_type": "1",
+        "filing_export.declaration_type": "1",
     }
     seeded: dict[str, Any] = {**determinable_madrid, _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY: _UNREACHABLE_COUNT}
     _inject_derived_autonomic_deduccion_facts(seeded, _MADRID_YEAR)

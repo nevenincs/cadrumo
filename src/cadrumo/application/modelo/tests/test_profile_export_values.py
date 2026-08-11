@@ -90,7 +90,7 @@ def test_a_declared_identity_slot_is_populated_from_the_profile() -> None:
         *_DECLARANTE,
         _Fact("renta_taxpayer.sex", "M"),
         _Fact("tax_residence.ccaa", "10"),
-        _Fact("renta_filing.declaration_type", "1"),
+        _Fact("filing_export.declaration_type", "1"),
     )
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
@@ -113,7 +113,7 @@ def test_an_individual_filing_writes_no_spouse_row() -> None:
         *_DECLARANTE,
         *_SPOUSE,
         _Fact("renta_spouse.sex", "H"),
-        _Fact("renta_filing.declaration_type", "1"),
+        _Fact("filing_export.declaration_type", "1"),
     )
 
     assert [field for field in values if field.endswith("_C")] == []
@@ -130,7 +130,7 @@ def test_a_conjunta_filing_writes_the_spouse_rows() -> None:
         *_DECLARANTE,
         *_SPOUSE,
         _Fact("renta_spouse.sex", "H"),
-        _Fact("renta_filing.declaration_type", "2"),
+        _Fact("filing_export.declaration_type", "2"),
     )
 
     assert values["DP_APENOM_C"] == "PEREZ RUIZ JUAN"
@@ -166,7 +166,7 @@ def test_the_precondition_fact_is_never_used_as_the_value() -> None:
     values = _resolve(
         *_DECLARANTE,
         *_SPOUSE,
-        _Fact("renta_filing.declaration_type", "2"),
+        _Fact("filing_export.declaration_type", "2"),
     )
 
     assert "DPFNAC_C" not in values
@@ -180,7 +180,7 @@ def test_a_multi_part_name_is_composed_rather_than_truncated() -> None:
     two-key binding would file the surnames alone as the taxpayer's full legal
     name. The declared format is what says the keys compose.
     """
-    values = _resolve(*_DECLARANTE, _Fact("renta_filing.declaration_type", "1"))
+    values = _resolve(*_DECLARANTE, _Fact("filing_export.declaration_type", "1"))
 
     assert values["DP_APENOM_D"] == "GARCIA LOPEZ MARIA"
     assert values["DP_APENOM_D"] != "GARCIA LOPEZ"
@@ -202,7 +202,7 @@ def test_a_value_keeps_the_type_the_renderer_decides_from() -> None:
     values = _resolve(
         *_DECLARANTE,
         _Fact("renta_taxpayer.birth_date", date(1980, 5, 17)),
-        _Fact("renta_filing.declaration_type", "1"),
+        _Fact("filing_export.declaration_type", "1"),
     )
 
     assert values["DPFNAC_D"] == date(1980, 5, 17)
@@ -232,7 +232,7 @@ def test_the_repeating_family_slots_are_a_known_structural_gap() -> None:
     values = _resolve(
         *_DECLARANTE,
         _Fact("renta_family.descendiente.0.birth_date", "2020-01-01"),
-        _Fact("renta_filing.declaration_type", "1"),
+        _Fact("filing_export.declaration_type", "1"),
     )
 
     assert repeating, "the revision no longer declares repeating export bindings; revisit this pin"

@@ -42,16 +42,13 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from datetime import date
+from collections.abc import Mapping
 from decimal import Decimal
 from enum import StrEnum
-from typing import Protocol
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
-from ...core import IvaDeductionFactKind
 from ...core.errors import CadrumoError as _CadrumoError
 from ...core.external_constants import (
     IVA_BIEN_INVERSION_INMUEBLE_DIVISOR as _IVA_BIEN_INVERSION_INMUEBLE_DIVISOR,
@@ -79,7 +76,7 @@ class BienInversionValidationError(BienInversionRecordError, ValueError):
     """Raised when a bien-de-inversión record fails Pydantic validation."""
 
 
-BIENES_INVERSION_SCHEMA_VERSION = "2"
+BIENES_INVERSION_SCHEMA_VERSION = "1"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _HUNDRED = Decimal("100")
@@ -185,8 +182,6 @@ class BienInversionIvaRecord(BaseModel):
     kind: BienInversionKind
     art108_elegible: bool = True
     asset_record_ref: str | None = Field(default=None, min_length=1)
-    acquisition_ledger_id: str = Field(min_length=1, max_length=128)
-    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     disposal: BienInversionDisposal | None = None
     schema_version: str = BIENES_INVERSION_SCHEMA_VERSION
 
@@ -528,9 +523,6 @@ class BienesInversionIvaRegister(BaseModel):
         seen = [record.identifier for record in self.records]
         if len(seen) != len(set(seen)):
             raise BienInversionValidationError("register carries duplicate record identifiers")
-        ledger_ids = [record.acquisition_ledger_id for record in self.records]
-        if len(ledger_ids) != len(set(ledger_ids)):
-            raise BienInversionValidationError("register carries duplicate acquisition_ledger_id values")
         return self
 
     def in_window_records(self, regularization_year: int) -> tuple[BienInversionIvaRecord, ...]:
@@ -585,48 +577,8 @@ class RegistroRegularizacionRow(BaseModel):
 
     identifier: str
     kind: BienInversionKind
-    prorrata_sector_id: str | None
     prorrata_anio_pct: Decimal | None
     result: RegularizacionAnualResult | None
-
-
-class BienesInversionSectorContribution(BaseModel):
-    """Immutable one-asset regularisation contribution owned by its register sector."""
-
-    model_config = _STRICT_FROZEN_CONFIG
-
-    asset_id: str
-    prorrata_sector_id: str | None
-    amount: Decimal
-
-
-class InvestmentAssetAcquisitionLink(BaseModel):
-    """Canonical reciprocal edge between one investment IVA fact and one asset."""
-
-    model_config = _STRICT_FROZEN_CONFIG
-
-    ledger_id: str = Field(min_length=1, max_length=128)
-    transaction_date: date
-    deduction_fact_kind: IvaDeductionFactKind
-    investment_asset_id: str = Field(min_length=1, max_length=128)
-    prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
-
-
-class _InvestmentAssetLink(Protocol):
-    @property
-    def ledger_id(self) -> str: ...
-
-    @property
-    def transaction_date(self) -> date: ...
-
-    @property
-    def deduction_fact_kind(self) -> IvaDeductionFactKind | None: ...
-
-    @property
-    def investment_asset_id(self) -> str | None: ...
-
-    @property
-    def prorrata_sector_id(self) -> str | None: ...
 
 
 class RegistroRegularizacionResult(BaseModel):
@@ -653,13 +605,6 @@ class RegistroRegularizacionResult(BaseModel):
     proposed_casilla_43: Decimal
     computed_count: int
     pending_percentage_count: int
-    sector_contributions: tuple[BienesInversionSectorContribution, ...]
-
-    @model_validator(mode="after")
-    def _contributions_equal_casilla_43(self) -> RegistroRegularizacionResult:
-        if sum((item.amount for item in self.sector_contributions), Decimal("0.00")) != self.proposed_casilla_43:
-            raise BienInversionValidationError("per-asset sector contributions must equal proposed_casilla_43")
-        return self
 
 
 def compute_registro_regularizacion(
@@ -688,7 +633,6 @@ def compute_registro_regularizacion(
         A :class:`RegistroRegularizacionResult`.
     """
     rows: list[RegistroRegularizacionRow] = []
-    contributions: list[BienesInversionSectorContribution] = []
     proposed = Decimal("0.00")
     computed_count = 0
     pending = 0
@@ -700,7 +644,6 @@ def compute_registro_regularizacion(
                 RegistroRegularizacionRow(
                     identifier=record.identifier,
                     kind=record.kind,
-                    prorrata_sector_id=record.prorrata_sector_id,
                     prorrata_anio_pct=None,
                     result=None,
                 )
@@ -715,18 +658,10 @@ def compute_registro_regularizacion(
         if result.aplica:
             computed_count += 1
             proposed += result.importe
-            contributions.append(
-                BienesInversionSectorContribution(
-                    asset_id=record.identifier,
-                    prorrata_sector_id=record.prorrata_sector_id,
-                    amount=result.importe,
-                )
-            )
         rows.append(
             RegistroRegularizacionRow(
                 identifier=record.identifier,
                 kind=record.kind,
-                prorrata_sector_id=record.prorrata_sector_id,
                 prorrata_anio_pct=pct,
                 result=result,
             )
@@ -737,7 +672,6 @@ def compute_registro_regularizacion(
         proposed_casilla_43=proposed,
         computed_count=computed_count,
         pending_percentage_count=pending,
-        sector_contributions=tuple(contributions),
     )
 
 
@@ -755,7 +689,6 @@ class RegistroTransmisionRow(BaseModel):
 
     identifier: str
     kind: BienInversionKind
-    prorrata_sector_id: str | None
     disposal_year: int
     result: RegularizacionTransmisionResult
 
@@ -781,13 +714,6 @@ class RegistroTransmisionesResult(BaseModel):
     rows: tuple[RegistroTransmisionRow, ...]
     proposed_casilla_43: Decimal
     computed_count: int
-    sector_contributions: tuple[BienesInversionSectorContribution, ...]
-
-    @model_validator(mode="after")
-    def _contributions_equal_casilla_43(self) -> RegistroTransmisionesResult:
-        if sum((item.amount for item in self.sector_contributions), Decimal("0.00")) != self.proposed_casilla_43:
-            raise BienInversionValidationError("per-asset sector contributions must equal proposed_casilla_43")
-        return self
 
 
 def compute_registro_transmisiones(
@@ -823,7 +749,6 @@ def compute_registro_transmisiones(
     """
     cap_by_identifier = cuota_devengada_entrega_by_identifier or {}
     rows: list[RegistroTransmisionRow] = []
-    contributions: list[BienesInversionSectorContribution] = []
     proposed = Decimal("0.00")
     for record in register.disposed_records(disposal_year):
         assert record.disposal is not None  # guaranteed by disposed_records's filter
@@ -836,18 +761,10 @@ def compute_registro_transmisiones(
             cuota_devengada_entrega=cap_by_identifier.get(record.identifier),
         )
         proposed += result.importe
-        contributions.append(
-            BienesInversionSectorContribution(
-                asset_id=record.identifier,
-                prorrata_sector_id=record.prorrata_sector_id,
-                amount=result.importe,
-            )
-        )
         rows.append(
             RegistroTransmisionRow(
                 identifier=record.identifier,
                 kind=record.kind,
-                prorrata_sector_id=record.prorrata_sector_id,
                 disposal_year=disposal_year,
                 result=result,
             )
@@ -857,53 +774,7 @@ def compute_registro_transmisiones(
         rows=tuple(rows),
         proposed_casilla_43=proposed,
         computed_count=len(rows),
-        sector_contributions=tuple(contributions),
     )
-
-
-def validate_investment_asset_reciprocity(
-    *,
-    observations: Sequence[_InvestmentAssetLink],
-    register: BienesInversionIvaRegister,
-    ledger_profile_id: str,
-    asset_profile_id: str,
-    filing_year: int,
-) -> None:
-    """Validate the one-to-one, same-profile/year/sector acquisition contract."""
-    if ledger_profile_id != asset_profile_id:
-        raise BienInversionValidationError("investment ledger and asset register must share a secure profile")
-    records_by_id = {record.identifier: record for record in register.records}
-    applicable_asset_ids = {
-        record.identifier for record in register.records if record.acquisition_year == filing_year
-    }
-    seen_assets: set[str] = set()
-    for observation in observations:
-        kind = observation.deduction_fact_kind
-        asset_id = observation.investment_asset_id
-        if kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION:
-            raise BienInversionValidationError("regularisation is not a ledger acquisition observation")
-        if kind is None or not kind.is_investment_acquisition:
-            if asset_id is not None:
-                raise BienInversionValidationError("non-investment observation cannot carry investment_asset_id")
-            continue
-        if asset_id is None or asset_id not in records_by_id:
-            raise BienInversionValidationError("investment observation has no reciprocal bienes-inversion record")
-        if asset_id in seen_assets:
-            raise BienInversionValidationError("multiple investment observations reference one bienes-inversion asset")
-        record = records_by_id[asset_id]
-        if record.acquisition_ledger_id != observation.ledger_id:
-            raise BienInversionValidationError("investment asset acquisition_ledger_id is not reciprocal")
-        if record.acquisition_year != filing_year or observation.transaction_date.year != filing_year:
-            raise BienInversionValidationError("investment asset and observation must share the filing year")
-        if record.prorrata_sector_id != observation.prorrata_sector_id:
-            raise BienInversionValidationError("investment asset and observation must share the prorrata sector")
-        seen_assets.add(asset_id)
-    missing_observations = sorted(applicable_asset_ids - seen_assets)
-    if missing_observations:
-        raise BienInversionValidationError(
-            "bienes-inversion assets acquired in the filing year have no reciprocal ledger observation: "
-            + ", ".join(missing_observations)
-        )
 
 
 __all__ = [
@@ -915,8 +786,6 @@ __all__ = [
     "BienInversionRecordError",
     "BienInversionValidationError",
     "BienesInversionIvaRegister",
-    "BienesInversionSectorContribution",
-    "InvestmentAssetAcquisitionLink",
     "RegistroRegularizacionResult",
     "RegistroRegularizacionRow",
     "RegistroTransmisionRow",
@@ -928,5 +797,4 @@ __all__ = [
     "compute_registro_transmisiones",
     "compute_regularizacion_anual",
     "compute_regularizacion_transmision",
-    "validate_investment_asset_reciprocity",
 ]
