@@ -4,7 +4,7 @@ tags:
   - '#user-docs-search-consolidation'
 date: '2026-08-01'
 modified: '2026-08-11'
-body_hash: 'sha256:88c43c05df2dc47c40041d2ea71421feae3c0a0741b611c3f53bbedab8ddc563'
+body_hash: 'sha256:6fd17a3c84c76db75f3e5948ebb784464985420fce0b53ee5c3854357baf0801'
 tier: L2
 related:
   - '[[2026-07-13-docs-terminology-search-research]]'
@@ -76,6 +76,7 @@ Deliver the operator's core ask that no record kind ever served: project the leg
 - [x] `P05.S16` - Reconcile the committed legal relevance targets to the new record ids and extend the target-resolution gate to refuse any target id no injector emits; `src/cadrumo/_data/terminology/relevance/`.
 - [x] `P05.S17` - Add the legal per-kind parity gate proving anchor existence and destination-grounding coverage for every projected provision record; `dev/docs/tests/`.
 - [x] `P05.S34` - Correct the three sites that ranked a legal provision in the DOC band above the modelo and casilla cards it grounds, and gate the agreement between a record's stamped weight and the class it displays under; `dev/docs/terminology/ and docs/_static/cadrumo-docs.js`.
+- [x] `P05.S39` - Confine a per-query relevance boost to its own display-class band so a record that tops one query stops outranking whole classes above it for every query, deriving each band's ceiling from the one declared table rather than hand-listing it, and gate the invariant over the real committed corpus with a live-subject anchor that refuses to pass vacuously; `dev/docs/terminology/_unified_record.py, dev/docs/pagefind_inject.py, dev/docs/terminology/tests/test_relevance_boost_band_containment.py`.
 
 ### Phase `P06` - Deterministic casilla enrollment and definition contract
 

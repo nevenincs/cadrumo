@@ -5,49 +5,11 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:a68bb2b1a01c2b02af670c819e2571fad435a974c795161f866a7d058f8c8616'
+body_hash: 'sha256:acb8319e03a3b40e987c0d02046971a18416def1060819321521367c191b92b8'
 step_id: 'S54'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S54 and 2026-08-10-aeat-export-fragment-generator-authority-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Ground and implement the canonical M303 differentiated-sector source taxonomy before projection by researching and approving the source authorities for current-versus-investment, REAGP, rectification, and bienes-inversion regularisation, preserving the chosen closed classification into frozen IVA observations, defining transaction and asset linkage, adjustment ownership, migration and backfill boundaries, and fail-closed behavior, then landing the canonical observation and resolver changes with real ledger, asset, and refusal proofs and no scalar, mapping, label, or slot inference and ## Scope
-
-- `src/cadrumo/domain/iva/`
-- `src/cadrumo/application/aggregation/`
-- `src/cadrumo/domain/calculations/registry/`
-- `src/cadrumo/domain/bienes_inversion/`
-- `.vault/research/`
-- `.vault/adr/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Ground and implement the canonical M303 differentiated-sector source taxonomy before projection by researching and approving the source authorities for current-versus-investment, REAGP, rectification, and bienes-inversion regularisation, preserving the chosen closed classification into frozen IVA observations, defining transaction and asset linkage, adjustment ownership, migration and backfill boundaries, and fail-closed behavior, then landing the canonical observation and resolver changes with real ledger, asset, and refusal proofs and no scalar, mapping, label, or slot inference
 

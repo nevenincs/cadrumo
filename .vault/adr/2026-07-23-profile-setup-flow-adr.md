@@ -7,8 +7,8 @@ modified: '2026-08-02'
 body_hash: 'sha256:4a9808eda1c120a5b4f260b14a212d7bfa6e24375bb46c98de042a1a6b709076'
 related:
   - "[[2026-07-23-profile-setup-flow-setup-flow-design-hypothesis-research]]"
+  - '[[2026-08-11-profile-setup-flow-critical-baseline-research]]'
 ---
-
 # `profile-setup-flow` adr: `paged profile setup flow with dynamic copy assembly and cotejo censal` | (**status:** `accepted`)
 
 ## Problem Statement

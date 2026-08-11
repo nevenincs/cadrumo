@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#user-docs-search-consolidation'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:fb48a0457944fd576d7d742224f964d03d2e26c864c9a09f9066a16e85d4fa80'
+body_hash: 'sha256:acf7b878abf711d71f7bb744d522d43cfece046ac2f1fb8a50c0195cf3e0f47a'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
 ---
@@ -97,3 +97,19 @@ RANK-002 wants a decision before code. Confining a boost to its class band is th
 RANK-003 is the standing goal's remaining substance. The lexical tier answers taxonomy queries well and prose queries poorly, and the semantic tier that would close it is correctly withheld. Raising its coverage past the floor is the work; enabling it as it stands is not.
 
 RANK-001 needs no further action beyond the gates already landed, which assert the agreement between a record's stamped weight and the class it displays under rather than restating either table.
+
+## 2026-08-11 disposition
+
+Every finding above is now actioned. Recorded here so no item wears an open marker without a stated outcome.
+
+**RANK-001, FIXED.** Unchanged, and now additionally gated: the pinned ladder enumerated only five of the six display classes, so the coverage assertion read `5 == 6` and the ordering assertion never saw the legal band at all. The legal class is enrolled in its ruled position and pinned from both sides, proven by restoring the original aliasing in memory.
+
+**RANK-002, FIXED.** Closed under a decision record rather than an opportunistic edit, as this audit asked. A boost is now mapped into the band between its own class's declared weight and the next class's, with a reserved margin so it approaches but never reaches the class above. The band-with-headroom shape this audit recommended is the shape adopted; the clamp-to-base alternative was rejected for the inertness this audit predicted, and a strict within-band ordering assertion now catches exactly that failure mode. 55 of the 90 boosted records carried a raw weight at or above their band ceiling, so the flattening was systemic rather than a single outlier.
+
+**RANK-003 and RANK-004, CARRIED FORWARD as lexical-tier work.** ADR Update 12 retires the semantic tier, so the prose-recall gap is explicitly not carried forward to it. This audit's own measurement is why that is honest rather than a downgrade: the dominant cause is term conjunction, not semantics, and removing function words alone restored recall by more than an order of magnitude. The remedy is an explicit per-language function-word authority or progressive term relaxation. The negative result on corpus-frequency thresholds stands as recorded and should not be re-attempted.
+
+**RANK-005, RESOLVED as the retirement evidence.** This finding is the substance of the Rung-2 ruling. The operator ruled the tier's removal intended, and ADR Update 12 (D12) records the retirement citing these measurements. The multilingual authoring programme is a formally deferred carry-forward, not dropped scope.
+
+**RANK-006, PARTIALLY CLOSED.** The corrupt Hungarian term is corrected in the Handbook. The committed relevance mapping still keys the stale string, and the target-vocabulary gate is red on it. The remediation remains the re-sweep this audit named, and the re-sweep is blocked: it needs the authoritative record projection, which currently refuses because a peer campaign's M303 casillas carry declared-but-null Spanish labels. Deliberately not hand-edited, for the reason this audit gave.
+
+**RANK-007, RECURRED and RE-ATTRIBUTED.** The failure shape has changed. This audit recorded 39 self-referencing scaffold placeholders; at HEAD there are none, and the blocking shape is now a declared key with a null value, which `scaffold --check` reports as clean while the resolver correctly refuses it. 889 Spanish casilla labels are null, every one of them M303, landed by the active M303 registry buildout on 2026-08-10 and 2026-08-11. Spanish is the mandatory source locale, so the projection's hard refusal is correct and must not be softened into a skip. Owner is that campaign.

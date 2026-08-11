@@ -17,7 +17,7 @@ related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
 modified: '2026-08-11'
-body_hash: 'sha256:780cc537adbe8bf81766285be5addc144032aa87afa2bd21e60a9ba40f497842'
+body_hash: 'sha256:a29659916c97804777f0419f57668641391aa0daef48a8f2c988f0c70f5ecb33'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 

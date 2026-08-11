@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#ci-lane-deconflation'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-11'
 body_schema: 'body-v1'
 body_hash: 'sha256:f9b51bc8a616e8cf50bf960df26836fa3824c7a1655c0fe3dfc322341203ebe6'
 related:
@@ -51,7 +51,6 @@ related:
   - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
   - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
   - '[[2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit]]'
-  - '[[2026-08-10-ci-lane-deconflation-exec]]'
   - '[[2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr]]'
 ---
 

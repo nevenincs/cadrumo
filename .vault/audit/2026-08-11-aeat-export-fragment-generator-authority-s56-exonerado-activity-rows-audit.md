@@ -35,4 +35,3 @@ No unresolved critical, high, medium, or low findings remain. The live implement
 No further S56-specific remediation is required. Retain the real five-epoch application matrix alongside the lower-level exact-anchor proof so future source-selection, provider-citation, row-order, or marker regressions fail at the boundary that exports consume.
 
 Final verdict: approved. The original medium finding is resolved, all S56 acceptance surfaces reviewed here are satisfied, and the focused behavior and static checks are green within the stated validation boundary.
-

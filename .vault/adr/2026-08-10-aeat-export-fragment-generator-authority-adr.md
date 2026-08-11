@@ -8,6 +8,8 @@ related:
   - '[[2026-08-09-aeat-design-relayout-boundary-modelo-200-fragment-tree-provenance-research]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-source-authority-research]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research]]'
+  - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
+  - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
 supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
 modified: '2026-08-10'

@@ -5,46 +5,11 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:cc5930ab5685067872a8fc03fcb591fdbe9b2cb6ffa30e7a1c2ef43fd058390d'
+body_hash: 'sha256:f044ff9b0b6bb76a0d75b686c564e816a16709ce0ddbdeec930c5be42d006b18'
 step_id: 'S51'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S51 and 2026-08-10-aeat-export-fragment-generator-authority-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Enforce M303 export applicability before rendering: optional canonical values may emit blank only when law/profile says not applicable, while exonerado, prorrata, differentiated-sector, simplified-regime, amendment, payment, and account populations with missing required authority refuse the whole export. Prove unsupported fields cannot be reclassified as filler, header defaults, or legacy lookups and ## Scope
-
-- `src/cadrumo/application/modelo/`
-- `src/cadrumo/application/filing/`
-- `src/cadrumo/domain/calculations/registry/tests/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Enforce M303 export applicability before rendering: optional canonical values may emit blank only when law/profile says not applicable, while exonerado, prorrata, differentiated-sector, simplified-regime, amendment, payment, and account populations with missing required authority refuse the whole export. Prove unsupported fields cannot be reclassified as filler, header defaults, or legacy lookups
 

@@ -5,37 +5,11 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:a5392cbcfb3d33bc148e019997e779eddd7b2008ed771f5f65ef74351d31477c'
+body_hash: 'sha256:7ccd38568db5c002aadbf5f85f68c3ac5833afcacbb11b3c5f5e123d85ea8e95'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #research) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown [label](path) links in the document body.
-     - Cite external sources as bare URLs. Cite code, commits, packages, and
-       standards as inline backtick locators: `src/module.py:42`, commit
-       `abc1234`, `package@1.2.3`, RFC 9110. -->
-
-<!-- DOCUMENT BOUNDARY:
-     Research grounds; the ADR decides. Frame the option space with evidence
-     and trade-offs; at most name the option the evidence favors and what
-     the ADR must settle. Never record the decision here - a decision
-     outside the ADR forks and goes stale when the ADR chooses otherwise. -->
 
 # `aeat-export-fragment-generator-authority` research: `S54 differentiated-sector source taxonomy`
 

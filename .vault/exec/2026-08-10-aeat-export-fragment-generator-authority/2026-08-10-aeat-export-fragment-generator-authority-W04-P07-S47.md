@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-10'
+modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:e62ccaae384377a67c21db429bc199a7731f93804c63f758ee10ed9a93775d3e'
+body_hash: 'sha256:4efc758d6c75b386feb28d761161abcfb5eb772cc97d34bbc19fc966077bce44'
 step_id: 'S47'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace aeat-export-fragment-generator-authority with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S47 and 2026-08-10-aeat-export-fragment-generator-authority-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Author the M303 exonerado-390 annual-summary official numbered casillas and their exact legal/source/applicability metadata for every applicable explicit revision, preserving the annual-summary values as canonical casilla projection endpoints and refusing the exonerado population until every required endpoint and producer is present and ## Scope
-
-- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Author the M303 exonerado-390 annual-summary official numbered casillas and their exact legal/source/applicability metadata for every applicable explicit revision, preserving the annual-summary values as canonical casilla projection endpoints and refusing the exonerado population until every required endpoint and producer is present
 

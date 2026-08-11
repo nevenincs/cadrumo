@@ -7,8 +7,8 @@ related:
   - "[[2026-05-27-khalid-cli-testimonial-audit]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
-modified: '2026-08-10'
-body_hash: 'sha256:405e2af0fb498453cfbc7f75ea7753fd0da65775b8c6a11b843709f8b6f70397'
+modified: '2026-08-11'
+body_hash: 'sha256:be1ed79857bd73ec58298ab10e156367b621b52f50010b905e96e93cbd90866f'
 ---
 # `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `proposed`)
 
