@@ -131,6 +131,55 @@ def build_action_catalogue(entries: Iterable[ActionCatalogueEntry]) -> ActionCat
 OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
     (
         ActionCatalogueEntry(
+            action_id="operator.auth.configure",
+            target_command_key="config.auth.configure",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="provider",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="provider",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="file",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="file",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.auth.login",
+            target_command_key="config.auth.login",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="provider",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="provider",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.diagnostics.secure_objects.quarantine",
+            target_command_key="config.repair.quarantine",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="yes",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="yes",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
+            action_id="operator.diagnostics.workflow.reset_progress",
+            target_command_key="config.repair.reset_progress",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="yes",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="yes",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.create",
             target_command_key="config.profile.create",
             argument_specifications=(
