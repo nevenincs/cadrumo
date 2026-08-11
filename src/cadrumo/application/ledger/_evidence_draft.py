@@ -1788,7 +1788,42 @@ class InvoiceConfirmationResult(BaseModel):
     establishment: ConfirmedEstablishment | None = None
 
 
-def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) -> str | None:
+def _without_own_country_prefix(value: str, *, country: str) -> str:
+    """Return *value* with a leading prefix naming *country* removed.
+
+    Only that country's own prefix, never any alpha-2. A German-prefixed number
+    on a counterparty recorded in Spain keeps its prefix and therefore keeps
+    disagreeing, which is the outcome that must survive: the point is to stop
+    refusing two spellings of ONE bearer, not to stop distinguishing two.
+    """
+    token = value.strip().upper()
+    head = country.strip().upper()
+    if len(head) == 2 and token.startswith(head) and len(token) > 2:
+        return token[2:]
+    return token
+
+
+def _same_bearer_allowing_own_country_prefix(left: str, right: str, *, country: str) -> bool:
+    """Whether two spellings name one bearer, discounting this country's prefix.
+
+    Delegates to the canonical same-bearer predicate rather than reimplementing
+    it, so the separator rule stays in one place and this function adds exactly
+    one axis on top of it.
+    """
+    if same_tax_identifier(left, right):
+        return True
+    return same_tax_identifier(
+        _without_own_country_prefix(left, country=country),
+        _without_own_country_prefix(right, country=country),
+    )
+
+
+def _agreed_counterparty_tax_id(
+    *,
+    supplied: str | None,
+    extracted: str | None,
+    counterparty_country: str,
+) -> str | None:
     """Resolve the counterparty tax id, refusing a supplied/extracted disagreement.
 
     Every other field here layers an operator value over the extracted one and
@@ -1836,9 +1871,26 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
     A blank on either side answers "not the same" and refuses, because an
     invoice cannot be confirmed against an identity nothing supplied.
 
+    **The second axis is the COUNTRY PREFIX, and it is handled here rather than
+    in the shared predicate.** A document routinely states an identifier in its
+    VAT form while an operator supplies the bare national form -- ``ESB12345674``
+    against ``B12345674`` -- and those name one bearer. The shared predicate
+    cannot know that: stripping a leading alpha-2 from both sides unconditionally
+    would merge bearers ACROSS States, since the same national body can exist
+    under two different prefixes, and that predicate is also consumed by the
+    identity-role resolver and the direction deriver, where a looser rule would
+    silently change who counts as the taxpayer on every document.
+
+    So the prefix is stripped only when it names THIS counterparty's own country,
+    which is a fact this call site has and the predicate does not. One side
+    carrying ``DE`` against a counterparty recorded in Spain still disagrees, and
+    must.
+
     Args:
         supplied: The operator's ``--counterparty-nif``, or ``None``.
         extracted: What the on-host extractor read, or ``None``.
+        counterparty_country: The alpha-2 country recorded for this
+            counterparty, which decides which prefix may be discounted.
 
     Returns:
         The value to confirm with, or ``None`` when neither side has one.
@@ -1854,7 +1906,7 @@ def _agreed_counterparty_tax_id(*, supplied: str | None, extracted: str | None) 
         # the operator's value is authoritative. This is the override case the
         # flag has always served, and it stays.
         return supplied
-    if not same_tax_identifier(supplied, extracted):
+    if not _same_bearer_allowing_own_country_prefix(supplied, extracted, country=counterparty_country):
         raise PurchaseInvoiceEvidenceInputError(
             "cannot confirm an invoice: the counterparty_tax_id supplied does not match the one "
             "extracted from the document. Check the tax id printed on the invoice; re-run the "
@@ -2541,7 +2593,11 @@ def confirm_invoice_draft_from_evidence(
         "retencion_amount": retention_amount,
     }
     resolved_counterparty_tax_id = _require_confirmed_field(
-        _agreed_counterparty_tax_id(supplied=counterparty_tax_id, extracted=extracted_counterparty_tax_id),
+        _agreed_counterparty_tax_id(
+            supplied=counterparty_tax_id,
+            extracted=extracted_counterparty_tax_id,
+            counterparty_country=counterparty_country,
+        ),
         field="counterparty_tax_id",
     )
     assert isinstance(resolved_counterparty_tax_id, str)
