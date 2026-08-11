@@ -36,7 +36,7 @@ import typer
 
 from ...application.operator_actions import ActionReference
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
 from ...core.output_rendering import OutputFormat
 from ...domain.iva import InvoiceKind
 from ._common import _bad, _emit_envelope, _format_of, _state, _tx_repo, emit_progress_line, resolve_notice_action
@@ -271,12 +271,14 @@ def _notice_line(notice: Notice) -> str:
     # and materialised bindings; notices without one do not gain a synthetic
     # command field.
     values = ["notice", notice.severity.value, notice.code, notice.message]
-    if notice.action is not None:
+    notice_action = notice.action
+    if isinstance(notice_action, ResolvedNoticeAction):
+        action_reference = notice_action.action
         values.extend(
             [
-                notice.action.action.action_id,
-                notice.action.action.target_command_key,
-                ",".join(f"{binding.argument_name}={binding.value}" for binding in notice.action.argument_bindings)
+                action_reference.action_id,
+                action_reference.target_command_key,
+                ",".join(f"{binding.argument_name}={binding.value}" for binding in notice_action.argument_bindings)
                 or "-",
             ],
         )

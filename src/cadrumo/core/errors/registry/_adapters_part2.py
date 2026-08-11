@@ -123,11 +123,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="FAIL_LLM_PROVIDER",
             category=ErrorCategory.FAIL,
             message_key="errors.fail.fail_llm_provider",
-            # The permanent half of the provider boundary: a 4xx, or a 2xx whose
-            # body does not match the provider schema. The identical request
-            # fails identically forever, so retrying it spends the budget and
-            # delays the real refusal. The transient half is
-            # LLMTransientTransportError below, which is retryable.
             retryable=False,
             runbook_id=None,
         ),
@@ -188,12 +183,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LLM_CONTENTION",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_llm_contention",
-            # The check reports which remediation applies -- unload a model
-            # Cadrumo selected, or close a peer application holding the device --
-            # and the raised error carries that verdict verbatim. This default
-            # covers only the case where none reached the instance.
-            # Headroom does not return on a timer, so a scheduled re-send turns
-            # one refusal into several while the memory is still held.
             retryable=False,
             runbook_id=None,
         ),
@@ -204,14 +193,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_LLM_BUSY",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_llm_busy",
-            # The next step is to see WHAT is running before retrying: the check
-            # renders the resident set and the contention snapshot, which
-            # distinguishes "my own read is still going" from "a peer process
-            # holds the device". Telling the operator to simply retry would
-            # misdirect in the second case, and the agent-operator follows it.
-            # Not retryable by the transport: occupancy does not decay on a
-            # timer, it decays when the running read finishes, and an automatic
-            # retry would spin against a full arena inside its own budget.
             retryable=False,
             runbook_id=None,
         ),

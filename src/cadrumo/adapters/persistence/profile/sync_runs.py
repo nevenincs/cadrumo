@@ -31,6 +31,7 @@ class SyncRunRecordRepository(SecureBoundRepository[SyncRunRecord], SyncRunRecor
             bucket_event_id=payload.bucket_event_id,
         )
 
+    @override
     def save_with_bucket_event(self, record: SyncRunRecord, event: BucketEvent) -> None:
         """Commit the run record and its event with the shared backend transaction."""
         events = BucketEventHistoryRepository(objects=self.secure_object_repository)

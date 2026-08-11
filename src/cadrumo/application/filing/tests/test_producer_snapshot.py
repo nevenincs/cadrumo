@@ -333,6 +333,9 @@ def test_presenter_is_required_and_never_derived_from_taxpayer() -> None:
     )
     assert snapshot.presenter.tax_id == _PRESENTER_TAX_ID
     assert snapshot.taxpayer_tax_id == _TAXPAYER_TAX_ID
+    producer_values = _filing_producer_values(snapshot)
+    assert producer_values[FilingProducerKey.PRESENTER_TAX_ID] == _PRESENTER_TAX_ID
+    assert producer_values[FilingProducerKey.TAXPAYER_TAX_ID] == _TAXPAYER_TAX_ID
     with pytest.raises(ValidationError, match="frozen"):
         snapshot.presenter.full_name = "Mutated"  # type: ignore[misc]
 

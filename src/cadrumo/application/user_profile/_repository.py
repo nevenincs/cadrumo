@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 from collections.abc import Iterable
 
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from ...adapters.persistence.storage import (
     USER_PROFILE_SNAPSHOT_NAMESPACE as USER_PROFILE_SNAPSHOT_STORAGE_NAMESPACE,
@@ -93,6 +93,7 @@ _PROFILE_RECORD_VERSION_MESSAGE = "profile record schema version is not supporte
 _PROFILE_SNAPSHOT_MISSING_MESSAGE = "profile snapshot not found in secure storage"
 _PROFILE_SNAPSHOT_VERSION_MESSAGE = "profile snapshot schema version is not supported"
 _OUTPUT_LANGUAGE_FACT_PATH = "preferences.output_language"
+_JSON_OBJECT = TypeAdapter(dict[str, object])
 _log = get_logger(__name__)
 
 
@@ -260,12 +261,12 @@ def _require_stored_payload_schema_version(raw_payload: bytes, *, namespace: str
     change behaviour for records that have no such marker and are not ours.
     """
     try:
-        document = json.loads(raw_payload.decode("utf-8"))
+        document = _JSON_OBJECT.validate_python(json.loads(raw_payload.decode("utf-8")))
     except (UnicodeDecodeError, ValueError):
         # Malformed bytes are not this check's subject; the typed validation
         # below reports them with the field-level detail it already produces.
         return
-    inner = document.get("payload") if isinstance(document, dict) else None
+    inner = document.get("payload")
     if not isinstance(inner, dict) or "schema_version" in inner:
         return
     raise EnvelopeVersionError(

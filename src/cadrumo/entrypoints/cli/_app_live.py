@@ -385,7 +385,8 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
                     (
                         str(row.year),
                         row.period.registry_token,
-                        row.status,
+                        f"provenance={row.provenance.value}",
+                        f"register_status={row.register_status or ''}",
                         f"prior={row.prior_pending_amount}",
                         f"applied={row.applied_amount}",
                         f"pending_later={row.pending_for_later_amount}",

@@ -35,7 +35,14 @@ from ....application.live import (
     select_declarations_for_capture,
 )
 from ....application.registry import verify_filed_state
-from ....core import AuthProviderKind, CasillaId, CasillaValueKind, Period, validated_casilla_id
+from ....core import (
+    AuthProviderKind,
+    CasillaId,
+    CasillaValueKind,
+    IvaCompensationStateProvenance,
+    Period,
+    validated_casilla_id,
+)
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import calculate_registry_snapshot
@@ -465,7 +472,8 @@ def test_live_iva_wallet_history_output_lines_surface_lots_and_authority_decisio
             IvaCompensationHistoryRow(
                 year=2024,
                 period=Period.from_year_and_code(2024, "1T"),
-                status="ALTA",
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+                register_status="ALTA",
                 presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
                 prior_pending_amount="100.00",
                 applied_amount="40.00",
@@ -550,7 +558,8 @@ def test_live_iva_wallet_history_payload_preserves_typed_periods() -> None:
             IvaCompensationHistoryRow(
                 year=2024,
                 period=Period.from_year_and_code(2024, "1T"),
-                status="ALTA",
+                provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+                register_status="ALTA",
                 presented_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
                 prior_pending_amount="100.00",
                 applied_amount="0.00",

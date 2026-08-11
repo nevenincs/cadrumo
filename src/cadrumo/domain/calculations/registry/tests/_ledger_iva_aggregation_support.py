@@ -8,10 +8,24 @@ from functools import lru_cache
 from typing import Final
 
 from .....application.calculations import resolve_iva_compensation_annual_partition_binding_values
-from .....core import BindingSourceKind, CasillaId, validated_casilla_id
+from .....core import (
+    BindingSourceKind,
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    validated_casilla_id,
+)
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind
+from ....iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaExemptionArticle,
+    IvaFlowDirection,
+    IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from .. import (
     BindingId,
     DataBindingDefinition,
@@ -115,6 +129,8 @@ def _observation(
     iva: Decimal = Decimal("210"),
     recargo: Decimal = Decimal("0"),
     applied_rate: Decimal | None = None,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    deduction_authority: IvaDeductionEvidenceAuthority | None = None,
 ) -> IvaLedgerObservation:
     """Build an observation fixture, requiring the rate on the domestic tiers.
 
@@ -144,6 +160,17 @@ def _observation(
             "every production path supplies one on the domestic tiers, so this models "
             "a row that cannot occur. State the rate the line carried.",
         )
+    if (deduction_fact_kind is None) is not (deduction_authority is None):
+        raise AssertionError("deduction fact kind and evidence authority must be stated together")
+    deduction_provenance = (
+        IvaDeductionClassificationProvenance(
+            authority=deduction_authority,
+            source_locator=f"test-ledger:{ledger_id}",
+            evidence_digest="a" * 64,
+        )
+        if deduction_authority is not None
+        else None
+    )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -155,6 +182,8 @@ def _observation(
         iva_amount=iva,
         recargo_amount=recargo,
         applied_rate=applied_rate,
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
     )
 
 
@@ -181,6 +210,9 @@ def _calculate_303_from_observations(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": observations[-1].transaction_date},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
 

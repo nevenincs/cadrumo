@@ -38,6 +38,7 @@ from ....application.ledger import (
     batch_item_identity,
 )
 from ....core.config import override_settings
+from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction
 from ....domain.iva import InvoiceKind
 from .._ledger_evidence_batch_cli import _run_notices
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
@@ -342,10 +343,13 @@ def test_pending_review_resolves_the_review_queue_action() -> None:
 
     (notice,) = notices
     assert notice.code == "ledger.evidence.batch.pending_review"
-    assert notice.action is not None
-    assert notice.action.action.action_id == "operator.ledger.evidence.review.list"
-    assert notice.action.action.target_command_key == "ledger.evidence.review.list"
-    assert notice.action.argument_bindings == ()
+    notice_action = notice.action
+    assert isinstance(notice_action, ResolvedNoticeAction)
+    action_reference = notice_action.action
+    assert isinstance(action_reference, ResolvedActionReference)
+    assert action_reference.action_id == "operator.ledger.evidence.review.list"
+    assert action_reference.target_command_key == "ledger.evidence.review.list"
+    assert notice_action.argument_bindings == ()
 
 
 def test_an_unreadable_source_counts_as_a_failure_without_becoming_an_item() -> None:

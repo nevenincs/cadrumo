@@ -17,6 +17,7 @@ class FilingProducerKey(StrEnum):
 
     PRESENTER_TAX_ID = "presenter.tax_id"
     FILING_RESULT_DISPOSITION = "filing.result_disposition"
+    TAXPAYER_TAX_ID = "taxpayer.tax_id"
     TAXPAYER_LEGAL_NAME = "taxpayer.legal_name"
     TAXPAYER_GIVEN_NAME = "taxpayer.given_name"
     TAXPAYER_SURNAMES = "taxpayer.surnames"

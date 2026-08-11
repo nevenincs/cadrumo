@@ -49,44 +49,50 @@ def validate_m303_export_applicability(
         for field in record.fields
         if field.projection_ref is not None
     )
-    projected_values: dict[tuple[str, int | None], object] = {
-        (ref.model_dump_json(), row_index): None
+    projected_values: dict[tuple[str, int | None], object] = {}
+    exonerado_refs = tuple(
+        ref
         for ref in projection_refs
-        for row_index in (
-            (0, 1, 2)
-            if isinstance(
-                ref,
-                M303RegimenSimplificadoActivityProjectionRef
-                | M303RegimenSimplificadoFactProjectionRef
-                | M303RegimenSimplificadoModuleProjectionRef,
-            )
-            else (None,)
+        if isinstance(
+            ref,
+            M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef,
         )
-    }
+    )
+    prorrata_refs = tuple(ref for ref in projection_refs if isinstance(ref, M303ProrrataActivityProjectionRef))
+    differentiated_refs = tuple(
+        ref for ref in projection_refs if isinstance(ref, M303DifferentiatedDeductionProjectionRef)
+    )
+    simplified_refs = tuple(
+        ref
+        for ref in projection_refs
+        if isinstance(
+            ref,
+            M303RegimenSimplificadoActivityProjectionRef
+            | M303RegimenSimplificadoFactProjectionRef
+            | M303RegimenSimplificadoModuleProjectionRef,
+        )
+    )
     exonerado_projection = project_m303_exonerado_390_value_arrival(
         period=period,
         schema_provider=schema_provider,
         evidence=filing_facts.exonerado_390,
         record_design=filing_facts.regimen_simplificado.regimen_snapshot.record_design,
-        projection_refs=tuple(
-            ref
-            for ref in projection_refs
-            if isinstance(
-                ref,
-                M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef,
-            )
-        ),
+        projection_refs=exonerado_refs,
     )
-    if exonerado_projection is not None:
+    if filing_facts.exonerado_390.applicable:
+        if exonerado_projection is None:
+            raise FilingExportError("modelo 303 exonerado-390 projector omitted an applicable record")
         projected_values.update(
             ((field.projection_ref.model_dump_json(), None), field.value) for field in exonerado_projection.fields
         )
+    else:
+        projected_values.update(((ref.model_dump_json(), None), None) for ref in exonerado_refs)
     register = filing_facts.prorrata_register
     if register.requires_activity_rows_for(period.filing_year):
         assert_m303_prorrata_activity_rows_complete(period=period, register=register)
     try:
         prorrata_projection = project_m303_prorrata_activity_rows(
-            projection_refs=tuple(ref for ref in projection_refs if isinstance(ref, M303ProrrataActivityProjectionRef)),
+            projection_refs=prorrata_refs,
             register=register,
             ejercicio=period.filing_year,
         )
@@ -95,6 +101,8 @@ def validate_m303_export_applicability(
             for row in prorrata_projection
             for endpoint in row.endpoints
         )
+        if not register.requires_activity_rows_for(period.filing_year):
+            projected_values.update(((ref.model_dump_json(), None), None) for ref in prorrata_refs)
     except RegistryValidationError as exc:
         raise FilingExportError(f"modelo 303 prorrata activities refused: {exc}") from exc
     if register.is_sectorized:
@@ -104,9 +112,7 @@ def validate_m303_export_applicability(
             raise FilingExportError("modelo 303 differentiated regularisation lacks canonical Bienes register rows")
         try:
             differentiated_projection = project_m303_differentiated_deduction_rows(
-                projection_refs=tuple(
-                    ref for ref in projection_refs if isinstance(ref, M303DifferentiatedDeductionProjectionRef)
-                ),
+                projection_refs=differentiated_refs,
                 register=register,
                 ejercicio=period.filing_year,
                 contributions=filing_facts.differentiated_contributions,
@@ -119,21 +125,16 @@ def validate_m303_export_applicability(
             )
         except RegistryValidationError as exc:
             raise FilingExportError(f"modelo 303 differentiated sectors refused: {exc}") from exc
+    else:
+        projected_values.update(((ref.model_dump_json(), None), None) for ref in differentiated_refs)
     simplified_projection = project_m303_regimen_simplificado_value_arrival(
         period=period,
         schema_provider=schema_provider,
         evidence=filing_facts.regimen_simplificado,
-        projection_refs=tuple(
-            ref
-            for ref in projection_refs
-            if isinstance(
-                ref,
-                M303RegimenSimplificadoActivityProjectionRef
-                | M303RegimenSimplificadoFactProjectionRef
-                | M303RegimenSimplificadoModuleProjectionRef,
-            )
-        ),
+        projection_refs=simplified_refs,
     )
+    if not filing_facts.regimen_simplificado.scope_decision.is_not_claimed and not simplified_projection:
+        raise FilingExportError("modelo 303 regimen simplificado projector omitted applicable record occurrences")
     projected_values.update(
         ((field.projection_ref.model_dump_json(), row.record - 1), field.value)
         for row in simplified_projection

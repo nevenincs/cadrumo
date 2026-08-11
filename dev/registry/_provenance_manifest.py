@@ -81,7 +81,7 @@ _LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.jso
 
 _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "records", "entries"})
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
-    {"sheet", "record_identity", "export_record_id", "record_type"},
+    {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat"},
 )
 _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -808,15 +808,18 @@ def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, o
             subject="semantic-map record export_record_id",
         ),
         "record_type": _as_string(payload["record_type"], subject="semantic-map record record_type"),
+        "required": _as_bool(payload["required"], subject="semantic-map record required"),
+        "repeat": _as_optional_string(payload["repeat"], subject="semantic-map record repeat"),
     }
 
 
-def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str]:
+def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str, str]:
     return (
         _as_string(payload["sheet"], subject="semantic-map record sheet"),
         _as_string(payload["record_identity"], subject="semantic-map record record_identity"),
         _as_string(payload["export_record_id"], subject="semantic-map record export_record_id"),
         _as_string(payload["record_type"], subject="semantic-map record record_type"),
+        _as_optional_string(payload["repeat"], subject="semantic-map record repeat") or "",
     )
 
 
@@ -946,6 +949,18 @@ def _sorted_strings(value: object, *, subject: str) -> list[str]:
 def _as_string(value: object, *, subject: str) -> str:
     if not isinstance(value, str):
         raise RegistryValidationError(f"{subject} schema drift: expected string")
+    return value
+
+
+def _as_optional_string(value: object, *, subject: str) -> str | None:
+    if value is None:
+        return None
+    return _as_string(value, subject=subject)
+
+
+def _as_bool(value: object, *, subject: str) -> bool:
+    if type(value) is not bool:
+        raise RegistryValidationError(f"{subject} schema drift: expected boolean")
     return value
 
 

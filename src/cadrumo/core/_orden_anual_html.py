@@ -11,7 +11,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import Literal
+from typing import ClassVar, Literal
 from unicodedata import normalize
 
 from bs4 import BeautifulSoup, Tag
@@ -32,6 +32,8 @@ _SLUG_RE = re.compile(r"[^a-z0-9]+")
 
 class OrdenAnualHtmlParseError(ValueError):
     """Raised when an annual IVA quota table is structurally malformed."""
+
+    __bare_base_rationale__: ClassVar[str] = "internal-orden-anual-html-structural-parser-carrier"
 
 
 @dataclass(frozen=True, slots=True)

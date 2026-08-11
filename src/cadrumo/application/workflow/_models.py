@@ -471,7 +471,7 @@ class WorkflowDeadlineRecoveryFacts(BaseModel):
     recargo_band_id: str = Field(min_length=1, max_length=64)
     min_completed_months: int = Field(ge=0)
     max_completed_months: int | None = Field(default=None, ge=0)
-    surcharge_pct: Decimal = Field(ge=0)
+    surcharge_pct: Decimal = Field(ge=Decimal("0"))
     interest_applies: bool
     legal_ref: str = Field(min_length=1, max_length=128)
 

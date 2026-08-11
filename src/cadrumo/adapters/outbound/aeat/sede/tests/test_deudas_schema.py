@@ -30,7 +30,7 @@ def _deuda(**overrides: object) -> Deuda:
         "situacion": "Pendiente de pago",
     }
     fields.update(overrides)
-    return Deuda(**fields)  # type: ignore[arg-type]
+    return Deuda.model_validate(fields)
 
 
 def test_a_fully_populated_row_validates_and_carries_the_read_marker() -> None:
@@ -100,7 +100,8 @@ def test_the_record_is_frozen_and_refuses_unknown_fields() -> None:
     """Strict-frozen: a typo'd field is a refusal, not a silently ignored extra."""
     deuda = _deuda()
     with pytest.raises(ValidationError):
-        deuda.importe_pendiente = Decimal("1")  # type: ignore[misc]
+        field_name = "importe_pendiente"
+        setattr(deuda, field_name, Decimal("1"))
     with pytest.raises(ValidationError):
         _deuda(importe_pendiete=Decimal("1"))
 

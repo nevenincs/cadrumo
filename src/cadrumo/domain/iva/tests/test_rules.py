@@ -16,7 +16,6 @@ _CATALOGUE = resolve_catalogue(on=date(2025, 1, 1))
 
 def test_catalogue_covers_every_iva_category() -> None:
     assert set(_CATALOGUE.regulations.keys()) == set(IvaCategory)
-    assert len(_CATALOGUE) == 20
 
 
 def test_catalogue_has_at_least_33_citations() -> None:
@@ -96,6 +95,13 @@ def test_cite_domestic_general_renders_its_registry_legal_reference() -> None:
     assert rendered
     assert "BOE-A-1992-28740" in rendered
     assert "Art. 90" in rendered
+
+
+def test_reagp_compensation_is_grounded_in_its_exact_statutory_compensation_article() -> None:
+    regulation = _CATALOGUE.regulations[IvaCategory.REAGP_COMPENSATION]
+
+    assert [citation.legal_reference for citation in regulation.citations] == ["ley-37-1992:art-130"]
+    assert "compensación a tanto alzado" in regulation.citations[0].quoted_text
 
 
 def test_every_committed_regulation_has_citations_unless_legal_basis_exempt() -> None:

@@ -15,9 +15,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal, cast, get_args, get_origin
 
-from pydantic import BaseModel, TypeAdapter, ValidationError
+from pydantic import BaseModel, ValidationError
 
-from ....core import OBJECT_TUPLE_ADAPTER, FilingProducerKey, FilingProjectionRef, freeze_toml, read_toml
+from ....core import OBJECT_TUPLE_ADAPTER, FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
 from ._compiled_cache import load_compiled_registry_cache, store_compiled_registry_cache
 from ._errors import RegistryLoadError, RegistryValidationError
 from ._export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -303,11 +303,8 @@ def _compile_export_semantic_field(source_path: Path, raw_field: object) -> dict
     raw_projection_ref = payload.get("projection_ref")
     if raw_projection_ref is not None:
         try:
-            payload["projection_ref"] = TypeAdapter(FilingProjectionRef).validate_python(
-                raw_projection_ref,
-                strict=False,
-            )
-        except ValidationError as exc:
+            payload["projection_ref"] = compile_filing_projection_ref(raw_projection_ref)
+        except (ValidationError, ValueError) as exc:
             raise RegistryLoadError(
                 f"{source_path}: export field projection_ref is not a canonical FilingProjectionRef: {exc}",
             ) from exc

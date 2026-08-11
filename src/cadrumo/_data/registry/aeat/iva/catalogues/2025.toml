@@ -238,6 +238,18 @@ quoted_text = "Artículo 123. Contenido del régimen simplificado. Uno. En las a
 retrieval_date = 2026-04-13
 
 [[regulations]]
+category = "reagp_compensation"
+requires_reverse_charge = false
+requires_supplier_iva_id = false
+manual_references = []
+notes = "Compensacion a tanto alzado soportada por el adquirente de productos o servicios de un empresario acogido al regimen especial de la agricultura, ganaderia y pesca."
+
+[[regulations.citations]]
+legal_reference = "ley-37-1992:art-130"
+quoted_text = "Dos. Los empresarios acogidos al régimen especial de la agricultura, ganadería y pesca tendrán derecho a percibir una compensación a tanto alzado por las cuotas del Impuesto sobre el Valor Añadido que hayan soportado o satisfecho por las adquisiciones o importaciones de bienes o en los servicios que les hayan sido prestados, en la medida en que utilicen dichos bienes y servicios en la realización de actividades a las que resulte aplicable dicho régimen especial."
+retrieval_date = 2026-08-11
+
+[[regulations]]
 category = "operacion_no_sujeta"
 requires_reverse_charge = false
 requires_supplier_iva_id = false

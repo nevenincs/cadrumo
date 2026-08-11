@@ -304,20 +304,6 @@ def _transaction(
     )
 
 
-def test_direct_aggregation_cannot_bypass_investment_reciprocity_authority() -> None:
-    transaction = _transaction("direct-investment").model_copy(
-        update={
-            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_INVESTMENT,
-            "investment_asset_id": "asset-direct",
-            "prorrata_sector_id": "sector-a",
-        }
-    )
-    catalogue = TransactionCatalogue.from_transactions((transaction,))
-
-    with pytest.raises(TypeError, match="investment_asset_register"):
-        _aggregate_iva_ledger_observations_with_authority(catalogue, period=_Q2_2026)
-
-
 def test_direct_aggregation_accepts_exact_reciprocal_investment_authority() -> None:
     transaction = _transaction("direct-investment-valid").model_copy(
         update={

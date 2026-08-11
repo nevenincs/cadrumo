@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 
-from pydantic import BaseModel, Field, StringConstraints, model_validator
+from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, model_validator
 
 from ._casilla_id import CasillaId
 from ._models import STRICT_FROZEN_CONFIG
@@ -138,14 +139,14 @@ class M303RegimenSimplificadoFactProjectionRef(BaseModel):
 
 
 class M303RegimenSimplificadoModuleProjectionRef(BaseModel):
-    """One typed value on an annual-Orden module address."""
+    """One typed value at an annual-Orden module ordinal."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     projection_kind: Literal["m303_regimen_simplificado_module"] = "m303_regimen_simplificado_module"
     cohort: Literal[M303RegimenSimplificadoCohort.NO_AGRICOLA] = M303RegimenSimplificadoCohort.NO_AGRICOLA
     slot: int = Field(ge=1, le=2)
-    module_identity: _Identity
+    module_order: int = Field(ge=1, le=7)
     value: M303RegimenSimplificadoModuleValue
 
 
@@ -179,6 +180,37 @@ FilingProjectionRef = Annotated[
 ]
 """Strict core-owned union for every repeated-row filing projection."""
 
+_FILING_PROJECTION_REF_ADAPTER: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
+_STRING_WIRE_FIELDS = frozenset(
+    {
+        "casilla_id",
+        "cohort",
+        "fact_identity",
+        "field",
+        "projection_kind",
+        "value",
+    },
+)
+
+
+def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
+    """Compile one canonical projection reference from exact persisted primitives."""
+    if not isinstance(value, Mapping):
+        raise ValueError("filing projection reference must be a mapping")
+    source = cast(Mapping[object, object], value)
+    payload: dict[str, object] = {}
+    for raw_key, raw_value in source.items():
+        if type(raw_key) is not str:
+            raise ValueError("filing projection reference keys must be exact strings")
+        payload[raw_key] = raw_value
+    for field_name in _STRING_WIRE_FIELDS.intersection(payload):
+        if type(payload[field_name]) is not str:
+            raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
+    for integer_field in ("slot", "module_order"):
+        if integer_field in payload and type(payload[integer_field]) is not int:
+            raise ValueError(f"filing projection reference {integer_field!r} must be an exact integer")
+    return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
+
 
 __all__ = [
     "FilingProjectionRef",
@@ -195,4 +227,5 @@ __all__ = [
     "M303RegimenSimplificadoFactProjectionRef",
     "M303RegimenSimplificadoModuleProjectionRef",
     "M303RegimenSimplificadoModuleValue",
+    "compile_filing_projection_ref",
 ]

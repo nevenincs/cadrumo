@@ -20,6 +20,7 @@ import io
 import json
 from decimal import Decimal
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 from pydantic import ValidationError
@@ -637,10 +638,13 @@ def test_precondition_projection_canonicalizes_and_deep_freezes_wire_facts() -> 
     )
 
     assert ordered.model_dump_json() == reversed_input.model_dump_json()
-    with pytest.raises(TypeError):
-        ordered.evidence[0].values["profile_name"] = "Bea"
+    assert isinstance(ordered.evidence[0].values, MappingProxyType)
+    assert not hasattr(ordered.evidence[0].values, "__setitem__")
+    action = ordered.action
+    assert action is not None
+    action_field = "action_id"
     with pytest.raises(ValidationError):
-        ordered.action.action_id = "profile.reset"
+        setattr(action, action_field, "profile.reset")
 
 
 def test_action_bearing_envelope_json_round_trip_preserves_resolved_target_and_bindings() -> None:

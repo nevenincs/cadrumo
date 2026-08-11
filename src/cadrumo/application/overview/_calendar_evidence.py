@@ -152,7 +152,7 @@ def calendar_filing_evidence_from_sources(
     filed_declaration_observations: tuple[FiledDeclaracionObservation, ...] = (),
     verified_filed_declaration_artefact_refs: tuple[str, ...] = (),
     verified_filed_declaration_artefact_csvs: Mapping[str, str] | None = None,
-    calculation_observations: tuple[object, ...] = (),
+    calculation_observations: tuple[ObservationEnvelopePayload, ...] = (),
     justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...] = (),
     justificantes: tuple[Justificante, ...] = (),
     expected_tax_id: str | None = None,

@@ -8,7 +8,7 @@ own export keys, layout offsets, or rendered record fragments.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from typing import Annotated, ClassVar, Final, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
@@ -69,6 +69,8 @@ _M303_OFFICIAL_FILING_PERIODS: Final[frozenset[StandardPeriodCode]] = frozenset(
 
 class FilingProducerSnapshotError(ValueError):
     """Raised when filing facts cannot form a complete producer snapshot."""
+
+    __bare_base_rationale__: ClassVar[str] = "internal-filing-producer-snapshot-validation-carrier"
 
 
 def _require_m303_official_filing_period(period: Period) -> None:

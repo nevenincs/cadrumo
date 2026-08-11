@@ -168,13 +168,6 @@ from ._verification_actions import (
 #: per submission tool, not per release.
 _PROGRAM_VERSION_CODE = "A001"
 
-#: Canonical user-profile fact paths for the operator's legal name.
-_PROFILE_SURNAMES_PATH = "identity.surnames"
-_PROFILE_NAME_PATH = "identity.name"
-_PROFILE_LEGAL_NAME_PATH = "identity.legal_name"
-_PROFILE_ENTITY_TYPE_PATH = "taxpayer_type.entity_type"
-_LEGAL_ENTITY_TYPE = "legal_entity"
-_LEGAL_ENTITY_NAME_SLOT_MODELOS: frozenset[str] = frozenset({Modelo.M111.value})
 _LOGGER = get_logger(__name__)
 _LOCAL_EXPORT_EVIDENCE_STATUS = "local_export_not_official_aeat_filing_evidence"
 _LOCAL_EXPORT_OFFICIAL_EVIDENCE_MESSAGE = (

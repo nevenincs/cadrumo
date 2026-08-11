@@ -135,13 +135,9 @@ def _project_ref(
             ) from exc
     if not isinstance(row, ActividadNoAgricolaSimplificado):
         raise RegistryValidationError("annual-Orden module reference resolved an agricultural row")
-    entries = {module.module_identity: module for module in row.modulos}
-    try:
-        entry = entries[ref.module_identity]
-    except KeyError as exc:
-        raise RegistryValidationError(
-            f"activity {row.activity_id!r} is missing annual-Orden module {ref.module_identity!r}",
-        ) from exc
+    if ref.module_order > len(row.modulos):
+        return None
+    entry = row.modulos[ref.module_order - 1]
     return (
         entry.declared_quantity
         if ref.value is M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY

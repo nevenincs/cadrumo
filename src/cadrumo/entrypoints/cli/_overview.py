@@ -94,6 +94,7 @@ if TYPE_CHECKING:
     from ...application.user_profile import ProfileRepository
     from ...application.workflow import ProfileBucketPointer as _ProfileBucketPointer
     from ...domain.deadlines import TaxpayerProfile
+    from ._errors import CliRefusedBoundaryError
 
 logger = get_logger(__name__)
 
@@ -130,7 +131,7 @@ def _grounded_warning_summary(warnings: Sequence[CalendarWarning]) -> str:
     )
 
 
-def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> Exception:
+def _incomplete_profile_refusal(warnings: Sequence[CalendarWarning]) -> CliRefusedBoundaryError:
     """Return the refusal for a projection blocked by unanswered profile facts.
 
     A profile fact the operator has not supplied is a workflow-state refusal,
@@ -169,7 +170,7 @@ _ENTITY_TYPE_SELECTOR = "taxpayer.entity_type"
 _IRPF_INCOME_CATEGORIES_SELECTOR = "taxpayer.irpf_income_categories"
 
 
-def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> Exception:
+def _undeclared_taxpayer_model_refusal(profile: TaxpayerProfile) -> CliRefusedBoundaryError:
     """Return the refusal for a projection blocked by an undeclared taxpayer model.
 
     Applicability cannot be derived without an entity type, and for a natural

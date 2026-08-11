@@ -8,6 +8,8 @@ references nor matches a semantic entry to parser output.
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef
@@ -119,6 +121,8 @@ class SemanticMapRecord(_StrictModel):
     record_identity: str = Field(min_length=1)
     export_record_id: RecordId
     record_type: str = Field(min_length=1)
+    required: bool = True
+    repeat: Literal["projection_rows"] | None = None
 
 
 class SemanticMap(_StrictModel):

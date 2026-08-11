@@ -95,7 +95,12 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
             ),
             M303RegimenSimplificadoModuleProjectionRef(
                 slot=1,
-                module_identity=annual_activity.modulos[0].identity,
+                module_order=1,
+                value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
+            ),
+            M303RegimenSimplificadoModuleProjectionRef(
+                slot=1,
+                module_order=7,
                 value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
             ),
             M303RegimenSimplificadoFactProjectionRef(
@@ -107,6 +112,9 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
     )
 
     assert len(projected) == 1
-    values = tuple(field.value for field in projected[0].fields if field.value is not None)
-    assert annual_activity.iae_epigrafe in values
-    assert Decimal("1") in values
+    assert tuple(field.value for field in projected[0].fields) == (
+        annual_activity.iae_epigrafe,
+        Decimal("1"),
+        None,
+        Decimal("1"),
+    )

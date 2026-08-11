@@ -190,7 +190,10 @@ def test_an_undeclared_entity_type_is_named_rather_than_summarised() -> None:
     """The refusal names the entity-type field, not only "model undeclared"."""
     refusal = _undeclared_taxpayer_model_refusal(_profile())
 
-    requirements = refusal.context["requirements"]
+    context = refusal.context
+    assert context is not None
+    requirements = context.get("requirements")
+    assert isinstance(requirements, str)
     assert _label_for(_ENTITY_TYPE_SELECTOR) in requirements
     assert _ENTITY_TYPE_SELECTOR not in requirements
 
@@ -205,6 +208,9 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
 
     refusal = _undeclared_taxpayer_model_refusal(_profile(entity_type=EntityType.NATURAL_PERSON))
 
-    requirements = refusal.context["requirements"]
+    context = refusal.context
+    assert context is not None
+    requirements = context.get("requirements")
+    assert isinstance(requirements, str)
     assert _label_for(_IRPF_INCOME_CATEGORIES_SELECTOR) in requirements
     assert _label_for(_ENTITY_TYPE_SELECTOR) not in requirements
