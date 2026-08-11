@@ -22,6 +22,7 @@ from ....domain.iva import (
     IvaTerritorialScope,
     SupplyNature,
     TransactionKind,
+    domestic_rate_tier_is_required,
 )
 from .._classification_assembly import (
     DeclaredFact,
@@ -445,6 +446,99 @@ def test_the_domestic_rate_tier_axis_is_carried_through() -> None:
     assert assembly.assembled, [m.field for m in assembly.missing]
     assert assembly.criteria is not None
     assert assembly.criteria.rate_tier is IvaRateKind.GENERAL
+
+
+def test_a_domestic_operation_with_no_tier_names_the_tier_and_not_another_axis() -> None:
+    """The blocker must be the field reported, not whatever the failed probe implicated.
+
+    Measured before the fix: this operation reported ``issuer_identification_state``
+    as its missing input -- a fact the domestic branch provably does not consume,
+    gated one package over -- while the tier that actually blocked it was never
+    named. The cause is a chain rather than a wrong string: the criteria model
+    RAISES without a domestic tier, the axis probe treats an unclassifiable
+    criteria set as "this branch might need everything", and everything includes
+    the identification.
+
+    So the operator was sent to supply a NIF-IVA. Following that instruction
+    could not have unblocked them, because supplying it changes nothing the
+    domestic branch reads -- a refusal an operator cannot act on, which is the
+    one thing every refusal here is contracted not to be.
+    """
+    assembly = _complete(
+        customer_country_code=None,
+        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
+        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
+        rate_tier=None,
+    )
+
+    reported = [gap.field for gap in assembly.missing]
+    assert "rate_tier" in reported, f"the tier is the blocker and must be named: {reported}"
+    assert "issuer_identification_state" not in reported, (
+        f"the domestic branch does not consume an identification; reporting one misdirects: {reported}"
+    )
+    assert not assembly.assembled
+
+
+def test_supplying_the_tier_is_what_actually_unblocks_it() -> None:
+    """The positive control the assertion above needs to mean anything.
+
+    Without this, the case above would hold for a refusal that named the tier
+    and then refused anyway on some further axis, which would be the same
+    dead-end failure wearing a better label.
+    """
+    assembly = _complete(
+        customer_country_code=None,
+        asserted_issuer_scope=IvaTerritorialScope.ES_MAINLAND,
+        asserted_customer_scope=IvaTerritorialScope.ES_MAINLAND,
+        rate_tier=IvaRateKind.GENERAL,
+    )
+
+    assert assembly.assembled, [gap.field for gap in assembly.missing]
+
+
+def test_a_cross_border_operation_is_never_asked_for_a_domestic_tier() -> None:
+    """The laziness half: the demand is made only where the law forks on it.
+
+    A demand raised unconditionally would put a Spanish rate-tier question on
+    every intra-community invoice, which is the noise the per-branch demand
+    exists to remove -- and is the exact defect a sibling row corrected on the
+    supply-nature axis.
+    """
+    assembly = _complete(rate_tier=None)
+
+    assert "rate_tier" not in [gap.field for gap in assembly.missing]
+
+
+def test_a_domestic_reverse_charge_kind_is_never_asked_for_a_tier() -> None:
+    """The exempt kinds, asked of the domain authority rather than restated here.
+
+    Rules R01 through R03 route the dedicated reverse-charge kinds before the
+    domestic rate rule runs, so their tier is a payload concern. This asserts
+    the producer agrees with the predicate the criteria model enforces, in both
+    directions, which is what stops the two drifting into a demand the model
+    does not make or a silence where it does.
+    """
+    for kind in (
+        TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
+        TransactionKind.WASTE_REVERSE_CHARGE,
+        TransactionKind.ELECTRONICS_REVERSE_CHARGE,
+        TransactionKind.IMMOVABLE_PROPERTY,
+    ):
+        assert not domestic_rate_tier_is_required(
+            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+            customer_residency=IvaTerritorialScope.ES_MAINLAND,
+            kind=kind,
+        ), kind
+    assert domestic_rate_tier_is_required(
+        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+        customer_residency=IvaTerritorialScope.ES_MAINLAND,
+        kind=TransactionKind.GOODS,
+    )
+    assert not domestic_rate_tier_is_required(
+        issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+        customer_residency=IvaTerritorialScope.EU_MEMBER,
+        kind=TransactionKind.GOODS,
+    )
 
 
 def test_a_spanish_postal_code_settles_the_territory_the_country_code_cannot() -> None:

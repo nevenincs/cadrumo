@@ -251,6 +251,59 @@ class TransactionKind(StrEnum):
 # -- Criteria and classification records ----------------------------------
 
 
+#: Domestic kinds whose rate tier is a payload concern, not a classification axis.
+#:
+#: Rules ``R01`` through ``R03`` route the three dedicated reverse-charge kinds
+#: to ``DOMESTIC_REVERSE_CHARGE`` before ``R05`` runs, and immovable property
+#: likewise, so the tier never selects their category and demanding it would ask
+#: for a fact no branch they can reach turns on.
+_DOMESTIC_RATE_TIER_EXEMPT_KINDS: Final[frozenset[TransactionKind]] = frozenset(
+    {
+        TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
+        TransactionKind.WASTE_REVERSE_CHARGE,
+        TransactionKind.ELECTRONICS_REVERSE_CHARGE,
+        TransactionKind.IMMOVABLE_PROPERTY,
+    },
+)
+
+
+def domestic_rate_tier_is_required(
+    *,
+    issuer_residency: IvaTerritorialScope,
+    customer_residency: IvaTerritorialScope,
+    kind: TransactionKind,
+) -> bool:
+    """Whether this operation falls through to ``R05`` and so needs a rate tier.
+
+    The single home of a condition two layers must agree on. The criteria model
+    RAISES when it holds and no tier was supplied, and a producer assembling
+    those criteria must be able to ask the same question BEFORE it builds them --
+    otherwise the raise surfaces as an unclassifiable probe, and a caller that
+    treats an unclassifiable probe as "this branch might need everything" then
+    reports the wrong missing input entirely.
+
+    That is not hypothetical: an ES-to-ES domestic operation with no readable
+    tier was reported as missing the counterparty's IVA identification state, a
+    fact the domestic branch provably does not consume, while the tier that
+    actually blocked it was never named. Restating the condition in the producer
+    would have fixed that instance and left the two free to drift; asking the
+    same predicate cannot.
+
+    Args:
+        issuer_residency: Where the issuing party is established.
+        customer_residency: Where the party billed is established.
+        kind: The nature of the supply.
+
+    Returns:
+        ``True`` when a tier must be supplied for the operation to classify.
+    """
+    return (
+        issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and customer_residency is IvaTerritorialScope.ES_MAINLAND
+        and kind not in _DOMESTIC_RATE_TIER_EXEMPT_KINDS
+    )
+
+
 class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
     """Input record for :func:`classify_iva`.
 
@@ -346,15 +399,11 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
           classification axis.
         """
         if (
-            self.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-            and self.customer_residency is IvaTerritorialScope.ES_MAINLAND
-            and self.kind
-            not in {
-                TransactionKind.CONSTRUCTION_REVERSE_CHARGE,
-                TransactionKind.WASTE_REVERSE_CHARGE,
-                TransactionKind.ELECTRONICS_REVERSE_CHARGE,
-                TransactionKind.IMMOVABLE_PROPERTY,
-            }
+            domestic_rate_tier_is_required(
+                issuer_residency=self.issuer_residency,
+                customer_residency=self.customer_residency,
+                kind=self.kind,
+            )
             and self.rate_tier is None
         ):
             raise IvaValidationError(

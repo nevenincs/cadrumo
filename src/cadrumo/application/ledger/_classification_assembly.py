@@ -105,6 +105,7 @@ from ...domain.iva import (
     TransactionKind,
     classify_iva,
     domestic_categories_by_rate_kind,
+    domestic_rate_tier_is_required,
     identification_state_for_printed_tax_identifier,
     rate_kind_for_domestic_category,
     stated_country_code_status,
@@ -790,6 +791,40 @@ def _unresolved_axis_gaps(
     return [gap for gap in gaps if gap is not None]
 
 
+def _domestic_rate_tier_is_reachable(
+    issuer_scope: IvaTerritorialScope | None,
+    customer_scope: IvaTerritorialScope | None,
+    supply_nature: SupplyNature | None,
+) -> bool:
+    """Whether any branch this operation can still reach demands a rate tier.
+
+    Lazy in the idiom the supply-nature demand already uses: asked only where
+    the law forks on it. A cross-border operation never wants a domestic tier,
+    and the four kinds routed to reverse charge before the domestic rule runs
+    never want one either.
+
+    Union semantics over the still-open kind axis, matching the identification
+    demand directly below: an operation that MIGHT land on a branch needing the
+    tier is asked for it. The alternative would spare an operation whose kind is
+    merely unread, and the tier would then surface as an unclassifiable probe
+    reported against the wrong field.
+
+    A scope that did not resolve returns False, because its own gap is already
+    recorded and the demand cannot be decided without it.
+    """
+    if issuer_scope is None or customer_scope is None:
+        return False
+    kinds = (_NATURE_TO_KIND[supply_nature],) if supply_nature is not None else tuple(_NATURE_TO_KIND.values())
+    return any(
+        domestic_rate_tier_is_required(
+            issuer_residency=issuer_scope,
+            customer_residency=customer_scope,
+            kind=kind,
+        )
+        for kind in kinds
+    )
+
+
 def assemble_classification_criteria(
     *,
     transaction_date: date | None,
@@ -875,6 +910,18 @@ def assemble_classification_criteria(
                 field="transaction_date",
                 reason="no invoice date was established",
                 settled_by="the printed invoice date, or an explicit operator assertion",
+            ),
+        )
+
+    if rate_tier is None and _domestic_rate_tier_is_reachable(issuer_scope, customer_scope, supply_nature):
+        missing.append(
+            MissingClassifierInput(
+                field="rate_tier",
+                reason=(
+                    "the operation is domestic and no IVA rate tier was read from the document, "
+                    "so the classifier cannot tell which domestic category applies"
+                ),
+                settled_by="the rate printed on the invoice lines, or an explicit operator assertion",
             ),
         )
 
