@@ -2479,7 +2479,7 @@ cli:
           (p. ej. 46)
         help: Listar todas las casillas definidas para la revisión de un modelo específico.
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
-          computed, informational)
+          computed, informational, projection_only)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         number_help: Filtrar casillas por número impreso o id canónico (p. ej. 0596).
         period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,

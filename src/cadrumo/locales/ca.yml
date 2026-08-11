@@ -2452,7 +2452,7 @@ cli:
         form_number_help: Filtrar caselles pel número imprès al BOE (p. ex. 46)
         help: Llistar totes les caselles definides per a la revisió d'un model específic.
         input_kind_help: Filtrar les caselles per tipus d'entrada (manual, bound,
-          computed, informational)
+          computed, informational, projection_only)
         modelo_help: Codi del model tributari (p. ex. 303, 130, 100)
         number_help: Filtrar caselles pel número imprès o id canònic (p. ex. 0596).
         period_help: 'Token de període per resoldre la revisió del model: 0A anual,

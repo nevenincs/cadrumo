@@ -34,6 +34,7 @@ invisible to it, and that is preferred to a gate authors learn to route around.
 from __future__ import annotations
 
 import re
+from typing import NamedTuple
 
 import pytest
 
@@ -62,21 +63,11 @@ _ILLUSTRATIVE = re.compile(
 _TRUNCATED = re.compile(r"\.\.\.|…|\betc\b|\band more\b|\band others\b", re.IGNORECASE)
 
 
-class ProseClaim(tuple):
+class ProseClaim(NamedTuple):
     """A claim the help prose makes about the accepted set."""
 
-    __slots__ = ()
-
-    def __new__(cls, kind: str, tokens: tuple[str, ...]) -> ProseClaim:
-        return super().__new__(cls, (kind, tokens))
-
-    @property
-    def kind(self) -> str:
-        return self[0]
-
-    @property
-    def tokens(self) -> tuple[str, ...]:
-        return self[1]
+    kind: str
+    tokens: tuple[str, ...]
 
 
 def prose_claims(description: str) -> list[ProseClaim]:

@@ -2390,7 +2390,7 @@ cli:
         help: A kiválasztott modell verzióhoz tartozó összes casilla (mező/doboz)
           listázása.
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
-          informational).
+          informational, projection_only).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         number_help: Mezők szűrése nyomtatott mezőszám vagy kanonikus azonosító alapján
           (pl. 0596).
