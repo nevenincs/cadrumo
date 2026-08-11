@@ -557,6 +557,7 @@ from ._work_plazo import (
     modelo_work_deadline_posture,
     validate_modelo_work_deadline_posture,
 )
+from ._work_review import ModeloWorkReview, build_modelo_work_review
 from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [
@@ -716,6 +717,7 @@ __all__ = [
     "ModeloWorkPeriodTokenError",
     "ModeloWorkRegistryYearMismatchError",
     "ModeloWorkResolution",
+    "ModeloWorkReview",
     "ModeloWorkRevisionConflictError",
     "ModeloWorkSelectorContradictionError",
     "ModeloWorkSelectorError",
@@ -797,6 +799,7 @@ __all__ = [
     "build_feedback_package",
     "build_m145_communication_service_contract",
     "build_modelo_precondition_failure",
+    "build_modelo_work_review",
     "build_review_package",
     "build_revision_deadline_window_checker",
     "build_verification_precondition_failure",
