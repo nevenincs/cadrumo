@@ -410,6 +410,14 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(
+                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                    value=False,
+                ),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -434,6 +442,14 @@ def _store_irene_sl_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(
+                    path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+                    value=False,
+                ),
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="provenance.source", value="manual_cli"),
@@ -633,7 +649,7 @@ def _non_official_local_chain_advisory_periods(report: VerificationReport) -> se
         if facts.get("source_modelo") != "303" or facts.get("origin_code") != "app_filing":
             continue
         source_period = facts.get("source_period")
-        if source_period in _QUARTER_ORDER:
+        if isinstance(source_period, str) and source_period in _QUARTER_ORDER:
             periods.add(source_period)
     return periods
 
