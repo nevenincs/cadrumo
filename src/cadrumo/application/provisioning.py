@@ -2,8 +2,8 @@
 
 This module is the read-only application doctor surface: each probe asks whether
 one external service or optional package extra is usable on this workstation and
-returns a typed :class:`DependencyStatus` with the exact remediation command when
-it is not. Probes do not provision, unlock, write profile state, or raise on
+returns a typed :class:`DependencyStatus` with measured facts and a closed
+precondition outcome when it is not. Probes do not provision, unlock, write profile state, or raise on
 absence; a missing dependency is report data, not an exception path.
 
 The vision read consults :func:`probe_ollama_vision` before expensive inference,
@@ -26,17 +26,20 @@ import os
 import sys
 import time
 from collections.abc import Callable, Mapping
+from enum import StrEnum
 from pathlib import Path
 from typing import TypedDict, cast
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ..core import (
     LLM_EXTRA,
     OPTIONAL_EXTRAS,
     STRICT_FROZEN_CONFIG,
     AcceleratorKind,
+    ActionConditionality,
+    ActionEvidenceProvenance,
     ContentionCause,
     DeploymentLicencePosture,
     ExternalPathRole,
@@ -45,6 +48,7 @@ from ..core import (
     ModelRole,
     ModelRuntime,
     ModelSelectionAdvisory,
+    NoRecoveryOutcome,
     OptionalExtra,
     candidates_for_role,
     hardware_tier_for_free_bytes,
@@ -53,6 +57,7 @@ from ..core import (
 )
 from ..core.config import Settings, load_settings
 from ..core.i18n import tr
+from .operator_actions import ConditionEvidence, PreconditionVerdict
 
 __all__ = [
     "LOCAL_MODEL_PROVISIONING_SERVICE",
@@ -110,24 +115,93 @@ _OLLAMA_PULL_TIMEOUT_S = 3600.0
 _OLLAMA_READINESS_TIMEOUT_S = 120.0
 
 
-class DependencyStatus(BaseModel):
+class ProvisioningPreconditionCondition(StrEnum):
+    """Stable failed-condition identities emitted by provisioning policy."""
+
+    OPTIONAL_EXTRA_IMPORTABLE = "provisioning.optional_extra.importable"
+    PLAYWRIGHT_BROWSER_INSTALLED = "provisioning.playwright_browser.installed"
+    RUNTIME_REACHABLE = "provisioning.runtime.reachable"
+    VISION_MODEL_INSTALLED = "provisioning.vision_model.installed"
+    HARDWARE_FLOOR_MET = "provisioning.hardware_floor.met"
+    SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available"
+    SELECTED_MODEL_FITS = "provisioning.selected_model.fits"
+    SELECTED_MODEL_CATALOGUED = "provisioning.selected_model.catalogued"
+    LOAD_HEADROOM_MEASURABLE = "provisioning.load_headroom.measurable"
+    LOAD_CAPACITY_AVAILABLE = "provisioning.load_capacity.available"
+    RESIDENT_SET_READABLE = "provisioning.resident_set.readable"
+    MODEL_SELECTED_BY_CADRUMO = "provisioning.model.selected_by_cadrumo"
+    MODEL_RESIDENT = "provisioning.model.resident"
+    MODEL_PULL_SUCCEEDED = "provisioning.model.pull_succeeded"
+    MODEL_READY = "provisioning.model.ready"
+    MODEL_INSTALLED = "provisioning.model.installed"
+    MODEL_REMOVAL_CONFIRMED = "provisioning.model.removal_confirmed"
+    LOCAL_MODEL_INVENTORY_READABLE = "provisioning.local_model.inventory_readable"
+    LOCAL_MODEL_EXTRA_REQUIRES_MODEL = "provisioning.local_model.extra_requires_model"
+    LOCAL_MODEL_MODEL_REQUIRES_EXTRA = "provisioning.local_model.model_requires_extra"
+
+
+ProvisioningFactValue = str | int | bool
+"""Locale-neutral scalar facts emitted by provisioning outcome records."""
+
+
+def _provisioning_no_recovery_verdict(
+    condition: ProvisioningPreconditionCondition,
+    *,
+    facts: Mapping[str, ProvisioningFactValue],
+) -> PreconditionVerdict:
+    """Return the explicit closed outcome for one provisioning refusal."""
+    condition_id = condition.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def _require_provisioning_verdict(*, failed: bool, verdict: PreconditionVerdict | None) -> None:
+    """Refuse silent provisioning failure and success records carrying a refusal."""
+    if failed and verdict is None:
+        raise ValueError("failed provisioning outcomes require a precondition verdict")
+    if not failed and verdict is not None:
+        raise ValueError("successful provisioning outcomes cannot carry a precondition verdict")
+
+
+class _ProvisioningOutcome(BaseModel):
+    """Shared locale-neutral facts and precondition outcome for provisioning records."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    facts: Mapping[str, ProvisioningFactValue] = Field(default_factory=dict)
+    precondition_verdict: PreconditionVerdict | None = None
+
+
+class DependencyStatus(_ProvisioningOutcome):
     """Availability result for one external dependency.
 
-    ``service`` is the stable row id shown by ``aeat config check``; ``detail``
-    explains the observed state; ``remediation`` is the command or action the
-    operator can run when ``available`` is false. The model is intentionally
+    ``service`` is the stable row id shown by the configuration check. ``facts``
+    records the measured state and ``precondition_verdict`` closes every unavailable
+    outcome without embedding presentation or executable text. The model is intentionally
     generic so Ollama, subprocess CLIs, Playwright browser binaries, and
     :class:`~cadrumo.core.OptionalExtra` package extras all render through the same
     payload shape and can be validated into
     :class:`~cadrumo.entrypoints.cli._config._check_payloads.CheckDependencyPayload`.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
-
     service: str = Field(min_length=1)
     available: bool
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_availability_outcome(self) -> DependencyStatus:
+        _require_provisioning_verdict(failed=not self.available, verdict=self.precondition_verdict)
+        return self
 
 
 def _ollama_tag_names(payload: object) -> set[str]:
@@ -171,11 +245,8 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
     Reads ``cadrumo_llm_ollama_chat_url`` and ``cadrumo_llm_ollama_vision_model`` from
     :class:`~cadrumo.core.config.Settings`, then performs a short-timeout
     ``GET /api/tags``. The probe never runs inference and returns unavailable
-    when the server is unreachable (``ollama serve``) or the configured model is
-    not pulled (``ollama pull <model>``). Ledger evidence reading uses this
-    result before local-vision inference so
-    :class:`~cadrumo.domain.transactions.LLMClassifierError` can carry the exact
-    remediation.
+    when the server is unreachable or the configured model is not installed.
+    Ledger evidence reading uses this result before local-vision inference.
     """
     resolved = settings if settings is not None else load_settings()
     model = resolved.cadrumo_llm_ollama_vision_model
@@ -189,8 +260,11 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
         return DependencyStatus(
             service="ollama-vision",
             available=False,
-            detail=f"Ollama is not reachable at {url}",
-            remediation="start Ollama (ollama serve) and ensure it listens on cadrumo_llm_ollama_chat_url",
+            facts={"runtime_reachable": False, "runtime_url": url},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
+                facts={"runtime_reachable": False, "runtime_url": url},
+            ),
         )
     # Ollama lists names with the tag (e.g. "qwen2.5vl:3b"); match the configured
     # model exactly or by its untagged stem.
@@ -199,13 +273,16 @@ def probe_ollama_vision(settings: Settings | None = None) -> DependencyStatus:
         return DependencyStatus(
             service="ollama-vision",
             available=False,
-            detail=f"Ollama is running but the vision model {model!r} is not pulled",
-            remediation=f"ollama pull {model}",
+            facts={"runtime_reachable": True, "vision_model": model, "vision_model_installed": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.VISION_MODEL_INSTALLED,
+                facts={"runtime_reachable": True, "vision_model": model, "vision_model_installed": False},
+            ),
         )
     return DependencyStatus(
         service="ollama-vision",
         available=True,
-        detail=f"Ollama is reachable and {model!r} is pulled",
+        facts={"runtime_reachable": True, "vision_model": model, "vision_model_installed": True},
     )
 
 
@@ -264,8 +341,8 @@ def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus
     Scans the Playwright browsers cache for an installed ``chromium*`` build using
     a fast filesystem check. The Playwright sync driver can hang inside the CLI
     process, so this probe deliberately never launches it. Missing, unreadable, or
-    empty cache roots return unavailable with the ``playwright install chromium``
-    remediation. ``cache_root`` is a testable override for the browser cache
+    empty cache roots return unavailable with a closed precondition outcome.
+    ``cache_root`` is a testable override for the browser cache
     directory. The row complements the browser health probe in
     :mod:`cadrumo.application.diagnostics`; it checks workstation provisioning, not
     AEAT site reachability.
@@ -279,13 +356,16 @@ def probe_playwright_browser(cache_root: Path | None = None) -> DependencyStatus
         return DependencyStatus(
             service="playwright-chromium",
             available=False,
-            detail=f"no Playwright Chromium build found under {root}",
-            remediation="playwright install chromium",
+            facts={"browser_cache_root": str(root), "chromium_installed": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED,
+                facts={"browser_cache_root": str(root), "chromium_installed": False},
+            ),
         )
     return DependencyStatus(
         service="playwright-chromium",
         available=True,
-        detail=f"Chromium build present under {root}",
+        facts={"browser_cache_root": str(root), "chromium_installed": True},
     )
 
 
@@ -435,36 +515,34 @@ def probe_model_runtime_hardware_floor(
     resolved = settings if settings is not None else load_settings()
     floor = resolved.cadrumo_llm_model_runtime_memory_floor_bytes
     observed = total_memory_bytes if total_memory_bytes is not None else read_total_system_memory_bytes()
-    floor_gib = floor / 1024**3
     if observed is None:
         return DependencyStatus(
             service="model-runtime-hardware-floor",
             available=True,
-            detail=(
-                f"total system memory could not be read on this platform; the local model "
-                f"runtime floor of {floor_gib:.1f} GiB was not verified"
-            ),
+            facts={"total_memory_measured": False, "memory_floor_bytes": floor},
         )
-    observed_gib = observed / 1024**3
     if observed < floor:
         return DependencyStatus(
             service="model-runtime-hardware-floor",
             available=False,
-            detail=(
-                f"total system memory {observed_gib:.1f} GiB is below the local model "
-                f"runtime floor of {floor_gib:.1f} GiB for model "
-                f"{resolved.cadrumo_llm_ollama_vision_model!r}"
-            ),
-            remediation=(
-                "resolve the vision role against this machine with select_model_for_role, which "
-                "names the weakest catalogued candidate that still clears the capability bar, or "
-                "lower cadrumo_llm_model_runtime_memory_floor_bytes if this machine is known good"
+            facts={
+                "total_memory_bytes": observed,
+                "memory_floor_bytes": floor,
+                "vision_model": resolved.cadrumo_llm_ollama_vision_model,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.HARDWARE_FLOOR_MET,
+                facts={
+                    "total_memory_bytes": observed,
+                    "memory_floor_bytes": floor,
+                    "vision_model": resolved.cadrumo_llm_ollama_vision_model,
+                },
             ),
         )
     return DependencyStatus(
         service="model-runtime-hardware-floor",
         available=True,
-        detail=f"total system memory {observed_gib:.1f} GiB meets the {floor_gib:.1f} GiB local model runtime floor",
+        facts={"total_memory_bytes": observed, "memory_floor_bytes": floor},
     )
 
 
@@ -473,8 +551,8 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
 
     Wraps the core :func:`optional_extra_available` spec-only check for one
     :class:`~cadrumo.core.OptionalExtra` (no import, no side effects) in the doctor's
-    :class:`DependencyStatus`, naming the extra's ``install_hint`` as remediation
-    when absent. The feature-boundary guard is the sibling core
+    :class:`DependencyStatus`, retaining only the extra's machine identity when
+    absent. The feature-boundary guard is the sibling core
     :func:`~cadrumo.core.require_optional_extra`, which raises the typed
     :class:`~cadrumo.core.MissingOptionalExtraError` when a command actually
     requires the feature.
@@ -483,13 +561,16 @@ def probe_optional_extra(extra: OptionalExtra) -> DependencyStatus:
         return DependencyStatus(
             service=f"extra:{extra.extra}",
             available=False,
-            detail=f"{extra.feature} needs the '{extra.extra}' extra ({extra.import_name} not importable)",
-            remediation=extra.install_hint,
+            facts={"extra": extra.extra, "import_name": extra.import_name, "importable": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.OPTIONAL_EXTRA_IMPORTABLE,
+                facts={"extra": extra.extra, "import_name": extra.import_name, "importable": False},
+            ),
         )
     return DependencyStatus(
         service=f"extra:{extra.extra}",
         available=True,
-        detail=f"{extra.feature} is available ({extra.import_name} importable)",
+        facts={"extra": extra.extra, "import_name": extra.import_name, "importable": True},
     )
 
 
@@ -712,11 +793,6 @@ def binding_free_bytes(profile: HardwareProfile) -> int | None:
     return None
 
 
-def _gib(value: int | None) -> str:
-    """Render a byte count as GiB for an operator-facing row, or ``unverified`` when unknown."""
-    return "unverified" if value is None else f"{value / 1024**3:.1f} GiB"
-
-
 def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> DependencyStatus:
     """Report the measured hardware profile as a diagnostic row, unknown shown as unverified.
 
@@ -736,25 +812,31 @@ def probe_local_inference_hardware(profile: HardwareProfile | None = None) -> De
     """
     resolved = profile if profile is not None else probe_hardware_profile()
     kind = resolved.accelerator.kind
-    detail = (
-        f"system memory {_gib(resolved.memory.free_bytes)} free of {_gib(resolved.memory.total_bytes)}; "
-        f"accelerator {kind.value}; "
-        f"VRAM {_gib(resolved.free_vram_bytes)} free of {_gib(resolved.total_vram_bytes)}"
-    )
+    facts: dict[str, ProvisioningFactValue] = {
+        "accelerator_kind": kind.value,
+        "total_memory_measured": resolved.memory.total_bytes is not None,
+        "free_memory_measured": resolved.memory.free_bytes is not None,
+        "total_vram_measured": resolved.total_vram_bytes is not None,
+        "free_vram_measured": resolved.free_vram_bytes is not None,
+    }
+    if resolved.memory.total_bytes is not None:
+        facts["total_memory_bytes"] = resolved.memory.total_bytes
+    if resolved.memory.free_bytes is not None:
+        facts["free_memory_bytes"] = resolved.memory.free_bytes
+    if resolved.total_vram_bytes is not None:
+        facts["total_vram_bytes"] = resolved.total_vram_bytes
+    if resolved.free_vram_bytes is not None:
+        facts["free_vram_bytes"] = resolved.free_vram_bytes
     if kind is AcceleratorKind.UNKNOWN:
         return DependencyStatus(
             service="local-inference-hardware",
             available=True,
-            detail=f"{detail} ({resolved.accelerator.detail})",
-            remediation=(
-                "install the NVML reader (pip install cadrumo[llm]) to measure device headroom; "
-                "until then a local model load is refused rather than guessed"
-            ),
+            facts=facts,
         )
-    return DependencyStatus(service="local-inference-hardware", available=True, detail=detail)
+    return DependencyStatus(service="local-inference-hardware", available=True, facts=facts)
 
 
-class ModelSelection(BaseModel):
+class ModelSelection(_ProvisioningOutcome):
     """Which model a role resolved to, and everything the operator should know about it.
 
     A *planning* result, not an admission decision. It answers "which model
@@ -774,8 +856,6 @@ class ModelSelection(BaseModel):
     honoured silently.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
-
     role: ModelRole
     runtime: ModelRuntime
     runtime_id: str | None = None
@@ -788,8 +868,11 @@ class ModelSelection(BaseModel):
     override_applied: bool = False
     selected: bool
     advisories: tuple[ModelSelectionAdvisory, ...] = ()
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_selection_outcome(self) -> ModelSelection:
+        _require_provisioning_verdict(failed=not self.selected, verdict=self.precondition_verdict)
+        return self
 
     @property
     def assessable_load(self) -> tuple[str, int] | None:
@@ -905,7 +988,7 @@ def select_model_for_role(
 
     Returns:
         A :class:`ModelSelection`. Never raises: an unsatisfiable role returns
-        ``selected`` false carrying the reason and a remediation.
+        ``selected`` false carrying the measured reason and closed outcome.
     """
     resolved = settings if settings is not None else load_settings()
     hardware = profile if profile is not None else probe_hardware_profile()
@@ -942,14 +1025,22 @@ def select_model_for_role(
         return ModelSelection(
             **base,
             selected=False,
-            detail=(
-                f"no catalogued {role.value} candidate both holds the configured "
-                f"{required_context}-token request window and carries a licence permitting "
-                f"{posture.value} use"
-            ),
-            remediation=(
-                "lower cadrumo_llm_ollama_num_ctx if the smaller window still fits the prompt, "
-                "or name a model explicitly and accept the advisories it carries"
+            facts={
+                "role": role.value,
+                "runtime": runtime.value,
+                "required_context_tokens": required_context,
+                "deployment_posture": posture.value,
+                "eligible_candidate_count": 0,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+                facts={
+                    "role": role.value,
+                    "runtime": runtime.value,
+                    "required_context_tokens": required_context,
+                    "deployment_posture": posture.value,
+                    "eligible_candidate_count": 0,
+                },
             ),
         )
 
@@ -970,14 +1061,22 @@ def select_model_for_role(
             **base,
             selected=False,
             advisories=(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM,),
-            detail=(
-                f"{_gib(free)} free on a {tier.value} machine is short of the {_gib(needed)} the "
-                f"smallest eligible {role.value} candidate {smallest.runtime_id!r} needs "
-                f"({_gib(smallest.memory_requirement_bytes)} requirement plus a {_gib(margin)} margin)"
-            ),
-            remediation=(
-                "close what is holding the memory, or unload a Cadrumo-selected resident model, "
-                "then retry; there is no smaller catalogued candidate that clears the capability bar"
+            facts={
+                "role": role.value,
+                "runtime": runtime.value,
+                "binding_free_bytes": free if free is not None else 0,
+                "required_bytes": needed,
+                "selected_model": smallest.runtime_id,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.SELECTED_MODEL_FITS,
+                facts={
+                    "role": role.value,
+                    "runtime": runtime.value,
+                    "binding_free_bytes": free if free is not None else 0,
+                    "required_bytes": needed,
+                    "selected_model": smallest.runtime_id,
+                },
             ),
         )
 
@@ -985,23 +1084,20 @@ def select_model_for_role(
     advisories: list[ModelSelectionAdvisory] = []
     if free is None and chosen.memory_requirement_bytes is not None:
         advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
-    detail = (
-        f"{role.value} resolves to {chosen.runtime_id!r} ({_gib(chosen.memory_requirement_bytes)}, "
-        f"{chosen.licence.spdx_id}) -- the weakest catalogued candidate holding the "
-        f"{required_context}-token window on a {tier.value} machine with {_gib(free)} free"
-    )
     return ModelSelection(
         **base,
         runtime_id=chosen.runtime_id,
         candidate=chosen,
         selected=True,
         advisories=tuple(advisories),
-        detail=detail,
-        remediation=(
-            "install the NVML reader (pip install cadrumo[llm]) so fit can be verified before the pull"
-            if free is None
-            else ""
-        ),
+        facts={
+            "role": role.value,
+            "runtime": runtime.value,
+            "selected_model": chosen.runtime_id,
+            "required_context_tokens": required_context,
+            "selected_model_requirement_known": chosen.memory_requirement_bytes is not None,
+            "binding_free_measured": free is not None,
+        },
     )
 
 
@@ -1031,14 +1127,11 @@ def _selection_from_override(
                 ModelSelectionAdvisory.OVERRIDE_NOT_IN_CATALOGUE,
                 ModelSelectionAdvisory.LICENCE_UNVERIFIED,
             ),
-            detail=(
-                f"{override!r} was named explicitly but is not in the model catalogue, so neither "
-                f"its licence nor its fit on this machine could be judged"
-            ),
-            remediation=(
-                "add the model to the core model catalogue with its publisher-verified licence, "
-                "or select a catalogued candidate"
-            ),
+            facts={
+                "selected_model": override,
+                "selected_model_catalogued": False,
+                "override_applied": True,
+            },
         )
 
     advisories: list[ModelSelectionAdvisory] = []
@@ -1060,10 +1153,12 @@ def _selection_from_override(
         selected=True,
         override_applied=True,
         advisories=tuple(advisories),
-        detail=(
-            f"{candidate.runtime_id!r} ({_gib(candidate.memory_requirement_bytes)}, "
-            f"{candidate.licence.spdx_id}) was named explicitly and overrides selection"
-        ),
+        facts={
+            "selected_model": candidate.runtime_id,
+            "selected_model_catalogued": True,
+            "override_applied": True,
+            "selected_model_requirement_known": candidate.memory_requirement_bytes is not None,
+        },
     )
 
 
@@ -1189,12 +1284,12 @@ class _ContentionSnapshotBase(TypedDict):
     residents: tuple[RuntimeResident, ...] | None
 
 
-class ContentionSnapshot(BaseModel):
+class ContentionSnapshot(_ProvisioningOutcome):
     """The measured verdict on whether one model load is safe to perform right now.
 
     Read the fields as three separate claims. ``admitted`` is the decision.
     ``causes`` is :class:`~core.ContentionCause` and says *why* a refusal
-    happened, keyed to which remediation applies -- unloading a model Cadrumo
+    happened, keyed to the condition that applies -- unloading a model Cadrumo
     selected, closing a peer application, or measuring what could not be
     measured. ``residents`` is the attribution evidence: the runtime's own
     loaded set, which is what separates memory Cadrumo can reclaim from memory
@@ -1204,8 +1299,6 @@ class ContentionSnapshot(BaseModel):
     Cadrumo does not own. Pressure caused by a peer is reported and refused,
     never managed.
     """
-
-    model_config = STRICT_FROZEN_CONFIG
 
     model: str = Field(min_length=1)
     requirement_bytes: int = Field(ge=0)
@@ -1220,8 +1313,11 @@ class ContentionSnapshot(BaseModel):
     shortfall_bytes: int | None = Field(default=None, ge=0)
     admitted: bool
     causes: tuple[ContentionCause, ...] = ()
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_contention_outcome(self) -> ContentionSnapshot:
+        _require_provisioning_verdict(failed=not self.admitted, verdict=self.precondition_verdict)
+        return self
 
     @property
     def required_bytes(self) -> int:
@@ -1278,38 +1374,6 @@ def _shortfall_causes(*, resident_bytes: int, peer_bytes: int) -> tuple[Contenti
     return tuple(causes)
 
 
-def _shortfall_remediation(
-    *,
-    peer_bytes: int,
-    unloadable: tuple[str, ...],
-    unloadable_bytes: int,
-    resident_bytes: int,
-    resident_names: str,
-) -> str:
-    """Name the remediation that matches the attribution, never one the operator cannot perform."""
-    if peer_bytes > 0 and unloadable_bytes > 0:
-        return (
-            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
-            f"{_gib(unloadable_bytes)}, and close the other application holding {_gib(peer_bytes)}; "
-            f"Cadrumo does not touch a process it did not start"
-        )
-    if peer_bytes > 0:
-        return (
-            f"close the other application holding {_gib(peer_bytes)} of device memory, then retry; "
-            f"no Cadrumo-selected model is resident, so there is nothing here for Cadrumo to unload"
-        )
-    if unloadable_bytes > 0:
-        return (
-            f"unload the Cadrumo-selected resident model(s) {', '.join(unloadable)} to reclaim "
-            f"{_gib(unloadable_bytes)}, then retry"
-        )
-    return (
-        f"the local runtime holds {_gib(resident_bytes)} in models Cadrumo did not select "
-        f"([{resident_names}]); ask whoever loaded them to release them -- Cadrumo unloads "
-        f"only the models it selected"
-    )
-
-
 def _attributed_shortfall_snapshot(
     base: _ContentionSnapshotBase,
     *,
@@ -1331,8 +1395,6 @@ def _attributed_shortfall_snapshot(
         names=frozenset(unloadable),
     )
     peer_bytes = max(shortfall - resident_bytes, 0)
-    resident_names = ", ".join(resident.name for resident in resident_set) or "none"
-
     return ContentionSnapshot(
         **base,
         resident_attributed_bytes=resident_bytes,
@@ -1340,17 +1402,30 @@ def _attributed_shortfall_snapshot(
         shortfall_bytes=shortfall,
         admitted=False,
         causes=_shortfall_causes(resident_bytes=resident_bytes, peer_bytes=peer_bytes),
-        detail=(
-            f"{_gib(binding_free)} free is {_gib(shortfall)} short of the {_gib(required)} needed for "
-            f"{model!r}; the local runtime holds {_gib(resident_bytes)} across residents [{resident_names}] "
-            f"and {_gib(peer_bytes)} of the shortfall is held outside it"
-        ),
-        remediation=_shortfall_remediation(
-            peer_bytes=peer_bytes,
-            unloadable=unloadable,
-            unloadable_bytes=unloadable_bytes,
-            resident_bytes=resident_bytes,
-            resident_names=resident_names,
+        facts={
+            "model": model,
+            "binding_free_bytes": binding_free,
+            "required_bytes": required,
+            "shortfall_bytes": shortfall,
+            "resident_attributed_bytes": resident_bytes,
+            "peer_attributed_bytes": peer_bytes,
+            "resident_count": len(resident_set),
+            "unloadable_model_count": len(unloadable),
+            "unloadable_bytes": unloadable_bytes,
+        },
+        precondition_verdict=_provisioning_no_recovery_verdict(
+            ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE,
+            facts={
+                "model": model,
+                "binding_free_bytes": binding_free,
+                "required_bytes": required,
+                "shortfall_bytes": shortfall,
+                "resident_attributed_bytes": resident_bytes,
+                "peer_attributed_bytes": peer_bytes,
+                "resident_count": len(resident_set),
+                "unloadable_model_count": len(unloadable),
+                "unloadable_bytes": unloadable_bytes,
+            },
         ),
     )
 
@@ -1375,7 +1450,7 @@ def assess_model_load_contention(
     an *unmeasurable* machine and never a *measured* shortfall.
 
     On a measured shortfall the cause is attributed rather than assumed, because
-    the remediations are not interchangeable. Memory held by the runtime's own
+    the attributions are not interchangeable. Memory held by the runtime's own
     residents is reclaimable through :func:`unload_runtime_model` -- and only for
     the models Cadrumo selected. Memory unexplained by those residents is a peer
     process's, and the refusal says so instead of telling the operator to unload
@@ -1430,24 +1505,21 @@ def assess_model_load_contention(
             return ContentionSnapshot(
                 **base,
                 admitted=True,
-                detail=(
-                    f"free memory for {model!r} could not be measured "
-                    f"(accelerator {kind.value}); admitted only because "
-                    f"cadrumo_llm_contention_check_override is set"
-                ),
+                facts={
+                    "model": model,
+                    "accelerator_kind": kind.value,
+                    "binding_free_measured": False,
+                    "contention_check_override": True,
+                },
             )
         return ContentionSnapshot(
             **base,
             admitted=False,
             causes=(ContentionCause.UNREADABLE,),
-            detail=(
-                f"free memory could not be measured (accelerator {kind.value}), so the "
-                f"{_gib(required)} needed for {model!r} cannot be shown to be available"
-            ),
-            remediation=(
-                "install the NVML reader (pip install cadrumo[llm]) so device headroom can be "
-                "measured, or set cadrumo_llm_contention_check_override on a machine known to "
-                "have capacity this build cannot read"
+            facts={"model": model, "accelerator_kind": kind.value, "binding_free_measured": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.LOAD_HEADROOM_MEASURABLE,
+                facts={"model": model, "accelerator_kind": kind.value, "binding_free_measured": False},
             ),
         )
 
@@ -1456,10 +1528,12 @@ def assess_model_load_contention(
             **base,
             shortfall_bytes=0,
             admitted=True,
-            detail=(
-                f"{_gib(binding_free)} free meets the {_gib(required)} needed for {model!r} "
-                f"({_gib(requirement_bytes)} requirement plus a {_gib(margin)} margin)"
-            ),
+            facts={
+                "model": model,
+                "binding_free_bytes": binding_free,
+                "required_bytes": required,
+                "shortfall_bytes": 0,
+            },
         )
 
     shortfall = required - binding_free
@@ -1469,14 +1543,22 @@ def assess_model_load_contention(
             shortfall_bytes=shortfall,
             admitted=False,
             causes=(ContentionCause.UNREADABLE,),
-            detail=(
-                f"{_gib(binding_free)} free is {_gib(shortfall)} short of the {_gib(required)} "
-                f"needed for {model!r}, and the local runtime's resident set could not be read, "
-                f"so the shortfall cannot be attributed"
-            ),
-            remediation=(
-                "start the local model runtime so its resident set can be read, then retry; "
-                "the shortfall is measured and real either way"
+            facts={
+                "model": model,
+                "binding_free_bytes": binding_free,
+                "required_bytes": required,
+                "shortfall_bytes": shortfall,
+                "resident_set_readable": False,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RESIDENT_SET_READABLE,
+                facts={
+                    "model": model,
+                    "binding_free_bytes": binding_free,
+                    "required_bytes": required,
+                    "shortfall_bytes": shortfall,
+                    "resident_set_readable": False,
+                },
             ),
         )
 
@@ -1492,7 +1574,7 @@ def assess_model_load_contention(
     )
 
 
-class UnloadOutcome(BaseModel):
+class UnloadOutcome(_ProvisioningOutcome):
     """The result of an explicit unload of one Cadrumo-selected resident model.
 
     Never raises and never escalates: a model Cadrumo did not select, or one that
@@ -1502,13 +1584,14 @@ class UnloadOutcome(BaseModel):
     process on the device.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
-
     model: str = Field(min_length=1)
     unloaded: bool
     was_resident: bool = False
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_unload_outcome(self) -> UnloadOutcome:
+        _require_provisioning_verdict(failed=not self.unloaded, verdict=self.precondition_verdict)
+        return self
 
 
 def unload_runtime_model(
@@ -1545,10 +1628,10 @@ def unload_runtime_model(
         return UnloadOutcome(
             model=model,
             unloaded=False,
-            detail=f"{model!r} is not a model Cadrumo selected, so Cadrumo will not unload it",
-            remediation=(
-                "Cadrumo releases only the models it loaded; ask the owner of the other model to "
-                "release it, or point cadrumo_llm_ollama_vision_model / _text_model at it"
+            facts={"model": model, "selected_by_cadrumo": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_SELECTED_BY_CADRUMO,
+                facts={"model": model, "selected_by_cadrumo": False},
             ),
         )
     if residents is None and residents_measured:
@@ -1559,15 +1642,22 @@ def unload_runtime_model(
         return UnloadOutcome(
             model=model,
             unloaded=False,
-            detail="the local runtime's resident set could not be read, so nothing was released",
-            remediation="start the local model runtime, then retry",
+            facts={"model": model, "resident_set_readable": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RESIDENT_SET_READABLE,
+                facts={"model": model, "resident_set_readable": False},
+            ),
         )
     if not any(_matches_selected(resident.name, frozenset({model})) for resident in resident_set):
         return UnloadOutcome(
             model=model,
             unloaded=False,
             was_resident=False,
-            detail=f"{model!r} is not resident in the local runtime; nothing to release",
+            facts={"model": model, "model_resident": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_RESIDENT,
+                facts={"model": model, "model_resident": False},
+            ),
         )
     url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "generate")
     try:
@@ -1579,14 +1669,17 @@ def unload_runtime_model(
             model=model,
             unloaded=False,
             was_resident=True,
-            detail=f"the local runtime refused the release request for {model!r} ({exc.__class__.__name__})",
-            remediation="check that the local model runtime is reachable at cadrumo_llm_ollama_chat_url",
+            facts={"model": model, "runtime_reachable": False, "runtime_error_type": exc.__class__.__name__},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
+                facts={"model": model, "runtime_reachable": False, "runtime_error_type": exc.__class__.__name__},
+            ),
         )
     return UnloadOutcome(
         model=model,
         unloaded=True,
         was_resident=True,
-        detail=f"released {model!r} from the local runtime",
+        facts={"model": model, "model_resident": True},
     )
 
 
@@ -1612,7 +1705,7 @@ class PullProgress(BaseModel):
         return min(100, int(self.completed_bytes * 100 / self.total_bytes))
 
 
-class PullOutcome(BaseModel):
+class PullOutcome(_ProvisioningOutcome):
     """The result of an explicit model fetch, including a fetch that never started.
 
     ``contention`` is populated when the pre-fetch admission check refused, and
@@ -1622,14 +1715,15 @@ class PullOutcome(BaseModel):
     instructions and only one of them is ours to offer.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
-
     model: str = Field(min_length=1)
     pulled: bool
     contention: ContentionSnapshot | None = None
     bytes_fetched: int | None = Field(default=None, ge=0)
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_pull_outcome(self) -> PullOutcome:
+        _require_provisioning_verdict(failed=not self.pulled, verdict=self.precondition_verdict)
+        return self
 
 
 def pull_runtime_model(
@@ -1648,7 +1742,7 @@ def pull_runtime_model(
     bandwidth to arrive at the refusal it could have been given immediately.
 
     Never raises, in keeping with every other action here. An unreachable
-    runtime is a typed outcome naming ``ollama serve`` -- this function does not
+    runtime is a typed closed outcome -- this function does not
     start a daemon, and nothing on this path pulls implicitly: reaching it at
     all requires an operator to have asked.
 
@@ -1669,12 +1763,18 @@ def pull_runtime_model(
     resolved = settings if settings is not None else load_settings()
     snapshot = assess_model_load_contention(model, requirement_bytes, profile=profile, settings=resolved)
     if not snapshot.admitted:
+        contention_verdict = snapshot.precondition_verdict
+        assert contention_verdict is not None
         return PullOutcome(
             model=model,
             pulled=False,
             contention=snapshot,
-            detail=snapshot.detail,
-            remediation=snapshot.remediation,
+            facts={
+                "model": model,
+                "admitted": False,
+                "contention_condition": contention_verdict.failed_condition_id,
+            },
+            precondition_verdict=contention_verdict,
         )
 
     url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "pull")
@@ -1698,14 +1798,27 @@ def pull_runtime_model(
             model=model,
             pulled=False,
             bytes_fetched=fetched,
-            detail=f"the local model runtime could not be reached to fetch {model!r} ({exc.__class__.__name__})",
-            remediation="start the local model runtime with 'ollama serve', then retry",
+            facts={
+                "model": model,
+                "runtime_reachable": False,
+                "runtime_error_type": exc.__class__.__name__,
+                "bytes_fetched_known": fetched is not None,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
+                facts={
+                    "model": model,
+                    "runtime_reachable": False,
+                    "runtime_error_type": exc.__class__.__name__,
+                    "bytes_fetched_known": fetched is not None,
+                },
+            ),
         )
     return PullOutcome(
         model=model,
         pulled=True,
         bytes_fetched=fetched,
-        detail=f"{model!r} is present in the local runtime",
+        facts={"model": model, "runtime_reachable": True, "bytes_fetched_known": fetched is not None},
     )
 
 
@@ -1734,7 +1847,7 @@ def _pull_progress(line: str) -> PullProgress | None:
     )
 
 
-class ReadinessOutcome(BaseModel):
+class ReadinessOutcome(_ProvisioningOutcome):
     """Whether a model is loaded and actually answering, not merely present.
 
     ``resident`` and ``answered`` are separate claims on purpose. A model can be
@@ -1742,15 +1855,16 @@ class ReadinessOutcome(BaseModel):
     operator debugging a stalled read needs to know which of the two they have.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
-
     model: str = Field(min_length=1)
     ready: bool
     resident: bool = False
     answered: bool = False
     elapsed_ms: int | None = Field(default=None, ge=0)
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_readiness_outcome(self) -> ReadinessOutcome:
+        _require_provisioning_verdict(failed=not self.ready, verdict=self.precondition_verdict)
+        return self
 
 
 def verify_model_ready(
@@ -1765,7 +1879,7 @@ def verify_model_ready(
     verifies the transport and the load, not the model's quality, so nothing
     here inspects what came back beyond the fact that something did.
 
-    Never raises. An unreachable runtime names ``ollama serve``; a model that is
+    Never raises. An unreachable runtime and a model that is
     absent names the provision verb rather than pulling it, because an implicit
     multi-gigabyte fetch triggered by a verification command is exactly what the
     lifecycle design forbids.
@@ -1777,8 +1891,11 @@ def verify_model_ready(
         return ReadinessOutcome(
             model=model,
             ready=False,
-            detail="the local model runtime could not be reached",
-            remediation="start the local model runtime with 'ollama serve', then retry",
+            facts={"model": model, "runtime_reachable": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
+                facts={"model": model, "runtime_reachable": False},
+            ),
         )
     resident = any(_matches_selected(entry.name, frozenset({model})) for entry in residents)
 
@@ -1795,8 +1912,23 @@ def verify_model_ready(
             ready=False,
             resident=resident,
             elapsed_ms=elapsed,
-            detail=f"{model!r} did not answer within {bound:g}s ({exc.__class__.__name__})",
-            remediation=f"aeat config provision pull --model {model}",
+            facts={
+                "model": model,
+                "model_resident": resident,
+                "model_answered": False,
+                "elapsed_ms": elapsed,
+                "runtime_error_type": exc.__class__.__name__,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_READY,
+                facts={
+                    "model": model,
+                    "model_resident": resident,
+                    "model_answered": False,
+                    "elapsed_ms": elapsed,
+                    "runtime_error_type": exc.__class__.__name__,
+                },
+            ),
         )
     elapsed = int((time.monotonic() - started) * 1000)
     return ReadinessOutcome(
@@ -1805,7 +1937,7 @@ def verify_model_ready(
         resident=resident,
         answered=True,
         elapsed_ms=elapsed,
-        detail=f"{model!r} answered in {elapsed} ms",
+        facts={"model": model, "model_resident": resident, "model_answered": True, "elapsed_ms": elapsed},
     )
 
 
@@ -1879,7 +2011,7 @@ def read_installed_models(settings: Settings | None = None) -> tuple[InstalledMo
     return tuple(installed)
 
 
-class RemoveOutcome(BaseModel):
+class RemoveOutcome(_ProvisioningOutcome):
     """The result of removing one Cadrumo-selected model from the local runtime's store.
 
     ``freed_bytes`` is a **measurement, not an estimate**, and is populated only
@@ -1893,14 +2025,15 @@ class RemoveOutcome(BaseModel):
     and an unreadable inventory each return ``removed`` false with the reason.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
-
     model: str = Field(min_length=1)
     removed: bool
     was_installed: bool = False
     freed_bytes: int | None = Field(default=None, ge=0)
-    detail: str = ""
-    remediation: str = ""
+
+    @model_validator(mode="after")
+    def _require_removal_outcome(self) -> RemoveOutcome:
+        _require_provisioning_verdict(failed=not self.removed, verdict=self.precondition_verdict)
+        return self
 
 
 def remove_runtime_model(
@@ -1943,10 +2076,10 @@ def remove_runtime_model(
         return RemoveOutcome(
             model=model,
             removed=False,
-            detail=f"{model!r} is not a model Cadrumo selected, so Cadrumo will not remove it",
-            remediation=(
-                "Cadrumo removes only the models it selected; remove it with the runtime's own tooling, "
-                "or point cadrumo_llm_ollama_vision_model / _text_model / _mapping_model at it"
+            facts={"model": model, "selected_by_cadrumo": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_SELECTED_BY_CADRUMO,
+                facts={"model": model, "selected_by_cadrumo": False},
             ),
         )
     if installed is None and installed_measured:
@@ -1957,8 +2090,11 @@ def remove_runtime_model(
         return RemoveOutcome(
             model=model,
             removed=False,
-            detail="the local runtime's installed model inventory could not be read, so nothing was removed",
-            remediation="start the local model runtime with 'ollama serve', then retry",
+            facts={"model": model, "installed_model_inventory_readable": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
+                facts={"model": model, "installed_model_inventory_readable": False},
+            ),
         )
     entry = next((row for row in inventory if _matches_selected(row.name, frozenset({model}))), None)
     if entry is None:
@@ -1967,7 +2103,11 @@ def remove_runtime_model(
             removed=False,
             was_installed=False,
             freed_bytes=0,
-            detail=f"{model!r} is not installed in the local runtime; nothing to remove",
+            facts={"model": model, "model_installed": False},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_INSTALLED,
+                facts={"model": model, "model_installed": False},
+            ),
         )
 
     url = _ollama_endpoint(resolved.cadrumo_llm_ollama_chat_url, "delete")
@@ -1980,8 +2120,11 @@ def remove_runtime_model(
             model=model,
             removed=False,
             was_installed=True,
-            detail=f"the local runtime refused the removal request for {model!r} ({exc.__class__.__name__})",
-            remediation="check that the local model runtime is reachable at cadrumo_llm_ollama_chat_url",
+            facts={"model": model, "runtime_reachable": False, "runtime_error_type": exc.__class__.__name__},
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.RUNTIME_REACHABLE,
+                facts={"model": model, "runtime_reachable": False, "runtime_error_type": exc.__class__.__name__},
+            ),
         )
 
     # The confirming re-read is what turns the figure into a measurement. A
@@ -1994,26 +2137,49 @@ def remove_runtime_model(
             model=model,
             removed=False,
             was_installed=True,
-            detail=(
-                f"the runtime accepted the removal of {model!r} but the inventory could not be re-read, "
-                "so no reclaimed figure is reported"
+            facts={
+                "model": model,
+                "removal_request_accepted": True,
+                "removal_confirmed": False,
+                "inventory_reread": False,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_REMOVAL_CONFIRMED,
+                facts={
+                    "model": model,
+                    "removal_request_accepted": True,
+                    "removal_confirmed": False,
+                    "inventory_reread": False,
+                },
             ),
-            remediation="re-run the removal once the local model runtime is reachable to confirm the outcome",
         )
     if any(_matches_selected(row.name, frozenset({model})) for row in after):
         return RemoveOutcome(
             model=model,
             removed=False,
             was_installed=True,
-            detail=f"the runtime accepted the removal of {model!r} but it is still installed",
-            remediation="remove the model with the runtime's own tooling and check the store for a lock",
+            facts={
+                "model": model,
+                "removal_request_accepted": True,
+                "removal_confirmed": False,
+                "model_installed": True,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.MODEL_REMOVAL_CONFIRMED,
+                facts={
+                    "model": model,
+                    "removal_request_accepted": True,
+                    "removal_confirmed": False,
+                    "model_installed": True,
+                },
+            ),
         )
     return RemoveOutcome(
         model=model,
         removed=True,
         was_installed=True,
         freed_bytes=entry.size_bytes,
-        detail=f"removed {entry.name!r} from the local runtime store",
+        facts={"model": model, "model_installed": False, "removal_confirmed": True},
     )
 
 
@@ -2076,19 +2242,20 @@ def probe_local_model_provisioning(
             return DependencyStatus(
                 service=LOCAL_MODEL_PROVISIONING_SERVICE,
                 available=False,
-                detail=(
-                    f"the '{LLM_EXTRA.extra}' extra is installed but the runtime's model inventory could "
-                    "not be read, so neither half of the local-inference posture could be confirmed"
+                facts={"extra": LLM_EXTRA.extra, "extra_importable": True, "installed_model_inventory_readable": False},
+                precondition_verdict=_provisioning_no_recovery_verdict(
+                    ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
+                    facts={
+                        "extra": LLM_EXTRA.extra,
+                        "extra_importable": True,
+                        "installed_model_inventory_readable": False,
+                    },
                 ),
-                remediation="start the local model runtime with 'ollama serve', then re-run this check",
             )
         return DependencyStatus(
             service=LOCAL_MODEL_PROVISIONING_SERVICE,
             available=True,
-            detail=(
-                f"the '{LLM_EXTRA.extra}' extra is not installed; the runtime's model inventory could not "
-                "be read, so installed-models-without-the-extra was not ruled out"
-            ),
+            facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "installed_model_inventory_readable": False},
         )
 
     selected = cadrumo_selected_models(resolved)
@@ -2098,35 +2265,54 @@ def probe_local_model_provisioning(
         return DependencyStatus(
             service=LOCAL_MODEL_PROVISIONING_SERVICE,
             available=False,
-            detail=(
-                f"the '{LLM_EXTRA.extra}' extra is installed but none of the selected models "
-                f"({', '.join(sorted(selected))}) is present in the local runtime"
+            facts={
+                "extra": LLM_EXTRA.extra,
+                "extra_importable": True,
+                "selected_model_count": len(selected),
+                "present_selected_model_count": 0,
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.LOCAL_MODEL_EXTRA_REQUIRES_MODEL,
+                facts={
+                    "extra": LLM_EXTRA.extra,
+                    "extra_importable": True,
+                    "selected_model_count": len(selected),
+                    "present_selected_model_count": 0,
+                },
             ),
-            remediation="aeat config provision pull",
         )
     if present and not extra_present:
         return DependencyStatus(
             service=LOCAL_MODEL_PROVISIONING_SERVICE,
             available=False,
-            detail=(
-                f"{', '.join(present)} occupies the local runtime store but the '{LLM_EXTRA.extra}' extra "
-                "is not installed, so nothing can use it"
+            facts={
+                "extra": LLM_EXTRA.extra,
+                "extra_importable": False,
+                "present_selected_model_count": len(present),
+            },
+            precondition_verdict=_provisioning_no_recovery_verdict(
+                ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA,
+                facts={
+                    "extra": LLM_EXTRA.extra,
+                    "extra_importable": False,
+                    "present_selected_model_count": len(present),
+                },
             ),
-            remediation=(f"{LLM_EXTRA.install_hint} to use the installed models, or remove them to reclaim the disk"),
         )
     if extra_present:
         return DependencyStatus(
             service=LOCAL_MODEL_PROVISIONING_SERVICE,
             available=True,
-            detail=f"the '{LLM_EXTRA.extra}' extra is installed and {', '.join(present)} is present",
+            facts={
+                "extra": LLM_EXTRA.extra,
+                "extra_importable": True,
+                "present_selected_model_count": len(present),
+            },
         )
     return DependencyStatus(
         service=LOCAL_MODEL_PROVISIONING_SERVICE,
         available=True,
-        detail=(
-            f"local inference is not provisioned: the '{LLM_EXTRA.extra}' extra is not installed and no "
-            "selected model occupies the runtime store"
-        ),
+        facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "present_selected_model_count": 0},
     )
 
 

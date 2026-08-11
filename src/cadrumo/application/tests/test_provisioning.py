@@ -70,8 +70,9 @@ def test_probe_ollama_vision_unreachable_returns_unavailable_with_remediation() 
     assert isinstance(status, DependencyStatus)
     assert status.service == "ollama-vision"
     assert status.available is False
-    assert "not reachable" in status.detail
-    assert "ollama serve" in status.remediation
+    assert status.facts["runtime_reachable"] is False
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == "provisioning.runtime.reachable"
 
 
 @pytest.mark.parametrize("payload", ([], {"models": None}, {"models": [{"name": 7}]}))
@@ -82,8 +83,8 @@ def test_probe_ollama_vision_malformed_successful_tags_response_is_unavailable(p
 
     assert status.service == "ollama-vision"
     assert status.available is False
-    assert "not reachable" in status.detail
-    assert "ollama serve" in status.remediation
+    assert status.facts["runtime_reachable"] is False
+    assert status.precondition_verdict is not None
 
 
 def test_probe_playwright_browser_absent_when_cache_empty(
@@ -93,7 +94,9 @@ def test_probe_playwright_browser_absent_when_cache_empty(
     status = probe_playwright_browser(cache_root=tmp_path)
     assert status.service == "playwright-chromium"
     assert status.available is False
-    assert status.remediation == "playwright install chromium"
+    assert status.facts["chromium_installed"] is False
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == "provisioning.playwright_browser.installed"
 
 
 def test_probe_playwright_browser_present_when_chromium_build_exists(
@@ -104,7 +107,8 @@ def test_probe_playwright_browser_present_when_chromium_build_exists(
     status = probe_playwright_browser(cache_root=tmp_path)
     assert status.service == "playwright-chromium"
     assert status.available is True
-    assert status.remediation == ""
+    assert status.facts["chromium_installed"] is True
+    assert status.precondition_verdict is None
 
 
 def test_probe_playwright_browser_missing_root_is_unavailable_not_an_error(
@@ -144,15 +148,19 @@ def test_probe_optional_extra_present_for_an_installed_package() -> None:
     status = probe_optional_extra(extra)
     assert status.service == "extra:google"
     assert status.available is True
-    assert status.remediation == ""
+    assert status.facts["importable"] is True
+    assert status.precondition_verdict is None
 
 
-def test_probe_optional_extra_absent_names_the_install_command() -> None:
-    """A missing extra reports unavailable with a `pip install cadrumo[<extra>]` remediation, never raising."""
+def test_probe_optional_extra_absent_reports_machine_facts_and_closed_outcome() -> None:
+    """A missing extra reports its measured identity without manufacturing an install command."""
     extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
     status = probe_optional_extra(extra)
     assert status.available is False
-    assert status.remediation == "pip install cadrumo[ghost]"
+    assert status.facts == {"extra": "ghost", "import_name": "aeat_definitely_not_installed_xyz", "importable": False}
+    assert status.precondition_verdict is not None
+    assert status.precondition_verdict.failed_condition_id == "provisioning.optional_extra.importable"
+    assert status.precondition_verdict.no_recovery_outcome == "operator_decision"
 
 
 def test_probe_optional_extras_covers_every_declared_extra() -> None:

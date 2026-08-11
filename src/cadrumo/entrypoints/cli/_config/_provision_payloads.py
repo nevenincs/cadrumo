@@ -7,25 +7,29 @@ nothing here declares a bespoke ``advisory``, ``next`` or ``suggestion`` field,
 which the envelope contract forbids.
 
 The contention block is carried as structured fields rather than a rendered
-sentence because its CAUSE selects the remediation: unloading a model Cadrumo
-selected and closing a peer application are different instructions, and only the
-first is an action this product can offer.
+sentence. Its condition, evidence, and closed outcome are projected through the
+shared action resolver; this schema does not own an instruction.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import Field
 
 from ....core import ContentionCause
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+
+ProvisioningFactPayload = Mapping[str, str | int | bool]
+"""Locale-neutral scalar facts projected from a provisioning outcome."""
 
 
 class ProvisionContentionPayload(OutputSchema):
     """The measured admission verdict for one model load.
 
     ``causes`` is the :class:`~core.ContentionCause` set the application layer
-    attributed the shortfall to. It is reported rather than collapsed into
-    ``detail`` so a caller can act on the distinction without parsing prose.
+    attributed the shortfall to. The application outcome's facts and resolved
+    verdict preserve the remaining explanation without prose parsing.
     """
 
     model: str = Field(min_length=1)
@@ -36,8 +40,8 @@ class ProvisionContentionPayload(OutputSchema):
     free_system_memory_bytes: int | None = None
     shortfall_bytes: int | None = None
     unloadable_models: list[str] = []
-    detail: str = ""
-    remediation: str = ""
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 class ProvisionModelPayload(OutputSchema):
@@ -47,7 +51,8 @@ class ProvisionModelPayload(OutputSchema):
     model: str | None = None
     selected: bool
     resident: bool = False
-    detail: str = ""
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 @register_schema("config.provision.report")
@@ -84,8 +89,8 @@ class ProvisionPullResult(OutputSchema):
     pulled: bool
     bytes_fetched: int | None = None
     contention: ProvisionContentionPayload | None = None
-    detail: str = ""
-    remediation: str = ""
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 @register_schema("config.provision.verify")
@@ -102,8 +107,8 @@ class ProvisionVerifyResult(OutputSchema):
     resident: bool = False
     answered: bool = False
     elapsed_ms: int | None = None
-    detail: str = ""
-    remediation: str = ""
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 __all__ = [

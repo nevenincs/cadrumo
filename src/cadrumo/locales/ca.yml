@@ -3435,10 +3435,13 @@ cli:
         ''aeat config auth --help'' per veure els identificadors vàlids.'
     check:
       available: disponible
+      capability_label: Capacitat
+      dependency_label: Dependència
       help: Comprova la disponibilitat de les dependències externes i les capacitats
         de servei del perfil actiu, amb la solució per a cada problema.
       issue_label: problema
       missing: absent
+      preflight_label: Comprovació prèvia
       profile_label: perfil
     collab:
       help: Gestiona els destinataris de confiança per a la col.laboració amb paquets

@@ -1,14 +1,15 @@
 """``aeat config check`` — the workstation doctor.
 
-For every external service, reports the active profile's capability posture, the
-dependency availability (from the typed probes), and the exact remediation for any
-gap. Exits non-zero when a capability the profile opted into has a missing
-dependency — the operator asked for a service that is not provisioned. Named
-``check`` because the older ``doctor`` command path is retired.
+For every external service, reports the active profile's capability posture and
+the typed dependency outcome. A rejected condition is resolved against the live
+action catalogue or carries an explicit closed outcome. The command exits
+non-zero when a capability the profile opted into has a missing dependency.
+Named ``check`` because the older ``doctor`` command path is retired.
 """
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 import typer
@@ -16,12 +17,39 @@ import typer
 from ....core import ServiceCapability, resolve_active_bucket_id
 
 if TYPE_CHECKING:
-    from ....application.provisioning import ContentionSnapshot, HardwareProfile
+    from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
 from ....core.i18n import tr
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_cli_precondition_action
 
 # Eager import so the @register_schema decorator runs on the CLI build path.
-from ._check_payloads import ConfigCheckResult
+from ._check_payloads import CheckDependencyPayload, ConfigCheckResult
+from ._status_rendering import precondition_action_lines
+
+
+def _dependency_payload(status: DependencyStatus) -> CheckDependencyPayload:
+    """Project an application dependency outcome through the one CLI resolver."""
+    return CheckDependencyPayload(
+        service=status.service,
+        available=status.available,
+        facts=status.facts,
+        precondition_action=(
+            resolve_cli_precondition_action(status.precondition_verdict)
+            if status.precondition_verdict is not None
+            else None
+        ),
+    )
+
+
+def _dependency_text_lines(payload: CheckDependencyPayload) -> tuple[str, ...]:
+    """Render one dependency DTO from its facts and resolved outcome."""
+    mark = tr("cli.config.check.available" if payload.available else "cli.config.check.missing")
+    lines = [f"{tr('cli.config.check.dependency_label')}\t{payload.service}\t{mark}"]
+    lines.extend(
+        f"{payload.service}.facts.{key}\t{json.dumps(value, ensure_ascii=False, sort_keys=True)}"
+        for key, value in sorted(payload.facts.items())
+    )
+    lines.extend(f"{payload.service}.{line}" for line in precondition_action_lines(payload.precondition_action))
+    return tuple(lines)
 
 
 def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot | None:
@@ -91,9 +119,14 @@ def register(app: typer.Typer) -> None:
         playwright = probe_playwright_browser()
         provisioning = probe_local_model_provisioning()
         extras = probe_optional_extras()
-        dependencies = [
-            d.model_dump() for d in (ollama, hardware_floor, hardware, contention, provisioning, playwright, *extras)
-        ]
+        dependency_payloads = tuple(
+            _dependency_payload(status)
+            for status in (ollama, hardware_floor, hardware, contention, provisioning, playwright, *extras)
+        )
+        # Keep the nested strict DTO instances intact until the one final
+        # envelope serialization. A JSON dump here turns tuple/enum action
+        # fields into primitives before ConfigCheckResult validates them.
+        dependencies = list(dependency_payloads)
         # Per-provider cert/clave health, storage/corpus/env preflight, and
         # registry referential integrity. Report-only: a red preflight row is
         # surfaced for operator visibility but does not, on its own, flip the
@@ -111,9 +144,9 @@ def register(app: typer.Typer) -> None:
 
         issues: list[str] = []
         if cap_enabled[ServiceCapability.LLM_VISION.value] and not ollama.available:
-            issues.append(f"llm_vision is on but {ollama.detail}: {ollama.remediation}")
+            issues.append(ollama.service)
         if cap_enabled[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
-            issues.append("google_export is on but the 'google' extra is not installed (pip install cadrumo[google])")
+            issues.append("extra:google")
         # The eligibility bar's own row. Reported in the SAME shape as the two
         # above -- the capability is on, but the layer beneath it refuses -- so
         # an operator who turned the bar on and expected off-host reading to
@@ -124,10 +157,7 @@ def register(app: typer.Typer) -> None:
         if cap_enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not (
             load_settings().cadrumo_evidence_cloud_upload_permitted
         ):
-            issues.append(
-                "cloud_evidence_upload is on for this profile but the deployment has not opted in "
-                "(set CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED); no document can be read off-host",
-            )
+            issues.append("cloud_evidence_upload:deployment_permission")
 
         ok = not issues
         result = ConfigCheckResult.model_validate(
@@ -141,20 +171,20 @@ def register(app: typer.Typer) -> None:
             },
         )
         lines = [f"{tr('cli.config.check.profile_label', default='profile')}\t{profile_id or '-'}"]
+        capability_label = tr("cli.config.check.capability_label")
+        preflight_label = tr("cli.config.check.preflight_label")
         for cap in capabilities:
             state = tr(
                 "cli.config.profile.capabilities.enabled"
                 if cap["enabled"]
                 else "cli.config.profile.capabilities.disabled"
             )
-            lines.append(f"capability\t{cap['capability']}\t{state}\t{cap['source']}")
-        for dep in dependencies:
-            mark = tr("cli.config.check.available" if dep["available"] else "cli.config.check.missing")
-            tail = f"\t{dep['remediation']}" if dep["remediation"] else ""
-            lines.append(f"dependency\t{dep['service']}\t{mark}{tail}")
+            lines.append(f"{capability_label}\t{cap['capability']}\t{state}\t{cap['source']}")
+        for dependency in dependency_payloads:
+            lines.extend(_dependency_text_lines(dependency))
         for row in preflight:
             tail = f"\t{row['remediation']}" if row["remediation"] else ""
-            lines.append(f"preflight\t{row['check']}\t{row['severity']}\t{row['detail']}{tail}")
+            lines.append(f"{preflight_label}\t{row['check']}\t{row['severity']}\t{row['detail']}{tail}")
         for issue in issues:
             lines.append(f"{tr('cli.config.check.issue_label', default='issue')}\t{issue}")
         _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))

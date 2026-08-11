@@ -2,32 +2,29 @@
 
 Three actions, and the boundaries between them are the design:
 
-* **report** — what the machine measures, which model each role resolves to,
-  and whether it could be loaded right now. Reads only.
-* **pull** — fetch a model, admission-checked BEFORE any bytes move.
-* **verify** — confirm a model is resident and answers within a bound.
+* **report** — measured machine and model-selection state. Reads only.
+* **pull** — an explicit model-acquisition operation.
+* **verify** — a resident-model readiness observation.
 
 **Nothing here is implicit.** No inference path reaches these verbs; an operator
-runs them. A multi-gigabyte download is an explicit action, never a side effect
-of first use, and an unreachable runtime is an instructive refusal naming
-``ollama serve`` -- this command family never spawns a daemon. Both are the
-lifecycle boundary the provisioning decision draws, not local caution.
+runs them. A model acquisition is explicit, never a side effect of first use.
+An unavailable runtime is represented by its typed failed condition and closed
+outcome; this command family does not start external processes.
 
-The pre-fetch admission check is the point of ``pull``. A refusal names which
-contention cause applies, because the remediations are not interchangeable:
-unloading a model Cadrumo selected is an action this product can offer, closing
-a peer application is not, and Cadrumo never touches a process it does not own.
+The pre-fetch admission check is the point of ``pull``. A refusal carries its
+typed condition and evidence. Cadrumo never touches a process it does not own.
 """
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 
 import typer
 
 from ....core import ModelRole
 from ....core.i18n import tr
-from .._common import _emit_envelope
+from .._common import _emit_envelope, resolve_cli_precondition_action
 
 # Eager import so the @register_schema decorators run on the CLI build path.
 from ._provision_payloads import (
@@ -37,9 +34,10 @@ from ._provision_payloads import (
     ProvisionReportResult,
     ProvisionVerifyResult,
 )
+from ._status_rendering import precondition_action_lines
 
 if TYPE_CHECKING:
-    from ....application.provisioning import ContentionSnapshot, HardwareProfile
+    from ....application.provisioning import HardwareProfile
 
 __all__ = ["register_provision_commands"]
 
@@ -61,8 +59,12 @@ def _contention_payload(snapshot: object | None) -> ProvisionContentionPayload |
         free_system_memory_bytes=snapshot.free_system_memory_bytes,
         shortfall_bytes=snapshot.shortfall_bytes,
         unloadable_models=list(snapshot.unloadable_models),
-        detail=snapshot.detail,
-        remediation=snapshot.remediation,
+        facts=snapshot.facts,
+        precondition_action=(
+            resolve_cli_precondition_action(snapshot.precondition_verdict)
+            if snapshot.precondition_verdict is not None
+            else None
+        ),
     )
 
 
@@ -145,7 +147,12 @@ def _selected_provision_models(
                 model=selection.runtime_id,
                 selected=selection.selected,
                 resident=resident,
-                detail=selection.detail,
+                facts=selection.facts,
+                precondition_action=(
+                    resolve_cli_precondition_action(selection.precondition_verdict)
+                    if selection.precondition_verdict is not None
+                    else None
+                ),
             ),
         )
         if primary is None:
@@ -153,20 +160,30 @@ def _selected_provision_models(
     return models, primary
 
 
-def _provision_report_lines(
-    profile: HardwareProfile,
-    residents: object | None,
-    models: list[ProvisionModelPayload],
-    contention: ContentionSnapshot | None,
-) -> tuple[str, ...]:
-    """Render the human-readable provisioning report rows."""
-    lines = [
-        f"accelerator\t{profile.accelerator.kind.value}",
-        f"runtime\t{'reachable' if residents is not None else 'unreachable'}",
-    ]
-    lines.extend(f"model\t{row.role}\t{row.model or '-'}\t{'resident' if row.resident else '-'}" for row in models)
-    if contention is not None:
-        lines.append(f"contention\t{'admitted' if contention.admitted else 'refused'}\t{contention.detail}")
+def _provision_result_lines(result: object) -> tuple[str, ...]:
+    """Render the exact registered result DTO without recovery prose.
+
+    The field names are schema identities, not human-authored guidance. Every
+    value comes from the exact object emitted in JSON, so the text path cannot
+    retain a second English detail or command hint.
+    """
+    from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
+
+    if not isinstance(result, OutputSchema):  # pragma: no cover - defensive boundary guard
+        raise TypeError("provisioning text rendering requires a registered output schema")
+    document = result.model_dump(mode="json")
+    lines: list[str] = []
+    for field_name, value in document.items():
+        if field_name != "precondition_action":
+            lines.append(
+                f"{field_name}\t{json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(',', ':'))}",
+            )
+            continue
+        if value is not None:
+            action = getattr(result, "precondition_action", None)
+            if not isinstance(action, ResolvedPreconditionAction):  # pragma: no cover - defensive boundary guard
+                raise TypeError("provisioning precondition action does not match the registered result DTO")
+            lines.extend(precondition_action_lines(action))
     return tuple(lines)
 
 
@@ -208,7 +225,7 @@ def _emit_provision_report(ctx: typer.Context) -> None:
         ctx,
         command="config.provision.report",
         result=result,
-        lines=_provision_report_lines(profile, residents, models, contention),
+        lines=_provision_result_lines(result),
     )
 
 
@@ -221,28 +238,20 @@ def _emit_provision_pull(ctx: typer.Context, *, model: str | None, role: ModelRo
         raise typer.BadParameter(tr("cli.config.provision.no_model"))
     target, requirement = resolved
 
-    reports: list[str] = []
-
-    def _on_progress(progress: object) -> None:
-        percent = getattr(progress, "percent", None)
-        status = getattr(progress, "status", "")
-        reports.append(f"{status} {percent}%" if percent is not None else status)
-
-    outcome = pull_runtime_model(target, requirement, on_progress=_on_progress)
+    outcome = pull_runtime_model(target, requirement)
     result = ProvisionPullResult(
         model=outcome.model,
         pulled=outcome.pulled,
         bytes_fetched=outcome.bytes_fetched,
         contention=_contention_payload(outcome.contention),
-        detail=outcome.detail,
-        remediation=outcome.remediation,
+        facts=outcome.facts,
+        precondition_action=(
+            resolve_cli_precondition_action(outcome.precondition_verdict)
+            if outcome.precondition_verdict is not None
+            else None
+        ),
     )
-    lines = [f"model\t{outcome.model}", f"pulled\t{'yes' if outcome.pulled else 'no'}"]
-    if outcome.detail:
-        lines.append(f"detail\t{outcome.detail}")
-    if outcome.remediation:
-        lines.append(f"remediation\t{outcome.remediation}")
-    _emit_envelope(ctx, command="config.provision.pull", result=result, lines=tuple(lines))
+    _emit_envelope(ctx, command="config.provision.pull", result=result, lines=_provision_result_lines(result))
     if not outcome.pulled:
         raise typer.Exit(code=2)
 
@@ -263,18 +272,13 @@ def _emit_provision_verify(ctx: typer.Context, *, model: str | None, role: Model
         resident=outcome.resident,
         answered=outcome.answered,
         elapsed_ms=outcome.elapsed_ms,
-        detail=outcome.detail,
-        remediation=outcome.remediation,
+        facts=outcome.facts,
+        precondition_action=(
+            resolve_cli_precondition_action(outcome.precondition_verdict)
+            if outcome.precondition_verdict is not None
+            else None
+        ),
     )
-    lines = [
-        f"model\t{outcome.model}",
-        f"ready\t{'yes' if outcome.ready else 'no'}",
-        f"resident\t{'yes' if outcome.resident else 'no'}",
-    ]
-    if outcome.detail:
-        lines.append(f"detail\t{outcome.detail}")
-    if outcome.remediation:
-        lines.append(f"remediation\t{outcome.remediation}")
-    _emit_envelope(ctx, command="config.provision.verify", result=result, lines=tuple(lines))
+    _emit_envelope(ctx, command="config.provision.verify", result=result, lines=_provision_result_lines(result))
     if not outcome.ready:
         raise typer.Exit(code=2)

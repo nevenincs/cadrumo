@@ -3198,10 +3198,13 @@ cli:
         config auth --help'' for valid ids.'
     check:
       available: available
+      capability_label: Capability
+      dependency_label: Dependency
       help: Check external-dependency availability and the active profile's service
         capability posture, with the fix for any gap.
       issue_label: issue
       missing: missing
+      preflight_label: Preflight check
       profile_label: profile
     collab:
       help: Manage trusted recipients for review-package collaboration.

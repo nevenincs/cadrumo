@@ -14,10 +14,15 @@ in :mod:`user_profile`, and provisioning semantics live in
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from pydantic import Field
 
 from ....application.preflight import HealthSeverity
-from ....core.json_contract import OutputSchema, register_schema
+from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
+
+ProvisioningFactPayload = Mapping[str, str | int | bool]
+"""Locale-neutral scalar facts projected from a provisioning outcome."""
 
 
 class CheckCapabilityPayload(OutputSchema):
@@ -45,14 +50,15 @@ class CheckDependencyPayload(OutputSchema):
     :class:`DependencyStatus` rows from
     :func:`probe_ollama_vision`,
     :func:`probe_playwright_browser`, and
-    :func:`probe_optional_extras`. ``remediation``
-    is populated only when the probe can name a concrete operator action.
+    :func:`probe_optional_extras`. The application-owned facts and verdict are
+    the full dependency explanation; this boundary resolves the verdict against
+    the live action surface without recreating a command string.
     """
 
     service: str = Field(min_length=1)
     available: bool
-    detail: str = ""
-    remediation: str = ""
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
 
 
 class CheckPreflightPayload(OutputSchema):

@@ -145,8 +145,8 @@ def test_diagnostic_row_renders_unreadable_figures_as_unverified() -> None:
         _profile(kind=AcceleratorKind.UNKNOWN, total_ram=None, free_ram=None),
     )
     assert status.available is True
-    assert status.detail.count("unverified") == 4
-    assert "cadrumo[llm]" in status.remediation
+    assert status.facts["accelerator_kind"] == "unknown"
+    assert status.precondition_verdict is None
 
 
 def test_diagnostic_row_renders_measured_figures_as_numbers() -> None:
@@ -154,10 +154,10 @@ def test_diagnostic_row_renders_measured_figures_as_numbers() -> None:
     status = probe_local_inference_hardware(
         _profile(kind=AcceleratorKind.NVIDIA_CUDA, devices=(_device(0, total=16 * GIB, free=4 * GIB),)),
     )
-    assert "unverified" not in status.detail
-    assert "16.0 GiB" in status.detail
-    assert "4.0 GiB" in status.detail
-    assert status.remediation == ""
+    assert status.facts["accelerator_kind"] == "nvidia_cuda"
+    assert status.facts["total_vram_bytes"] == 16 * GIB
+    assert status.facts["free_vram_bytes"] == 4 * GIB
+    assert status.precondition_verdict is None
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +176,8 @@ def test_unreadable_accelerator_refuses_the_load() -> None:
     )
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.UNREADABLE,)
-    assert "cadrumo_llm_contention_check_override" in snapshot.remediation
+    assert snapshot.precondition_verdict is not None
+    assert snapshot.precondition_verdict.failed_condition_id == "provisioning.load_headroom.measurable"
 
 
 def test_measured_headroom_admits_the_load() -> None:
@@ -297,8 +298,8 @@ def test_shortfall_explained_by_our_residents_names_the_unload_remediation() -> 
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT,)
     assert snapshot.unloadable_models == ("qwen2.5vl:3b",)
-    assert "unload" in snapshot.remediation
-    assert "close the other application" not in snapshot.remediation
+    assert snapshot.facts["unloadable_model_count"] == 1
+    assert snapshot.precondition_verdict is not None
 
 
 def test_shortfall_unexplained_by_residents_is_attributed_to_a_peer_process() -> None:
@@ -316,8 +317,8 @@ def test_shortfall_unexplained_by_residents_is_attributed_to_a_peer_process() ->
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.PEER_PROCESS,)
     assert snapshot.unloadable_models == ()
-    assert "close the other application" in snapshot.remediation
-    assert "unload the Cadrumo-selected" not in snapshot.remediation
+    assert snapshot.facts["peer_attributed_bytes"] > 0
+    assert snapshot.precondition_verdict is not None
 
 
 def test_a_partially_explained_shortfall_names_both_causes_and_both_remediations() -> None:
@@ -338,8 +339,8 @@ def test_a_partially_explained_shortfall_names_both_causes_and_both_remediations
     assert snapshot.admitted is False
     assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT, ContentionCause.PEER_PROCESS)
     assert snapshot.resident_attributed_bytes == 3 * GIB
-    assert "unload" in snapshot.remediation
-    assert "close the other application" in snapshot.remediation
+    assert snapshot.facts["unloadable_model_count"] == 1
+    assert snapshot.facts["peer_attributed_bytes"] > 0
 
 
 def test_a_resident_cadrumo_did_not_select_is_reported_but_never_offered_for_unload() -> None:
@@ -360,8 +361,9 @@ def test_a_resident_cadrumo_did_not_select_is_reported_but_never_offered_for_unl
         )
     assert snapshot.causes == (ContentionCause.RUNTIME_RESIDENT,)
     assert snapshot.unloadable_models == ()
-    assert "llama3:70b" in snapshot.detail
-    assert "Cadrumo unloads" in snapshot.remediation
+    assert snapshot.facts["resident_count"] == 1
+    assert snapshot.facts["unloadable_model_count"] == 0
+    assert snapshot.precondition_verdict is not None
 
 
 def test_an_unreadable_resident_set_refuses_even_though_the_shortfall_is_measured() -> None:
@@ -517,7 +519,8 @@ def test_unload_refuses_a_model_cadrumo_did_not_select_and_sends_nothing(
             residents=(RuntimeResident(name="llama3:70b", size_bytes=40 * GIB, size_vram_bytes=40 * GIB),),
         )
     assert outcome.unloaded is False
-    assert "not a model Cadrumo selected" in outcome.detail
+    assert outcome.facts["selected_by_cadrumo"] is False
+    assert outcome.precondition_verdict is not None
     assert events.empty(), "a refused unload must not reach the runtime at all"
 
 
@@ -648,7 +651,8 @@ def test_a_pull_against_an_unreachable_runtime_refuses_naming_the_daemon_command
 
     assert outcome.pulled is False
     assert outcome.contention is None, "this is a transport failure, not an admission refusal"
-    assert "ollama serve" in outcome.remediation
+    assert outcome.facts["runtime_reachable"] is False
+    assert outcome.precondition_verdict is not None
 
 
 def test_a_readiness_check_against_an_unreachable_runtime_refuses_naming_the_daemon_command() -> None:
@@ -658,7 +662,8 @@ def test_a_readiness_check_against_an_unreachable_runtime_refuses_naming_the_dae
 
     assert outcome.ready is False
     assert outcome.answered is False
-    assert "ollama serve" in outcome.remediation
+    assert outcome.facts["runtime_reachable"] is False
+    assert outcome.precondition_verdict is not None
 
 
 def test_a_readiness_check_reports_ready_when_the_runtime_answers(

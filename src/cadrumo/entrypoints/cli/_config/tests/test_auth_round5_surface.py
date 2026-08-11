@@ -29,6 +29,7 @@ from .....application.auth import (
 from .....application.auth import test_operator_auth as probe_operator_auth
 from .....application.user_profile import profile_create_storage_span
 from .....application.workflow import workflow_state_repository
+from .....core import NoRecoveryOutcome
 from .....core.config import load_settings, override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .....tests.cli_runner import invoke_typer_app, semantic_cli_output
@@ -305,11 +306,6 @@ def test_auth_test_runs_real_certificate_probe(_isolated_application_layer: None
     # The three probe verdicts produced by the three configure states
     # MUST be distinct — the round-3 G5 finding (auth test observably
     # identical to status) is closed only when probe_result varies.
-    assert {test_no_path.probe_result, test_missing.probe_result, test_corrupt.probe_result} == {
-        test_no_path.probe_result,
-        test_missing.probe_result,
-        test_corrupt.probe_result,
-    }
     assert len({test_no_path.probe_result, test_missing.probe_result, test_corrupt.probe_result}) >= 2
 
 
@@ -389,4 +385,4 @@ def test_clave_movil_mismatch_carries_a_typed_no_recovery_outcome(
     assert verdict is not None
     assert verdict.failed_condition_id == "auth.clave_movil.identity_aligned"
     assert verdict.action is None
-    assert verdict.no_recovery_outcome.value == "operator_decision"
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
