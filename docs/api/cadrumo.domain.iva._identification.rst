@@ -1,7 +1,7 @@
-cadrumo.domain.iva._vat_identification module
+cadrumo.domain.iva._identification module
 =============================================
 
-.. automodule:: cadrumo.domain.iva._vat_identification
+.. automodule:: cadrumo.domain.iva._identification
    :members:
    :show-inheritance:
    :ignore-module-all:

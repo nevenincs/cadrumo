@@ -1,7 +1,7 @@
 # Prepare a Modelo 303 IVA filing
 
 Use this guide when the active profile must prepare Modelo 303. Modelo 303 is
-the Spanish IVA/VAT self-assessment (`autoliquidacion`) used here to calculate
+the Spanish IVA self-assessment (`autoliquidacion`) used here to calculate
 standard quarterly IVA filings; monthly IVA-liquidation profiles such as REDEME
 or large-company taxpayers use monthly Modelo 303 periods. Voluntary SII
 enrolment alone remains quarterly. The registry's official title is "Modelo 303.
