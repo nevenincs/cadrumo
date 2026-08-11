@@ -16,7 +16,7 @@ related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
 modified: '2026-08-11'
-body_hash: 'sha256:6b4116340f7ce65eaf85e8530ba7eb1355c002e74a8e0010d88f457a4dfffd11'
+body_hash: 'sha256:65119f486878e4b1da9192f513f2c3ebf969acf6737f09da8d11a212c5df2d94'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -107,29 +107,25 @@ M303 layout and creates no alias, fallback, legacy spelling, or parallel store.
 
 ### Differentiated-sector deduction projection
 
-The two differentiated-sector rows are an ephemeral deterministic application
-projection beside the canonical IVA-ledger aggregation. They consume only the
-selected filing revision and period's frozen canonical ledger observations, the
-same ejercicio's ordered `ProrrataRegister` sector identities, regimes, and
-resolved percentages, and the existing registry aggregation and apportionment
-primitives. They create no persistence, input authority, selector, scalar family,
-or export-specific aggregation.
+The earlier statement that all calculated values for casillas 700 through 735
+already existed was inaccurate. The frozen IVA-ledger observation does not retain
+the current-versus-investment or adjustment identities required by the official
+rows; the registry selectors do not close REAGP and rectification ownership; and
+the bienes-inversion regularisation owner has no accepted transaction or asset
+linkage to those observations. An ephemeral projection over those incomplete
+inputs would infer or collapse facts and become a second aggregation authority.
 
-Each sector's seven base and deductible-cuota pairs are selected by canonical
-binding and category identity, never by labels, slot numbers, or a second store.
-Rectification base and cuota and investment-goods regularisation arrive only from
-their existing canonical ledger or binding owners. The row sum is projection-only
-arithmetic performed once with the established Decimal and rounding policy: the
-seven projected deductible cuotas plus signed rectification cuota plus signed
-investment-goods regularisation. It is neither persisted nor accepted as input,
-and it is not reverse-derived from the already aggregated M303 total.
+Casillas 700 through 735 therefore remain unavailable projection-only endpoints
+until a prerequisite decision and implementation name the canonical source for
+current versus investment, REAGP and rectification identity, transaction and asset
+linkage, adjustment ownership, candidate-to-frozen classification preservation,
+and migration, backfill, and refusal behavior. S49 may consume that enriched
+immutable authority only after the prerequisite lands.
 
-The whole projection refuses before target creation for more than two applicable
-sectors, duplicate or unknown sector identity, missing regime or percentage,
-unattributable relevant common observations, missing or ambiguous category
-ownership, overlap or double consumption, or any incomplete applicable row fact.
-No missing authority becomes blank or zero. The production M303 layout remains
-withdrawn, with no alias, legacy selector, or manual 700-through-735 input path.
+Until then the complete differentiated-sector population refuses before target
+creation. These endpoints cannot become manual or bound scalars, raw mappings,
+label- or slot-inferred categories, blanks, zeros, aliases, legacy selectors, or
+layout fields. The production M303 layout remains withdrawn.
 
 ### Producer vocabulary and resolution
 
