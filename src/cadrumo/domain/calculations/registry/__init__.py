@@ -300,6 +300,7 @@ from ._period_offset_math import same_ejercicio_prior_quarter_anchors
 from ._period_selector_match import selector_period_matches_request
 from ._export import (
     ResolvedExportLayout,
+    classify_official_boxes,
     derive_export_layouts_from_bindings,
     fixed_width_record_casilla_ids,
     export_fields_for_casilla,
@@ -1081,6 +1082,7 @@ __all__ = [
     "censo_modelo_ownership",
     "censo_modelo_ownership_map",
     "check_m303_annual_orden_manifest",
+    "classify_official_boxes",
     "clear_fingerprint_cache",
     "coerce_export_value_policy",
     "collect_applicability_declarations",

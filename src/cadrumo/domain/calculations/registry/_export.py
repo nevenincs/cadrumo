@@ -8,8 +8,9 @@ them against a :class:`RegistrySnapshot`. The resolved layout is a
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 
-from ....core import CasillaId
+from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat, OfficialBoxStatus
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -21,6 +22,7 @@ from ._binding_selector_utils import (
 )
 from ._casilla_membership import casillas_by_id
 from ._errors import RegistryValidationError
+from ._export_parse import xml_dictionary_entries
 from ._fixed_width_codec import ExportJustification, ExportPadding
 from ._ids import ExportFieldId
 from ._schema import (
@@ -32,6 +34,7 @@ from ._schema import (
     ModeloRevision,
     RegistryModel,
     RegistrySnapshot,
+    SourceReference,
 )
 
 _BindingExportMember = tuple[DataBindingDefinition, BindingExportSelector]
@@ -175,6 +178,55 @@ def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) ->
                 addressed.add(field.casilla_id)
         addressed.update(record.row_field_casilla_ids.values())
     return frozenset(addressed)
+
+
+def classify_official_boxes(
+    revision: ModeloRevision,
+    *,
+    source_root: Path | None = None,
+    sources: Mapping[str, SourceReference] | None = None,
+) -> Mapping[CasillaId, OfficialBoxStatus]:
+    """Classify every revision casilla by its official export representation.
+
+    Binding-derived record fields are resolved before any channel is measured.
+    Fixed-width ``CASILLA`` fields, repeated-row slot mappings, and official XML
+    dictionary entries address a casilla directly. A casilla carrying the
+    reviewed ``FILED_VIA_BINDING_FIELD`` exemption is represented through a
+    binding when the resolved design actually contains binding fields. All
+    remaining casillas are explicitly undefined.
+
+    XML dictionaries are external registry evidence. A revision containing one
+    therefore requires the validated source root and catalogue rather than
+    silently treating an unavailable dictionary as an undefined export surface.
+    """
+    addressed: set[CasillaId] = set()
+    has_binding_fields = False
+    for layout in derive_export_layouts_from_bindings(revision):
+        if layout.format is ExportLayoutFormat.FIXED_WIDTH:
+            addressed.update(fixed_width_record_casilla_ids(layout.records))
+            has_binding_fields = has_binding_fields or any(
+                field.kind is CasillaFieldKind.BINDING and field.binding is not None
+                for record in layout.records
+                for field in record.fields
+            )
+            continue
+        if layout.format is ExportLayoutFormat.XML_DICTIONARY:
+            addressed.update(
+                entry.casilla_id
+                for entry in xml_dictionary_entries(layout, source_root=source_root, sources=sources)
+                if entry.casilla_id is not None
+            )
+
+    return {
+        casilla.id: (
+            OfficialBoxStatus.ADDRESSED
+            if casilla.id in addressed
+            else OfficialBoxStatus.REPRESENTED_VIA_BINDING
+            if has_binding_fields and casilla.export_exemption_reason is ExportExemptionReason.FILED_VIA_BINDING_FIELD
+            else OfficialBoxStatus.UNDEFINED
+        )
+        for casilla in revision.casillas
+    }
 
 
 def export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
@@ -424,6 +476,7 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
     "ResolvedExportLayout",
+    "classify_official_boxes",
     "derive_export_layouts_from_bindings",
     "export_fields_for_casilla",
     "fixed_width_record_casilla_ids",
