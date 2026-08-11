@@ -318,7 +318,7 @@ _TEXT_PATH_NEEDS_PROVIDER = (
 
 
 def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
-    """Run an on-host model call, converting a missing/unreachable Ollama to a typed refusal.
+    """Run an on-host reader, preserving a typed unavailable-reader verdict.
 
     Transport-neutral: it guards the VISION read and, since the local text
     reader was wired, the TEXT read too. Named for the runtime it protects
@@ -328,9 +328,10 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     The local adapter only guards HTTP *status* errors; a connection-refused or a
     model-missing failure escaped every CLI ``except`` clause as a raw
     ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
-    an ``LLMClassifierError`` (which the classify CLI already renders) carrying the
-    exact remediation from :func:`probe_ollama_vision` (probe -> typed refusal
-    with the fix).
+    an application evidence-input refusal when the probe confirms that the
+    reader is unavailable. The S33 provisioning verdict remains unmodified for
+    later live-surface resolution. A call failure followed by an available probe
+    is not misclassified as an unavailable-reader precondition.
     """
     import httpx
 
@@ -343,9 +344,12 @@ def _run_on_host_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
         from ..provisioning import probe_ollama_vision
 
         status = probe_ollama_vision(settings)
-        fix = status.remediation or "ensure the local Ollama runtime is reachable"
-        detail = status.detail if not status.available else str(exc)
-        raise LLMClassifierError(f"on-host model reading failed: {detail}. Fix: {fix}") from exc
+        if status.precondition_verdict is not None:
+            raise PurchaseInvoiceEvidenceInputError(
+                LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
+                precondition_verdict=status.precondition_verdict,
+            ) from exc
+        raise LLMClassifierError("ledger.evidence.reader.operation_failed") from exc
 
 
 def _record_injected_classifier_run[T](run: Callable[[], T], *, provider: str) -> T:

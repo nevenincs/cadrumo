@@ -510,7 +510,10 @@ class TestInferencePacing:
 
         assert [item.status for item in result.items] == ["paused"] * 3
         assert result.inference_pause is not None, "three paused documents must carry one stated cause"
-        assert result.inference_pause.remediation, "a pause an operator cannot act on is a dead end"
+        assert (
+            result.inference_pause.precondition_verdict.failed_condition_id == "provisioning.load_headroom.measurable"
+        )
+        assert result.inference_pause.facts["binding_free_measured"] is False
         # No per-item refusal text: the model forbids a reason under a non-refused
         # status, so this also proves the pause did not smuggle one in per row.
         assert all(item.refusal_detail is None for item in result.items)
@@ -570,14 +573,14 @@ class TestInferencePacing:
             )
 
         paused = _over_the_folder(self._contended())
-        # The contention clears; the same folder is re-run, exactly as an
-        # operator would after acting on the remediation.
+        # The contention clears; the same folder is re-run against a new
+        # measured outcome.
         later = _over_the_folder(_measurable_headroom())
 
         assert paused.items[0].status == "paused"
         assert later.items[0].status != "paused", "once the contention clears, the deferred item must be attempted"
 
-    def test_a_machine_with_no_reader_gives_one_instruction_not_one_per_document(
+    def test_a_machine_with_no_reader_gives_one_typed_refusal_not_one_per_document(
         self,
         runtime_profile: TestRuntimeProfile,
         tmp_path: Path,
@@ -588,8 +591,8 @@ class TestInferencePacing:
         closed port — a real failure of the real client, not a substituted one.
         Admission has nothing to refuse here (the machine has headroom), so this
         exercises the after-the-first-attempt closure specifically: one document
-        pays for the discovery, the rest are deferred on it, and exactly one
-        instruction naming the provisioning verb reaches the operator.
+        pays for the discovery and the rest are deferred on the exact typed
+        provisioning refusal.
         """
         folder = tmp_path / "no_reader"
         folder.mkdir()
@@ -612,13 +615,8 @@ class TestInferencePacing:
         assert statuses.count("refused") == 1, f"exactly one document should pay for the discovery: {statuses}"
         assert statuses.count("paused") == 2, f"every later document must be deferred, not re-refused: {statuses}"
         assert result.inference_pause is not None
-        assert result.inference_pause.reason == "no_reader_available"
-        # The remediation is the runtime probe's own, not a fixed string, and
-        # that is stricter rather than looser: here the server is unreachable
-        # rather than the model unprovisioned, and the operator is told to start
-        # it. A hard-coded "provision pull" would have sent them to download a
-        # model they may already have.
-        assert "ollama serve" in result.inference_pause.remediation.lower()
+        assert result.inference_pause.precondition_verdict.failed_condition_id == "provisioning.runtime.reachable"
+        assert result.inference_pause.facts["runtime_reachable"] is False
 
     def test_a_document_needing_a_reader_is_read_when_one_is_there(
         self,

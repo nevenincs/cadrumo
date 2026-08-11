@@ -19,9 +19,11 @@ import pytest
 
 from ....core import ImageMediaType
 from ....core.config import Settings
+from ....domain.transactions import prompt_spec_with_saturation_fields
+from ....llm import LocalVisionLLMClassifier, MultimodalImageInput
 from ....tests.secure_sql import TestRuntimeProfile
 from .._evidence import PurchaseInvoiceEvidenceInputError
-from .._llm_classification import _resolve_evidence
+from .._llm_classification import _classify_with_evidence, _resolve_evidence, _ResolvedEvidence
 from .._preconditions import LedgerPreconditionCondition
 from ._llm_vision_evidence_support import (
     _add_evidence,
@@ -135,3 +137,42 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
         LedgerPreconditionCondition.EVIDENCE_VISION_CAPABILITY_ENABLED.value
     )
+
+
+def test_unreachable_reader_preserves_the_provisioning_refusal(
+    profile: TestRuntimeProfile,
+) -> None:
+    """A real reader connection failure carries S33 facts and its exact verdict."""
+    settings = profile.settings.model_copy(
+        update={
+            "cadrumo_llm_ollama_chat_url": "http://127.0.0.1:1/api/chat",
+            "cadrumo_llm_vision_read_timeout_s": 1,
+        },
+    )
+    evidence = _ResolvedEvidence(
+        reference="reader-unavailable",
+        text=None,
+        images=(
+            MultimodalImageInput.from_base64(
+                base64.b64encode(_png_image()).decode("ascii"),
+                ImageMediaType.PNG,
+            ),
+        ),
+    )
+    reader = LocalVisionLLMClassifier(spec=prompt_spec_with_saturation_fields(), settings=settings)
+
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        _classify_with_evidence(
+            _transaction("reader-unavailable"),
+            evidence,
+            text_classifier=None,
+            spec=prompt_spec_with_saturation_fields(),
+            vision_classifier=reader,
+            vision_model=None,
+            settings=settings,
+        )
+
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "provisioning.runtime.reachable"
+    assert verdict.evidence[0].values["runtime_reachable"] is False
