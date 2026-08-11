@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b5d1119cc9ff45206215a00e966f992260720e11f86b34895514da4233c0ab4'
+body_hash: 'sha256:e489c7dd56cb7314285b756dd03eeb26dfdde1652ce0db3d3763ef3d1ecf95c3'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -80,3 +80,21 @@ The committed mechanism is present and unchanged: the viewer function maps each 
 The live acceptance property is still unsatisfied: the `es`, `ca` and `hu` roots each return HTTP 404. That evidence is preserved as-is. It cannot be advanced because the AWS session is expired and re-authentication is an operator action; without it the deployed routing and object state cannot be distinguished from the committed mechanism.
 
 Nothing here may be read as a claim that the localized roots respond. The campaign closes with this row open.
+
+### 2026-08-12 the publish would have failed on its own build; two blockers removed
+
+This row stays open on the live proof, but its engineering half moved materially, and what was found changes the value of the pending re-authentication.
+
+The live state was re-verified directly this session rather than inherited from the earlier record. Reading a public site needs no credentials, only publishing does, so the roots were probed over plain HTTPS: the default root answers 200 while `/es/`, `/ca/`, `/hu/`, `/en/` and the casilla destination page all answer 404. The gap is real and current.
+
+More useful: the publish would have failed even with valid credentials. It builds every root through the docs driver under strict settings before it uploads anything, and all three translated builds were red. Two independent causes, both credential-free and both now fixed.
+
+First, the casilla reference generator aborted at builder-inited because `docs.casilla.input_kind.projection_only` and its count sibling had no authored value. A new projection-only input kind had entered the schema, and the surface derives its label keys from that enum precisely so a new member demands its string rather than rendering nothing. The design worked; the strings were simply never written. Authored in all four languages on the register the sibling kinds establish.
+
+Second, five stale preview pages sat in the generated casilla directory from an earlier session, in no toctree, so the nitpicky build warned and failed. Nothing in the tree emits them any more. They are gitignored build residue, not source, and were moved aside rather than deleted outright.
+
+All four roots now build clean: es and ca passed immediately, and hu passed on a sequential re-run after a concurrent registry write raced its cache fingerprint the first time.
+
+So the remaining blocker really is only the credential. Before this session a re-authentication would have hit a failing build; now the publish path is clear up to the upload.
+
+One recurrence risk recorded rather than fixed: the generator does not prune its own output directory, and that directory is gitignored, so stale pages survive across builds and can red the strict build again. A pruning pass belongs with the generator's owner.
