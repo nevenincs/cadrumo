@@ -959,7 +959,7 @@ _REDACTABLE_IDENTIFIER_TOKENS: dict[str, frozenset[str]] = {
     "nif-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
     "nif-separated-hash": frozenset({"nif", "nie", "tax_id", "taxid", "dni"}),
     "cif-hash": frozenset({"cif"}),
-    "nif-iva-hash": frozenset({"nif_iva", "vat_id", "vat_number"}),
+    "nif-iva-hash": frozenset({"nif_iva", "iva_id", "iva_number"}),
     "iban-hash": frozenset({"iban"}),
     "url-host-only": frozenset({"url", "endpoint", "href"}),
     # Bare ``token`` is deliberately absent. It is ordinary computing
