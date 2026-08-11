@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-11'
-body_hash: 'sha256:1ee9785a3893dfd5a491e66cada9b07d45c0f42df5c6f6726afa1c85bb2b0c00'
+body_hash: 'sha256:41afb26eb4e2e9e00340e65a866d68e9e3a91a937943c08ca27c1cddab08d2aa'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -109,7 +109,7 @@ One forward join, one reverse join, one relation grouping; duplicates retargeted
 The four-channel consumption predicate becomes importable production code.
 
 - [x] `W02.P04.S12` - promote the consumption predicate from the consumption test into facade-exported registry functions, adding the alternate_bindings channel the test omits as an explicit deliverable, and re-point the test at the production functions; `src/cadrumo/domain/calculations/registry/_handoffs.py`.
-- [ ] `W02.P04.S13` - record the consumption channel on relation handoff records and retarget the relation-prefill unresolved partition onto the promoted index; `src/cadrumo/application/calculations/_relation_prefill.py`.
+- [x] `W02.P04.S13` - record the consumption channel on relation handoff records and retarget the relation-prefill unresolved partition onto the promoted index; `src/cadrumo/application/calculations/_relation_prefill.py`.
 
 ### Phase `W02.P05` - official-box classification
 

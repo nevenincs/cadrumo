@@ -5,57 +5,36 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:5cab98e537ecb34235d7e7e75337d6a46373269b690b631a882b8bd2009fbe10'
+body_hash: 'sha256:964ba12d58455d1ba9a89fe72a5e880131fd666d2c5a99b620221d212c1984df'
 step_id: 'S13'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace casilla-schema with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S13 and 2026-08-10-casilla-schema-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Carry relation consumption channels into handoffs and prefill and ## Scope
-
-- `src/cadrumo/application/calculations/_relation_prefill.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Carry relation consumption channels into handoffs and prefill
 
 ## Scope
 
+- `src/cadrumo/domain/calculations/registry/_handoffs.py`
+- `src/cadrumo/domain/calculations/registry/__init__.py`
+- `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py`
 - `src/cadrumo/application/calculations/_relation_prefill.py`
+- `src/cadrumo/application/calculations/tests/test_relation_prefill_source_mesh.py`
 
 ## Description
 
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
+- Preserve primary binding, alternate binding, formula relation, and formula binding as distinct sets in the canonical consumption index.
+- Add the facade-exported ordered `relation_consumption_channels` projection and carry its result on every `RelationHandoffRecord`.
+- Retarget the unresolved relation partition to the canonical index, channel projection, and consumption predicate.
+- Delete the local formula-relation walker and declared-binding proxy, then re-point direct application tests to production authority.
 
 ## Outcome
 
+- The bundled inventory measures 78 handoffs with no empty consumption-channel tuple; exact alternate-only and formula-relation-only records are proven.
+- Fourteen focused handoff and prefill tests pass; Ruff, format, BasedPyright, collection, facade identity, structural, prohibited-construct, and diff gates are green.
+- Formal review reported PASS with no actionable findings.
+- Production and application changes landed in `0ac21bd662`; direct regression updates landed in `9809466c5f`.
+
 ## Notes
 
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
+- The execution scaffold landed in broad concurrent commit `96b06b9b27`; this lifecycle commit completes it rather than rewriting shared history.
+- The pre-existing applicability inventory hard count expects 108 rows while concurrent registry work now yields 156. That exact unrelated test remains red; no S13 behavior depends on the stale total.
