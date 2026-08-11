@@ -622,9 +622,6 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE: (
         "projection-path prorrata attachment; preflight screens the usage-ratio reference instead"
     ),
-    IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION: (
-        "projection-path deduction taxonomy gate; preflight does not resolve immutable deduction evidence"
-    ),
     IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY: (
         "projection-path category resolution; preflight screens non-declarable categories itself"
     ),

@@ -1,74 +1,84 @@
-"""Anti-legacy proof for the canonical filing producer boundary."""
+"""Structural proof for the single export semantic producer vocabulary."""
 
 from __future__ import annotations
 
 import ast
-import inspect
 from pathlib import Path
 
 import pytest
 
-import cadrumo.application.filing._export as export_module
-import cadrumo.application.modelo._export as modelo_export_module
-import cadrumo.domain.calculations.registry as registry
-from cadrumo.application.filing import export_draft
-from cadrumo.core import FilingProducerKey
-from cadrumo.domain.calculations.registry import ExportComputedKey, ExportDraftAttribute
+from ....domain.calculations.registry import (
+    ExportComputedKey,
+    ExportDraftAttribute,
+    ExportHeaderKey,
+)
+from ....domain.filing import FilingExportValidationError
+from .._export import (
+    _COMPUTED_VALUE_PRODUCERS,
+    _DRAFT_VALUE_PRODUCERS,
+    _normalise_export_headers,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-
-def _resolver_enum_keys() -> set[FilingProducerKey]:
-    source = Path("src/cadrumo/application/filing/_export.py").read_text(encoding="utf-8")
-    tree = ast.parse(source)
-    resolver = next(
-        node
-        for node in tree.body
-        if isinstance(node, ast.FunctionDef) and node.name == "_filing_producer_values"
-    )
-    members: set[FilingProducerKey] = set()
-    for node in ast.walk(resolver):
-        if (
-            isinstance(node, ast.Attribute)
-            and isinstance(node.value, ast.Name)
-            and node.value.id == "FilingProducerKey"
-        ):
-            members.add(FilingProducerKey[node.attr])
-    return members
-
-
-def test_snapshot_resolver_is_exhaustive_over_the_core_producer_vocabulary() -> None:
-    assert _resolver_enum_keys() == set(FilingProducerKey)
-
-
-def test_legacy_header_surfaces_are_deleted_instead_of_normalised() -> None:
-    assert not hasattr(registry, "ExportHeaderKey")
-    assert not hasattr(export_module, "_normalise_export_headers")
-    assert not hasattr(modelo_export_module, "compose_export_headers")
-    assert "headers" not in inspect.signature(export_draft).parameters
-    assert "producer_snapshot" in inspect.signature(export_draft).parameters
-
-
-@pytest.mark.parametrize(
-    "legacy_token",
-    (
-        "presenter_nif",
-        "presenter_tax_id",
-        "complementaria",
-        "previous_receipt",
-        "name",
-        "program_version",
-        "aeat_seal",
-    ),
+_HEADER_PRODUCER_FUNCTIONS = frozenset(
+    {
+        "_compose_charge_account_block",
+        "_compose_refund_account_block",
+        "_compose_export_headers",
+    },
 )
-def test_historical_header_spellings_are_not_enum_members_or_values(legacy_token: str) -> None:
-    assert legacy_token not in FilingProducerKey.__members__
-    assert legacy_token not in {member.value for member in FilingProducerKey}
-    with pytest.raises(ValueError):
-        FilingProducerKey(legacy_token)
 
 
-def test_draft_vocabulary_has_no_profile_or_taxpayer_identity_fallback() -> None:
-    assert set(export_module._DRAFT_VALUE_PRODUCERS) == set(ExportDraftAttribute)
-    assert set(export_module._COMPUTED_VALUE_PRODUCERS) == set(ExportComputedKey)
-    assert "profile_tax_id" not in {member.value for member in ExportDraftAttribute}
+def _enum_keys_in_header_producers(source: str) -> tuple[set[ExportHeaderKey], tuple[str, ...]]:
+    """Read enum-key writes from the one production composition unit."""
+    tree = ast.parse(source)
+    produced: set[ExportHeaderKey] = set()
+    raw_string_keys: list[str] = []
+    for function in (node for node in tree.body if isinstance(node, ast.FunctionDef)):
+        if function.name not in _HEADER_PRODUCER_FUNCTIONS:
+            continue
+        for node in ast.walk(function):
+            candidates: tuple[ast.expr | None, ...] = ()
+            if isinstance(node, ast.Dict):
+                candidates = tuple(node.keys)
+            elif isinstance(node, ast.Subscript) and isinstance(node.ctx, ast.Store):
+                candidates = (node.slice,)
+            for candidate in candidates:
+                if isinstance(candidate, ast.Constant) and isinstance(candidate.value, str):
+                    raw_string_keys.append(candidate.value)
+                if (
+                    isinstance(candidate, ast.Attribute)
+                    and isinstance(candidate.value, ast.Name)
+                    and candidate.value.id == "ExportHeaderKey"
+                ):
+                    produced.add(ExportHeaderKey[candidate.attr])
+    return produced, tuple(sorted(raw_string_keys))
+
+
+def test_every_admitted_header_key_is_written_by_the_single_production_composer() -> None:
+    producer_source = Path("src/cadrumo/application/modelo/_export.py").read_text(encoding="utf-8")
+
+    produced, raw_string_keys = _enum_keys_in_header_producers(producer_source)
+
+    assert produced == set(ExportHeaderKey)
+    assert raw_string_keys == ()
+
+
+def test_draft_and_computed_vocabularies_are_total_over_their_dispatch_tables() -> None:
+    assert set(_DRAFT_VALUE_PRODUCERS) == set(ExportDraftAttribute)
+    assert set(_COMPUTED_VALUE_PRODUCERS) == set(ExportComputedKey)
+
+
+@pytest.mark.parametrize("deleted_key", ("presenter_nif", "presenter_tax_id", "record_type"))
+def test_deleted_or_unproduced_header_tokens_fail_at_the_filing_boundary(deleted_key: str) -> None:
+    with pytest.raises(FilingExportValidationError, match="not recognised"):
+        _normalise_export_headers({deleted_key: "value"})
+
+
+def test_filing_header_boundary_retains_enum_identity_without_casefolding() -> None:
+    normalized = _normalise_export_headers({ExportHeaderKey.PROGRAM_VERSION: "A001"})
+
+    assert normalized == {ExportHeaderKey.PROGRAM_VERSION: "A001"}
+    with pytest.raises(FilingExportValidationError, match="not recognised"):
+        _normalise_export_headers({"PROGRAM_VERSION": "A001"})

@@ -64,7 +64,7 @@ def _profile_export_binding_applies(
     met, so a profile that never answered the question writes nothing rather
     than defaulting into disclosure. The read uses the same
     ``str(...).strip()`` shape this module's marital and autonomic derivations
-    already apply to ``renta_filing.declaration_type``, and folds case so a
+    already apply to ``filing_export.declaration_type``, and folds case so a
     stored boolean ``True`` matches a registry-declared ``"true"``.
     """
     gate_key = getattr(binding.selector, "required_when_profile_key", None)

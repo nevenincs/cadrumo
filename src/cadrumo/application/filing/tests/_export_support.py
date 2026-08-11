@@ -2,38 +2,28 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from decimal import Decimal
 from functools import cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from ....core import (
-    CasillaId,
-    Modelo,
-    PaymentElection,
-    Period,
-    PriorDomiciliationElection,
-    RefundElection,
-    ResultDisposition,
-    validated_casilla_id,
-)
+import pytest
+
+from ....core import CasillaId, Period, PriorDomiciliationElection, validated_casilla_id
 from ....domain.calculations.registry import (
     ExportLayoutDefinition,
 )
-from ....domain.modelos import CalculationRevisionAmendmentKind
+from ....domain.filing import ModeloDraft
 from ....domain.submission import ModeloDraftStatus
 from .. import (
-    AmendmentEvidence,
-    FilingElectionFacts,
-    FilingProducerSnapshot,
-    Modelo111ProfileFacts,
     ModeloOperatorProfile,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
     build_draft,
-    build_filing_producer_snapshot,
     build_runtime_schema_provider,
+    export_draft,
 )
+from .._export_parity import boe_representable_casilla_ids
 from ..runtime import RegistrySchemaAccessor
 
 _HEX_DIGEST = "a" * 64
@@ -41,39 +31,6 @@ _PERIOD = Period.from_year_and_code(2026, "1T")
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
 _SCHEMA_PROVIDER_CACHE: dict[tuple[int | None, str | None, tuple[str, ...]], RegistrySchemaAccessor] = {}
-
-
-def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerSnapshot:
-    amendment = (
-        AmendmentEvidence(
-            kind=CalculationRevisionAmendmentKind.COMPLEMENTARIA,
-            motive="Codec producer proof",
-            original_aeat_receipt="1234567890123",
-        )
-        if complementaria
-        else None
-    )
-    return build_filing_producer_snapshot(
-        modelo=Modelo.M111,
-        taxpayer_tax_id="12345678Z",
-        taxpayer_identity=TaxpayerIdentityFacts(
-            legal_name=None,
-            given_name="Ana",
-            surnames="Prueba",
-            full_name="Ana Prueba",
-        ),
-        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
-        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
-        elections=FilingElectionFacts(
-            result_disposition=ResultDisposition.NEGATIVA,
-            payment=PaymentElection.INGRESO,
-            refund=RefundElection.COMPENSAR,
-            prior_domiciliation=PriorDomiciliationElection.KEEP,
-        ),
-        amendment_evidence=amendment,
-        refund_account=None,
-        charge_account=None,
-    )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -225,8 +182,110 @@ def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
     assert "does not certify legal correctness" in message
 
 
+@dataclass(frozen=True)
+class _RequiredSetPartition:
+    """Registry-derived partition of a revision's manifest-and-representable casillas.
+
+    Each manifest casilla the official record files a slot for falls into exactly
+    one of three classes, read straight off the registry ``CasillaSchema``:
+
+    - ``calculation_results`` -- declares a formula, so its value is produced by the
+      calculation and a blank slot means the calculation did not run.
+    - ``schema_required_inputs`` -- declares no formula but carries the registry
+      ``required`` flag, so the taxpayer must supply it and a blank slot is an
+      omission, not a zero.
+    - ``optional_inputs`` -- declares neither, so a blank slot is a valid zero
+      (retenciones, prior payments, deductions the taxpayer may legitimately not
+      have).
+
+    The first two classes are the required set a complete fichero-BOE must carry.
+
+    This partition is the INDEPENDENT ORACLE for that required set: it reads
+    ``formula`` and ``required`` off the :class:`CasillaCollection` directly and
+    MUST NOT be rewritten to delegate to ``required_applicable_casilla_ids``. The
+    duplicated predicate is deliberate. A test that derives its expectation from
+    the function under test cannot detect a change in that function's semantics --
+    it can only detect that the function was called. Collapsing the two onto one
+    derivation once let a relaxed predicate drop a schema-required, formula-less
+    casilla out of the pre-write completeness gate while every filing test stayed
+    green, which is exactly the structurally-thin ``.boe`` the gate exists to
+    refuse. Keeping the classes separate here also makes each clause of the
+    production predicate independently pinnable, so a per-clause relaxation names
+    the class it broke rather than failing on an opaque set difference.
+
+    Representability is deliberately NOT mirrored: it is supplied by the production
+    ``boe_representable_casilla_ids`` derivation, whose disposition-suppression
+    behaviour carries its own dedicated coverage. Only the required-set predicate is
+    duplicated here, because only that predicate is the subject under pin.
+    """
+
+    modelo: str
+    calculation_results: frozenset[CasillaId]
+    schema_required_inputs: frozenset[CasillaId]
+    optional_inputs: frozenset[CasillaId]
+
+    @property
+    def required_applicable(self) -> frozenset[CasillaId]:
+        """Return the casillas a complete fichero-BOE must carry a value for."""
+        return self.calculation_results | self.schema_required_inputs
 
 
+def _required_set_partition(
+    *,
+    modelo: str,
+    provider: RegistrySchemaAccessor,
+    layout: ExportLayoutDefinition,
+    draft: ModeloDraft,
+    headers: dict[str, str],
+) -> _RequiredSetPartition:
+    """Classify a revision's manifest-and-representable casillas from the registry.
+
+    Args:
+        modelo: Modelo code whose completeness manifest and casilla collection
+            supply the classification facts.
+        provider: Real registry schema accessor for the pinned revision.
+        layout: Fixed-width export layout whose filed slots bound the classification.
+        headers: Export headers selecting this filing's disposition, which decide
+            which records (and therefore which slots) are suppressed.
+
+    Returns:
+        The :class:`_RequiredSetPartition` oracle for this modelo and revision.
+    """
+    subview = provider.get_subview(modelo)
+    manifest = subview.completeness_manifest
+    assert manifest is not None, f"modelo {modelo} must declare a completeness manifest to ground the required-set pin"
+    representable = boe_representable_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        schema_provider=provider,
+    )
+    collection = provider.get_collection(modelo)
+
+    calculation_results: set[CasillaId] = set()
+    schema_required_inputs: set[CasillaId] = set()
+    optional_inputs: set[CasillaId] = set()
+    for entry in manifest.casillas:
+        casilla_id = entry.casilla_id
+        if casilla_id not in representable:
+            continue
+        schema = collection.get(casilla_id)
+        if schema is None:
+            continue
+        if schema.formula is not None:
+            calculation_results.add(casilla_id)
+        elif schema.required:
+            schema_required_inputs.add(casilla_id)
+        else:
+            optional_inputs.add(casilla_id)
+
+    return _RequiredSetPartition(
+        modelo=modelo,
+        calculation_results=frozenset(calculation_results),
+        schema_required_inputs=frozenset(schema_required_inputs),
+        optional_inputs=frozenset(optional_inputs),
+    )
 
 
 @cache
@@ -256,6 +315,14 @@ def _approved_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_130_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "presenter_nif": "A12345678",
+    }
 
 
 @cache
@@ -397,6 +464,14 @@ def _approved_modelo_111_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_111_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "presenter_nif": "A12345678",
+    }
 
 
 @cache
@@ -418,6 +493,14 @@ def _approved_modelo_115_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_115_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "legal_name": "EXPORT TEST",
+        "first_name": "ANA",
+        "program_version": "A001",
+        "presenter_tax_id": "A12345678",
+    }
 
 
 @cache
@@ -445,6 +528,13 @@ def _approved_modelo_123_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_123_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "legal_name": "EXPORT TEST",
+        "program_version": "A001",
+        "presenter_tax_id": "A12345678",
+    }
 
 
 @cache
@@ -470,6 +560,14 @@ def _approved_modelo_123_2019_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_123_2019_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "presenter_tax_id": "A12345678",
+    }
 
 
 @cache
@@ -506,6 +604,14 @@ def _approved_modelo_200_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_200_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "D",
+        "surnames": "EMILIO EXPORT TEST SL",
+        "name": "EMILIO EXPORT TEST SL",
+        "program_version": "A001",
+        "presenter_nif": "B12345674",
+    }
 
 
 @cache
@@ -545,22 +651,143 @@ def _approved_modelo_390_registry_draft():
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
+def _modelo_390_export_headers() -> dict[str, str]:
+    return {
+        "declaration_type": "I",
+        "surnames": "EXPORT TEST",
+        "name": "ANA",
+        "program_version": "A001",
+        "presenter_nif": "12345678Z",
+    }
 
 
+def _real_export_payload(
+    *,
+    draft: ModeloDraft,
+    provider: RegistrySchemaAccessor,
+    headers: dict[str, str],
+    output_name: str,
+) -> bytes:
+    with TemporaryDirectory() as directory:
+        output = Path(directory) / output_name
+        export_draft(
+            draft,
+            output_path=output,
+            headers=headers,
+            schema_provider=provider,
+        )
+        return output.read_bytes()
 
 
+@cache
+def _modelo_130_export_payload() -> bytes:
+    return _real_export_payload(
+        draft=_approved_registry_draft(),
+        provider=_schema_provider(),
+        headers=_modelo_130_export_headers(),
+        output_name="modelo-130.txt",
+    )
 
 
+@cache
+def _modelo_111_export_payload() -> bytes:
+    return _real_export_payload(
+        draft=_approved_modelo_111_registry_draft(),
+        provider=_schema_provider(modelos=("111",)),
+        headers=_modelo_111_export_headers(),
+        output_name="modelo-111.txt",
+    )
 
 
+@cache
+def _modelo_115_export_payload() -> bytes:
+    return _real_export_payload(
+        draft=_approved_modelo_115_registry_draft(),
+        provider=_schema_provider(modelos=("115",)),
+        headers=_modelo_115_export_headers(),
+        output_name="modelo-115.txt",
+    )
 
 
+@cache
+def _modelo_123_export_payload() -> bytes:
+    return _real_export_payload(
+        draft=_approved_modelo_123_registry_draft(),
+        provider=_schema_provider(modelos=("123",)),
+        headers=_modelo_123_export_headers(),
+        output_name="modelo-123.txt",
+    )
 
 
+@cache
+def _modelo_123_2019_export_payload() -> bytes:
+    return _real_export_payload(
+        draft=_approved_modelo_123_2019_registry_draft(),
+        provider=_schema_provider(filing_year=2023, period="4T", modelos=("123",)),
+        headers=_modelo_123_2019_export_headers(),
+        output_name="modelo-123-2023.txt",
+    )
 
 
+@dataclass(frozen=True)
+class _ExportVerifyMatchCase:
+    output_name: str
+    draft_factory: Callable[[], ModeloDraft]
+    payload_factory: Callable[[], bytes]
+    modelos: tuple[str, ...]
+    filing_year: int | None = None
+    period: str | None = None
 
 
+_EXPORT_VERIFY_MATCH_CASES = (
+    pytest.param(
+        _ExportVerifyMatchCase(
+            output_name="modelo-130.txt",
+            draft_factory=_approved_registry_draft,
+            payload_factory=_modelo_130_export_payload,
+            modelos=("130",),
+        ),
+        id="modelo-130",
+    ),
+    pytest.param(
+        _ExportVerifyMatchCase(
+            output_name="modelo-111.txt",
+            draft_factory=_approved_modelo_111_registry_draft,
+            payload_factory=_modelo_111_export_payload,
+            modelos=("111",),
+        ),
+        id="modelo-111",
+    ),
+    pytest.param(
+        _ExportVerifyMatchCase(
+            output_name="modelo-115.txt",
+            draft_factory=_approved_modelo_115_registry_draft,
+            payload_factory=_modelo_115_export_payload,
+            modelos=("115",),
+        ),
+        id="modelo-115",
+    ),
+    pytest.param(
+        _ExportVerifyMatchCase(
+            output_name="modelo-123.txt",
+            draft_factory=_approved_modelo_123_registry_draft,
+            payload_factory=_modelo_123_export_payload,
+            modelos=("123",),
+        ),
+        id="modelo-123",
+    ),
+    pytest.param(
+        _ExportVerifyMatchCase(
+            output_name="modelo-123-2023.txt",
+            draft_factory=_approved_modelo_123_2019_registry_draft,
+            payload_factory=_modelo_123_2019_export_payload,
+            modelos=("123",),
+            filing_year=2023,
+            period="4T",
+        ),
+        id="modelo-123-2019-layout",
+    ),
+)
 
 
 def _field_slice(layout: ExportLayoutDefinition, record_id: str, field_id: str) -> slice:

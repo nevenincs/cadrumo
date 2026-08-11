@@ -58,7 +58,7 @@ _NOTHING_CLAIMED = {_ESTATAL_CASILLA: Decimal("0")}
 #: real write path.
 _INFERRED_SECOND_FILER = {
     "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-    "renta_filing.declaration_type": "1",
+    "filing_export.declaration_type": "1",
 }
 
 
@@ -171,7 +171,7 @@ def test_silent_when_no_second_filer_is_indicated() -> None:
         _child(),
         signals={
             "renta_taxpayer.marital_status": RentaMaritalStatus.SOLTERO.value,
-            "renta_filing.declaration_type": "1",
+            "filing_export.declaration_type": "1",
         },
     )
     assert _collect() == ()
@@ -183,7 +183,7 @@ def test_silent_for_a_married_conjunta_return() -> None:
         _child(),
         signals={
             "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-            "renta_filing.declaration_type": "2",
+            "filing_export.declaration_type": "2",
         },
     )
     assert _collect() == ()
@@ -233,11 +233,11 @@ def test_the_conjunta_branch_is_pinned_on_the_codes_the_schema_can_store() -> No
 
     unmarried = {
         "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,
-        "renta_filing.declaration_type": "2",
+        "filing_export.declaration_type": "2",
     }
     married = {
         "renta_taxpayer.marital_status": RentaMaritalStatus.CASADO.value,
-        "renta_filing.declaration_type": "2",
+        "filing_export.declaration_type": "2",
     }
     # Art. 82.1.2a: no marriage bond, so the unit is one progenitor plus the
     # minor children and the other progenitor stays separately entitled.

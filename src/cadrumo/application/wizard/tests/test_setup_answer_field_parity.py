@@ -87,7 +87,7 @@ def test_both_projections_agree_on_a_populated_record() -> None:
     values["preferences.output_language"] = "en"
     values["taxpayer_type.entity_type"] = ""
     values["taxpayer_type.legal_entity_form"] = ""
-    values["renta_filing.declaration_type"] = ""
+    values["filing_export.declaration_type"] = ""
     values["taxpayer_type.fiscal_residency"] = ""
     values["tax_residence.ccaa"] = "madrid"
     values["taxpayer_type.irpf_income_categories"] = ""

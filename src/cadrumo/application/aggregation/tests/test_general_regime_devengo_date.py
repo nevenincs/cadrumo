@@ -36,7 +36,7 @@ from ....domain.transactions import (
     TransactionDirection,
     transaction_eligible_date_span,
 )
-from ._iva_authority_support import aggregate_iva_ledger_observations
+from .._iva_ledger import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -18,10 +18,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....core import RentaDeclaracionType
-from ....domain import contribuyente
 from ....domain.contribuyente import RentaMaritalStatus, RentaSexCode
-from .. import UserProfileNotFoundError, load_user_profile_schema
+from .. import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,26 +68,3 @@ def test_marital_status_declares_the_runtime_code_set() -> None:
     expected = {member.value for member in RentaMaritalStatus}
 
     assert set(schema.field("renta_taxpayer.marital_status").enum_values) == expected
-
-
-def test_renta_declaration_type_has_one_core_owner_and_canonical_profile_path() -> None:
-    schema = load_user_profile_schema()
-
-    assert {member.value for member in RentaDeclaracionType} == {"1", "2"}
-    assert not hasattr(contribuyente, "RentaDeclaracionType")
-    assert schema.field("renta_filing.declaration_type").key == "declaration_type"
-    with pytest.raises(UserProfileNotFoundError):
-        schema.field("filing_export.declaration_type")
-
-
-def test_rental_reduction_tier_refuses_the_legacy_profile_path() -> None:
-    schema = load_user_profile_schema()
-
-    assert schema.field("renta_rental.reduccion_art_23_2_tier_2024").enum_values == (
-        "tier-50",
-        "tier-60",
-        "tier-70",
-        "tier-90",
-    )
-    with pytest.raises(UserProfileNotFoundError):
-        schema.field("filing_export.rental_reduccion_art_23_2_tier_2024")

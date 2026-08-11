@@ -77,7 +77,6 @@ from ._components import (
     iva_category_components,
 )
 from ._corpus import load_iva_rules_from_manual
-from ._deduction_facts import IvaDeductionClassificationProvenance, validate_iva_deduction_fact
 from ._errors import (
     IvaCatalogueError,
     IvaCategoryNotFoundError,
@@ -268,7 +267,6 @@ __all__ = [
     "IvaClassificationResult",
     "IvaComponentPresence",
     "IvaCuotaSettlement",
-    "IvaDeductionClassificationProvenance",
     "IvaError",
     "IvaExemptionArticle",
     "IvaFlowDirection",
@@ -382,7 +380,6 @@ __all__ = [
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",
     "territorial_scope_for_spanish_postal_code",
-    "validate_iva_deduction_fact",
     "validate_prorrata_reference",
     "vat_identification_state_for_printed_tax_identifier",
     "verify_catalogue",

@@ -32,7 +32,7 @@ formulas = [
 ]
 workbook_parity_refs = ["modelo-202-dr-xlsx-2025"]
 live_cross_references = ["modelo-202-static-documentation"]
-support_removal_decisions = ["modelo-202-fichero-boe-support-removal"]
+export_layouts = ["modelo-202-fichero-boe"]
 bindings = ["modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores", "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior"]
 relations = ["modelo-202-2025-y-siguientes-rel-self-pagos-2p", "modelo-202-2025-y-siguientes-rel-self-pagos-3p", "modelo-202-2025-y-siguientes-rel-cuota-base-1p", "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"]
 dependency_classifications = ["modelo-202-2025-y-siguientes-dep-self-prior-pagos", "modelo-202-2025-y-siguientes-dep-200-cuota-base"]

@@ -170,7 +170,7 @@ def _seed_modelo_303_1t_clean_state(
     values = {casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)}
     source_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
     persist_justificante_metadata(
-        "JUST30320261T",
+        "JUST-303-2026-1T",
         modelo="303",
         filing_year=2026,
         period="1T",
@@ -191,7 +191,7 @@ def _seed_modelo_303_1t_clean_state(
         work_unit_id=work_unit.work_unit_id,
         casilla_values=values,
         evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-        evidence_reference_id="JUST30320261T",
+        evidence_reference_id="JUST-303-2026-1T",
         actor="aeat-import-test",
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
@@ -219,7 +219,7 @@ def _seed_modelo_303_1t_clean_state(
             source_metadata={
                 "aeat_register_status": "ALTA",
                 "aeat_expediente_id": "EXP-303-2026-1T",
-                "aeat_justificante_csv": "JUST30320261T",
+                "aeat_justificante_csv": "JUST-303-2026-1T",
                 "authenticated_identity": taxpayer_tax_id,
             },
         )

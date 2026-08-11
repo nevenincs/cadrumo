@@ -29,7 +29,7 @@ from typing import Literal, NamedTuple, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, IvaDeductionFactKind, Modelo, validated_casilla_id
+from ....core import STRICT_FROZEN_CONFIG, CasillaId, Modelo, validated_casilla_id
 from ....core.aggregation import (
     LEDGER_BINDING_SOURCE_KINDS,
     BindingAggregationOp,
@@ -44,13 +44,11 @@ from ...iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
-    IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
-    validate_iva_deduction_fact,
 )
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model
@@ -458,11 +456,6 @@ class IvaLedgerObservation(BaseModel):
     the whole-entity default otherwise; the non-sectorized apportionment ignores
     it.
     """
-    deduction_fact_kind: IvaDeductionFactKind | None = None
-    """Exact, evidence-grounded differentiated-sector deduction family."""
-    deduction_provenance: IvaDeductionClassificationProvenance | None = None
-    investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
-    rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
 
     @model_validator(mode="after")
     def _enforce_exemption_article_category(self) -> IvaLedgerObservation:
@@ -471,30 +464,6 @@ class IvaLedgerObservation(BaseModel):
                 "exemption_article is only valid when category is DOMESTIC_EXEMPT; "
                 f"got category {self.category.value!r}",
             )
-        if (
-            self.flow_direction
-            not in {
-                IvaFlowDirection.SOPORTADO,
-                IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-            }
-            or self.category is IvaCategory.RECARGO_EQUIVALENCIA
-        ):
-            if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
-                raise RegistryValidationError("output IVA facts cannot carry deduction authority")
-            return self
-        if self.deduction_fact_kind is None or self.deduction_provenance is None:
-            raise RegistryValidationError("input IVA facts require exact deduction authority")
-        validate_iva_deduction_fact(
-            kind=self.deduction_fact_kind,
-            provenance=self.deduction_provenance,
-            category=self.category,
-            rate_kind=self.rate_kind,
-            flow_direction=self.flow_direction,
-            base_amount=self.base_amount,
-            iva_amount=self.iva_amount,
-            investment_asset_id=self.investment_asset_id,
-            rectifies_ledger_id=self.rectifies_ledger_id,
-        )
         return self
 
 

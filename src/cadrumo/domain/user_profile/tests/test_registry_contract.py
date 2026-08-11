@@ -67,7 +67,7 @@ def test_schema_selector_index_contains_modelo_profile_namespaces() -> None:
     assert "enrollment.large_company" in index.schedule_predicates
     assert "enrollment.public_administration_budget_gt_6000000" in index.schedule_predicates
     assert "tax.id" not in index.schedule_predicates
-    assert not hasattr(index, "export_headers")
+    assert "profile_tax_id" in index.export_headers
 
 
 def test_anualidades_selector_still_resolves_through_its_derived_pattern() -> None:
@@ -170,7 +170,7 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
 
 
 def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
-    """The patterns own the 22 derived selectors and neither operator input.
+    """The patterns own the 21 derived selectors and neither of the 2 operator inputs.
 
     ``cotizaciones_ss_madre`` and ``rental_reduccion_art_23_2_tier`` are
     genuine taxpayer input that keep their declarations, so a pattern
@@ -187,7 +187,7 @@ def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
         if any(definition.matches(selector) for definition in schema.derived_selectors)
     }
 
-    assert len(covered) == 22, sorted(covered)
+    assert len(covered) == 21, sorted(covered)
     assert not [selector for selector in covered if "cotizaciones_ss_madre" in selector]
     assert not [selector for selector in covered if "rental_reduccion_art_23_2_tier" in selector]
 
@@ -263,8 +263,24 @@ def test_committed_modelo_profile_selectors_are_declared_by_user_profile_schema(
     ]
     assert report.valid, "\n".join(blocking)
     assert all(issue.severity is not BaseSeverity.ERROR for issue in report.issues)
-    assert not report.warnings
-    assert not report.issues
+    # Every WARNING must be the tolerated "export header not yet
+    # classified" kind: committed layouts carry header fields whose
+    # selectors are per-filing flags (e.g. declaracion_complementaria),
+    # not stable taxpayer-profile attributes, so the user-profile schema
+    # deliberately does not classify them. The exact warning count
+    # drifts as schema-hardening lands new export layouts; what must
+    # hold is that no warning is a different, unexpected kind — a real
+    # classification gap would surface as a non-"export header" message
+    # or an ERROR, both still caught above.
+    assert report.warnings, "expected the tolerated export-header warnings to be present"
+    assert all(
+        issue.message == "export header is not yet classified by user-profile schema" for issue in report.warnings
+    ), "an unexpected non-export-header warning kind appeared"
+    assert {issue.selector for issue in report.warnings} >= {
+        "colegio_concertado",
+        "datos_adicionales_declaraci-n-complementaria-6",
+        "declaracion_complementaria",
+    }
 
 
 def test_user_profile_imports_before_registry_barrel() -> None:

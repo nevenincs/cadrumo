@@ -40,13 +40,8 @@ import pytest
 
 from ..adapters.inbound.financial.providers import CsvProvider
 from ..adapters.outbound.fx import EcbReferenceRateProvider
-from ..application.aggregation import (
-    IvaLedgerAggregationIssueReason,
-    aggregate_iva_ledger_observations,
-    aggregate_renta_income_ledger,
-)
+from ..application.aggregation import aggregate_iva_ledger_observations, aggregate_renta_income_ledger
 from ..core import Period
-from ..domain.bienes_inversion import BienesInversionIvaRegister
 from ..domain.currency import (
     CurrencyNormalizationService,
     CurrencyNormalizationStatus,
@@ -241,13 +236,7 @@ def test_iva_pipeline_gates_transfers_personal_and_nondeclarable() -> None:
     catalogue = _catalogue()
     emitted: set[str] = set()
     for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
+        result = aggregate_iva_ledger_observations(catalogue, period=period)
         emitted.update(o.ledger_id for o in result.observations)
     leaked = emitted & gated_ids
     assert not leaked, f"{len(leaked)} non-declarable rows leaked into IVA observations"
@@ -259,13 +248,7 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
     catalogue = _catalogue()
     seen = 0
     for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
+        result = aggregate_iva_ledger_observations(catalogue, period=period)
         # Issues are the pipeline's gating signal for transfers / personal /
         # no-IVA rows; they are expected for a mixed corpus, not an error.
         for obs in result.observations:
@@ -283,32 +266,21 @@ def test_iva_observations_match_oracle_category_and_flow() -> None:
     assert seen > 0
 
 
-def test_iva_pipeline_refuses_input_categories_without_authoritative_deduction_evidence() -> None:
-    """Legacy corpus input categories remain blocked until their evidence oracle is extended."""
+def test_iva_pipeline_emits_intracommunity_and_export_and_import() -> None:
+    """The source-driven categories actually reach M303 across the corpus."""
     catalogue = _catalogue()
     categories: set[IvaCategory] = set()
-    refusal_count = 0
     for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
+        result = aggregate_iva_ledger_observations(catalogue, period=period)
         categories.update(o.category for o in result.observations)
-        refusal_count += sum(
-            issue.reason is IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION for issue in result.issues
-        )
     for required in (
         IvaCategory.DOMESTIC_GENERAL,
         IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+        IvaCategory.IMPORT_THIRD_COUNTRY,
     ):
         assert required in categories, f"{required} never reached M303"
-    assert IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE not in categories
-    assert IvaCategory.IMPORT_THIRD_COUNTRY not in categories
-    assert refusal_count > 0
 
 
 def test_renta_income_excludes_salary_rent_and_interest_from_m130() -> None:
@@ -334,12 +306,6 @@ def test_recargo_equivalencia_is_not_deductible_input_iva() -> None:
     assert re_ids, "corpus must contain the recargo-equivalencia anomaly row"
     catalogue = _catalogue()
     for period in _QUARTERLY_TEST_PERIODS:
-        result = aggregate_iva_ledger_observations(
-            catalogue,
-            period=period,
-            ledger_profile_id="corpus-test",
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id="corpus-test",
-        )
+        result = aggregate_iva_ledger_observations(catalogue, period=period)
         soportado = {o.ledger_id for o in result.observations if o.flow_direction is IvaFlowDirection.SOPORTADO}
         assert not (soportado & re_ids), "RE row leaked into deductible soportado IVA"

@@ -25,9 +25,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
+from ....core import Period
 from ....core.resources import resources
-from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
     ModeloRevision,
@@ -38,7 +37,6 @@ from ....domain.iva import (
     InvoiceKind,
     IvaCashAccountingTreatment,
     IvaCategory,
-    IvaDeductionClassificationProvenance,
     IvaRateKind,
     derive_flow_for_classification,
 )
@@ -53,28 +51,15 @@ from ....domain.transactions import (
     TransactionLifecycleState,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .._modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from .. import aggregate_iva_ledger_observations
+from .._modelo_bindings import LedgerIvaAggregationSourceResolver
 from .._source_mesh import CalculationSourceContext
-from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2025, 2, 10, 12, 0, tzinfo=UTC)
 _Q1_2025 = Period.from_year_and_code(2025, "1T")
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
-
-
-class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
-    """Bind injected real repositories to an explicit empty Bienes authority."""
-
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
-        super().__init__(
-            transaction_repository=transaction_repository,
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=(
-                transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
-            ),
-        )
 
 
 @cache
@@ -109,32 +94,6 @@ def _row(category: IvaCategory) -> IvaLedgerObservation:
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
         recargo_amount=Decimal("0"),
-        deduction_fact_kind=(
-            IvaDeductionFactKind.IMPORT_CURRENT
-            if category is IvaCategory.IMPORT_THIRD_COUNTRY
-            else IvaDeductionFactKind.INTRA_EU_CURRENT
-            if category
-            in {
-                IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-            }
-            else IvaDeductionFactKind.DOMESTIC_CURRENT
-        ),
-        deduction_provenance=IvaDeductionClassificationProvenance(
-            authority=(
-                IvaDeductionEvidenceAuthority.CUSTOMS_DECLARATION
-                if category is IvaCategory.IMPORT_THIRD_COUNTRY
-                else IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT
-                if category
-                in {
-                    IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-                    IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
-                }
-                else IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
-            ),
-            source_locator=f"fixture:{category.value}",
-            evidence_digest="d" * 64,
-        ),
     )
 
 
@@ -459,12 +418,6 @@ def _third_country_import() -> Transaction:
             "iva_rate": Decimal("0.21"),
             "iva_amount": Decimal("210.00"),
             "iva_category": IvaCategory.IMPORT_THIRD_COUNTRY,
-            "deduction_fact_kind": IvaDeductionFactKind.IMPORT_CURRENT,
-            "deduction_provenance": IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.CUSTOMS_DECLARATION,
-                source_locator="customs:import-1",
-                evidence_digest="e" * 64,
-            ),
             "lifecycle_state": TransactionLifecycleState.ACTIVE,
             "classified_at": _NOW,
             "classified_by": "manual",

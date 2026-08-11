@@ -307,31 +307,6 @@ def inner_envelope_classification_is_expected(
     return stored is expected
 
 
-# Keep durable-format upgrade ownership beside the lineage registry, rather
-# than relying on an incidental import of a profile repository.  That makes
-# every real secure-object reader see the same complete chain before it opens
-# any taxpayer data.
-from ._iva_deduction_schema import (  # noqa: E402
-    upgrade_bienes_inversion_v1_payload,
-    upgrade_transaction_catalogue_v1_payload,
-)
-from ._namespace_registry import (  # noqa: E402
-    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
-    TRANSACTION_CATALOGUE_NAMESPACE,
-)
-
-register_secure_object_schema_upgrader(
-    PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-    1,
-    upgrade_bienes_inversion_v1_payload,
-)
-register_secure_object_schema_upgrader(
-    TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-    1,
-    upgrade_transaction_catalogue_v1_payload,
-)
-
-
 __all__ = [
     "SECURE_OBJECT_DURABILITY_FLOOR",
     "SecureObjectSchemaUpgrader",

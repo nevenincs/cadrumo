@@ -1,0 +1,688 @@
+[[revisions."2016-2017".export_layouts]]
+id = "modelo-232-2016-fichero-aeat"
+format = "fixed_width"
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records]]
+id = "modelo-232-2016-envelope-header"
+record_type = "envelope_header"
+order = 0
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "232"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-discriminante"
+offset = 6
+length = 1
+kind = "literal"
+literal = "0"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-year"
+offset = 7
+length = 4
+kind = "draft"
+draft_attribute = "filing_year"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-period"
+offset = 11
+length = 2
+kind = "literal"
+literal = "0A"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-marker"
+offset = 13
+length = 5
+kind = "literal"
+literal = "0000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-aux-open"
+offset = 18
+length = 5
+kind = "literal"
+literal = "<AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-reserved-1"
+offset = 23
+length = 70
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-program-version"
+offset = 93
+length = 4
+kind = "header"
+header_key = "program_version"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-reserved-2"
+offset = 97
+length = 4
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-presenter-nif"
+offset = 101
+length = 9
+kind = "header"
+header_key = "presenter_nif"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-reserved-3"
+offset = 110
+length = 213
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-aux-close"
+offset = 323
+length = 6
+kind = "literal"
+literal = "</AUX>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records]]
+id = "modelo-232-2016-page-01"
+record_type = "page_01"
+order = 1
+encoding = "latin-1"
+line_ending = "none"
+binding_record = "page_01"
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "232"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-page"
+offset = 6
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-marker"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-complementaria-page"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria_page"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-reserved-aeat-1"
+offset = 13
+length = 1
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-nif"
+offset = 14
+length = 9
+kind = "draft"
+draft_attribute = "profile_tax_id"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-surnames"
+offset = 23
+length = 60
+kind = "header"
+header_key = "surnames"
+data_type = "text"
+required = true
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-name"
+offset = 83
+length = 20
+kind = "header"
+header_key = "name"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-year"
+offset = 103
+length = 4
+kind = "casilla"
+casilla_id = "decl.ejercicio"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-period"
+offset = 107
+length = 2
+kind = "literal"
+literal = "0A"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-tipo-ejercicio"
+offset = 109
+length = 1
+kind = "casilla"
+casilla_id = "decl.tipo-ejercicio"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-fecha-inicio"
+offset = 110
+length = 8
+kind = "header"
+header_key = "fecha_inicio_periodo"
+data_type = "date"
+required = true
+padding = "left_zero"
+justification = "right"
+date_format = "ddmmaaaa"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-fecha-fin"
+offset = 118
+length = 8
+kind = "header"
+header_key = "fecha_fin_periodo"
+data_type = "date"
+required = true
+padding = "left_zero"
+justification = "right"
+date_format = "ddmmaaaa"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-cnae"
+offset = 126
+length = 4
+kind = "casilla"
+casilla_id = "decl.cnae"
+data_type = "text"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-complementaria"
+offset = 130
+length = 1
+kind = "header"
+header_key = "complementaria"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-justificante-anterior"
+offset = 131
+length = 13
+kind = "header"
+header_key = "justificante_anterior"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-reserved-aeat-2"
+offset = 1172
+length = 317
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-end-open"
+offset = 1489
+length = 3
+kind = "literal"
+literal = "</T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-end-modelo"
+offset = 1492
+length = 3
+kind = "literal"
+literal = "232"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-end-page"
+offset = 1495
+length = 2
+kind = "literal"
+literal = "01"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-01-end-marker"
+offset = 1497
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records]]
+id = "modelo-232-2016-page-02"
+record_type = "page_02"
+order = 2
+encoding = "latin-1"
+line_ending = "none"
+binding_record = "page_02"
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-open"
+offset = 1
+length = 2
+kind = "literal"
+literal = "<T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-modelo"
+offset = 3
+length = 3
+kind = "literal"
+literal = "232"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-page"
+offset = 6
+length = 2
+kind = "literal"
+literal = "02"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-marker"
+offset = 8
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-complementaria-page"
+offset = 12
+length = 1
+kind = "header"
+header_key = "complementaria_page"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-reserved-aeat"
+offset = 3073
+length = 403
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-sello-aeat"
+offset = 3476
+length = 13
+kind = "filler"
+data_type = "text"
+required = false
+padding = "right_space"
+justification = "left"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-end-open"
+offset = 3489
+length = 3
+kind = "literal"
+literal = "</T"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-end-modelo"
+offset = 3492
+length = 3
+kind = "literal"
+literal = "232"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-end-page"
+offset = 3495
+length = 2
+kind = "literal"
+literal = "02"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-page-02-end-marker"
+offset = 3497
+length = 4
+kind = "literal"
+literal = "000>"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]
+
+[[revisions."2016-2017".export_layouts.records]]
+id = "modelo-232-2016-envelope-footer"
+record_type = "envelope_footer"
+order = 99
+encoding = "latin-1"
+line_ending = "none"
+
+[[revisions."2016-2017".export_layouts.records.fields]]
+id = "modelo-232-2016-envelope-close"
+offset = 1
+length = 18
+kind = "computed"
+computed_key = "envelope_closing_tag"
+data_type = "text"
+required = true
+padding = "none"
+justification = "none"
+signed = false
+legal_refs = ["orden-hfp-816-2017:art-3", "ley-27-2014:art-19", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-232-2016"]

@@ -97,7 +97,6 @@ class IvaCategory(StrEnum):
     IMPORT_THIRD_COUNTRY = "import_third_country"
     RECARGO_EQUIVALENCIA = "recargo_equivalencia"
     REGIMEN_SIMPLIFICADO = "regimen_simplificado"
-    REAGP_COMPENSATION = "reagp_compensation"
     OPERACION_NO_SUJETA = "operacion_no_sujeta"
     ERRONEOUS_INVOICE = "erroneous_invoice"
     UNKNOWN = "unknown"
@@ -420,26 +419,6 @@ class _IvaStrictMutable(BaseModel):
     )
 
 
-def _require_grounded_rate_refs(record: IvaRateRecord) -> None:
-    """Refuse duplicate, absent, or jurisdiction-inappropriate registry grounding.
-
-    A Spanish rate is established by binding domestic law, so it must cite
-    ``legal_refs``; a foreign member-state rate is observed rather than enacted
-    here, so it must cite ``source_refs`` instead.
-    """
-    label = f"IvaRateRecord[{record.member_state.value}/{record.kind.value}]"
-    if len(set(record.legal_refs)) != len(record.legal_refs):
-        raise IvaValidationError(f"{label}: legal_refs must be unique")
-    if len(set(record.source_refs)) != len(record.source_refs):
-        raise IvaValidationError(f"{label}: source_refs must be unique")
-    if not record.legal_refs and not record.source_refs:
-        raise IvaValidationError(f"{label}: missing registry legal_refs/source_refs")
-    if record.member_state is EUMemberState.ES and not record.legal_refs:
-        raise IvaValidationError(f"{label}: Spanish rates require binding registry legal_refs")
-    if record.member_state is not EUMemberState.ES and not record.source_refs:
-        raise IvaValidationError(f"{label}: foreign rates require registry source_refs")
-
-
 class IvaRateRecord(_IvaStrictFrozen):
     """A single IVA rate line item keyed by member state and rate kind.
 
@@ -512,7 +491,28 @@ class IvaRateRecord(_IvaStrictFrozen):
                 f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
                 f"effective_from {self.effective_from} is after effective_until {self.effective_until}",
             )
-        _require_grounded_rate_refs(self)
+        if len(set(self.legal_refs)) != len(self.legal_refs):
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: legal_refs must be unique",
+            )
+        if len(set(self.source_refs)) != len(self.source_refs):
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: source_refs must be unique",
+            )
+        if not self.legal_refs and not self.source_refs:
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: missing registry legal_refs/source_refs",
+            )
+        if self.member_state is EUMemberState.ES and not self.legal_refs:
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
+                "Spanish rates require binding registry legal_refs",
+            )
+        if self.member_state is not EUMemberState.ES and not self.source_refs:
+            raise IvaValidationError(
+                f"IvaRateRecord[{self.member_state.value}/{self.kind.value}]: "
+                "foreign rates require registry source_refs",
+            )
         return self
 
 

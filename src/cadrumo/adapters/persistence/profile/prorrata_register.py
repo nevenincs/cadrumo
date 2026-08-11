@@ -26,7 +26,6 @@ from pathlib import Path
 from ....core.errors import CadrumoError
 from ....core.logging import get_logger
 from ....domain.prorrata_register import (
-    ProrrataActivityRow,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
@@ -81,11 +80,6 @@ def declare_prorrata_entry(entry: ProrrataRegisterEntry) -> ProrrataRegister:
         The updated :class:`ProrrataRegister` including the entry.
     """
     return ProrrataRegisterRepository().upsert_entry(entry)
-
-
-def declare_prorrata_activity_row(row: ProrrataActivityRow) -> ProrrataRegister:
-    """Atomically add or replace a canonical activity row by stable identity."""
-    return ProrrataRegisterRepository().upsert_activity_row(row)
 
 
 class ProrrataRegisterRepository:
@@ -213,7 +207,6 @@ class ProrrataRegisterRepository:
             return ProrrataRegister(
                 entries=(*retained, entry),
                 sector_definitions=current.sector_definitions,
-                activity_rows=current.activity_rows,
             )
 
         return self._storage.mutate(_apply)
@@ -251,24 +244,6 @@ class ProrrataRegisterRepository:
             return ProrrataRegister(
                 entries=current.entries,
                 sector_definitions=(*retained, definition),
-                activity_rows=current.activity_rows,
-            )
-
-        return self._storage.mutate(_apply)
-
-    def upsert_activity_row(self, row: ProrrataActivityRow) -> ProrrataRegister:
-        """Atomically add or replace one row by its ``(ejercicio, activity_id)`` key."""
-
-        def _apply(current: ProrrataRegister) -> ProrrataRegister:
-            retained = tuple(
-                existing
-                for existing in current.activity_rows
-                if (existing.ejercicio, existing.activity_id) != (row.ejercicio, row.activity_id)
-            )
-            return ProrrataRegister(
-                entries=current.entries,
-                sector_definitions=current.sector_definitions,
-                activity_rows=(*retained, row),
             )
 
         return self._storage.mutate(_apply)
@@ -276,7 +251,6 @@ class ProrrataRegisterRepository:
 
 __all__ = [
     "ProrrataRegisterRepository",
-    "declare_prorrata_activity_row",
     "declare_prorrata_entry",
     "load_prorrata_register",
     "save_prorrata_register",

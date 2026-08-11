@@ -107,7 +107,7 @@ def _full_profile() -> UserProfileRecord:
             UserProfileFact(path="identity.surnames", value="Garcia Lopez"),
             UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="renta_filing.declaration_type", value="2"),
+            UserProfileFact(path="filing_export.declaration_type", value="2"),
             UserProfileFact(path="renta_taxpayer.sex", value="H"),
             UserProfileFact(path="renta_taxpayer.marital_status", value="2"),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),

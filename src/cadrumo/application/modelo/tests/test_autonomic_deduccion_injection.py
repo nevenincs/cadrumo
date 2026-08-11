@@ -30,7 +30,7 @@ _OTROS_KEY = "renta_family.unidad_familiar_otros_miembros_base"
 def _facts(**overrides: UserProfileFactValue) -> dict[str, UserProfileFactValue]:
     base: dict[str, UserProfileFactValue] = {
         "tax_residence.ccaa": "madrid",
-        "renta_filing.declaration_type": "1",
+        "filing_export.declaration_type": "1",
         "renta_taxpayer.marital_status": "1",
         "renta_family.descendiente.0.birth_date": "2024-06-01",
         "renta_family.descendiente.0.convivencia": "true",
@@ -59,7 +59,7 @@ def test_out_of_window_child_leaves_count_at_zero_default() -> None:
 
 
 def test_conjunta_declaration_is_fail_closed_no_auto_claim() -> None:
-    facts = _facts(**{"renta_filing.declaration_type": "2"})
+    facts = _facts(**{"filing_export.declaration_type": "2"})
     inject_derived_autonomic_deduccion_facts(facts, 2025)
     # Default 0 supplied so the formula resolves, but no count auto-claimed.
     assert facts[_COUNT_KEY] == Decimal("0")

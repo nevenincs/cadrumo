@@ -48,9 +48,8 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import IvaLedgerAggregationIssueReason
+from .. import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
 from .._iva_ledger import IvaLedgerAggregation
-from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

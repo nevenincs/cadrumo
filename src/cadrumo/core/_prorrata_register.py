@@ -60,20 +60,6 @@ class ProrrataRegisterRegime(StrEnum):
     NINGUNA = "ninguna"
 
 
-class ProrrataActivityRowType(StrEnum):
-    """Official Modelo 303 type token for one per-activity prorrata row.
-
-    The DP30305 record carries a one-byte ``Tipo de prorrata`` field for each
-    of its five activity rows.  It is deliberately distinct from
-    :class:`ProrrataRegisterRegime`: the latter is the taxpayer's regime in
-    force for an ejercicio, whereas this token is an official-row fact that
-    must project as ``G`` or ``E`` at the row's reviewed fixed slot.
-    """
-
-    GENERAL = "G"
-    ESPECIAL = "E"
-
-
 class ProrrataProvisionalProvenance(StrEnum):
     """The regulated source of the provisional prorrata percentage in force (LIVA art. 105).
 
@@ -135,7 +121,6 @@ class SectorDiferenciadoLetra(StrEnum):
 
 
 __all__ = [
-    "ProrrataActivityRowType",
     "ProrrataProvisionalProvenance",
     "ProrrataRegisterRegime",
     "SectorDiferenciadoLetra",

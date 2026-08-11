@@ -27,7 +27,7 @@ _ENTRY = """
 [[entries]]
 export_field_id = "registro-tipo-1.declarante-nif"
 kind = "header"
-producer_key = "presenter.tax_id"
+header_key = "profile_tax_id"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026"]
 
@@ -294,7 +294,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         if node.module in {"cadrumo.core", "cadrumo.domain.calculations.registry", "_semantic_map"}
     }
     assert imported_names_by_module == {
-        "cadrumo.core": {"FilingProducerKey", "freeze_toml", "read_toml"},
+        "cadrumo.core": {"freeze_toml", "read_toml"},
         "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
         "_semantic_map": {"SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }

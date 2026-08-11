@@ -117,7 +117,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="renta_taxpayer.birth_date", value="1985-06-15"),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
+            UserProfileFact(path="filing_export.declaration_type", value="1"),
         ),
     )
     UserProfileLifecycleRepository(bucket_id=_PROFILE_ID, objects=runtime_profile.repository).save(record)

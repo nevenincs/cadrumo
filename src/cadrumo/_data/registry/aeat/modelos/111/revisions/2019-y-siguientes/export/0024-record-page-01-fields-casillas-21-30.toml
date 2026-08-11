@@ -1,0 +1,145 @@
+[[revisions."2019-y-siguientes".export_layouts]]
+id = "modelo-111-fichero-boe"
+
+[[revisions."2019-y-siguientes".export_layouts.records]]
+id = "modelo-111-page-01"
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-21"
+offset = 386
+length = 17
+kind = "casilla"
+casilla_id = "21"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-22"
+offset = 403
+length = 8
+kind = "casilla"
+casilla_id = "22"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-23"
+offset = 411
+length = 17
+kind = "casilla"
+casilla_id = "23"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-24"
+offset = 428
+length = 17
+kind = "casilla"
+casilla_id = "24"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-25"
+offset = 445
+length = 8
+kind = "casilla"
+casilla_id = "25"
+data_type = "integer"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-26"
+offset = 453
+length = 17
+kind = "casilla"
+casilla_id = "26"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-27"
+offset = 470
+length = 17
+kind = "casilla"
+casilla_id = "27"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-28"
+offset = 487
+length = 17
+kind = "casilla"
+casilla_id = "28"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-29"
+offset = 504
+length = 17
+kind = "casilla"
+casilla_id = "29"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = true
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]
+
+[[revisions."2019-y-siguientes".export_layouts.records.fields]]
+id = "modelo-111-casilla-30"
+offset = 521
+length = 17
+kind = "casilla"
+casilla_id = "30"
+data_type = "money"
+required = true
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["ley-35-2006:art-99", "orden-eha-586-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-95", "rd-439-2007:art-80", "ley-35-2006:art-101", "rd-439-2007:art-86"]
+source_refs = ["aeat-dr-111-2019-v18"]

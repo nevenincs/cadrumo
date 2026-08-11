@@ -169,17 +169,21 @@ def test_the_gate_detects_a_known_dual_spelling() -> None:
 
 
 def test_no_header_key_spells_a_spanish_concept_in_english(head_tokens: frozenset[str]) -> None:
-    """The canonical producer vocabulary keeps only the Spanish AEAT spelling.
+    """The gate proper. RED at HEAD by design -- see below.
 
-    Historical commits intentionally retain the evidence that motivated the
-    migration, so the HEAD scan remains useful to prove the detector fires.
-    The live contract is the closed producer vocabulary: the canonical token
-    must be admitted and the legacy English alias must not be.
+    ``presenter_tax_id`` is in the committed corpus right now, so this fails,
+    and that failure IS the gate reading the fragments. If it ever passes
+    without those three occurrences having been renamed, the scan has gone
+    blind rather than the corpus clean.
+
+    The remedy is a registry data change: rename the ``presenter_tax_id``
+    header keys in modelos 115 and 123 to ``presenter_nif``. It is deliberately
+    not done here -- the registry data is frozen under a large uncommitted
+    migration, and a rename landed into that would collide with it.
     """
-    from cadrumo.core import FilingProducerKey
-
-    assert english_stem_offenders(head_tokens) == (("presenter_tax_id", "presenter_nif"),)
-    producer_keys = {member.value for member in FilingProducerKey}
-    assert "presenter.tax_id" in producer_keys
-    assert "presenter_tax_id" not in producer_keys
-    assert "presenter_nif" not in producer_keys
+    offenders = english_stem_offenders(head_tokens)
+    rendered = "\n".join(f"  {token}  ->  {canonical}" for token, canonical in offenders)
+    assert not offenders, (
+        "a header_key spells an AEAT concept in English while the corpus also "
+        f"carries its Spanish spelling:\n{rendered}"
+    )

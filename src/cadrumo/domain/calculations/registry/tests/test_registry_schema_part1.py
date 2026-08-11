@@ -141,11 +141,7 @@ def test_committed_snapshot_exposes_expected_metadata(
         "modelo-130-calculation-verification",
         "modelo-130-2019-y-siguientes-reconcile-when-present",
     )
-    removal = modelo_130_snapshot.support_removal_decisions["modelo-130-fichero-boe-support-removal"]
-    assert removal.subject_type == "export_layout"
-    assert removal.subject_id == "modelo-130-fichero-boe"
-    assert removal.decision == "remove_from_filing_grade"
-    assert removal.legal_refs and removal.source_refs and removal.evidence_note
+    assert modelo_130_snapshot.support_removal_decisions == {}
     assert tuple(modelo_130_snapshot.deadline_windows) == _EXPECTED_DEADLINE_WINDOWS
     assert set(modelo_130_snapshot.application_links) >= _REQUIRED_APPLICATION_LINKS
 
@@ -402,18 +398,17 @@ source_refs = ["aeat-dr-130-2019-v12"]
 
 
 def test_validator_rejects_removal_decision_for_active_registry_surface() -> None:
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
-    layout = revision.export_layouts[0]
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
     decision = SupportRemovalDecisionDefinition(
-        id="modelo-131-remove-active-export",
+        id="modelo-130-remove-active-export",
         subject_type="export_layout",
-        subject_id=layout.id,
+        subject_id=revision.export_layouts[0].id,
         decision="remove_from_filing_grade",
         reason="out_of_scope",
         evidence_note="The active export layout cannot also be recorded as removed.",
-        legal_refs=layout.legal_refs,
-        source_refs=layout.source_refs,
+        legal_refs=("rd-439-2007:art-110",),
+        source_refs=("aeat-dr-130-2019-v12",),
     )
     mutated = revision.model_copy(update={"support_removal_decisions": (decision,)})
 
@@ -587,8 +582,8 @@ def test_validator_rejects_profile_binding_selector_missing_from_user_profile_sc
 
 
 def test_export_fields_can_reference_structured_bindings() -> None:
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
     bound_revision = _with_first_export_field(
         revision,
         ExportFieldDefinition.model_validate(
@@ -599,7 +594,7 @@ def test_export_fields_can_reference_structured_bindings() -> None:
                 "binding": revision.bindings[0].id,
                 "casilla_id": None,
                 "literal": None,
-                "producer_key": None,
+                "header_key": None,
                 "draft_attribute": None,
                 "computed_key": None,
                 "data_type": "money",
@@ -617,8 +612,8 @@ def test_export_fields_can_reference_structured_bindings() -> None:
 
 
 def test_validator_rejects_export_field_with_unknown_binding() -> None:
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
     bound_revision = _with_first_export_field(
         revision,
         ExportFieldDefinition.model_validate(
@@ -629,7 +624,7 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
                 "binding": "missing.export.binding",
                 "casilla_id": None,
                 "literal": None,
-                "producer_key": None,
+                "header_key": None,
                 "draft_attribute": None,
                 "computed_key": None,
                 "data_type": "money",
@@ -645,8 +640,8 @@ def test_validator_rejects_export_field_with_unknown_binding() -> None:
 
 
 def test_validator_rejects_literal_export_field_longer_than_declared_length() -> None:
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
     layout = revision.export_layouts[0]
     record = layout.records[0]
     field = next(item for item in record.fields if item.kind == "literal" and item.length is not None)
@@ -759,48 +754,42 @@ def test_draft_attribute_width_ruling_covers_every_declarable_attribute() -> Non
 
     assert declarable
     assert set(DRAFT_ATTRIBUTE_CANONICAL_WIDTHS) == declarable
-    assert "profile_tax_id" not in declarable
+    assert DRAFT_ATTRIBUTE_CANONICAL_WIDTHS[ExportDraftAttribute.PROFILE_TAX_ID] == SPANISH_TAX_ID_WIDTH
 
 
 def test_validator_rejects_declarant_nif_draft_field_bound_to_a_wider_slot() -> None:
-    """Deleted profile draft authority cannot be restored at any slot width."""
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
-    field = (
-        revision.export_layouts[0]
-        .records[0]
-        .fields[0]
-        .model_copy(
-            update={"kind": CasillaFieldKind.DRAFT, "draft_attribute": "profile_tax_id", "literal": None, "length": 15},
-        )
-    )
-    mutated = _with_first_export_field(revision, field)
+    """A declarant-NIF draft field must be refused at a slot wider than the identifier.
 
-    with pytest.raises(RegistryValidationError, match="profile_tax_id"):
+    The defect shape this closes: Modelo 200 bound the filer's own NIF into a
+    15-character slot the diseño reserves for a group parent's foreign tax
+    identification number, and every export right-padded the filer's identifier
+    into another entity's field. Widening a committed, correct declaration
+    reproduces that contradiction against the real registry validator.
+    """
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    field, record_id, layout_id = _first_profile_tax_id_draft_field(revision)
+    assert field.length == SPANISH_TAX_ID_WIDTH, "the anchor declaration must start at the identifier width"
+    widened = field.model_copy(update={"length": SPANISH_TAX_ID_WIDTH + 6})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=widened)
+
+    with pytest.raises(RegistryValidationError, match=r"to a slot of length 15"):
         _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_accepts_declarant_nif_draft_field_at_the_identifier_width() -> None:
-    """Deleted profile draft authority is refused even at the identifier width."""
-    modelo, catalogues = _committed_modelo("131")
-    revision = modelo.revisions["2026"]
-    field = (
-        revision.export_layouts[0]
-        .records[0]
-        .fields[0]
-        .model_copy(
-            update={
-                "kind": CasillaFieldKind.DRAFT,
-                "draft_attribute": "profile_tax_id",
-                "literal": None,
-                "length": SPANISH_TAX_ID_WIDTH,
-            },
-        )
-    )
-    mutated = _with_first_export_field(revision, field)
+    """The committed declaration at the identifier width must stay accepted.
 
-    with pytest.raises(RegistryValidationError, match="profile_tax_id"):
-        _validate_revision(modelo, catalogues, mutated)
+    The control for the refusal above: without it, a validator that refused every
+    ``profile_tax_id`` draft field would look like a working width gate.
+    """
+    modelo, catalogues = _committed_registry()
+    revision = _revision(modelo)
+    field, record_id, layout_id = _first_profile_tax_id_draft_field(revision)
+    restated = field.model_copy(update={"length": SPANISH_TAX_ID_WIDTH})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=restated)
+
+    _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_draft_field() -> None:
@@ -819,13 +808,22 @@ def test_validator_rejects_the_modelo_200_envelope_open_tag_collapsed_onto_one_d
     loaded declaration. The field is located by property rather than by a pinned
     id, so a rename cannot make this pass vacuously.
     """
-    modelo, _catalogues = _committed_modelo("200")
+    modelo, catalogues = _committed_modelo("200")
     revision = modelo.revisions["2024-y-siguientes"]
-    assert revision.export_layouts == ()
-    assert any(
-        decision.subject_type == "export_layout" and decision.decision == "remove_from_filing_grade"
-        for decision in revision.support_removal_decisions
+    field, record_id, layout_id = next(
+        (item, record.id, layout.id)
+        for layout in revision.export_layouts
+        for record in layout.records
+        if record.record_type == "page_000"
+        for item in record.fields
+        if item.kind == CasillaFieldKind.DRAFT and item.draft_attribute == "filing_year"
     )
+    assert field.length == 4, "the committed year field must carry the year's own width, not the whole tag's"
+    collapsed = field.model_copy(update={"length": 17})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=collapsed)
+
+    with pytest.raises(RegistryValidationError, match=r"to a slot of length 17"):
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_declarant() -> None:
@@ -842,14 +840,16 @@ def test_validator_rejects_the_grupo_mercantil_parent_tin_slot_rebound_to_the_de
     The field id is read from the committed revision rather than restated, so the
     declaration must exist and must be filler for the restore to mean anything.
     """
-    modelo, _catalogues = _committed_modelo("200")
+    modelo, catalogues = _committed_modelo("200")
     revision = modelo.revisions["2024-y-siguientes"]
-    assert revision.export_layouts == ()
-    decisions = tuple(
-        decision for decision in revision.support_removal_decisions if decision.subject_type == "export_layout"
-    )
-    assert decisions
-    assert all(decision.legal_refs and decision.source_refs and decision.evidence_note for decision in decisions)
+    field, record_id, layout_id = _export_field_by_id(revision, _M200_PARENT_TIN_FIELD_ID)
+    assert field.kind == CasillaFieldKind.FILLER, "the parent-TIN slot must ship unbound"
+    assert field.length == 15, "the AEAT slot width must stay as the diseño publishes it"
+    rebound = field.model_copy(update={"kind": CasillaFieldKind.DRAFT, "draft_attribute": "profile_tax_id"})
+    mutated = _with_replaced_export_field(revision, layout_id=layout_id, record_id=record_id, field=rebound)
+
+    with pytest.raises(RegistryValidationError, match=re.escape(_M200_PARENT_TIN_FIELD_ID)):
+        _validate_revision(modelo, catalogues, mutated)
 
 
 def test_validator_rejects_parameter_without_official_source_guidance() -> None:
