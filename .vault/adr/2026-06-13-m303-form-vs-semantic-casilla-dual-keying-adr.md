@@ -188,6 +188,31 @@ projection consumes those outputs and only orders, sums, and projects them into 
 official endpoints. It never sums raw observation cuota as deductible, multiplies by
 a register percentage, or reimplements special-prorrata routing.
 
+S50 may make the five DP30302 source shapes structurally complete without claiming
+that the simplified-regime calculation is complete. The canonical filing-year owner
+is one ordered, evidence-bearing collection of discriminated agricultural and
+non-agricultural IAE activity rows. Agricultural rows carry the official activity
+code and their applicable declared and attested row facts. Non-agricultural rows
+carry the canonical IAE epigraph and typed module entries keyed and ordered by the
+annual Orden module identity, never domain fields named `module1` through `module7`.
+The shared annual Orden/IAE substrate owns activity taxonomy, annual module identity,
+order, coefficients, and legal evidence; the filing rows own taxpayer-declared
+quantities and evidence-backed off-form results. Taxpayer and IVA profiles own only
+applicability and enrolment, not module quantities or export-slot values.
+
+Projection packs exactly two agricultural and two non-agricultural activities per
+DP30302 record, permits at most six of each across three records, and preserves each
+revision's exact source anchors. It does not coerce the 2023 employee-count fields
+into later reserved offsets or infer one positional superset across epochs. Missing
+applicable facts, unknown annual module identity or order, duplicate or conflicting
+activities, over-capacity, wrong-epoch fields, or row-to-census conflicts refuse
+before target creation or bytes. Only fields proven non-applicable may project blank.
+Casilla 48 remains manual, guarded against silent zero, and compared with the existing
+partial formula reference by advisory. S50 does not promote it, synthesize unsupported
+facts from the three-slot reference tables, add a second resolver or store, introduce
+profile defaults or scalar slot redeclarations, or treat structural completeness as
+calculation completeness.
+
 ### Producer vocabulary and resolution
 
 The public core producer enum names semantic facts, not record labels. The registry `producer_key` payload and development semantic-map schema import that enum and require one exact member. Canonical TOML loading is the only string-to-enum boundary. Renderer dispatch is an exhaustive enum-keyed table whose keys equal the enum membership; it receives one `FilingProducerSnapshot` and returns the typed value for the exact official projection.
