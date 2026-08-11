@@ -167,17 +167,26 @@ def parse_retry_after(value: str | None) -> float | None:
     return parsed if math.isfinite(parsed) and parsed >= 0 else None
 
 
-def raise_rate_limit(message: str, retry_after: str | None) -> None:
+def raise_rate_limit(*, provider_name: str, model: str, retry_after: str | None) -> None:
     """Raise a normalized rate-limit error with parsed retry hint.
 
     Args:
-        message: Human-readable error message to attach.
+        provider_name: Stable provider identity observed at the transport boundary.
+        model: Model identifier carried by the rejected request.
         retry_after: Raw ``Retry-After`` header value supplied by the provider.
 
     Raises:
         LLMRateLimitError: Always raised with the parsed retry hint.
     """
-    raise LLMRateLimitError(message, retry_after_seconds=parse_retry_after(retry_after))
+    parsed_retry_after = parse_retry_after(retry_after)
+    context: dict[str, str | float | int | bool] = {
+        "provider_name": provider_name,
+        "model": model,
+        "http_status": 429,
+    }
+    if parsed_retry_after is not None:
+        context["retry_after_seconds"] = parsed_retry_after
+    raise LLMRateLimitError(retry_after_seconds=parsed_retry_after, context=context)
 
 
 def parse_provider_response[ProviderResponse: BaseModel](
@@ -202,7 +211,13 @@ def parse_provider_response[ProviderResponse: BaseModel](
     try:
         return response_model.model_validate_json(response.text)
     except ValidationError as exc:
-        raise LLMProviderError(f"{provider_name} returned an invalid response.") from exc
+        raise LLMProviderError(
+            context={
+                "provider_name": provider_name,
+                "provider_response_valid": False,
+                "provider_response_error_type": type(exc).__name__,
+            },
+        ) from exc
 
 
 def require_provider_response_item[ProviderResponseItem](
@@ -225,7 +240,13 @@ def require_provider_response_item[ProviderResponseItem](
         LLMProviderError: When a successful provider response has no primary item.
     """
     if not items:
-        raise LLMProviderError(f"{provider_name} returned no {item_name}.")
+        raise LLMProviderError(
+            context={
+                "provider_name": provider_name,
+                "provider_response_item_present": False,
+                "provider_response_item_kind": item_name,
+            },
+        )
     return items[0]
 
 
@@ -280,7 +301,13 @@ async def post_provider_request(
         return await client.post(url, headers=headers, json=json)
     except httpx.RequestError as exc:
         logger.debug("%s connection failure model=%s", provider_name, model, exc_info=True)
-        raise LLMTransientTransportError(f"{provider_name} connection failure.") from exc
+        raise LLMTransientTransportError(
+            context={
+                "provider_name": provider_name,
+                "model": model,
+                "transport_error_type": type(exc).__name__,
+            },
+        ) from exc
 
 
 def check_http_error(response: httpx.Response, *, provider_name: str, model: str, logger: logging.Logger) -> None:
@@ -311,11 +338,15 @@ def check_http_error(response: httpx.Response, *, provider_name: str, model: str
     status = response.status_code
     if status == 429:
         logger.warning("%s: rate limit response status=%d model=%s", provider_name, status, model)
-        raise_rate_limit(f"{provider_name} rate limit exceeded.", response.headers.get("retry-after"))
+        raise_rate_limit(provider_name=provider_name, model=model, retry_after=response.headers.get("retry-after"))
     if 200 <= status < 300:
         return
     if status >= 500:
         logger.error("%s: server error status=%d model=%s", provider_name, status, model)
-        raise LLMTransientTransportError(f"{provider_name} API failure ({status}).")
+        raise LLMTransientTransportError(
+            context={"provider_name": provider_name, "model": model, "http_status": status},
+        )
     logger.warning("%s: unexpected HTTP status=%d model=%s", provider_name, status, model)
-    raise LLMProviderError(f"{provider_name} API failure ({status}).")
+    raise LLMProviderError(
+        context={"provider_name": provider_name, "model": model, "http_status": status},
+    )

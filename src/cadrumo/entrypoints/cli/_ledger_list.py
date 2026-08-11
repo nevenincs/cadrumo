@@ -22,7 +22,7 @@ from ...application.ledger import (
     list_manual_transactions,
     query_ledger_review_rows,
 )
-from ...application.review import FilterParseError, LedgerReviewFilterSpec
+from ...application.review import LedgerReviewFilterSpec
 from ...core import LedgerSortField, LedgerSortOrder
 from ...core.i18n import tr
 from ...domain.buckets import BucketEventHistoryCatalogue, BucketEventObjectType, BucketEventType
@@ -47,23 +47,6 @@ class LedgerListProjection:
 def parse_ledger_list_filter_spec(filters: list[str]) -> LedgerReviewFilterSpec:
     """Parse ``ledger list --filter`` clauses and return a :class:`LedgerReviewFilterSpec`."""
     return LedgerReviewFilterSpec.from_strings(filters)
-
-
-def ledger_filter_parse_error_message(exc: FilterParseError, *, year: int | None = None) -> str:
-    """Render a CLI message for a parsed :class:`FilterParseError`."""
-    if exc.reason == "invalid-value-ledger-period":
-        return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
-    if exc.reason == "ledger-period-year-pairing":
-        example_year = year if year is not None else 2025
-        return tr("cli.ledger.errors.period_year_pairing", year=example_year)
-    return tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)
-
-
-def _filter_period_value(exc: FilterParseError) -> str:
-    prefix = "--filter period="
-    if exc.raw_token.startswith(prefix):
-        return exc.raw_token.removeprefix(prefix)
-    return exc.safe_token
 
 
 def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
@@ -379,7 +362,6 @@ def _ledger_list_column_header() -> str:
 
 __all__ = [
     "LedgerListProjection",
-    "ledger_filter_parse_error_message",
     "parse_ledger_list_filter_spec",
     "project_ledger_list",
 ]

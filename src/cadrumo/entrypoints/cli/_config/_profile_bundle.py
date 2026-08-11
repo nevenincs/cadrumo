@@ -740,7 +740,6 @@ def _decode_import_bundle(
     from ....application.user_profile import (
         EncryptedProfileBundleError,
         EncryptedProfileBundleExport,
-        UnsupportedBundleSchemaVersionError,
         decrypt_profile_bundle_with_passphrase,
         validate_bundle_payload,
     )

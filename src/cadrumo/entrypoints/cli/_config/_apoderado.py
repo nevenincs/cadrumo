@@ -341,9 +341,8 @@ def apoderado_check(
     ),
 ) -> None:
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import ApoderadoLiveCheckUnavailableError, ApoderadoService
+    from ....application.auth import ApoderadoService
     from ....application.workflow import workflow_state_repository
-    from ....core.errors import resolve_error_message
 
     workflow_state_repository().load()
     pointer = _active_profile_pointer()
@@ -354,8 +353,7 @@ def apoderado_check(
     # the service refuses rather than silently re-reading stored configuration
     # and presenting it as a live result. Surface the registered refusal copy;
     # ``status`` is the offline configuration read.
-    try:
-        svc.check(bucket_id=pointer.bucket_id)
+    svc.check(bucket_id=pointer.bucket_id)
 
 
 __all__ = ["apoderado_app", "register_apoderado_commands"]

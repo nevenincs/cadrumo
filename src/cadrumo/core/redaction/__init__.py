@@ -603,21 +603,13 @@ def _gated_sub(
             out.append(value[pos:end])
             pos = max(end, start + 1)
             continue
-        replacement: str | None = None
-        stop = end
-        while stop > start:
-            # A candidate must end where a token ends. ``endpos`` makes ``\b``
-            # see an end-of-string it does not have, so without this guard the
-            # scan could hash a PREFIX of a longer opaque token.
-            if stop < length and _is_word_character(value[stop]):
-                stop -= 1
-                continue
-            candidate = pattern.match(value, start, stop)
-            if candidate is not None and candidate.end() == stop:
-                replacement = admit(value[start:stop])
-                if replacement is not None:
-                    break
-            stop -= 1
+        replacement, stop = _gated_replacement(
+            pattern,
+            value,
+            start=start,
+            end=end,
+            admit=admit,
+        )
         if replacement is None:
             out.append(value[pos : start + 1])
             pos = start + 1
@@ -627,6 +619,31 @@ def _gated_sub(
         pos = stop
     out.append(value[pos:])
     return "".join(out)
+
+
+def _gated_replacement(
+    pattern: re.Pattern[str],
+    value: str,
+    *,
+    start: int,
+    end: int,
+    admit: Callable[[str], str | None],
+) -> tuple[str | None, int]:
+    """Return the longest token-bounded candidate the authority gate admits."""
+    stop = end
+    while stop > start:
+        # ``endpos`` makes ``\b`` see an end-of-string it does not have, so a
+        # candidate may not stop inside a longer opaque token.
+        if stop < len(value) and _is_word_character(value[stop]):
+            stop -= 1
+            continue
+        candidate = pattern.match(value, start, stop)
+        if candidate is not None and candidate.end() == stop:
+            replacement = admit(value[start:stop])
+            if replacement is not None:
+                return replacement, stop
+        stop -= 1
+    return None, stop
 
 
 def _apply_one(rule: _RedactionRule, value: str) -> str:

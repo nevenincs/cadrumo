@@ -103,7 +103,6 @@ def _register_passphrase_commands(app: typer.Typer) -> None:
         from ....adapters.persistence.storage import (
             MasterKeyMaterialMissingError,
             MasterKeyPassphraseMismatchError,
-            SecretStoreError,
         )
         from ....application.user_profile import change_passphrase
         from .._config_payloads import ConfigPassphraseChangeResult
@@ -256,7 +255,7 @@ def _register_recover_command(app: typer.Typer) -> None:
     ) -> None:
         """Recover the configured file secret store from the persisted recovery wrapper."""
         _activate_subcommand_output_language(ctx, output_language)
-        from ....adapters.persistence.storage import RecoveryVerificationError, SecretStoreError
+        from ....adapters.persistence.storage import RecoveryVerificationError
         from ....application.user_profile import recover_secret_store
         from .._config_payloads import ConfigRecoverResult
 
@@ -367,13 +366,11 @@ def _register_recovery_commands(app: typer.Typer) -> None:
     ) -> None:
         """Verify that a recovery code opens the persisted recovery wrapper."""
         _activate_subcommand_output_language(ctx, output_language)
-        from ....adapters.persistence.storage import SecretStoreError
         from ....application.user_profile import verify_recovery_code
         from .._config_payloads import ConfigRecoveryVerifyResult
 
         code = _resolve_recovery_code(secrets_stdin)
-        try:
-            result = verify_recovery_code(mnemonic=code)
+        result = verify_recovery_code(mnemonic=code)
         payload = ConfigRecoveryVerifyResult(
             recovery_path=str(result.recovery_path),
             verified=result.verified,
@@ -410,7 +407,7 @@ def _run_recovery_enrollment(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.recovery.errors.interactive_terminal_required",
         )
-    from ....adapters.persistence.storage import RecoveryVerificationError, SecretStoreError
+    from ....adapters.persistence.storage import RecoveryVerificationError
     from ....application.user_profile import create_recovery_code, rotate_recovery_code
     from .._config_payloads import ConfigRecoveryCreateResult, ConfigRecoveryRotateResult
 

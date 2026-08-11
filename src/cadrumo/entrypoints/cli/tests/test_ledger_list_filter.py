@@ -128,16 +128,14 @@ def test_year_option_without_period_refuses_with_annual_guidance() -> None:
     assert "year=2025" in result.output
 
 
-def test_year_filter_without_period_refuses_with_matching_annual_guidance() -> None:
-    """Bare ``--filter year=...`` guidance keeps the operator's requested year."""
+def test_year_filter_without_period_refuses_with_typed_no_recovery() -> None:
+    """A partial period predicate stays typed without reconstructed guidance."""
     result = invoke_cached_cli(["app", "ledger", "list", "--filter", "year=2026"])
 
     assert result.exit_code != 0
-    assert "ledger-period-year-pairing" not in result.output
-    assert "--period 0A --year 2026" in result.output
-    assert "period=0A" in result.output
-    assert "year=2026" in result.output
-    assert "year=2025" not in result.output
+    assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
+    assert "action.action: null" in result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in result.output
 
 
 def test_classification_filter_narrows_to_one_class() -> None:
@@ -249,13 +247,15 @@ def test_malformed_filter_token_is_rejected() -> None:
     assert result.exit_code != 0
 
 
-def test_period_filter_combined_shape_refuses_with_period_guidance() -> None:
-    """A combined period filter refuses with the same AEAT-token guidance as --period."""
+def test_period_filter_combined_shape_refuses_with_typed_no_recovery() -> None:
+    """A combined period token is redacted and carries no invented action."""
     combined_period = "2026" + "Q1"
     result = invoke_cached_cli(
         ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", "year=2026"],
     )
 
     assert result.exit_code != 0
-    assert "1T" in result.output
-    assert "--year" in result.output
+    assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
+    assert "action.action: null" in result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in result.output
+    assert combined_period not in result.output

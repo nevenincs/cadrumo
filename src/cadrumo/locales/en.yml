@@ -3626,6 +3626,10 @@ cli:
         time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
+      preflight:
+        per_operation_axis_not_assessed: No schema-required profile field is declared
+          for Modelo {modelo}; readiness covers identity and conditional checks only,
+          not a complete per-modelo assessment.
       preflight_filing_year_help: Four-digit filing year.
       preflight_help: Report which profile fields are missing for a given (modelo,
         revision, filing-year, period) filing context.
@@ -3696,7 +3700,14 @@ cli:
         merge_into_help: Target profile name the sandbox's records are promoted into.
         merge_name_help: Sandbox name (without the prefix).
         merge_promoted_info: Promoted %{scope} from %{source} into %{target}.
+        merge_refused: Sandbox {name} cannot be merged into {into} because the merge
+          preconditions are not satisfied.
+        merge_requires_yes: Merging sandbox {name} into {into} with scope {scope}
+          changes state and requires explicit confirmation.
         merge_scope_help: 'Data category to promote: ledger, modelo, or all.'
+        merge_target_ambiguous: Profile {into} is ambiguous; identify the target by
+          its bucket ID.
+        merge_target_not_found: No live profile named {into} exists as a merge target.
         merge_yes_help: Confirm promoting sandbox data.
         prune_dry_run_help: Preview which sandboxes would be discarded without discarding
           them.

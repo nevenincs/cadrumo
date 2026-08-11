@@ -3821,6 +3821,10 @@ cli:
         újranyithatod az 'aeat config profile edit' paranccsal.
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
+      preflight:
+        per_operation_axis_not_assessed: A(z) {modelo} modellhez nincs séma szerint
+          kötelező profilmező; a készenlét csak az identitás- és feltételes ellenőrzéseket
+          fedi le, nem a teljes modellenkénti értékelést.
       preflight_filing_year_help: Bevallási év (négy számjegy).
       preflight_help: Jelenti, mely profilmezők hiányoznak adott (modell, revízió,
         év, időszak) bevallási kontextushoz.
@@ -3896,7 +3900,15 @@ cli:
         merge_into_help: A célprofil neve, amelybe a sandbox nyilvántartásait beemeli.
         merge_name_help: A sandbox neve (előtag nélkül).
         merge_promoted_info: '%{scope} beemelve innen: %{source}, ide: %{target}.'
+        merge_refused: A(z) {name} tesztkörnyezet nem egyesíthető a(z) {into} profillal,
+          mert az egyesítés előfeltételei nem teljesülnek.
+        merge_requires_yes: A(z) {name} tesztkörnyezet {into} profilba, {scope} hatókörrel
+          történő egyesítése állapotot módosít, ezért kifejezett megerősítést igényel.
         merge_scope_help: 'A beemelendő adatkategória: ledger, modelo vagy all.'
+        merge_target_ambiguous: A(z) {into} profil nem egyértelmű; a célhelyet a tárolóazonosítójával
+          adja meg.
+        merge_target_not_found: Nincs {into} nevű aktív profil, amely egyesítési célként
+          használható.
         merge_yes_help: A sandbox adatainak beemelését megerősíti.
         prune_dry_run_help: Előnézet arról, mely sandboxokat törölne, anélkül, hogy
           törölne őket.

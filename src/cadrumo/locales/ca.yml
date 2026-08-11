@@ -3889,6 +3889,11 @@ cli:
         quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
+      preflight:
+        per_operation_axis_not_assessed: No hi ha cap camp de perfil obligatori de
+          l'esquema declarat per al model {modelo}; la preparació només cobreix la
+          identitat i les comprovacions condicionals, no una avaluació completa del
+          model.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
       preflight_help: Informa quins camps del perfil falten per a un context de presentació
         (model, revisió, exercici, període).
@@ -3959,7 +3964,15 @@ cli:
           del sandbox.
         merge_name_help: Nom del sandbox (sense el prefix).
         merge_promoted_info: S'ha promogut %{scope} de %{source} a %{target}.
+        merge_refused: L'entorn aïllat {name} no es pot fusionar a {into} perquè no
+          es compleixen les precondicions de la fusió.
+        merge_requires_yes: Fusionar l'entorn aïllat {name} a {into} amb l'àmbit {scope}
+          modifica l'estat i requereix confirmació explícita.
         merge_scope_help: 'Categoria de dades a promoure: ledger, modelo o all.'
+        merge_target_ambiguous: El perfil {into} és ambigu; identifica la destinació
+          mitjançant el seu ID de contenidor.
+        merge_target_not_found: No existeix cap perfil actiu anomenat {into} que es
+          pugui usar com a destinació de la fusió.
         merge_yes_help: Confirma la promoció de les dades del sandbox.
         prune_dry_run_help: Mostra una previsualització de quins sandboxes es descartarien
           sense descartar-los.

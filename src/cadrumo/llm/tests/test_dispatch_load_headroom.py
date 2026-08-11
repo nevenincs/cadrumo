@@ -84,10 +84,13 @@ def test_the_model_under_test_still_declares_a_memory_requirement() -> None:
     assert candidate.memory_requirement_bytes is not None
 
 
-def _causes(refusal: LLMContentionError) -> str:
-    """Return the refusal's declared causes as one comparable string."""
+def _causes(refusal: LLMContentionError) -> tuple[str, ...]:
+    """Return the refusal's declared causes from structured context."""
     context = refusal.context or {}
-    return str(context.get("causes", ""))
+    causes = context.get("contention_causes")
+    assert isinstance(causes, tuple)
+    assert all(isinstance(cause, str) for cause in causes)
+    return causes
 
 
 def _declared_requirement_bytes() -> int:
@@ -307,11 +310,6 @@ def test_a_contention_refusal_is_sent_once_and_never_retried(tmp_path: Path) -> 
         assert arrivals == []
 
 
-def model_in_refusal(rendered: str) -> bool:
-    """Whether the refusal names the model, which is what makes it actionable."""
-    return _CATALOGUED_MODEL in rendered
-
-
 def test_the_refusal_names_the_authority_s_own_causes(tmp_path: Path) -> None:
     """The error carries the authority's typed verdict, model, and causes."""
     resident = RuntimeResident(name=_CATALOGUED_MODEL, size_bytes=2 * _GIB, size_vram_bytes=2 * _GIB)
@@ -334,10 +332,10 @@ def test_the_refusal_names_the_authority_s_own_causes(tmp_path: Path) -> None:
     assert snapshot.precondition_verdict is not None
     assert refusal.value.terminal_precondition_verdict == snapshot.precondition_verdict
     assert snapshot.causes, "the authority refused without naming a cause, so there is nothing to carry"
-    rendered = str(refusal.value)
-    for cause in snapshot.causes:
-        assert cause.value in rendered, f"the refusal dropped the authority's cause {cause.value!r}: {rendered}"
-    assert model_in_refusal(rendered), f"the refusal must name the model it refused: {rendered}"
+    assert refusal.value.context == {
+        "model": _CATALOGUED_MODEL,
+        "contention_causes": tuple(cause.value for cause in snapshot.causes),
+    }
 
 
 def test_an_off_host_dispatch_is_not_headroom_checked(tmp_path: Path) -> None:

@@ -1634,12 +1634,11 @@ def _resolve_iva_transaction_amounts(
     operation_date: date,
     proportionality: Decimal,
 ) -> _IvaTransactionAmounts | _IvaTransactionOutcome:
-    transaction_id = transaction.transaction_id
     iva_category = transaction.iva_category
     if iva_category is not None and iva_category in _NON_DECLARABLE_IVA_CATEGORIES:
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
+                transaction_id=transaction.transaction_id,
                 reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY,
                 detail=(
                     f"iva_category {iva_category.value!r} does not produce a declarable IVA "
@@ -1647,6 +1646,21 @@ def _resolve_iva_transaction_amounts(
                 ),
             ),
         )
+    return _resolved_iva_transaction_amounts(
+        transaction,
+        operation_date=operation_date,
+        proportionality=proportionality,
+    )
+
+
+def _resolved_iva_transaction_amounts(
+    transaction: Transaction,
+    *,
+    operation_date: date,
+    proportionality: Decimal,
+) -> _IvaTransactionAmounts | _IvaTransactionOutcome:
+    """Validate measured tax facts, then scale them for the business share."""
+    transaction_id = transaction.transaction_id
     missing_reason = _missing_tax_fact_reason(transaction)
     if missing_reason is not None:
         return _IvaTransactionOutcome(
@@ -1670,12 +1684,30 @@ def _resolve_iva_transaction_amounts(
                 ),
             ),
         )
+    rate_kind = _canonical_iva_rate_kind(transaction, operation_date=operation_date)
+    if isinstance(rate_kind, _IvaTransactionOutcome):
+        return rate_kind
+    return _IvaTransactionAmounts(
+        rate_kind=rate_kind,
+        base_amount=transaction.taxable_base * proportionality,
+        iva_amount=transaction.iva_amount * proportionality,
+        recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality,
+    )
+
+
+def _canonical_iva_rate_kind(
+    transaction: Transaction,
+    *,
+    operation_date: date,
+) -> IvaRateKind | _IvaTransactionOutcome:
+    """Resolve a declared rate against the legal table available on its date."""
+    assert transaction.iva_rate is not None
     rate_kind = _iva_rate_kind_for(transaction.iva_rate, on_date=operation_date)
     if rate_kind is None:
         covered = rate_table_covers_any_positive_tier(EUMemberState.ES, operation_date)
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(
-                transaction_id=transaction_id,
+                transaction_id=transaction.transaction_id,
                 reason=(
                     IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE
                     if covered
@@ -1694,12 +1726,7 @@ def _resolve_iva_transaction_amounts(
                 ),
             ),
         )
-    return _IvaTransactionAmounts(
-        rate_kind=rate_kind,
-        base_amount=transaction.taxable_base * proportionality,
-        iva_amount=transaction.iva_amount * proportionality,
-        recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality,
-    )
+    return rate_kind
 
 
 def _resolve_iva_transaction_classification(

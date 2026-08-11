@@ -33,7 +33,6 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ....core.errors import resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -103,7 +102,6 @@ def certificate_register(
     """Register (or re-point) a named certificate source for the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         register_operator_certificate_source,
     )
@@ -199,12 +197,9 @@ def certificate_select(
     """Mark ``name`` the active certificate source; its path becomes the certificate-provider path."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
-        CertificateSourceNotFoundError,
         select_operator_certificate_source,
     )
-    from ....core.errors import resolve_error_message
 
     try:
         result = select_operator_certificate_source(name=name)
@@ -255,7 +250,6 @@ def certificate_remove(
     """Remove ``name`` from the certificate-source registry. A no-op when ``name`` is not registered."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         remove_operator_certificate_source,
     )
@@ -418,12 +412,9 @@ def certificate_secret_set(
         )
 
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
-        CertificateSourceNotFoundError,
         set_operator_certificate_source_secret,
     )
-    from ....core.errors import resolve_error_message
 
     try:
         result = set_operator_certificate_source_secret(
@@ -478,7 +469,6 @@ def certificate_secret_remove(
     """Remove the passphrase bound to the named certificate source. A no-op when unset."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         remove_operator_certificate_source_secret,
     )

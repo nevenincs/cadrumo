@@ -48,36 +48,63 @@ class _M303ProjectionRefPartition:
     simplified: tuple[_SimplifiedProjectionRef, ...]
 
 
-def _partition_m303_projection_refs(schema_provider: RegistrySchemaAccessor) -> _M303ProjectionRefPartition:
-    """Partition the active revision's typed projection references by owning projector."""
+def _collect_m303_projection_refs(schema_provider: RegistrySchemaAccessor) -> tuple[FilingProjectionRef, ...]:
+    """Collect active-revision projection references in layout order."""
     subview = schema_provider.get_subview("303")
-    projection_refs: tuple[FilingProjectionRef, ...] = tuple(
+    return tuple(
         field.projection_ref
         for layout in subview.export_layouts
         for record in layout.records
         for field in record.fields
         if field.projection_ref is not None
     )
+
+
+def _exonerado_projection_refs(
+    projection_refs: tuple[FilingProjectionRef, ...],
+) -> tuple[_ExoneradoProjectionRef, ...]:
+    return tuple(
+        ref
+        for ref in projection_refs
+        if isinstance(ref, M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef)
+    )
+
+
+def _prorrata_projection_refs(
+    projection_refs: tuple[FilingProjectionRef, ...],
+) -> tuple[M303ProrrataActivityProjectionRef, ...]:
+    return tuple(ref for ref in projection_refs if isinstance(ref, M303ProrrataActivityProjectionRef))
+
+
+def _differentiated_projection_refs(
+    projection_refs: tuple[FilingProjectionRef, ...],
+) -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:
+    return tuple(ref for ref in projection_refs if isinstance(ref, M303DifferentiatedDeductionProjectionRef))
+
+
+def _simplified_projection_refs(
+    projection_refs: tuple[FilingProjectionRef, ...],
+) -> tuple[_SimplifiedProjectionRef, ...]:
+    return tuple(
+        ref
+        for ref in projection_refs
+        if isinstance(
+            ref,
+            M303RegimenSimplificadoActivityProjectionRef
+            | M303RegimenSimplificadoFactProjectionRef
+            | M303RegimenSimplificadoModuleProjectionRef,
+        )
+    )
+
+
+def _partition_m303_projection_refs(schema_provider: RegistrySchemaAccessor) -> _M303ProjectionRefPartition:
+    """Partition the active revision's typed projection references by owning projector."""
+    projection_refs = _collect_m303_projection_refs(schema_provider)
     return _M303ProjectionRefPartition(
-        exonerado=tuple(
-            ref
-            for ref in projection_refs
-            if isinstance(ref, M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef)
-        ),
-        prorrata=tuple(ref for ref in projection_refs if isinstance(ref, M303ProrrataActivityProjectionRef)),
-        differentiated=tuple(
-            ref for ref in projection_refs if isinstance(ref, M303DifferentiatedDeductionProjectionRef)
-        ),
-        simplified=tuple(
-            ref
-            for ref in projection_refs
-            if isinstance(
-                ref,
-                M303RegimenSimplificadoActivityProjectionRef
-                | M303RegimenSimplificadoFactProjectionRef
-                | M303RegimenSimplificadoModuleProjectionRef,
-            )
-        ),
+        exonerado=_exonerado_projection_refs(projection_refs),
+        prorrata=_prorrata_projection_refs(projection_refs),
+        differentiated=_differentiated_projection_refs(projection_refs),
+        simplified=_simplified_projection_refs(projection_refs),
     )
 
 

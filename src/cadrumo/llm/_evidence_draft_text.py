@@ -71,7 +71,7 @@ from ..application.ledger import (
     PurchaseInvoiceEvidenceInputError,
     resolve_invoice_extraction_authority_values,
 )
-from ..core import LLM_EXTRA, build_provenance_stamp, require_optional_extra
+from ..core import LLM_EXTRA, ActionEvidenceProvenance, build_provenance_stamp, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
@@ -83,6 +83,7 @@ from ._invoice_extraction_prompt import (
 )
 from ._invoice_field_grounding import ground_extracted_fields, parse_invoice_extraction_response
 from ._models import LLMProvider, LLMRequest
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [
     "TextInvoiceFieldExtractor",
@@ -145,7 +146,11 @@ def build_text_field_extraction_prompt(
     """
     if not evidence_text.strip():
         raise PurchaseInvoiceEvidenceInputError(
-            "invoice text extraction was given no text to read",
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_TEXT_PRESENT,
+                facts={"evidence_content_available": False},
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
     resolved = values if values is not None else default_extraction_authority_values()
     compiled = render_invoice_extraction_prompt(values=resolved, fields=fields)
@@ -220,8 +225,14 @@ class TextInvoiceFieldExtractor:
             # model, so forwarding that identifier to a vendor asks for a model
             # it does not serve -- and doing so SILENTLY is what let a
             # taxpayer's document reach a cloud provider by configuration alone.
-            msg = f"a text model must be named explicitly for provider {provider.value!r}; no default exists for it"
-            raise LLMConfigError(msg)
+            raise LLMConfigError(
+                context={"provider": provider.value, "off_host_model_named": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.OFF_HOST_MODEL_NAMED,
+                    facts={"provider": provider.value, "off_host_model_named": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         else:
             self._model = model
         self._authority_values = (

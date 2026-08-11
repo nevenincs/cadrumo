@@ -1,12 +1,7 @@
 """Locale coverage for the `aeat config google ...` error refusal helper.
 
-`_google_refusal` is the single chokepoint every `aeat config google`
-command routes adapter failures through. Before it existed the commands
-re-raised `CliRefusedBoundaryError(str(exc))` — a literal-positional
-refusal that rendered the adapter's English message verbatim in every
-locale. These tests lock the contract that the helper dispatches on the
-concrete exception type to a localised `cli.config.google.errors.*`
-frame instead.
+The projection delegates message ownership to the central exception registry;
+the config package neither repeats a class-name map nor leaks adapter prose.
 """
 
 from __future__ import annotations
@@ -20,7 +15,7 @@ from .....adapters.outbound.google import (
     GoogleAuthValidationError,
 )
 from .....adapters.outbound.storage import OutboundStorageError
-from .....core.errors import resolve_error_message
+from .....core.errors import get_registered_error_code, resolve_error_message
 from .....core.i18n import tr
 from .._google import _google_refusal
 
@@ -33,46 +28,33 @@ def _refusal_message(exc: GoogleAuthError | OutboundStorageError) -> str:
     return resolve_error_message(_google_refusal(exc))
 
 
-def test_each_error_type_routes_to_its_own_localised_key() -> None:
-    """Each concrete adapter exception renders its own translation key.
+def test_each_error_type_routes_through_the_central_registry() -> None:
+    """Each concrete adapter exception uses its registered message authority."""
 
-    The assertion compares against `tr(key, ...)` to prove routing, then
-    guards against the tautology where `tr` echoes a missing key back:
-    the rendered message must differ from both the bare key and the raw
-    `str(exc)` the old code leaked.
-    """
-
-    expected: dict[GoogleAuthError | OutboundStorageError, str] = {
-        GoogleAuthValidationError("raw adapter detail"): "cli.config.google.errors.validation",
-        GoogleAuthClientNotRegisteredError("raw adapter detail"): "cli.config.google.errors.client_not_registered",
-        GoogleAuthExpiredError("raw adapter detail"): "cli.config.google.errors.token_expired",
-        OutboundStorageError("raw adapter detail"): "cli.config.google.errors.storage",
-    }
+    errors: tuple[GoogleAuthError | OutboundStorageError, ...] = (
+        GoogleAuthValidationError("raw adapter detail"),
+        GoogleAuthClientNotRegisteredError("raw adapter detail"),
+        GoogleAuthExpiredError("raw adapter detail"),
+        OutboundStorageError("raw adapter detail"),
+    )
 
     rendered: set[str] = set()
-    for exc, key in expected.items():
+    for exc in errors:
+        key = get_registered_error_code(exc).message_key
         message = _refusal_message(exc)
-        assert message == tr(key, detail=str(exc)), (type(exc).__name__, message)
+        assert message == tr(key), (type(exc).__name__, message)
         assert message != key, f"{key} rendered as the bare key — missing locale entry"
         assert message != str(exc), f"{type(exc).__name__} leaked the raw adapter string"
         rendered.add(message)
 
-    assert len(rendered) == len(expected), "distinct error types collapsed to the same frame"
+    assert len(rendered) == len(errors), "distinct registered errors collapsed to the same frame"
 
 
-def test_detail_interpolating_key_carries_the_adapter_specifics() -> None:
-    """Keys that interpolate `{detail}` keep the adapter's own text."""
+def test_base_google_error_uses_its_registered_generic_frame() -> None:
+    """The broad adapter base also has one canonical registry entry."""
 
-    message = _refusal_message(GoogleAuthValidationError("missing installed wrapper"))
-    assert "missing installed wrapper" in message
-
-
-def test_unknown_google_error_falls_back_to_the_generic_frame() -> None:
-    """A bare `GoogleAuthError` with no dedicated key uses `auth_failed`."""
-
-    message = _refusal_message(GoogleAuthError("unclassified failure"))
-    assert message == tr("cli.config.google.errors.auth_failed", detail="unclassified failure")
-    assert "unclassified failure" in message
+    exc = GoogleAuthError("unclassified failure")
+    assert _refusal_message(exc) == tr(get_registered_error_code(exc).message_key)
 
 
 def test_google_refusal_keeps_the_adapter_failure_as_factual_detail_only() -> None:
@@ -80,5 +62,5 @@ def test_google_refusal_keeps_the_adapter_failure_as_factual_detail_only() -> No
 
     refusal = _google_refusal(GoogleAuthValidationError("missing installed wrapper"))
 
-    assert refusal.context == {"detail": "missing installed wrapper"}
+    assert refusal.context is None
     assert not hasattr(refusal, "suggestion")

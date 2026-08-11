@@ -139,7 +139,6 @@ def auth_configure(
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         AuthProviderReservedError,
         configure_operator_auth,
@@ -311,8 +310,6 @@ def auth_login(
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthLoginNotEnabledError,
-        AuthLoginPreconditionError,
         AuthProviderReservedError,
         login_operator_auth,
     )

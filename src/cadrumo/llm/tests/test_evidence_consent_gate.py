@@ -369,7 +369,7 @@ def test_a_token_cannot_be_minted_unless_every_condition_holds(
     assert (
         cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged) is False
     )
-    with pytest.raises(LLMConsentError):
+    with pytest.raises(LLMConsentError) as raised:
         mint_evidence_consent_token(
             settings=settings,
             profile_eligible=profile_eligible,
@@ -377,6 +377,16 @@ def test_a_token_cannot_be_minted_unless_every_condition_holds(
             surface="aeat app ledger evidence extract",
             evidence_content_address="b" * 64,
         )
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.evidence.off_host_dispatch_permitted"
+    assert verdict.action is None
+    assert verdict.evidence[0].values == {
+        "acknowledged": acknowledged,
+        "deployment_permitted": permitted,
+        "gestor_mode": gestor,
+        "profile_eligible": profile_eligible,
+    }
 
 
 def test_the_only_permitting_combination_mints(tmp_path: Path) -> None:
@@ -399,8 +409,13 @@ def test_the_only_permitting_combination_mints(tmp_path: Path) -> None:
 def test_the_token_refuses_every_serialization_path() -> None:
     """A stored token would be the sticky enablement the posture forbids."""
     for dump in (_CONSENTED.model_dump, _CONSENTED.model_dump_json):
-        with pytest.raises(LLMConsentError):
+        with pytest.raises(LLMConsentError) as raised:
             dump()
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.token_ephemeral"
+        assert verdict.action is None
+        assert verdict.evidence[0].values == {"consent_token_serializable": False}
 
 
 def test_a_container_that_forgets_to_exclude_the_token_still_cannot_dump_it() -> None:
@@ -441,8 +456,13 @@ def test_a_request_dump_carries_no_token() -> None:
 def test_a_token_bound_to_nothing_is_refused() -> None:
     """A whitespace surface or address binds the acknowledgement to everything."""
     for surface, address in ((" ", "d" * 64), ("aeat app ledger evidence extract", "  ")):
-        with pytest.raises(ValueError, match="real surface"):
+        with pytest.raises(LLMConsentError) as raised:
             EvidenceConsentToken(surface=surface, evidence_content_address=address)
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.token_bound"
+        assert verdict.action is None
+        assert verdict.evidence[0].values == {"consent_token_binding_valid": False}
 
 
 # ── The gate's position in the dispatch, asserted structurally ───────────────

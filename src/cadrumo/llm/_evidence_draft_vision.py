@@ -61,12 +61,13 @@ from ..application.ledger import (
     PurchaseInvoiceEvidenceInputError,
     TranscriberIdentity,
 )
-from ..core import LLM_EXTRA, FieldOrigin, provenance_transport_label, require_optional_extra
+from ..core import LLM_EXTRA, ActionEvidenceProvenance, FieldOrigin, provenance_transport_label, require_optional_extra
 from ..core.config import Settings, load_settings
 from ._client import LLMClient
 from ._consent import EvidenceConsentToken
 from ._errors import LLMConfigError
 from ._models import LLMProvider, LLMRequest, MultimodalImageInput, PromptDefinition, PromptRegistry
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [
     "VISION_TRANSCRIPTION_PROMPT",
@@ -197,8 +198,14 @@ class LocalVisionDocumentTranscriber:
             # The only default that exists is the local Ollama vision model, and
             # forwarding that identifier to another vendor asks for a model it
             # does not serve. Refuse rather than send a name that cannot resolve.
-            msg = f"a vision model must be named explicitly for provider {provider.value!r}; no default exists for it"
-            raise LLMConfigError(msg)
+            raise LLMConfigError(
+                context={"provider": provider.value, "off_host_model_named": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.OFF_HOST_MODEL_NAMED,
+                    facts={"provider": provider.value, "off_host_model_named": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         else:
             self._model = model
         # A local vision model on consumer hardware can take minutes; give the
@@ -282,7 +289,11 @@ class LocalVisionDocumentTranscriber:
         """
         if not evidence_images:
             raise PurchaseInvoiceEvidenceInputError(
-                "vision transcription was given no pages to read",
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.EVIDENCE_IMAGES_PRESENT,
+                    facts={"evidence_image_count": 0, "evidence_images_present": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
             )
         request = LLMRequest(
             prompt=self._prompt.template,
@@ -296,8 +307,11 @@ class LocalVisionDocumentTranscriber:
         text = response.text.strip()
         if not text:
             raise PurchaseInvoiceEvidenceInputError(
-                "the vision model returned no text for this document, so it was not read and nothing "
-                "was guessed from it",
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.EVIDENCE_TRANSCRIPTION_NONEMPTY,
+                    facts={"transcription_nonempty": False},
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                ),
             )
         return DocumentTranscription(
             text=text,

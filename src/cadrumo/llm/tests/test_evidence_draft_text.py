@@ -25,6 +25,7 @@ import pytest
 from ...application.ledger import PurchaseInvoiceEvidenceInputError
 from ...core import FieldOrigin
 from ...core.config import load_settings
+from ...entrypoints.cli._common import cli_policy_refusal_projection
 from .._errors import LLMConfigError
 from .._evidence_draft_text import (
     TextInvoiceFieldExtractor,
@@ -180,8 +181,20 @@ class TestTextExtractionPrompt:
         assert "Facture 42\nTVA 20%" in prompt
 
     def test_blank_text_refuses_rather_than_asking_a_model_to_read_nothing(self) -> None:
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no text to read"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             build_text_field_extraction_prompt("   \n\t ")
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.text_present"
+        assert verdict.evidence[0].values == {"evidence_content_available": False}
+
+        projection = cli_policy_refusal_projection(raised.value)
+        assert projection is not None
+        action = projection.precondition_action
+        assert action.failed_condition_id == verdict.failed_condition_id
+        assert action.action is None
+        assert action.no_recovery_outcome == verdict.no_recovery_outcome
+        assert action.evidence[0].values == verdict.evidence[0].values
 
 
 class TestAuthoredResponseParsesAndGrounds:
@@ -358,8 +371,15 @@ class TestExtractorPinsTheHostByDefault:
         cannot be reached around by setting an environment variable, which is
         what makes this the stronger half of the fix.
         """
-        with pytest.raises(LLMConfigError, match="must be named explicitly"):
+        with pytest.raises(LLMConfigError) as raised:
             TextInvoiceFieldExtractor(provider=LLMProvider.ANTHROPIC, settings=load_settings())
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.off_host_model.named"
+        assert verdict.evidence[0].values == {
+            "off_host_model_named": False,
+            "provider": LLMProvider.ANTHROPIC.value,
+        }
 
     def test_an_explicitly_named_cloud_provider_and_model_is_still_honoured(self) -> None:
         """Positive control, and it protects a sanctioned route.

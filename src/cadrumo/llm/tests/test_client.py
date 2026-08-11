@@ -101,9 +101,14 @@ def test_client_surfaces_provider_error(tmp_path: Path) -> None:
     with (
         _serve_ollama(HTTPStatus.SERVICE_UNAVAILABLE) as (endpoint, _events),
         override_settings(cadrumo_llm_ollama_chat_url=endpoint),
-        pytest.raises(LLMProviderError, match="Local Ollama API failure"),
+        pytest.raises(LLMProviderError) as raised,
     ):
         asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
+    assert raised.value.context == {
+        "http_status": HTTPStatus.SERVICE_UNAVAILABLE,
+        "model": "gpt-oss",
+        "provider_name": LLMProvider.LOCAL.value,
+    }
 
 
 def test_client_surfaces_rate_limit_error(tmp_path: Path) -> None:

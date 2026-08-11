@@ -200,7 +200,11 @@ def test_a_schema_refusal_is_never_retried(tmp_path: Path) -> None:
     ):
         asyncio.run(_client(tmp_path).complete(LLMRequest(prompt="hello")))
 
-    assert "invalid response" in str(raised.value)
+    assert raised.value.context == {
+        "provider_name": LLMProvider.LOCAL.value,
+        "provider_response_error_type": "ValidationError",
+        "provider_response_valid": False,
+    }
     assert script.arrivals == 1
 
 

@@ -13,10 +13,12 @@ from typing import override
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import ActionEvidenceProvenance
 from ...core.config import load_settings
 from ...core.logging import get_logger
 from .._errors import LLMConfigError
 from .._models import LLMProvider
+from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .base import (
     ProviderCompletion,
     ProviderRequest,
@@ -110,8 +112,14 @@ class OpenAIAdapter(_ProviderAdapter):
             LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
-            msg = "CADRUMO_LLM_OPENAI_API_KEY must be set for the OpenAI provider."
-            raise LLMConfigError(msg)
+            raise LLMConfigError(
+                context={"provider": self.provider.value, "provider_credentials_present": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.PROVIDER_CREDENTIALS_PRESENT,
+                    facts={"provider": self.provider.value, "provider_credentials_present": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         self._api_key = api_key
         self._timeout_s = timeout_s
 
@@ -137,7 +145,7 @@ class OpenAIAdapter(_ProviderAdapter):
             response = await post_provider_request(
                 client,
                 _openai_chat_url(),
-                provider_name="OpenAI",
+                provider_name=LLMProvider.OPENAI.value,
                 model=request.model,
                 logger=_logger,
                 headers={"Authorization": f"Bearer {self._api_key}"},
@@ -148,9 +156,15 @@ class OpenAIAdapter(_ProviderAdapter):
                     "temperature": request.temperature,
                 },
             )
-        check_http_error(response, provider_name="OpenAI", model=request.model, logger=_logger)
-        parsed = parse_provider_response(response, provider_name="OpenAI", response_model=_OpenAIResponse)
-        choice = require_provider_response_item(parsed.choices, provider_name="OpenAI", item_name="choices")
+        check_http_error(response, provider_name=LLMProvider.OPENAI.value, model=request.model, logger=_logger)
+        parsed = parse_provider_response(
+            response, provider_name=LLMProvider.OPENAI.value, response_model=_OpenAIResponse
+        )
+        choice = require_provider_response_item(
+            parsed.choices,
+            provider_name=LLMProvider.OPENAI.value,
+            item_name="choices",
+        )
         text = choice.message.content or ""
         return ProviderCompletion(
             text=text.strip(),
