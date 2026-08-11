@@ -19,7 +19,6 @@ from pathlib import Path
 
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
-from ._ids import RevisionId
 from ._period_selector_match import registry_period_for_request
 from ._schema import (
     CasillaDefinition,
@@ -35,6 +34,7 @@ from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_references import check_all_id_references
 from ._validate_revision_identity import revision_reference_identity_failures
+from ._ids import RevisionId
 
 _SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None]
 _SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
@@ -213,7 +213,6 @@ def _build_validated_snapshot(
             classification.id: classification for classification in revision.dependency_classifications
         },
         convenio=catalogues.convenio,
-        m303_annual_orden=catalogues.m303_annual_orden,
     )
     check_all_id_references(snapshot)
     return snapshot

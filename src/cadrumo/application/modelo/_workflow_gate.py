@@ -190,7 +190,6 @@ class _RevisionDraftBuilder:
             profile=filing_profile_from_taxpayer(profile),
             inputs=inputs,
             schema_provider=self._schema_provider,
-            m303_regimen_simplificado_scope=None,
             fail_on_warning=fail_on_warning,
         )
         if draft.status is not ModeloDraftStatus.LISTO_PARA_PRESENTAR:

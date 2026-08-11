@@ -62,7 +62,6 @@ def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Dec
         enum_binding_values=enum_binding_values,
         text_inputs=text_inputs,
         date_context={"filing_period": date(_YEAR, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     return result.values[_TIPO_GRAVAMEN], result.values[_CUOTA_INTEGRA]
 

@@ -32,7 +32,6 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
-    RevisionId,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
     declared_casilla_ids,
@@ -47,6 +46,7 @@ from ._schema import (
     VerificationStatus,
     VerificationVerdict,
 )
+from ...domain.calculations.registry import RevisionId
 
 _logger = get_logger(__name__)
 
@@ -194,7 +194,6 @@ def verify_declaracion(
         inputs=inputs,
         date_context={"filing_period": calculation_filing_date(period)},
         binding_values=supplied_bindings,
-        m303_regimen_simplificado_scope=None,
     )
     unreliable_ids = {
         warning.casilla_id

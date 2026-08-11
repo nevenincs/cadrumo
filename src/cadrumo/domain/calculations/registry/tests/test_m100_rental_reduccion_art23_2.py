@@ -65,7 +65,6 @@ def _calculate(
             "renta-2024-rel-131-pagos-fraccionados": Decimal("0"),
         },
         date_binding_values={"renta-2024-profile-taxpayer-birth-date": date(1980, 1, 1)},
-        m303_regimen_simplificado_scope=None,
     )
 
 

@@ -49,7 +49,6 @@ from ...core import Modelo, Period, PeriodError
 from ...core.logging import get_logger
 from ...core.time import MADRID_TZ
 from ...domain.filing import CasillaSchemaProvider, ModeloBuilderError, ModeloDraft, ModeloImportError
-from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.justificante import Justificante
 from .runtime import ModeloOperatorProfile
 
@@ -106,7 +105,6 @@ def import_filing_from_justificante(
     pdf_path: Path,
     *,
     schema_provider: RegistryImportSchemaProvider,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
 ) -> JustificanteImportResult:
     """Reconstruct a draft + submission record from a justificante PDF.
 
@@ -115,8 +113,6 @@ def import_filing_from_justificante(
         schema_provider: Casilla schema provider used by the filing
             builder. Callers typically pass
             ``build_runtime_schema_provider()``.
-        m303_regimen_simplificado_scope: Closed M303 scope supplied by the
-            evidence-owning caller; ``None`` for every other modelo.
 
     Returns:
         A :class:`JustificanteImportResult` with ``draft``, companion
@@ -149,7 +145,6 @@ def import_filing_from_justificante(
             profile=profile,
             inputs={},
             schema_provider=schema_provider,
-            m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
         )
     except ModeloBuilderError as exc:
         raise ModeloImportError(

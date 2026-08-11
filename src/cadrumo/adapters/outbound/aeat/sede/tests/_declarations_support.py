@@ -15,13 +15,13 @@ from pydantic import AnyHttpUrl
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
-from ......core import (
-    CasillaId,
-    CasillaValueKind,
-    Period,
-    validated_casilla_id,
-    validated_casilla_id_map,
+from ......application.filing import (
+    ModeloOperatorProfile,
+    build_draft,
+    build_runtime_schema_provider,
+    export_draft,
 )
+from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id, validated_casilla_id_map
 from ......core.config import Settings
 from ......core.resources import resources
 from ......domain.calculations.registry import (
@@ -32,6 +32,7 @@ from ......domain.calculations.registry import (
     relation_source_requirements,
     resolve_export_layout,
 )
+from ......domain.submission import ModeloDraftStatus
 from ......tests import FIXTURES_DIR
 from ......tests.secure_sql import isolated_runtime_profile
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
@@ -93,6 +94,7 @@ __all__ = [
     "_declaration_pdf_payload",
     "_declaration_row",
     "_declarations_page_shape_context",
+    "_exported_modelo_123_payload",
     "_extract_csv_from_url",
     "_filed_observation",
     "_modelo_130_snapshot",
@@ -298,6 +300,73 @@ def _modelo_130_snapshot():
 
 def _submitted_file_payload(path: Path = _SUBMITTED_FILE_130_2026_1T) -> bytes:
     return path.read_bytes()
+
+
+def _exported_modelo_123_payload(tmp_path: Path, *, filing_year: int, period: str) -> bytes:
+    filing_period = Period.from_year_and_code(filing_year, period)
+    provider = build_runtime_schema_provider(
+        filing_year=filing_year,
+        period=filing_period,
+        modelos=("123",),
+    )
+    if filing_year >= 2024:
+        inputs = _casilla_values(
+            {
+                "01": Decimal("2"),
+                "02": Decimal("3"),
+                "04": Decimal("1000.25"),
+                "05": Decimal("200.75"),
+                "07": Decimal("190.05"),
+                "08": Decimal("38.14"),
+                "10": Decimal("0"),
+                "11": Decimal("7.50"),
+                "13": Decimal("12.25"),
+            },
+        )
+        headers = {
+            "declaration_type": "I",
+            "legal_name": "EXPORT TEST",
+            "program_version": "A001",
+            "presenter_tax_id": "A12345678",
+        }
+    else:
+        inputs = _casilla_values(
+            {
+                "01": Decimal("5"),
+                "02": Decimal("1201.00"),
+                "03": Decimal("228.19"),
+                "04": Decimal("0"),
+                "05": Decimal("7.50"),
+                "07": Decimal("12.25"),
+            },
+        )
+        headers = {
+            "declaration_type": "I",
+            "surnames": "EXPORT TEST",
+            "name": "ANA",
+            "program_version": "A001",
+            "presenter_tax_id": "A12345678",
+        }
+    draft = build_draft(
+        modelo="123",
+        period=filing_period,
+        profile=ModeloOperatorProfile(
+            tax_id="12345678Z",
+            display_name="Submitted file registry test",
+        ),
+        inputs=inputs,
+        schema_provider=provider,
+    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    output = tmp_path / f"modelo-123-{filing_year}-{period}.txt"
+
+    export_draft(
+        draft,
+        output_path=output,
+        headers=headers,
+        schema_provider=provider,
+    )
+
+    return output.read_bytes()
 
 
 def _declaration_pdf_payload(

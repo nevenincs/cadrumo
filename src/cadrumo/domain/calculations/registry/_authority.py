@@ -14,7 +14,6 @@ from functools import lru_cache
 from pathlib import Path
 
 from .... import __version__
-from ....core import Modelo
 from ....core.access_gate import (
     AuthorizationManifest,
     ModeloAuthorization,
@@ -24,14 +23,7 @@ from ....core.access_gate import (
 from ....core.resources import bundled_path as _bundled_path
 from ._convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from ._errors import RegistrySnapshotError, RegistryValidationError
-from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
-from ._m303_orden_anual import (
-    M303AnnualOrdenAuthority,
-    M303AnnualOrdenCompilation,
-    collect_m303_annual_orden_fingerprints,
-    load_m303_annual_orden_authority,
-)
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
@@ -44,6 +36,7 @@ from ._validate_verdict import (
     shipped_verdict_location,
     stamp_bundled_verdict,
 )
+from ._ids import RevisionId
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None]
 _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
@@ -72,9 +65,7 @@ class ValidatedRegistryAuthority:
         return _load_authority(
             resolved_root,
             resolved_source_root,
-            collect_registry_tree_fingerprints(resolved_root)
-            + collect_convenio_fingerprints(resolved_root)
-            + collect_m303_annual_orden_fingerprints(resolved_root),
+            collect_registry_tree_fingerprints(resolved_root) + collect_convenio_fingerprints(resolved_root),
             collect_source_evidence_fingerprints(resolved_source_root),
         )
 
@@ -284,30 +275,7 @@ def _load_authority(
     # the shared legal/ catalogue (which resolves to bundled BOE corpus text).
     convenio = load_convenio_authority(root / "treaties")
     validate_convenio_legal_refs(convenio, frozenset(catalogues.legal))
-    if any(modelo.id == Modelo.M303 and bool(modelo.revisions) for modelo in modelos):
-        m303_annual_orden = load_m303_annual_orden_authority(
-            root,
-            source_root=source_root,
-            modelos=modelos,
-            sources=catalogues.sources,
-        )
-    else:
-        m303_annual_orden = M303AnnualOrdenCompilation(
-            authority=M303AnnualOrdenAuthority.empty(),
-            legal={},
-        )
-    duplicate_legal_refs = set(catalogues.legal).intersection(m303_annual_orden.legal)
-    if duplicate_legal_refs:
-        raise RegistryValidationError(
-            f"annual Orden compiler collided with hand-authored legal refs: {sorted(duplicate_legal_refs)!r}",
-        )
-    catalogues = catalogues.model_copy(
-        update={
-            "legal": {**catalogues.legal, **m303_annual_orden.legal},
-            "convenio": convenio,
-            "m303_annual_orden": m303_annual_orden.authority,
-        },
-    )
+    catalogues = catalogues.model_copy(update={"convenio": convenio})
 
     authority = ValidatedRegistryAuthority(
         root=root,
@@ -365,11 +333,7 @@ def stamp_bundled_registry_verdict(registry_root: Path, *, package_version: str 
         The path the shipped verdict was written to.
     """
     resolved = registry_root.expanduser().resolve()
-    fingerprints = (
-        collect_registry_tree_fingerprints(resolved)
-        + collect_convenio_fingerprints(resolved)
-        + collect_m303_annual_orden_fingerprints(resolved)
-    )
+    fingerprints = collect_registry_tree_fingerprints(resolved) + collect_convenio_fingerprints(resolved)
     output_path = shipped_verdict_location(resolved)
     stamp_bundled_verdict(
         registry_fingerprints=fingerprints,

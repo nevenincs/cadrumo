@@ -305,7 +305,6 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
             },
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
             date_context={"filing_period": date(2024, 12, 31)},
-            m303_regimen_simplificado_scope=None,
         )
         return result.values[_M200_TIPO_GRAVAMEN_CASILLA], result.values[_M200_CUOTA_INTEGRA_CASILLA]
 
@@ -345,7 +344,6 @@ def test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold() -> 
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("10")
@@ -374,7 +372,6 @@ def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() ->
             },
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
             date_context={"filing_period": date(2024, 12, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -401,7 +398,6 @@ def test_tipo_gravamen_dispatch_raises_on_unrecognised_legal_entity_form() -> No
             },
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
             date_context={"filing_period": date(2024, 12, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -496,7 +492,6 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         binding_values=common_bindings,
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     result_sl = calculate_registry_snapshot(
         _snapshot(),
@@ -505,7 +500,6 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         binding_values=common_bindings,
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result_sal.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("23"), (
@@ -542,7 +536,6 @@ def test_tipo_gravamen_dispatch_routes_2025_micro_display_rate_to_first_tranche(
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
@@ -565,7 +558,6 @@ def test_tipo_gravamen_dispatch_routes_2025_micro_cuota_to_rest_tranche() -> Non
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
@@ -597,7 +589,6 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
         "SA with INCN 1.5M must display tipo 25 % (above ERD threshold)"
@@ -627,7 +618,6 @@ def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_from_2025() -> None:
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("24")
@@ -650,7 +640,6 @@ def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_from_2025(
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")
@@ -680,7 +669,6 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("15"), (
         "new-entity flag must override ERD lane: tipo = 15 %, not 23 %"
@@ -713,7 +701,6 @@ def test_cooperativa_retains_20_percent_even_when_incn_below_1m() -> None:
         },
         relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
         date_context={"filing_period": date(2024, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("20"), (
         "cooperativa with INCN 500k must retain 20 %, not ERD 23 %"

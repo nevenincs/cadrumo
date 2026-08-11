@@ -135,7 +135,6 @@ def _run_calculation(
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     return calculation.values
 
@@ -237,7 +236,6 @@ class TestPiensosIndiceIsTextTypedButStillApplies:
             date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
             date_context={"filing_period": date(2025, 12, 31)},
             text_inputs={"1543": "0.50"},
-            m303_regimen_simplificado_scope=None,
         )
         assert calculation.values[_CASILLA_1539_RENDIMIENTO_NETO_MINORADO] == _TARGET_MINORADO
         expected = (_TARGET_MINORADO * Decimal("0.50")).quantize(Decimal("0.01"))

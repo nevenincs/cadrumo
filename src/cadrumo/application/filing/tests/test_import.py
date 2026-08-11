@@ -132,7 +132,6 @@ def test_submission_record_preserves_typed_draft_period(
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=None,
     )
     justificante = Justificante(
         csv="ABCD1234EFGH5678",
@@ -178,7 +177,6 @@ def test_submission_record_preserves_an_aware_receipt_instant(
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=None,
     )
     presented_at = datetime(2026, 4, 10, 11, 23, 45, tzinfo=UTC)
     justificante = Justificante(
@@ -211,11 +209,7 @@ class TestImportFromJustificante:
     ) -> None:
         pdf = _FIXTURES / "modelo_130_2026Q1.pdf"
         with pytest.raises(ModeloImportError) as excinfo:
-            import_filing_from_justificante(
-                pdf,
-                schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
-            )
+            import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
         # The import error carries a translated_message locale key (not a raw
         # args[0] string); assert the operator-facing rendered text, which
         # interpolates the underlying builder detail via resolve_error_message.
@@ -224,11 +218,7 @@ class TestImportFromJustificante:
     def test_unsupported_modelo_raises_import_error(self, schema_provider: RegistrySchemaAccessor) -> None:
         pdf = _FIXTURES / "modelo_100_2025A.pdf"
         with pytest.raises(ModeloImportError) as excinfo:
-            import_filing_from_justificante(
-                pdf,
-                schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
-            )
+            import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
         assert "modelo '100'" in resolve_error_message(excinfo.value)
 
     def test_year_only_justificante_period_is_rejected_at_registry_boundary(
@@ -239,11 +229,7 @@ class TestImportFromJustificante:
         pdf = _justificante_pdf_without_period(tmp_path, modelo="130", ejercicio="2026")
 
         with pytest.raises(ModeloImportError, match="period token '0A'"):
-            import_filing_from_justificante(
-                pdf,
-                schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
-            )
+            import_filing_from_justificante(pdf, schema_provider=cast(RegistryImportSchemaProvider, schema_provider))
 
     def test_missing_pdf_raises_parse_error(
         self,
@@ -255,7 +241,6 @@ class TestImportFromJustificante:
             import_filing_from_justificante(
                 missing,
                 schema_provider=cast(RegistryImportSchemaProvider, schema_provider),
-                m303_regimen_simplificado_scope=None,
             )
 
 

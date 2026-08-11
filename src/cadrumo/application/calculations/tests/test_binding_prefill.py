@@ -29,13 +29,7 @@ from ....domain.calculations.registry import (
     resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import (
-    IvaCategory,
-    IvaFlowDirection,
-    IvaRateKind,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-)
+from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
 from ....domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
@@ -158,9 +152,6 @@ def _calculate_303_from_observations(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": observations[-1].transaction_date},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
 
 
@@ -325,7 +316,6 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             binding_values=binding_values,
             date_context={"filing_period": date(2025, 12, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
         assert (

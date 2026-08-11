@@ -11,14 +11,7 @@ from .....application.calculations import resolve_iva_compensation_annual_partit
 from .....core import BindingSourceKind, CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.resources import resources
-from ....iva import (
-    IvaCategory,
-    IvaExemptionArticle,
-    IvaFlowDirection,
-    IvaRateKind,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-)
+from ....iva import IvaCategory, IvaExemptionArticle, IvaFlowDirection, IvaRateKind
 from .. import (
     BindingId,
     DataBindingDefinition,
@@ -188,9 +181,6 @@ def _calculate_303_from_observations(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": observations[-1].transaction_date},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
 
 
@@ -255,5 +245,4 @@ def _calculate_390_from_observations_and_303_filings(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )

@@ -89,7 +89,6 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     resolve_bound_inputs_by_casilla_id,
 )
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions import (
@@ -240,7 +239,6 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
             inputs=full_inputs,
             binding_values={},
             date_context={"filing_period": date(_YEAR, 12, 31)},
-            m303_regimen_simplificado_scope=None,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
@@ -461,7 +459,6 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
         binding_values=relay_binding_values,
         date_context={"filing_period": date(_YEAR, 12, 31)},
         relation_values=relay_resolution.relation_values,
-        m303_regimen_simplificado_scope=None,
     )
     relay_casilla_values = relay_engine_result.values
 
@@ -599,9 +596,6 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         inputs=pull_inputs,
         binding_values=pull_binding_values,
         date_context={"filing_period": date(_PRORRATA_YEAR, 3, 31)},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
 
     assert purchase.iva_amount is not None

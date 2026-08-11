@@ -86,7 +86,6 @@ def _calculate_historical_m100(snapshot: RegistrySnapshot, *, year: int) -> Regi
         binding_values=_historical_m100_binding_values(year),
         enum_binding_values={f"renta-{year}-profile-tax-residence-ccaa": "madrid"},
         relation_values=relation_values,
-        m303_regimen_simplificado_scope=None,
     )
 
 

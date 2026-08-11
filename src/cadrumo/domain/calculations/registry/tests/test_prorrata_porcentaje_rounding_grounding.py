@@ -133,7 +133,6 @@ def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal)
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     return result.values[_PORCENTAJE_ID]
 

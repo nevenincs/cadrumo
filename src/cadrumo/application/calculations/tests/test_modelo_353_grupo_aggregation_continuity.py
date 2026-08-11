@@ -155,7 +155,6 @@ def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> 
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, int(period), 28)},
-        m303_regimen_simplificado_scope=None,
     )
 
 
@@ -222,7 +221,6 @@ def _resolve_353_aggregate(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, int(period), 28)},
-        m303_regimen_simplificado_scope=None,
     )
 
 

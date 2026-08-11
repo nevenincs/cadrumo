@@ -327,8 +327,8 @@ number = "28"
 # internal_only casillas from the single-segment manifest, matching the export
 # gate that omits them as advisory-support figures absent from the AEAT Diseño.
 [[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-orden-id"
-number = "modulos-iva-orden-id"
+casilla_id = "modulos-iva-epigrafe"
+number = "modulos-iva-epigrafe"
 
 [[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
 casilla_id = "modulos-iva-1-unidades"
@@ -341,23 +341,6 @@ number = "modulos-iva-2-unidades"
 [[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
 casilla_id = "modulos-iva-3-unidades"
 number = "modulos-iva-3-unidades"
-
-[[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-4-unidades"
-number = "modulos-iva-4-unidades"
-
-[[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-5-unidades"
-number = "modulos-iva-5-unidades"
-
-[[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-6-unidades"
-number = "modulos-iva-6-unidades"
-
-[[revisions.2024-desde-09-y-3t.completeness_manifest.casillas]]
-casilla_id = "modulos-iva-7-unidades"
-number = "modulos-iva-7-unidades"
-
 
 # Deducción regularización cuota casillas (43 regularización bienes de inversión,
 # LIVA art. 107-110; 44 regularización prorrata por porcentaje definitivo, LIVA

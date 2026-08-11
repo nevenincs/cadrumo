@@ -16,8 +16,6 @@ from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
 )
 from .. import (
     IvaLedgerObservation,
@@ -388,9 +386,6 @@ def _calculate_303_2009_from_observations(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": observations[-1].transaction_date},
-        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
-            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-        ),
     )
 
 

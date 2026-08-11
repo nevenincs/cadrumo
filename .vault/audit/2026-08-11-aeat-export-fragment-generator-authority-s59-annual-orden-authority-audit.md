@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-11'
 body_schema: 'body-v1'
-body_hash: 'sha256:095d0266ac216c43aba4493a11c3bc8cb6649a14771410e143775f786d40669d'
+body_hash: 'sha256:e3f465fcdb3afed770028d3b1c138b85d2468302c178c4fca769a08fb1b8fbab'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
   - "[[2026-08-10-aeat-export-fragment-generator-authority-adr]]"
@@ -14,40 +14,30 @@ related:
 
 ## Scope
 
-Final formal review of `W04.P07.S59` against the accepted annual-Orden amendment, the plan acceptance text, and candidate `5e3d11a0ba180ff547dcfc66997a47a0bd0ab381`. The review covered the annual source compiler, immutable projection and reference coordinates, registry snapshot integration, strict source-sidecar validation, formula scope handling, filing value arrival, constructor propagation, all direct runtime callers, legacy deletion, and exact revision-source authority.
+Formal re-review of `W04.P07.S59` against the accepted annual-Orden amendment and plan acceptance text after remediation. The review covered `ActividadOrdenAnualId`, `ActividadOrdenAnualRef`, the immutable year/revision/source-digest projection and snapshot, source and generated-manifest loading, registry catalogue and snapshot integration, formula scope handling, filing projection, generated data, and the current focused tests.
 
-Verdict: **PASS**. Luna approved candidate `5e3d11a0ba180ff547dcfc66997a47a0bd0ab381`; no open critical, high, medium, or low S59 finding remains.
+Verdict: **PASS**. No open critical, high, medium, or low finding remains.
 
 ## Findings
 
-### filing-builder-and-import-callers-omitted-scope | critical | Resolved: every caller states the closed decision
+### filing-builder-missing-applicability-authority | critical | Resolved: the public builder threads the closed scope decision
 
-`build_draft` requires `m303_regimen_simplificado_scope` with no default and passes the value unchanged to `calculate_registry_snapshot`. Its production and test callers, including import and generic filing boundaries, were migrated explicitly. Modelo 303 callers pass the intentional typed decision; scope-unaware and non-303 boundaries pass `None` and therefore retain the runtime's fail-closed modelo check. No profile inference, optional tunnel, compatibility default, or legacy overload remains.
+`build_draft` requires the typed `m303_regimen_simplificado_scope` argument and passes it unchanged to `calculate_registry_snapshot`. Modelo 303 calculations require the closed input, non-303 calculations reject a non-null value, not-claimed scope stays neutral, and evidence-required scope refuses pending S58. S59 has no secure-profile assembler or regime-composition enum; S55 owns that later mapping atomically.
 
-### annual-orden-constructor-propagation-incomplete | high | Resolved: canonical coordinates reach every production constructor
+### parallel-selector-and-runtime-inference | high | Resolved: one private selector is owned by the canonical snapshot resolver
 
-The annual-Orden projection and references require `orden_id`, ejercicio, registry revision, canonical source, content digest, and `cuota_minima_pct`. Constructor census coverage proves production compilation supplies these coordinates and the bundled 2026 authority resolves the pinned identifier and statutory percentage rather than recreating a test-only row.
+The prior public `select_m303_annual_orden_projection` surface is absent from source and the registry facade. `_select_m303_annual_orden_projection` is private and called only inside `resolve_m303_regimen_simplificado_snapshot`. Formula evaluation no longer scans formula operations or selects an annual projection; it enforces the already-resolved closed scope and general-scope input neutrality. Filing projection consumes the resolved snapshot and no longer reselects the newest record-design source.
 
-### sidecar-metadata-was-under-validated | high | Resolved: the paired extraction authority is exact
+### snapshot-reference-coordinate-not-validated | high | Resolved: every activity reference is bound to the exact snapshot coordinate
 
-The loader accepts only the closed top-level and unit schemas and validates schema version, source kind, status, canonical source path, digest, preprocessor identity, and attribution. Copied-real-sidecar mutation tests refuse unknown keys, missing required metadata, stale content, and JSON-versus-Markdown divergence. The sidecar proof lane contains 31 passing tests.
+`M303AnnualOrdenSnapshot` now owns ejercicio, revision, source, and content digest and validates every `ActividadOrdenAnualRef` against that complete coordinate in addition to ordered `orden_id` parity. It also verifies that each activity matches the filing year and cites the selected source. A dedicated mutation test changes revision and digest and proves strict refusal.
 
-### registry-runtime-default-and-caller-omissions | critical | Resolved: all 248 direct calls are explicit
+### markdown-sidecar-divergence-not-checked | medium | Resolved: JSON and Markdown sidecars are validated as one deterministic pair
 
-`calculate_registry_snapshot` requires `m303_regimen_simplificado_scope`; signature binding proves omission raises `TypeError`. The all-source AST ratchet enumerates 248 direct calls with zero omissions: non-303 or generic calls state `None`, while M303 execution paths use the typed `REGIMEN_SIMPLIFICADO_NOT_CLAIMED` or `REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED` decision. Only the dedicated missing-scope refusal test passes `None` to an M303 snapshot. Not-claimed stays neutral, rejects simplified rows, and evidence-required refuses pending S58.
-
-### revision-source-assertion-dropped-annual-authority | high | Resolved: both authorities are exact and distinct
-
-Every explicit Modelo 303 revision now asserts the complete ordered source tuple: one revision-specific active record-design source, official procedure guidance, exactly one filing-year-pinned annual Orden source, and the base-form authority. Both 2024 design epochs intentionally share the same 2024 annual Orden, while their record-design sources remain distinct. The assertion is exact rather than subset-based and the source slice passes five tests.
-
-### parallel-selector-and-runtime-inference | high | Resolved: one private selector remains behind the canonical resolver
-
-The former public selector, parallel coefficient tables, test-only rows, raw-IAE selection, and runtime formula-operation inference are deleted. `_select_m303_annual_orden_projection` is private to `resolve_m303_regimen_simplificado_snapshot`; formula evaluation consumes the resolved immutable snapshot.
+The annual-Orden loader reconstructs the Markdown sidecar from the validated JSON units and requires exact equality with the committed `.extracted.md` member before accepting the source. A real copied-source mutation test corrupts the Markdown member and proves `sidecar pair diverges` refusal.
 
 ## Recommendations
 
-S59 is complete. Preserve the required no-default scope boundary, the 248-call ratchet, the exact annual-source coordinate, and the explicit S58 evidence refusal. S55 remains the owner of secure-profile composition and mapping; S58 remains the owner of evidence-bearing applicability.
+No S59 remediation remains. Preserve the private-selector boundary, the required explicit scope input, and the explicit S58 refusal. S55 must add profile composition and mapping atomically rather than retrofitting a default or compatibility path.
 
-Final evidence: the S59 lane passed 74 tests; `test_formula_runtime.py` passed 9; the engine and all-source ratchet passed 17; strict sidecar coverage passed 31; and the exact M303 source slice passed 5. The annual-Orden generator check, full registry verification, and scoped Ruff all passed. Detached-base comparison proved zero introduced `ty` or basedpyright diagnostics.
-
-Separate campaign priorities remain honestly open and are not claimed green by S59: four pre-existing deduction-authority fixtures, sixteen Renta tarifa failures missing `renta-2024-profile-deduccion-maternidad`, one record-design value drift from `0` to `0000`, and stale submitted-file fixtures for withdrawn exports or invalid historical XML. None was masked with legacy compatibility.
+Verification evidence: semantic RAG discovery reached the repaired implementation and governing ADR/plan records. The isolated candidate passed 25 annual-authority and engine tests plus 2 real `build_draft` boundary tests. `uv run --no-sync aeat app registry verify` passed with 73 modelos, 94 revisions, 798 legal references, 316 source references, 16800 casillas, and 1385 formulas. `uv run --no-sync python dev/registry/m303_orden_anual.py --check` passed. Scoped Ruff passed. A structural search found no public `select_m303_annual_orden_projection` declaration, import, export, or caller.

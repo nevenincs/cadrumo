@@ -76,7 +76,6 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
         date_context={"filing_period": date(2026, 1, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.values["decl.total-perceptores"] == binding_values["modelo-180-115-perceptores-anual"]

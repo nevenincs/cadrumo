@@ -166,7 +166,6 @@ def _calculate_200(
         enum_binding_values=_PROFILE_ENUM_BINDINGS,
         relation_values=relation_values,
         date_context={"filing_period": date(filing_year, 7, 25)},
-        m303_regimen_simplificado_scope=None,
     )
     return result, len(result.values)
 

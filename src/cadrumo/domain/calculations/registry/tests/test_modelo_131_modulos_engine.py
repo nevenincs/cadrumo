@@ -573,7 +573,6 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
             },
             text_inputs={"modulos-epigrafe": "721.2"},
             date_context={"filing_period": snapshot.filing_period.end_date},
-            m303_regimen_simplificado_scope=None,
         )
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("1")
 
@@ -588,7 +587,6 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
             },
             text_inputs={"modulos-epigrafe": "972.1"},
             date_context={"filing_period": snapshot.filing_period.end_date},
-            m303_regimen_simplificado_scope=None,
         )
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
@@ -600,7 +598,6 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
             inputs={"modulos-2-unidades": Decimal("1"), "modulos-3-unidades": Decimal("900")},
             text_inputs={"modulos-epigrafe": "721.2"},
             date_context={"filing_period": snapshot.filing_period.end_date},
-            m303_regimen_simplificado_scope=None,
         )
         assert result.values["modulos-pequena-dimension-ignorado-flag"] == Decimal("0")
 
@@ -616,7 +613,6 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
             },
             text_inputs={"modulos-epigrafe": "673.1"},
             date_context={"filing_period": snapshot.filing_period.end_date},
-            m303_regimen_simplificado_scope=None,
         )
         assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("1")
 
@@ -628,6 +624,5 @@ class TestModulosIndicesGeneralesAdvisoryFlags:
             inputs={"modulos-1-unidades": Decimal("1"), "modulos-indice-temporada": Decimal("1.50")},
             text_inputs={"modulos-epigrafe": "673.1"},
             date_context={"filing_period": snapshot.filing_period.end_date},
-            m303_regimen_simplificado_scope=None,
         )
         assert result.values["modulos-temporada-inicio-actividad-conflicto-flag"] == Decimal("0")

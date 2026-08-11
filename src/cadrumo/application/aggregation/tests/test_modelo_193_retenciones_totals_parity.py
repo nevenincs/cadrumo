@@ -143,7 +143,6 @@ def _calculate_193(
         binding_values=binding_values,
         relation_values=relation_values,
         date_context={"filing_period": date(_FILING_YEAR, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
     return result, aggregation
 

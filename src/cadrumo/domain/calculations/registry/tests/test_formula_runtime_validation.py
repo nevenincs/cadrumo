@@ -54,7 +54,6 @@ def test_registry_formula_runtime_rejects_non_decimal_input(
             committed_modelo_130_snapshot,
             inputs={_M130_INGRESOS_CASILLA: 100},
             date_context={"filing_period": date(2026, 3, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -66,7 +65,6 @@ def test_registry_formula_runtime_rejects_non_string_input_key_at_entry(
             committed_modelo_130_snapshot,
             inputs={1: Decimal("1")},
             date_context={"filing_period": date(2026, 3, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -79,7 +77,6 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             inputs={},
             text_inputs={1: "general"},
             date_context={"filing_period": date(2026, 3, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
     with pytest.raises(RegistryValidationError, match=r"text_input keys must be canonical casilla\.id strings"):
@@ -88,7 +85,6 @@ def test_registry_formula_runtime_rejects_noncanonical_text_input_keys_at_entry(
             inputs={},
             text_inputs={"bad key": "general"},
             date_context={"filing_period": date(2026, 3, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -113,7 +109,6 @@ def test_registry_formula_runtime_rejects_binding_id_supplied_as_casilla_input(
             committed_modelo_130_snapshot,
             inputs={_PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000")},
             date_context={"filing_period": date(2026, 3, 31)},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -129,7 +124,6 @@ def test_registry_formula_runtime_rejects_unknown_binding_values(
                 _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
                 "unknown-binding": Decimal("1"),
             },
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -146,7 +140,6 @@ def test_registry_formula_runtime_rejects_unknown_relation_values(
                 "modelo-180-rel-115-retenciones-anual": Decimal("114.00"),
                 "unknown-relation": Decimal("1"),
             },
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -161,7 +154,6 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
             inputs={},
             date_context={"filing_period": date(2026, 4, 20)},
             relation_values={"modelo-180-rel-115-base-anual": Decimal("1")},
-            m303_regimen_simplificado_scope=None,
         )
 
 
@@ -184,7 +176,6 @@ def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
         },
-        m303_regimen_simplificado_scope=None,
     )
 
     assert _M130_PAGO_FRACCIONADO_CASILLA in result.values
@@ -220,5 +211,4 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
                 _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
                 _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
             },
-            m303_regimen_simplificado_scope=None,
         )

@@ -5,6 +5,5 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1", "orden-eha-378
 source_refs = [
     "aeat-dr-303-2026",
     "aeat-modelo-303-procedure",
-    "boe-orden-hac-1425-2025-iva-authority",
     "boe-modelo-303-2008-form",
 ]

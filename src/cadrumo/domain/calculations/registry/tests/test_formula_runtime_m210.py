@@ -94,7 +94,6 @@ def test_irnr_resolve_tipo_gravamen_reports_unresolved_rate_as_typed_outcome() -
         enum_binding_values={_M210_COUNTRY_BINDING: "ZW"},
         text_inputs={_M210_TIPO_RENTA_CASILLA: "general"},
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert _M210_TIPO_GRAVAMEN_CASILLA not in result.values
@@ -139,7 +138,6 @@ def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
         enum_binding_values={},
         text_inputs={_M210_TIPO_RENTA_CASILLA: "dividend"},
         date_context={"filing_period": date(2025, 12, 31)},
-        m303_regimen_simplificado_scope=None,
     )
 
     assert result.unresolved_outcomes == ()

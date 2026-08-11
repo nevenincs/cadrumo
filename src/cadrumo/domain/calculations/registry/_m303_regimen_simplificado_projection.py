@@ -73,7 +73,9 @@ def project_m303_regimen_simplificado_rows(
     source_fields = m303_regimen_simplificado_nonnumbered_fields(sheet)
     if not applicable:
         return ()
-    by_annual_id = {item.orden_id: item for item in orden}
+    by_annual_key = {
+        (item.kind, item.activity_code if item.kind == "agricola" else item.iae_epigrafe): item for item in orden
+    }
     agricultural = tuple(activity for activity in rows.activities if activity.kind == "agricola")
     non_agricultural = tuple(activity for activity in rows.activities if activity.kind == "no_agricola")
     record_count = max((len(agricultural) + 1) // 2, (len(non_agricultural) + 1) // 2)
@@ -86,7 +88,7 @@ def project_m303_regimen_simplificado_rows(
                     field,
                     agricultural=agricultural[record_index * 2 : record_index * 2 + 2],
                     non_agricultural=non_agricultural[record_index * 2 : record_index * 2 + 2],
-                    by_annual_id=by_annual_id,
+                    by_annual_key=by_annual_key,
                 )
                 for field in source_fields
             ),
@@ -113,7 +115,7 @@ def _project_field(
     *,
     agricultural: tuple[ActividadAgricolaSimplificado, ...],
     non_agricultural: tuple[ActividadNoAgricolaSimplificado, ...],
-    by_annual_id: dict[str, ActividadOrdenAnual],
+    by_annual_key: dict[tuple[str, str | None], ActividadOrdenAnual],
 ) -> M303RegimenSimplificadoFieldProjection:
     match = _ACTIVITY.search(field.description)
     if match is None:  # guarded by _nonnumbered_rs_fields
@@ -122,7 +124,7 @@ def _project_field(
     is_agricultural = " - (A) Actividades agrícolas, ganaderas y forestales - " in field.description
     candidates: tuple[RegimenSimplificadoActivity, ...] = agricultural if is_agricultural else non_agricultural
     row = candidates[slot] if slot < len(candidates) else None
-    value = None if row is None else _row_value(field, row=row, by_annual_id=by_annual_id)
+    value = None if row is None else _row_value(field, row=row, by_annual_key=by_annual_key)
     return M303RegimenSimplificadoFieldProjection(
         ordinal=field.ordinal,
         offset=field.offset,
@@ -137,7 +139,7 @@ def _row_value(
     field: RecordDesignField,
     *,
     row: RegimenSimplificadoActivity,
-    by_annual_id: dict[str, ActividadOrdenAnual],
+    by_annual_key: dict[tuple[str, str | None], ActividadOrdenAnual],
 ) -> str | Decimal | None:
     suffix = _ACTIVITY.split(field.description, maxsplit=1)[-1].strip()
     if isinstance(row, ActividadAgricolaSimplificado) and suffix == "Código":
@@ -147,14 +149,15 @@ def _row_value(
     module_match = _MODULE.fullmatch(suffix)
     if isinstance(row, ActividadNoAgricolaSimplificado) and module_match is not None:
         module_order = int(module_match.group(1))
-        annual = by_annual_id[row.orden_id]
+        annual = by_annual_key[(row.kind, row.iae_epigrafe)]
         if module_order > len(annual.modulos):
             return None
         module_identity = annual.modulos[module_order - 1].identity
         entry = next(module for module in row.modulos if module.module_identity == module_identity)
         return entry.declared_quantity if module_match.group(2) == "Nº Unidades" else entry.off_form_result
     fact_identity = _fact_identity(suffix)
-    annual = by_annual_id[row.orden_id]
+    annual_key = (row.kind, row.activity_code if isinstance(row, ActividadAgricolaSimplificado) else row.iae_epigrafe)
+    annual = by_annual_key[annual_key]
     if fact_identity not in annual.applicable_fact_identities:
         return None
     facts = {fact.identity: fact.value for fact in row.facts}

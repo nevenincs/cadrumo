@@ -37,4 +37,4 @@ def test_modelo_115_rejects_unknown_input_casilla() -> None:
     date_context = {"filing_period": date(2025, 4, 20)}
 
     with pytest.raises(RegistryValidationError, match="unknown registry input casilla"):
-        calculate_registry_snapshot(snapshot, inputs=inputs, date_context=date_context, m303_regimen_simplificado_scope=None)
+        calculate_registry_snapshot(snapshot, inputs=inputs, date_context=date_context)

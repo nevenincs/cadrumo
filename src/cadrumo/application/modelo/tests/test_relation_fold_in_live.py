@@ -176,7 +176,6 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
-            m303_regimen_simplificado_scope=None,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(

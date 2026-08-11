@@ -115,7 +115,6 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
             "modelo-130-resultados-negativos-anteriores": Decimal("0"),
         },
         schema_provider=schema_provider,
-        m303_regimen_simplificado_scope=None,
     )
 
 

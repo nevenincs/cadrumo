@@ -527,7 +527,6 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
             "renta-2025-rel-131-pagos-fraccionados": Decimal("55.00"),
         },
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1985, 6, 15)},
-        m303_regimen_simplificado_scope=None,
     )
     assert result.values, "the M100/2025 calculation must close before the policy fold is meaningful"
 
