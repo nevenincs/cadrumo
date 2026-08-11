@@ -296,34 +296,51 @@ def _review_queue_rows(
     """
     rows: list[EvidenceReviewRowPayload] = []
     for stored in sorted(document.drafts, key=lambda row: row.evidence_reference):
-        blockers = confirmation_blockers(stored.draft)
-        reasons = sorted({blocker.reason.value for blocker in blockers})
-        # Read through the one projection the show surface's notices are
-        # built from, never re-classified here: a queue that disagrees with
-        # the document it sends the operator to is a queue they stop reading.
-        advisories = review_advisory_kinds(stored.draft)
-        if reason is not None and reason.value not in reasons:
-            continue
-        if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
-            continue
-        if advisory is not None and advisory not in advisories:
-            continue
-        if blocking_only and not blockers:
-            continue
-        rows.append(
-            EvidenceReviewRowPayload.model_validate(
-                {
-                    "evidence_reference": stored.evidence_reference,
-                    "extractor": stored.extractor,
-                    "drafted_at": stored.drafted_at.isoformat(),
-                    "blocking_count": len(blockers),
-                    "reasons": reasons,
-                    "advisory_count": len(advisories),
-                    "advisories": [kind.value for kind in advisories],
-                },
-            ),
+        row = _review_queue_row(
+            stored,
+            reason=reason,
+            finding=finding,
+            advisory=advisory,
+            blocking_only=blocking_only,
         )
+        if row is not None:
+            rows.append(row)
     return rows
+
+
+def _review_queue_row(
+    stored: StoredExtractionDraft,
+    *,
+    reason: ConfirmationBlockReason | None,
+    finding: DraftDiscrepancyKind | None,
+    advisory: ReviewAdvisoryKind | None,
+    blocking_only: bool,
+) -> EvidenceReviewRowPayload | None:
+    """Project one draft when it satisfies every supplied queue filter."""
+    blockers = confirmation_blockers(stored.draft)
+    reasons = sorted({blocker.reason.value for blocker in blockers})
+    # Read through the one projection the show surface's notices use; the queue
+    # must not independently classify a document it sends the operator to review.
+    advisories = review_advisory_kinds(stored.draft)
+    if reason is not None and reason.value not in reasons:
+        return None
+    if finding is not None and all(item.kind is not finding for item in stored.draft.discrepancies):
+        return None
+    if advisory is not None and advisory not in advisories:
+        return None
+    if blocking_only and not blockers:
+        return None
+    return EvidenceReviewRowPayload.model_validate(
+        {
+            "evidence_reference": stored.evidence_reference,
+            "extractor": stored.extractor,
+            "drafted_at": stored.drafted_at.isoformat(),
+            "blocking_count": len(blockers),
+            "reasons": reasons,
+            "advisory_count": len(advisories),
+            "advisories": [kind.value for kind in advisories],
+        },
+    )
 
 
 def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
