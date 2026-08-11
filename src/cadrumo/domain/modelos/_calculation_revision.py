@@ -172,26 +172,47 @@ class M303Exonerado390FilingEvidence(BaseModel):
 
     @model_validator(mode="after")
     def _applicability_matches_endpoint_population(self) -> M303Exonerado390FilingEvidence:
-        endpoint_ids = tuple(endpoint.casilla_id for endpoint in self.endpoints)
-        if len(set(endpoint_ids)) != len(endpoint_ids):
-            raise ModeloValidationError("M303 exonerado-390 evidence contains duplicate endpoint casillas")
-        row_slots = tuple(row.slot for row in self.activity_rows)
-        if row_slots != tuple(range(1, len(row_slots) + 1)):
-            raise ModeloValidationError("M303 exonerado-390 activity rows must use contiguous ordered slots 1-6")
+        _validate_m303_exonerado_endpoint_ids(self.endpoints)
+        _validate_m303_exonerado_activity_row_slots(self.activity_rows)
         if self.applicable:
-            if not self.endpoints:
-                raise ModeloValidationError("applicable M303 exonerado-390 evidence requires endpoint facts")
-            if not self.activity_rows:
-                raise ModeloValidationError("applicable M303 exonerado-390 evidence requires activity rows")
-            if self.operaciones_terceros_declarables is None or self.operaciones_terceros_reference is None:
-                raise ModeloValidationError("applicable M303 exonerado-390 evidence requires the Modelo 347 decision")
-        elif self.endpoints or self.activity_rows:
-            raise ModeloValidationError("non-applicable M303 exonerado-390 evidence must not carry annual facts")
-        elif self.operaciones_terceros_declarables is not None or self.operaciones_terceros_reference is not None:
-            raise ModeloValidationError(
-                "non-applicable M303 exonerado-390 evidence must not carry a Modelo 347 decision",
-            )
+            _validate_applicable_m303_exonerado_evidence(self)
+        else:
+            _validate_non_applicable_m303_exonerado_evidence(self)
         return self
+
+
+def _validate_m303_exonerado_endpoint_ids(
+    endpoints: tuple[M303Exonerado390EndpointEvidence, ...],
+) -> None:
+    endpoint_ids = tuple(endpoint.casilla_id for endpoint in endpoints)
+    if len(set(endpoint_ids)) != len(endpoint_ids):
+        raise ModeloValidationError("M303 exonerado-390 evidence contains duplicate endpoint casillas")
+
+
+def _validate_m303_exonerado_activity_row_slots(
+    activity_rows: tuple[M303Exonerado390ActivityRowEvidence, ...],
+) -> None:
+    row_slots = tuple(row.slot for row in activity_rows)
+    if row_slots != tuple(range(1, len(row_slots) + 1)):
+        raise ModeloValidationError("M303 exonerado-390 activity rows must use contiguous ordered slots 1-6")
+
+
+def _validate_applicable_m303_exonerado_evidence(evidence: M303Exonerado390FilingEvidence) -> None:
+    if not evidence.endpoints:
+        raise ModeloValidationError("applicable M303 exonerado-390 evidence requires endpoint facts")
+    if not evidence.activity_rows:
+        raise ModeloValidationError("applicable M303 exonerado-390 evidence requires activity rows")
+    if evidence.operaciones_terceros_declarables is None or evidence.operaciones_terceros_reference is None:
+        raise ModeloValidationError("applicable M303 exonerado-390 evidence requires the Modelo 347 decision")
+
+
+def _validate_non_applicable_m303_exonerado_evidence(evidence: M303Exonerado390FilingEvidence) -> None:
+    if evidence.endpoints or evidence.activity_rows:
+        raise ModeloValidationError("non-applicable M303 exonerado-390 evidence must not carry annual facts")
+    if evidence.operaciones_terceros_declarables is not None or evidence.operaciones_terceros_reference is not None:
+        raise ModeloValidationError(
+            "non-applicable M303 exonerado-390 evidence must not carry a Modelo 347 decision",
+        )
 
 
 class M303RegimenSimplificadoFilingEvidence(BaseModel):

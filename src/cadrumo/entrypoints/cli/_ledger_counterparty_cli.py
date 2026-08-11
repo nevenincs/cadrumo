@@ -254,11 +254,6 @@ def counterparty_confirm(
                     identifier=fact.canonical_tax_identifier,
                     answered=answered,
                     asserted_by=fact.asserted_by,
-                    default=(
-                        f"'{fact.canonical_tax_identifier}' was already confirmed by '{fact.asserted_by}' "
-                        f"as '{answered}'; this call created no new confirmation and the original "
-                        f"provenance stands."
-                    ),
                 ),
                 context=context,
             ),
@@ -331,10 +326,6 @@ def counterparty_withdraw(
                 message=tr(
                     "cli.ledger.counterparty.notices.nothing_to_withdraw",
                     identifier=tax_identifier,
-                    default=(
-                        f"Nothing was confirmed for '{tax_identifier}', so nothing was "
-                        f"withdrawn and the store is already in the state you asked for."
-                    ),
                 ),
                 context={"tax_identifier": tax_identifier},
             ),
@@ -435,12 +426,6 @@ def counterparty_show(
                     identifier=tax_identifier,
                     confirmed=contradiction.confirmed_scope.value,
                     evidenced=contradiction.evidenced_scope.value,
-                    default=(
-                        f"'{tax_identifier}' was confirmed as established in "
-                        f"{contradiction.confirmed_scope.value}, but the evidence you supplied places "
-                        f"the same party in {contradiction.evidenced_scope.value}. The ladder will "
-                        f"settle no territory for this counterparty until one of the two is withdrawn."
-                    ),
                 ),
                 context={
                     "tax_identifier": tax_identifier,
@@ -457,11 +442,6 @@ def counterparty_show(
                 message=tr(
                     "cli.ledger.counterparty.notices.not_confirmed",
                     identifier=tax_identifier,
-                    default=(
-                        f"No establishment is confirmed for '{tax_identifier}', so the ladder settles "
-                        f"nothing from this rung and a document whose paper is non-decisive will raise "
-                        f"the question."
-                    ),
                 ),
                 context={"tax_identifier": tax_identifier},
             ),

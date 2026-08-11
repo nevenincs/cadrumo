@@ -198,13 +198,6 @@ def _prorrata_especial_inert_notice(
     message = tr(
         "cli.ledger.add.input_classification_inert",
         ejercicio=ejercicio,
-        default=(
-            f"--input-classification is inert for ejercicio {ejercicio}: no prorrata especial "
-            f"election applies, so the input deducts under the general percentage. Classifying every "
-            f"input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial "
-            f"check on a general bucket. Run 'app ledger prorrata elect-especial --ejercicio {ejercicio}' "
-            f"to route it by LIVA art. 106."
-        ),
     )
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -248,11 +241,6 @@ def _prorrata_sector_unmatched_notice(
     message = tr(
         "cli.ledger.add.sector_unmatched",
         sector_id=sector_id,
-        default=(
-            f"--sector '{sector_id}' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), "
-            f"so this input deducts under the common-use percentage rather than the sector's own. Run "
-            f"'app ledger prorrata declare-sector --sector-id {sector_id} ...' to route it, or correct the tag."
-        ),
     )
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -456,10 +444,6 @@ def ledger_add(
         noop_message = tr(
             "cli.ledger.add.idempotent_noop",
             transaction_id=result.ref.transaction_id,
-            default=(
-                f"Idempotent no-op: a transaction with this idempotency key already exists "
-                f"({result.ref.transaction_id}); nothing was added."
-            ),
         )
         notices.append(
             Notice(

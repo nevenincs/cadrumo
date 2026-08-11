@@ -82,7 +82,6 @@ def ledger_classify_bulk_csv(
     if result.total > 0 and result.applied == 0 and result.failures:
         message = tr(
             "cli.ledger.classify.bulk_all_failed",
-            default="bulk classify failed: every row failed; no ledger rows were updated",
         )
         lines.insert(1, message)
         notices.append(

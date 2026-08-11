@@ -353,7 +353,7 @@ def ledger_pull_folder(
         resolve_active_profile,
         resolve_document_link,
     )
-    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...domain.attachments import (
         AttachmentBytesContent,
@@ -370,25 +370,7 @@ def ledger_pull_folder(
 
     profile = resolve_active_profile()
     credentials = build_google_credentials(profile=profile)
-    try:
-        listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
-    except OutboundStorageError as exc:
-        required_scope = ""
-        if exc.context is not None:
-            required_scope = str(exc.context.get("required_scope", ""))
-        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
-        raise _bad(
-            tr(
-                "cli.ledger.pull_folder.errors.folder_refused",
-                folder_id=folder_id,
-                scope_hint=scope_hint,
-                default=(
-                    f"Cannot list the Drive folder {folder_id!r}{scope_hint}: the folder must be "
-                    "reachable under the drive.file scope (created by the app or explicitly picked "
-                    "by the operator), or grant the required Google scope and retry."
-                ),
-            ),
-        ) from exc
+    listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
 
     store = AttachmentStore()
     rows: list[LedgerDocLinkPullFolderFilePayload] = []
@@ -396,30 +378,11 @@ def ledger_pull_folder(
     refused_count = 0
     for document in listing.documents:
         reference = f"https://drive.google.com/file/d/{document.file_id}/view"
-        try:
-            data = resolve_document_link(
-                source=AttachmentSource.GOOGLE_DRIVE,
-                reference=reference,
-                credentials=credentials,
-            )
-        except OutboundStorageError as exc:
-            required_scope = ""
-            if exc.context is not None:
-                required_scope = str(exc.context.get("required_scope", ""))
-            refused_count += 1
-            rows.append(
-                LedgerDocLinkPullFolderFilePayload(
-                    file_id=document.file_id,
-                    name=document.name,
-                    mime_type=document.mime_type,
-                    fetched=False,
-                    refusal_reason=(
-                        f"not reachable under the drive.file scope"
-                        f"{f' (requires {required_scope})' if required_scope else ''}: {exc}"
-                    ),
-                ),
-            )
-            continue
+        data = resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=reference,
+            credentials=credentials,
+        )
         attachment = add_attachment(
             store,
             content=AttachmentBytesContent(data=data),

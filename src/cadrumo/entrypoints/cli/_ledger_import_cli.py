@@ -185,7 +185,6 @@ def _refusal_lines_and_notices(
             "cli.ledger.import.file_refused",
             path=refused_path.name,
             reason=reason,
-            default=f"{refused_path.name} was not imported: {reason}",
         )
         lines.append(f"{tr('cli.ledger.labels.warning')}\t{refusal_line}")
         notices.append(

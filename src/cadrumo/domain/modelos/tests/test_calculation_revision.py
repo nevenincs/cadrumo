@@ -103,6 +103,31 @@ def test_m303_filing_evidence_requires_an_explicit_nullable_insolvency_fact() ->
     assert M303FilingInstanceEvidence.model_validate(payload) == evidence
 
 
+def test_m303_exonerado_390_evidence_preserves_shape_refusal_precedence() -> None:
+    """Endpoint identity refuses before rows or applicability completeness."""
+    reference = FilingEvidenceReference(reference="test:exonerado-390:precedence")
+    duplicate_endpoint = M303Exonerado390EndpointEvidence(
+        casilla_id=_casilla_id("79"),
+        value=Decimal("0"),
+        evidence_reference=reference,
+    )
+
+    with pytest.raises(ValidationError, match="duplicate endpoint casillas"):
+        M303Exonerado390FilingEvidence(
+            applicable=True,
+            applicability_reference=reference,
+            endpoints=(duplicate_endpoint, duplicate_endpoint),
+            activity_rows=(
+                M303Exonerado390ActivityRowEvidence(
+                    slot=2,
+                    codigo_actividad="A01",
+                    epigrafe_iae="4191",
+                    evidence_reference=reference,
+                ),
+            ),
+        )
+
+
 def _base_id() -> str:
     return derive_calculation_revision_id(
         work_unit_id="a" * 64,

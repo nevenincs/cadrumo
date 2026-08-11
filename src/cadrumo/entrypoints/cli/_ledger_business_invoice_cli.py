@@ -607,10 +607,6 @@ def invoice_wizard(
         noop_message = tr(
             "cli.app.ledger.invoice.wizard_idempotent_noop",
             invoice_id=wizard_result.invoice.invoice_id,
-            default=(
-                "Idempotent no-op: an invoice with this identity already exists "
-                f"({wizard_result.invoice.invoice_id}); nothing was created."
-            ),
         )
         notices.append(
             Notice(
@@ -727,7 +723,6 @@ def invoice_import(
         message = tr(
             "cli.app.ledger.invoice.import_unmapped_columns",
             columns=headers,
-            default=f"columns not imported because no invoice field matched them: {headers}",
         )
         lines.append(f"unmapped_columns\t{headers}")
         notices.append(
@@ -760,7 +755,6 @@ def invoice_import(
     if every_row_refused:
         message = tr(
             "cli.app.ledger.invoice.import_all_refused",
-            default="bulk invoice import failed: every row was refused; no invoices were created",
         )
         lines.insert(1, message)
         notices.append(

@@ -108,31 +108,60 @@ def _project_ref(
     non_agricultural: tuple[ActividadNoAgricolaSimplificado, ...],
     by_annual_id: dict[str, ActividadOrdenAnual],
 ) -> str | Decimal | None:
-    candidates: tuple[RegimenSimplificadoActivity, ...] = (
-        agricultural if ref.cohort is M303RegimenSimplificadoCohort.AGRICOLA else non_agricultural
-    )
-    row = candidates[ref.slot - 1] if ref.slot <= len(candidates) else None
+    row = _select_row(ref, agricultural=agricultural, non_agricultural=non_agricultural)
     if row is None:
         return None
     if isinstance(ref, M303RegimenSimplificadoActivityProjectionRef):
-        if ref.field is M303RegimenSimplificadoActivityField.ACTIVITY_CODE:
-            if not isinstance(row, ActividadAgricolaSimplificado):
-                raise RegistryValidationError("agricultural activity-code reference resolved a non-agricultural row")
-            return row.activity_code
-        if not isinstance(row, ActividadNoAgricolaSimplificado):
-            raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
-        return row.iae_epigrafe
+        return _project_activity_ref(ref, row)
     annual = by_annual_id[row.orden_id]
     if isinstance(ref, M303RegimenSimplificadoFactProjectionRef):
-        if ref.fact_identity not in annual.applicable_fact_identities:
-            return None
-        facts = {fact.identity: fact.value for fact in row.facts}
-        try:
-            return facts[ref.fact_identity]
-        except KeyError as exc:
-            raise RegistryValidationError(
-                f"activity {row.activity_id!r} is missing applicable DP30302 fact {ref.fact_identity!r}",
-            ) from exc
+        return _project_fact_ref(ref, row, annual)
+    return _project_module_ref(ref, row)
+
+
+def _select_row(
+    ref: _RegimenSimplificadoProjectionRef,
+    *,
+    agricultural: tuple[ActividadAgricolaSimplificado, ...],
+    non_agricultural: tuple[ActividadNoAgricolaSimplificado, ...],
+) -> RegimenSimplificadoActivity | None:
+    candidates = agricultural if ref.cohort is M303RegimenSimplificadoCohort.AGRICOLA else non_agricultural
+    return candidates[ref.slot - 1] if ref.slot <= len(candidates) else None
+
+
+def _project_activity_ref(
+    ref: M303RegimenSimplificadoActivityProjectionRef,
+    row: RegimenSimplificadoActivity,
+) -> str:
+    if ref.field is M303RegimenSimplificadoActivityField.ACTIVITY_CODE:
+        if not isinstance(row, ActividadAgricolaSimplificado):
+            raise RegistryValidationError("agricultural activity-code reference resolved a non-agricultural row")
+        return row.activity_code
+    if not isinstance(row, ActividadNoAgricolaSimplificado):
+        raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
+    return row.iae_epigrafe
+
+
+def _project_fact_ref(
+    ref: M303RegimenSimplificadoFactProjectionRef,
+    row: RegimenSimplificadoActivity,
+    annual: ActividadOrdenAnual,
+) -> str | Decimal | None:
+    if ref.fact_identity not in annual.applicable_fact_identities:
+        return None
+    facts = {fact.identity: fact.value for fact in row.facts}
+    try:
+        return facts[ref.fact_identity]
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"activity {row.activity_id!r} is missing applicable DP30302 fact {ref.fact_identity!r}",
+        ) from exc
+
+
+def _project_module_ref(
+    ref: M303RegimenSimplificadoModuleProjectionRef,
+    row: RegimenSimplificadoActivity,
+) -> Decimal | None:
     if not isinstance(row, ActividadNoAgricolaSimplificado):
         raise RegistryValidationError("annual-Orden module reference resolved an agricultural row")
     if ref.module_order > len(row.modulos):
