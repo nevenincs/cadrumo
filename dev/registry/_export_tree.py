@@ -623,6 +623,7 @@ def _schema_field(
                 "producer_key": semantic_entry.producer_key,
                 "draft_attribute": semantic_entry.draft_attribute,
                 "computed_key": semantic_entry.computed_key,
+                "projection_ref": semantic_entry.projection_ref,
                 "data_type": data_type,
                 "required": required,
                 "padding": padding,
