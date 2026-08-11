@@ -50,10 +50,7 @@ from ._ledger_business_payloads import (
 
 review_app = typer.Typer(
     name="review",
-    help=tr(
-        "cli.app.ledger.evidence.review.group_help",
-        default="Review pending extraction drafts before confirming them into invoices.",
-    ),
+    help=tr("cli.app.ledger.evidence.review.group_help"),
     no_args_is_help=True,
 )
 
@@ -232,24 +229,8 @@ def _country_notice_message(status: StatedCountryCodeStatus) -> str:
     is then reported as an orphan and swept out from under the notice.
     """
     if status is StatedCountryCodeStatus.UNASSIGNED:
-        return tr(
-            "cli.app.ledger.evidence.review.country_code_unassigned_message",
-            default=(
-                "A party's country code is one ISO 3166-1 reserves so that no country is ever "
-                "allocated to it, so the document states a string rather than a country and nothing "
-                "places that party. Correct the code against the document. This draft can still be "
-                "confirmed; the party simply stays unestablished until it is."
-            ),
-        )
-    return tr(
-        "cli.app.ledger.evidence.review.country_code_uncatalogued_message",
-        default=(
-            "A party's country code may name a real country this system's bundled vocabulary "
-            "does not yet carry, so nothing can be said about where that party is established. "
-            "Re-reading the document will not settle it: the country has to be added. This "
-            "draft can still be confirmed; the party simply stays unestablished until it is."
-        ),
-    )
+        return tr("cli.app.ledger.evidence.review.country_code_unassigned_message")
+    return tr("cli.app.ledger.evidence.review.country_code_uncatalogued_message")
 
 
 def _country_vocabulary_notices(advisory: CountryVocabularyAdvisory) -> list[Notice]:
@@ -393,47 +374,29 @@ def _review_queue_notices(rows: list[EvidenceReviewRowPayload]) -> list[Notice]:
 def _register_review_list_command() -> None:
     @review_app.command(
         "list",
-        help=tr(
-            "cli.app.ledger.evidence.review.list_help",
-            default="List pending extraction drafts awaiting human review.",
-        ),
+        help=tr("cli.app.ledger.evidence.review.list_help"),
     )
     def review_list(
         ctx: typer.Context,
         reason: ConfirmationBlockReason | None = typer.Option(
             None,
             "--reason",
-            help=tr(
-                "cli.app.ledger.evidence.review.reason_help",
-                default="Show only drafts blocked for this reason.",
-            ),
+            help=tr("cli.app.ledger.evidence.review.reason_help"),
         ),
         finding: DraftDiscrepancyKind | None = typer.Option(
             None,
             "--finding",
-            help=tr(
-                "cli.app.ledger.evidence.review.finding_help",
-                default="Show only drafts whose document failed this deterministic check.",
-            ),
+            help=tr("cli.app.ledger.evidence.review.finding_help"),
         ),
         advisory: ReviewAdvisoryKind | None = typer.Option(
             None,
             "--advisory",
-            help=tr(
-                "cli.app.ledger.evidence.review.advisory_help",
-                default=(
-                    "Show only drafts carrying this non-blocking advisory. These stop nothing, so "
-                    "they are otherwise met only by opening each document."
-                ),
-            ),
+            help=tr("cli.app.ledger.evidence.review.advisory_help"),
         ),
         blocking_only: bool = typer.Option(
             False,
             "--blocking",
-            help=tr(
-                "cli.app.ledger.evidence.review.blocking_help",
-                default="Show only drafts that cannot be confirmed until a finding is answered.",
-            ),
+            help=tr("cli.app.ledger.evidence.review.blocking_help"),
         ),
     ) -> None:
         """List the review queue, optionally narrowed to one blocking reason, check or advisory."""
@@ -483,11 +446,7 @@ def _stored_draft_for_reference(document: ExtractionDraftDocument, reference: st
             return row
     known = ", ".join(sorted(row.evidence_reference for row in document.drafts)) or "none"
     raise _bad(
-        tr(
-            "cli.app.ledger.evidence.review.unknown_reference",
-            default="No pending draft for that reference.",
-        )
-        + f" ({known})",
+        tr("cli.app.ledger.evidence.review.unknown_reference") + f" ({known})",
     )
 
 
@@ -515,19 +474,13 @@ def _review_show_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
 def _register_review_show_command() -> None:
     @review_app.command(
         "show",
-        help=tr(
-            "cli.app.ledger.evidence.review.show_help",
-            default="Show one pending draft field by field, with its findings and blockers.",
-        ),
+        help=tr("cli.app.ledger.evidence.review.show_help"),
     )
     def review_show(
         ctx: typer.Context,
         reference: str = typer.Argument(
             ...,
-            help=tr(
-                "cli.app.ledger.evidence.review.reference_help",
-                default="Evidence or attachment reference the pending draft was read from.",
-            ),
+            help=tr("cli.app.ledger.evidence.review.reference_help"),
         ),
     ) -> None:
         """Show every reviewable field of one pending draft, with its blocking findings."""
@@ -622,24 +575,14 @@ def parse_finding_resolution(raw: str) -> FindingResolution:
     blocker_id, separator, remainder = raw.partition("=")
     if not separator:
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.review.resolve_shape",
-                default=(
-                    "Each --resolve is <finding-id>=<choose|supply|attest>:<value-or-reason>. "
-                    "A choose names the reading by its value or by the digest review showed."
-                ),
-            ),
+            tr("cli.app.ledger.evidence.review.resolve_shape"),
         )
     action_token, _, payload = remainder.partition(":")
     action = _RESOLUTION_ACTION_TOKENS.get(action_token.strip().casefold())
     if action is None:
         accepted = ", ".join(sorted(_RESOLUTION_ACTION_TOKENS))
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.review.resolve_action",
-                default="Unknown resolution action.",
-            )
-            + f" ({accepted})",
+            tr("cli.app.ledger.evidence.review.resolve_action") + f" ({accepted})",
         )
     if action is FindingResolutionAction.ATTEST:
         return FindingResolution(blocker_id=blocker_id.strip(), action=action, note=payload.strip())

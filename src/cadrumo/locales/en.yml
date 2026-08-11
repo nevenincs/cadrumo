@@ -740,42 +740,6 @@ application:
       errors:
         build_failed: 'invoice wizard refused: %{detail}'
         field_errors: 'invoice wizard refused %{field_count} field(s): %{detail}'
-  iva_wallet:
-    decision_reason:
-      aeat_wallet_uncrosschecked: The latest valid AEAT wallet observation is selected;
-        no local recurrence was available for cross-checking.
-      aeat_wallet_validated: The latest valid AEAT wallet observation matches the
-        local recurrence for Modelo 303 prior compensation.
-      caller_zero_matches_local_authority: The caller-provided zero matches the persisted
-        local zero authority.
-      filed_history_requires_override: AEAT wallet evidence is unavailable; filed-history
-        recurrence requires an explicit taxpayer override before automatic output.
-      filed_history_zero: Committed Modelo 303 filing-history evidence establishes
-        zero carry-forward compensation.
-      first_period_zero_activity_start_uncontrasted: 'UNCONTRASTED: The first-period
-        zero rests on the operator-declared activity-start date; Cadrumo cannot verify
-        that date against current AEAT censo evidence.'
-      first_period_zero_aeat_wallet: The AEAT wallet confirms zero prior compensation
-        for the first registered IVA period.
-      first_period_zero_local_recurrence: A seeded local zero establishes no prior
-        compensation for the first registered IVA period.
-      local_evidence_unreadable: A prior Modelo 303 record exists but cannot be read
-        as prior-compensation evidence, and no AEAT wallet observation is available.
-      local_recurrence_requires_override: The AEAT wallet is unavailable; local recurrence
-        requires an explicit taxpayer override before automatic output.
-      local_recurrence_zero: Local Modelo 303 recurrence establishes zero carry-forward
-        compensation.
-      no_usable_authority: No AEAT wallet observation or usable local recurrence is
-        available for Modelo 303 prior compensation.
-      stale_wallet_local_recurrence_requires_override: The AEAT wallet observation
-        is stale; local recurrence requires an explicit taxpayer override before automatic
-        output.
-      stale_wallet_no_local_recurrence: The AEAT wallet observation is stale and no
-        local recurrence fallback is available.
-      taxpayer_override: Taxpayer override selected; the separately recorded operator
-        explanation states its evidence basis.
-      wallet_local_recurrence_divergence: The AEAT wallet and local recurrence differ;
-        review is required before automatic output.
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -66231,6 +66195,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -66872,6 +66848,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -67517,6 +67505,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -68158,6 +68158,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -68889,6 +68901,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:

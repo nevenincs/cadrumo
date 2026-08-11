@@ -306,13 +306,7 @@ def ledger_add(
     prorrata_sector: str | None = typer.Option(
         None,
         "--sector",
-        help=tr(
-            "cli.ledger.add.prorrata_sector_help",
-            default=(
-                "Differentiated-sector id (LIVA arts. 9.1.c / 101) this input belongs to; "
-                "must match a sector declared via 'app ledger prorrata declare-sector'."
-            ),
-        ),
+        help=tr("cli.ledger.add.prorrata_sector_help"),
     ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
@@ -347,15 +341,7 @@ def ledger_add(
         # row is BUSINESS, PERSONAL, MIXED, or left at the NOT_YET_PROCESSED
         # default; refuse the internal states instructively.
         raise _bad(
-            tr(
-                "cli.ledger.add.system_state_not_assignable",
-                value=business_classification.value,
-                default=(
-                    f"Classification '{business_classification.value}' is set automatically by cadrumo "
-                    "and cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED, or "
-                    "omit --classification to leave the row unclassified."
-                ),
-            ),
+            tr("cli.ledger.add.system_state_not_assignable", value=business_classification.value),
         )
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
@@ -557,14 +543,7 @@ _FileOpt = Annotated[
     str | None,
     typer.Option(
         "--file",
-        help=tr(
-            "cli.ledger.classify.file_help",
-            default=(
-                "Path to a CSV file with columns transaction_id, classification"
-                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category, "
-                "irpf_category]."
-            ),
-        ),
+        help=tr("cli.ledger.classify.file_help"),
     ),
 ]
 
@@ -846,32 +825,23 @@ register_lifecycle_commands(app)
 
 @app.command(
     "link",
-    help=tr(
-        "cli.ledger.link.help",
-        default=(
-            "Bind a ledger transaction to a reconciliation-catalogue invoice in one "
-            "atomic call. Refuses cross-bucket links. Local-only; never contacts AEAT."
-        ),
-    ),
+    help=tr("cli.ledger.link.help"),
 )
 def ledger_link(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
         ...,
-        help=tr("cli.ledger.link.id_help", default="Ledger transaction id (SHA-256 or unambiguous prefix)."),
+        help=tr("cli.ledger.link.id_help"),
     ),
     invoice_id: str = typer.Option(
         ...,
         "--invoice-id",
-        help=tr(
-            "cli.ledger.link.invoice_id_help",
-            default="Invoice id to bind bidirectionally to the transaction.",
-        ),
+        help=tr("cli.ledger.link.invoice_id_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--by",
-        help=tr("cli.ledger.link.actor_help", default="Operator label recorded on bucket events."),
+        help=tr("cli.ledger.link.actor_help"),
     ),
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
@@ -893,17 +863,11 @@ def ledger_link(
     invoice_record = invoice_repo.load().invoices.get(invoice_id)
     if invoice_record is None:
         raise _bad(
-            tr(
-                "cli.ledger.link.errors.invoice_not_found",
-                default="Invoice id not found in the active profile invoice catalogue.",
-            ),
+            tr("cli.ledger.link.errors.invoice_not_found"),
         )
     if invoice_record.bucket_id not in (None, bucket_id):
         raise _bad(
-            tr(
-                "cli.ledger.link.errors.cross_bucket_invoice",
-                default="Invoice belongs to a different bucket than the active profile.",
-            ),
+            tr("cli.ledger.link.errors.cross_bucket_invoice"),
         )
     try:
         link_manual_transaction_invoice(

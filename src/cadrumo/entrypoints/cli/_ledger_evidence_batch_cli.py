@@ -64,38 +64,23 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
 
     @evidence_app.command(
         "batch",
-        help=tr(
-            "cli.app.ledger.evidence.batch_help",
-            default=(
-                "Ingest every document in a directory (or each --file) into evidence and a reviewable "
-                "draft, one typed result row per document."
-            ),
-        ),
+        help=tr("cli.app.ledger.evidence.batch_help"),
     )
     def evidence_batch(
         ctx: typer.Context,
         directory: str | None = typer.Argument(
             None,
-            help=tr(
-                "cli.app.ledger.evidence.batch_directory_help",
-                default="Directory whose files are ingested. Combine with or replace by repeated --file.",
-            ),
+            help=tr("cli.app.ledger.evidence.batch_directory_help"),
         ),
         kind: InvoiceKind = typer.Option(
             ...,
             "--kind",
-            help=tr(
-                "cli.app.ledger.invoice.kind_help",
-                default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-            ),
+            help=tr("cli.app.ledger.invoice.kind_help"),
         ),
         file: list[str] = typer.Option(
             [],
             "--file",
-            help=tr(
-                "cli.app.ledger.evidence.batch_file_help",
-                default="One document to ingest. Repeat once per document; combines with a directory.",
-            ),
+            help=tr("cli.app.ledger.evidence.batch_file_help"),
         ),
     ) -> None:
         """Run the ingestion pipeline over every source, one typed row per document.
@@ -115,10 +100,7 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
             sources.insert(0, directory)
         if not sources:
             raise _bad(
-                tr(
-                    "cli.app.ledger.evidence.batch_source_required",
-                    default="Supply a directory argument, one or more --file options, or both.",
-                ),
+                tr("cli.app.ledger.evidence.batch_source_required"),
             )
 
         from ...application.ledger import run_evidence_batch

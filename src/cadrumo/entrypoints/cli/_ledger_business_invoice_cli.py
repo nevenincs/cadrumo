@@ -89,10 +89,7 @@ def _catalogue_iva_category_for_operation_type(
 
 invoice_app = typer.Typer(
     name="invoice",
-    help=tr(
-        "cli.app.ledger.invoice.group_help",
-        default="Business invoice records (issued or received).",
-    ),
+    help=tr("cli.app.ledger.invoice.group_help"),
     no_args_is_help=True,
 )
 
@@ -267,10 +264,7 @@ _CatalogueKindOpt = Annotated[
     InvoiceKind,
     typer.Option(
         "--kind",
-        help=tr(
-            "cli.app.ledger.invoice.kind_help",
-            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-        ),
+        help=tr("cli.app.ledger.invoice.kind_help"),
     ),
 ]
 #: The destinatario's NIF. Optional because RD 1619/2012 art. 7 does not require
@@ -292,7 +286,7 @@ _CatalogueInvoiceDateOpt = Annotated[
     str,
     typer.Option(
         "--invoice-date",
-        help=tr("cli.app.ledger.invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
+        help=tr("cli.app.ledger.invoice.invoice_date_help"),
     ),
 ]
 _CatalogueTaxableBaseOpt = Annotated[str, typer.Option("--taxable-base")]
@@ -302,27 +296,14 @@ _CatalogueCountryCodeOpt = Annotated[
     str,
     typer.Option(
         "--country-code",
-        help=tr(
-            "cli.app.ledger.invoice.country_code_help",
-            default=(
-                "Counterparty ISO 3166-1 alpha-2 country code. Required:"
-                " it routes both informativas, so it is never assumed."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.country_code_help"),
     ),
 ]
 _CatalogueOperationDateOpt = Annotated[
     str | None,
     typer.Option(
         "--operation-date",
-        help=tr(
-            "cli.app.ledger.invoice.operation_date_help",
-            default=(
-                "Date the entrega or prestacion took place (YYYY-MM-DD). This is the"
-                " LIVA art. 75 devengo date that decides which period declares the"
-                " cuota; without it the invoice date stands in for it."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.operation_date_help"),
     ),
 ]
 _CatalogueOperationTypeOpt = Annotated[
@@ -330,14 +311,7 @@ _CatalogueOperationTypeOpt = Annotated[
     typer.Option(
         "--operation-type",
         click_type=case_insensitive_choice(IntracomOperationType),
-        help=tr(
-            "cli.app.ledger.invoice.operation_type_help",
-            default=(
-                "M349 operation type: E entrega, S servicios, T triangular,"
-                " R rectificación, A adquisición bienes, I adquisición servicios,"
-                " M miscelánea."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.operation_type_help"),
     ),
 ]
 _CatalogueNotesOpt = Annotated[str, typer.Option("--notes")]
@@ -345,13 +319,7 @@ _CatalogueInvoiceClassOpt = Annotated[
     InvoiceClass | None,
     typer.Option(
         "--invoice-class",
-        help=tr(
-            "cli.app.ledger.invoice.invoice_class_help",
-            default=(
-                "Invoice class. A rectificativa also requires"
-                " --rectifies-invoice-number naming the invoice it corrects."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.invoice_class_help"),
     ),
 ]
 
@@ -359,10 +327,7 @@ _CatalogueSeriesOpt = Annotated[
     str | None,
     typer.Option(
         "--series",
-        help=tr(
-            "cli.app.ledger.invoice.series_help",
-            default="Invoice numbering series, when the issuer uses one.",
-        ),
+        help=tr("cli.app.ledger.invoice.series_help"),
     ),
 ]
 
@@ -370,10 +335,7 @@ _CatalogueRectifiesOpt = Annotated[
     str | None,
     typer.Option(
         "--rectifies-invoice-number",
-        help=tr(
-            "cli.app.ledger.invoice.rectifies_help",
-            default="Number of the invoice this rectificativa corrects.",
-        ),
+        help=tr("cli.app.ledger.invoice.rectifies_help"),
     ),
 ]
 
@@ -381,13 +343,7 @@ _CatalogueRecargoOpt = Annotated[
     str | None,
     typer.Option(
         "--recargo",
-        help=tr(
-            "cli.app.ledger.invoice.recargo_help",
-            default=(
-                "Recargo de equivalencia charged on top of the cuota (LIVA art. 161)."
-                " It rides inside the invoice total, unlike a retención."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.recargo_help"),
     ),
 ]
 
@@ -395,10 +351,7 @@ _CatalogueIvaCategoryOpt = Annotated[
     IvaCategory | None,
     typer.Option(
         "--iva-category",
-        help=tr(
-            "cli.app.ledger.invoice.iva_category_help",
-            default="IVA treatment of the operation. Required for a renta income calculation to ground it.",
-        ),
+        help=tr("cli.app.ledger.invoice.iva_category_help"),
     ),
 ]
 
@@ -406,37 +359,21 @@ _CatalogueRetentionRateOpt = Annotated[
     str | None,
     typer.Option(
         "--retention-rate",
-        help=tr(
-            "cli.app.ledger.invoice.retention_rate_help",
-            default=(
-                "RIRPF art. 95.1 retención fraction withheld by the payer"
-                " (0.15 for the general 15%, or 0.07 during the inicio-de-actividad"
-                " window). Requires --retention-amount; a rate alone is refused."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.retention_rate_help"),
     ),
 ]
 _CatalogueRetentionAmountOpt = Annotated[
     str | None,
     typer.Option(
         "--retention-amount",
-        help=tr(
-            "cli.app.ledger.invoice.retention_amount_help",
-            default=(
-                "Amount of IRPF retención withheld by the payer, in euros."
-                " May be supplied alone, or alongside --retention-rate."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.retention_amount_help"),
     ),
 ]
 
 
 @invoice_app.command(
     "add",
-    help=tr(
-        "cli.app.ledger.invoice.add_help",
-        default="Create a linkable reconciliation invoice in the catalogue.",
-    ),
+    help=tr("cli.app.ledger.invoice.add_help"),
 )
 def invoice_add(
     ctx: typer.Context,
@@ -527,10 +464,7 @@ def invoice_add(
 
 @invoice_app.command(
     "wizard",
-    help=tr(
-        "cli.app.ledger.invoice.wizard_help",
-        default="Guided, non-interactive manual entry when extraction is unavailable.",
-    ),
+    help=tr("cli.app.ledger.invoice.wizard_help"),
 )
 def invoice_wizard(
     ctx: typer.Context,
@@ -629,44 +563,24 @@ def invoice_wizard(
 
 @invoice_app.command(
     "import",
-    help=tr(
-        "cli.app.ledger.invoice.import_help",
-        default="Bulk-create catalogue invoices from a CSV or XLSX file.",
-    ),
+    help=tr("cli.app.ledger.invoice.import_help"),
 )
 def invoice_import(
     ctx: typer.Context,
     file: Path = typer.Option(
         ...,
         "--file",
-        help=tr(
-            "cli.app.ledger.invoice.import_file_help",
-            default=(
-                "Path to a CSV or XLSX file of invoice rows (counterparty_nif, "
-                "counterparty_name, invoice_number, invoice_date, taxable_base, "
-                "and optional iva_rate/currency/country_code/notes)."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.import_file_help"),
     ),
     kind: InvoiceKind = typer.Option(
         ...,
         "--kind",
-        help=tr(
-            "cli.app.ledger.invoice.kind_help",
-            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-        ),
+        help=tr("cli.app.ledger.invoice.kind_help"),
     ),
     country: str | None = typer.Option(
         None,
         "--country",
-        help=tr(
-            "cli.app.ledger.invoice.import_country_help",
-            default=(
-                "Counterparty country (ISO 3166-1 alpha-2) for the whole import. "
-                "Required only when the file carries no country_code column; "
-                "ignored when it does, because those rows state their own."
-            ),
-        ),
+        help=tr("cli.app.ledger.invoice.import_country_help"),
     ),
 ) -> None:
     """Bulk-create reconciliation catalogue invoices from a CSV/XLSX file.
@@ -686,11 +600,7 @@ def invoice_import(
     bucket_id = _business_invoice_bucket_id()
     if not file.exists():
         raise _bad(
-            tr(
-                "cli.app.ledger.invoice.import_file_not_found",
-                path=str(file),
-                default=f"File not found: {file}",
-            ),
+            tr("cli.app.ledger.invoice.import_file_not_found", path=str(file)),
         )
     try:
         mapper, mapping_reasons = _invoice_column_role_mapper()
@@ -837,20 +747,14 @@ def _invoice_column_role_mapper() -> tuple[Callable[[Sequence[str]], Sequence[Fi
 
 @invoice_app.command(
     "list",
-    help=tr(
-        "cli.app.ledger.invoice.list_help",
-        default="List reconciliation catalogue invoices.",
-    ),
+    help=tr("cli.app.ledger.invoice.list_help"),
 )
 def invoice_list(
     ctx: typer.Context,
     kind: InvoiceKind | None = typer.Option(
         None,
         "--kind",
-        help=tr(
-            "cli.app.ledger.invoice.kind_help",
-            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-        ),
+        help=tr("cli.app.ledger.invoice.kind_help"),
     ),
 ) -> None:
     """List the rich reconciliation catalogue invoices for the active bucket."""
@@ -882,19 +786,13 @@ def invoice_list(
 
 @invoice_app.command(
     "view",
-    help=tr(
-        "cli.app.ledger.invoice.view_help",
-        default="Show one reconciliation catalogue invoice by id or unambiguous prefix.",
-    ),
+    help=tr("cli.app.ledger.invoice.view_help"),
 )
 def invoice_view(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
         ...,
-        help=tr(
-            "cli.app.ledger.invoice.invoice_id_help",
-            default="Catalogue invoice id (or unambiguous prefix).",
-        ),
+        help=tr("cli.app.ledger.invoice.invoice_id_help"),
     ),
 ) -> None:
     """Show one rich catalogue invoice, resolving a full id or unambiguous prefix.
@@ -917,24 +815,18 @@ def invoice_view(
 
 @invoice_app.command(
     "remove",
-    help=tr(
-        "cli.app.ledger.invoice.remove_help",
-        default="Delete one reconciliation catalogue invoice.",
-    ),
+    help=tr("cli.app.ledger.invoice.remove_help"),
 )
 def invoice_remove(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
         ...,
-        help=tr(
-            "cli.app.ledger.invoice.invoice_id_help",
-            default="Catalogue invoice id (or unambiguous prefix).",
-        ),
+        help=tr("cli.app.ledger.invoice.invoice_id_help"),
     ),
     yes: bool = typer.Option(
         False,
         "--yes",
-        help=tr("cli.app.ledger.invoice.yes_help", default="Confirm removal."),
+        help=tr("cli.app.ledger.invoice.yes_help"),
     ),
 ) -> None:
     """Delete one rich catalogue invoice, resolving a full id or unambiguous prefix.
@@ -946,10 +838,7 @@ def invoice_remove(
     """
     if not yes:
         raise _bad(
-            tr(
-                "cli.app.ledger.invoice.yes_required",
-                default="--yes is required to remove an invoice record",
-            ),
+            tr("cli.app.ledger.invoice.yes_required"),
         )
     bucket_id = _business_invoice_bucket_id()
     result = remove_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id)
@@ -963,16 +852,13 @@ def invoice_remove(
 
 @invoice_app.command(
     "update",
-    help=tr(
-        "cli.app.ledger.invoice.update_help",
-        default="Correct fields on one invoice record.",
-    ),
+    help=tr("cli.app.ledger.invoice.update_help"),
 )
 def invoice_update(
     ctx: typer.Context,
     invoice_id: str = typer.Argument(
         ...,
-        help=tr("cli.app.ledger.invoice.invoice_id_help", default="Invoice id (or unambiguous prefix)."),
+        help=tr("cli.app.ledger.invoice.invoice_id_help"),
     ),
     counterparty_name: _CatalogueCounterpartyNameOpt | None = None,
     counterparty_country: _CatalogueCountryCodeOpt | None = None,

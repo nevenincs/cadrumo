@@ -821,45 +821,6 @@ application:
         build_failed: 'l''assistent de factures ha rebutjat: %{detail}'
         field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s):
           %{detail}'
-  iva_wallet:
-    decision_reason:
-      aeat_wallet_uncrosschecked: S'ha seleccionat l'última observació vàlida de la
-        cartera de l'AEAT; no hi havia recurrència local disponible per contrastar-la.
-      aeat_wallet_validated: L'última observació vàlida de la cartera de l'AEAT coincideix
-        amb la recurrència local per a la compensació anterior del Model 303.
-      caller_zero_matches_local_authority: El zero proporcionat pel cridador coincideix
-        amb l'autoritat local de zero persistent.
-      filed_history_requires_override: No hi ha prova de la cartera de l'AEAT; la
-        recurrència de l'historial presentat requereix una anul·lació expressa del
-        contribuent abans de generar el resultat automàtic.
-      filed_history_zero: La prova registrada de l'historial presentat del Model 303
-        estableix una compensació a traslladar de zero.
-      first_period_zero_activity_start_uncontrasted: 'NO CONTRASTAT: El zero del primer
-        període es basa en la data d''inici d''activitat declarada per l''operador;
-        Cadrumo no pot verificar aquesta data amb la informació censal actual de l''AEAT.'
-      first_period_zero_aeat_wallet: La cartera de l'AEAT confirma que la compensació
-        anterior és zero en el primer període d'IVA registrat.
-      first_period_zero_local_recurrence: Un zero local inicial estableix que no hi
-        ha compensació anterior en el primer període d'IVA registrat.
-      local_evidence_unreadable: Hi ha un registre anterior del Model 303, però no
-        es pot llegir com a prova de compensació anterior i no hi ha cap observació
-        disponible de la cartera de l'AEAT.
-      local_recurrence_requires_override: La cartera de l'AEAT no està disponible;
-        la recurrència local requereix una anul·lació expressa del contribuent abans
-        de generar el resultat automàtic.
-      local_recurrence_zero: La recurrència local del Model 303 estableix una compensació
-        a traslladar de zero.
-      no_usable_authority: No hi ha cap observació de la cartera de l'AEAT ni recurrència
-        local utilitzable per a la compensació anterior del Model 303.
-      stale_wallet_local_recurrence_requires_override: L'observació de la cartera
-        de l'AEAT està desactualitzada; la recurrència local requereix una anul·lació
-        expressa del contribuent abans de generar el resultat automàtic.
-      stale_wallet_no_local_recurrence: L'observació de la cartera de l'AEAT està
-        desactualitzada i no hi ha cap recurrència local alternativa disponible.
-      taxpayer_override: S'ha seleccionat l'anul·lació expressa del contribuent; l'explicació
-        de l'operador registrada per separat n'indica el fonament probatori.
-      wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
-        difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -66652,6 +66613,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -67293,6 +67266,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -67938,6 +67923,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -68579,6 +68576,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -69325,6 +69334,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:

@@ -55,15 +55,7 @@ def ledger_filter_parse_error_message(exc: FilterParseError, *, year: int | None
         return tr("cli.common.errors.period_unrecognised", raw=_filter_period_value(exc))
     if exc.reason == "ledger-period-year-pairing":
         example_year = year if year is not None else 2025
-        return tr(
-            "cli.ledger.errors.period_year_pairing",
-            year=example_year,
-            default=(
-                "Ledger period filters require period and year together. "
-                "For a full year use --period 0A --year 2025, or "
-                "--filter period=0A --filter year=2025."
-            ),
-        )
+        return tr("cli.ledger.errors.period_year_pairing", year=example_year)
     return tr("cli.ledger.errors.filter_parse_error", reason=exc.reason, token=exc.safe_token)
 
 
@@ -377,10 +369,7 @@ def _ledger_list_rows_and_lines(
 
 
 def _ledger_list_column_header() -> str:
-    base_header = tr(
-        "cli.ledger.list.column_header",
-        default="id\tfull_id\tdate\tamount\tdescription\treview_status",
-    )
+    base_header = tr("cli.ledger.list.column_header")
     iva_category_label = tr("cli.ledger.labels.iva_category")
     columns = base_header.split("\t")
     if len(columns) >= 2:

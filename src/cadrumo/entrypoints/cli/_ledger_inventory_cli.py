@@ -45,31 +45,25 @@ def _inventory_service() -> InventoryService:
 
 inventory_app = typer.Typer(
     name="inventory",
-    help=tr(
-        "cli.app.ledger.inventory.group_help",
-        default="Per-actividad inventory ledgers (stock, movements, valuation).",
-    ),
+    help=tr("cli.app.ledger.inventory.group_help"),
     no_args_is_help=True,
 )
 
 inventory_movement_app = typer.Typer(
     name="movement",
-    help=tr("cli.app.ledger.inventory.movement_group_help", default="Inventory movement subcommands."),
+    help=tr("cli.app.ledger.inventory.movement_group_help"),
     no_args_is_help=True,
 )
 inventory_valuation_app = typer.Typer(
     name="valuation",
-    help=tr("cli.app.ledger.inventory.valuation_group_help", default="Inventory valuation subcommands."),
+    help=tr("cli.app.ledger.inventory.valuation_group_help"),
     no_args_is_help=True,
 )
 
 
 @inventory_app.command(
     "list",
-    help=tr(
-        "cli.app.ledger.inventory.list_help",
-        default="List every per-actividad inventory ledger on the active profile.",
-    ),
+    help=tr("cli.app.ledger.inventory.list_help"),
 )
 def inventory_list(ctx: typer.Context) -> None:
     """List per-actividad ledgers via :meth:`InventoryService.list_all`."""
@@ -96,27 +90,24 @@ def inventory_list(ctx: typer.Context) -> None:
 
 @inventory_app.command(
     "create",
-    help=tr(
-        "cli.app.ledger.inventory.create_help",
-        default="Create a fresh inventory ledger for one actividad and year.",
-    ),
+    help=tr("cli.app.ledger.inventory.create_help"),
 )
 def inventory_create(
     ctx: typer.Context,
     actividad_id: str = typer.Argument(
         ...,
-        help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier."),
+        help=tr("cli.app.ledger.inventory.actividad_id_help"),
     ),
-    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help")),
     valuation_method: str = typer.Option(
         ...,
         "--valuation-method",
-        help=tr("cli.app.ledger.inventory.valuation_method_help", default="Valuation method (fifo or pmp)."),
+        help=tr("cli.app.ledger.inventory.valuation_method_help"),
     ),
     opening_stock: str = typer.Option(
         "0",
         "--opening-stock",
-        help=tr("cli.app.ledger.inventory.opening_stock_help", default="Opening stock value."),
+        help=tr("cli.app.ledger.inventory.opening_stock_help"),
     ),
 ) -> None:
     """Create a ledger via :meth:`InventoryService.create`."""
@@ -148,56 +139,50 @@ def inventory_create(
 
 @inventory_movement_app.command(
     "add",
-    help=tr(
-        "cli.app.ledger.inventory.movement_add_help",
-        default="Append one movement (purchase/sale/adjustment) to an actividad ledger.",
-    ),
+    help=tr("cli.app.ledger.inventory.movement_add_help"),
 )
 def inventory_movement_add(
     ctx: typer.Context,
     actividad_id: str = typer.Option(
         ...,
         "--actividad-id",
-        help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier."),
+        help=tr("cli.app.ledger.inventory.actividad_id_help"),
     ),
-    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help")),
     movement_id: str = typer.Option(
         ...,
         "--movement-id",
-        help=tr("cli.app.ledger.inventory.movement_id_help", default="Movement identifier (unique per ledger)."),
+        help=tr("cli.app.ledger.inventory.movement_id_help"),
     ),
     movement_date: str = typer.Option(
         ...,
         "--date",
-        help=tr("cli.app.ledger.inventory.movement_date_help", default="Movement date (YYYY-MM-DD)."),
+        help=tr("cli.app.ledger.inventory.movement_date_help"),
     ),
     kind: MovementKind = typer.Option(
         ...,
         "--kind",
-        help=tr(
-            "cli.app.ledger.inventory.movement_kind_help",
-            default="Movement kind (purchase, sale, adjustment, ...)",
-        ),
+        help=tr("cli.app.ledger.inventory.movement_kind_help"),
     ),
     quantity: str = typer.Option(
         ...,
         "--quantity",
-        help=tr("cli.app.ledger.inventory.quantity_help", default="Movement quantity (positive or negative)."),
+        help=tr("cli.app.ledger.inventory.quantity_help"),
     ),
     unit_cost: str | None = typer.Option(
         None,
         "--unit-cost",
-        help=tr("cli.app.ledger.inventory.unit_cost_help", default="Unit cost (purchase movements)."),
+        help=tr("cli.app.ledger.inventory.unit_cost_help"),
     ),
     taxable_base: str | None = typer.Option(
         None,
         "--taxable-base",
-        help=tr("cli.app.ledger.inventory.taxable_base_help", default="Taxable base (for IVA)."),
+        help=tr("cli.app.ledger.inventory.taxable_base_help"),
     ),
     iva_rate: str = typer.Option(
         str(DEFAULT_IVA_GENERAL_RATE_PCT),
         "--iva-rate",
-        help=tr("cli.app.ledger.inventory.iva_rate_help", default="IVA rate in percent."),
+        help=tr("cli.app.ledger.inventory.iva_rate_help"),
     ),
 ) -> None:
     """Append an :class:`InventoryMovementCommand` to an actividad ledger."""
@@ -236,19 +221,16 @@ def inventory_movement_add(
 
 @inventory_valuation_app.command(
     "preview",
-    help=tr(
-        "cli.app.ledger.inventory.valuation_preview_help",
-        default="Preview closing stock and COGS for one actividad/year ledger.",
-    ),
+    help=tr("cli.app.ledger.inventory.valuation_preview_help"),
 )
 def inventory_valuation_preview(
     ctx: typer.Context,
     actividad_id: str = typer.Option(
         ...,
         "--actividad-id",
-        help=tr("cli.app.ledger.inventory.actividad_id_help", default="Actividad identifier."),
+        help=tr("cli.app.ledger.inventory.actividad_id_help"),
     ),
-    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help", default="Fiscal year.")),
+    year: int = typer.Option(..., "--year", help=tr("cli.app.ledger.inventory.year_help")),
 ) -> None:
     """Preview valuation via :meth:`InventoryService.valuation_preview`."""
     bucket_id = _inventory_bucket_id()

@@ -213,11 +213,7 @@ def _all_files_refused(refusals: list[tuple[Path, str]]) -> typer.BadParameter:
     """
     detail = "; ".join(f"{path.name}: {reason}" for path, reason in refusals)
     return _bad(
-        tr(
-            "cli.ledger.import.all_files_refused",
-            detail=detail,
-            default="No statement file could be imported: " + detail,
-        ),
+        tr("cli.ledger.import.all_files_refused", detail=detail),
     )
 
 
@@ -245,7 +241,7 @@ def register_import_commands(app: typer.Typer) -> None:
         year: int | None = typer.Option(
             None,
             "--year",
-            help=tr("cli.ledger.import.year_help", default="Filing year for --period (e.g. 2024)."),
+            help=tr("cli.ledger.import.year_help"),
         ),
     ) -> None:
         """Import a financial-statement file via the existing provider registry."""
@@ -309,11 +305,7 @@ def _resolve_import_paths(path: Path) -> list[Path]:
     )
     if not files:
         raise _bad(
-            tr(
-                "cli.ledger.import.empty_directory",
-                path=str(path),
-                default=f"No importable statement files found in directory: {path}",
-            ),
+            tr("cli.ledger.import.empty_directory", path=str(path)),
         )
     return files
 

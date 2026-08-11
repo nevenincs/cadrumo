@@ -23,10 +23,7 @@ from ._common import active_bucket_id_or_refuse as _rule_bucket_id
 
 rule_app = typer.Typer(
     name="rule",
-    help=tr(
-        "cli.app.ledger.rule.group_help",
-        default="Manage and apply ledger classification rules.",
-    ),
+    help=tr("cli.app.ledger.rule.group_help"),
     no_args_is_help=True,
 )
 
@@ -52,55 +49,41 @@ def _validate_category_id(category_id: str | None) -> str | None:
     if value not in {category.value for category in SpendingCategory}:
         known = ", ".join(category.value for category in SpendingCategory)
         raise _bad(
-            tr(
-                "cli.ledger.errors.invalid_category",
-                category=value,
-                known=known,
-                default=f"Unknown spending category '{value}'. Known categories: {known}.",
-            ),
+            tr("cli.ledger.errors.invalid_category", category=value, known=known),
         )
     return value
 
 
 @rule_app.command(
     "add",
-    help=tr(
-        "cli.app.ledger.rule.add_help",
-        default="Add a classification rule that auto-classifies matching transactions.",
-    ),
+    help=tr("cli.app.ledger.rule.add_help"),
 )
 def rule_add(
     ctx: typer.Context,
     description_pattern: str = typer.Option(
         ...,
         "--description-pattern",
-        help=tr(
-            "cli.app.ledger.rule.description_pattern_help",
-            default="Regex pattern matched (case-insensitive) against transaction description.",
-        ),
+        help=tr("cli.app.ledger.rule.description_pattern_help"),
     ),
     classification: BusinessClassification = typer.Option(
         ...,
         "--classification",
-        help=tr("cli.app.ledger.rule.classification_help", default="Target classification for matching transactions."),
+        help=tr("cli.app.ledger.rule.classification_help"),
     ),
     category_id: str | None = typer.Option(
         None,
         "--category-id",
-        help=tr("cli.app.ledger.rule.category_id_help", default="Optional spending category to apply."),
+        help=tr("cli.app.ledger.rule.category_id_help"),
     ),
     priority: int = typer.Option(
         100,
         "--priority",
-        help=tr(
-            "cli.app.ledger.rule.priority_help",
-            default="Rule priority (lower number wins). Default 100.",
-        ),
+        help=tr("cli.app.ledger.rule.priority_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr("cli.app.ledger.rule.actor_help", default="Operator identifier recorded in the rule provenance."),
+        help=tr("cli.app.ledger.rule.actor_help"),
     ),
 ) -> None:
     """Add or idempotently update a ledger classification rule."""
@@ -114,13 +97,7 @@ def rule_add(
         # whitespace-only pattern matches nothing useful. Refuse both at the
         # boundary with an instructive message instead of leaking the pydantic repr.
         raise _bad(
-            tr(
-                "cli.app.ledger.rule.empty_pattern",
-                default=(
-                    'A rule needs a non-empty --description-pattern (a word or phrase, e.g. "software") '
-                    "to match transaction descriptions."
-                ),
-            ),
+            tr("cli.app.ledger.rule.empty_pattern"),
         )
     validated_category_id = _validate_category_id(category_id)
     try:
@@ -212,11 +189,7 @@ def _rule_apply_dry_run_payload(would_match: list[dict[str, object]]) -> dict[st
 
 def _rule_apply_dry_run_lines(would_match: list[dict[str, object]]) -> list[str]:
     lines = [
-        tr(
-            "cli.app.ledger.rule.apply_dry_run_summary",
-            count=len(would_match),
-            default=f"dry-run: {len(would_match)} transaction(s) would be classified",
-        ),
+        tr("cli.app.ledger.rule.apply_dry_run_summary", count=len(would_match)),
     ]
     lines.extend(
         f"  match\t{_short_display_id(str(row['transaction_id']))}\t{row['classification']}" for row in would_match
@@ -256,11 +229,6 @@ def _rule_apply_lines(result: ApplyRulesResult) -> list[str]:
             matched=result.matched,
             skipped=result.skipped_already_classified,
             no_match=result.no_match,
-            default=(
-                f"rules: {result.rules_evaluated}, scanned: {result.transactions_scanned}, "
-                f"matched: {result.matched}, skipped: {result.skipped_already_classified}, "
-                f"no_match: {result.no_match}"
-            ),
         ),
     ]
     lines.extend(
@@ -282,33 +250,24 @@ def _emit_rule_apply_result(ctx: typer.Context, result: ApplyRulesResult) -> Non
 
 @rule_app.command(
     "apply",
-    help=tr(
-        "cli.app.ledger.rule.apply_help",
-        default="Apply stored classification rules to unclassified ACTIVE transactions.",
-    ),
+    help=tr("cli.app.ledger.rule.apply_help"),
 )
 def rule_apply(
     ctx: typer.Context,
     reaffirm: bool = typer.Option(
         False,
         "--reaffirm",
-        help=tr(
-            "cli.app.ledger.rule.apply_reaffirm_help",
-            default="Also re-classify transactions that were manually classified.",
-        ),
+        help=tr("cli.app.ledger.rule.apply_reaffirm_help"),
     ),
     dry_run: bool = typer.Option(
         False,
         "--dry-run",
-        help=tr(
-            "cli.app.ledger.rule.apply_dry_run_help",
-            default="Show what would be classified without persisting changes.",
-        ),
+        help=tr("cli.app.ledger.rule.apply_dry_run_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr("cli.app.ledger.rule.actor_help", default="Operator identifier recorded in the rule provenance."),
+        help=tr("cli.app.ledger.rule.actor_help"),
     ),
 ) -> None:
     """Apply stored rules to ACTIVE NOT_YET_PROCESSED transactions."""
@@ -333,10 +292,7 @@ def rule_apply(
 
 @rule_app.command(
     "list",
-    help=tr(
-        "cli.app.ledger.rule.list_help",
-        default="List stored classification rules ordered by priority.",
-    ),
+    help=tr("cli.app.ledger.rule.list_help"),
 )
 def rule_list(ctx: typer.Context) -> None:
     """List all stored ledger classification rules (priority ascending)."""
@@ -358,9 +314,9 @@ def rule_list(ctx: typer.Context) -> None:
             for r in rules
         ],
     }
-    lines: list[str] = [tr("cli.app.ledger.rule.list_header", default="priority\tclassification\tpattern\trule_id")]
+    lines: list[str] = [tr("cli.app.ledger.rule.list_header")]
     if not rules:
-        lines.append(tr("cli.app.ledger.rule.list_empty", default="(no rules stored)"))
+        lines.append(tr("cli.app.ledger.rule.list_empty"))
     for rule in rules:
         lines.append(
             f"{rule.priority}\t{rule.classification.value}\t{rule.description_pattern}\t{_short_display_id(rule.rule_id)}",

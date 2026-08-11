@@ -51,29 +51,17 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("attach", help=tr("cli.ledger.attach.help"))(ledger_attach)
     app.command(
         "doclink",
-        help=tr(
-            "cli.ledger.doclink.help",
-            default="Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.",
-        ),
+        help=tr("cli.ledger.doclink.help"),
     )(ledger_doclink)
     app.command(
         "pull-folder",
-        help=tr(
-            "cli.ledger.pull_folder.help",
-            default=(
-                "Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted "
-                "evidence, unlinked to any transaction."
-            ),
-        ),
+        help=tr("cli.ledger.pull_folder.help"),
     )(ledger_pull_folder)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
     app.command(
         "exclude",
-        help=tr(
-            "cli.ledger.exclude.help",
-            default="Mark one reviewed ledger transaction as deliberately excluded from filing.",
-        ),
+        help=tr("cli.ledger.exclude.help"),
     )(ledger_exclude)
     app.command("restore", help=tr("cli.ledger.restore.help"))(ledger_restore)
     app.command("remove", help=tr("cli.ledger.remove.help"))(ledger_remove)
@@ -195,23 +183,23 @@ def ledger_doclink(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
         ...,
-        help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
+        help=tr("cli.ledger.doclink.id_help"),
     ),
     source: DocumentLinkSource = typer.Option(
         ...,
         "--source",
-        help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url."),
+        help=tr("cli.ledger.doclink.source_help"),
     ),
     reference: str = typer.Option(
         ...,
         "--reference",
-        help=tr("cli.ledger.doclink.reference_help", default="The document link reference."),
+        help=tr("cli.ledger.doclink.reference_help"),
     ),
-    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
+    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help")),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr("cli.ledger.doclink.actor_help", default="Operator label."),
+        help=tr("cli.ledger.doclink.actor_help"),
     ),
 ) -> None:
     """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
@@ -300,14 +288,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
     folder_id = parse_drive_file_id(reference)
     if folder_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.pull_folder.errors.folder_id_unrecognised",
-                reference=reference,
-                default=(
-                    f"Google Drive folder reference {reference!r} does not contain a recognisable "
-                    "folder id. Pass a Drive folder URL or its bare folder id."
-                ),
-            ),
+            tr("cli.ledger.pull_folder.errors.folder_id_unrecognised", reference=reference),
         )
     return folder_id
 
@@ -317,15 +298,12 @@ def ledger_pull_folder(
     folder: str = typer.Option(
         ...,
         "--folder",
-        help=tr(
-            "cli.ledger.pull_folder.folder_help",
-            default="Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.",
-        ),
+        help=tr("cli.ledger.pull_folder.folder_help"),
     ),
     note: str = typer.Option(
         "",
         "--note",
-        help=tr("cli.ledger.pull_folder.note_help", default="Optional note recorded on every fetched attachment."),
+        help=tr("cli.ledger.pull_folder.note_help"),
     ),
 ) -> None:
     """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
@@ -425,12 +403,11 @@ def ledger_pull_folder(
         },
     )
     lines = [
-        f"{tr('cli.ledger.pull_folder.labels.folder_id', default='folder_id')}\t{folder_id}",
-        f"{tr('cli.ledger.pull_folder.labels.total', default='total_documents')}\t{len(listing.documents)}",
-        f"{tr('cli.ledger.pull_folder.labels.fetched', default='fetched_count')}\t{fetched_count}",
-        f"{tr('cli.ledger.pull_folder.labels.refused', default='refused_count')}\t{refused_count}",
-        f"{tr('cli.ledger.pull_folder.labels.skipped', default='skipped_non_document_count')}"
-        f"\t{listing.skipped_non_document_count}",
+        f"{tr('cli.ledger.pull_folder.labels.folder_id')}\t{folder_id}",
+        f"{tr('cli.ledger.pull_folder.labels.total')}\t{len(listing.documents)}",
+        f"{tr('cli.ledger.pull_folder.labels.fetched')}\t{fetched_count}",
+        f"{tr('cli.ledger.pull_folder.labels.refused')}\t{refused_count}",
+        f"{tr('cli.ledger.pull_folder.labels.skipped')}\t{listing.skipped_non_document_count}",
     ]
     lines.extend(
         f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
@@ -529,22 +506,22 @@ def ledger_exclude(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
         ...,
-        help=tr("cli.ledger.exclude.id_help", default="Ledger transaction id."),
+        help=tr("cli.ledger.exclude.id_help"),
     ),
     reason: str = typer.Option(
         "",
         "--reason",
-        help=tr("cli.ledger.exclude.reason_help", default="Optional note recording why the row is excluded."),
+        help=tr("cli.ledger.exclude.reason_help"),
     ),
     yes: bool = typer.Option(
         False,
         "--yes",
-        help=tr("cli.ledger.exclude.yes_help", default="Confirm the reviewed-excluded decision."),
+        help=tr("cli.ledger.exclude.yes_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr("cli.ledger.exclude.actor_help", default="Operator label."),
+        help=tr("cli.ledger.exclude.actor_help"),
     ),
 ) -> None:
     """Mark one active ledger transaction as reviewed and excluded from filing."""
@@ -691,34 +668,22 @@ def ledger_split(
     llm: bool = typer.Option(
         False,
         "--llm",
-        help=tr(
-            "cli.ledger.split.llm_help",
-            default="Propose an evidence-driven N-way split with the on-host reader.",
-        ),
+        help=tr("cli.ledger.split.llm_help"),
     ),
     apply: bool = typer.Option(
         False,
         "--apply",
-        help=tr(
-            "cli.ledger.split.apply_help",
-            default="Persist the proposed --llm split (requires --yes); without it the proposal is previewed only.",
-        ),
+        help=tr("cli.ledger.split.apply_help"),
     ),
     read_evidence: bool = typer.Option(
         False,
         "--read-evidence",
-        help=tr(
-            "cli.ledger.split.read_evidence_help",
-            default="Read the transaction's attached invoice on-host and feed it to the --llm split proposer.",
-        ),
+        help=tr("cli.ledger.split.read_evidence_help"),
     ),
     vision_model: str | None = typer.Option(
         None,
         "--vision-model",
-        help=tr(
-            "cli.ledger.split.vision_model_help",
-            default="Override the local Ollama vision model for a scanned/image invoice read (e.g. qwen2.5vl:7b).",
-        ),
+        help=tr("cli.ledger.split.vision_model_help"),
     ),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
@@ -854,11 +819,7 @@ def _validate_split_llm_options(
     """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
     if child_amount or child_description:
         raise _bad(
-            tr(
-                "cli.ledger.split.llm_exclusive",
-                default="--llm cannot be combined with --child-amount/--child-description; "
-                "the manual path is the explicit operator override.",
-            ),
+            tr("cli.ledger.split.llm_exclusive"),
         )
     if apply and not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))

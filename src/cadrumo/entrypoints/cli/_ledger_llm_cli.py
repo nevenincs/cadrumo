@@ -224,33 +224,19 @@ def dispatch_autosplit(
 
     if not read_evidence:
         raise _bad(
-            tr(
-                "cli.ledger.classify.auto_split_needs_evidence",
-                default="--auto-split requires --read-evidence: the split decision is read from the invoice.",
-            ),
+            tr("cli.ledger.classify.auto_split_needs_evidence"),
         )
     if classification is not None or file is not None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --file; "
-                "the manual path is the explicit operator override.",
-            ),
+            tr("cli.ledger.classify.llm_exclusive"),
         )
     if reject and apply:
         raise _bad(
-            tr(
-                "cli.ledger.classify.reject_apply_exclusive",
-                default="--reject cannot be combined with --apply: reject records a declined "
-                "suggestion, apply records an accepted one.",
-            ),
+            tr("cli.ledger.classify.reject_apply_exclusive"),
         )
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
 
     state = _state()
@@ -475,26 +461,15 @@ def _validate_classify_llm_options(
     """
     if classification is not None or file is not None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --file; "
-                "the manual path is the explicit operator override.",
-            ),
+            tr("cli.ledger.classify.llm_exclusive"),
         )
     if reject and apply:
         raise _bad(
-            tr(
-                "cli.ledger.classify.reject_apply_exclusive",
-                default="--reject cannot be combined with --apply: reject records a declined "
-                "suggestion, apply records an accepted one.",
-            ),
+            tr("cli.ledger.classify.reject_apply_exclusive"),
         )
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
     return transaction_id
 
@@ -821,20 +796,11 @@ def ledger_operator_iva_derive(
         )
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
     if iva_category is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.saturate_requires_llm",
-                default=(
-                    "--saturate needs an IVA category: supply --iva-category to derive the "
-                    "base, rate, and amount, or --llm <provider> to have the model select one."
-                ),
-            ),
+            tr("cli.ledger.classify.saturate_requires_llm"),
         )
 
     state = _state()

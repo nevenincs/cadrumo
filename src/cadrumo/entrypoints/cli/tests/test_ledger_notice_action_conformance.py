@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from pathlib import Path
 from types import ModuleType
 
 import pytest
@@ -99,3 +100,17 @@ def test_pull_folder_does_not_flatten_typed_storage_errors() -> None:
         if isinstance(item, ast.Name)
     }
     assert "OutboundStorageError" not in caught_names
+
+
+def test_every_ledger_translation_is_catalogue_owned_without_a_runtime_fallback() -> None:
+    """Every ledger translation resolves from the authored locale catalogues."""
+    ledger_directory = Path(inspect.getfile(_ledger)).parent
+    failures: list[str] = []
+    for path in sorted(ledger_directory.glob("_ledger*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for call in ast.walk(tree):
+            if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name) or call.func.id != "tr":
+                continue
+            if any(keyword.arg == "default" for keyword in call.keywords):
+                failures.append(f"{path.name}:{call.lineno}")
+    assert failures == []

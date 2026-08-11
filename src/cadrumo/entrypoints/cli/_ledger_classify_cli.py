@@ -32,15 +32,12 @@ def ledger_classify_bulk_csv(
 ) -> None:
     if transaction_id is not None or classification is not None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.file_exclusive",
-                default="--file cannot be combined with a transaction id or --classification.",
-            ),
+            tr("cli.ledger.classify.file_exclusive"),
         )
     csv_path = Path(file)
     if not csv_path.exists():
         raise _bad(
-            tr("cli.ledger.classify.file_not_found", path=file, default=f"CSV file not found: {file}"),
+            tr("cli.ledger.classify.file_not_found", path=file),
         )
     csv_text = csv_path.read_text(encoding="utf-8")
     result = _bulk_classify(
@@ -59,10 +56,6 @@ def ledger_classify_bulk_csv(
             applied=result.applied,
             skipped=result.skipped,
             fail=len(result.failures),
-            default=(
-                f"bulk classify: {result.total} rows, {result.applied} applied, "
-                f"{result.skipped} skipped, {len(result.failures)} failed"
-            ),
         ),
     ]
     from ._ledger_payloads import LedgerClassifyBulkResult
@@ -109,38 +102,19 @@ def require_single_ledger_classification_request(
     """Validate and return the direct, operator-controlled classify target."""
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
     if classification is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.classification_required",
-                default="--classification is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.classification_required"),
         )
     if not is_classified(classification):
         raise _bad(
-            tr(
-                "cli.ledger.classify.system_state_not_assignable",
-                value=classification.value,
-                default=(
-                    f"Classification '{classification.value}' is set automatically by cadrumo and "
-                    "cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED."
-                ),
-            ),
+            tr("cli.ledger.classify.system_state_not_assignable", value=classification.value),
         )
     if reason is not None and not reason.strip():
         raise _bad(
-            tr(
-                "cli.ledger.classify.reason_empty",
-                default=(
-                    "Refused. --reason must record why you are classifying this "
-                    "transaction. Pass a non-empty rationale, or omit --reason."
-                ),
-            ),
+            tr("cli.ledger.classify.reason_empty"),
         )
     return transaction_id, classification
 

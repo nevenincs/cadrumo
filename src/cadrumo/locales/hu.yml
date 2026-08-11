@@ -767,43 +767,6 @@ application:
       errors:
         build_failed: 'a számlavarázsló elutasította: %{detail}'
         field_errors: 'a számlavarázsló %{field_count} mezőt utasított el: %{detail}'
-  iva_wallet:
-    decision_reason:
-      aeat_wallet_uncrosschecked: A legutóbbi érvényes AEAT-tárcamegfigyelés lett
-        kiválasztva; nem volt elérhető helyi ismétlődés az összevetéshez.
-      aeat_wallet_validated: A legutóbbi érvényes AEAT-tárcamegfigyelés egyezik a
-        Modelo 303 korábbi kompenzációjának helyi ismétlődésével.
-      caller_zero_matches_local_authority: A hívó által megadott nulla egyezik a tartósan
-        tárolt helyi nullaforrással.
-      filed_history_requires_override: Az AEAT-tárca bizonyítéka nem érhető el; a
-        bevallási előzményből származó ismétlődés automatikus kimenet előtt az adózó
-        kifejezett felülbírálását igényli.
-      filed_history_zero: A rögzített Modelo 303 bevallási előzmény nulla továbbvihető
-        kompenzációt igazol.
-      first_period_zero_activity_start_uncontrasted: 'NEM ELLENŐRZÖTT: Az első időszaki
-        nulla az operátor által megadott tevékenységkezdési dátumon alapul; a Cadrumo
-        ezt a dátumot nem tudja ellenőrizni az AEAT jelenlegi censo-adataival.'
-      first_period_zero_aeat_wallet: Az AEAT-tárca nulla korábbi kompenzációt igazol
-        az első nyilvántartott IVA-időszakra.
-      first_period_zero_local_recurrence: Egy rögzített helyi nulla igazolja, hogy
-        az első nyilvántartott IVA-időszakhoz nincs korábbi kompenzáció.
-      local_evidence_unreadable: Létezik korábbi Modelo 303 rekord, de nem olvasható
-        korábbi kompenzáció bizonyítékaként, és nincs elérhető AEAT-tárcamegfigyelés.
-      local_recurrence_requires_override: Az AEAT-tárca nem érhető el; a helyi ismétlődés
-        automatikus kimenet előtt az adózó kifejezett felülbírálását igényli.
-      local_recurrence_zero: A helyi Modelo 303 ismétlődés nulla továbbvihető kompenzációt
-        igazol.
-      no_usable_authority: Nincs elérhető AEAT-tárcamegfigyelés vagy használható helyi
-        ismétlődés a Modelo 303 korábbi kompenzációjához.
-      stale_wallet_local_recurrence_requires_override: Az AEAT-tárcamegfigyelés elavult;
-        a helyi ismétlődés automatikus kimenet előtt az adózó kifejezett felülbírálását
-        igényli.
-      stale_wallet_no_local_recurrence: Az AEAT-tárcamegfigyelés elavult, és nincs
-        elérhető helyi ismétlődési tartalék.
-      taxpayer_override: Az adózó kifejezett felülbírálása lett kiválasztva; a külön
-        rögzített kezelői magyarázat tartalmazza a bizonyíték alapját.
-      wallet_local_recurrence_divergence: Az AEAT-tárca és a helyi ismétlődés eltér;
-        automatikus kimenet előtt felülvizsgálat szükséges.
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -66742,6 +66705,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -67383,6 +67358,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -68028,6 +68015,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -68669,6 +68668,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -69413,6 +69424,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:

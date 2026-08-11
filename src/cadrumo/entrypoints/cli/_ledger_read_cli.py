@@ -138,36 +138,24 @@ def _ledger_list_pairing_error_year(filters: list[str], option_year: int | None)
 def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
     @app.command(
         "llm-diagnostics",
-        help=tr(
-            "cli.ledger.llm_diagnostics.help",
-            default="Report existing LLM usage, cost, and classification-confidence metrics.",
-        ),
+        help=tr("cli.ledger.llm_diagnostics.help"),
     )
     def ledger_llm_diagnostics(
         ctx: typer.Context,
         since: str | None = typer.Option(
             None,
             "--since",
-            help=tr(
-                "cli.ledger.llm_diagnostics.since_help",
-                default="Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.",
-            ),
+            help=tr("cli.ledger.llm_diagnostics.since_help"),
         ),
         until: str | None = typer.Option(
             None,
             "--until",
-            help=tr(
-                "cli.ledger.llm_diagnostics.until_help",
-                default="Inclusive upper ISO date (YYYY-MM-DD) bound on usage records.",
-            ),
+            help=tr("cli.ledger.llm_diagnostics.until_help"),
         ),
         low_confidence_below: float = typer.Option(
             0.5,
             "--low-confidence-below",
-            help=tr(
-                "cli.ledger.llm_diagnostics.threshold_help",
-                default="Confidence floor below which a classification counts as low-confidence.",
-            ),
+            help=tr("cli.ledger.llm_diagnostics.threshold_help"),
         ),
     ) -> None:
         """Report existing LLM usage, cost, and classification-confidence metrics."""
@@ -179,10 +167,7 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
         threshold = coerce_decimal_strict(low_confidence_below)
         if not Decimal("0") <= threshold <= Decimal("1"):
             raise _bad(
-                tr(
-                    "cli.ledger.llm_diagnostics.threshold_range",
-                    default="--low-confidence-below must be within the inclusive 0..1 range.",
-                ),
+                tr("cli.ledger.llm_diagnostics.threshold_range"),
             )
 
         report = build_llm_diagnostics_report(
@@ -412,31 +397,20 @@ def _link_inconsistency_notices(rows: tuple[LinkInconsistency, ...]) -> list[Not
 def _register_ledger_check_command(app: typer.Typer) -> None:
     @app.command(
         "check",
-        help=tr(
-            "cli.ledger.check.help",
-            default=(
-                "Probe ledger transactions in the addressed profile (defaults to the active "
-                "profile) and report anomaly rows aggregated across every period a "
-                "transaction touches, plus any invoice link the invoice and transaction "
-                "catalogues disagree about. Local-only; never contacts AEAT."
-            ),
-        ),
+        help=tr("cli.ledger.check.help"),
     )
     def ledger_check(
         ctx: typer.Context,
         bucket_id_option: str | None = typer.Option(
             None,
             "--bucket-id",
-            help=tr(
-                "cli.ledger.check.bucket_id_help",
-                default="Bucket id to probe (defaults to the active profile).",
-            ),
+            help=tr("cli.ledger.check.bucket_id_help"),
         ),
         period: str | None = typer.Option(None, "--period", help=tr("cli.ledger.check.period_help")),
         year: int | None = typer.Option(
             None,
             "--year",
-            help=tr("cli.ledger.check.year_help", default="Filing year for --period (e.g. 2024)."),
+            help=tr("cli.ledger.check.year_help"),
         ),
     ) -> None:
         """Surface ledger anomalies and broken invoice links without mutating state."""
@@ -589,32 +563,19 @@ def _register_ledger_check_command(app: typer.Typer) -> None:
 def _register_ledger_preflight_command(app: typer.Typer) -> None:
     @app.command(
         "preflight",
-        help=tr(
-            "cli.ledger.preflight.help",
-            default=(
-                "Report missing ledger facts (category, taxable base, IVA amount/rate, "
-                "currency, proportionality reference) for the active bucket's transactions "
-                "in a given period. Local-only; never contacts AEAT."
-            ),
-        ),
+        help=tr("cli.ledger.preflight.help"),
     )
     def ledger_preflight(
         ctx: typer.Context,
         period: str = typer.Option(
             ...,
             "--period",
-            help=tr(
-                "cli.ledger.preflight.period_help",
-                default=(
-                    "Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), "
-                    "01-12 (months). Combine with --year to choose the year."
-                ),
-            ),
+            help=tr("cli.ledger.preflight.period_help"),
         ),
         year: int = typer.Option(
             ...,
             "--year",
-            help=tr("cli.ledger.preflight.year_help", default="Filing year (e.g. 2024)."),
+            help=tr("cli.ledger.preflight.year_help"),
         ),
     ) -> None:
         """Surface modelo-readiness gaps for the active bucket without mutating ledger state."""
@@ -728,18 +689,12 @@ def _register_ledger_export_command(app: typer.Typer) -> None:
         period: str | None = typer.Option(
             None,
             "--period",
-            help=tr(
-                "cli.ledger.export.period_help",
-                default=(
-                    "Restrict the export to one filing period, as an AEAT token: "
-                    "1T-4T (quarters), 0A (annual), 01-12 (months). Combine with --year."
-                ),
-            ),
+            help=tr("cli.ledger.export.period_help"),
         ),
         year: int | None = typer.Option(
             None,
             "--year",
-            help=tr("cli.ledger.export.year_help", default="Filing year for --period (e.g. 2024)."),
+            help=tr("cli.ledger.export.year_help"),
         ),
         actor: str | None = typer.Option(None, "--actor", help=tr("cli.ledger.export.actor_help")),
     ) -> None:
@@ -874,31 +829,25 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
         lines = [
             f"{tr('cli.ledger.labels.id')}\t{result.ref.transaction_id}",
             f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.value_date', default='Value date')}\t{_field(transaction_payload.value_date)}",
+            f"{tr('cli.ledger.labels.value_date')}\t{_field(transaction_payload.value_date)}",
             f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.currency', default='Currency')}\t{_field(transaction_payload.currency)}",
-            f"{tr('cli.ledger.labels.direction', default='Direction')}\t{_field(transaction_payload.direction)}",
+            f"{tr('cli.ledger.labels.currency')}\t{_field(transaction_payload.currency)}",
+            f"{tr('cli.ledger.labels.direction')}\t{_field(transaction_payload.direction)}",
             f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.counterparty', default='Counterparty')}"
-            f"\t{_field(transaction_payload.counterparty)}",
-            f"{tr('cli.ledger.labels.business_classification', default='Classification')}"
-            f"\t{_field(transaction_payload.business_classification)}",
-            f"{tr('cli.ledger.labels.business_pct', default='Business %')}\t{_field(transaction_payload.business_pct)}",
-            f"{tr('cli.ledger.labels.category_id', default='Category')}\t{_field(transaction_payload.category_id)}",
-            f"{tr('cli.ledger.labels.usage_ratio_id', default='Usage ratio id')}"
-            f"\t{_field(transaction_payload.usage_ratio_id)}",
-            f"{tr('cli.ledger.labels.taxable_base', default='Taxable base')}"
-            f"\t{_field(transaction_payload.taxable_base)}",
-            f"{tr('cli.ledger.labels.iva_rate', default='IVA rate')}\t{_field(transaction_payload.iva_rate)}",
-            f"{tr('cli.ledger.labels.iva_amount', default='IVA amount')}\t{_field(transaction_payload.iva_amount)}",
+            f"{tr('cli.ledger.labels.counterparty')}\t{_field(transaction_payload.counterparty)}",
+            f"{tr('cli.ledger.labels.business_classification')}\t{_field(transaction_payload.business_classification)}",
+            f"{tr('cli.ledger.labels.business_pct')}\t{_field(transaction_payload.business_pct)}",
+            f"{tr('cli.ledger.labels.category_id')}\t{_field(transaction_payload.category_id)}",
+            f"{tr('cli.ledger.labels.usage_ratio_id')}\t{_field(transaction_payload.usage_ratio_id)}",
+            f"{tr('cli.ledger.labels.taxable_base')}\t{_field(transaction_payload.taxable_base)}",
+            f"{tr('cli.ledger.labels.iva_rate')}\t{_field(transaction_payload.iva_rate)}",
+            f"{tr('cli.ledger.labels.iva_amount')}\t{_field(transaction_payload.iva_amount)}",
             f"{tr('cli.ledger.labels.iva_category')}\t{_field(transaction_payload.iva_category)}",
-            f"{tr('cli.ledger.labels.counterparty_country', default='Established in')}"
-            f"\t{_field(transaction_payload.counterparty_country)}",
-            f"{tr('cli.ledger.labels.counterparty_identification_state', default='IVA identified in')}"
+            f"{tr('cli.ledger.labels.counterparty_country')}\t{_field(transaction_payload.counterparty_country)}",
+            f"{tr('cli.ledger.labels.counterparty_identification_state')}"
             f"\t{_field(transaction_payload.counterparty_identification_state)}",
-            f"{tr('cli.ledger.labels.irpf_category', default='IRPF category')}"
-            f"\t{_field(transaction_payload.irpf_category)}",
-            f"{tr('cli.ledger.labels.notes', default='Notes')}\t{_field(transaction_payload.notes)}",
+            f"{tr('cli.ledger.labels.irpf_category')}\t{_field(transaction_payload.irpf_category)}",
+            f"{tr('cli.ledger.labels.notes')}\t{_field(transaction_payload.notes)}",
             f"{tr('cli.ledger.labels.purchase_invoice_evidence_id')}"
             f"\t{_field(transaction_payload.purchase_invoice_evidence_id)}",
             f"{tr('cli.ledger.labels.attachment_ids')}\t{_field(', '.join(transaction_payload.attachment_ids))}",
@@ -917,7 +866,7 @@ def _register_ledger_view_command(app: typer.Typer, *, resolve_transaction_id: R
         if rejection_notice is not None:
             notices.append(rejection_notice)
             reason = (rejection_notice.context or {}).get("operator_reason", "")
-            label = tr("cli.ledger.view.llm_rejected_label", default="LLM suggestion")
+            label = tr("cli.ledger.view.llm_rejected_label")
             lines.append(f"{label}\t{tr('cli.ledger.classify.llm_rejected_label')}" + (f": {reason}" if reason else ""))
 
         _emit_envelope(
@@ -937,7 +886,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         year: int | None = typer.Option(
             None,
             "--year",
-            help=tr("cli.ledger.status.year_help", default="Filing year for --period (e.g. 2024)."),
+            help=tr("cli.ledger.status.year_help"),
         ),
     ) -> None:
         """Summarize active-bucket ledger state through the backend status service."""
@@ -949,7 +898,7 @@ def _register_ledger_status_command(app: typer.Typer) -> None:
         )
         transactions = transaction_repository.load()
         lines = [
-            f"{tr('cli.ledger.labels.profile', default='Profile')}\t{active_profile_label() or '<none>'}",
+            f"{tr('cli.ledger.labels.profile')}\t{active_profile_label() or '<none>'}",
             f"business_income_total\t{report.business_income_total}",
             f"business_expense_total\t{report.business_expense_total}",
             f"business_net_total\t{report.business_net_total}",

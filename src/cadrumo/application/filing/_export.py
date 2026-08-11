@@ -958,54 +958,93 @@ def _record_render_rows(
     projection_values: Mapping[tuple[str, int | None], object],
 ) -> tuple[_RecordRenderRow, ...]:
     if record.repeat == "projection_rows":
-        projection_identities = {
-            field.projection_ref.model_dump_json() for field in record.fields if field.projection_ref is not None
-        }
-        if not projection_identities:
-            raise FilingExportValidationError(
-                f"projection-row export record {record.id!r} must declare typed projection fields",
-            )
-        row_indexes = sorted(
-            {
-                row_index
-                for projection_identity, row_index in projection_values
-                if projection_identity in projection_identities and row_index is not None
-            },
-        )
-        if record.required and not row_indexes:
-            raise FilingExportValidationError(
-                f"required projection-row export record {record.id!r} has no projected occurrences",
-            )
-        return tuple(_RecordRenderRow(row_index=row_index, active_binding_ids=frozenset()) for row_index in row_indexes)
+        return _projection_record_render_rows(record, projection_values)
     if record.repeat != "binding_rows":
-        if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
-            return ()
-        return (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
-    binding_fields = _record_binding_fields(record)
+        return _single_record_render_row(record, binding_values)
+    return _binding_record_render_rows(record, binding_values)
+
+
+def _projection_record_render_rows(
+    record: ExportRecordDefinition,
+    projection_values: Mapping[tuple[str, int | None], object],
+) -> tuple[_RecordRenderRow, ...]:
+    projection_identities = {
+        field.projection_ref.model_dump_json() for field in record.fields if field.projection_ref is not None
+    }
+    if not projection_identities:
+        raise FilingExportValidationError(
+            f"projection-row export record {record.id!r} must declare typed projection fields",
+        )
     row_indexes = sorted(
         {
             row_index
-            for binding_id, row_index in binding_values
-            if row_index is not None
-            and any(field.binding == binding_id for field in binding_fields)
-            and _is_active_binding_value(binding_values[(binding_id, row_index)])
+            for projection_identity, row_index in projection_values
+            if projection_identity in projection_identities and row_index is not None
         },
     )
-    rows: list[_RecordRenderRow] = []
-    for row_index in row_indexes:
-        active_fields = tuple(
-            field
-            for field in binding_fields
-            if field.binding is not None and _is_active_binding_value(binding_values.get((field.binding, row_index)))
+    if record.required and not row_indexes:
+        raise FilingExportValidationError(
+            f"required projection-row export record {record.id!r} has no projected occurrences",
         )
-        for group in _compatible_binding_field_groups(active_fields):
-            rows.append(
-                _RecordRenderRow(
-                    row_index=row_index,
-                    active_binding_ids=frozenset(field.binding for field in group if field.binding is not None),
-                ),
-            )
-    return tuple(rows)
+    return tuple(_RecordRenderRow(row_index=row_index, active_binding_ids=frozenset()) for row_index in row_indexes)
+
+
+def _single_record_render_row(
+    record: ExportRecordDefinition,
+    binding_values: dict[tuple[BindingId, int | None], object],
+) -> tuple[_RecordRenderRow, ...]:
+    if record.binding_record is not None and not _record_has_binding_value(record, binding_values):
+        return ()
+    return (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),)
+
+
+def _binding_record_render_rows(
+    record: ExportRecordDefinition,
+    binding_values: dict[tuple[BindingId, int | None], object],
+) -> tuple[_RecordRenderRow, ...]:
+    binding_fields = _record_binding_fields(record)
+    row_indexes = _binding_row_indexes(binding_fields, binding_values)
+    return tuple(
+        row
+        for row_index in row_indexes
+        for row in _binding_record_rows_for_index(binding_fields, binding_values, row_index)
+    )
+
+
+def _binding_row_indexes(
+    binding_fields: tuple[ExportFieldDefinition, ...],
+    binding_values: dict[tuple[BindingId, int | None], object],
+) -> tuple[int, ...]:
+    return tuple(
+        sorted(
+            {
+                row_index
+                for binding_id, row_index in binding_values
+                if row_index is not None
+                and any(field.binding == binding_id for field in binding_fields)
+                and _is_active_binding_value(binding_values[(binding_id, row_index)])
+            },
+        ),
+    )
+
+
+def _binding_record_rows_for_index(
+    binding_fields: tuple[ExportFieldDefinition, ...],
+    binding_values: dict[tuple[BindingId, int | None], object],
+    row_index: int,
+) -> tuple[_RecordRenderRow, ...]:
+    active_fields = tuple(
+        field
+        for field in binding_fields
+        if field.binding is not None and _is_active_binding_value(binding_values.get((field.binding, row_index)))
+    )
+    return tuple(
+        _RecordRenderRow(
+            row_index=row_index,
+            active_binding_ids=frozenset(field.binding for field in group if field.binding is not None),
+        )
+        for group in _compatible_binding_field_groups(active_fields)
+    )
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
