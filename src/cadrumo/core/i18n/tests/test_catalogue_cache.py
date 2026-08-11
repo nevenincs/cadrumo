@@ -35,16 +35,15 @@ def _env_var(name: str, value: str):
     A local context manager rather than the pytest ``monkeypatch`` fixture,
     per this module's own no-monkeypatch discipline.
     """
-    had = name in os.environ
     previous = os.environ.get(name)
     os.environ[name] = value
     try:
         yield
     finally:
-        if had:
-            os.environ[name] = previous  # type: ignore[assignment]
-        else:
+        if previous is None:
             os.environ.pop(name, None)
+        else:
+            os.environ[name] = previous
 
 
 def test_write_then_read_round_trips_the_flat_map(tmp_path: Path) -> None:

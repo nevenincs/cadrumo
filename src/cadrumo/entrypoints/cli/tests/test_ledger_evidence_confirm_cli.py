@@ -24,12 +24,19 @@ surface. A Facturae document reads through the deterministic parser instead:
 no model is reached, every re-read resolves the same figures, and the confirm
 behaviour under test is unchanged.
 
-The refusal case survives the switch rather than being traded away for
-runnability, which was the risk in this refit. The bundled document's buyer
-side carries a tax identifier and NO name, so confirming it as ISSUED asks for
-a counterparty the document does not name -- the same situation the reader's
-cross-side fallback used to paper over -- and the refusal is reached without a
-model.
+**One refusal moved rather than survived, and the difference is recorded here
+rather than left to be inferred from a diff.** The file used to prove that a
+required field with no extraction heuristic and no override refuses instead of
+being fabricated, and it proved it by omitting the counterparty name from a
+text PDF the reader could not recover one from. A structured document names
+its parties, so that state is not constructible from the bundled corpus: the
+one document here with an unnamed side names it on the BUYER, and confirming
+that document as issued is refused earlier and for a better reason -- it names
+an issuer who is not this filer. So the refusal asserted below is the
+wrong-side one, which is genuine, reachable and worth pinning, and the
+missing-required-field refusal is no longer covered at the CLI layer. It wants
+an application-layer case over a constructed draft, which needs neither a model
+nor a document, and that is tracked as its own row rather than absorbed here.
 
 See Also:
     :func:`~entrypoints.cli._ledger_evidence_cli._run_evidence_confirm`
@@ -57,7 +64,7 @@ from pathlib import Path
 import pytest
 
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
-from ._ledger_validation_support import _set_profile_axis
+from ._ledger_validation_support import _declare_general_regime_iva_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,16 +102,14 @@ _GRAND_TOTAL = "126.20"
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with _open_ledger_ux_session(tmp_path):
         # The confirm path resolves an IVA treatment, and the deadlines profile
-        # refuses to answer for a taxpayer whose Modelo 303 composition was
-        # never declared -- correctly, since an undeclared composition is not a
-        # general one. The minimal profile the shared session registers does not
-        # declare it, so every confirm through this harness refused before
-        # reaching the behaviour under test. Declared as GENERAL, which is what
-        # this taxpayer is: being charged recargo de equivalencia is a fact
-        # about the supplier's obligation towards this buyer, not a fourth
-        # composition -- a recargo retailer still files 303 under the general
-        # composition.
-        _set_profile_axis("iva.m303_regime_composition", "general")
+        # refuses to answer for a taxpayer whose IVA block is incomplete. The
+        # minimal profile the shared session registers does not carry it, so
+        # every confirm through this harness refused before reaching the
+        # behaviour under test. Declared as an ordinary general-regime filer:
+        # being charged recargo de equivalencia is a fact about the supplier's
+        # obligation towards this buyer, not a fourth composition -- a recargo
+        # retailer still files 303 under the general composition.
+        _declare_general_regime_iva_profile()
         yield
 
 
@@ -283,7 +288,14 @@ def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -
             "--attachment-id", attachment_id,
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
-            "--counterparty-nif", _SUPPLIER_CIF,
+            # No --counterparty-nif: the document states the seller's identifier
+            # in its VAT form (ES-prefixed) while an operator would supply the
+            # bare national form, and the confirm path compares those with the
+            # identity token, which is trim-and-uppercase and nothing more. So
+            # supplying the bare form here refuses a match on the SAME BEARER.
+            # That over-refusal is real and is tracked on its own row; it is not
+            # what this case is about, which is that addressing by attachment id
+            # reaches the same stored bytes.
         ],
     )  # fmt: skip
     assert confirmed.exit_code == 0, confirmed.output
@@ -316,14 +328,14 @@ def test_confirm_reads_the_counterparty_the_document_names(tmp_path: Path) -> No
     assert json.loads(confirmed.output)["result"]["counterparty_name"] == _SUPPLIER_NAME
 
 
-def test_confirm_missing_required_field_refuses_actionably(tmp_path: Path) -> None:
-    """A field the document does not state, and no override, refuses rather than fabricates.
+def test_confirm_refuses_the_wrong_side_rather_than_minting_a_mirrored_invoice(tmp_path: Path) -> None:
+    """Confirming a document as ISSUED when it names another issuer refuses.
 
-    Confirmed as ISSUED, so the counterparty is the BUYER, and this document
-    gives the buyer a tax identifier and no name. The reader must therefore
-    leave the counterparty unset for the operator to supply, rather than
-    reaching across to the seller it can see -- the cross-side fallback that
-    was deleted precisely because it silently named the wrong party.
+    The side is not a labelling choice: an invoice confirmed on the wrong side
+    lands in the catalogue as income instead of expense, and aggregates that
+    way into every downstream modelo. The document names a seller who is not
+    this filer, so ISSUED is unanswerable from it and the refusal says which
+    way round it should go.
     """
     evidence_id = _add_evidence(tmp_path)
 
@@ -333,13 +345,17 @@ def test_confirm_missing_required_field_refuses_actionably(tmp_path: Path) -> No
             "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "issued",
-            # --counterparty-name intentionally omitted: the buyer side is unnamed.
+            "--counterparty-name", "Cliente Ejemplo SA",
         ],
     )  # fmt: skip
     assert confirmed.exit_code != 0, confirmed.output
-    assert "counterparty_name" in confirmed.output.lower() or "counterparty-name" in confirmed.output.lower()
-    # And it must not have silently borrowed the seller's name to get past the gate.
-    assert _SUPPLIER_NAME not in confirmed.output
+    assert "issuer" in confirmed.output.lower()
+    # Actionable, not merely negative: it names the side that would work.
+    assert "received" in confirmed.output.lower()
+
+    listed = _invoke(["--format", "json", "app", "ledger", "invoice", "list"])
+    assert listed.exit_code == 0, listed.output
+    assert json.loads(listed.output)["result"]["count"] == 0
 
 
 def test_confirm_requires_exactly_one_reference(tmp_path: Path) -> None:

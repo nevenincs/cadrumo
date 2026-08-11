@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from pydantic import BaseModel
 
 from ....entrypoints.cli._ledger_business_payloads import (
     EvidenceDraftDiscrepancyPayload,
@@ -58,7 +59,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 #: mechanical (``InvoiceDraftLine`` against ``EvidenceDraftLinePayload``) and a
 #: derivation that silently matched nothing would make this vacuous. The count
 #: is floored below instead, so a pair dropped from this table is visible.
-_NESTED_PAIRS: tuple[tuple[str, type, type], ...] = (
+_NESTED_PAIRS: tuple[tuple[str, type[BaseModel], type[BaseModel]], ...] = (
     ("line", InvoiceDraftLine, EvidenceDraftLinePayload),
     ("rate breakdown", InvoiceDraftRateBreakdown, EvidenceDraftRateBreakdownPayload),
     ("ambiguity candidate", FieldAmbiguityCandidate, EvidenceFieldAmbiguityCandidatePayload),
@@ -154,7 +155,7 @@ def test_the_provenance_envelopes_arrive_whole() -> None:
 # -- the same property, one level down, on every nested model pair ----------
 
 
-def nested_parity_defects(draft_model: type, payload_model: type) -> list[str]:
+def nested_parity_defects(draft_model: type[BaseModel], payload_model: type[BaseModel]) -> list[str]:
     """Return the field-set divergences between a draft sub-model and its payload.
 
     Both directions, for the same reasons the top-level pair checks both: a

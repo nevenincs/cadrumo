@@ -21,6 +21,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from pydantic import ValidationError
 
 from .....core import validated_casilla_id
 from .....core.aggregation import BindingSourceKind
@@ -28,7 +29,6 @@ from .. import (
     CasillaDefinition,
     ModeloRevision,
     PeriodSelector,
-    RegistryValidationError,
     bound_casilla_binding_ids,
     bundled_authority,
     casillas_by_binding,
@@ -79,27 +79,20 @@ def _revision(casillas: tuple[CasillaDefinition, ...]) -> ModeloRevision:
     )
 
 
-def test_refuses_a_bound_casilla_that_declares_no_binding() -> None:
-    """The dual inherits the forward primitive's refusal rather than skipping.
+def test_schema_refuses_a_bound_casilla_that_declares_no_binding() -> None:
+    """The canonical schema refuses the invalid state before the join can run.
 
-    A BOUND casilla with no binding is a registry declaration error. The private
-    predicate this join replaced skipped it silently, which is how a
-    mis-declared casilla could reach a rate-box mapping as an absence rather
-    than as a refusal.
+    A BOUND casilla with no binding is a registry declaration error. Keeping the
+    proof at model construction exercises the real public boundary instead of
+    bypassing Pydantic validation to manufacture an impossible join input.
     """
-    revision = _revision(
-        (
-            _casilla(
-                validated_casilla_id("01", surface="test.dual.bound_without_binding"),
-                number="01",
-                input_kind="bound",
-                binding=None,
-            ),
+    with pytest.raises(ValidationError, match="must declare binding"):
+        _casilla(
+            validated_casilla_id("01", surface="test.dual.bound_without_binding"),
+            number="01",
+            input_kind="bound",
+            binding=None,
         )
-    )
-
-    with pytest.raises(RegistryValidationError, match="has no binding"):
-        casillas_by_binding(revision)
 
 
 def test_a_non_bound_casilla_carrying_a_binding_contributes_nothing() -> None:
@@ -116,22 +109,16 @@ def test_a_non_bound_casilla_carrying_a_binding_contributes_nothing() -> None:
     assert casillas_by_binding(revision) == {}
 
 
-def test_a_casilla_naming_one_binding_as_primary_and_alternate_appears_once() -> None:
-    """De-duplication is the join's own, not the caller's."""
-    casilla_id = validated_casilla_id("03", surface="test.dual.duplicate")
-    revision = _revision(
-        (
-            _casilla(
-                casilla_id,
-                number="03",
-                input_kind="bound",
-                binding="m390-total",
-                alternate_bindings=("m390-total",),
-            ),
+def test_schema_refuses_a_primary_binding_repeated_as_an_alternate() -> None:
+    """The reverse join receives only canonical, non-duplicated binding axes."""
+    with pytest.raises(ValidationError, match="must not repeat primary binding"):
+        _casilla(
+            validated_casilla_id("03", surface="test.dual.duplicate"),
+            number="03",
+            input_kind="bound",
+            binding="m390-total",
+            alternate_bindings=("m390-total",),
         )
-    )
-
-    assert casillas_by_binding(revision) == {"m390-total": (casilla_id,)}
 
 
 def test_alternate_bindings_reach_the_mapping() -> None:
