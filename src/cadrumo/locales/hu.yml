@@ -7329,6 +7329,10 @@ flows:
     header: '{flow} - {position}. kérdés a(z) {total} közül, {section} szakasz'
     header_single_section: '{flow} — {position}. kérdés / {total}'
     section_unavailable: Nem elérhető szakasz
+ledger:
+  evidence:
+    reader:
+      operation_failed: A bizonylatolvasó művelete sikertelen volt
 live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért

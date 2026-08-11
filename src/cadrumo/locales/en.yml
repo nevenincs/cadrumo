@@ -2277,7 +2277,8 @@ cli:
         explain_help: Include localized help text in the text output.
         form_number_help: Filter casillas by BOE-printed form number (e.g. 46)
         help: List all casillas (fields/boxes) defined for a specific modelo revision.
-        input_kind_help: Filter casillas by input kind (manual, bound, computed, informational, projection_only)
+        input_kind_help: Filter casillas by input kind (manual, bound, computed, informational,
+          projection_only)
         modelo_help: Tax form code (e.g. 303, 130, 100)
         number_help: Filter casillas by printed casilla number or canonical id (e.g.
           0596).
@@ -7005,6 +7006,10 @@ flows:
     header: '{flow} - question {position} of {total}, section {section}'
     header_single_section: '{flow} — question {position} of {total}'
     section_unavailable: Unavailable section
+ledger:
+  evidence:
+    reader:
+      operation_failed: Evidence reader operation failed
 live:
   errors:
     expediente_not_found: AEAT declaration register did not return the requested expediente.

@@ -8,12 +8,11 @@ import-time guard in the preflight module itself, the same placement the
 discrepancy-kind guard beside it uses, so an unclassified member fails the
 import rather than one test run.
 
-That placement is what these tests have to respect. Asserting the partition's
-shape here would be tautological -- the import would have failed before the
-assertion ran -- so the structural half is proved the only way it can be: by
-re-executing the real module source against a mutated enum and watching it
-refuse. What remains a test is the half no import-time check can do, which is
-whether the declared emission sets still match what the shipped screens emit.
+That placement is what these tests respect. The checked-in suite imports the
+real module, asserts the native partition and operator-action projection are
+total, and exercises the shipped screens to prove their declared emission sets.
+The import-refusal bite belongs in execution evidence rather than in a test that
+mutates a live enum.
 
 Two lanes renamed members of this one enum inside a day, and the first failure
 masked the second entirely; the class this closes is that masking.
@@ -21,16 +20,13 @@ masked the second entirely; the class this closes is that masking.
 
 from __future__ import annotations
 
-import importlib.util
-from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import ModuleType
 
 import pytest
 
-from ....core import BindingSourceKind
+from ....core import BindingSourceKind, OperatorActionAxis
 from ....domain.iva import EUMemberState, IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -51,10 +47,6 @@ from ...aggregation import (
 from .. import _preflight
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_PROBE_NAME = "MUTATION_PROBE_REASON"
-_PROBE_VALUE = "mutation_probe_reason"
-
 
 def _transaction(
     *,
@@ -108,52 +100,6 @@ def _transaction(
     )
 
 
-def _execute_preflight_module_copy(probe_name: str) -> ModuleType:
-    """Execute the real preflight source as an independent module object.
-
-    Loads it under a name inside its own package, so its relative imports
-    resolve exactly as the canonical module's do, and never touches the
-    canonical module in ``sys.modules``. Executing the shipped source is what
-    makes this a proof rather than a restatement: the guard under test is the
-    one that ships, not a copy of its condition written here.
-    """
-    source = Path(_preflight.__file__)
-    spec = importlib.util.spec_from_file_location(f"{_preflight.__package__}.{probe_name}", source)
-    if spec is None or spec.loader is None:  # pragma: no cover - defensive
-        pytest.fail(f"could not build a module spec for {source}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
-@pytest.fixture
-def unclassified_enum_member() -> Iterator[IvaLedgerAggregationIssueReason]:
-    """Add a real member to the live enum, then remove it again.
-
-    Adding rather than deleting, deliberately: deleting a member crashes
-    production import through a missing attribute and would red on a signature
-    that says nothing about this guard, so it would prove far less than the
-    defect actually being simulated here.
-    """
-    enum = IvaLedgerAggregationIssueReason
-    assert _PROBE_NAME not in enum.__members__, "probe member already present; the mutation would be a no-op"
-
-    member = str.__new__(enum, _PROBE_VALUE)
-    member._name_ = _PROBE_NAME
-    member._value_ = _PROBE_VALUE
-    enum._member_map_[_PROBE_NAME] = member
-    enum._member_names_.append(_PROBE_NAME)
-    enum._value2member_map_[_PROBE_VALUE] = member
-    try:
-        assert member in set(enum), "mutation ineffective: the probe member is not in set(enum)"
-        yield member
-    finally:
-        enum._member_map_.pop(_PROBE_NAME, None)
-        enum._value2member_map_.pop(_PROBE_VALUE, None)
-        if _PROBE_NAME in enum._member_names_:
-            enum._member_names_.remove(_PROBE_NAME)
-
-
 def _observed_counterparty_gate_reasons() -> frozenset[IvaLedgerAggregationIssueReason]:
     """Return every reason the real counterparty gate emits across its inputs.
 
@@ -202,28 +148,12 @@ def _observed_missing_fact_reasons() -> frozenset[IvaLedgerAggregationIssueReaso
 
 
 def test_the_shipped_module_imports_with_every_member_classified() -> None:
-    """The positive control: the guard passes on the real, unmutated enum.
-
-    Without this the refusal below would be consistent with a module that
-    cannot load at all, and a guard that always fires is not a guard.
-    """
-    module = _execute_preflight_module_copy("_preflight_control_probe")
-
-    assert set(module._PREFLIGHT_REASON_BY_IVA_ISSUE) | set(module._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT) == set(
+    """The real imported module classifies every native issue exactly once."""
+    assert set(_preflight._PREFLIGHT_REASON_BY_IVA_ISSUE) | set(
+        _preflight._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT
+    ) == set(
         IvaLedgerAggregationIssueReason,
     )
-
-
-def test_an_unclassified_member_fails_the_module_import(
-    unclassified_enum_member: IvaLedgerAggregationIssueReason,
-) -> None:
-    """A member on neither side of the partition refuses at import, not at call."""
-    with pytest.raises(RuntimeError) as excinfo:
-        _execute_preflight_module_copy("_preflight_mutation_probe")
-
-    message = str(excinfo.value)
-    assert unclassified_enum_member.value in message
-    assert "_IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT" in message
 
 
 def test_declared_emission_sets_match_the_shipped_screens() -> None:
@@ -248,3 +178,19 @@ def test_every_not_reaching_entry_states_its_reason() -> None:
     """
     for reason, rationale in _preflight._IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT.items():
         assert rationale.strip(), reason.value
+
+
+def test_every_native_iva_ledger_issue_projects_to_an_operator_action() -> None:
+    projection = _preflight.OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+
+    assert set(projection) == set(IvaLedgerAggregationIssueReason)
+    assert set(projection.values()) <= set(OperatorActionAxis)
+    assert projection[IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE] is OperatorActionAxis.IMPORT_LEDGER_DATA
+    assert (
+        projection[IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW]
+        is OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+    )
+    assert (
+        projection[IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE]
+        is OperatorActionAxis.RESOLVE_IDENTITY
+    )

@@ -25,6 +25,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
+from types import MappingProxyType
 from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, computed_field, field_serializer, field_validator
@@ -32,7 +33,7 @@ from pydantic import BaseModel, Field, computed_field, field_serializer, field_v
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios_with_censo_guard
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import ElidedProse, Period
+from ...core import ElidedProse, OperatorActionAxis, Period
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import BucketId
 from ...domain.categories import SpendingCategory, SpendingCategoryFamily, family_for
@@ -633,6 +634,66 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     ),
 }
 
+
+OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
+    IvaLedgerAggregationIssueReason,
+    OperatorActionAxis,
+] = MappingProxyType(
+    {
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_DIRECTION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION: OperatorActionAxis.REVIEW_ADVISORY,
+        IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD: OperatorActionAxis.REVIEW_ADVISORY,
+        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        IvaLedgerAggregationIssueReason.MISSING_IVA_RATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE: (
+            OperatorActionAxis.RESOLVE_REVISION_MISMATCH
+        ),
+        IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
+        IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
+        IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE: (
+            OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE
+        ),
+        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
+        IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE: OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE,
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE: (
+            OperatorActionAxis.RESOLVE_IDENTITY
+        ),
+        IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION: (
+            OperatorActionAxis.RESOLVE_IDENTITY
+        ),
+        IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION: OperatorActionAxis.RESOLVE_IDENTITY,
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT: (
+            OperatorActionAxis.RESOLVE_IDENTITY
+        ),
+        IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EXCLUDED_CATEGORY: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION: (
+            OperatorActionAxis.COMPLETE_DOCUMENT_EVIDENCE
+        ),
+    },
+)
+"""Total operator-action projection for every native IVA ledger issue."""
+
+if set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) != set(IvaLedgerAggregationIssueReason):
+    missing = sorted(
+        reason.value
+        for reason in set(IvaLedgerAggregationIssueReason) - set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE)
+    )
+    stale = sorted(
+        str(reason)
+        for reason in set(OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE) - set(IvaLedgerAggregationIssueReason)
+    )
+    raise RuntimeError(
+        "every IvaLedgerAggregationIssueReason must declare an OperatorActionAxis; "
+        f"missing={missing}; stale={stale}",
+    )
+
 # Fails the import, not a test run, so an unclassified member cannot reach a
 # run at all. The same placement and message shape as the discrepancy-kind
 # guard in ``_confirmation_gate``, deliberately: that axis absorbed two
@@ -698,6 +759,7 @@ def _preflight_detail_for_iva_issue(reason: IvaLedgerAggregationIssueReason) -> 
 
 
 __all__ = [
+    "OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE",
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",

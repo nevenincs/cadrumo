@@ -7513,6 +7513,10 @@ flows:
     header: '{flow} - pregunta {position} de {total}, sección {section}'
     header_single_section: '{flow} — pregunta {position} de {total}'
     section_unavailable: Sección no disponible
+ledger:
+  evidence:
+    reader:
+      operation_failed: Falló la operación del lector de justificantes
 live:
   errors:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
