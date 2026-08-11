@@ -50,9 +50,9 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
-from .. import aggregate_iva_ledger_observations
 from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings import _invoice_line_iva_observation
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

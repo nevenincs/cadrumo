@@ -10,10 +10,15 @@ from typing import TypedDict
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....core import Period
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_ledger_iva_aggregation_binding_values
-from ....domain.iva import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
+from ....domain.iva import (
+    IvaCashAccountingPaymentEvidence,
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -24,7 +29,8 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import aggregate_iva_ledger_observations, aggregate_iva_ledger_observations_from_repositories
+from .. import aggregate_iva_ledger_observations_from_repositories
+from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,6 +86,16 @@ def _transaction(
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
             "iva_category": IvaCategory.DOMESTIC_GENERAL,
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT
+            if direction is TransactionDirection.OUTGOING
+            else None,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{provider_id}",
+                evidence_digest="a" * 64,
+            )
+            if direction is TransactionDirection.OUTGOING
+            else None,
             "cash_accounting_treatment": cash_accounting_treatment,
             "operation_date": operation_date,
             "cash_accounting_payment_evidence": cash_accounting_payment_evidence,
