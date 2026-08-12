@@ -372,6 +372,79 @@ exists. A fabricated value must now survive two independent model errors that
 agree, instead of one unanchored guess, and the fabrication rate is measured
 per stage rather than asserted.
 
+**Ruling (ninth amendment): the multi-rate collapse is closed by an
+arithmetic identity, not by a repeating form and not by a transcription
+scan.** Measured 2026-08-12: a draft carrying `taxable_base=2000.00`,
+`iva_rate=21`, `iva_amount=310.00`, `grand_total=2310.00` — a 1000 at 21%
+plus 1000 at 10% invoice exactly as the text or vision lane reads it —
+yields ZERO deterministic findings. The total identity holds
+(2000 + 310 = 2310), so the one check that runs confirms it clean, and the
+draft carries a single rate that is a lie about half its own base all the
+way to the Modelo 303 tier casillas. `_rate_consistency_findings` applies
+`base × rate == cuota` only per breakdown ENTRY and `iva_breakdown` is
+empty on those lanes; `_breakdown_sum_findings` returns early on the same
+emptiness. The FLAT triple is never checked against itself on any lane —
+and the two representations are disjoint, flat `iva_rate` being set only
+by the model-read lane and `iva_breakdown` only by the structured one, so
+the unchecked representation is exactly the model-read one.
+
+Both proposals mis-locate this as a missing DERIVATION and are refused:
+
+- **A repeating extraction form is refused.** It requires the anchor
+  mirror to become repeating alongside the values, which changes this
+  record's anti-fabrication guarantee at its root: the mirror is a
+  per-field exact parity, and an array of per-rate rows cannot carry one
+  anchor string. It also adds a repeating group to a prompt whose design
+  target is a lowest-bound vision model — a far larger ask than the two
+  role-evidence keys a shipped gate already refuses on those grounds. A
+  guarantee change and a context cost, to buy a detection the arithmetic
+  already gives away.
+- **A transcription scan for a second charged tier is refused on its own
+  stated hazard.** Telling a second CHARGED IVA tier from a recargo
+  percentage, a retención percentage or a discount quoted in prose is the
+  rule-table-over-arbitrary-prose problem this record already names, and
+  these findings BLOCK confirmation — a false fire trains operators to
+  ignore the channel that exists to stop them filing a wrong figure.
+- **The ruling: the flat triple closes over itself.**
+  `taxable_base × iva_rate == iva_amount`, the identity
+  `_rate_consistency_findings` already applies per tier, applied to the
+  flat triple and enrolled in `closure_findings` so it reaches every
+  reader through the shared check list. No transcription, no prompt
+  tokens, no contract change, no anchor change.
+
+It has no precision problem because it reads no prose: it asks only
+whether three figures the reader already produced are mutually
+consistent. The confounds are answered by the field split rather than by
+tolerance — recargo carries its own rate and amount and is not inside
+`iva_amount`, suplidos are excluded from the base imponible by LIVA
+art. 78.Tres.3º and carry their own field, retención has its own
+identity — and an exempt or reverse-charge document states no rate or no
+cuota, where an identity with a missing term does not run at all.
+
+**The breakdown stays the authority where it exists.** The flat check is
+skipped when `iva_breakdown` carries more than one tier: there the flat
+rate is legitimately not a single rate, and the per-tier and sum checks
+already cover the figures. No producer populates both today, so the guard
+is not load-bearing — it states which representation wins before a
+producer can violate it.
+
+**What this does NOT claim.** It DETECTS the collapse; it does not
+recover the lost tier. The operator holding the document supplies the
+split, the same division of labour the ambiguity candidates already use.
+Recovering a per-rate breakdown from a text or vision read stays open,
+unbuilt, and undecided by this record.
+
+The asymmetry that makes this a defect rather than a gap is already in
+the tree: the identical identity is a HARD refusal on manually entered
+asset and inventory invoices (`iva_amount must equal taxable_base *
+iva_rate`). The figure a human types is refused when it does not close;
+the figure a model reads was not checked at all.
+
+Gate: the two-rate collapse above raises a `RATE_INCONSISTENT` finding, a
+correct single-rate draft raises none, a multi-tier breakdown draft is
+untouched, and a mutation proof removing the identity restores the silent
+clean confirm.
+
 ### D5 — Per-field provenance, and structural rather than numeric confidence
 
 Every draft field carries a typed provenance envelope: an origin StrEnum in
