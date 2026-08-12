@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#ci-lane-deconflation'
-date: '2026-08-10'
-modified: '2026-08-11'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f9b51bc8a616e8cf50bf960df26836fa3824c7a1655c0fe3dfc322341203ebe6'
+body_hash: 'sha256:c28810b77c0f956eb2787d119830edef0231e89da8db64631e0509feb1d2390d'
 related:
   - '[[2026-08-05-ci-lane-deconflation-P01-S02]]'
   - '[[2026-08-05-ci-lane-deconflation-P01-S03]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P02-S09]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S22]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S23]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S28]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S29]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S30]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S31]]'
@@ -27,6 +28,9 @@ related:
   - '[[2026-08-05-ci-lane-deconflation-P02-S36]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S37]]'
   - '[[2026-08-05-ci-lane-deconflation-P02-S38]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S39]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S46]]'
+  - '[[2026-08-05-ci-lane-deconflation-P02-S48]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S11]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S12]]'
   - '[[2026-08-05-ci-lane-deconflation-P03-S13]]'
@@ -111,7 +115,10 @@ Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
 - `2026-08-05-ci-lane-deconflation-P04-S17` - Record a finding about the 204 semantic-dedup exec records rather than remediating them, all 204 carry empty Description Outcome and Notes and were bulk-scaffolded in one commit so 0 resolve to an implementing commit, and unchecking would assert work the tree shows was done
 - `2026-08-05-ci-lane-deconflation-P02-S29` - Stamp the host load reading at fire time into the pytest timeout failure output, and do NOT convert that ceiling to process CPU-time, because pytest-timeout offers only signal and thread methods and has no CPU notion at all so the conversion is not expressible in configuration, and more importantly because a wall-clock bound is the CORRECT instrument here rather than a tolerated one, since the thing this ceiling exists to kill is a wedged or deadlocked test and a deadlocked process burns almost no CPU so a CPU-time bound would never fire on the exact failure the ceiling was added for, which is the same share-hang argument that saved the wall threshold on the integration budgets except stronger because here wall is the only instrument that works, leaving the real defect as interpretability rather than instrument choice since nothing in a timeout traceback records host load so a legitimately slow test under saturation is indistinguishable from a genuine hang and reaches a lead ledger as a plausible fictitious defect with a traceback attached
 - `2026-08-05-ci-lane-deconflation-P02-S36` - MEASURED AND RULED. The selective local form does NOT qualify, and the reason is structural rather than a cost. Reachability across the whole dev tree is 22 test directories and 258 files, of which test-dev-tooling reaches 15 and test-dev-ci reaches 4, so only dev/docs/tests (46 files), dev/docs/apidocs/tests (1) and an empty migration directory are reached by no recipe and no workflow at all, and docs.yml invokes no pytest whatsoever. That makes the original figure of two hundred and forty-six files an overstatement by nineteen directories, because the forty-four minutes it priced was overwhelmingly the cost of re-reaching what two lanes already reach. Of the 46 remaining files, 22 reference playwright, sphinx, a docs build or a long mark.timeout, leaving 24 candidates. A bounded run over those 24 plus the apidocs directory collected 130 of 185 tests in 91.7 seconds with 16 failed and 13 errors, and 55 tests were DESELECTED by the local lane's own marker. The deselection is the ruling. Ten of the 24 candidate files are integration-marked at module level, so the local unit lane cannot select them at any price, and enrolling this directory there would leave every one of them exactly as unreached as it is today while printing green over them. The enrolment therefore cannot close the coverage gap it was proposed to close, which is a property of the markers and not of the machine. Cost only compounds it. 29 of the 130 selectable tests are currently non-passing, a never-run backlog that would red every lead's local run from the first day, and the 91.7 seconds is a floor measured while the heaviest fixture short-circuited on a HEAD-level ImportError from the CalculationRevisionId relocation rather than running its CLI-tree subprocess. Re-running once that clears would sharpen the ceiling and cannot change the direction, because the marker and backlog facts are not timing facts. The coverage half of the original question stands open and unaddressed by this row and belongs in CI, where an integration-capable lane can reach all 185. Note for whoever writes that row that this is the FIFTH remedy on this row family to be wider or blinder than the defect it targets, after a CPU bound that cannot fire on a wedge, a report hook that cannot fire on Windows, a raw descriptor write that the exit discards, and a reachability change whose cost was dominated by what it was never meant to reach
-- `2026-08-10-ci-lane-deconflation-exec` - Classify the twelve unclassified open-coded write sites and propose the instrument that would keep them classified
+- `2026-08-05-ci-lane-deconflation-P02-S46` - Classify the twelve unclassified open-coded write sites and propose the instrument that would keep them classified
+- `2026-08-05-ci-lane-deconflation-P02-S28` - Convert the two wall-clock budgets guarding the integration serial step so that a process CPU-time bound becomes the failure condition while the wall-clock threshold is retained as a loud advisory, because the budgets were measured on a box shared with the dev machine and the agent fleet and flake under load regardless of code quality, and because a straight conversion would delete the only bound that catches a genuine share hang given that a test blocked on I/O burns almost no CPU, applying the repository control-plane invariant that perf gates assert process CPU-time with wall advisory only rather than inventing a remedy, noting the perf marker is not available as an escape because it is absent from _CI_INCAPABLE_MARKERS and the perf lane is path-scoped to dev/packaging, and covering the two named budgets only while inheriting the load stamp owned by the pytest ceiling row
+- `2026-08-05-ci-lane-deconflation-P02-S39` - Delegate the export provenance manifest writer to the new core publish-once tier and delete its hand-rolled staging sequence, because the earlier decision to document that writer as a deliberate superset rested on an untested claim that this working tree cannot support os.link, and measurement shows os.link both links and refuses an existing target atomically, so the compromise that justified leaving a parallel write path in the tree never existed and the architecture boundary forbids re-implementing a write path rather than delegating to the single-writer primitive, noting the delegation must also strip the now-false unavailable-on-this-platform paragraph from the writer docstring and that the existing refusal test should keep passing unchanged since the contract is preserved and only its implementation moves
+- `2026-08-05-ci-lane-deconflation-P02-S48` - Repair the workflow-conformance gate that S31 left pinning a removed ignore directive, because S31 correctly deleted the three redundant --ignore directives from the test-unit recipe once the marker expression carried not external_tool, but test_ci_workflow.py still asserts that the recipe body contains --ignore=dev/registry/tests/test_workbook_parity.py, so the gate has been red since that landing and reds for every agent who runs the dev-ci lane, and this is S31's collateral rather than a new defect, noting that the fix is to re-pin the gate on the property S31 established (that the workbook-parity module is held out by its external_tool marker rather than by a path ignore) rather than to restore the directive, because restoring it would undo S31 to make its own gate pass, and noting that the gate's other three assertions on the recipe body are still correct and must survive the repair
 
 ### plan
 
