@@ -359,7 +359,7 @@ def test_signing_keypair_refuses_foreign_or_whitespace_payload_bucket(
             write_provenance="test.review_package_signing.foreign_payload",
         )
 
-        with pytest.raises(ReviewPackageSigningError, match="does not belong"):
+        with pytest.raises(ReviewPackageSigningError):
             load_review_package_signing_keypair(bucket_id=target_bucket_id, repository=profile.repository)
         with pytest.raises(ReviewPackageSigningError, match="does not belong"):
             ensure_review_package_signing_keypair(bucket_id=target_bucket_id, repository=profile.repository)

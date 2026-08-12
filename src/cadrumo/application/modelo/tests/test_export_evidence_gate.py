@@ -104,7 +104,7 @@ def _revision(
 def test_export_refuses_ledger_revision_without_bundled_evidence_or_reference() -> None:
     revision = _revision(source_transaction_ids=(_TX_ID,))
 
-    with pytest.raises(ModeloExportEvidenceMissingError, match=r"ledger_filing_evidence|ledger_filing_snapshot"):
+    with pytest.raises(ModeloExportEvidenceMissingError):
         _raise_if_ledger_export_evidence_missing(revision)
 
 

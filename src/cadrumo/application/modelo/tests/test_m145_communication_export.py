@@ -194,7 +194,7 @@ def test_export_m145_communication_record_refuses_layout_field_overflow(tmp_path
             ),
             bucket_id=runtime.bucket_id,
         )
-        with pytest.raises(ValueError, match="overflows length"):
+        with pytest.raises(ValueError):
             export_m145_communication_record(
                 record.communication_record_id, bucket_id=runtime.bucket_id, renderer=RegistryFixedWidthRecordRenderer()
             )

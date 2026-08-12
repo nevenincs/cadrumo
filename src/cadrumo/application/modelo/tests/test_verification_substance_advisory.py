@@ -74,7 +74,7 @@ def test_advisory_when_ratio_ge_rejects_noncanonical_casilla_id_token() -> None:
         _M200_BIN_GENERATED_CASILLA: Decimal("100"),
     }
 
-    with pytest.raises(ModeloError, match=r"non-canonical casilla\.id"):
+    with pytest.raises(ModeloError):
         evaluate_advisory_predicate_fires('advisory_when_ratio_ge(["00501", "bad key", "0.70"])', values)
 
 

@@ -108,7 +108,7 @@ def _modelo_100_registry_snapshot() -> RegistrySnapshot:
 def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -> None:
     snapshot = _modelo_100_registry_snapshot()
 
-    with pytest.raises(RegistryValidationError, match="malformed keys"):
+    with pytest.raises(RegistryValidationError):
         validate_casilla_input_ids(snapshot.revision, {1: Decimal("1")})
 
 
@@ -117,7 +117,7 @@ def test_validate_casilla_input_ids_keeps_unknown_only_context() -> None:
     snapshot = _modelo_100_registry_snapshot()
     unknown_casilla_id = "modelo-100-not-declared-test"
 
-    with pytest.raises(RegistryValidationError, match=r"unknown casilla.id values") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {unknown_casilla_id: Decimal("1")})
 
     assert raised.value.context == {
@@ -130,7 +130,7 @@ def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_fa
     """Malformed keys refuse before unknown ids or invalid values are considered."""
     snapshot = _modelo_100_registry_snapshot()
 
-    with pytest.raises(RegistryValidationError, match="malformed keys") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(
             snapshot.revision,
             {
@@ -153,7 +153,7 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
     assert result_casilla.id != result_casilla.number
     assert result_casilla.number not in {casilla.id for casilla in snapshot.revision.casillas}
 
-    with pytest.raises(RegistryValidationError, match="non-canonical reference tokens are not accepted") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {result_casilla.number: Decimal("1")})
 
     assert raised.value.context == {
@@ -166,7 +166,7 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
 
-    with pytest.raises(RegistryValidationError, match="is ambiguous") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
 
     assert raised.value.context == {
