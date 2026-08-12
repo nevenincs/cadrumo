@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:3a8743b7e463303b10f0040d4de9a7a85ef309cdbea6fa9a2fb8b1b19654ac58'
+body_hash: 'sha256:cc96e08cb2edf9993a3823d0eddcc0dfb711ba301902199545d3e4d901833a94'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -146,7 +146,7 @@ A standing, deliberately open-ended wave. P11 is the single intake gate for ever
 Open-ended by design: every mid-campaign discovery lands here as an appended Step. A discovery that belongs to an earlier phase's subject matter is still appended HERE if that phase already closed; open phases may take insertions instead.
 
 - [x] `W05.P11.S37` - reconcile the stale export-exemption docstring describing M720 design positions 5-8 against the layout whose records carry zero inline fields; `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`.
-- [ ] `W05.P11.S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it; `src/cadrumo/core/`.
+- [x] `W05.P11.S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it; `src/cadrumo/core/`.
 - [ ] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
 - [x] `W05.P11.S80` - reconcile the invalid S08 manifest worklist against canonical calculation closure, retire false-positive steps S42-S79, correct plan prose, S08 execution, research A-09, and the exact-count test, and prove absent manifests remain canonical for empty closures; `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py`.
 
