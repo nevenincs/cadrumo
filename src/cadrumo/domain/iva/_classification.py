@@ -272,8 +272,9 @@ def domestic_rate_tier_is_required(
     issuer_residency: IvaTerritorialScope,
     customer_residency: IvaTerritorialScope,
     kind: TransactionKind,
+    customer_tax_status: CustomerTaxStatus | None = None,
 ) -> bool:
-    """Whether this operation falls through to ``R05`` and so needs a rate tier.
+    """Whether this operation reaches a rate-tier branch and so needs a tier.
 
     The single home of a condition two layers must agree on. The criteria model
     RAISES when it holds and no tier was supplied, and a producer assembling
@@ -293,14 +294,28 @@ def domestic_rate_tier_is_required(
         issuer_residency: Where the issuing party is established.
         customer_residency: Where the party billed is established.
         kind: The nature of the supply.
+        customer_tax_status: The recipient's condition, where it is settled.
+            ``None`` means it is still open, and an open status demands the tier
+            rather than excusing it.
 
     Returns:
         ``True`` when a tier must be supplied for the operation to classify.
     """
+    if kind in _DOMESTIC_RATE_TIER_EXEMPT_KINDS:
+        return False
+    if issuer_residency is IvaTerritorialScope.ES_MAINLAND and customer_residency is IvaTerritorialScope.ES_MAINLAND:
+        return True
+    # Art. 69.Uno.2.º keeps a B2C service in the TAI when the supplier is
+    # established here, so it is taxed at a Spanish rate exactly as a domestic
+    # supply is -- and picking WHICH domestic category needs the tier just the
+    # same. ``None`` demands it too: the status is still open, the operation may
+    # yet land on this branch, and failing toward asking is the rule everywhere
+    # else on this axis.
     return (
         issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and customer_residency is IvaTerritorialScope.ES_MAINLAND
-        and kind not in _DOMESTIC_RATE_TIER_EXEMPT_KINDS
+        and customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and kind is TransactionKind.SERVICES_GENERAL
+        and (customer_tax_status is None or customer_tax_status is CustomerTaxStatus.B2C_CONSUMER)
     )
 
 
@@ -403,12 +418,14 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
                 issuer_residency=self.issuer_residency,
                 customer_residency=self.customer_residency,
                 kind=self.kind,
+                customer_tax_status=self.customer_tax_status,
             )
             and self.rate_tier is None
         ):
             raise IvaValidationError(
-                "rate_tier is required for ES-to-ES domestic transactions; "
-                "supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly",
+                "rate_tier is required for operations taxed at a Spanish rate: ES-to-ES domestic, "
+                "and a B2C service outside the Comunidad, which LIVA art. 69.Uno.2.º keeps in the TAI. "
+                "Supply GENERAL / REDUCED / SUPER_REDUCED / ZERO / EXEMPT explicitly",
             )
         return self
 
@@ -757,18 +774,74 @@ def _r21_import_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
-def _r22_services_outbound_third_country(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an ES services supply localised outside the TAI (Art. 69).
+#: The condition art. 69.Uno.1.º places on the recipient: "que el destinatario
+#: sea un empresario o profesional que actúe como tal".
+#:
+#: Registration is NOT what the article asks for, so an unregistered business is
+#: squarely inside it. ``PUBLIC_ADMINISTRATION`` is deliberately outside: art.
+#: 69.Tres.4.º treats a legal person holding an IVA identification as an
+#: empresario for these rules even when it does not act as one, and ruling on
+#: that needs its own grounding. ``UNKNOWN`` is outside because it is the
+#: absence of the fact, and an absence cannot satisfy a condition.
+_EMPRESARIO_O_PROFESIONAL: Final[frozenset[CustomerTaxStatus]] = frozenset(
+    {
+        CustomerTaxStatus.B2B_IVA_REGISTERED,
+        CustomerTaxStatus.B2B_NOT_REGISTERED,
+    },
+)
+
+
+def _r22_services_outbound_b2b(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Match a B2B services supply localised outside the TAI (Art. 69.Uno.1.º).
 
     Goods and services FORK here, which is why this stays a separate row rather
     than sharing art. 21's: that article exempts *entregas de bienes* only. A
-    service to a recipient established outside the TAI is localised there by
+    service to a business established outside the TAI is localised there by
     arts. 69 and 70, so it is NOT SUBJECT here rather than exempt -- a different
     outcome with a different Modelo 303 consequence.
+
+    **The recipient's CONDITION is half the rule, not a refinement of it.**
+    Art. 69.Uno.1.º places the supply at the recipient only when that recipient
+    is an *empresario o profesional que actúe como tal*; 69.Uno.2.º places a B2C
+    supply at the SUPPLIER instead, which for a mainland issuer is the TAI. This
+    row read establishment alone and sent both limbs here, so every B2C service
+    outside the Comunidad was booked not-subject -- an under-declaration in the
+    ordinary case rather than an edge.
     """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
         and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_tax_status in _EMPRESARIO_O_PROFESIONAL
+        and criteria.kind is TransactionKind.SERVICES_GENERAL
+        and criteria.direction is InvoiceKind.ISSUED
+    )
+
+
+def _r24_services_outbound_b2c(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Match a B2C services supply the TAI keeps (Art. 69.Uno.2.º).
+
+    The other limb of the same article, and it lands in the opposite place: a
+    service to someone who is not an empresario o profesional is realizada where
+    the SUPPLIER is established, so a mainland issuer's B2C service is inside the
+    TAI and taxed at its Spanish rate. Downstream picks the domestic category
+    from ``rate_tier``, exactly as the ES-to-ES default does, because a supply
+    located here is taxed here on the same terms.
+
+    **Art. 69.Dos is not modelled, and the omission is toward tax rather than
+    away from it.** That paragraph excepts a closed list of services -- derechos
+    de autor, publicidad, asesoramiento, tratamiento de datos, traducción,
+    seguro, cesión de personal, arrendamiento de bienes muebles and the rest --
+    when the B2C recipient is established outside the Comunidad, and it
+    EXPRESSLY does not except a recipient in Canarias, Ceuta or Melilla.
+    Modelling the list would mean deciding which lettered item an invoice falls
+    under from its own prose, which is the rule-table-as-model this domain
+    refuses. So the list's population classifies as subject and the operator
+    must say otherwise.
+    """
+    return (
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -1017,10 +1090,17 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
-        "R22_services_outbound_third_country",
-        "ES services localised outside the TAI",
-        _r22_services_outbound_third_country,
+        "R22_services_outbound_b2b",
+        "ES B2B services localised outside the TAI",
+        _r22_services_outbound_b2b,
         IvaCategory.OPERACION_NO_SUJETA,
+        consumes=_ESTABLISHMENT_ONLY,
+    ),
+    _IvaClassificationRule(
+        "R24_services_outbound_b2c_at_rate_tier",
+        "ES B2C services the TAI keeps, by rate_tier",
+        _r24_services_outbound_b2c,
+        None,
         consumes=_ESTABLISHMENT_ONLY,
     ),
     _IvaClassificationRule(
@@ -1104,7 +1184,9 @@ def classify_iva(criteria: IvaInvoiceClassificationCriteria) -> IvaClassificatio
             continue
         category = rule.category
         if category is None:
-            # R05 — domestic-by-rate-tier; pick the right DOMESTIC_*.
+            # A rate-tier row: the ES-to-ES default, and the B2C service art.
+            # 69.Uno.2.º keeps in the TAI. Both are taxed here, so both pick
+            # their DOMESTIC_* from the tier.
             tier = criteria.rate_tier if criteria.rate_tier is not None else IvaRateKind.GENERAL
             if criteria.rate_tier is None:
                 _logger.debug(
