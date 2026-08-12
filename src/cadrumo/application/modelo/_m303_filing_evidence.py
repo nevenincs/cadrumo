@@ -27,7 +27,7 @@ _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
 
 
-def _evidence_failure(
+def m303_filing_evidence_failure(
     scenario_code: str,
     evidence_values: Mapping[str, str | int | bool | Decimal],
 ) -> ModeloPreconditionFailure:
@@ -58,7 +58,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     if work_unit.modelo != Modelo.M303:
         if evidence is not None:
             raise M303FilingEvidenceError(
-                precondition_failure=_evidence_failure(
+                precondition_failure=m303_filing_evidence_failure(
                     "unsupported_modelo",
                     {"modelo": str(work_unit.modelo), "evidence_present": True},
                 ),
@@ -66,7 +66,7 @@ def validate_m303_filing_instance_evidence_for_revision(
         return None
     if evidence is None:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "missing",
                 {"modelo": str(work_unit.modelo), "evidence_present": False},
             ),
@@ -74,7 +74,7 @@ def validate_m303_filing_instance_evidence_for_revision(
     m303 = evidence.m303
     if m303.period != work_unit.period:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "period_mismatch",
                 {
                     "work_unit_period": work_unit.period.registry_token,
@@ -114,7 +114,7 @@ def _validate_m303_simplified_filing_evidence(
     )
     if regimen.regimen_snapshot != expected_snapshot:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "regimen_snapshot_mismatch",
                 {"snapshot_matches_scope_decision": False},
             ),
@@ -122,7 +122,7 @@ def _validate_m303_simplified_filing_evidence(
     profile = _active_taxpayer_profile(work_unit)
     if regimen.scope_decision != m303_regimen_simplificado_scope_for_profile(profile):
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "regimen_scope_profile_divergence",
                 {"scope_decision_matches_censo_profile": False},
             ),
@@ -149,7 +149,7 @@ def _validate_m303_exonerado_filing_evidence(
 
     if exonerado.applicable and not is_last_filing_period_of_year(work_unit.period):
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "exonerado_390_not_final_period",
                 {"applicable": True, "is_last_filing_period": False},
             ),
@@ -169,7 +169,7 @@ def _validate_m303_exonerado_filing_evidence(
         )
     elif actual_values:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "exonerado_390_endpoints_on_non_applicable",
                 {"applicable": False, "endpoint_count": len(actual_values)},
             ),
@@ -186,7 +186,7 @@ def _validate_m303_exonerado_applicable_values(
     """Require complete A28 endpoints and agreement with revision/observations."""
     if set(actual_values) != expected_ids:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "exonerado_390_endpoint_coverage_incomplete",
                 {"expected_endpoint_count": len(expected_ids), "declared_endpoint_count": len(actual_values)},
             ),
@@ -194,7 +194,7 @@ def _validate_m303_exonerado_applicable_values(
     revision_values = {casilla_id: casilla_values.get(casilla_id) for casilla_id in expected_ids}
     if revision_values != actual_values:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "exonerado_390_revision_value_divergence",
                 {"values_match_revision": False, "endpoint_count": len(actual_values)},
             ),
@@ -206,7 +206,7 @@ def _validate_m303_exonerado_applicable_values(
     }
     if observation_values != actual_values:
         raise M303FilingEvidenceError(
-            precondition_failure=_evidence_failure(
+            precondition_failure=m303_filing_evidence_failure(
                 "exonerado_390_observation_value_divergence",
                 {"values_match_observations": False, "endpoint_count": len(actual_values)},
             ),
@@ -230,4 +230,4 @@ def _active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
     return projection_for_taxpayer(record)
 
 
-__all__ = ["validate_m303_filing_instance_evidence_for_revision"]
+__all__ = ["m303_filing_evidence_failure", "validate_m303_filing_instance_evidence_for_revision"]
