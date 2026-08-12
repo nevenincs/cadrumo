@@ -1940,6 +1940,9 @@ cli:
           de esta factura. El territorio de IVA determina el tratamiento y no se da
           por supuesto que sea la península. El detalle siguiente nombra la parte
           y lo que faltaba.
+        confirm_supply_nature_help: Indique si la operación es una entrega de bienes
+          o una prestación de servicios. Las reglas de localización difieren, por
+          lo que un documento que no lo indica deja el tratamiento sin resolver.
         confirm_taxable_base_help: Sobrescribe la base imponible extraida.
         consent:
           bytes_unrecallable: 'Retirar el consentimiento detiene los envíos futuros.
@@ -7411,6 +7414,7 @@ flows:
       binding_source: Origen concreto del vínculo
       casilla_blocker: Acción bloqueante de casilla
       casilla_blocker_presence: Presencia de bloqueo de casilla
+      estado_casilla_oficial: Estado de casilla oficial
       filters: Filtros
       finding_kind: Tipo de incidencia
       finding_severity: Gravedad de la incidencia
@@ -7419,7 +7423,6 @@ flows:
       no_matching_blockers: Ningún bloqueo coincide con los filtros activos.
       no_matching_casillas: Ninguna casilla coincide con los filtros activos.
       no_matching_findings: Ninguna incidencia coincide con los filtros activos.
-      official_status: Estado de casilla oficial
       option:
         binding_source:
           atribucion_member: Miembro de atribución de rentas
@@ -7451,6 +7454,10 @@ flows:
           relation_prefill: Declaración relacionada
           retenciones_aggregation: Totales de retenciones
           withholding: Registro de retención
+        estado_casilla_oficial:
+          addressed: Representada directamente
+          represented_via_binding: Representada mediante vínculo
+          undefined: Sin definir
         finding_kind:
           advisory: Aviso
           blocking_rule: Regla bloqueante
@@ -7466,10 +7473,6 @@ flows:
           informational: Informativa
           manual: Manual
           projection_only: Solo proyección
-        official_status:
-          addressed: Representada directamente
-          represented_via_binding: Representada mediante vínculo
-          undefined: Sin definir
         operator_action:
           capture_external_evidence: Capturar evidencia externa
           complete_document_evidence: Completar evidencia documental

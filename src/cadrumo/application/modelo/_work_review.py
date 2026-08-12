@@ -15,8 +15,8 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
     CasillaId,
+    EstadoCasillaOficial,
     ModeloWorkProgressState,
-    OfficialBoxStatus,
     OperatorActionAxis,
     Period,
 )
@@ -40,7 +40,7 @@ from ...domain.calculations.registry import (
     ValidatedRegistryAuthority,
     bundled_authority,
     casillas_by_binding,
-    classify_official_boxes,
+    clasificar_casillas_oficiales,
     derive_export_layouts_from_bindings,
     enum_consumed_binding_ids,
     expression_binding_refs,
@@ -147,7 +147,7 @@ class ModeloWorkReviewCasilla(BaseModel):
     realised_kind: ModeloValueKind
     value: ModeloScalar
     origin_anomaly: ModeloWorkOriginAnomaly | None
-    official_box_status: OfficialBoxStatus
+    estado_casilla_oficial: EstadoCasillaOficial
     legal_refs: tuple[LegalRefId, ...]
     source_refs: tuple[SourceRefId, ...]
     formula_id: FormulaId | None
@@ -222,7 +222,7 @@ class _ReviewRowContext:
     relation_channels: Mapping[RelationId, tuple[RelationConsumptionChannel, ...]]
     persisted_decimal_bindings: Mapping[BindingId, Decimal]
     persisted_binding_ids: frozenset[BindingId]
-    statuses: Mapping[CasillaId, OfficialBoxStatus]
+    estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial]
     official_references: Mapping[CasillaId, str | None]
     blocking_findings: tuple[ModeloVerificationFinding, ...]
 
@@ -357,7 +357,7 @@ def _persisted_decimal_bindings(
 def _official_references(
     snapshot: RegistrySnapshot,
     authority: ValidatedRegistryAuthority,
-    statuses: Mapping[CasillaId, OfficialBoxStatus],
+    estados_casillas_oficiales: Mapping[CasillaId, EstadoCasillaOficial],
 ) -> Mapping[CasillaId, str | None]:
     xml_paths: dict[CasillaId, str] = {}
     for layout in derive_export_layouts_from_bindings(snapshot.revision):
@@ -368,7 +368,7 @@ def _official_references(
                 xml_paths.setdefault(entry.casilla_id, entry.path)
     return {
         casilla.id: xml_paths.get(casilla.id, casilla.number)
-        if statuses[casilla.id] is OfficialBoxStatus.ADDRESSED
+        if estados_casillas_oficiales[casilla.id] is EstadoCasillaOficial.ADDRESSED
         else None
         for casilla in snapshot.revision.casillas
     }
@@ -549,7 +549,7 @@ def _review_casilla(
         realised_kind=realised_kind,
         value=value,
         origin_anomaly=anomaly,
-        official_box_status=context.statuses[casilla.id],
+        estado_casilla_oficial=context.estados_casillas_oficiales[casilla.id],
         legal_refs=tuple(casilla.legal_refs),
         source_refs=tuple(casilla.source_refs),
         formula_id=casilla.formula,
@@ -566,7 +566,7 @@ def _review_row_context(
     revision: CalculationRevision | None,
     blocking_findings: tuple[ModeloVerificationFinding, ...],
 ) -> _ReviewRowContext:
-    statuses = classify_official_boxes(
+    estados_casillas_oficiales = clasificar_casillas_oficiales(
         snapshot.revision,
         source_root=authority.source_root,
         sources=snapshot.sources,
@@ -585,8 +585,8 @@ def _review_row_context(
         },
         persisted_decimal_bindings=_persisted_decimal_bindings(snapshot=snapshot, revision=revision),
         persisted_binding_ids=frozenset(() if revision is None else revision.binding_overrides),
-        statuses=statuses,
-        official_references=_official_references(snapshot, authority, statuses),
+        estados_casillas_oficiales=estados_casillas_oficiales,
+        official_references=_official_references(snapshot, authority, estados_casillas_oficiales),
         blocking_findings=blocking_findings,
     )
 

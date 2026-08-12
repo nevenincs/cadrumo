@@ -1749,6 +1749,9 @@ cli:
           is established was left undecided by the document as read. IVA territory
           decides the treatment, and it is not assumed to be the mainland. The detail
           below names the party and what was missing.
+        confirm_supply_nature_help: State whether the operation is a supply of goods
+          or of services. The place-of-supply rules differ, so a document that does
+          not say leaves the treatment unresolved.
         confirm_taxable_base_help: Override the extracted taxable base.
         consent:
           bytes_unrecallable: 'Withdrawing consent stops future transmission. It cannot
@@ -6870,6 +6873,7 @@ flows:
       binding_source: Concrete binding source
       casilla_blocker: Casilla blocker action
       casilla_blocker_presence: Casilla blocker presence
+      estado_casilla_oficial: Official box status
       filters: Filters
       finding_kind: Finding kind
       finding_severity: Finding severity
@@ -6878,7 +6882,6 @@ flows:
       no_matching_blockers: No blockers match the active filters.
       no_matching_casillas: No casillas match the active filters.
       no_matching_findings: No findings match the active filters.
-      official_status: Official box status
       option:
         binding_source:
           atribucion_member: Income-attribution member
@@ -6910,6 +6913,10 @@ flows:
           relation_prefill: Related filing
           retenciones_aggregation: Withholding totals
           withholding: Withholding record
+        estado_casilla_oficial:
+          addressed: Directly addressed
+          represented_via_binding: Represented through binding
+          undefined: Undefined
         finding_kind:
           advisory: Advisory
           blocking_rule: Blocking rule
@@ -6925,10 +6932,6 @@ flows:
           informational: Informational
           manual: Manual
           projection_only: Projection only
-        official_status:
-          addressed: Directly addressed
-          represented_via_binding: Represented through binding
-          undefined: Undefined
         operator_action:
           capture_external_evidence: Capture external evidence
           complete_document_evidence: Complete document evidence

@@ -15,7 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....application.modelo import ModeloWorkReview, build_modelo_work_review
-from ....core import OperatorActionAxis, Period
+from ....core import EstadoCasillaOficial, OperatorActionAxis, Period
 from ....core.json_contract import (
     SCHEMA_REGISTRY,
     EnvelopeStatus,
@@ -155,12 +155,16 @@ def test_review_record_round_trips_through_registered_schema_envelope(tmp_path: 
             notices=notices,
         )
 
+        document = envelope.model_dump(mode="json")
         round_tripped = envelope_cls.model_validate_json(envelope.model_dump_json())
 
         assert SCHEMA_REGISTRY[_COMMAND] is WorkReviewResult
         assert result.review is review
         assert round_tripped == envelope
         assert round_tripped.status is EnvelopeStatus.WARNING
+        casilla_document = document["result"]["review"]["casillas"][0]
+        assert casilla_document["estado_casilla_oficial"] in {member.value for member in EstadoCasillaOficial}
+        assert "official_box_" + "status" not in casilla_document
         blocker = round_tripped.result.review.blockers[0]
         notice = round_tripped.notices[0]
         assert blocker.axis is OperatorActionAxis.SUPPLY_MANUAL_INPUT

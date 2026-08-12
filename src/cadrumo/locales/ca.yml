@@ -1886,6 +1886,9 @@ cli:
           llegit, ha deixat sense decidir on està establerta una de les parts d'aquesta
           factura. El territori d'IVA determina el tractament i no es dona per suposat
           que sigui la península. El detall següent anomena la part i el que faltava.
+        confirm_supply_nature_help: Indiqueu si l'operació és un lliurament de béns
+          o una prestació de serveis. Les regles de localització difereixen, de manera
+          que un document que no ho indica deixa el tractament sense resoldre.
         confirm_taxable_base_help: Sobreescriu la base imposable extreta.
         consent:
           bytes_unrecallable: 'Retirar el consentiment atura els enviaments futurs.
@@ -7322,6 +7325,7 @@ flows:
       binding_source: Origen concret del vincle
       casilla_blocker: Acció bloquejant de casella
       casilla_blocker_presence: Presència de bloqueig de casella
+      estado_casilla_oficial: Estat de casella oficial
       filters: Filtres
       finding_kind: Tipus d'incidència
       finding_severity: Gravetat de la incidència
@@ -7330,7 +7334,6 @@ flows:
       no_matching_blockers: Cap bloqueig coincideix amb els filtres actius.
       no_matching_casillas: Cap casella coincideix amb els filtres actius.
       no_matching_findings: Cap incidència coincideix amb els filtres actius.
-      official_status: Estat de casella oficial
       option:
         binding_source:
           atribucion_member: Membre d'atribució de rendes
@@ -7362,6 +7365,10 @@ flows:
           relation_prefill: Declaració relacionada
           retenciones_aggregation: Totals de retencions
           withholding: Registre de retenció
+        estado_casilla_oficial:
+          addressed: Representada directament
+          represented_via_binding: Representada mitjançant vincle
+          undefined: Sense definir
         finding_kind:
           advisory: Avís
           blocking_rule: Regla bloquejant
@@ -7377,10 +7384,6 @@ flows:
           informational: Informativa
           manual: Manual
           projection_only: Només projecció
-        official_status:
-          addressed: Representada directament
-          represented_via_binding: Representada mitjançant vincle
-          undefined: Sense definir
         operator_action:
           capture_external_evidence: Captura evidència externa
           complete_document_evidence: Completa l'evidència documental

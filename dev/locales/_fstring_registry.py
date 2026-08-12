@@ -199,7 +199,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
 def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Register every closed value used by the modelo-review facet labels."""
     from cadrumo.application.modelo import ModeloWorkOriginAnomaly
-    from cadrumo.core import BindingSourceKind, OfficialBoxStatus, OperatorActionAxis
+    from cadrumo.core import BindingSourceKind, EstadoCasillaOficial, OperatorActionAxis
     from cadrumo.domain.calculations.registry import InputKind, RelationConsumptionChannel
     from cadrumo.domain.filing import ModeloValueKind
     from cadrumo.domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
@@ -209,7 +209,7 @@ def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
         ("binding_source", tuple(member.value for member in BindingSourceKind)),
         ("realised_kind", tuple(member.value for member in ModeloValueKind)),
         ("origin_anomaly", tuple(member.value for member in ModeloWorkOriginAnomaly)),
-        ("official_status", tuple(member.value for member in OfficialBoxStatus)),
+        ("estado_casilla_oficial", tuple(member.value for member in EstadoCasillaOficial)),
         ("operator_action", tuple(member.value for member in OperatorActionAxis)),
         ("finding_kind", tuple(member.value for member in ModeloVerificationFindingKind)),
         ("finding_severity", tuple(member.value for member in ModeloVerificationFindingSeverity)),
