@@ -1812,6 +1812,9 @@ cli:
           formájában eldöntetlenül hagyta, hogy a számla egyik fele hol telepedett
           le. Az áfaterület dönti el a kezelést, és nem feltételezzük, hogy a félsziget.
           Az alábbi részlet megnevezi a felet és azt, ami hiányzott.
+        confirm_supply_nature_help: Adja meg, hogy az ügylet termékértékesítés vagy
+          szolgáltatásnyújtás. A teljesítési hely szabályai eltérnek, ezért ha a dokumentum
+          nem jelöli, a kezelés eldöntetlen marad.
         confirm_taxable_base_help: Felülírja a kinyert adóalapot.
         consent:
           bytes_unrecallable: 'A hozzájárulás visszavonása megállítja a további küldést.
@@ -7180,6 +7183,7 @@ flows:
       binding_source: Konkrét kötési forrás
       casilla_blocker: Mező blokkoló művelete
       casilla_blocker_presence: Mezőblokkoló megléte
+      estado_casilla_oficial: Hivatalos mező állapota
       filters: Szűrők
       finding_kind: Megállapítás típusa
       finding_severity: Megállapítás súlyossága
@@ -7188,7 +7192,6 @@ flows:
       no_matching_blockers: Egy blokkoló sem felel meg az aktív szűrőknek.
       no_matching_casillas: Egy mező sem felel meg az aktív szűrőknek.
       no_matching_findings: Egy megállapítás sem felel meg az aktív szűrőknek.
-      official_status: Hivatalos mező állapota
       option:
         binding_source:
           atribucion_member: Jövedelem-hozzárendelési tag
@@ -7220,6 +7223,10 @@ flows:
           relation_prefill: Kapcsolódó bevallás
           retenciones_aggregation: Levonások összesítése
           withholding: Levonási nyilvántartás
+        estado_casilla_oficial:
+          addressed: Közvetlenül megjelenített
+          represented_via_binding: Kötésen keresztül megjelenített
+          undefined: Meghatározatlan
         finding_kind:
           advisory: Tájékoztatás
           blocking_rule: Blokkoló szabály
@@ -7235,10 +7242,6 @@ flows:
           informational: Tájékoztató
           manual: Kézi
           projection_only: Csak előrevetítés
-        official_status:
-          addressed: Közvetlenül megjelenített
-          represented_via_binding: Kötésen keresztül megjelenített
-          undefined: Meghatározatlan
         operator_action:
           capture_external_evidence: Külső bizonyíték rögzítése
           complete_document_evidence: Dokumentumbizonyíték kiegészítése

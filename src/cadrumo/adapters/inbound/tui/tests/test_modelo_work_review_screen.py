@@ -27,7 +27,7 @@ from .....adapters.persistence.profile.modelos_calculation import CalculationRev
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from .....application.modelo import ModeloWorkOriginAnomaly, ModeloWorkReview, build_modelo_work_review
-from .....core import BindingSourceKind, ModeloWorkProgressState, OfficialBoxStatus, OperatorActionAxis, Period
+from .....core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis, Period
 from .....core.config import override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
 from .....domain.calculations.registry import (
@@ -300,7 +300,7 @@ def test_facet_option_sets_are_exactly_the_canonical_closed_axes() -> None:
         (BindingSourceKind, "binding_source"),
         (ModeloValueKind, "realised_kind"),
         (ModeloWorkOriginAnomaly, "origin_anomaly"),
-        (OfficialBoxStatus, "official_status"),
+        (EstadoCasillaOficial, "estado_casilla_oficial"),
         (OperatorActionAxis, "operator_action"),
         (ModeloVerificationFindingKind, "finding_kind"),
         (ModeloVerificationFindingSeverity, "finding_severity"),
@@ -393,12 +393,12 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
                 tuple(str(row.casilla_id) for row in review.casillas if row.origin_anomaly is None),
             ),
             (
-                "#modelo-review-filter-official-status",
-                OfficialBoxStatus.ADDRESSED.value,
+                "#modelo-review-filter-estado-casilla-oficial",
+                EstadoCasillaOficial.ADDRESSED.value,
                 tuple(
                     str(row.casilla_id)
                     for row in review.casillas
-                    if row.official_box_status is OfficialBoxStatus.ADDRESSED
+                    if row.estado_casilla_oficial is EstadoCasillaOficial.ADDRESSED
                 ),
             ),
         )
@@ -431,17 +431,23 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         assert _row_keys(table) == original_rows
 
         input_kind = cast("Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select))
-        official_status = cast("Select[str]", screen.query_one("#modelo-review-filter-official-status", Select))
+        estado_casilla_oficial = cast(
+            "Select[str]",
+            screen.query_one("#modelo-review-filter-estado-casilla-oficial", Select),
+        )
         expected_manual = tuple(
             str(row.casilla_id) for row in review.casillas if row.declared_input_kind is InputKind.MANUAL
         )
         expected_addressed = tuple(
-            str(row.casilla_id) for row in review.casillas if row.official_box_status is OfficialBoxStatus.ADDRESSED
+            str(row.casilla_id)
+            for row in review.casillas
+            if row.estado_casilla_oficial is EstadoCasillaOficial.ADDRESSED
         )
         expected_intersection = tuple(
             str(row.casilla_id)
             for row in review.casillas
-            if row.declared_input_kind is InputKind.MANUAL and row.official_box_status is OfficialBoxStatus.ADDRESSED
+            if row.declared_input_kind is InputKind.MANUAL
+            and row.estado_casilla_oficial is EstadoCasillaOficial.ADDRESSED
         )
         assert expected_manual
         assert expected_addressed
@@ -454,7 +460,7 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         assert len(_row_keys(table)) == len(expected_manual)
         assert _row_keys(table) == expected_manual
 
-        official_status.value = OfficialBoxStatus.ADDRESSED.value
+        estado_casilla_oficial.value = EstadoCasillaOficial.ADDRESSED.value
         await pilot.pause()
         assert len(_row_keys(table)) == len(expected_intersection)
         assert _row_keys(table) == expected_intersection

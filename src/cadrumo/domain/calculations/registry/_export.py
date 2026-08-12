@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from ....core import CasillaId, ExportExemptionReason, ExportLayoutFormat, OfficialBoxStatus
+from ....core import CasillaId, EstadoCasillaOficial, ExportExemptionReason, ExportLayoutFormat
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -180,12 +180,12 @@ def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) ->
     return frozenset(addressed)
 
 
-def classify_official_boxes(
+def clasificar_casillas_oficiales(
     revision: ModeloRevision,
     *,
     source_root: Path | None = None,
     sources: Mapping[str, SourceReference] | None = None,
-) -> Mapping[CasillaId, OfficialBoxStatus]:
+) -> Mapping[CasillaId, EstadoCasillaOficial]:
     """Classify every revision casilla by its official export representation.
 
     Binding-derived record fields are resolved before any channel is measured.
@@ -199,13 +199,13 @@ def classify_official_boxes(
     therefore requires the validated source root and catalogue rather than
     silently treating an unavailable dictionary as an undefined export surface.
     """
-    addressed, has_binding_fields = _official_box_representation_channels(
+    addressed, has_binding_fields = _canales_representacion_casillas_oficiales(
         revision,
         source_root=source_root,
         sources=sources,
     )
     return {
-        casilla.id: _official_box_status(
+        casilla.id: _estado_casilla_oficial(
             casilla.id,
             exemption_reason=casilla.export_exemption_reason,
             addressed=addressed,
@@ -215,7 +215,7 @@ def classify_official_boxes(
     }
 
 
-def _official_box_representation_channels(
+def _canales_representacion_casillas_oficiales(
     revision: ModeloRevision,
     *,
     source_root: Path | None,
@@ -247,19 +247,19 @@ def _layout_has_binding_fields(layout: ExportLayoutDefinition) -> bool:
     )
 
 
-def _official_box_status(
+def _estado_casilla_oficial(
     casilla_id: CasillaId,
     *,
     exemption_reason: ExportExemptionReason | None,
     addressed: set[CasillaId],
     has_binding_fields: bool,
-) -> OfficialBoxStatus:
+) -> EstadoCasillaOficial:
     """Classify one casilla with direct address taking precedence over its exemption."""
     if casilla_id in addressed:
-        return OfficialBoxStatus.ADDRESSED
+        return EstadoCasillaOficial.ADDRESSED
     if has_binding_fields and exemption_reason is ExportExemptionReason.FILED_VIA_BINDING_FIELD:
-        return OfficialBoxStatus.REPRESENTED_VIA_BINDING
-    return OfficialBoxStatus.UNDEFINED
+        return EstadoCasillaOficial.REPRESENTED_VIA_BINDING
+    return EstadoCasillaOficial.UNDEFINED
 
 
 def export_fields_overlap(left: ExportFieldDefinition, right: ExportFieldDefinition) -> bool:
@@ -509,7 +509,7 @@ __all__ = [
     "ExportLayoutDefinition",
     "ExportRecordDefinition",
     "ResolvedExportLayout",
-    "classify_official_boxes",
+    "clasificar_casillas_oficiales",
     "derive_export_layouts_from_bindings",
     "export_fields_for_casilla",
     "fixed_width_record_casilla_ids",

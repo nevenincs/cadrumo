@@ -32,7 +32,7 @@ from ....application.modelo import (
     ModeloWorkReview,
     ModeloWorkReviewCasilla,
 )
-from ....core import BindingSourceKind, ModeloWorkProgressState, OfficialBoxStatus, OperatorActionAxis
+from ....core import BindingSourceKind, EstadoCasillaOficial, ModeloWorkProgressState, OperatorActionAxis
 from ....core.i18n import tr
 from ....domain.calculations.registry import InputKind, RelationConsumptionChannel
 from ....domain.filing import ModeloValueKind
@@ -176,11 +176,14 @@ class ModeloWorkReviewScreen(Screen[None]):
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-origin-anomaly-presence",
                 )
-                yield Label(tr("flows.modelo_review.filter.official_status"), classes="modelo-review-filter-label")
+                yield Label(
+                    tr("flows.modelo_review.filter.estado_casilla_oficial"),
+                    classes="modelo-review-filter-label",
+                )
                 yield Select[str](
-                    _enum_options(OfficialBoxStatus, axis="official_status"),
+                    _enum_options(EstadoCasillaOficial, axis="estado_casilla_oficial"),
                     prompt=tr("flows.modelo_review.filter.all"),
-                    id="modelo-review-filter-official-status",
+                    id="modelo-review-filter-estado-casilla-oficial",
                 )
                 yield Label(tr("flows.modelo_review.filter.casilla_blocker"), classes="modelo-review-filter-label")
                 yield Select[str](
@@ -284,7 +287,7 @@ class ModeloWorkReviewScreen(Screen[None]):
         relation_channel = self._selected("#modelo-review-filter-relation-channel")
         realised_kind = self._selected("#modelo-review-filter-realised-kind")
         anomaly = self._selected("#modelo-review-filter-origin-anomaly")
-        official_status = self._selected("#modelo-review-filter-official-status")
+        estado_casilla_oficial = self._selected("#modelo-review-filter-estado-casilla-oficial")
         blocker_axis = self._selected("#modelo-review-filter-casilla-blocker")
         return all(
             (
@@ -313,7 +316,7 @@ class ModeloWorkReviewScreen(Screen[None]):
                     self._selected("#modelo-review-filter-origin-anomaly-presence"),
                     row.origin_anomaly is not None,
                 ),
-                official_status is None or row.official_box_status.value == official_status,
+                estado_casilla_oficial is None or row.estado_casilla_oficial.value == estado_casilla_oficial,
                 blocker_axis is None or any(blocker.axis.value == blocker_axis for blocker in row.blocked_by),
                 self._matches_presence(
                     self._selected("#modelo-review-filter-casilla-blocker-presence"),
@@ -423,7 +426,7 @@ class ModeloWorkReviewScreen(Screen[None]):
                 ),
             )
             official = ":".join(
-                part for part in (row.official_box_status.value, row.official_reference) if part is not None
+                part for part in (row.estado_casilla_oficial.value, row.official_reference) if part is not None
             )
             realised = ":".join(
                 part

@@ -141,6 +141,7 @@ from ._document_shape import (
     DocumentShape,
 )
 from ._draft_discrepancy import DraftDiscrepancyKind
+from ._estado_casilla_oficial import EstadoCasillaOficial
 from ._export_exemption_reason import ExportExemptionReason
 from ._export_layout_format import ExportLayoutFormat
 from ._external_oracle_corpus import ExternalOracleCorpus
@@ -223,7 +224,6 @@ from ._notificacion_estado_servicio import (
 )
 from ._objeto_tributario import ObjetoTributario
 from ._observed_header_fact import ObservedHeaderFact
-from ._official_box_status import OfficialBoxStatus
 from ._operator_action_enums import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -526,6 +526,7 @@ __all__: list[str] = [
     "DocumentShape",
     "DraftDiscrepancyKind",
     "ElidedProse",
+    "EstadoCasillaOficial",
     "ExportExemptionReason",
     "ExportLayoutFormat",
     "ExternalOracleCorpus",
@@ -586,7 +587,6 @@ __all__: list[str] = [
     "NotificacionEstadoServicio",
     "ObjetoTributario",
     "ObservedHeaderFact",
-    "OfficialBoxStatus",
     "OfficialTipoRentaCode",
     "OperatorActionAxis",
     "OperatorProgress",
