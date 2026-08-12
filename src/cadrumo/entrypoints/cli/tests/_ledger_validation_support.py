@@ -10,6 +10,7 @@ from pathlib import Path
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
+from ....application.ledger import FILER_POSTCODE_FACT_PATH
 from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
@@ -107,15 +108,35 @@ _GENERAL_REGIME_IVA_AXES: tuple[tuple[str, str | bool], ...] = (
     ("iva.hydrocarbon_deposit_advance_payment_deduction_entitled", False),
 )
 
+#: The filer's own fiscal-address postcode, which is a TERRITORIAL fact rather
+#: than an IVA-regime one and so is named apart from the block above.
+#:
+#: It separates the peninsula from Canarias and from Ceuta y Melilla, is never
+#: read off an invoice, and became mandatory on every confirm path -- so a
+#: harness omitting it reads an incomplete-profile refusal in place of whatever
+#: the suite meant to assert, for the same reason and at the same scale the IVA
+#: block did. A peninsular code, because these suites are domestic.
+#:
+#: The path comes from the production constant rather than a literal, so a
+#: rename reaches this harness through the type checker instead of through a
+#: red suite nobody can attribute.
+_FILER_FISCAL_ADDRESS_AXES: tuple[tuple[str, str | bool], ...] = ((FILER_POSTCODE_FACT_PATH, "28013"),)
+
 
 def _declare_general_regime_iva_profile() -> None:
-    """Complete the minimal profile's IVA block for a general-regime filer.
+    """Complete the minimal profile for a domestic general-regime filer.
 
     ``register_minimal_profile`` deliberately registers the smallest profile
-    that can hold a bucket, which does not include the IVA axes. Any CLI path
-    that resolves an IVA treatment -- notably ``evidence confirm`` -- then
-    refuses with an incomplete-profile error before reaching the behaviour
-    under test, so a suite exercising that path must declare them.
+    that can hold a bucket, which includes neither the IVA axes nor the fiscal
+    address. Any CLI path that resolves an IVA treatment -- notably
+    ``evidence confirm`` -- then refuses with an incomplete-profile error
+    before reaching the behaviour under test, so a suite exercising that path
+    must declare them.
+
+    Both blocks are declared here, and the postcode is not an afterthought: the
+    filer's own territory decides the treatment of every operation, so a
+    confirm path refuses without it exactly as it refuses without a declared
+    Modelo 303 composition. Two mandatory blocks, one incomplete profile.
 
     Written in ONE update rather than one per axis, so the profile is never
     observed half-declared by anything reading between writes.
@@ -123,7 +144,10 @@ def _declare_general_regime_iva_profile() -> None:
     workflow_state_repository().update(
         lambda state: set_active_fields(
             state,
-            tuple(UserProfileFact(path=path, value=value) for path, value in _GENERAL_REGIME_IVA_AXES),
+            tuple(
+                UserProfileFact(path=path, value=value)
+                for path, value in (*_GENERAL_REGIME_IVA_AXES, *_FILER_FISCAL_ADDRESS_AXES)
+            ),
         ),
     )
 
