@@ -279,9 +279,7 @@ def _work_unit_for_target(
     if len(matching) != 1:
         stored = sorted(str(unit.revision_id) for unit in candidates)
         raise WorkUnitRevisionDivergenceError(
-            f"persisted modelo work target for {modelo} {filing_year} {period.registry_token!r} "
-            f"was created against registry revision(s) {stored!r}, but law-determined resolution "
-            f"selected {registry_revision_id!r}. Re-create the work unit against the current registry revision.",
+            translated_message="application.modelo.errors.work_unit_revision_divergence_candidates",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
