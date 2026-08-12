@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:a102497caeb806418001182a9c2cc5b9c123cc697cbe096ad14c75096b4ecbc8'
+body_hash: 'sha256:bfc677a09cbb7d60839d7526007d6e3ef1f55c1d694d4e868b4357676bb16f36'
 step_id: 'S333'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -62,8 +62,6 @@ stage cannot produce a slot the document authors, and guessing it here would
 quietly satisfy a check written to catch exactly that.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 WHAT THE ADR'S QUESTION STILL NEEDS IS A RUNTIME, and that is genuinely the
 operator's to supply rather than code anyone can write: the call-shape question
