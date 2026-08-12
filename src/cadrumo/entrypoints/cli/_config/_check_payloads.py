@@ -19,7 +19,6 @@ from collections.abc import Mapping
 from pydantic import Field, model_validator
 
 from ....application.preflight import HealthSeverity
-from ....core import NoRecoveryOutcome
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 
 ProvisioningFactPayload = Mapping[str, str | int | bool]
@@ -88,15 +87,13 @@ class CheckPreflightPayload(OutputSchema):
     severity: HealthSeverity
     facts: ProvisioningFactPayload = Field(default_factory=dict)
     precondition_action: ResolvedPreconditionAction | None = None
-    no_recovery_outcome: NoRecoveryOutcome | None = None
 
     @model_validator(mode="after")
     def _unhealthy_rows_have_one_outcome(self) -> CheckPreflightPayload:
-        projections = int(self.precondition_action is not None) + int(self.no_recovery_outcome is not None)
-        if self.healthy and projections:
+        if self.healthy and self.precondition_action is not None:
             raise ValueError("healthy preflight rows cannot carry a recovery projection")
-        if not self.healthy and projections != 1:
-            raise ValueError("unhealthy preflight rows require exactly one action or no-recovery outcome")
+        if not self.healthy and self.precondition_action is None:
+            raise ValueError("unhealthy preflight rows require one resolved precondition outcome")
         return self
 
 

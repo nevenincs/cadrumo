@@ -68,16 +68,14 @@ def test_config_check_emits_typed_preflight_rows() -> None:
             "severity",
             "facts",
             "precondition_action",
-            "no_recovery_outcome",
         }
         assert isinstance(row["healthy"], bool)
         assert row["severity"] in {"ok", "warn", "error"}
         assert isinstance(row["facts"], dict)
         if row["healthy"]:
             assert row["precondition_action"] is None
-            assert row["no_recovery_outcome"] is None
         else:
-            assert bool(row["precondition_action"]) != bool(row["no_recovery_outcome"])
+            assert row["precondition_action"] is not None
 
 
 def test_preflight_rows_do_not_leak_into_capability_issues() -> None:
@@ -97,9 +95,11 @@ def test_config_check_flags_missing_corpus_as_red_preflight_row(tmp_path: Path) 
     normatives = by_id["corpus:normatives"]
     assert normatives["healthy"] is False
     assert normatives["severity"] == "error"
-    assert normatives["facts"] == {}
-    assert normatives["precondition_action"] is None
-    assert normatives["no_recovery_outcome"] == "operator_decision"
+    assert normatives["facts"]["corpus_present"] is False
+    action = normatives["precondition_action"]
+    assert action["action"] is None
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["evidence"][0]["values"] == normatives["facts"]
 
 
 def test_config_check_payload_rows_refuse_empty_ids_and_unknown_severity() -> None:

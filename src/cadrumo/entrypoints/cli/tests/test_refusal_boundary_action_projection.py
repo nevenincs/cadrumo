@@ -9,6 +9,7 @@ from typing import cast
 
 import pytest
 import typer
+from pydantic import TypeAdapter
 
 from ....application.auth import acquire_auth_acquisition_lock
 from ....application.modelo import ModeloWorkflowGateError
@@ -29,9 +30,12 @@ from ....core import (
     ActionConditionality,
     ActionEvidenceProvenance,
     AuthProviderKind,
+    MissingOptionalExtraError,
+    OptionalExtra,
 )
 from ....core.config import Settings, override_settings
-from ....core.errors import ErrorCategory, get_error_exit_code
+from ....core.errors import CoreValidationError, ErrorCategory, get_error_exit_code
+from ....llm import LLMRequest, PromptDefinition
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import CliPolicyRefusalProjection, attach_cli_policy_refusal_projection
@@ -104,6 +108,117 @@ def test_workflow_gate_refusal_projects_its_persisted_action_to_json() -> None:
     assert action["conditionality"] == "requires_arguments"
     assert action["missing_argument_names"] == ["work_unit_id"]
     assert action["argument_bindings"][0]["status"] == "missing"
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+def test_nested_llm_request_validation_projects_its_terminal_verdict(locale: str) -> None:
+    """The public callback boundary preserves a validator-owned refusal."""
+    validation_app = typer.Typer()
+
+    @validation_app.command()
+    @command_error_boundary
+    def validate_request(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        LLMRequest(prompt=" \t")
+
+    result = invoke_typer_app(
+        validation_app, ["--json"], catch_exceptions=False, env={"CADRUMO_OUTPUT_LANGUAGE": locale}
+    )
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.REFUSED), result.output
+    document = json.loads(result.stderr)
+    error = document["error"]
+    assert error["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
+    action = error["action"]
+    assert action["failed_condition_id"] == "llm.request.prompt_nonempty"
+    assert action["evidence"] == [
+        {
+            "condition_id": "llm.request.prompt_nonempty",
+            "evidence_id": "llm.request.prompt_nonempty.observation",
+            "provenance": "application_state",
+            "values": {"request_prompt_nonempty": False},
+        },
+    ]
+    assert action["action"] is None
+    assert action["conditionality"] == "not_applicable"
+    assert action["no_recovery_outcome"] == "operator_decision"
+
+
+@pytest.mark.parametrize(
+    "validation_input",
+    [
+        (LLMRequest, {"prompt": "valid", "max_tokens": 0}),
+        (
+            TypeAdapter(tuple[LLMRequest, PromptDefinition]),
+            (
+                {"prompt": " \t"},
+                {"id": "Not canonical", "version": 1, "template": "{{ value }}", "description": "x"},
+            ),
+        ),
+    ],
+)
+def test_nested_validation_fails_closed_without_one_typed_verdict(validation_input: tuple[object, object]) -> None:
+    """No typed candidate and multiple typed candidates retain the generic outcome."""
+    validator, value = validation_input
+    validation_app = typer.Typer()
+
+    @validation_app.command()
+    @command_error_boundary
+    def validate_request(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        if isinstance(validator, TypeAdapter):
+            validator.validate_python(value)
+        else:
+            validator.model_validate(value)  # type: ignore[union-attr]
+
+    result = invoke_typer_app(validation_app, ["--json"], catch_exceptions=False)
+
+    assert result.exit_code == get_error_exit_code(ErrorCategory.REFUSED), result.output
+    action = json.loads(result.stderr)["error"]["action"]
+    assert action["failed_condition_id"] == "cli.validation.boundary_clean"
+    assert action["evidence"][0]["values"] == {"boundary_error_type": "CliValidationBoundaryError"}
+    assert action["action"] is None
+    assert action["conditionality"] == "not_applicable"
+    assert action["no_recovery_outcome"] == "operator_decision"
+
+
+@pytest.mark.parametrize(
+    ("error", "condition", "facts"),
+    [
+        (
+            MissingOptionalExtraError(OptionalExtra(extra="proof", import_name="absent.proof", feature="proof")),
+            "provisioning.optional_extra.importable",
+            {"extra": "proof", "import_name": "absent.proof", "importable": False},
+        ),
+        (
+            CoreValidationError(context={"section": "aeat.pre303", "validation_error": "withheld"}),
+            "cli.external_constants.section_valid",
+            {"section": "aeat.pre303", "valid": False},
+        ),
+    ],
+)
+def test_shared_boundary_maps_declared_s114_producers(
+    error: CoreValidationError | MissingOptionalExtraError,
+    condition: str,
+    facts: dict[str, str | bool],
+) -> None:
+    """S114 producer families emit machine facts without their raw prose."""
+    producer_app = typer.Typer()
+
+    @producer_app.command()
+    @command_error_boundary
+    def refuse(json_out: bool = typer.Option(False, "--json")) -> None:
+        del json_out
+        raise error
+
+    result = invoke_typer_app(producer_app, ["--json"], catch_exceptions=False)
+
+    action = json.loads(result.stderr)["error"]["action"]
+    assert action["failed_condition_id"] == condition
+    assert action["evidence"][0]["values"] == facts
+    assert action["action"] is None
+    assert action["conditionality"] == "not_applicable"
+    assert action["no_recovery_outcome"] == "operator_decision"
 
 
 def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path) -> None:

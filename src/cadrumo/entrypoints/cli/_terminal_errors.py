@@ -362,6 +362,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     defect. Forward it verbatim instead, with its own exit code.
     """
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
+    from ._common import cli_policy_refusal_projection
     from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, render_error_payload, write_stderr
 
     typed = _unwrap_cadrumo_error(exc)
@@ -387,7 +388,12 @@ def _emit_crash(exc: Exception) -> NoReturn:
         )
     boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
-    payload = render_error_payload(boundary, as_json=_json_requested_for(exc))
+    projection = cli_policy_refusal_projection(boundary)
+    payload = render_error_payload(
+        boundary,
+        as_json=_json_requested_for(exc),
+        action=None if projection is None else projection.precondition_action,
+    )
     write_stderr(payload)
     sys.exit(get_error_exit_code(code.category))
 

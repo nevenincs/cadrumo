@@ -1014,7 +1014,14 @@ def _project_validation_error(error: Exception, callback: Callable[..., object])
         getattr(callback, "__name__", repr(callback)),
         error.errors(),
     )
-    return CliValidationBoundaryError(error)
+    boundary = CliValidationBoundaryError(error)
+    from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
+    from ._common import attach_cli_policy_verdict
+
+    verdict = nested_terminal_precondition_verdict(error)
+    if verdict is None:
+        return boundary
+    return attach_cli_policy_verdict(boundary, verdict=verdict)
 
 
 #: Exception-family projections walked in DECLARATION ORDER by

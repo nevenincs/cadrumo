@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core import NoRecoveryOutcome, ServiceCapability, resolve_active_bucket_id
+from ....core import ServiceCapability, resolve_active_bucket_id
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
@@ -22,7 +22,7 @@ from ....core.i18n import tr
 from .._common import _emit_envelope, resolve_cli_precondition_action
 
 # Eager import so the @register_schema decorator runs on the CLI build path.
-from ._check_payloads import CheckDependencyPayload, ConfigCheckResult
+from ._check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
 from ._status_rendering import precondition_action_lines
 
 
@@ -135,14 +135,17 @@ def register(app: typer.Typer) -> None:
         # storage adapter owns, so it is supplied here at the composition root rather
         # than reached for from the application layer.
         preflight = [
-            {
-                "check": row.check,
-                "healthy": row.healthy,
-                "severity": row.severity,
-                "facts": {},
-                "precondition_action": None,
-                "no_recovery_outcome": None if row.healthy else NoRecoveryOutcome.OPERATOR_DECISION,
-            }
+            CheckPreflightPayload(
+                check=row.check,
+                healthy=row.healthy,
+                severity=row.severity,
+                facts=row.facts,
+                precondition_action=(
+                    resolve_cli_precondition_action(row.precondition_verdict)
+                    if row.precondition_verdict is not None
+                    else None
+                ),
+            )
             for row in run_preflight_checks(
                 object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
             )
@@ -190,9 +193,10 @@ def register(app: typer.Typer) -> None:
         for dependency in dependency_payloads:
             lines.extend(_dependency_text_lines(dependency))
         for row in preflight:
-            lines.append(f"{preflight_label}\t{row['check']}\t{row['severity']}")
-            if row["no_recovery_outcome"] is not None:
-                lines.append(f"{row['check']}.outcome\t{row['no_recovery_outcome']}")
+            lines.append(f"{preflight_label}\t{row.check}\t{row.severity}")
+            action = row.precondition_action
+            if action is not None:
+                lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(action))
         for issue in issues:
             lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
         _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))

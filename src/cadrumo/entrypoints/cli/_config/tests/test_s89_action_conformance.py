@@ -330,7 +330,6 @@ def test_config_check_json_and_text_resolve_the_same_localized_action_surface(
             "severity",
             "facts",
             "precondition_action",
-            "no_recovery_outcome",
         }
         for preflight in result["preflight"]
     )
