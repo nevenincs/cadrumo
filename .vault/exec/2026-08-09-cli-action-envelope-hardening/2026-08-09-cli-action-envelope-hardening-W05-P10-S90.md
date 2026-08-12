@@ -52,6 +52,18 @@ Verification: the strengthened integration module passes 5 tests; a separate fix
 
 S90 remains open for final independent review.
 
+## Canonical import notice transport closure
+
+The final import payload review found three advisory strings redeclared inside `LedgerImportPayload`: dry-run preview, empty-import explanation, and likely-duplicate warning. Those fields duplicated the envelope's typed `Notice` authority and made machine consumers depend on localized prose embedded in a command-specific result schema.
+
+The bespoke fields and their constructor parameters are removed. Import now emits the shared notice schema with stable codes `ledger.import.dry_run_preview`, `ledger.import.no_rows_imported`, `ledger.import.all_rows_skipped`, and `ledger.import.likely_duplicates`. Their contexts contain only deterministic import facts encoded as strings; every action is null because none of these observations identifies a genuine executable recovery. Text mode remains a localized projection of the same catalogue-owned message.
+
+The integration proof asserts code, severity, context, and null action without matching rendered prose. The empty-import proof runs under Catalan, English, Spanish, and Hungarian and yields the same structural contract in every locale. Real import paths cover blank input, all rows skipped on re-import, dry-run would-import counts, and likely cross-format duplicates. A new AST conformance gate scans every ledger payload module and rejects future payload fields or constructor arguments ending in notice, hint, suggestion, or recovery.
+
+Verification: the focused real-import selection passes seven tests; the complete import UX plus ledger notice/action conformance lane passes 33 tests. Ruff is clean. The exact ledger payload fixed-point scan returns zero bespoke advisory fields and only the canonical `LedgerImportPayload.from_result(result)` call remains. Direct-file BasedPyright reports only the package's known private-import and Typer callback diagnostics, with no diagnostic on the changed notice or payload declarations. `git diff --check` reports one pre-existing blank-line warning in the separately owned casilla-schema S29 execution record.
+
+S90 remains open for final independent review.
+
 ### Frozen typed-error full-scope remediation
 
 The frozen review identified remaining ledger CLI consumers that converted registered typed exceptions into `BadParameter` prose. Fresh semantic discovery re-confirmed the canonical split: `LLMConsentError` already owns a terminal LLM precondition verdict; transaction and invoice validation failures retain registered domain identities but require a fact-only CLI projection where no genuine operator action can be bound.
