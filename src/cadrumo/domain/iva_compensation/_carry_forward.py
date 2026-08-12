@@ -436,8 +436,12 @@ def enforce_iva_compensation_four_year_window(
     if expired:
         first = expired[0]
         raise IvaCompensationCarryForwardPolicyError(
-            "IVA compensation carry-forward contains expired remaining balance "
-            f"from {first.source_filing_year}/{first.source_period.registry_token}",
+            translated_message="errors.refused.refused_filing_calculate",
+            context={
+                "source_filing_year": str(first.source_filing_year),
+                "source_period": first.source_period.registry_token,
+                "remaining_balance_expired": True,
+            },
         )
     return report
 
@@ -455,7 +459,10 @@ def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
     if period.is_quarterly:
         quarter_ordinal = period.quarter_ordinal
         if quarter_ordinal is None:
-            raise IvaCompensationCarryForwardPolicyError("quarterly IVA period has no quarter ordinal")
+            raise IvaCompensationCarryForwardPolicyError(
+                translated_message="errors.refused.refused_filing_calculate",
+                context={"period": period.registry_token, "quarter_ordinal_present": False},
+            )
         return (quarter_ordinal, period.registry_token)
     if period.kind is PeriodKind.MONTHLY:
         return (int(period.registry_token), period.registry_token)
