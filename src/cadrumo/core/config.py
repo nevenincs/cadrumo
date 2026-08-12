@@ -939,9 +939,13 @@ class Settings(CadrumoMcpServingSettings):
     @model_validator(mode="after")
     def _validate_live_iva_timeout_hierarchy(self) -> Settings:
         if self.cadrumo_live_iva_declaration_capture_timeout_ms >= self.cadrumo_live_iva_surface_timeout_ms:
-            raise ValueError(
-                "cadrumo_live_iva_declaration_capture_timeout_ms must be lower than "
-                "cadrumo_live_iva_surface_timeout_ms",
+            raise CoreValidationError(
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "capture_timeout_ms": self.cadrumo_live_iva_declaration_capture_timeout_ms,
+                    "surface_timeout_ms": self.cadrumo_live_iva_surface_timeout_ms,
+                    "capture_below_surface": False,
+                },
             )
         return self
 
@@ -1100,7 +1104,14 @@ class Settings(CadrumoMcpServingSettings):
     def _detail_url_template_has_expediente_id(cls, value: str) -> str:
         """Reject templates that omit the ``{expediente_id}`` placeholder."""
         if "{expediente_id}" not in value:
-            raise CoreValidationError("aeat_status_detail_url_template must contain '{expediente_id}'")
+            raise CoreValidationError(
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "setting": "aeat_status_detail_url_template",
+                    "required_placeholder": "{expediente_id}",
+                    "placeholder_present": False,
+                },
+            )
         return value
 
     @field_validator(
@@ -1134,11 +1145,25 @@ class Settings(CadrumoMcpServingSettings):
         import re as _re
 
         if not _re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
-            raise CoreValidationError("CADRUMO_CLAVE_MOVIL_DNI_FECHA must be YYYY-MM-DD (e.g. 2030-01-01)")
+            raise CoreValidationError(
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "env_var": "CADRUMO_CLAVE_MOVIL_DNI_FECHA",
+                    "required_format": "YYYY-MM-DD",
+                    "canonical_form": False,
+                },
+            )
         try:
             date.fromisoformat(value)
         except ValueError as exc:
-            raise CoreValidationError("CADRUMO_CLAVE_MOVIL_DNI_FECHA must be a valid YYYY-MM-DD date") from exc
+            raise CoreValidationError(
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "env_var": "CADRUMO_CLAVE_MOVIL_DNI_FECHA",
+                    "required_format": "YYYY-MM-DD",
+                    "resolvable_date": False,
+                },
+            ) from exc
         return value
 
     @field_validator(
@@ -1150,7 +1175,12 @@ class Settings(CadrumoMcpServingSettings):
         """Reject templates that omit the ``{target}`` placeholder."""
         if "{target}" not in value:
             raise CoreValidationError(
-                "aeat_clave_sede_access_url_template must contain '{target}' for the URL-encoded post-auth path",
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "required_placeholder": "{target}",
+                    "placeholder_present": False,
+                    "placeholder_purpose": "url_encoded_post_auth_path",
+                },
             )
         return value
 
@@ -1375,8 +1405,9 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
     Raises:
         CoreValidationError: When the root or one of its directories cannot
             be created, or a path in the taxonomy is occupied by a file. The
-            refusal names the offending path: a half-built tree is worse than
-            an absent one, because the gap only surfaces later, at a write.
+            refusal carries the offending path and which of the two conditions
+            failed as typed facts: a half-built tree is worse than an absent
+            one, because the gap only surfaces later, at a write.
     """
     from ._storage_taxonomy import storage_tree_targets
 
@@ -1398,15 +1429,25 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
         if mode is not None:
             if not S_ISDIR(mode):
                 raise CoreValidationError(
-                    f"Cadrumo state directory {target} is occupied by a file; "
-                    "the storage tree cannot be materialised over it.",
+                    translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                    context={
+                        "state_directory_target": str(target),
+                        "occupied_by_file": True,
+                        "directory_created": False,
+                    },
                 )
             continue
         try:
             target.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
             raise CoreValidationError(
-                f"Cadrumo could not create the state directory {target}: {exc}",
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "state_directory_target": str(target),
+                    "occupied_by_file": False,
+                    "directory_created": False,
+                    "mkdir_error_type": type(exc).__name__,
+                },
             ) from exc
 
     # Harden the ROOT once, with inheritance, rather than each file as it is
