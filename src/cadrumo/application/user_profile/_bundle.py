@@ -88,12 +88,20 @@ def _stamped_bundle_version(payload: dict[str, object], *, expected_written_vers
     written_version = payload.get("bundle_schema_version")
     if not isinstance(written_version, int) or isinstance(written_version, bool):
         raise UnsupportedBundleSchemaVersionError(
-            f"bundle payload carries no integer bundle_schema_version (got {written_version!r})",
+            translated_message="errors.refused.refused_application_registry_input",
+            context={
+                "written_version": str(written_version),
+                "bundle_schema_version_is_integer": False,
+            },
         )
     if expected_written_version is not None and written_version != expected_written_version:
         raise UnsupportedBundleSchemaVersionError(
-            f"bundle payload is stamped bundle_schema_version {written_version} but its "
-            f"transport envelope declares {expected_written_version}",
+            translated_message="errors.refused.refused_application_registry_input",
+            context={
+                "written_version": str(written_version),
+                "envelope_version": str(expected_written_version),
+                "versions_agree": False,
+            },
         )
     return written_version
 
@@ -104,15 +112,11 @@ def _refuse_unreadable_bundle_version(written_version: int) -> None:
     context = {"bundle_schema_version": str(written_version), "supported_versions": supported}
     if written_version > BUNDLE_SCHEMA_VERSION:
         raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {written_version} was written by a newer application; "
-            f"this application reads up to version {BUNDLE_SCHEMA_VERSION}",
             context=context,
             translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
     if written_version < BUNDLE_DURABILITY_FLOOR:
         raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {written_version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
             context=context,
             translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
@@ -157,8 +161,6 @@ def validate_bundle_payload(
         upgrader = BUNDLE_PAYLOAD_UPGRADERS.get(hop)
         if upgrader is None:
             raise UnsupportedBundleSchemaVersionError(
-                f"bundle_schema_version {written_version} has no registered upgrade "
-                f"from version {hop}; the payload is supported but this build cannot upgrade it",
                 context={
                     "bundle_schema_version": str(written_version),
                     "missing_from_version": str(hop),
@@ -246,8 +248,6 @@ def _normalize_custody_profile(custody_profile: StorageCustodyProfile | str) -> 
         from ...domain.user_profile import ProfileExportError
 
         raise ProfileExportError(
-            f"unsupported custody_profile {custody_profile!r}; expected one of "
-            f"{tuple(profile.value for profile in StorageCustodyProfile)}",
             context={"custody_profile": custody_profile},
         ) from exc
 
@@ -320,8 +320,6 @@ def _assert_full_custody_coverage(
     from ...domain.user_profile import ProfileExportError
 
     raise ProfileExportError(
-        "full custody profile found a populated secure-object namespace with no registry "
-        "classification; register a custody disposition for it before it can be backed up",
         context={"unclassified_namespaces": missing, "custody_profile": StorageCustodyProfile.FULL.value},
     )
 
