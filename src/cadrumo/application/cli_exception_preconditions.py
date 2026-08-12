@@ -93,6 +93,43 @@ def nested_terminal_precondition_verdict(error: BaseException) -> PreconditionVe
     return next(iter(candidates.values()))
 
 
+def cli_exception_envelope_view(error: BaseException) -> BaseException:
+    """Return the narrow envelope-safe view for S114 producer families."""
+    from ..core import MissingOptionalExtraError
+    from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
+
+    if isinstance(error, MissingOptionalExtraError):
+        context: dict[str, object] = {
+            "extra": error.extra.extra,
+            "import_name": error.extra.import_name,
+            "importable": False,
+        }
+    elif (
+        isinstance(error, CoreValidationError)
+        and error.context is not None
+        and error.context.get("section") == "aeat.pre303"
+    ):
+        context = {
+            "section": "aeat.pre303",
+            "validation_error_type": (
+                type(error.__cause__).__name__ if error.__cause__ is not None else "ValidationError"
+            ),
+        }
+    else:
+        return error
+
+    code = get_registered_error_code(error)
+    view = BaseException.__new__(type(error))
+    assert isinstance(view, CadrumoError)
+    view.__dict__.update(error.__dict__)
+    for attribute in ("extra", "install_hint", "name", "path"):
+        view.__dict__.pop(attribute, None)
+    view.args = (code.message_key,)
+    view.translated_message = code.message_key
+    view.context = context
+    return view
+
+
 class CliExceptionPrecondition(StrEnum):
     """Closed failed-condition identities for the CLI exception slice."""
 
@@ -147,6 +184,7 @@ def cli_exception_no_recovery_verdict(
 
 __all__ = [
     "CliExceptionPrecondition",
+    "cli_exception_envelope_view",
     "cli_exception_no_recovery_verdict",
     "nested_terminal_precondition_verdict",
 ]

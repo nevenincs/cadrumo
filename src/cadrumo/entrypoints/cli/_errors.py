@@ -995,7 +995,16 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
 def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
     """Forward a typed :class:`CadrumoError` verbatim."""
     assert isinstance(error, CadrumoError)
-    return error
+    from ...application.cli_exception_preconditions import (
+        cli_exception_envelope_view,
+        nested_terminal_precondition_verdict,
+    )
+    from ._common import attach_cli_policy_verdict
+
+    verdict = nested_terminal_precondition_verdict(error)
+    view = cli_exception_envelope_view(error)
+    assert isinstance(view, CadrumoError)
+    return view if verdict is None else attach_cli_policy_verdict(view, verdict=verdict)
 
 
 def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:

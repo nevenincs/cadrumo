@@ -35,6 +35,7 @@ from ....core import (
 )
 from ....core.config import Settings, override_settings
 from ....core.errors import CoreValidationError, ErrorCategory, get_error_exit_code
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
 from ....llm import LLMRequest, PromptDefinition
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app, semantic_cli_output
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -110,7 +111,7 @@ def test_workflow_gate_refusal_projects_its_persisted_action_to_json() -> None:
     assert action["argument_bindings"][0]["status"] == "missing"
 
 
-@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
 def test_nested_llm_request_validation_projects_its_terminal_verdict(locale: str) -> None:
     """The public callback boundary preserves a validator-owned refusal."""
     validation_app = typer.Typer()
@@ -197,10 +198,12 @@ def test_nested_validation_fails_closed_without_one_typed_verdict(validation_inp
         ),
     ],
 )
+@pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
 def test_shared_boundary_maps_declared_s114_producers(
     error: CoreValidationError | MissingOptionalExtraError,
     condition: str,
     facts: dict[str, str | bool],
+    locale: str,
 ) -> None:
     """S114 producer families emit machine facts without their raw prose."""
     producer_app = typer.Typer()
@@ -211,14 +214,29 @@ def test_shared_boundary_maps_declared_s114_producers(
         del json_out
         raise error
 
-    result = invoke_typer_app(producer_app, ["--json"], catch_exceptions=False)
+    result = invoke_typer_app(
+        producer_app,
+        ["--json"],
+        catch_exceptions=False,
+        env={"CADRUMO_OUTPUT_LANGUAGE": locale},
+    )
 
-    action = json.loads(result.stderr)["error"]["action"]
+    envelope = json.loads(result.stderr)["error"]
+    action = envelope["action"]
     assert action["failed_condition_id"] == condition
     assert action["evidence"][0]["values"] == facts
     assert action["action"] is None
     assert action["conditionality"] == "not_applicable"
     assert action["no_recovery_outcome"] == "operator_decision"
+    if isinstance(error, MissingOptionalExtraError):
+        assert envelope["context"] == {"extra": "proof", "import_name": "absent.proof", "importable": "false"}
+        assert "feature" not in envelope["context"]
+        assert "install_hint" not in envelope["context"]
+        assert error.extra.install_hint not in result.stderr
+    else:
+        assert envelope["context"] == {"section": "aeat.pre303", "validation_error_type": "ValidationError"}
+        assert "validation_error" not in envelope["context"]
+        assert "withheld" not in result.stderr
 
 
 def test_real_root_refusal_projects_exact_leaf_and_action_to_json(tmp_path: Path) -> None:

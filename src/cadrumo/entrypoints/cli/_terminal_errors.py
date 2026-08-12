@@ -361,6 +361,7 @@ def _emit_crash(exc: Exception) -> NoReturn:
     remedy, and would report an operator-actionable condition as a program
     defect. Forward it verbatim instead, with its own exit code.
     """
+    from ...application.cli_exception_preconditions import cli_exception_envelope_view
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
     from ._common import cli_policy_refusal_projection
     from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, render_error_payload, write_stderr
@@ -386,9 +387,11 @@ def _emit_crash(exc: Exception) -> NoReturn:
             exc_info=exc,
             extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
         )
-    boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
+    projection = cli_policy_refusal_projection(typed) if typed is not None else None
+    boundary = cli_exception_envelope_view(typed) if typed is not None else CliUnexpectedBoundaryError(exc)
     code = get_registered_error_code(boundary)
-    projection = cli_policy_refusal_projection(boundary)
+    if projection is None:
+        projection = cli_policy_refusal_projection(boundary)
     payload = render_error_payload(
         boundary,
         as_json=_json_requested_for(exc),
