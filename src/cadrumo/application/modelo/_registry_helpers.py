@@ -282,15 +282,9 @@ def _reject_non_numeric_casilla_inputs(
         if revision_casillas_by_id[casilla_id].data_type not in accepted_data_types
     )
     if non_numeric:
-        details = "; ".join(
-            f"{casilla_id}: data_type={revision_casillas_by_id[casilla_id].data_type!r} "
-            f"({revision_casillas_by_id[casilla_id].label})"
-            for casilla_id in non_numeric
-        )
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
             context={
-                "noncanonical_reference_targets": details,
                 "casilla_ids": ",".join(non_numeric),
                 "revision_id": revision.id,
                 "data_types": ",".join(revision_casillas_by_id[casilla_id].data_type for casilla_id in non_numeric),
@@ -315,14 +309,9 @@ def _reject_boolean_casilla_inputs_outside_domain(
         # a boolean casilla that is not exactly 0 or 1, so coercing here would only
         # move the same refusal further from the operator who typed the value, and
         # guessing which answer a 2 meant is not a guess this boundary can make.
-        details = "; ".join(
-            f"{casilla_id}: {decimal_inputs[casilla_id]!s} ({revision_casillas_by_id[casilla_id].label})"
-            for casilla_id in out_of_domain
-        )
         raise RegistryValidationError(
             translated_message="errors.error.error_calculations_registry_validation",
             context={
-                "noncanonical_reference_targets": details,
                 "casilla_ids": ",".join(out_of_domain),
                 "revision_id": revision.id,
                 "accepted": "0,1",
