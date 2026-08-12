@@ -468,8 +468,11 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         _logger.error("load_corpus_manifest: structurally invalid manifest at %s", target, exc_info=True)
         raise CorpusManifestError(
             translated_message="errors.integrity.integrity_storage_corpus_manifest",
-            context={"manifest_path": str(target), "structurally_valid": False,
-                     "validation_error_type": type(exc).__name__},
+            context={
+                "manifest_path": str(target),
+                "structurally_valid": False,
+                "validation_error_type": type(exc).__name__,
+            },
         ) from exc
     except _UnsupportedManifestVersionError as exc:
         raise CorpusManifestError(
@@ -653,8 +656,11 @@ def verify_corpus_bundle(bundle_path: Path) -> CorpusBundleVerification:
     except zipfile.BadZipFile as exc:
         raise CorpusBundleError(
             translated_message="errors.integrity.integrity_storage_corpus_bundle",
-            context={"bundle_path": str(bundle_path), "valid_zip_archive": False,
-                     "archive_error_type": type(exc).__name__},
+            context={
+                "bundle_path": str(bundle_path),
+                "valid_zip_archive": False,
+                "archive_error_type": type(exc).__name__,
+            },
         ) from exc
 
 
@@ -693,8 +699,7 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
     except _MalformedManifestPayloadError as exc:
         raise CorpusBundleError(
             translated_message="errors.integrity.integrity_storage_corpus_bundle",
-            context={"embedded_manifest_structurally_valid": False,
-                     "validation_error_type": type(exc).__name__},
+            context={"embedded_manifest_structurally_valid": False, "validation_error_type": type(exc).__name__},
         ) from exc
     except _UnsupportedManifestVersionError as exc:
         raise CorpusBundleError(
