@@ -471,7 +471,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
                     legal_refs=_art95_refs(),
                     remedy=(
                         "Confirm with the payer whether this was retención or a fee, then record "
-                        "the true figure with 'aeat app ledger classify <transaction-id>'."
+                        "the true figure by classifying that transaction in the ledger."
                     ),
                 ),
             )
@@ -491,8 +491,8 @@ def inferred_actividad_retencion_rate_advisory_observations(
                 legal_refs=_art95_refs(),
                 remedy=(
                     "Claiming a pago a cuenta nobody withheld over-declares it. Confirm the shortfall "
-                    "with the payer, then record the true figure with 'aeat app ledger classify "
-                    "<transaction-id>'."
+                    "with the payer, then record the true figure by classifying that transaction in "
+                    "the ledger."
                 ),
             ),
         )

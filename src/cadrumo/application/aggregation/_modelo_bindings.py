@@ -791,8 +791,8 @@ def _ungrounded_income_diagnostics(
     preamble = (
         f"{len(observations)} actividad-económica income row(s) totalling {total} EUR lack a "
         f"taxable_base, so {_ungrounded_income_consequence(ungrounded.facts)}. Their retención "
-        f"credit is also lost, since it needs the same missing base. Record with 'aeat app "
-        f"ledger classify <transaction-id> --taxable-base <amount>'. Transactions: "
+        f"credit is also lost, since it needs the same missing base. Classify each transaction "
+        f"in the ledger with its taxable base. Transactions: "
     )
     return (
         CalculationSourceDiagnostic(

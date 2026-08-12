@@ -295,8 +295,8 @@ def _undeclared_advisory(casilla_id: CasillaId) -> CalculationSourceDiagnostic:
             "omitted"
         ),
         remedy=(
-            "Declare them with `aeat config profile descendiente add --descendiente "
-            "NACIMIENTO=YYYY-MM-DD[,...]` before filing."
+            "Declare each descendant on the active profile, with its date of birth, "
+            "before filing."
         ),
         casilla_id=casilla_id,
     )
@@ -516,8 +516,8 @@ def _count_desync_advisory(stored: Decimal, rows: int) -> CalculationSourceDiagn
             "would carry two different answers"
         ),
         remedy=(
-            "Re-enter the descendants with `aeat config profile descendiente add --descendiente "
-            "NACIMIENTO=YYYY-MM-DD[,...]`, which rewrites the count and the rows together."
+            "Re-enter the descendants on the active profile, which rewrites the count and "
+            "the rows together."
         ),
     )
 
