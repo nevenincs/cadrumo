@@ -24,11 +24,26 @@
 # historical version oldest-first and taking the first would bundle repealed
 # law.
 #
-# ONE LIMITATION, stated rather than buried. Only art-28 was confirmed through
-# two independent live channels (the BOE API and AEAT's own published surcharge
-# table). Every other article rests on a single live channel. That is weaker
-# corroboration, and a second channel is owed before any consumer computes a
-# figure from these entries rather than merely citing them.
+# TWO INDEPENDENT CHANNELS, and what that does and does not buy. The text of
+# every entry here is confirmed on the BOE consolidated database AND on the
+# original 2003 diario publication together with the original publications of
+# each modifying norm (RDL 20/2011, Ley 7/2012, Ley 34/2015, RDL 3/2016,
+# Ley 11/2021). Those are demonstrably different documents rather than one
+# source re-served: the 2003 original lacks the apartados added to art-28 and
+# art-170 in 2012, which the consolidated text carries. Thirteen of these
+# articles have never been amended, so for them the 2003 original IS the
+# current text and the confirmation is direct.
+#
+# RESIDUAL LIMITATION, which two channels did NOT close. The channels agree on
+# what text was ENACTED. They do not independently agree that nothing later
+# changed it: the claim that the amendment history is exhausted still rests on
+# the consolidated database's own version list. For the unamended articles that
+# gap is small -- a later amendment would have to be invisible to BOE's own
+# consolidation -- but it is not zero.
+#
+# An AEAT restatement was sought as a third channel for the sanction bands and
+# NOT obtained; the published recargos material covers art-27 only. Recorded as
+# unobtained rather than filled with a search-engine paraphrase.
 
 [legal."ley-58-2003:art-163"]
 evidence_tier = "legal_authority"

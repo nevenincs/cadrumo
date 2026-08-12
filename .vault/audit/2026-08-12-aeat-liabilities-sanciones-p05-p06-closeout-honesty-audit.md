@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:064c5e5e28a128ba158721ec93ff062bc88938781b2667fe93de2d6c958dbf0e'
+body_hash: 'sha256:f2ecec69f835b37cead07fad5969600e61401c3aed51c5a2ce11d15fb9368d4c'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
@@ -143,15 +143,40 @@ bundled-side claims were then independently re-verified before stamping,
 including the check that the superseded art. 188 reduction figures are absent
 from the corpus.
 
-**The limitation, stated rather than buried:** only art. 28 was confirmed
-through two independent live channels. The other seventeen articles rest on a
-single live channel. The review agent reported this itself rather than being
-caught at it.
+**AMENDED after a second-channel pass.** This finding originally recorded that
+only art. 28 had two independent live channels and the other seventeen rested
+on one. That is no longer true and the claim has been corrected everywhere it
+was shipped.
 
-**Remediation:** recorded in each catalogue file's header, so the limitation
-travels with the data instead of living in a vault document. A second live
-channel is owed before any consumer COMPUTES a figure from these entries rather
-than merely citing them. No consumer exists today, so this is not blocking.
+A second channel was obtained: the ORIGINAL 2003 BOE diario publication plus
+the original publications of each modifying norm. Its independence is
+demonstrated rather than asserted — the 2003 original lacks the apartados added
+to arts. 28 and 170 in 2012, which the consolidated text carries, so it cannot
+be the same document re-served. Thirteen of the seventeen articles have never
+been amended, so for them the 2003 original IS the current text. 31 figures
+checked on the second channel, 31 AGREE, zero disagreements. Every
+figure-bearing article among the seventeen falls in the unamended set.
+
+Art. 188's reductions — load-bearing for every sancionador entry, since they
+move the nominal band to what is actually paid — gained a second channel too,
+against Ley 11/2021's own original publication.
+
+**What two channels did NOT buy, and this is the honest residual.** The channels
+agree on what text was ENACTED. They do not independently agree that nothing
+later changed it: the claim that the amendment history is exhausted still rests
+on the consolidated database's own version list. For the unamended articles the
+gap is small — a later amendment would have to be invisible to BOE's own
+consolidation — but it is not zero.
+
+An AEAT restatement was sought as a third channel for the sanction bands and
+NOT obtained; the published recargos material covers art. 27 only. The reviewer
+recorded this as unobtained rather than counting a search-engine paraphrase,
+which is the right call.
+
+**Remediation:** the corrected two-channel statement and its residual limitation
+now sit in each catalogue file's header, replacing the superseded one, so what
+travels with the data is accurate. No further channel work is owed before a
+consumer merely CITES these entries.
 
 ## FINDING-6: unrelated red gates on the shared tree, triaged to peers
 
