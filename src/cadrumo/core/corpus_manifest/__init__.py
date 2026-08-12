@@ -102,20 +102,30 @@ class CorpusEntry(BaseModel):
     @classmethod
     def _validate_relative_path(cls, value: str) -> str:
         if value in {".", "..", ""}:
-            raise CorpusManifestError(f"relative_path must not be a dot token: {value!r}")
+            raise CorpusManifestError(
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={"relative_path": str(value), "dot_token": True},
+            )
         # PurePosixPath ignores backslashes (treats them as part of a
         # single path token), so a Windows-style ``..\\escape`` would
         # slip past the dot-part walk below. Reject them explicitly.
         if "\\" in value:
             raise CorpusManifestError(
-                f"relative_path must use POSIX-style separators only: {value!r}",
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={"relative_path": str(value), "posix_separators_only": False},
             )
         pure = PurePosixPath(value)
         if pure.is_absolute():
-            raise CorpusManifestError(f"relative_path must not be absolute: {value!r}")
+            raise CorpusManifestError(
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={"relative_path": str(value), "absolute": True},
+            )
         for part in pure.parts:
             if part in {"..", "."}:
-                raise CorpusManifestError(f"relative_path must not contain dot tokens: {value!r}")
+                raise CorpusManifestError(
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={"relative_path": str(value), "contains_dot_tokens": True},
+            )
         return value
 
 
@@ -449,10 +459,15 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
         manifest = _validate_raw_manifest_payload(raw)
     except _MalformedManifestPayloadError as exc:
         _logger.error("load_corpus_manifest: structurally invalid manifest at %s", target, exc_info=True)
-        raise CorpusManifestError(f"manifest at {target} is structurally invalid: {exc}") from exc
+        raise CorpusManifestError(
+            translated_message="errors.integrity.integrity_storage_corpus_manifest",
+            context={"manifest_path": str(target), "structurally_valid": False,
+                     "validation_error_type": type(exc).__name__},
+        ) from exc
     except _UnsupportedManifestVersionError as exc:
         raise CorpusManifestError(
-            f"manifest at {target} is at version {exc}; consumer supports up to {_MANIFEST_VERSION}",
+            translated_message="errors.integrity.integrity_storage_corpus_manifest",
+            context={"manifest_path": str(target), "supported_version": str(_MANIFEST_VERSION)},
         ) from exc
     except _TamperedManifestPayloadError as exc:
         _logger.error(
@@ -620,14 +635,19 @@ def verify_corpus_bundle(bundle_path: Path) -> CorpusBundleVerification:
         with zipfile.ZipFile(bundle_path, mode="r") as archive:
             return _verify_open_corpus_bundle(archive)
     except zipfile.BadZipFile as exc:
-        raise CorpusBundleError(f"{bundle_path} is not a valid zip archive: {exc}") from exc
+        raise CorpusBundleError(
+            translated_message="errors.integrity.integrity_storage_corpus_bundle",
+            context={"bundle_path": str(bundle_path), "valid_zip_archive": False,
+                     "archive_error_type": type(exc).__name__},
+        ) from exc
 
 
 def _verify_open_corpus_bundle(archive: zipfile.ZipFile) -> CorpusBundleVerification:
     names = frozenset(archive.namelist())
     if _BUNDLE_MANIFEST_MEMBER not in names:
         raise CorpusBundleError(
-            f"bundle is missing its embedded manifest member {_BUNDLE_MANIFEST_MEMBER!r}",
+            translated_message="errors.integrity.integrity_storage_corpus_bundle",
+            context={"manifest_member": str(_BUNDLE_MANIFEST_MEMBER), "manifest_member_present": False},
         )
     manifest = _load_bundle_manifest(archive)
     expected = {entry.relative_path: entry for entry in manifest.entries}
@@ -655,7 +675,11 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
     try:
         return _validate_raw_manifest_payload(raw)
     except _MalformedManifestPayloadError as exc:
-        raise CorpusBundleError(f"embedded manifest is structurally invalid: {exc}") from exc
+        raise CorpusBundleError(
+            translated_message="errors.integrity.integrity_storage_corpus_bundle",
+            context={"embedded_manifest_structurally_valid": False,
+                     "validation_error_type": type(exc).__name__},
+        ) from exc
     except _UnsupportedManifestVersionError as exc:
         raise CorpusBundleError(
             f"embedded manifest is at version {exc}; consumer supports up to {_MANIFEST_VERSION}",
