@@ -57,6 +57,10 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
         "m210_agrupacion_renta_verification_findings",
     ): "annual grouped-renta integrity belongs to the detail-row set",
     (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_resolve_verification_snapshot",
+    ): "an unresolved registry snapshot blocks the whole revision, so no single casilla owns it",
+    (
         "src/cadrumo/application/modelo/_m303_m349_reconcile.py",
         "m303_m349_intracom_reconcile_findings",
     ): "the reconciliation compares several casillas across two modelos",
