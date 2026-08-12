@@ -55,8 +55,10 @@ def test_require_live_read_allows_operator_context_without_test_opt_in() -> None
 def test_require_live_read_still_blocks_pytest_context_without_test_opt_in() -> None:
     with override_settings(cadrumo_live_tests_enabled=""):
         settings = Settings(cadrumo_live_tests_enabled="")
-        with pytest.raises(AeatLiveReadNotEnabledError, match=r"CADRUMO_LIVE_TESTS_ENABLED|pytest live"):
+        with pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
             AeatAccessGate(settings).require_live_read(pytest_current_test="test_gate.py::case (call)")
+        assert excinfo.value.context is not None
+        assert excinfo.value.context["env_var"] == "CADRUMO_LIVE_TESTS_ENABLED"
 
 
 def test_require_live_read_raises_when_unset() -> None:
@@ -86,14 +88,12 @@ def test_require_live_read_refusal_states_only_literal_one_is_accepted() -> None
         settings = Settings(cadrumo_live_tests_enabled="true")
         with pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
             AeatAccessGate(settings).require_live_read()
-        message = str(excinfo.value)
-        # The refusal names the literal accepted value.
-        assert "literal" in message and "1" in message
-        # It explicitly names the rejected near-miss spelling so the
-        # operator sees why `true` did not work.
-        assert "'true'" in message
-        # It echoes the current value for traceability.
-        assert repr("true") in message
+        # The refusal names the literal accepted value and what was actually set,
+        # as machine facts rather than a sentence.
+        context = excinfo.value.context
+        assert context is not None
+        assert context["required_value"] == "1"
+        assert context["current_value"] == "true"
 
 
 def test_require_live_write_always_raises_permanent_refusal() -> None:

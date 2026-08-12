@@ -140,9 +140,13 @@ class AeatAccessGate:
             not self.settings.live_tests_enabled
         ):
             raise AeatLiveReadNotEnabledError(
-                f"pytest live AEAT reads require {_LIVE_READ_TEST_OPT_IN_ENV_VAR} set to the literal "
-                f"value 1 (the exact string '1', not 'true'/'yes'/'on'); "
-                f"current value: {self.settings.cadrumo_live_tests_enabled!r}",
+                translated_message="errors.refused.refused_access_gate_live_read_not_enabled",
+                context={
+                    "env_var": _LIVE_READ_TEST_OPT_IN_ENV_VAR,
+                    "required_value": "1",
+                    "current_value": str(self.settings.cadrumo_live_tests_enabled),
+                    "live_reads_enabled": False,
+                },
             )
 
     def require_live_write(self) -> None:
