@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:fa8cc711c341f1c5f16c9286354caa9ee2cb376fb82652c21e2e72c16f3750b4'
+body_hash: 'sha256:ae926a4d42731ea0b53afd04aec22d322d39300a2a51b67718a1c30ced0d361d'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -114,7 +114,7 @@ ModeloWorkReview, its producer, its envelope, and the findings attribution sweep
 
 Pipeline health consumes the persisted verification outcome; INCOMPLETE is visibly distinct.
 
-- [ ] `W03.P08.S28` - re-point pipeline health readiness at the persisted verification outcome and render INCOMPLETE distinctly from never-verified, with a parity regression; `src/cadrumo/application/overview/_pipeline_health.py`.
+- [x] `W03.P08.S28` - re-point pipeline health readiness at the persisted verification outcome and render INCOMPLETE distinctly from never-verified, with a parity regression; `src/cadrumo/application/overview/_pipeline_health.py`.
 
 ## Wave `W04` - deletions, wiring, and the TUI review screen
 

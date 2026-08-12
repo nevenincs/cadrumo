@@ -5,88 +5,41 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:b04a99d841747d6bbb55159146f85ae45d19d79b050f8ea770aeac2b04d6d845'
+body_hash: 'sha256:e58fd91c48497ed70e075d7a87de44e9d1737cd0b428bb3a3b805d9cb36c36e9'
 step_id: 'S28'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace casilla-schema with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S28 and 2026-08-10-casilla-schema-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The re-point pipeline health readiness at the persisted verification outcome and render INCOMPLETE distinctly from never-verified, with a parity regression and ## Scope
-
-- `src/cadrumo/application/overview/_pipeline_health.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
-# re-point pipeline health readiness at the persisted verification outcome and render INCOMPLETE distinctly from never-verified, with a parity regression
+# S28 pipeline-health persisted-readiness authority
 
 ## Scope
 
 - `src/cadrumo/application/overview/_pipeline_health.py`
+- `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`
+- Exact `cli.overview.pipeline` leaves in the four locale catalogues
 
 ## Description
 
-- Make the latest persisted `VerificationReport.completeness_status` and
-  `granted_verificado_completo` authoritative for non-filed pipeline readiness.
-- Render persisted `INCOMPLETE` separately from a calculated revision with no
-  verification report, while retaining conclusive filed lifecycle precedence.
-- Keep finding severities as display counts only and stop deriving verification
-  readiness from `CalculationRevisionState`.
-- Add an exact CLI regression that persists a genuine zero-finding incomplete
-  report through the encrypted repository and contrasts it with the preceding
-  never-verified output.
-- Extend the existing four-locale pipeline help entry and the new incomplete
-  summary through `dev.locales`, using the internal `incompleto` stem.
+- Make the latest persisted `VerificationReport.completeness_status` and `granted_verificado_completo` authoritative for non-filed pipeline readiness.
+- Render persisted `INCOMPLETE` separately from a calculated revision with no verification report, while retaining conclusive filed lifecycle precedence.
+- Keep finding severities as display counts only and stop deriving verification readiness from `CalculationRevisionState`.
+- Prove parity through the exact CLI with a genuine zero-finding incomplete report in the encrypted repository.
+- Localise the new incomplete summary and expanded help through `dev.locales`, using the internal Spanish `INCOMPLETO` stem and preserving the `incomplete` wire value.
 
 ## Outcome
 
-Pipeline health now reports `calculated` only when the current revision has no
-persisted verification outcome, `incomplete` for the latest persisted incomplete
-outcome, `blocked` for the persisted blocked outcome, and `verified` only for a
-complete outcome that granted `verificado_completo`. Presented revisions remain
-filed regardless of a preceding verification report.
+Pipeline health now reports `calculated` only when the current revision has no persisted verification outcome, `incomplete` for the latest persisted incomplete outcome, `blocked` for the persisted blocked outcome, and `verified` only for a complete outcome that granted `verificado_completo`. Presented revisions remain filed regardless of a preceding verification report.
+
+Implementation and its real CLI regression landed in `5e91761461`. The initial execution record and review-audit scaffold were absorbed together by concurrent commit `8a1f493506`; the completed audit body and this corrected lifecycle closure are therefore a follow-up only. Shared history is not rewritten.
 
 Focused verification passed:
 
-- exact persisted-report CLI parity regression: 1 passed;
-- typed pipeline-row transport regression: 1 passed;
+- exact persisted-report CLI parity regression and typed transport regression: 2 passed;
 - Ruff over the changed Python implementation and test: passed;
-- strict BasedPyright over the changed Python implementation and test: zero
-  errors, warnings, or notes;
+- strict BasedPyright over the changed Python implementation and test: zero errors, warnings, or notes;
+- direct runtime resolution of the new summary and help in all four locales: passed;
 - `git diff --check`: passed.
 
 ## Notes
 
-The full focused integration module reached six passes and one transient failure
-while a concurrent registry writer changed the registry directory during cache
-fingerprinting. The exact new regression was rerun after that race and passed.
-The locale scaffold check remains blocked by concurrent unrelated catalogue
-drift (missing profile-schema and IVA-wallet keys plus stale ledger keys); the
-four edited pipeline-help leaves themselves were written by the locale CLI.
-
+The formal review approved S28 with no runtime findings. Its LOW execution-record hygiene finding is resolved by this VaultSpec-CLI-only body replacement, which removes all scaffold comments and extra blank lines. The wider integration module remains red only because its pre-existing shared profile helper omits a newly required profile fact; the S28 regression uses a complete real profile and passes. Locale scaffold and audit remain red only on unrelated catalogue drift and do not name either S28 key. These are explicit broader-tree boundaries, not S28 failures.
