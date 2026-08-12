@@ -171,6 +171,24 @@ STATUTORY_CITATIONS: Final[tuple[StatutoryCitation, ...]] = (
         establishes=SupplyNature.SERVICES,
     ),
     StatutoryCitation(
+        article="68",
+        heading="Lugar de realización de las entregas de bienes.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a68",
+        establishes=SupplyNature.GOODS,
+    ),
+    StatutoryCitation(
+        article="69",
+        heading="Lugar de realización de las prestaciones de servicios. Reglas generales.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a69",
+        establishes=SupplyNature.SERVICES,
+    ),
+    StatutoryCitation(
+        article="70",
+        heading="Lugar de realización de las prestaciones de servicios. Reglas especiales.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a70",
+        establishes=SupplyNature.SERVICES,
+    ),
+    StatutoryCitation(
         article="84",
         heading="Sujetos pasivos.",
         corpus_ref="corpus/normatives/html/ley-37-1992-art-84.html",
@@ -185,23 +203,28 @@ STATUTORY_CITATIONS: Final[tuple[StatutoryCitation, ...]] = (
 )
 """Every LIVA article this axis can read, and what each one establishes.
 
-The general place-of-supply articles -- LIVA arts. 68 for goods and 69 and 70 for
-services -- are absent, and the reason is a property of this table's check rather
-than a missing corpus. Their consolidated text *is* bundled, as the ``#a68``,
-``#a69`` and ``#a70`` anchored units of
-``corpus/normatives/html/ley-37-1992.html``, and each already carries a reviewed
-legal-catalogue entry pinned to that anchor; do not go fetching them. What no row
-can do yet is name them the way the rows above name their provisions: the check
-below reads the whole file a row cites, and the consolidated law reaches the goods
-limb and the services limb alike, so a row citing it could only ever establish
-nothing. They are added when a citation the check can read a single article from
-exists.
+Two shapes of ``corpus_ref`` appear here, and the difference is bookkeeping
+rather than authority. A row citing a per-article bundled file names that file;
+a row citing an article of the consolidated law names the file and the article's
+anchor. Both resolve to exactly one article, which is the property that matters:
+a row whose check could reach the whole IVA law would see the goods limb and the
+services limb alike and could only ever establish nothing.
 
-The consequence is worth stating plainly, because it bounds what this axis can do
-today: the articles present here reach the *exemption* and *special regime*
-citations an invoice prints, which is the population art. 6.1.j obliges to print a
-reference at all. An ordinary cross-border invoice citing nothing derives nothing
-and asks the operator, which is the designed outcome rather than a failure.
+**Art. 22 is deliberately absent, and not for that reason.** Assimilated exports
+are bundled as their own file, so scoping is not the obstacle. Its opening
+enumerates operation kinds -- "las entregas, construcciones, transformaciones,
+reparaciones, mantenimiento, fletamento ... y arrendamiento" -- without naming
+either limb, so the check cannot read what it establishes from the article
+itself. Which limbs it reaches IS decidable, but only by consulting arts. 8 and
+11, where the statute defines the two limbs; until the check does that, no row
+can be declared honestly. Typing the answer in directly would be the paraphrase
+this table exists to avoid.
+
+What the table reaches is therefore the *exemption*, *special regime* and
+*place-of-supply* citations an invoice prints, which is the population art. 6.1.j
+obliges to print a reference at all. An ordinary cross-border invoice citing
+nothing derives nothing and asks the operator, which is the designed outcome
+rather than a failure.
 """
 
 
