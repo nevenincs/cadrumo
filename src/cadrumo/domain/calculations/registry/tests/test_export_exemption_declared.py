@@ -171,13 +171,7 @@ def test_a_forgotten_annotation_is_detected(
 def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """MUTATION: the one reason asserting the figure IS filed must be checked.
-
-    ``FEEDS_ADDRESSED_CASILLA`` claims the value reaches the record through a
-    downstream box. Accepting that on the author's word would reopen the hole
-    under a new name, so the gate walks the formula graph. Re-labelling a casilla
-    that genuinely reaches no addressed casilla must therefore refuse.
-    """
+    """MUTATION: the one reason asserting the figure IS filed must be checked."""
     relabelled = 0
     for modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
         for casilla in revision.casillas:
@@ -196,24 +190,28 @@ def test_feeds_addressed_casilla_claim_is_verified_not_trusted(
     assert relabelled > 0, "no NOT_IN_RECORD_DESIGN casilla was available to re-label"
 
 
-def test_declared_feeds_addressed_casilla_reasons_really_do_reach_a_box(
+def test_feeds_addressed_casilla_is_wired_into_compiled_authority(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Every bundled ``FEEDS_ADDRESSED_CASILLA`` declaration survives its own check.
+    """The retained member hydrates real M303 declarations; it is not dormant."""
+    users = {
+        (modelo.id, revision_id, casilla.id)
+        for modelo in registry_authority.modelos
+        for revision_id, revision in modelo.revisions.items()
+        for casilla in revision.casillas
+        if casilla.export_exemption_reason is ExportExemptionReason.FEEDS_ADDRESSED_CASILLA
+    }
 
-    The companion to the mutation above: the check is strict enough to refuse a
-    false claim AND permissive enough to accept the true ones the tree makes, so
-    it is a discriminator rather than a blanket refusal.
-    """
-    accepted = 0
-    for _modelo_id, _revision_id, revision in _fixed_width_revisions(registry_authority):
-        for casilla in revision.casillas:
-            if casilla.export_exemption_reason is ExportExemptionReason.FEEDS_ADDRESSED_CASILLA:
-                accepted += 1
-    assert accepted > 0, "no bundled casilla declares FEEDS_ADDRESSED_CASILLA"
-    # The corpus-wide gate above already ran clean, which is the acceptance proof;
-    # this pins that the accepted population is non-empty so that clean run is not
-    # vacuous for this member.
+    assert len(users) == 17
+    assert {modelo_id for modelo_id, _revision_id, _casilla_id in users} == {"303"}
+    assert {revision_id for _modelo_id, revision_id, _casilla_id in users} == {
+        "2009-y-siguientes",
+        "2023",
+        "2024-desde-09-y-3t",
+        "2024-hasta-08-y-2t",
+        "2025",
+        "2026-y-siguientes",
+    }
 
 
 def _revalidate(casilla: object, **updates: object) -> object:
