@@ -161,7 +161,10 @@ def _canonical_casilla_values[CasillaKey](
     casilla_values: Mapping[CasillaKey, object],
 ) -> dict[CasillaId, Decimal]:
     if not casilla_values:
-        raise ModeloLocalObservationError("local observation requires at least one --set CASILLA=DECIMAL value")
+        raise ModeloLocalObservationError(
+            translated_message="errors.error.error_modelos",
+            context={"casilla_value_count": 0},
+        )
 
     canonical: dict[CasillaId, Decimal] = {}
     malformed: list[str] = []
