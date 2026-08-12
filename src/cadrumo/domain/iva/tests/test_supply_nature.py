@@ -33,6 +33,7 @@ from .. import (
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
     match_statutory_citations,
+    supply_nature_implied_by_category,
     supply_nature_is_required,
 )
 
@@ -314,6 +315,63 @@ def test_a_domestic_operation_is_never_asked_for_the_distinction(category: IvaCa
 def test_a_branch_where_the_law_forks_does_ask(category: IvaCategory) -> None:
     """The other direction, so laziness cannot be a blanket "never ask"."""
     assert supply_nature_is_required(category) is True
+
+
+def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
+    """The gap the place-of-supply rows closed, pinned as a consistency invariant.
+
+    A member the catalogue calls a service supply is a *prestación de servicios*
+    by its own name, so any nature its grounding yields other than ``SERVICES``
+    is a disagreement between the catalogue and the statute rather than a
+    preference. Both members derived nothing until arts. 69 and 70 could be
+    declared, and an operator was asked a question the law had answered.
+
+    Discovered from the catalogue rather than listed, so a member added later is
+    covered without editing this file.
+    """
+    service_named = tuple(category for category in IvaCategory if "SERVICE" in category.name)
+    assert service_named, "the catalogue names no service member, so this case cannot discriminate"
+
+    for category in service_named:
+        derivation = supply_nature_implied_by_category(category)
+        assert derivation.nature is SupplyNature.SERVICES, (
+            f"{category.value} is named a service but its grounding derives "
+            f"{derivation.nature} ({derivation.outcome})"
+        )
+
+
+@pytest.mark.parametrize(
+    "category",
+    [
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    ],
+)
+def test_the_goods_categories_still_derive_goods(category: IvaCategory) -> None:
+    """The other side of the same change, so the rows cannot have moved the answer.
+
+    Adding a services article to the vocabulary must not disturb what the goods
+    families derived. Each of these rests on an article defining an operation on
+    *bienes* -- arts. 25, 15 and 21 -- and none cites art. 68 alongside them.
+    """
+    assert supply_nature_implied_by_category(category).nature is SupplyNature.GOODS
+
+
+def test_no_shipped_category_is_grounded_in_articles_that_disagree() -> None:
+    """A contradiction here is a defect in the component table, not a stray input.
+
+    ``CONTRADICTED`` is the honest report for a document citing incompatible
+    articles. Reached through a CATEGORY it means something else: the family's
+    own grounding disagrees with itself, which no invoice can resolve and no
+    operator can be asked about. Stated as a property so it keeps holding as
+    articles and members are added.
+    """
+    for category in IvaCategory:
+        derivation = supply_nature_implied_by_category(category)
+        assert derivation.outcome is not SupplyNatureDerivationOutcome.CONTRADICTED, (
+            f"{category.value} is grounded in articles establishing different natures: {derivation.note}"
+        )
 
 
 def test_an_unplaced_operation_is_asked_rather_than_assumed_domestic() -> None:

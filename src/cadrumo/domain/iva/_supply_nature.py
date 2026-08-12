@@ -432,13 +432,12 @@ def supply_nature_implied_by_category(category: IvaCategory | None) -> SupplyNat
     row in the citation table because nothing ever ruled what it establishes, so
     the join finds nothing and the category stays open.
 
-    Measured over the shipped tables: exactly three categories derive --
-    intra-community supply and export, both GOODS via arts. 25 and 21, and
-    intra-community acquisition, GOODS via art. 15. The two SERVICE members
-    derive nothing, because their grounding articles are the general
-    place-of-supply rules 69 and 70, which the citation table deliberately
-    omits; that gap is the table's, and closing it is its own change rather
-    than a special case here.
+    Measured over the shipped tables: the three goods families derive GOODS --
+    intra-community supply and export via arts. 25 and 21, intra-community
+    acquisition via art. 15 -- and the two SERVICE members derive SERVICES via
+    the general place-of-supply rules 69 and 70. The services half arrived
+    entirely through the citation table: nothing here changed to admit it, which
+    is the join working as intended.
 
     Args:
         category: The category the document declared, or ``None``.
