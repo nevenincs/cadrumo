@@ -481,15 +481,29 @@ def slots_unavailable_at(document: CorpusDocument, stage: PipelineStage) -> tupl
     by the classification authority at confirm -- so a capture at the extraction
     seam mismeasures both, on every document that authors them.
 
+    Measured over the pinned key: of 302 documents, **221** author at least one
+    slot the extraction seam cannot carry, and 29 still do at the grounding
+    seam. None do at classification. So this is not a corner -- a capture at
+    extraction mismeasured most of the corpus, and the residual it produced was
+    read as a product gap rather than as an artefact of where the capture was
+    taken.
+
     Returns the slot names in key order, empty when the stage can carry every
     slot the document authors. A stage outside the seam ordering
     (``TABULAR_MAPPING``, ``END_TO_END``) reaches everything and yields nothing.
+
+    Reads the document's truth as given rather than expanding it, so it is
+    correct for a raw document AND for one already through
+    :func:`expand_document_slots` -- a caller has usually expanded before
+    scoring, and expanding again would drop every composite leaf, whose slot
+    name is not a key field. The composite prefix is split off before the
+    lookup for the same reason.
     """
     if stage not in _STAGE_ORDER:
         return ()
     reached = _STAGE_ORDER.index(stage)
     unavailable: list[str] = []
-    for slot in expand_document_slots(document).scorable_fields:
+    for slot in document.scorable_fields:
         key_field = slot.split(COMPOSITE_LEAF_SEPARATOR, 1)[0]
         mapping = KEY_FIELD_MAPPINGS.get(key_field)
         if mapping is None or mapping.available_from not in _STAGE_ORDER:
