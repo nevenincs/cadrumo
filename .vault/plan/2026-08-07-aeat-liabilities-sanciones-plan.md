@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-12'
-body_hash: 'sha256:300cc32fc25d4b9a70e8963674a3f3ac0a3b210f207b810224d36152606b1b97'
+body_hash: 'sha256:a5fc0f4d772d9308c4081ee49fbe044098015d5068969b863b86bd8974e68ed3'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -128,6 +128,30 @@ no harness entry, so an operator today still gets three verbs over zero rows.
 Closing S15 moves the guard from refusing everything to refusing everything
 except one endpoint nothing yet navigates to. That is real progress on safety
 and none on the goal, and the two must not be confused at closeout.
+
+**Correction (2026-08-12, second): the "no outstanding deudas" reading is
+withdrawn.** The correction above concluded that the remaining P05 rows are
+blocked because this taxpayer has no outstanding deudas, and called that
+established rather than assumed. It is withdrawn.
+
+The negative control it rested on — an invalid NIF drawing AEAT's retrieval
+error while the valid query re-rendered the form — proves the form PROCESSES a
+submission. It does not separate "no debts" from "the listing did not render for
+another reason". Both the consulta form and its result carry an AEAT banner
+instructing the user to access pending notifications *before continuing*, which
+was dismissed as page furniture; and the operator has since stated there are
+many late filings with debts and penalties set out in the messages.
+
+The rows stay open, but the recorded reason changes from "blocked on data that
+does not exist" to "blocked on a listing not yet reached, for reasons not yet
+established" — unfinished investigation rather than unschedulable work.
+
+The next step is NOT for an agent to act on alone. Accessing an electronic
+notification is the moment it is deemed served and starts the appeal and payment
+clocks, which for a taxpayer with late filings and pending penalties is an
+irreversible act on their legal position. The notifications LIST surface carries
+no such effect and is the only side that may be read without an explicit
+operator decision.
 
 ## Steps
 

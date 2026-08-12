@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f86ff23f614468070146445ffefc4bf01d30d70cb0efa639c206d096087768fd'
+body_hash: 'sha256:88805f0d1099b6fb8ce2929773a21f8b7d9095937eded1c8ef83b81e141559bf'
 step_id: 'S15'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
@@ -101,3 +101,17 @@ A broader run showed unrelated failures in the declarations adapter tests and
 one route-literal gate. Both are peer surface — the declarations files were in
 the merge's own conflict set, and none of the route-literal offenders is in a
 file this step touched.
+
+**Correction, same day.** The paragraph above states that this taxpayer has no
+outstanding deudas and that the point was established rather than assumed. That
+is withdrawn. The invalid-NIF control proves the form processes a submission; it
+does not separate "no debts" from "the listing did not render for another
+reason", and the captured pages carry an AEAT banner instructing the user to
+access pending notifications before continuing that was read as page furniture.
+The operator has since stated there are many late filings with debts and
+penalties set out in the messages.
+
+Nothing in S15 itself changes — the consulta path, the shared-application
+refusal, the POST scoping and the charset are all direct observations and stand.
+Only the explanation for why the sibling rows stay open is corrected, from
+absent data to an unreached listing.

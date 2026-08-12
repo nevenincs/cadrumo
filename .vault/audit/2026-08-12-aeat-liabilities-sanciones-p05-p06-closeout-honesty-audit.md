@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f2ecec69f835b37cead07fad5969600e61401c3aed51c5a2ce11d15fb9368d4c'
+body_hash: 'sha256:21fcfe3b8a10ca2fb9c6c080cabb84616806948e326cb5d606bd3ff2c4f5c4fb'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
@@ -46,28 +46,60 @@ AEAT's reported figures — which is what the governing ADR says it does.
 
 **Pathway:** live discovery → `adapters/outbound/aeat/sede/_deudas.py`
 
-The plan said P05 was blocked on an operator-authorised specimen capture. That
-framing is now wrong in both directions and the plan Description has been
-corrected.
+The plan said P05 was blocked on an operator-authorised specimen capture. Access
+was obtained: the authenticated session reached the consulta, the query was
+accepted, and the surface was decomposed. What was NOT obtained is a populated
+listing.
 
-Access was obtained: the authenticated session reached the consulta, the query
-was accepted, and the surface was decomposed. What does not exist is a
-populated listing — this taxpayer has no outstanding deudas.
+**WITHDRAWN, and the withdrawal is the finding.** This section originally
+concluded that the taxpayer has no outstanding deudas, and presented that as
+established rather than assumed on the strength of a negative control: a
+syntactically invalid NIF drew AEAT's retrieval error while the valid query
+re-rendered the form byte-identically apart from the clock.
 
-**That was established, not assumed.** A syntactically invalid NIF drew AEAT's
-retrieval error while the valid query re-rendered the form byte-identically
-apart from the clock. The form therefore processes, and the empty result is
-real rather than a silent rejection. Recording the method matters: "the query
-returned nothing" and "the query was not processed" are indistinguishable
-without the negative control, and only one of them means the taxpayer has no
-debts.
+That control does not support the conclusion drawn from it. It proves the form
+PROCESSES a submission. It does not distinguish "this taxpayer has no debts"
+from "the listing does not render for another reason" — an error path can work
+perfectly while the results path is gated. Two hypotheses were consistent with
+the evidence and only one was reported.
 
-**Remediation:** S13, S14, S16, S17 and S18 are deferred carry-forward. They
-unblock when a listing with rows can be observed — a deuda arising, or a
-representation the operator holds over a taxpayer who has one. Neither is
-schedulable by this campaign. **None of them may be satisfied by inventing a
-row parser or a situación vocabulary**, which is the pressure a nearly-complete
-phase creates.
+The missed evidence was on the captured page the whole time. Both the consulta
+form and its result carry an AEAT banner reading *"tiene notificaciones
+pendientes. Antes de continuar acceda al enlace: Consultar notificaciones
+pendientes"* — before continuing, access the link. That is AEAT instructing the
+user to clear a gate before proceeding, and it was read as page furniture and
+excluded from the analysis.
+
+The operator subsequently stated that there are many late filings and many
+messages clearly setting out the debts, penalties and legal recourse. That is
+direct evidence against the withdrawn conclusion.
+
+**Current honest position.** At least three readings remain open and the
+evidence gathered does not choose between them:
+
+1. The consulta listing is gated behind the pending-notifications banner.
+2. The liabilities exist but sit at notification stage — a liquidación or
+   sanción served but not yet an enforceable deuda in the recaudación register.
+3. The debts are in the register and the query needs something the probe did
+   not supply.
+
+**Remediation:** S13, S14, S16, S17 and S18 remain deferred, but the recorded
+REASON is corrected from "no debts exist" to "the listing was not reached, and
+why is not yet established". The distinction matters: the first reason says the
+work is unschedulable, the second says it is unfinished investigation. This is
+the second one.
+
+**A hard constraint on the next attempt.** The obvious way to test hypothesis 1
+— following AEAT's instruction and accessing the pending notifications — is NOT
+available to an agent acting alone. Accessing an electronic notification is an
+act with legal effect: it is the moment the notification is deemed served, which
+starts the appeal and payment clocks. For a taxpayer with late filings and
+pending penalties that is a consequential, irreversible act on the operator's
+legal position, and it is categorically outside the read-only posture this
+project holds toward AEAT. The notifications LIST surface is different and is
+safe — the shipped reader is documented as never telling AEAT a notification was
+read — and that is the only side of this that may be exercised without an
+explicit operator decision.
 
 ## FINDING-2: the specimen established more than S15 consumed, and the surplus is unrecorded in code
 
