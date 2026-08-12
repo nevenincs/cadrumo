@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:48a76c40eebfce0b0703c788e321a54314d6e2b5ade951356e227d5bb9cf2eb8'
+body_hash: 'sha256:bfc0f16ee156f464c64933e12a4597d91bc0a2980e28767ef603cd71f37f4e5e'
 step_id: 'S89'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -47,3 +47,11 @@ related:
 
 - S66 now supplies typed machine facts and precondition verdicts. S89 preserves them without action inference, compatibility fields, or locale-specific producer content.
 - Tests use production source parsing, locale loading, CLI registration, and isolated storage; no fake, mock, stub, patch, monkeypatch, skip, xfail, or mirrored business logic was introduced.
+
+## Coordinated canonical rehoming reconciliation
+
+A fresh read-only derivation established three identical stability boundaries separated by at least sixty seconds. Immediately before mutation, the canonical guard revalidated the ledger, plan, all-source, rendered postimage, structural-delta, and locator-delta hashes byte-for-byte. OWNER_ZERO was zero and every one of the twenty-four structural additions had exactly one open owner. The delta contained thirty-five removals, no historical-row, disposition, or current-identity changes, and 144 locator-only refreshes recorded as incidental metadata.
+
+Exactly one S50 canonical-tool write produced the proven postimage. The resulting ledger SHA-256 is `bc6ddc3b5edddd852a155e48ca58ec6e3aa188f716cecef8615b9bef20de2aec`. Direct validation returned `E_REHOMING_VALIDATED:238`; the single immediate no-write replay returned `E_REHOMING_MIGRATION_CHECKED:238`. No second locator chase or write was performed. The complete canonical rehoming lane passed 74 tests.
+
+This owner Step remains open for independent review and ledger reconciliation.

@@ -5,12 +5,11 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:c876a6e747ef4f97b4d6ca673f2a8603b1e189c17dd9de6b9cba9938dcc0ba89'
+body_hash: 'sha256:e5018976f998873ea248a7a437313e548a5e96267670101a5e1c35710fb5c565'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-
 # Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct typed-error consumer migration so canonical refusals reach the shared envelope intact.
 
 ## Scope
@@ -167,3 +166,11 @@ The S90 conformance corpus now includes every plan-declared module, adding `_led
 Verification: the strengthened integration module passes seven tests; the focused helper/default and locale key-set gates pass two tests; the real `llm-diagnostics --since not-a-date` command passes four locale cases against the selected catalogue value. Ruff check and formatting pass. Locale scaffold remains globally red only on separately owned profile-schema, Modelo-work, and IVA-wallet catalogue drift; the S90-scoped parity/orphan gate is clean. Vault execution mapping is clean, with only pre-existing S38 markdown and S56 audit body warnings.
 
 S90 remains open for independent review.
+
+## Coordinated canonical rehoming reconciliation
+
+A fresh read-only derivation established three identical stability boundaries separated by at least sixty seconds. Immediately before mutation, the canonical guard revalidated the ledger, plan, all-source, rendered postimage, structural-delta, and locator-delta hashes byte-for-byte. OWNER_ZERO was zero and every one of the twenty-four structural additions had exactly one open owner. The delta contained thirty-five removals, no historical-row, disposition, or current-identity changes, and 144 locator-only refreshes recorded as incidental metadata.
+
+Exactly one S50 canonical-tool write produced the proven postimage. The resulting ledger SHA-256 is `bc6ddc3b5edddd852a155e48ca58ec6e3aa188f716cecef8615b9bef20de2aec`. Direct validation returned `E_REHOMING_VALIDATED:238`; the single immediate no-write replay returned `E_REHOMING_MIGRATION_CHECKED:238`. No second locator chase or write was performed. The complete canonical rehoming lane passed 74 tests.
+
+This owner Step remains open for independent review and ledger reconciliation.

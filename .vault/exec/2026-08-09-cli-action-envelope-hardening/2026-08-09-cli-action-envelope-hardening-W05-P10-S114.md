@@ -5,12 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:93787f77ba5c96d422e102c417e62997948e8ce41cabdafd55070f45825a1297'
+body_hash: 'sha256:d2e75320f2cb0b2db1957531bdcfa0fa8c81c4797944475d7af484c5fb70de38'
 step_id: 'S114'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
 ---
-
 <!-- FRONTMATTER RULES:
      tags: one directory tag (hardcoded #exec) and one feature tag.
      Replace cli-action-envelope-hardening with a kebab-case feature tag, e.g. #foo-bar.
@@ -107,3 +106,11 @@ The public callback tests use actual `MissingOptionalExtraError`, malformed Pre3
 Focused boundary, LLM-model, and registry verification passes 33 tests. Ruff and focused BasedPyright remain clean. A broader JSON-schema selection passes 359 tests; one separately owned profile-creation fixture fails before its schema assertion because it omits the newly required `tax-residence-jurisdiction-scope` input.
 
 S114 remains open for independent review and ledger reconciliation.
+
+## Coordinated canonical rehoming reconciliation
+
+A fresh read-only derivation established three identical stability boundaries separated by at least sixty seconds. Immediately before mutation, the canonical guard revalidated the ledger, plan, all-source, rendered postimage, structural-delta, and locator-delta hashes byte-for-byte. OWNER_ZERO was zero and every one of the twenty-four structural additions had exactly one open owner. The delta contained thirty-five removals, no historical-row, disposition, or current-identity changes, and 144 locator-only refreshes recorded as incidental metadata.
+
+Exactly one S50 canonical-tool write produced the proven postimage. The resulting ledger SHA-256 is `bc6ddc3b5edddd852a155e48ca58ec6e3aa188f716cecef8615b9bef20de2aec`. Direct validation returned `E_REHOMING_VALIDATED:238`; the single immediate no-write replay returned `E_REHOMING_MIGRATION_CHECKED:238`. No second locator chase or write was performed. The complete canonical rehoming lane passed 74 tests.
+
+This owner Step remains open for independent review and ledger reconciliation.

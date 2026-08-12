@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cli-action-envelope-hardening'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:90b0cb2795ec32d7ec6b60550f618639f385dfc4a9084cbb6f54f239258d7317'
+body_hash: 'sha256:14e33f17c7997c173f5604d02a90719d27df682a219a1c80ce08547b681d5ee3'
 step_id: 'S38'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -50,3 +50,11 @@ related:
 - The full locale audit and scaffold checks remain red on unrelated catalogue debt, with zero findings for `ledger.evidence.reader.operation_failed`.
 - S90 and S94 were not edited.
 
+
+## Coordinated canonical rehoming reconciliation
+
+A fresh read-only derivation established three identical stability boundaries separated by at least sixty seconds. Immediately before mutation, the canonical guard revalidated the ledger, plan, all-source, rendered postimage, structural-delta, and locator-delta hashes byte-for-byte. OWNER_ZERO was zero and every one of the twenty-four structural additions had exactly one open owner. The delta contained thirty-five removals, no historical-row, disposition, or current-identity changes, and 144 locator-only refreshes recorded as incidental metadata.
+
+Exactly one S50 canonical-tool write produced the proven postimage. The resulting ledger SHA-256 is `bc6ddc3b5edddd852a155e48ca58ec6e3aa188f716cecef8615b9bef20de2aec`. Direct validation returned `E_REHOMING_VALIDATED:238`; the single immediate no-write replay returned `E_REHOMING_MIGRATION_CHECKED:238`. No second locator chase or write was performed. The complete canonical rehoming lane passed 74 tests.
+
+This owner Step remains open for independent review and ledger reconciliation.

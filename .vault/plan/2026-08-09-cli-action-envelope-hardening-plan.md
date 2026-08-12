@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-11'
-body_hash: 'sha256:682d89a544a399658e94e893c87384b65c6c894ac8f0c7237bc159d93060a2ba'
+modified: '2026-08-12'
+body_hash: 'sha256:2fc7060c5781fda97674029bd631a5d38b02afc66025213bd42f52e2c0774c30'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -151,7 +151,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S28` - Delete ErrorCode.default_suggestion and define only the current catalogue-backed error action or explicit no-recovery projection; `src/cadrumo/core/errors/_registry.py`.
 - [x] `W05.P08.S29` - Fail when an adjudicated exception-override producer lacks an exclusive migration Step; `dev/cli_action_census_dispositions.py`.
 - [x] `W05.P08.S30` - Prove registered error recovery resolves against the live command and input surface; `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`.
-- [x] `W05.P08.S50` - Build a fail-closed per-record historical-default rehoming join keyed by structural fingerprints before any registry-shard owner is retired; `dev/quality/error_code_default_recovery_rehoming.py; dev/quality/error_code_default_recovery_rehoming.toml; dev/tests/test_error_code_default_recovery_rehoming.py`.
+- [x] `W05.P08.S50` - Build a fail-closed per-record historical-default rehoming join keyed by structural fingerprints before any registry-shard owner is retired, preserving open migration owners until S118 lands, then retaining checked owners only for exact unchanged historical fingerprints backed by canonical completed-plan, execution mapping, independent PASS attestation, and subject-body-hash evidence while rejecting every post-close structural drift unless a new unique open owner covers it; `dev/quality/error_code_default_recovery_rehoming.py; dev/quality/error_code_default_recovery_rehoming.toml; dev/tests/test_error_code_default_recovery_rehoming.py`.
 - [x] `W05.P08.S51` - Retire remaining recovery-authority claims from the first application registry shard and prove its ErrorCode tuples are taxonomy-only with zero S51-owned structural or locator impact while historical defaults and dispositions remain exclusively in immutable preimage evidence and later producer migrations and unrelated peer locator refreshes are refused; `src/cadrumo/core/errors/registry/_application_part1.py`.
 - [x] `W05.P08.S52` - Prove the second application registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger and 62 migration_required rows exclusively owned by later producer steps; `src/cadrumo/core/errors/registry/_application_part2.py`.
 - [x] `W05.P08.S53` - Prove the first domain registry shard is taxonomy-only with no recovery authority, retaining historical recovery only in the S50 ledger where 44 migration_required rows are exclusively owned by later producer steps and 3 rows are retired_or_unreachable; `src/cadrumo/core/errors/registry/_domain_part1.py`.
@@ -173,6 +173,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [ ] `W05.P08.S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/invoices/_service.py; src/cadrumo/domain/iva/_lookup.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/invoices/_enums.py; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/domain/iva/_saturation.py`.
 - [ ] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py; src/cadrumo/application/config_reset.py`.
 - [x] `W05.P08.S116` - Replace runtime pkgutil result-schema discovery with one canonical schema-module declaration reconciled bidirectionally to the live command and result-schema surface; `src/cadrumo/entrypoints/cli/_app_contract.py; src/cadrumo/entrypoints/schema_surface.py; src/cadrumo/entrypoints/cli/tests/test_app_contract_resilience.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [ ] `W05.P08.S118` - Provide upstream VaultSpec Core canonical independent-audit attestation carrying machine-readable subject execution identity, closed verdict enum, independent review kind, and subject body hash through parser, graph, and CLI APIs, with no filename or body-prose inference and no AEAT-local schema redeclaration; `VaultSpec Core audit metadata; VaultSpec Core parser; VaultSpec Core graph; VaultSpec Core CLI API`.
 
 ### Phase `W05.P09` - Diagnostics overview and provisioning
 
@@ -261,7 +262,7 @@ retired absence and reference-only status, and preserves the complete immutable
 612-row history.
 
 - [ ] `W06.P12.S46` - Require a complete semantic and mechanical pass with no newly discovered action site or alias; `dev/cli_action_census.py`.
-- [ ] `W06.P12.S47` - Fail closure on unclassified sites unresolved actions insufficient bindings missing proofs or ungrounded exclusions; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
+- [ ] `W06.P12.S47` - Fail closure on unclassified sites, unresolved actions, insufficient bindings, missing proofs, ungrounded exclusions, or absent S118 canonical audit attestation, and after S118 accept checked S50 owners only when exact unchanged historical identity and canonical execution, independent PASS verdict, and subject-body-hash evidence all match while rejecting post-close drift unless a new unique open owner covers it; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
 - [ ] `W06.P12.S95` - Rule what the recoverable-refusal path tells an autonomous operator now that the dead suggestion instruction is struck, stating both branches rather than either, because the strike was correct and landed while its consequence has no row, and what went missing is narrower than silence since both rules now point at the code and the message which the envelope does emit, so the agent can classify a refusal but cannot be told what to run to fix it, which is neither self-remediating nor undiagnosable, and either the replacement is the action field once the migration has advanced far enough that it is not None for most codes, or the path carries no guidance by design and the honest cost is that an autonomous operator must infer the remedy from the code rather than be handed it, a real reduction and a defensible one that must be recorded as a decision rather than left as an accident; `src/cadrumo/_data/agent/ and the recoverable-refusal envelope surface`.
 
