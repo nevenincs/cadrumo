@@ -114,6 +114,36 @@ _PROFILE_BUNDLE_FLOW_COPY_SLOTS: tuple[str, ...] = (
     "transport_cleartext_description",
 )
 
+# Text-mode storage reports choose these labels through ``_label(name, ...)``;
+# the scanner can see neither the helper argument nor its nested notice prefix.
+# They are a closed CLI presentation vocabulary, not user- or data-derived keys.
+_STORAGE_LABEL_SUFFIXES: tuple[str, ...] = (
+    "already_present",
+    "area",
+    "areas",
+    "checked_areas",
+    "created",
+    "detail",
+    "entries",
+    "entry_count",
+    "footprint",
+    "healthy",
+    "issues",
+    "lifecycle",
+    "no",
+    "occupancy",
+    "path",
+    "reclaimable",
+    "removed_entries",
+    "resolved_paths",
+    "retained_entries",
+    "storage_root",
+    "targets",
+    "yes",
+    "notice_info",
+    "notice_warning",
+)
+
 
 def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     """Construct the registration tuple at import time.
@@ -122,7 +152,9 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
+    from cadrumo.application.storage_management import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.wizard import WIZARD_FLOWS
+    from cadrumo.core import StorageArea
     from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES
     from cadrumo.domain.contribuyente import CCAA
     from cadrumo.domain.deadlines import (
@@ -154,6 +186,11 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         ),
         *_wizard_question_registrations(wizard_flows=WIZARD_FLOWS),
         *_surface_registrations(user_profile_status=UserProfileStatus),
+        *_storage_registrations(
+            storage_area=StorageArea,
+            storage_area_disposition=StorageAreaDisposition,
+            storage_occupancy=StorageOccupancy,
+        ),
         *_generated_docs_registrations(),
     )
 
@@ -352,6 +389,37 @@ def _surface_registrations(*, user_profile_status: type[Enum]) -> tuple[FStringK
             description="cli.config.profile.bundle_flow.* (profile bundle interactive-flow CopyRef copy)",
             key_factory=lambda v: f"cli.config.profile.bundle_flow.{v}",
             values=_PROFILE_BUNDLE_FLOW_COPY_SLOTS,
+        ),
+    )
+
+
+def _storage_registrations(
+    *,
+    storage_area: type[Enum],
+    storage_area_disposition: type[Enum],
+    storage_occupancy: type[Enum],
+) -> tuple[FStringKeyRegistration, ...]:
+    """Register every bounded key built by the storage CLI's display helpers."""
+    return (
+        FStringKeyRegistration(
+            description="cli.config.storage.labels.* (text-mode storage report labels)",
+            key_factory=lambda v: f"cli.config.storage.labels.{v}",
+            values=_STORAGE_LABEL_SUFFIXES,
+        ),
+        FStringKeyRegistration(
+            description="cli.config.storage.values.area.* (StorageArea)",
+            key_factory=lambda v: f"cli.config.storage.values.area.{v}",
+            values=tuple(member.value for member in storage_area),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.storage.values.lifecycle.* (StorageAreaDisposition)",
+            key_factory=lambda v: f"cli.config.storage.values.lifecycle.{v}",
+            values=tuple(member.value for member in storage_area_disposition),
+        ),
+        FStringKeyRegistration(
+            description="cli.config.storage.values.occupancy.* (StorageOccupancy)",
+            key_factory=lambda v: f"cli.config.storage.values.occupancy.{v}",
+            values=tuple(member.value for member in storage_occupancy),
         ),
     )
 
