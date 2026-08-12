@@ -11,6 +11,7 @@ import typer
 
 from ...application.modelo import (
     DataInventoryCasilla,
+    DataInventoryChecklist,
     ceded_autonomic_modelo_locale_key,
     data_inventory_checklist,
     modelo_work_create_refusal_locale_key,
@@ -539,6 +540,10 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             optional_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.optional_manual],
             ledger_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable],
             profile_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable],
+            previous_filing=[_data_inventory_casilla_payload(entry) for entry in checklist.previous_filing],
+            relation_prefill=[_data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill],
+            live_observation=[_data_inventory_casilla_payload(entry) for entry in checklist.live_observation],
+            unbucketed_sources=[_data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources],
             unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
             unresolved_profile_keys=list(checklist.unresolved_profile_keys),
             profile_checked=checklist.profile_checked,
@@ -564,15 +569,32 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                 tr("cli.app.modelo.requires.section_profile", default="profile_derivable"),
                 checklist.profile_derivable,
             ),
+            *_data_inventory_section_lines(
+                "previous_filing",
+                checklist.previous_filing,
+            ),
+            *_data_inventory_section_lines(
+                "relation_prefill",
+                checklist.relation_prefill,
+            ),
+            *_data_inventory_section_lines(
+                "live_observation",
+                checklist.live_observation,
+            ),
+            *_data_inventory_section_lines(
+                "unbucketed_sources",
+                checklist.unbucketed_sources,
+            ),
         ]
         notices = _requires_notices(checklist)
         lines.extend(_notice_text_lines(notices))
         _emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
 
-def _requires_notices(checklist) -> tuple[Notice, ...]:
+def _requires_notices(checklist: DataInventoryChecklist) -> tuple[Notice, ...]:
+    notices: list[Notice] = []
     if not checklist.profile_checked:
-        return (
+        notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="modelo.requires.no_active_profile",
@@ -586,10 +608,10 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                 context={"modelo": str(checklist.modelo)},
             ),
         )
-    if checklist.unresolved_profile_bindings:
+    elif checklist.unresolved_profile_bindings:
         binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
         missing = _unresolved_profile_requirements(checklist) or binding_ids
-        return (
+        notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="modelo.requires.missing_profile_coefficient",
@@ -606,10 +628,29 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                 context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
             ),
         )
-    return ()
+    if checklist.unbucketed_sources:
+        source_kinds = ", ".join(sorted({entry.binding_source or "" for entry in checklist.unbucketed_sources}))
+        binding_ids = ", ".join(
+            sorted(str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None),
+        )
+        casilla_ids = ", ".join(sorted({str(entry.casilla_id) for entry in checklist.unbucketed_sources}))
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.requires.unbucketed_binding_source",
+                message=tr("cli.app.modelo.requires.unbucketed_binding_source"),
+                context={
+                    "modelo": str(checklist.modelo),
+                    "source_kinds": source_kinds,
+                    "binding_ids": binding_ids,
+                    "casilla_ids": casilla_ids,
+                },
+            ),
+        )
+    return tuple(notices)
 
 
-def _unresolved_profile_requirements(checklist) -> str:
+def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     """Render the unresolved bindings' profile facts as grounded requirements.
 
     A binding id names the registry's internal consumer of a profile fact, not

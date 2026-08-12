@@ -895,7 +895,13 @@ class ModeloRequiresResult(OutputSchema):
     optionally enter (``optional_manual``), casillas the ledger aggregation
     mesh populates once the relevant transactions are imported and classified
     (``ledger_derivable``), and casillas populated from the active taxpayer
-    profile (``profile_derivable``). ``unresolved_profile_bindings`` names the
+    profile (``profile_derivable``). The two cross-filing channels remain
+    distinct as ``previous_filing`` and ``relation_prefill``;
+    ``live_observation`` carries bucket-local observation, register, and
+    invoice-backed sources, while ``unbucketed_sources`` preserves any binding
+    pair outside the explicit classifier for the envelope advisory.
+
+    ``unresolved_profile_bindings`` names the
     profile-derivable bindings the active profile has not yet supplied a fact
     for (e.g. an unset home-office usage ratio) so the operator can fix the
     gap before calculating, and ``unresolved_profile_keys`` names the profile
@@ -913,6 +919,10 @@ class ModeloRequiresResult(OutputSchema):
     optional_manual: list[DataInventoryCasillaPayload]
     ledger_derivable: list[DataInventoryCasillaPayload]
     profile_derivable: list[DataInventoryCasillaPayload]
+    previous_filing: list[DataInventoryCasillaPayload]
+    relation_prefill: list[DataInventoryCasillaPayload]
+    live_observation: list[DataInventoryCasillaPayload]
+    unbucketed_sources: list[DataInventoryCasillaPayload]
     unresolved_profile_bindings: list[BindingId]
     unresolved_profile_keys: list[str]
     profile_checked: bool

@@ -41,12 +41,30 @@ from ...domain.calculations.registry import (
     RevisionId,
     SourceRefId,
     binding_profile_keys,
+    bound_casilla_binding_ids,
     build_profile_grounding_index,
 )
 from ._binding_readiness import profile_resolvable_binding_ids
 from ._registry_resources import authority_via_resources
 
 _log = get_logger(__name__)
+
+# Sources whose calculate resolvers read bucket-local observation, register, or
+# invoice evidence rather than the general ledger, taxpayer profile, or a
+# prior-filing/relation carry.  ``live`` here means live application state: it
+# does not claim that ``modelo requires`` contacts an AEAT remote service.
+_LIVE_OBSERVATION_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
+    {
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION,
+        BindingSourceKind.COLLECTIBLE_INVOICE,
+        BindingSourceKind.FOREIGN_ASSET,
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+        BindingSourceKind.PAYABLE_INVOICE,
+        BindingSourceKind.PRORRATA_REGULARIZACION,
+        BindingSourceKind.RETENCIONES_AGGREGATION,
+        BindingSourceKind.WITHHOLDING,
+    },
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry import ModeloRevision
@@ -74,7 +92,13 @@ class DataInventoryChecklist:
     aggregation mesh populates automatically once the relevant transactions
     are imported and classified — the operator imports these rather than
     typing them. ``profile_derivable`` are casillas populated from the active
-    taxpayer profile (coefficients such as the home-office usage ratio);
+    taxpayer profile (coefficients such as the home-office usage ratio).
+    ``previous_filing`` and ``relation_prefill`` expose the two distinct
+    cross-filing channels. ``live_observation`` contains bucket-local
+    observation, register, and invoice-backed sources; it does not imply a
+    remote AEAT query. ``unbucketed_sources`` preserves any remaining declared
+    binding pair for an advisory instead of silently dropping it.
+
     ``unresolved_profile_bindings`` names the subset of those bindings the
     active profile has not yet supplied a fact for, so the checklist can warn
     the operator before they calculate and hit a missing-binding refusal.
@@ -88,6 +112,10 @@ class DataInventoryChecklist:
     optional_manual: tuple[DataInventoryCasilla, ...]
     ledger_derivable: tuple[DataInventoryCasilla, ...]
     profile_derivable: tuple[DataInventoryCasilla, ...]
+    previous_filing: tuple[DataInventoryCasilla, ...]
+    relation_prefill: tuple[DataInventoryCasilla, ...]
+    live_observation: tuple[DataInventoryCasilla, ...]
+    unbucketed_sources: tuple[DataInventoryCasilla, ...]
     unresolved_profile_bindings: tuple[BindingId, ...]
     #: The profile keys those unresolved bindings consume, in binding order and
     #: de-duplicated. Carried alongside the binding ids because the operator
@@ -141,10 +169,10 @@ def data_inventory_checklist(
     * ``input_kind == BOUND`` casillas are classified by their binding's
       :class:`~core.aggregation.BindingSourceKind`: ledger-aggregation
       sources become ``ledger_derivable``; ``profile`` sources become
-      ``profile_derivable``. Every other bound source (previous-filing carry,
-      relation prefill, live observation, constant value, ...) requires no
-      operator data-gathering action and is intentionally omitted from the
-      checklist.
+      ``profile_derivable``; prior-filing carries, relation prefills, and
+      bucket-local observation/register/invoice sources have their own
+      buckets. Source kinds outside those explicit buckets remain visible in
+      ``unbucketed_sources`` so taxonomy growth cannot silently disappear.
     * ``COMPUTED`` and ``INFORMATIONAL`` casillas need no source data and are
       omitted.
 
@@ -168,39 +196,60 @@ def data_inventory_checklist(
     authority = authority_via_resources()
     snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
     revision = snapshot.revision
-    binding_sources = {binding.id: binding.source for binding in revision.bindings}
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
 
     required_manual: list[DataInventoryCasilla] = []
     optional_manual: list[DataInventoryCasilla] = []
     ledger_derivable: list[DataInventoryCasilla] = []
     profile_derivable: list[DataInventoryCasilla] = []
+    previous_filing: list[DataInventoryCasilla] = []
+    relation_prefill: list[DataInventoryCasilla] = []
+    live_observation: list[DataInventoryCasilla] = []
+    unbucketed_sources: list[DataInventoryCasilla] = []
     profile_binding_ids: list[BindingId] = []
 
     for casilla in revision.casillas:
-        binding_source = binding_sources.get(casilla.binding) if casilla.binding is not None else None
-        entry = DataInventoryCasilla(
+        unbound_entry = DataInventoryCasilla(
             casilla_id=casilla.id,
             number=casilla.number,
             label=casilla.get_label(output_language()),
             legal_refs=tuple(casilla.legal_refs),
             source_refs=tuple(casilla.source_refs),
-            binding_id=casilla.binding,
-            binding_source=str(binding_source) if binding_source is not None else None,
         )
         if casilla.input_kind == InputKind.MANUAL:
             if casilla.required:
-                required_manual.append(entry)
+                required_manual.append(unbound_entry)
             else:
-                optional_manual.append(entry)
-        elif casilla.input_kind == InputKind.BOUND and casilla.binding is not None:
+                optional_manual.append(unbound_entry)
+            continue
+        if casilla.input_kind != InputKind.BOUND:
+            continue
+
+        for binding_id in bound_casilla_binding_ids(casilla):
+            binding_source = bindings_by_id[binding_id].source
+            entry = DataInventoryCasilla(
+                casilla_id=casilla.id,
+                number=casilla.number,
+                label=casilla.get_label(output_language()),
+                legal_refs=tuple(casilla.legal_refs),
+                source_refs=tuple(casilla.source_refs),
+                binding_id=binding_id,
+                binding_source=binding_source.value,
+            )
             if binding_source in LEDGER_BINDING_SOURCE_KINDS:
                 ledger_derivable.append(entry)
-            elif binding_source == BindingSourceKind.PROFILE:
+            elif binding_source is BindingSourceKind.PROFILE:
                 profile_derivable.append(entry)
-                profile_binding_ids.append(casilla.binding)
-        # COMPUTED, INFORMATIONAL, and non-ledger/non-profile BOUND casillas
-        # (previous_filing, relation_prefill, ...) need no operator
-        # data-gathering action.
+                if binding_id not in profile_binding_ids:
+                    profile_binding_ids.append(binding_id)
+            elif binding_source is BindingSourceKind.PREVIOUS_FILING:
+                previous_filing.append(entry)
+            elif binding_source is BindingSourceKind.RELATION_PREFILL:
+                relation_prefill.append(entry)
+            elif binding_source in _LIVE_OBSERVATION_SOURCE_KINDS:
+                live_observation.append(entry)
+            else:
+                unbucketed_sources.append(entry)
 
     unresolved_profile_bindings: tuple[BindingId, ...] = ()
     unresolved_profile_keys: tuple[str, ...] = ()
@@ -229,6 +278,10 @@ def data_inventory_checklist(
         optional_manual=tuple(optional_manual),
         ledger_derivable=tuple(ledger_derivable),
         profile_derivable=tuple(profile_derivable),
+        previous_filing=tuple(previous_filing),
+        relation_prefill=tuple(relation_prefill),
+        live_observation=tuple(live_observation),
+        unbucketed_sources=tuple(unbucketed_sources),
         unresolved_profile_bindings=unresolved_profile_bindings,
         unresolved_profile_keys=unresolved_profile_keys,
         profile_checked=profile_checked,

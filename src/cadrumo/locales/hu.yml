@@ -2637,6 +2637,9 @@ cli:
         section_optional: opcionalis_kezi_mezok
         section_profile: profilbol_szarmazo
         section_required: kotelezo_kezi_mezok
+        unbucketed_binding_source: Néhány deklarált kötési forrás nem tartozik a modelo.requires
+          adatleltár egyik kategóriájába sem. Javítási javaslat nélkül jelennek meg,
+          mert a forrás szemantikáját felül kell vizsgálni.
       review_package:
         actor_help: A csomag leírójába és a mögöttes exportálási eseménybe rögzített
           operátorcímke.

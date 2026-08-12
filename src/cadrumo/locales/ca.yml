@@ -2704,6 +2704,9 @@ cli:
         section_optional: caselles_opcionals_manuals
         section_profile: derivades_del_perfil
         section_required: caselles_obligatories_manuals
+        unbucketed_binding_source: Algunes fonts d'enllaç declarades no pertanyen
+          a cap categoria de l'inventari de dades de modelo.requires. Es mostren sense
+          suggerir una reparació perquè cal revisar la semàntica de la font.
       review_package:
         actor_help: Etiqueta de l'operador registrada al descriptor del paquet i a
           l'esdeveniment d'exportació subjacent.

@@ -2518,6 +2518,9 @@ cli:
         section_optional: optional_manual
         section_profile: profile_derivable
         section_required: required_manual
+        unbucketed_binding_source: Some declared binding sources do not belong to
+          a modelo.requires data-inventory bucket. They are reported without a suggested
+          repair because their source semantics require review.
       review_package:
         actor_help: Operator label recorded into the package descriptor and the underlying
           export event.

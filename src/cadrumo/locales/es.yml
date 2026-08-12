@@ -2771,6 +2771,10 @@ cli:
         section_optional: casillas_opcionales_manuales
         section_profile: derivadas_del_perfil
         section_required: casillas_obligatorias_manuales
+        unbucketed_binding_source: Algunas fuentes de enlace declaradas no pertenecen
+          a ninguna categoría del inventario de datos de modelo.requires. Se muestran
+          sin sugerir una reparación porque es necesario revisar la semántica de la
+          fuente.
       review_package:
         actor_help: Etiqueta del operador registrada en el descriptor del paquete
           y en el evento de exportación subyacente.
