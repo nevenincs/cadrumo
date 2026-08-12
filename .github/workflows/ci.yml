@@ -141,9 +141,23 @@ jobs:
           uv run vaultspec-core install --force
 
       - name: Lint
+        # `check-format` joins the two style gates here because until now
+        # NOTHING enforced formatting on a push. The recipe existed and was
+        # invoked by zero automatically-triggered workflows, and the only other
+        # configured format gate is the ruff-format hook in `prek.toml`, which
+        # this fleet is instructed never to run because it stashes the shared
+        # tree. Two configured gates covered formatting and the intersection of
+        # what they enforced was empty.
+        #
+        # The sweep landed FIRST, in the same commit that added this line.
+        # Adding the step to an unswept tree would red the lane on its first
+        # run, and a permanently red lane is one everyone learns to route
+        # around — the decay this repository has already documented for
+        # `continue-on-error`.
         run: |
           just check-style
           just check-relative-imports
+          just check-format
 
       - name: Import architecture
         run: just check-imports

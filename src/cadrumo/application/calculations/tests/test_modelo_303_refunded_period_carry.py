@@ -175,7 +175,9 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
     """
     work_unit_id = _year_n_4t_work_unit().work_unit_id
     values = dict(result.values)
-    filing_instance_evidence = general_m303_filing_evidence(Period.from_year_and_code(2025, "4T"), reference="test:m303-refunded-period-carry")
+    filing_instance_evidence = general_m303_filing_evidence(
+        Period.from_year_and_code(2025, "4T"), reference="test:m303-refunded-period-carry"
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},

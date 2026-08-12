@@ -259,7 +259,9 @@ def test_formula_runtime_and_registry_fragments_cannot_reintroduce_retired_dispa
     function_names = {node.name for node in ast.walk(runtime_tree) if isinstance(node, ast.FunctionDef)}
     assert "_m303_resolve_modulos_iva_cuota_devengada_args" not in function_names
     assert "_m303_resolve_modulos_iva_cuota_minima_pct_args" not in function_names
-    assert "M303RegimenSimplificadoEvidenceRequiredError" not in Path(_formula_runtime.__file__).read_text(encoding="utf-8")
+    assert "M303RegimenSimplificadoEvidenceRequiredError" not in Path(_formula_runtime.__file__).read_text(
+        encoding="utf-8"
+    )
     assert FORMULA_OPERATOR_ARITIES["m303_resolve_modulos_iva_cuota_devengada"].minimum == 8
     assert FORMULA_OPERATOR_ARITIES["m303_resolve_modulos_iva_cuota_devengada"].maximum == 8
     assert FORMULA_OPERATOR_ARITIES["m303_resolve_modulos_iva_cuota_minima_pct"].minimum == 1

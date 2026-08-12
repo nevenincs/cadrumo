@@ -109,7 +109,9 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2009-y-siguientes",
     )
-    filing_instance_evidence = general_m303_filing_evidence(Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip")
+    filing_instance_evidence = general_m303_filing_evidence(
+        Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip"
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_EVIDENCE_CASILLA: "140000.00"},

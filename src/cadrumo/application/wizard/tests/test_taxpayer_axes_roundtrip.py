@@ -390,11 +390,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         # Filter blanks and the wizard's undeclared IVA defaults before
         # projecting the deadline-layer TaxpayerProfile. Those ``false``
         # tokens are not declared IVA block facts in this scenario.
-        persisted = {
-            key: value
-            for key, value in serialised.items()
-            if value and not key.startswith("iva.")
-        }
+        persisted = {key: value for key, value in serialised.items() if value and not key.startswith("iva.")}
         assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted
         profile = taxpayer_profile_from_mapping(
             persisted,
@@ -456,11 +452,7 @@ class TestLey49SpecialRegimeRoundTrip:
         assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared") == ""
         assert canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date") == ""
 
-        persisted = {
-            key: value
-            for key, value in canonical.items()
-            if value and not key.startswith("iva.")
-        }
+        persisted = {key: value for key, value in canonical.items() if value and not key.startswith("iva.")}
         profile = taxpayer_profile_from_mapping(persisted, tax_id_default="00000000T")
         assert profile.ley_49_2002_special_regime_option_declared is None
         assert profile.ley_49_2002_special_regime_option_date is None

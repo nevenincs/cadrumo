@@ -9,9 +9,9 @@ from decimal import Decimal
 import pytest
 
 from .....core import (
+    EstadoCasillaOficial,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    EstadoCasillaOficial,
     ProrrataActivityRowType,
     ProrrataRegisterRegime,
 )
