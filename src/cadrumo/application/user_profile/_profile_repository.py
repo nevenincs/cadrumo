@@ -444,7 +444,6 @@ class ProfileRepository:
             # one exception contract regardless of which layer caught the
             # mismatch first.
             raise ProfileIntegrityError(
-                "profile physical stores disagree on identity",
                 translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
                 context={"mismatches": ("manifest_bucket_id",)},
             ) from exc

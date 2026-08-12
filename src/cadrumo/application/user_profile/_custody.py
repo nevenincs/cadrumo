@@ -288,9 +288,8 @@ def _configured_passphrase_callback(settings: Settings) -> PassphraseCallback:
         configured = settings.cadrumo_secret_passphrase
         if configured is None:
             raise SecretStoreError(
-                "no secret-store passphrase is available for this custody operation; "
-                "pass an explicit passphrase_callback, or configure the secret-store "
-                "passphrase in the settings environment before enrolling a recovery code.",
+                translated_message="errors.fail.fail_storage_secret_store",
+                context={"passphrase_available": False, "passphrase_callback_supplied": False},
             )
         return configured.get_secret_value().rstrip("\r\n")
 
@@ -453,9 +452,12 @@ def _require_file_custody(settings: Settings) -> None:
     )
     if not isinstance(provider, FileFallbackMasterKeyProvider):
         raise SecretStoreError(
-            "passphrase change requires the file secret-store backend; the resolved "
-            f"backend {type(provider).__name__} is unsupported. Set "
-            "CADRUMO_SECRET_STORE_BACKEND=file and retry.",
+            translated_message="errors.fail.fail_storage_secret_store",
+            context={
+                "resolved_backend": type(provider).__name__,
+                "required_backend": "file",
+                "backend_supported": False,
+            },
         )
 
 

@@ -548,8 +548,12 @@ def serialize_carried_objects(
                 # a typed, attributable export error naming the namespace, not a bare
                 # pydantic/parse error bubbling out of the sealed-archive export.
                 raise ProfileExportError(
-                    "could not resolve the natural key for a carried secure-object row",
-                    context={"namespace": definition.namespace, "error": str(exc)},
+                    translated_message="errors.fail.profile_export",
+                    context={
+                        "namespace": definition.namespace,
+                        "resolver_error_type": type(exc).__name__,
+                        "natural_key_resolved": False,
+                    },
                 ) from exc
             carried.append(
                 CarriedSecureObject(
