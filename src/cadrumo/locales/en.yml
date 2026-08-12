@@ -4912,9 +4912,9 @@ cli:
       (months). Combine with --year to choose the year.'
     pipeline:
       help: 'Show cross-domain pipeline health for one filing period in one table:
-        ledger classification/review state, modelo readiness (calculated / verified
-        / filed / blocked) for every work unit in the period, and outstanding verification
-        findings. Read-only; safe to run repeatedly; never contacts AEAT.'
+        ledger classification/review state, modelo readiness (calculated / incomplete
+        / verified / filed / blocked) for every work unit in the period, and outstanding
+        verification findings. Read-only; safe to run repeatedly; never contacts AEAT.'
       labels:
         findings_section: 'Findings:'
         ledger_section: 'Ledger:'
@@ -4923,6 +4923,8 @@ cli:
       no_work_units: No modelo work units for this period yet.
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
+      summary:
+        incompleto: 'Modelo %{modelo}: verification incomplete.'
       year_help: Filing year (e.g. 2026).
     post_filing:
       pending_summary: '%{count} AEAT post-filing event(s) require attention: %{kinds}.'

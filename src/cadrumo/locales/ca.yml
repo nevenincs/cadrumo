@@ -5256,9 +5256,10 @@ cli:
     pipeline:
       help: 'Mostra la salut del flux de treball entre dominis per a un període de
         declaració en una sola taula: estat de classificació i revisió del llibre
-        comptable, preparació de cada model (calculat / verificat / presentat / bloquejat)
-        per a cada unitat de treball del període, i troballes de verificació pendents.
-        Només lectura; segur d''executar repetidament; mai contacta amb l''AEAT.'
+        comptable, preparació de cada model (calculat / incomplet / verificat / presentat
+        / bloquejat) per a cada unitat de treball del període, i troballes de verificació
+        pendents. Només lectura; segur d''executar repetidament; mai contacta amb
+        l''AEAT.'
       labels:
         findings_section: 'Troballes:'
         ledger_section: 'Llibre comptable:'
@@ -5267,6 +5268,8 @@ cli:
       no_work_units: Encara no hi ha unitats de treball de model per a aquest període.
       period_help: 'Període de declaració com a token de l''AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
+      summary:
+        incompleto: 'Model %{modelo}: verificació incompleta.'
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
       pending_summary: '%{count} esdeveniment(s) de l''AEAT posterior(s) a la presentació

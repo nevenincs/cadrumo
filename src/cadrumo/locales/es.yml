@@ -5343,10 +5343,10 @@ cli:
     pipeline:
       help: 'Muestra la salud del flujo de trabajo entre dominios para un periodo
         de declaración en una sola tabla: estado de clasificación y revisión del libro
-        contable, preparación de cada modelo (calculado / verificado / presentado
-        / bloqueado) para cada unidad de trabajo del periodo, y hallazgos de verificación
-        pendientes. Solo lectura; seguro de ejecutar repetidamente; nunca contacta
-        con la AEAT.'
+        contable, preparación de cada modelo (calculado / incompleto / verificado
+        / presentado / bloqueado) para cada unidad de trabajo del periodo, y hallazgos
+        de verificación pendientes. Solo lectura; seguro de ejecutar repetidamente;
+        nunca contacta con la AEAT.'
       labels:
         findings_section: 'Hallazgos:'
         ledger_section: 'Libro contable:'
@@ -5355,6 +5355,8 @@ cli:
       no_work_units: Todavía no hay unidades de trabajo de modelo para este periodo.
       period_help: 'Periodo de declaración como token de la AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
+      summary:
+        incompleto: 'Modelo %{modelo}: verificación incompleta.'
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
       pending_summary: '%{count} evento(s) posteriores a la presentación de la AEAT

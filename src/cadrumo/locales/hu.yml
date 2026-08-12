@@ -5185,10 +5185,10 @@ cli:
     pipeline:
       help: 'Mutassa a keresztdomén-folyamat állapotát egy adóbevallási időszakra
         egyetlen táblázatban: a főkönyv besorolási/felülvizsgálati állapota, az egyes
-        modellek felkészültsége (kiszámítva / ellenőrizve / benyújtva / blokkolva)
-        az időszak minden munkaegységéhez, valamint a fennálló ellenőrzési megállapítások.
-        Csak olvasható; biztonságosan újra futtatható; soha nem lép kapcsolatba az
-        AEAT-tal.'
+        modellek felkészültsége (kiszámítva / hiányos / ellenőrizve / benyújtva /
+        blokkolva) az időszak minden munkaegységéhez, valamint a fennálló ellenőrzési
+        megállapítások. Csak olvasható; biztonságosan újra futtatható; soha nem lép
+        kapcsolatba az AEAT-tal.'
       labels:
         findings_section: 'Megállapítások:'
         ledger_section: 'Főkönyv:'
@@ -5197,6 +5197,8 @@ cli:
       no_work_units: Ehhez az időszakhoz még nincs modell munkaegység.
       period_help: 'Bevallási időszak AEAT-tokenként: 1T-4T (negyedévek), 0A (éves),
         01-12 (hónapok). Az évhez kombináld a --year kapcsolóval.'
+      summary:
+        incompleto: '%{modelo} modell: az ellenőrzés hiányos.'
       year_help: Bevallási év (pl. 2026).
     post_filing:
       pending_summary: '%{count} AEAT benyújtás utáni esemény figyelmet igényel: %{kinds}.'
