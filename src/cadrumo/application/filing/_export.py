@@ -633,6 +633,11 @@ def export_draft(
             casilla_metadata=subview.casilla_record_metadata,
         )
     atomic_write_bytes(output_path, payload)
+    _verify_written_export(
+        draft,
+        file_path=output_path,
+        schema_provider=provider,
+    )
     digest = sha256_hex(payload)
     receipt = DeclaracionExportResult(
         draft_id=draft.draft_id,
@@ -774,7 +779,11 @@ def verify_export(
     if draft.schema_version != subview.schema_version:
         raise FilingExportError("declaration verify requires a draft built from the active registry snapshot")
     if not subview.export_layout_ids:
-        digest = sha256_file(file_path) if file_path.exists() else None
+        try:
+            digest = sha256_file(file_path) if file_path.exists() else None
+        except OSError:
+            _logger.warning("declaration export verification could not read %s", file_path, exc_info=True)
+            digest = None
         return DeclaracionVerifyResult(
             draft_id=draft.draft_id,
             file_path=file_path,
@@ -791,7 +800,17 @@ def verify_export(
             verified_at=now(),
             narrative="filing.export.missing_file",
         )
-    payload = file_path.read_bytes()
+    try:
+        payload = file_path.read_bytes()
+    except OSError:
+        _logger.warning("declaration export verification could not read %s", file_path, exc_info=True)
+        return DeclaracionVerifyResult(
+            draft_id=draft.draft_id,
+            file_path=file_path,
+            verdict=DeclaracionVerifyVerdict.MISSING,
+            verified_at=now(),
+            narrative="filing.export.missing_file",
+        )
     digest = sha256_hex(payload)
     try:
         mismatched, checked = _mismatched_casilla_ids(
@@ -853,6 +872,47 @@ def verify_export(
         file_sha256=digest,
         verified_at=now(),
         narrative="filing.export.verified",
+    )
+
+
+def _verify_written_export(
+    draft: ModeloDraft,
+    *,
+    file_path: Path,
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    """Fail closed unless the just-written declaration re-parses as a match.
+
+    The output has already crossed the atomic-write boundary when this check
+    runs. This function deliberately does not remove it: the draft-level writer
+    has no deletion policy, while the work-unit writer owns a sibling ``.tmp``
+    path and removes that path when this :class:`FilingExportError` propagates.
+
+    Args:
+        draft: Approved draft whose bytes were rendered.
+        file_path: Exact artefact path written by :func:`export_draft`.
+        schema_provider: The same registry snapshot used by the renderer.
+
+    Raises:
+        FilingExportError: The real parser cannot read the artefact back as a
+            :attr:`DeclaracionVerifyVerdict.MATCH`.
+    """
+    verification = verify_export(
+        draft,
+        file_path=file_path,
+        schema_provider=schema_provider,
+    )
+    if verification.verdict is DeclaracionVerifyVerdict.MATCH:
+        return
+    details: list[str] = []
+    if verification.mismatched_casilla_ids:
+        details.append(f"casillas={','.join(verification.mismatched_casilla_ids)}")
+    if verification.mismatched_root_fields:
+        details.append(f"root_fields={','.join(verification.mismatched_root_fields)}")
+    detail_suffix = f" ({'; '.join(details)})" if details else ""
+    raise FilingExportError(
+        "declaration export post-write verification refused "
+        f"{verification.verdict.value} artefact {str(file_path)!r}{detail_suffix}",
     )
 
 
