@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-11'
-body_hash: 'sha256:f3aa62a9f3eb434d729447cc2cac6e69e20c7b9243dbc48d8d3d1f1fd783e9bf'
+modified: '2026-08-12'
+body_hash: 'sha256:9decfa0d5f4e15cc2aa218bfe7aeb2bd78a56aa0c320657970d9e1777b88a84c'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -107,7 +107,7 @@ ModeloWorkReview, its producer, its envelope, and the findings attribution sweep
 - [x] `W03.P07.S23` - add the frozen ModeloWorkReview model and its single producer build_modelo_work_review, law-resolving the revision and asserting any stored stamp; `src/cadrumo/application/modelo/`.
 - [x] `W03.P07.S24` - sweep all finding construction sites that leave casilla_id unset (26 sites across 18 files, with _verification_cross_period.py carrying 9 including the never-populating cross-period kind) and populate it wherever a casilla exists to name, recording the grep-derived site list in the exec record; `src/cadrumo/application/modelo/`.
 - [x] `W03.P07.S25` - implement the owner-ruled progress counts: typed state plus counts against the named manifest denominator, UNDEFINED when no manifest exists, never a bare percentage; `src/cadrumo/application/modelo/`.
-- [ ] `W03.P07.S26` - register the modelo.work.review envelope wrapping the record, with the spine axis and machine facts riding Notice context; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
+- [x] `W03.P07.S26` - register the modelo.work.review envelope wrapping the record, with the spine axis and machine facts riding Notice context; `src/cadrumo/entrypoints/cli/_modelo_payloads.py`.
 - [ ] `W03.P07.S27` - widen the modelo.requires classifier to bucket previous_filing, relation_prefill and live_observation sources, read alternate bindings, and surface unbucketed sources as an advisory; `src/cadrumo/application/modelo/_data_inventory.py`.
 
 ### Phase `W03.P08` - readiness reads verification

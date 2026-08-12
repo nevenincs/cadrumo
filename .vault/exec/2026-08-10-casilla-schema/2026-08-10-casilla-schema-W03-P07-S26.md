@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:09f5baeb1fb811ac80100ba671dcfc3703e78b37b83bb9a90e97a63a3fdbacb5'
+body_hash: 'sha256:5619d1681d495f5e773c64f4f8cc66ea8b6368164611fca0ced74b3b8723d2ab'
 step_id: 'S26'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -44,3 +44,5 @@ Focused Ruff formatting and lint passed. BasedPyright over the new registrar and
 The live command uses the existing target resolver and repository-backed application producer; it adds no facade, shim, or duplicate review assembly. `cli.app.modelo.work.review_help` was added through `dev.locales` in all four locale catalogs. The locale scaffold check retained unrelated existing drift outside this key.
 
 The initial inventory found unrelated peer modifications in `_ledger_evidence_review_cli.py`, `_modelo_discovery_cli.py`, and the locale catalogs. A transient peer-owned syntax error in `_ledger_evidence_cli.py` initially blocked the conformance node; it cleared without S26 edits and the exact node then passed. All peer changes were preserved. No staging, commit, plan-state mutation, audit authoring, or unrelated cleanup was performed.
+
+History/atomicity note: S26 landed across four commits: the payload and original envelope test were accidentally swept into unrelated refactor a8eb0cd936; the initial execution record landed separately in 278215f04e; its wording was refined in 8db25cff0a; and the reopened command, rendering-helper factor, locale leaf, and direct CLI test landed in 9d416e9006 mixed with the S89 config/ledger translation sweep. This violated the one-Step/one-atomic-commit rule. History was not rewritten. Final closure is audit, plan, and execution-record correction only.
