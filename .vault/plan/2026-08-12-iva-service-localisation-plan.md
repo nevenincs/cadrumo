@@ -4,7 +4,7 @@ tags:
   - '#iva-service-localisation'
 date: '2026-08-12'
 modified: '2026-08-12'
-body_hash: 'sha256:09594257d2f19c3e313053488e659018d60577fdceea2fb7edb2a18bce4bdc44'
+body_hash: 'sha256:704b1ac7c458e06713b41e620939e405374637f530e17f39c6fbbc9215d09ac8'
 tier: L1
 related:
   - '[[2026-08-12-iva-service-localisation-adr]]'
@@ -22,7 +22,7 @@ related:
 - [x] `S03` - Prove the two SERVICE categories now derive SERVICES through supply_nature_implied_by_category, and that the goods categories still derive GOODS. Assert the property per category from the shipped component table, never a total count of deriving categories - a count encodes this moment and goes stale the next time an article is bundled. Correct the module docstring that states the two SERVICE members derive nothing and names the gap as the citation table's; `src/cadrumo/domain/iva/_supply_nature.py, src/cadrumo/domain/iva/tests/test_supply_nature.py`.
 - [x] `S04` - Fork the outbound services classification on the customer's condition per LIVA art 69: the B2B limb keeps not-subject under 69.Uno.1 for a recipient that is an empresario o profesional established outside the Comunidad, and the B2C limb resolves to a SUBJECT domestic outcome under 69.Uno.2 because the supplier is established in the TAI. UNKNOWN and PUBLIC_ADMINISTRATION reach neither limb. Declare the customer tax status on the row's consumed party facts so the operator is asked for it on this branch and only on it; `src/cadrumo/domain/iva/_classification.py`.
 - [x] `S05` - Gate both under-declarations the fork closes, each as a mutation proof that reds against the pre-change row: a B2C service to a third-country consumer, and a B2C service to a consumer in Canarias, Ceuta or Melilla, which art 69.Dos expressly carves back out of its own exception by naming those territories. Keep a positive control on the B2B limb through the same territories so the case cannot pass by refusing everything, and assert the outcomes rather than any localised message text; `src/cadrumo/domain/iva/tests/`.
-- [ ] `S06` - Sweep the consumers of the outbound services row for the widened outcome: any caller, projection, advisory or Modelo 303 routing that assumed an ES-to-outside-the-Comunidad service is always not-subject. Run the full IVA and ledger suites sequentially and triage owner failures from peer churn before closing. Record the art 69.Dos list as a named carry-forward in the exec record - its population is over-taxed by default, which is the direction nothing in the apparatus watches; `src/cadrumo/domain/iva/, src/cadrumo/application/`.
+- [x] `S06` - Sweep the consumers of the outbound services row for the widened outcome: any caller, projection, advisory or Modelo 303 routing that assumed an ES-to-outside-the-Comunidad service is always not-subject. Run the full IVA and ledger suites sequentially and triage owner failures from peer churn before closing. Record the art 69.Dos list as a named carry-forward in the exec record - its population is over-taxed by default, which is the direction nothing in the apparatus watches; `src/cadrumo/domain/iva/, src/cadrumo/application/`.
 
 ## Parallelization
 
