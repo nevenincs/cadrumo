@@ -238,7 +238,10 @@ def _normalised_observation_refs(observations: Iterable[CasillaObservation | Non
         ),
     )
     if not refs:
-        raise ModeloValidationError(f"ledger filing evidence requires non-empty observation {field_name}")
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={"field_name": field_name, "observation_present": False},
+        )
     return refs
 
 
