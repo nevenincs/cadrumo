@@ -357,6 +357,25 @@ def uppercase_alpha_code(field_label: str) -> Callable[[type, str], str]:
     return _validate
 
 
+def optional_uppercase_alpha_code(field_label: str) -> Callable[[type, str | None], str | None]:
+    """Build the nullable counterpart of :func:`uppercase_alpha_code`.
+
+    Delegates to that validator for anything present, so what "uppercase
+    alphabetic" MEANS keeps one home and this adds only the nullability axis.
+    A separate builder rather than a flag on the shared one, because most of
+    the fields it guards are genuinely required and loosening it for them would
+    make an absent code representable where nothing should represent one.
+    """
+    validate_present = uppercase_alpha_code(field_label)
+
+    def _validate(cls: type, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return validate_present(cls, value)
+
+    return _validate
+
+
 _AEAT_OPERATION_CLAVES: frozenset[str] = frozenset({"E", "M", "H", "A", "T", "S", "I", "R", "D", "C"})
 
 

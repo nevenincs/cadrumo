@@ -17,8 +17,13 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import selector_as_dict as _selector_as_dict
-from ._binding_selector_utils import unique_tuple, uppercase_alpha_code
+from ._binding_selector_utils import (
+    optional_uppercase_alpha_code,
+    unique_tuple,
+)
+from ._binding_selector_utils import (
+    selector_as_dict as _selector_as_dict,
+)
 from ._errors import RegistryValidationError
 from ._ids import BindingId
 from ._schema import DataBindingDefinition, ModeloRevision
@@ -80,7 +85,18 @@ class WithholdingObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
     perceptor_legal_name: str = Field(default="", max_length=200)
-    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    """The party's country, or ``None`` when the source stated none.
+
+    Nullable rather than defaulted to ``ES``, because these forms carry the
+    NON-RESIDENT population by construction -- a perceptor on a withholding
+    form is routinely foreign, and an attribution member can be -- so a
+    default silently declares a foreign party Spanish on a filing surface.
+
+    Absence propagates as an ABSENT KEY in the built row rather than as a
+    value, so a binding that needs the country refuses with the shipped
+    not-produced error naming itself. That is the visible failure the silent
+    default replaced."""
     transaction_date: date
     clave: RetencionClave
     subclave: str = Field(default="", max_length=4, pattern=r"^[0-9]*$")
@@ -89,7 +105,7 @@ class WithholdingObservation(BaseModel):
     retencion_practicada: Decimal = Decimal("0")
     ingreso_a_cuenta: Decimal = Decimal("0")
 
-    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
+    _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
     @field_validator("clave", mode="before")
     @classmethod
@@ -347,7 +363,7 @@ def _build_withholding_rows(
     observations: tuple[WithholdingObservation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     """Group withholding observations into rows keyed by perceptor and optionally clave."""
-    accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
+    accum: dict[tuple[str | None, str, str, str], dict[str, Decimal | str]] = {}
     for observation in observations:
         if grouping == "per_perceptor":
             key = (observation.country_code, observation.perceptor_tax_id, "", "")
@@ -362,20 +378,23 @@ def _build_withholding_rows(
             )
             row_clave = observation.clave
             row_subclave = observation.subclave
-        bucket = accum.setdefault(
-            key,
-            {
-                "country_code": observation.country_code,
-                "perceptor_tax_id": observation.perceptor_tax_id,
-                "perceptor_legal_name": observation.perceptor_legal_name,
-                "clave": row_clave,
-                "subclave": row_subclave,
-                "percibido_dinerario": Decimal("0"),
-                "percibido_especie": Decimal("0"),
-                "retencion_practicada": Decimal("0"),
-                "ingreso_a_cuenta": Decimal("0"),
-            },
-        )
+        # An unknown country is an ABSENT KEY rather than a value. The payload
+        # carries decimals and strings, and a binding reading a field this row
+        # did not produce already refuses with an error naming itself -- so the
+        # absence surfaces as that refusal instead of as a silent "ES".
+        identity: dict[str, Decimal | str] = {
+            "perceptor_tax_id": observation.perceptor_tax_id,
+            "perceptor_legal_name": observation.perceptor_legal_name,
+            "clave": row_clave,
+            "subclave": row_subclave,
+            "percibido_dinerario": Decimal("0"),
+            "percibido_especie": Decimal("0"),
+            "retencion_practicada": Decimal("0"),
+            "ingreso_a_cuenta": Decimal("0"),
+        }
+        if observation.country_code is not None:
+            identity["country_code"] = observation.country_code
+        bucket = accum.setdefault(key, identity)
         prev_dinerario = bucket["percibido_dinerario"]
         prev_especie = bucket["percibido_especie"]
         prev_retencion = bucket["retencion_practicada"]
