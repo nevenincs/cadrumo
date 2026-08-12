@@ -220,7 +220,7 @@ def test_dividend_baseline_resolves_unconditional_art_25_1_f_rate(
 
     Before the ``dividend`` tipo_renta category was added to the registry
     baseline table, this lookup returned ``(None, [])`` (deferred baseline
-    coverage), and the application verification layer converted a matching
+    coverage), and the modelo verification workflow converted a matching
     unresolved outcome into a BLOCKING finding rather than a rate. This
     proves the resolver now returns the unconditional 19% Art 25.1.f rate
     directly, with no findings.
@@ -345,8 +345,9 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
 ) -> None:
     """A typed convenio-missing outcome emits the missing-row finding."""
 
+    outcome = _unresolved_rate_outcome(RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING)
     findings = _m210_unresolved_outcome_findings(
-        (_unresolved_rate_outcome(RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING),),
+        (outcome,),
         profile=_irnr_profile("ZW"),
         snapshot=m210_snapshot,
         year=2025,
@@ -354,6 +355,7 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
     )
 
     assert len(findings) == 1
+    assert findings[0].casilla_id == outcome.casilla_id
     assert findings[0].message_facts["reason_code"] == "convenio_rate_missing"
 
 
@@ -362,14 +364,13 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
 ) -> None:
     """A typed baseline-deferred outcome + unknown type emits a finding."""
 
+    outcome = _unresolved_rate_outcome(
+        RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
+        tipo_renta="royalty",
+        country="",
+    )
     findings = _m210_unresolved_outcome_findings(
-        (
-            _unresolved_rate_outcome(
-                RegistryUnresolvedOutcomeReason.M210_BASELINE_TIPO_DEFERRED,
-                tipo_renta="royalty",
-                country="",
-            ),
-        ),
+        (outcome,),
         profile=_resident_profile(),
         snapshot=m210_snapshot,
         year=2025,
@@ -377,6 +378,7 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
     )
 
     assert len(findings) == 1
+    assert findings[0].casilla_id == outcome.casilla_id
     assert findings[0].message_facts["reason_code"] == "baseline_rate_unavailable"
 
 

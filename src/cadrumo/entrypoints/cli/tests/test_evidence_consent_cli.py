@@ -38,7 +38,7 @@ from ....application.ledger import (
     write_extraction_draft,
 )
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
-from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
+from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -159,6 +159,8 @@ def test_consent_rederive_reaches_its_own_refusal_rather_than_crashing(profile: 
     _ = profile
     result = invoke_cached_cli(
         [
+            "--format",
+            "json",
             "app",
             "ledger",
             "evidence",
@@ -177,9 +179,14 @@ def test_consent_rederive_reaches_its_own_refusal_rather_than_crashing(profile: 
     # from "died before it could" -- which is exactly the pair this module
     # exists to separate.
     assert result.exit_code != 0, "re-deriving an unknown artefact must refuse"
-    assert "nothing to re-derive" in semantic_cli_output(result), (
-        "the verb must reach its own instructive refusal rather than crashing on the way to it"
-    )
+    envelope = json.loads(next(line for line in result.output.splitlines() if line.startswith("{")))
+    error = envelope["error"]
+    assert error["code"] != "REFUSED_CLI_BOUNDARY"
+    action = error["action"]
+    assert action["failed_condition_id"] == "ledger.consent_rederivation.artefact_available"
+    assert action["evidence"][0]["values"] == {"artefact_available": False}
+    assert action["action"] is None
+    assert action["no_recovery_outcome"] == "operator_decision"
 
 
 # ── The survey reports what is there, not only that it is empty ──────────────
@@ -386,6 +393,8 @@ def test_re_derivation_refuses_when_no_cached_transcription_exists(profile: Test
 
     result = invoke_cached_cli(
         [
+            "--format",
+            "json",
             "app",
             "ledger",
             "evidence",
@@ -400,8 +409,11 @@ def test_re_derivation_refuses_when_no_cached_transcription_exists(profile: Test
     )
 
     assert result.exit_code != 0
-    # Names the transcription, so the refusal is about the missing cached text
-    # rather than any earlier failure that also exits non-zero.
-    assert "transcription" in semantic_cli_output(result).lower(), (
-        "the refusal must say the cached transcription is missing, not fail opaquely"
-    )
+    envelope = json.loads(next(line for line in result.output.splitlines() if line.startswith("{")))
+    error = envelope["error"]
+    assert error["code"] != "REFUSED_CLI_BOUNDARY"
+    action = error["action"]
+    assert action["failed_condition_id"] == "ledger.consent_rederivation.transcription_available"
+    assert action["evidence"][0]["values"] == {"transcription_available": False}
+    assert action["action"] is None
+    assert action["no_recovery_outcome"] == "operator_decision"

@@ -284,64 +284,88 @@ class ProrrataRegisterEntry(BaseModel):
     @model_validator(mode="after")
     def _validate_field_coupling(self) -> ProrrataRegisterEntry:
         """Enforce that the provisional, referenced, and settlement field groups are coherent."""
-        if self.interrupted and any(
-            field is not None
-            for field in (
-                self.provisional_percentage,
-                self.provisional_provenance,
-                self.authorisation_reference,
-                self.definitive_percentage,
-                self.definitive_volume_con_derecho,
-                self.definitive_volume_sin_derecho,
-                self.source_observation_ref,
-            )
-        ):
-            raise ProrrataRegisterValidationError(
-                "an interrupted (sin operaciones) ejercicio carries no provisional/definitive percentage, "
-                "volume inputs, authorisation, or source-observation reference"
-            )
-        if (self.provisional_percentage is None) != (self.provisional_provenance is None):
-            raise ProrrataRegisterValidationError(
-                "provisional_percentage and provisional_provenance must be present or absent together"
-            )
-        referenced = self.provisional_provenance in _REFERENCED_PROVENANCES
-        if referenced and self.authorisation_reference is None:
-            raise ProrrataRegisterValidationError(
-                f"provenance {self.provisional_provenance} requires an authorisation_reference"
-            )
-        if not referenced and self.authorisation_reference is not None:
-            raise ProrrataRegisterValidationError(
-                "authorisation_reference is permitted only for an AEAT-authorised or inicio-actividad provenance"
-            )
-        settlement_fields = (
-            self.definitive_percentage,
-            self.definitive_volume_con_derecho,
-            self.definitive_volume_sin_derecho,
-        )
-        present = [field is not None for field in settlement_fields]
-        if any(present) and not all(present):
-            raise ProrrataRegisterValidationError(
-                "definitive_percentage and both definitive volume inputs must be present or absent together"
-            )
-        if (
-            self.source_observation_ref is not None
-            and self.provisional_provenance is not _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
-        ):
-            raise ProrrataRegisterValidationError(
-                "source_observation_ref is permitted only for a carried_prior_definitiva entry"
-            )
-        if self.especial_transition is not None:
-            required_regime = (
-                _ProrrataRegisterRegime.ESPECIAL
-                if self.especial_transition.kind is _ProrrataEspecialTransitionKind.OPCION
-                else _ProrrataRegisterRegime.GENERAL
-            )
-            if self.regime is not required_regime:
-                raise ProrrataRegisterValidationError(
-                    f"prorrata especial transition {self.especial_transition.kind!r} requires "
-                    f"regime {required_regime.value!r}"
-                )
+        _validate_interrupted_entry_fields(self)
+        _validate_provisional_field_coupling(self)
+        _validate_settlement_field_coupling(self)
+        _validate_source_observation_provenance(self)
+        _validate_especial_transition_regime(self)
         return self
+
+
+def _validate_interrupted_entry_fields(entry: ProrrataRegisterEntry) -> None:
+    """Keep an interrupted exercise free from every active-operation field."""
+    fields = (
+        entry.provisional_percentage,
+        entry.provisional_provenance,
+        entry.authorisation_reference,
+        entry.definitive_percentage,
+        entry.definitive_volume_con_derecho,
+        entry.definitive_volume_sin_derecho,
+        entry.source_observation_ref,
+    )
+    if entry.interrupted and any(field is not None for field in fields):
+        raise ProrrataRegisterValidationError(
+            "an interrupted (sin operaciones) ejercicio carries no provisional/definitive percentage, "
+            "volume inputs, authorisation, or source-observation reference"
+        )
+
+
+def _validate_provisional_field_coupling(entry: ProrrataRegisterEntry) -> None:
+    """Validate the provisional percentage, provenance, and referenced-authorisation group."""
+    if (entry.provisional_percentage is None) != (entry.provisional_provenance is None):
+        raise ProrrataRegisterValidationError(
+            "provisional_percentage and provisional_provenance must be present or absent together"
+        )
+    referenced = entry.provisional_provenance in _REFERENCED_PROVENANCES
+    if referenced and entry.authorisation_reference is None:
+        raise ProrrataRegisterValidationError(
+            f"provenance {entry.provisional_provenance} requires an authorisation_reference"
+        )
+    if not referenced and entry.authorisation_reference is not None:
+        raise ProrrataRegisterValidationError(
+            "authorisation_reference is permitted only for an AEAT-authorised or inicio-actividad provenance"
+        )
+
+
+def _validate_settlement_field_coupling(entry: ProrrataRegisterEntry) -> None:
+    """Require definitive percentage and both annual volume inputs as one group."""
+    settlement_fields = (
+        entry.definitive_percentage,
+        entry.definitive_volume_con_derecho,
+        entry.definitive_volume_sin_derecho,
+    )
+    present = [field is not None for field in settlement_fields]
+    if any(present) and not all(present):
+        raise ProrrataRegisterValidationError(
+            "definitive_percentage and both definitive volume inputs must be present or absent together"
+        )
+
+
+def _validate_source_observation_provenance(entry: ProrrataRegisterEntry) -> None:
+    """Restrict source observations to the carried-prior-definitive lifecycle."""
+    if (
+        entry.source_observation_ref is not None
+        and entry.provisional_provenance is not _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    ):
+        raise ProrrataRegisterValidationError(
+            "source_observation_ref is permitted only for a carried_prior_definitiva entry"
+        )
+
+
+def _validate_especial_transition_regime(entry: ProrrataRegisterEntry) -> None:
+    """Require the regime declared by a typed especial option or revocation."""
+    transition = entry.especial_transition
+    if transition is None:
+        return
+    required_regime = (
+        _ProrrataRegisterRegime.ESPECIAL
+        if transition.kind is _ProrrataEspecialTransitionKind.OPCION
+        else _ProrrataRegisterRegime.GENERAL
+    )
+    if entry.regime is not required_regime:
+        raise ProrrataRegisterValidationError(
+            f"prorrata especial transition {transition.kind!r} requires regime {required_regime.value!r}"
+        )
 
 
 class ProrrataProvisionalResolution(BaseModel):
@@ -505,41 +529,10 @@ class ProrrataRegister(BaseModel):
     @model_validator(mode="after")
     def _especial_transitions_are_mutually_exclusive(self) -> ProrrataRegister:
         """Keep an option and revocation from claiming the same ejercicio."""
-        transition_kinds_by_ejercicio: dict[int, set[_ProrrataEspecialTransitionKind]] = {}
-        transition_references_by_ejercicio: dict[int, set[str]] = {}
-        for entry in self.entries:
-            if entry.especial_transition is None:
-                continue
-            transition_kinds_by_ejercicio.setdefault(entry.ejercicio, set()).add(entry.especial_transition.kind)
-            transition_references_by_ejercicio.setdefault(entry.ejercicio, set()).add(
-                entry.especial_transition.evidence_reference
-            )
-        contradictory_ejercicios = tuple(
-            ejercicio for ejercicio, kinds in transition_kinds_by_ejercicio.items() if len(kinds) > 1
-        )
-        if contradictory_ejercicios:
-            raise ProrrataRegisterValidationError(
-                "register carries contradictory prorrata especial option and revocation evidence for "
-                f"ejercicio(s) {contradictory_ejercicios}"
-            )
-        conflicting_reference_ejercicios = tuple(
-            ejercicio for ejercicio, references in transition_references_by_ejercicio.items() if len(references) > 1
-        )
-        if conflicting_reference_ejercicios:
-            raise ProrrataRegisterValidationError(
-                "register carries conflicting prorrata especial transition evidence references for "
-                f"ejercicio(s) {conflicting_reference_ejercicios}"
-            )
-        for entry in self.entries:
-            transition = entry.especial_transition
-            if transition is None or transition.kind is not _ProrrataEspecialTransitionKind.REVOCACION:
-                continue
-            prior_entry = self.entry_for(entry.ejercicio - 1, sector_id=entry.sector_id)
-            if prior_entry is None or prior_entry.regime is not _ProrrataRegisterRegime.ESPECIAL:
-                raise ProrrataRegisterValidationError(
-                    "prorrata especial revocation requires a prior-year especial register state for "
-                    f"sector {entry.sector_id!r}"
-                )
+        kinds_by_ejercicio, references_by_ejercicio = _especial_transition_evidence(self.entries)
+        _validate_one_transition_kind_per_ejercicio(kinds_by_ejercicio)
+        _validate_one_transition_reference_per_ejercicio(references_by_ejercicio)
+        _validate_revocation_prior_especial_state(self)
         return self
 
     @property
@@ -652,6 +645,64 @@ class ProrrataRegister(BaseModel):
             summed_volume_con_derecho=summed_con,
             summed_volume_sin_derecho=summed_sin,
         )
+
+
+def _especial_transition_evidence(
+    entries: tuple[ProrrataRegisterEntry, ...],
+) -> tuple[
+    dict[int, set[_ProrrataEspecialTransitionKind]],
+    dict[int, set[str]],
+]:
+    """Collect the transition kinds and evidence references declared per exercise."""
+    kinds_by_ejercicio: dict[int, set[_ProrrataEspecialTransitionKind]] = {}
+    references_by_ejercicio: dict[int, set[str]] = {}
+    for entry in entries:
+        transition = entry.especial_transition
+        if transition is None:
+            continue
+        kinds_by_ejercicio.setdefault(entry.ejercicio, set()).add(transition.kind)
+        references_by_ejercicio.setdefault(entry.ejercicio, set()).add(transition.evidence_reference)
+    return kinds_by_ejercicio, references_by_ejercicio
+
+
+def _validate_one_transition_kind_per_ejercicio(
+    kinds_by_ejercicio: dict[int, set[_ProrrataEspecialTransitionKind]],
+) -> None:
+    """Reject option and revocation evidence asserted for the same exercise."""
+    contradictory_ejercicios = tuple(ejercicio for ejercicio, kinds in kinds_by_ejercicio.items() if len(kinds) > 1)
+    if contradictory_ejercicios:
+        raise ProrrataRegisterValidationError(
+            "register carries contradictory prorrata especial option and revocation evidence for "
+            f"ejercicio(s) {contradictory_ejercicios}"
+        )
+
+
+def _validate_one_transition_reference_per_ejercicio(
+    references_by_ejercicio: dict[int, set[str]],
+) -> None:
+    """Reject divergent transition-evidence references for one exercise."""
+    conflicting_reference_ejercicios = tuple(
+        ejercicio for ejercicio, references in references_by_ejercicio.items() if len(references) > 1
+    )
+    if conflicting_reference_ejercicios:
+        raise ProrrataRegisterValidationError(
+            "register carries conflicting prorrata especial transition evidence references for "
+            f"ejercicio(s) {conflicting_reference_ejercicios}"
+        )
+
+
+def _validate_revocation_prior_especial_state(register: ProrrataRegister) -> None:
+    """Require every revocation to follow the same sector's prior especial state."""
+    for entry in register.entries:
+        transition = entry.especial_transition
+        if transition is None or transition.kind is not _ProrrataEspecialTransitionKind.REVOCACION:
+            continue
+        prior_entry = register.entry_for(entry.ejercicio - 1, sector_id=entry.sector_id)
+        if prior_entry is None or prior_entry.regime is not _ProrrataRegisterRegime.ESPECIAL:
+            raise ProrrataRegisterValidationError(
+                "prorrata especial revocation requires a prior-year especial register state for "
+                f"sector {entry.sector_id!r}"
+            )
 
 
 __all__ = [

@@ -33,7 +33,6 @@ from pathlib import Path
 import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ....core.errors import resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -59,7 +58,6 @@ certificate_app = typer.Typer(
     name="certificate",
     help=tr(
         "cli.config.auth.certificate.help",
-        default="Manage named certificate sources for the certificate auth provider",
     ),
     no_args_is_help=True,
 )
@@ -69,7 +67,6 @@ certificate_app = typer.Typer(
     "register",
     help=tr(
         "cli.config.auth.certificate.register_help",
-        default="Register (or re-point) a named certificate source",
     ),
 )
 def certificate_register(
@@ -79,7 +76,6 @@ def certificate_register(
         "--name",
         help=tr(
             "cli.config.auth.certificate.register.name_help",
-            default="Identifier for this certificate source (e.g. 'personal', 'apoderado-acme')",
         ),
     ),
     file: Path = typer.Option(
@@ -87,7 +83,6 @@ def certificate_register(
         "--file",
         help=tr(
             "cli.config.auth.certificate.register.file_help",
-            default="Path to the PKCS#12 (.p12/.pfx) bundle",
         ),
     ),
     friendly_name: str | None = typer.Option(
@@ -95,7 +90,6 @@ def certificate_register(
         "--friendly-name",
         help=tr(
             "cli.config.auth.certificate.register.friendly_name_help",
-            default="Optional human-readable label distinct from --name",
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(
@@ -108,7 +102,6 @@ def certificate_register(
     """Register (or re-point) a named certificate source for the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         register_operator_certificate_source,
     )
@@ -123,8 +116,6 @@ def certificate_register(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceMutationPayload
 
@@ -136,14 +127,13 @@ def certificate_register(
         lines=(
             f"name\t{result.name}",
             f"certificate_path\t{result.certificate_path}",
-            f"next_action\taeat config auth certificate select --name {result.name}",
         ),
     )
 
 
 @certificate_app.command(
     "list",
-    help=tr("cli.config.auth.certificate.list_help", default="List every registered certificate source"),
+    help=tr("cli.config.auth.certificate.list_help"),
 )
 def certificate_list(
     ctx: typer.Context,
@@ -174,7 +164,7 @@ def certificate_list(
         active_source=report.active_source,
     )
     if not report.sources:
-        lines = ["sources\t<none>", "next_action\taeat config auth certificate register --name NAME --file PATH"]
+        lines = ["sources\t<none>"]
     else:
         lines = [f"active_source\t{report.active_source or '<none>'}"]
         for source in report.sources:
@@ -186,7 +176,7 @@ def certificate_list(
 
 @certificate_app.command(
     "select",
-    help=tr("cli.config.auth.certificate.select_help", default="Select the active certificate source"),
+    help=tr("cli.config.auth.certificate.select_help"),
 )
 def certificate_select(
     ctx: typer.Context,
@@ -195,7 +185,6 @@ def certificate_select(
         "--name",
         help=tr(
             "cli.config.auth.certificate.select.name_help",
-            default="Registered certificate source to activate",
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(
@@ -208,12 +197,9 @@ def certificate_select(
     """Mark ``name`` the active certificate source; its path becomes the certificate-provider path."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
-        CertificateSourceNotFoundError,
         select_operator_certificate_source,
     )
-    from ....core.errors import resolve_error_message
 
     try:
         result = select_operator_certificate_source(name=name)
@@ -221,10 +207,6 @@ def certificate_select(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-    except CertificateSourceNotFoundError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceMutationPayload
 
@@ -247,7 +229,7 @@ def certificate_select(
 
 @certificate_app.command(
     "remove",
-    help=tr("cli.config.auth.certificate.remove_help", default="Remove a registered certificate source"),
+    help=tr("cli.config.auth.certificate.remove_help"),
 )
 def certificate_remove(
     ctx: typer.Context,
@@ -256,7 +238,6 @@ def certificate_remove(
         "--name",
         help=tr(
             "cli.config.auth.certificate.remove.name_help",
-            default="Registered certificate source to remove",
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(
@@ -269,7 +250,6 @@ def certificate_remove(
     """Remove ``name`` from the certificate-source registry. A no-op when ``name`` is not registered."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         remove_operator_certificate_source,
     )
@@ -280,8 +260,6 @@ def certificate_remove(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceMutationPayload
 
@@ -301,7 +279,6 @@ def certificate_remove(
     "check",
     help=tr(
         "cli.config.auth.certificate.check_help",
-        default="Check expiry/rotation health for every registered certificate source",
     ),
 )
 def certificate_check(
@@ -351,7 +328,7 @@ def certificate_check(
         Notice(
             severity=NoticeSeverity.WARNING,
             code=f"config.auth.certificate.check.{entry.result}",
-            message=f"{entry.name}: {entry.summary}",
+            message=entry.summary,
             context={"name": entry.name, "result": entry.result},
         )
         for entry in report.entries
@@ -359,7 +336,7 @@ def certificate_check(
     ]
 
     if not report.entries:
-        lines = ["sources\t<none>", "next_action\taeat config auth certificate register --name NAME --file PATH"]
+        lines = ["sources\t<none>"]
     else:
         lines = []
         for entry in report.entries:
@@ -382,7 +359,6 @@ secret_app = typer.Typer(
     name="secret",
     help=tr(
         "cli.config.auth.certificate.secret.help",
-        default="Manage the passphrase bound to a named certificate source",
     ),
     no_args_is_help=True,
 )
@@ -393,7 +369,6 @@ certificate_app.add_typer(secret_app)
     "set",
     help=tr(
         "cli.config.auth.certificate.secret.set_help",
-        default="Set (or rotate) the passphrase for a registered certificate source",
     ),
 )
 def certificate_secret_set(
@@ -403,7 +378,6 @@ def certificate_secret_set(
         "--name",
         help=tr(
             "cli.config.auth.certificate.secret.set.name_help",
-            default="Registered certificate source the passphrase is bound to",
         ),
     ),
     secrets_stdin: bool = typer.Option(
@@ -434,17 +408,13 @@ def certificate_secret_set(
         secret = prompt_secret_no_echo(
             tr(
                 "cli.config.auth.certificate.secret.set.secret_prompt",
-                default="PKCS#12 passphrase: ",
             ),
         )
 
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
-        CertificateSourceNotFoundError,
         set_operator_certificate_source_secret,
     )
-    from ....core.errors import resolve_error_message
 
     try:
         result = set_operator_certificate_source_secret(
@@ -455,10 +425,6 @@ def certificate_secret_set(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-    except CertificateSourceNotFoundError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceSecretMutationPayload
 
@@ -482,7 +448,6 @@ def certificate_secret_set(
     "remove",
     help=tr(
         "cli.config.auth.certificate.secret.remove_help",
-        default="Remove the passphrase bound to a registered certificate source",
     ),
 )
 def certificate_secret_remove(
@@ -492,7 +457,6 @@ def certificate_secret_remove(
         "--name",
         help=tr(
             "cli.config.auth.certificate.secret.remove.name_help",
-            default="Registered certificate source whose passphrase should be removed",
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(
@@ -505,7 +469,6 @@ def certificate_secret_remove(
     """Remove the passphrase bound to the named certificate source. A no-op when unset."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth import (
-        AuthConfigureDanglingActiveProfileError,
         AuthConfigureNoActiveBucketError,
         remove_operator_certificate_source_secret,
     )
@@ -516,8 +479,6 @@ def certificate_secret_remove(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.no_active_bucket",
         ) from exc
-    except AuthConfigureDanglingActiveProfileError as exc:
-        raise _CliRefusedBoundaryError(resolve_error_message(exc)) from exc
 
     from .._config_payloads import CertificateSourceSecretMutationPayload
 

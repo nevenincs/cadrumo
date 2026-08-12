@@ -53,10 +53,6 @@ def register_bucket_archive_commands(
         name="archive",
         help=tr(
             "cli.config.profile.archive.help",
-            default=(
-                "Back up and restore a profile as a sealed, AEAD-encrypted "
-                "archive (the full-custody recovery transport)."
-            ),
         ),
         no_args_is_help=True,
     )
@@ -94,10 +90,6 @@ def _register_archive_export_command(
         "export",
         help=tr(
             "cli.config.profile.archive.export_help",
-            default=(
-                "Write a sealed, AEAD-encrypted full-backup archive to PATH; add "
-                "--recovery-wrap-passphrase before email or cross-host transfer."
-            ),
         ),
     )
     def config_profile_archive_export(
@@ -106,23 +98,18 @@ def _register_archive_export_command(
             None,
             help=tr(
                 "cli.config.profile.archive.export_name_help",
-                default="Profile to back up; defaults to active.",
             ),
         ),
         out: Path = typer.Option(
             ...,
             "--to",
-            help=tr("cli.config.profile.archive.export_out_help", default="Destination path for the archive."),
+            help=tr("cli.config.profile.archive.export_out_help"),
         ),
         recovery_wrap_passphrase: str | None = typer.Option(
             None,
             "--recovery-wrap-passphrase",
             help=tr(
                 "cli.config.profile.archive.export_recovery_wrap_help",
-                default=(
-                    "Optional passphrase to seal the archive under, instead of "
-                    "the active bucket key; required if the archive will leave this host."
-                ),
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -197,15 +184,6 @@ def _build_export_completeness_notice() -> Notice:
         code="config.profile.archive.export.full_backup",
         message=tr(
             "cli.config.profile.archive.export_full_backup_info",
-            default=(
-                "This archive is a FULL backup: it is AEAD-encrypted at rest and "
-                "carries attachment evidence bytes, the audit trail, and the "
-                "cross-period calculation inputs, in addition to the profile, "
-                "ledger, calculation, and filing history. When exported with "
-                "--recovery-wrap-passphrase it is the encrypted cross-host transfer "
-                "path for profile bundles. Store it somewhere safe; restoration "
-                "requires a separately selected archive and recovery credentials."
-            ),
         ),
     )
 
@@ -215,21 +193,19 @@ def _register_archive_import_command(archive_app: typer.Typer) -> None:
         "import",
         help=tr(
             "cli.config.profile.archive.import_help",
-            default="Restore a profile from a sealed, encrypted archive at PATH.",
         ),
     )
     def config_profile_archive_import(
         ctx: typer.Context,
         path: Path = typer.Argument(
             ...,
-            help=tr("cli.config.profile.archive.import_path_help", default="Path to the sealed archive."),
+            help=tr("cli.config.profile.archive.import_path_help"),
         ),
         force: bool = typer.Option(
             False,
             "--force",
             help=tr(
                 "cli.config.profile.archive.import_force_help",
-                default="Overwrite an existing profile that shares the archive's bucket id.",
             ),
         ),
         recovery_wrap_passphrase: str | None = typer.Option(
@@ -237,7 +213,6 @@ def _register_archive_import_command(archive_app: typer.Typer) -> None:
             "--recovery-wrap-passphrase",
             help=tr(
                 "cli.config.profile.archive.import_recovery_wrap_help",
-                default="Passphrase to unseal the archive; required if it was exported with one.",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -311,11 +286,6 @@ def _build_archive_import_active_switch_notice(label: str) -> Notice:
         code="config.profile.archive.import.active_profile_switched",
         message=tr(
             "cli.config.profile.archive.import_active_switch_info",
-            default=(
-                "The restored profile {name} is now the ACTIVE profile; subsequent "
-                "commands operate on it. The available profile-login action changes "
-                "the active profile."
-            ),
             name=label,
         ),
         action=resolve_notice_action(
@@ -339,14 +309,13 @@ def _register_archive_inspect_command(archive_app: typer.Typer) -> None:
         "inspect",
         help=tr(
             "cli.config.profile.archive.inspect_help",
-            default="Show a sealed archive's header without decrypting or restoring it.",
         ),
     )
     def config_profile_archive_inspect(
         ctx: typer.Context,
         path: Path = typer.Argument(
             ...,
-            help=tr("cli.config.profile.archive.inspect_path_help", default="Path to the sealed archive."),
+            help=tr("cli.config.profile.archive.inspect_path_help"),
         ),
         output_language: OutputLanguage | None = typer.Option(
             None,

@@ -21,7 +21,7 @@ from ...core import M210PayerMode
 from ...core.i18n import tr
 from ...domain.transactions import M210IncomeClassification, TransactionDirection, TransactionValidationError
 from ._common import _bad
-from ._ledger_support import _ledger_transaction_validation_bad, _ledger_validation_bad, _parse_decimal
+from ._ledger_support import _ledger_transaction_validation_no_recovery, _ledger_validation_bad, _parse_decimal
 
 M210TipoRentaCodeOpt = Annotated[
     str | None,
@@ -171,7 +171,7 @@ class M210LedgerClassifyOptions:
         except ValidationError as exc:
             raise _ledger_validation_bad(exc) from exc
         except TransactionValidationError as exc:
-            raise _ledger_transaction_validation_bad(exc) from exc
+            raise _ledger_transaction_validation_no_recovery(exc) from None
 
 
 __all__ = [

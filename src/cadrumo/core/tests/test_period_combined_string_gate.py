@@ -337,10 +337,6 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="overview calendar support tests preserve external justificante CSV labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/application/verification/_verify\.py$"),
-        reason="verification helper docs explicitly refuse combined calendar input",
-    ),
-    AllowlistRule(
         path=_path(r"^src/cadrumo/core/(?:observability/tests/test_replay|tests/test_paths)\.py$"),
         reason="core tests preserve historical replay argv and path-token examples",
     ),

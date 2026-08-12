@@ -1016,86 +1016,157 @@ def select_model_for_role(
             context=required_context,
         )
 
-    eligible = [
+    eligible = _eligible_model_candidates(
+        role,
+        runtime=runtime,
+        required_context=required_context,
+        posture=posture,
+    )
+    if not eligible:
+        return _selection_without_eligible_candidate(
+            base,
+            role=role,
+            runtime=runtime,
+            required_context=required_context,
+            posture=posture,
+        )
+
+    fitting = _fitting_model_candidates(eligible, free=free, margin=margin)
+    if not fitting:
+        return _selection_without_fitting_candidate(
+            base,
+            role=role,
+            runtime=runtime,
+            free=free,
+            margin=margin,
+            smallest=eligible[0],
+        )
+
+    return _selected_model_selection(base, candidate=fitting[0], free=free)
+
+
+def _eligible_model_candidates(
+    role: ModelRole,
+    *,
+    runtime: ModelRuntime,
+    required_context: int,
+    posture: DeploymentLicencePosture,
+) -> tuple[ModelCandidate, ...]:
+    """Return ordered candidates that clear the capability and licence bars."""
+    return tuple(
         candidate
         for candidate in candidates_for_role(role, runtime)
         if candidate.max_context_tokens >= required_context and candidate.permitted_under(posture)
-    ]
-    if not eligible:
-        return ModelSelection(
-            **base,
-            selected=False,
-            facts={
-                "role": role.value,
-                "runtime": runtime.value,
-                "required_context_tokens": required_context,
-                "deployment_posture": posture.value,
-                "eligible_candidate_count": 0,
-            },
-            precondition_verdict=_provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
-                facts={
-                    "role": role.value,
-                    "runtime": runtime.value,
-                    "required_context_tokens": required_context,
-                    "deployment_posture": posture.value,
-                    "eligible_candidate_count": 0,
-                },
-            ),
-        )
+    )
 
+
+def _fitting_model_candidates(
+    candidates: tuple[ModelCandidate, ...],
+    *,
+    free: int | None,
+    margin: int,
+) -> tuple[ModelCandidate, ...]:
+    """Return eligible candidates that fit local headroom, preserving catalogue order."""
     # A hosted candidate has no local weights, so the headroom bar does not
     # apply to it -- comparing this machine's free memory against a model that
     # never touches it would refuse a route that cannot fail that way.
-    fitting = [
+    return tuple(
         candidate
-        for candidate in eligible
+        for candidate in candidates
         if candidate.memory_requirement_bytes is None
         or free is None
         or candidate.memory_requirement_bytes + margin <= free
-    ]
-    if not fitting:
-        smallest = eligible[0]
-        needed = (smallest.memory_requirement_bytes or 0) + margin
-        return ModelSelection(
-            **base,
-            selected=False,
-            advisories=(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM,),
-            facts={
-                "role": role.value,
-                "runtime": runtime.value,
-                "binding_free_bytes": free if free is not None else 0,
-                "required_bytes": needed,
-                "selected_model": smallest.runtime_id,
-            },
-            precondition_verdict=_provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.SELECTED_MODEL_FITS,
-                facts={
-                    "role": role.value,
-                    "runtime": runtime.value,
-                    "binding_free_bytes": free if free is not None else 0,
-                    "required_bytes": needed,
-                    "selected_model": smallest.runtime_id,
-                },
-            ),
-        )
+    )
 
-    chosen = fitting[0]
+
+def _selection_without_eligible_candidate(
+    base: _SelectionContext,
+    *,
+    role: ModelRole,
+    runtime: ModelRuntime,
+    required_context: int,
+    posture: DeploymentLicencePosture,
+) -> ModelSelection:
+    """Return the typed refusal when capability and licence filters leave no candidate."""
+    facts: dict[str, ProvisioningFactValue] = {
+        "role": role.value,
+        "runtime": runtime.value,
+        "required_context_tokens": required_context,
+        "deployment_posture": posture.value,
+        "eligible_candidate_count": 0,
+    }
+    return _selection_refusal(
+        base,
+        condition=ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+        facts=facts,
+    )
+
+
+def _selection_without_fitting_candidate(
+    base: _SelectionContext,
+    *,
+    role: ModelRole,
+    runtime: ModelRuntime,
+    free: int | None,
+    margin: int,
+    smallest: ModelCandidate,
+) -> ModelSelection:
+    """Return the typed refusal when the first eligible model cannot fit."""
+    needed = (smallest.memory_requirement_bytes or 0) + margin
+    facts: dict[str, ProvisioningFactValue] = {
+        "role": role.value,
+        "runtime": runtime.value,
+        "binding_free_bytes": free if free is not None else 0,
+        "required_bytes": needed,
+        "selected_model": smallest.runtime_id,
+    }
+    return _selection_refusal(
+        base,
+        condition=ProvisioningPreconditionCondition.SELECTED_MODEL_FITS,
+        facts=facts,
+        advisories=(ModelSelectionAdvisory.FIT_EXCEEDS_MEASURED_HEADROOM,),
+    )
+
+
+def _selection_refusal(
+    base: _SelectionContext,
+    *,
+    condition: ProvisioningPreconditionCondition,
+    facts: Mapping[str, ProvisioningFactValue],
+    advisories: tuple[ModelSelectionAdvisory, ...] = (),
+) -> ModelSelection:
+    """Build one failed selection with its immutable evidence and verdict."""
+    return ModelSelection(
+        **base,
+        selected=False,
+        advisories=advisories,
+        facts=facts,
+        precondition_verdict=_provisioning_no_recovery_verdict(condition, facts=facts),
+    )
+
+
+def _selected_model_selection(
+    base: _SelectionContext,
+    *,
+    candidate: ModelCandidate,
+    free: int | None,
+) -> ModelSelection:
+    """Project the first fitting candidate, retaining unknown-fit evidence."""
     advisories: list[ModelSelectionAdvisory] = []
-    if free is None and chosen.memory_requirement_bytes is not None:
+    if free is None and candidate.memory_requirement_bytes is not None:
         advisories.append(ModelSelectionAdvisory.FIT_UNVERIFIED)
     return ModelSelection(
         **base,
-        runtime_id=chosen.runtime_id,
-        candidate=chosen,
+        runtime_id=candidate.runtime_id,
+        candidate=candidate,
         selected=True,
         advisories=tuple(advisories),
         facts={
-            "role": role.value,
-            "runtime": runtime.value,
-            "selected_model": chosen.runtime_id,
-            "required_context_tokens": required_context,
-            "selected_model_requirement_known": chosen.memory_requirement_bytes is not None,
+            "role": base["role"].value,
+            "runtime": base["runtime"].value,
+            "selected_model": candidate.runtime_id,
+            "required_context_tokens": base["required_context_tokens"],
+            "selected_model_requirement_known": candidate.memory_requirement_bytes is not None,
             "binding_free_measured": free is not None,
         },
     )

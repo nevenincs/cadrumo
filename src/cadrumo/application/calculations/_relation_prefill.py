@@ -82,7 +82,6 @@ from ...domain.calculations.registry import (
     materialize_relation_binding_values,
     relation_consumption_channels,
     relation_consumption_index,
-    relation_is_consumed,
     relation_source_requirements,
     relations_by_target_binding,
     resolve_observed_requirement_value,
@@ -841,6 +840,15 @@ class _UnresolvedRelationIds(NamedTuple):
     """
 
 
+class _RelationConsumption(NamedTuple):
+    """Canonical registry channels projected for one unresolved-value pass."""
+
+    formula_fed: frozenset[RelationId]
+    bound: frozenset[RelationId]
+    consumed: frozenset[RelationId]
+    target_bindings: dict[RelationId, BindingId]
+
+
 def _unresolved_relation_ids(
     snapshot: RegistrySnapshot,
     *,
@@ -869,59 +877,95 @@ def _unresolved_relation_ids(
       does not own. The check is the registry's own predicate rather than a
       binding-id comparison invented here.
     """
-    consumption_index = relation_consumption_index(snapshot.revision)
-    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
-    consumption_channels = {
-        relation.id: relation_consumption_channels(relation, consumption_index)
-        for relation in snapshot.revision.relations
-    }
-    formula_relation_ids = frozenset(
-        relation_id
-        for relation_id, channels in consumption_channels.items()
-        if "formula_relation" in channels or "formula_binding" in channels
-    )
-    bound_relation_ids = frozenset(
-        relation_id
-        for relation_id, channels in consumption_channels.items()
-        if "primary_binding" in channels or "alternate_binding" in channels
-    )
-    relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
+    consumption = _relation_consumption(snapshot)
+    unresolved_ids = frozenset(item.relation for item in relation_values.values if item.value is None)
     taxpayer_filed_source_modelos = frozenset(
         classification.source_modelo
         for classification in snapshot.revision.dependency_classifications
         if classification.taxpayer_files_source
     )
     return _UnresolvedRelationIds(
-        formula_fed=frozenset(
-            item.relation
-            for item in relation_values.values
-            if item.value is None and item.relation in formula_relation_ids
+        formula_fed=unresolved_ids & consumption.formula_fed,
+        orphaned=unresolved_ids - consumption.consumed,
+        bound=_unresolved_bound_relation_ids(
+            unresolved_ids,
+            consumption=consumption,
+            requirements_by_relation=requirements_by_relation,
+            taxpayer_filed_source_modelos=taxpayer_filed_source_modelos,
+            modelo_id=modelo_id,
+            revision_id=str(snapshot.revision.id),
         ),
-        orphaned=frozenset(
-            item.relation
-            for item in relation_values.values
-            if item.value is None
-            and (
-                (relation := relations_by_id.get(item.relation)) is None
-                or not relation_is_consumed(relation, consumption_index)
-            )
+    )
+
+
+def _relation_consumption(snapshot: RegistrySnapshot) -> _RelationConsumption:
+    """Derive only the registry's four declared relation consumption channels."""
+    consumption_index = relation_consumption_index(snapshot.revision)
+    channels_by_relation = {
+        relation.id: relation_consumption_channels(relation, consumption_index)
+        for relation in snapshot.revision.relations
+    }
+    return _RelationConsumption(
+        formula_fed=frozenset(
+            relation_id
+            for relation_id, channels in channels_by_relation.items()
+            if "formula_relation" in channels or "formula_binding" in channels
         ),
         bound=frozenset(
-            item.relation
-            for item in relation_values.values
-            if item.value is None
-            and item.relation not in formula_relation_ids
-            and item.relation in requirements_by_relation
-            and requirements_by_relation[item.relation].source_modelo in taxpayer_filed_source_modelos
-            and _requirement_periods_are_datable(requirements_by_relation[item.relation])
-            and item.relation in bound_relation_ids
-            and not is_iva_wallet_owned_relation_target(
-                modelo_id=modelo_id,
-                revision_id=str(snapshot.revision.id),
-                relation_id=str(item.relation),
-                target_binding=str(relation_target_binding.get(item.relation)),
-            )
+            relation_id
+            for relation_id, channels in channels_by_relation.items()
+            if "primary_binding" in channels or "alternate_binding" in channels
         ),
+        consumed=frozenset(relation_id for relation_id, channels in channels_by_relation.items() if channels),
+        target_bindings={relation.id: relation.target_binding for relation in snapshot.revision.relations},
+    )
+
+
+def _unresolved_bound_relation_ids(
+    unresolved_ids: frozenset[RelationId],
+    *,
+    consumption: _RelationConsumption,
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
+    taxpayer_filed_source_modelos: frozenset[ModeloId],
+    modelo_id: str,
+    revision_id: str,
+) -> frozenset[RelationId]:
+    """Keep only actionable, non-wallet unresolved bound carries."""
+    return frozenset(
+        relation_id
+        for relation_id in unresolved_ids
+        if _is_actionable_unresolved_bound_relation(
+            relation_id,
+            consumption=consumption,
+            requirements_by_relation=requirements_by_relation,
+            taxpayer_filed_source_modelos=taxpayer_filed_source_modelos,
+            modelo_id=modelo_id,
+            revision_id=revision_id,
+        )
+    )
+
+
+def _is_actionable_unresolved_bound_relation(
+    relation_id: RelationId,
+    *,
+    consumption: _RelationConsumption,
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
+    taxpayer_filed_source_modelos: frozenset[ModeloId],
+    modelo_id: str,
+    revision_id: str,
+) -> bool:
+    if relation_id in consumption.formula_fed or relation_id not in requirements_by_relation:
+        return False
+    requirement = requirements_by_relation[relation_id]
+    if requirement.source_modelo not in taxpayer_filed_source_modelos:
+        return False
+    if not _requirement_periods_are_datable(requirement) or relation_id not in consumption.bound:
+        return False
+    return not is_iva_wallet_owned_relation_target(
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        relation_id=str(relation_id),
+        target_binding=str(consumption.target_bindings.get(relation_id)),
     )
 
 

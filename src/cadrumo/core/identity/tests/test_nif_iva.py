@@ -1,13 +1,13 @@
 """Tests for the EU NIF-IVA per-country format authority.
 
 Exercises the central :data:`cadrumo.core.identity.NIF_IVA_FORMATS` table and its
-resolution helpers: every Member State accepts a well-formed VAT number and
-rejects a structurally malformed one, the Greek ISO/VAT prefix mismatch
+resolution helpers: every Member State accepts a well-formed IVA number and
+rejects a structurally malformed one, the Greek ISO/IVA prefix mismatch
 (``GR`` -> ``EL``) resolves correctly, and non-EU / Spanish codes carry no
 pattern.
 
 The expected valid and invalid shapes are derived from the European Commission
-VIES national VAT-number structure rules (Council Directive 2006/112/EC), not
+VIES national IVA-number structure rules (Council Directive 2006/112/EC), not
 from any runtime output.
 """
 
@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 # (iso_country, valid_number, invalid_number) triples grounded in the VIES
-# national VAT-number format rules. Each invalid case violates the country's
+# national IVA-number format rules. Each invalid case violates the country's
 # published structure (wrong length, missing block, or wrong character class).
 _VALID_AND_INVALID: list[tuple[str, str, str]] = [
     ("AT", "ATU12345678", "AT12345678"),  # missing mandatory U block

@@ -49,6 +49,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, Period, derive_result_disposition, result_disposition_casilla_ids, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -57,7 +59,6 @@ from ....domain.calculations.registry import (
     RegistryModeloObservation,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -186,7 +187,7 @@ def _calculate_303_quarter(
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     return calculate_registry_snapshot(
         snapshot,
@@ -265,7 +266,7 @@ def _calculate_390_annual(
         # annual casilla 63 binding is therefore an explicit zero fact.
         _M390_BIENES_INVERSION_REGULARIZACION_BINDING: Decimal("0"),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

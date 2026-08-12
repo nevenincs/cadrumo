@@ -701,7 +701,7 @@ def test_m349_declarable_facts_are_reachable_on_the_canonical_path(
 ) -> None:
     """Every M349 fact the slim store contributes must be reachable canonically.
 
-    The counterparty carries BOTH a domestic-format NIF and an EU VAT ID, which
+    The counterparty carries BOTH a domestic-format NIF and an EU IVA ID, which
     is the case that separates the two paths. The slim record has no coupling
     between its tax id and its country, so it needs a second identity field and
     a prefix-derivation fallback to decide who is being declared. The canonical
@@ -756,7 +756,7 @@ def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
     """The mechanism by which canonical conserves M349 party identity.
 
     This is the other half of the proof above, and it is why the canonical
-    aggregate needs no second EU-VAT-ID field. The slim record accepts a
+    aggregate needs no second EU-IVA-ID field. The slim record accepts a
     Spanish-format NIF alongside a German country because nothing couples the
     two, which is exactly what forces it to carry a separate identity field and
     prefer it at projection time. The canonical record refuses that shape: a
@@ -764,7 +764,7 @@ def test_canonical_invoice_refuses_the_tax_id_country_mismatch_slim_permits(
     NIF-IVA pattern, so the only representable party identity is already the
     one M349 must declare.
 
-    Adding an EU-VAT-ID field to the canonical aggregate would therefore
+    Adding an EU-IVA-ID field to the canonical aggregate would therefore
     install a SECOND party-identity authority on the record -- two fields that
     can disagree about who was invoiced -- on the axis where a disagreement is
     a mis-declared intra-community operator.

@@ -45,6 +45,8 @@ from functools import cache
 import pdfplumber
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, Period, validated_casilla_id, validated_casilla_id_map
 from .....core.aggregation import RetencionClave
 from .....tests import FIXTURES_DIR
@@ -53,7 +55,6 @@ from .. import (
     RegistryCalculationResult,
     WithholdingObservation,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_withholding_binding_values,
 )
 from .._authority import ValidatedRegistryAuthority
@@ -524,7 +525,7 @@ def test_annual_summary_cross_dependency_calculation_resolves_quarterly_filings(
         assert relation_values[retenciones_relation_id] == fixture_values[_DECL_RETENCIONES_TOTAL_CASILLA]
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         date_context={"filing_period": _registry_filing_date(filing_year, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,
@@ -648,7 +649,7 @@ def test_modelo_190_calculation_resolves_modelo_111_quarterly_filings(
     )
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         date_context={"filing_period": _registry_filing_date(2024, "0A")},
         binding_values=binding_values,
         relation_values=relation_values,

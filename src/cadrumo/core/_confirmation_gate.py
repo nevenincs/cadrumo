@@ -112,8 +112,7 @@ if set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) != set(ConfirmationBlockRea
         str(reason) for reason in set(OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON) - set(ConfirmationBlockReason)
     )
     raise RuntimeError(
-        "every ConfirmationBlockReason must declare an OperatorActionAxis; "
-        f"missing={missing}; stale={stale}",
+        f"every ConfirmationBlockReason must declare an OperatorActionAxis; missing={missing}; stale={stale}",
     )
 
 

@@ -1,61 +1,48 @@
-"""Every guarded inference entry point preserves the typed optional-extra refusal.
+"""Installed-core proof for every guarded local-inference surface.
 
-The inference boundary is a claim about what the product SAYS when an operator
-reaches a model-bearing surface without having opted into the model-bearing
-dependencies: one :class:`~core.MissingOptionalExtraError` carrying registered
-machine facts, never a raw ``ModuleNotFoundError`` and never a
-surface that quietly runs anyway. This module proves that at the source level,
-for every entry point that carries the guard.
-
-**Why the absent state has to be constructed rather than installed.** The dev
-and CI environment installs the extra's requirements so the rest of the suite
-runs, so the probe reads PRESENT here and every guard is a no-op in-process. A
-meta-path finder in a fresh interpreter constructs the absent state faithfully:
-the block is installed before any product module is imported, and it RAISES
-rather than returning ``None``, so resolution fails exactly as it would against
-a genuinely absent distribution. No mock, no patched guard, no monkeypatched
-probe -- the real refusal path, reached the real way.
-
-**The blocked module is the one the registry probes**, read from
-:data:`~core.LLM_EXTRA` rather than written out here. Blocking a name the
-registry does not probe would construct some other absent package's state and
-prove nothing about this extra; reading it means a future repoint of the probe
-retargets this test with no edit.
-
-**The driven inventory is checked against the guards, not merely asserted.** A
-hand-kept list is a completeness claim over a set this module's own author
-chose, so the guarded definitions are re-derived from the package source and
-the inventory must cover them. A guard added to a new entry point fails here
-until it is driven.
+The developer environment includes the ``llm`` dependencies, so absence cannot
+be established there.  This module instead builds the committed product cohort
+and runs the production package from a clean core-only virtual environment.
+The optional probe is consequently absent because its distribution was never
+installed, rather than because import resolution was intercepted.
 """
 
 from __future__ import annotations
 
 import ast
 import json
+import shutil
 import subprocess
 import sys
 import textwrap
 from pathlib import Path
 
 import pytest
+from dev.packaging._smoke_common import (
+    build_companion_wheels,
+    build_wheel,
+    create_pip_venv,
+    head_extract,
+    install_targets_with_pip,
+    isolated_product_env,
+    venv_python_path,
+)
 
+from ... import llm
 from ...core import LLM_EXTRA
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter, pytest.mark.serial]
 
-#: The import name :data:`~core.LLM_EXTRA` is registered under. Blocking THIS
-#: name is what makes the constructed state correspond to the registered extra
-#: rather than to some other absent package.
-_PROBE_IMPORT_NAME = LLM_EXTRA.import_name
+_REPO_ROOT = Path(__file__).resolve().parents[4]
+_MARKER = "SURFACE_OUTCOMES:"
 
-#: Every guarded entry point, named with a construction that reaches its guard.
-#: Each call is deliberately minimal: the guard is the first statement of the
-#: callable, so nothing here needs to be a usable argument -- only to evaluate,
-#: so the guarded body is entered at all. Arguments are core-only literals, so
-#: a driver failure cannot masquerade as a surface outcome.
+# Every operator-reachable guarded entry point is driven with core-only typed
+# inputs. The source-derived coverage check below fails if a new production
+# guard is not represented here.
 _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
     ("rasterise_pdf_pages_to_base64_png", "rasterise_pdf_pages_to_base64_png(b'%PDF-1.4\\n')"),
+    ("transcribe_document_images", "transcribe_document_images(_PAGES, source_content_sha256='0' * 64)"),
+    ("extract_invoice_fields_from_text", "extract_invoice_fields_from_text(_TRANSCRIPTION)"),
     ("LocalVisionDocumentTranscriber", "LocalVisionDocumentTranscriber()"),
     ("TextInvoiceFieldExtractor", "TextInvoiceFieldExtractor()"),
     ("LocalTextLLMClassifier", "LocalTextLLMClassifier(spec=None)"),
@@ -64,16 +51,29 @@ _GUARDED_SURFACES: tuple[tuple[str, str], ...] = (
 )
 
 
-def _guarded_definition_names() -> frozenset[str]:
-    """Re-derive the guarded, exported definition names from the package source.
+@pytest.fixture(scope="module")
+def installed_core_environment(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    """Build one complete core-only cohort where the LLM extra is genuinely absent."""
+    uv = shutil.which("uv")
+    assert uv is not None, "uv is required to build the installed core cohort"
 
-    Structural throughout: a guard inside a branch or a nested helper attributes
-    to the OUTERMOST enclosing definition -- the callable an operator can name --
-    and a docstring mentioning the guard cannot change the answer.
-    """
+    work_dir = tmp_path_factory.mktemp("missing-llm-extra-boundary")
+    build_root = head_extract(_REPO_ROOT, work_dir)
+    root_wheel = build_wheel(_REPO_ROOT, work_dir, uv, build_root=build_root)
+    data_wheels = build_companion_wheels(work_dir, uv, build_root=build_root)
+    venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
+    install_targets_with_pip(
+        work_dir,
+        (str(root_wheel.resolve()), *(str(wheel.resolve()) for wheel in data_wheels)),
+        venv,
+    )
+    return work_dir, venv_python_path(venv)
+
+
+def _guarded_definition_names() -> frozenset[str]:
+    """Derive exported definitions that call the real LLM extra guard."""
     package = Path(__file__).resolve().parents[1]
-    exported = frozenset(__import__("cadrumo.llm", fromlist=["__all__"]).__all__)
-    symbol = "LLM_EXTRA"
+    exported = frozenset(llm.__all__)
     derived: set[str] = set()
     for path in sorted(package.rglob("*.py")):
         if "tests" in path.relative_to(package).parts:
@@ -86,47 +86,61 @@ def _guarded_definition_names() -> frozenset[str]:
                 isinstance(child, ast.Call)
                 and isinstance(child.func, ast.Name)
                 and child.func.id == "require_optional_extra"
-                and any(isinstance(arg, ast.Name) and arg.id == symbol for arg in child.args)
+                and any(isinstance(arg, ast.Name) and arg.id == "LLM_EXTRA" for arg in child.args)
                 for child in ast.walk(node)
             ):
                 derived.add(node.name)
     return frozenset(derived) & exported
 
 
-def _drive_surfaces(*, block: bool) -> list[dict[str, str]]:
-    """Drive every guarded surface in a fresh interpreter, optionally without the probe module.
+def _isolated_environment(work_dir: Path) -> dict[str, str]:
+    """Keep the subprocess outside the checkout and host product state."""
+    environment = isolated_product_env(work_dir / "product-state")
+    environment.pop("PYTHONPATH", None)
+    return environment
 
-    ``block`` parameterises the control rather than duplicating the runner, so
-    the blocked and unblocked runs differ in exactly one respect and nothing
-    else can explain a difference between them.
-    """
+
+def _drive_surfaces(work_dir: Path, python: Path) -> dict[str, object]:
+    """Drive actual production entry points inside the core-only installed cohort."""
     surfaces = json.dumps([{"name": name, "call": call} for name, call in _GUARDED_SURFACES])
     code = textwrap.dedent(
         f"""
-        import json, os, sys
-        os.environ["CADRUMO_OUTPUT_LANGUAGE"] = "en"
+        import json
+        from pathlib import Path
 
-        class _Blocked:
-            def find_spec(self, fullname, path=None, target=None):
-                if fullname.split(".")[0] == {_PROBE_IMPORT_NAME!r}:
-                    raise ModuleNotFoundError(f"No module named {{fullname!r}}", name=fullname)
-                return None
-
-        if {block!r}:
-            # Purge any warm cache first, so the block governs the product's own
-            # resolution rather than being satisfied from sys.modules.
-            for name in [n for n in sys.modules if n.split(".")[0] == {_PROBE_IMPORT_NAME!r}]:
-                del sys.modules[name]
-            sys.meta_path.insert(0, _Blocked())
-
-        from cadrumo.core import MissingOptionalExtraError
+        import cadrumo
+        from cadrumo.application.ledger import DocumentTranscription, TranscriberIdentity
+        from cadrumo.core import (
+            FieldOrigin,
+            ImageMediaType,
+            LLM_EXTRA,
+            LOCAL_TRANSPORT_LABEL,
+            MissingOptionalExtraError,
+            optional_extra_available,
+        )
         from cadrumo.llm import (
             LocalTextLLMClassifier,
             LocalVisionDocumentTranscriber,
             LocalVisionLLMClassifier,
+            MultimodalImageInput,
             SemanticColumnRoleMapper,
             TextInvoiceFieldExtractor,
+            extract_invoice_fields_from_text,
             rasterise_pdf_pages_to_base64_png,
+            transcribe_document_images,
+        )
+
+        _PAGES = (MultimodalImageInput.from_base64("aGk=", ImageMediaType.PNG),)
+        _TRANSCRIPTION = DocumentTranscription(
+            text="factura",
+            page_count=1,
+            source_content_sha256="0" * 64,
+            transcriber=TranscriberIdentity(
+                origin=FieldOrigin.TEXT_LAYER,
+                name="boundary",
+                transport=LOCAL_TRANSPORT_LABEL,
+                revision="installed-core",
+            ),
         )
 
         outcomes = []
@@ -138,98 +152,77 @@ def _drive_surfaces(*, block: bool) -> list[dict[str, str]]:
                     {{
                         "name": surface["name"],
                         "outcome": "refused",
-                        "extra": exc.extra.extra,
-                        "import_name": exc.extra.import_name,
-                        "feature": exc.extra.feature,
+                        "extra": exc.extra.model_dump(mode="json"),
                     }}
                 )
             except ModuleNotFoundError as exc:
-                outcomes.append({{"name": surface["name"], "outcome": "module-not-found", "hint": str(exc)}})
+                outcomes.append({{"name": surface["name"], "outcome": "module-not-found", "type": type(exc).__name__}})
             except BaseException as exc:
-                outcomes.append(
-                    {{"name": surface["name"], "outcome": "other", "hint": f"{{type(exc).__name__}}: {{exc}}"}}
-                )
+                outcomes.append({{"name": surface["name"], "outcome": "other", "type": type(exc).__name__}})
             else:
-                outcomes.append({{"name": surface["name"], "outcome": "succeeded", "hint": ""}})
+                outcomes.append({{"name": surface["name"], "outcome": "succeeded"}})
 
-        print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
+        print(
+            {_MARKER!r}
+            + json.dumps(
+                {{
+                    "cadrumo_file": str(Path(cadrumo.__file__).resolve()),
+                    "extra_available": optional_extra_available(LLM_EXTRA),
+                    "outcomes": outcomes,
+                }},
+                sort_keys=True,
+            )
+        )
         """,
     )
     completed = subprocess.run(
-        [sys.executable, "-c", code],
+        [str(python), "-c", code],
+        cwd=work_dir,
+        env=_isolated_environment(work_dir),
         capture_output=True,
         text=True,
         encoding="utf-8",
         errors="replace",
-        timeout=300,
+        timeout=180,
         check=False,
     )
-    marker = "SURFACE_OUTCOMES:"
-    line = next((row for row in completed.stdout.splitlines() if row.startswith(marker)), None)
-    assert line is not None, f"the surface driver produced no outcomes: {completed.stdout!r} {completed.stderr}"
-    parsed: list[dict[str, str]] = json.loads(line[len(marker) :])
-    assert parsed, "the driver returned an empty outcome set, so every assertion over it holds vacuously"
-    return parsed
+    assert completed.returncode == 0, completed.stderr
+    line = next((row for row in completed.stdout.splitlines() if row.startswith(_MARKER)), None)
+    assert line is not None, completed.stdout
+    report = json.loads(line.removeprefix(_MARKER))
+    assert isinstance(report, dict)
+    return report
 
 
 def test_the_driven_inventory_covers_every_guarded_entry_point() -> None:
-    """A guard added to a new entry point must be driven, not silently uncovered.
-
-    The direction is the point: a derived surface this module never drives is a
-    hole in the completeness claim below and fails here. The reverse is not a
-    failure -- a driven name carrying no guard of its own would simply be extra
-    coverage -- but the derived set must never be empty, since an empty set
-    would make every assertion below vacuously true.
-    """
+    """A newly guarded production definition cannot silently escape the real lane."""
     derived = _guarded_definition_names()
-    assert derived, "no production require_optional_extra(LLM_EXTRA) guard was found; the claims below are vacuous"
+    assert derived, "no production require_optional_extra(LLM_EXTRA) guard was found"
     driven = {name for name, _call in _GUARDED_SURFACES}
     assert not derived - driven, (
-        f"these entry points carry the llm guard but this module never drives them: {sorted(derived - driven)!r}"
+        f"guarded production entry points not driven by this lane: {sorted(derived - driven)!r}"
     )
 
 
-def test_every_guarded_surface_preserves_the_registered_extra_facts() -> None:
-    """With the probe absent, each entry point raises the typed refusal unchanged.
+@pytest.mark.timeout(900)
+def test_every_guarded_surface_preserves_the_registered_extra_facts(
+    installed_core_environment: tuple[Path, Path],
+) -> None:
+    """Every guarded surface refuses in a genuine no-extra product install."""
+    work_dir, python = installed_core_environment
+    report = _drive_surfaces(work_dir, python)
 
-    The two outcomes that must never appear are a ``ModuleNotFoundError`` -- the
-    raw deep-stack failure the guard exists to convert -- and a successful call,
-    which is a model-bearing surface running without the model-bearing
-    dependencies.
-    """
-    outcomes = _drive_surfaces(block=True)
-
-    driven = {entry["name"] for entry in outcomes}
-    assert driven == {name for name, _call in _GUARDED_SURFACES}, f"the driver did not reach every surface: {driven!r}"
-    expected = {
-        "outcome": "refused",
-        "extra": LLM_EXTRA.extra,
-        "import_name": LLM_EXTRA.import_name,
-        "feature": LLM_EXTRA.feature,
-    }
-    wrong = [entry for entry in outcomes if {key: entry.get(key) for key in expected} != expected]
-    assert not wrong, (
-        f"these guarded surfaces did not preserve the registered extra facts: {wrong!r}. A 'module-not-found' "
-        "outcome is the raw failure the guard exists to convert; a 'succeeded' outcome is a model-bearing "
-        "surface running without the model-bearing dependencies."
-    )
-
-
-def test_no_surface_refuses_when_the_probe_module_is_present() -> None:
-    """Positive control: the block is what causes the refusal.
-
-    Without this, the refusals above are equally consistent with guards wired to
-    fire unconditionally, or with a child interpreter that cannot import the
-    product at all -- both of which would satisfy every assertion there. What is
-    asserted is narrow and deliberate: only that the EXTRA refusal is absent. A
-    surface driven with a deliberately empty argument is expected to fail on its
-    own terms, and demanding success would be asserting the feature works rather
-    than that the gate opened.
-    """
-    outcomes = _drive_surfaces(block=False)
-
-    refused = [entry for entry in outcomes if entry["outcome"] in {"refused", "module-not-found"}]
-    assert not refused, (
-        f"these surfaces reported the llm extra as missing while its probe module {_PROBE_IMPORT_NAME!r} was "
-        f"importable: {refused!r}. Every refusal the blocked run observes would then be evidence of nothing."
-    )
+    assert Path(str(report["cadrumo_file"])).is_relative_to(python.parents[1])
+    assert report["extra_available"] is False
+    outcomes = report["outcomes"]
+    assert isinstance(outcomes, list) and outcomes
+    expected_names = {name for name, _call in _GUARDED_SURFACES}
+    observed_names = {entry["name"] for entry in outcomes if isinstance(entry, dict)}
+    assert observed_names == expected_names
+    expected_extra = LLM_EXTRA.model_dump(mode="json")
+    wrong = [
+        entry
+        for entry in outcomes
+        if not isinstance(entry, dict) or entry.get("outcome") != "refused" or entry.get("extra") != expected_extra
+    ]
+    assert not wrong, f"installed core LLM surfaces did not preserve the registered typed extra: {wrong!r}"

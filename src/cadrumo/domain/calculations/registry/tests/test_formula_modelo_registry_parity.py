@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_formula_revisions_are_owned_by_constructs_with_snapshot_workflow_surfaces() -> None:
     modelos, catalogues = _committed_registry_tree()
     validator = RegistryValidator(catalogues, source_root=bundled_path())
-    required_surfaces = {"calculation", "verification", "review", "approval", "reconciliation", "workflow"}
+    required_surfaces = {"calculation", "review", "approval", "reconciliation", "workflow"}
 
     for modelo in modelos:
         validator.validate_modelo(modelo)

@@ -67,7 +67,6 @@ _REQUIRED_SURFACES = {
     "portal",
     "reconciliation",
     "review",
-    "verification",
     "workflow",
 }
 _M130_EXTRACTION_PROFILE_TARGET_LEGAL_REFS = frozenset(

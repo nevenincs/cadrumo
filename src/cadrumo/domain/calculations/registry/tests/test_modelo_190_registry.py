@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
@@ -18,7 +20,6 @@ from .. import (
     build_snapshot,
     calculate_registry_snapshot,
     relation_source_requirements,
-    resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     resolve_withholding_binding_values,
 )
@@ -254,12 +255,12 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
 
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, withholding_values),
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, withholding_values),
         date_context={"filing_period": date(2025, 12, 31)},
         binding_values=withholding_values,
         relation_values=relation_values,
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}

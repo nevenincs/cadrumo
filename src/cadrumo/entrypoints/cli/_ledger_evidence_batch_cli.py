@@ -64,38 +64,23 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
 
     @evidence_app.command(
         "batch",
-        help=tr(
-            "cli.app.ledger.evidence.batch_help",
-            default=(
-                "Ingest every document in a directory (or each --file) into evidence and a reviewable "
-                "draft, one typed result row per document."
-            ),
-        ),
+        help=tr("cli.app.ledger.evidence.batch_help"),
     )
     def evidence_batch(
         ctx: typer.Context,
         directory: str | None = typer.Argument(
             None,
-            help=tr(
-                "cli.app.ledger.evidence.batch_directory_help",
-                default="Directory whose files are ingested. Combine with or replace by repeated --file.",
-            ),
+            help=tr("cli.app.ledger.evidence.batch_directory_help"),
         ),
         kind: InvoiceKind = typer.Option(
             ...,
             "--kind",
-            help=tr(
-                "cli.app.ledger.invoice.kind_help",
-                default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-            ),
+            help=tr("cli.app.ledger.invoice.kind_help"),
         ),
         file: list[str] = typer.Option(
             [],
             "--file",
-            help=tr(
-                "cli.app.ledger.evidence.batch_file_help",
-                default="One document to ingest. Repeat once per document; combines with a directory.",
-            ),
+            help=tr("cli.app.ledger.evidence.batch_file_help"),
         ),
     ) -> None:
         """Run the ingestion pipeline over every source, one typed row per document.
@@ -115,10 +100,7 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
             sources.insert(0, directory)
         if not sources:
             raise _bad(
-                tr(
-                    "cli.app.ledger.evidence.batch_source_required",
-                    default="Supply a directory argument, one or more --file options, or both.",
-                ),
+                tr("cli.app.ledger.evidence.batch_source_required"),
             )
 
         from ...application.ledger import run_evidence_batch
@@ -202,7 +184,6 @@ def _item_notice(item: BatchItemResult) -> Notice:
             "cli.app.ledger.evidence.batch_progress_message",
             source=item.source_name,
             status=item.status,
-            default=f"{item.source_name}: {item.status}",
         ),
         context={
             "source_name": item.source_name,
@@ -228,10 +209,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 code="ledger.evidence.batch.items_refused",
                 message=tr(
                     "cli.app.ledger.evidence.batch_items_refused_message",
-                    default=(
-                        "Some documents were refused. Every other document in the run still completed; "
-                        "the refused rows name what was seen."
-                    ),
                 ),
                 context={
                     "refused": str(run.count_of("refused")),
@@ -247,10 +224,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 code="ledger.evidence.batch.work_deferred",
                 message=tr(
                     "cli.app.ledger.evidence.batch_work_deferred_message",
-                    default=(
-                        "Some documents were not read because no reading model could be run. Nothing was "
-                        "guessed from them and nothing failed; re-run once the cause below is cleared."
-                    ),
                 ),
                 action=resolve_cli_precondition_action(pause.precondition_verdict),
                 context={
@@ -266,10 +239,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 code="ledger.evidence.batch.pending_review",
                 message=tr(
                     "cli.app.ledger.evidence.batch_pending_review_message",
-                    default=(
-                        "Some drafts carry a finding a person must adjudicate before an invoice is minted. "
-                        "They are held, not failed."
-                    ),
                 ),
                 action=resolve_notice_action(
                     action=ActionReference(action_id="operator.ledger.evidence.review.list"),

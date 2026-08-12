@@ -86,6 +86,21 @@ _M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_COMPENSACION_PENDIE
 _M303_AVAILABLE_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
 
 
+class _WalletBindingTarget(NamedTuple):
+    bucket_id: str
+    modelo: str
+    filing_year: int
+    period: _Period
+    revision: ModeloRevision
+
+
+class _PriorCompensationInputs(NamedTuple):
+    caller_binding_value: Decimal | None
+    backend_binding_value: Decimal | None
+    caller_casilla_value: Decimal | None
+    backend_casilla_value: Decimal | None
+
+
 class ModeloIvaWalletReconciliationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
     """Raised when Modelo 303 calculation is blocked by IVA wallet reconciliation."""
 
@@ -191,6 +206,67 @@ def _raise_iva_wallet_precondition(
     raise error
 
 
+def _persisted_decision_for_calculation(
+    work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    repository: IvaWalletDecisionRepository | None,
+) -> IvaCompensationReconciliationDecision | None:
+    persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
+    if persisted is None:
+        return None
+    refreshed = _refresh_local_iva_compensation_decision_if_evidence_changed(
+        work_unit,
+        snapshot=snapshot,
+        decision=persisted,
+        repository=repository,
+    )
+    return _require_first_period_zero_decision_grounded(
+        work_unit,
+        snapshot,
+        refreshed,
+        subject_leaf_key="modelo.work.calculate",
+    )
+
+
+def _resolve_caller_supplied_prior_compensation(
+    work_unit: WorkUnit,
+    *,
+    snapshot: RegistrySnapshot,
+    repository: IvaWalletDecisionRepository | None,
+    supplied_amounts: tuple[Decimal, ...],
+) -> IvaCompensationReconciliationDecision | None:
+    decision = lazily_reconcile_local_iva_compensation_for_work_unit(
+        work_unit,
+        snapshot=snapshot,
+        repository=repository,
+        persist=False,
+    )
+    if decision is None or _decision_is_missing_local_authority(decision):
+        return None
+    if _decision_has_concrete_zero_authority(decision):
+        if any(amount != Decimal("0") for amount in supplied_amounts):
+            _raise_iva_wallet_precondition(
+                subject_leaf_key="modelo.work.calculate",
+                reason_code="caller_binding_conflict",
+                translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
+                evidence_values={
+                    "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+                    "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
+                },
+            )
+        decision = _non_blocking_concrete_zero_authority_decision(decision)
+    if not decision.blocked:
+        decision = _require_first_period_zero_decision_grounded(
+            work_unit,
+            snapshot,
+            decision,
+            subject_leaf_key="modelo.work.calculate",
+        )
+    _save_iva_compensation_decision(decision, repository=repository)
+    return decision
+
+
 def resolve_iva_compensation_decision_for_calculation(
     work_unit: WorkUnit,
     *,
@@ -215,135 +291,77 @@ def resolve_iva_compensation_decision_for_calculation(
     returns ``None`` so calculation surfaces the seed/reconcile guidance instead
     of silently trusting the value.
     """
-    if supplied_decision is None:
-        persisted = load_persisted_iva_compensation_decision_for_work_unit(work_unit, repository=repository)
-        if persisted is not None:
-            persisted = _refresh_local_iva_compensation_decision_if_evidence_changed(
-                work_unit,
-                snapshot=snapshot,
-                decision=persisted,
-                repository=repository,
-            )
-            return _require_first_period_zero_decision_grounded(
-                work_unit,
-                snapshot,
-                persisted,
-                subject_leaf_key="modelo.work.calculate",
-            )
-        if caller_supplied_prior_compensation_value(
-            binding_values=binding_values,
-            backend_binding_values=backend_binding_values,
-            casilla_inputs=casilla_inputs,
-            backend_casilla_inputs=backend_casilla_inputs,
-        ):
-            supplied_amounts = _supplied_prior_compensation_amounts(
-                binding_values=binding_values,
-                backend_binding_values=backend_binding_values,
-                casilla_inputs=casilla_inputs,
-                backend_casilla_inputs=backend_casilla_inputs,
-            )
-            decision = lazily_reconcile_local_iva_compensation_for_work_unit(
-                work_unit,
-                snapshot=snapshot,
-                repository=repository,
-                persist=False,
-            )
-            if decision is not None and not _decision_is_missing_local_authority(decision):
-                if _decision_has_concrete_zero_authority(decision):
-                    if any(amount != Decimal("0") for amount in supplied_amounts):
-                        _raise_iva_wallet_precondition(
-                            subject_leaf_key="modelo.work.calculate",
-                            reason_code="caller_binding_conflict",
-                            translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
-                            evidence_values={
-                                "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
-                                "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
-                            },
-                        )
-                    decision = _non_blocking_concrete_zero_authority_decision(decision)
-                if not decision.blocked:
-                    decision = _require_first_period_zero_decision_grounded(
-                        work_unit,
-                        snapshot,
-                        decision,
-                        subject_leaf_key="modelo.work.calculate",
-                    )
-                _save_iva_compensation_decision(decision, repository=repository)
-                return decision
-            return None
-        return lazily_reconcile_local_iva_compensation_for_work_unit(
+    if supplied_decision is not None:
+        return require_persisted_iva_compensation_decision_for_work_unit(
             work_unit,
+            supplied_decision=supplied_decision,
             snapshot=snapshot,
             repository=repository,
         )
-    return require_persisted_iva_compensation_decision_for_work_unit(
+    persisted = _persisted_decision_for_calculation(
         work_unit,
-        supplied_decision=supplied_decision,
+        snapshot=snapshot,
+        repository=repository,
+    )
+    if persisted is not None:
+        return persisted
+    supplied_amounts = _supplied_prior_compensation_amounts(
+        binding_values=binding_values,
+        backend_binding_values=backend_binding_values,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
+    )
+    if supplied_amounts:
+        return _resolve_caller_supplied_prior_compensation(
+            work_unit,
+            snapshot=snapshot,
+            repository=repository,
+            supplied_amounts=supplied_amounts,
+        )
+    return lazily_reconcile_local_iva_compensation_for_work_unit(
+        work_unit,
         snapshot=snapshot,
         repository=repository,
     )
 
 
-def apply_iva_compensation_decision_binding(
-    modelo: str,
-    filing_year: int,
-    period: _Period,
+def _prior_compensation_inputs(
     *,
-    bucket_id: str,
-    revision: ModeloRevision,
-    taxpayer_nif: str | None = None,
-    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
-    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
-    caller_binding_values: dict[BindingId, Decimal],
-    backend_binding_values: dict[BindingId, Decimal],
-    decision: object | None,
-) -> None:
-    """Apply a non-blocking IVA wallet decision to Modelo 303 binding values.
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    caller_binding_values: Mapping[BindingId, Decimal],
+    backend_binding_values: Mapping[BindingId, Decimal],
+) -> _PriorCompensationInputs:
+    return _PriorCompensationInputs(
+        caller_binding_value=caller_binding_values.get(_M303_PRIOR_COMPENSATION_BINDING_ID),
+        backend_binding_value=backend_binding_values.get(_M303_PRIOR_COMPENSATION_BINDING_ID),
+        caller_casilla_value=dict(casilla_inputs or {}).get(_M303_PRIOR_COMPENSATION_CASILLA_ID),
+        backend_casilla_value=dict(backend_casilla_inputs or {}).get(_M303_PRIOR_COMPENSATION_CASILLA_ID),
+    )
 
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` defines the
-    binding channel; the decision amount is written only after target period and
-    taxpayer identity checks pass. Caller and backend inputs for the same binding
-    or casilla must either match the selected decision amount or are refused as
-    conflicts. The effective value is then produced through
-    :class:`~cadrumo.application.calculations.IvaWalletDecisionSourceResolver`, so
-    the calculation source mesh records the IVA-wallet provenance instead of a
-    generic ``previous_filing`` source.
-    """
-    if modelo != Modelo.M303:
-        return
-    binding_id = _M303_PRIOR_COMPENSATION_BINDING_ID
-    bound_casilla_id = _M303_PRIOR_COMPENSATION_CASILLA_ID
-    caller_casilla_value = dict(casilla_inputs or {}).get(bound_casilla_id)
-    backend_casilla_value = dict(backend_casilla_inputs or {}).get(bound_casilla_id)
-    if decision is None:
-        caller_value = caller_binding_values.get(binding_id)
-        backend_value = backend_binding_values.get(binding_id)
-        if (
-            caller_value is not None
-            or backend_value is not None
-            or caller_casilla_value is not None
-            or backend_casilla_value is not None
-        ):
-            _raise_iva_wallet_precondition(
-                subject_leaf_key="modelo.work.calculate",
-                reason_code="not_seeded",
-                translated_message="application.modelo.errors.iva_wallet_not_seeded",
-                evidence_values={
-                    "binding_id": binding_id,
-                    "casilla_id": bound_casilla_id,
-                    "supplied_value_count": sum(
-                        value is not None
-                        for value in (
-                            caller_value,
-                            backend_value,
-                            caller_casilla_value,
-                            backend_casilla_value,
-                        )
-                    ),
-                },
-            )
-        return
 
+def _require_decision_for_supplied_inputs(inputs: _PriorCompensationInputs) -> None:
+    supplied_values = tuple(value for value in inputs if value is not None)
+    if not supplied_values:
+        return
+    _raise_iva_wallet_precondition(
+        subject_leaf_key="modelo.work.calculate",
+        reason_code="not_seeded",
+        translated_message="application.modelo.errors.iva_wallet_not_seeded",
+        evidence_values={
+            "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+            "casilla_id": _M303_PRIOR_COMPENSATION_CASILLA_ID,
+            "supplied_value_count": len(supplied_values),
+        },
+    )
+
+
+def _validated_decision_amount(
+    decision: object,
+    *,
+    target: _WalletBindingTarget,
+    taxpayer_nif: str | None,
+) -> tuple[IvaCompensationReconciliationDecision, Decimal]:
     if not isinstance(decision, IvaCompensationReconciliationDecision):
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
@@ -352,7 +370,7 @@ def apply_iva_compensation_decision_binding(
             evidence_values={"decision_type": type(decision).__name__},
             context={"decision_type": type(decision).__name__},
         )
-    if decision.target_period != period:
+    if decision.target_period != target.period:
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code="target_mismatch",
@@ -360,14 +378,14 @@ def apply_iva_compensation_decision_binding(
             evidence_values={
                 "target_year": decision.target_year,
                 "target_period": decision.target_period.registry_token,
-                "filing_year": filing_year,
-                "period": period.registry_token,
+                "filing_year": target.filing_year,
+                "period": target.period.registry_token,
             },
             context={
                 "target_year": decision.target_year,
                 "target_period": decision.target_period.registry_token,
-                "filing_year": filing_year,
-                "period": period.registry_token,
+                "filing_year": target.filing_year,
+                "period": target.period.registry_token,
             },
         )
     if taxpayer_nif is None:
@@ -403,54 +421,123 @@ def apply_iva_compensation_decision_binding(
             translated_message="application.modelo.errors.iva_wallet_selected_amount_missing",
             evidence_values={"selected_amount_present": False},
         )
-    selected = Decimal(decision.selected_amount)
-    caller_value = caller_binding_values.get(binding_id)
-    if caller_value is not None and Decimal(caller_value) != selected:
+    return decision, Decimal(decision.selected_amount)
+
+
+def _require_inputs_match_decision(
+    inputs: _PriorCompensationInputs,
+    selected: Decimal,
+) -> None:
+    if inputs.caller_binding_value is not None and Decimal(inputs.caller_binding_value) != selected:
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code="caller_binding_conflict",
             translated_message="application.modelo.errors.iva_wallet_caller_binding_conflict",
             evidence_values={
-                "binding_id": binding_id,
+                "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
                 "decision_amount": selected,
-                "supplied_amount": Decimal(caller_value),
+                "supplied_amount": Decimal(inputs.caller_binding_value),
             },
         )
-    if caller_casilla_value is not None and Decimal(caller_casilla_value) != selected:
+    if inputs.caller_casilla_value is not None and Decimal(inputs.caller_casilla_value) != selected:
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code="caller_casilla_conflict",
             translated_message="application.modelo.errors.iva_wallet_caller_casilla_conflict",
             evidence_values={
-                "casilla_id": bound_casilla_id,
+                "casilla_id": _M303_PRIOR_COMPENSATION_CASILLA_ID,
                 "decision_amount": selected,
-                "supplied_amount": Decimal(caller_casilla_value),
+                "supplied_amount": Decimal(inputs.caller_casilla_value),
             },
         )
-    if backend_casilla_value is not None and Decimal(backend_casilla_value) != selected:
+    if inputs.backend_casilla_value is not None and Decimal(inputs.backend_casilla_value) != selected:
         _raise_iva_wallet_precondition(
             subject_leaf_key="modelo.work.calculate",
             reason_code="backend_casilla_conflict",
             translated_message="application.modelo.errors.iva_wallet_backend_casilla_conflict",
             evidence_values={
-                "casilla_id": bound_casilla_id,
+                "casilla_id": _M303_PRIOR_COMPENSATION_CASILLA_ID,
                 "decision_amount": selected,
-                "supplied_amount": Decimal(backend_casilla_value),
+                "supplied_amount": Decimal(inputs.backend_casilla_value),
             },
         )
+
+
+def _apply_wallet_resolution(
+    *,
+    target: _WalletBindingTarget,
+    decision: IvaCompensationReconciliationDecision,
+    backend_binding_values: dict[BindingId, Decimal],
+) -> None:
     from ..aggregation import CalculationSourceContext
     from ..calculations import IvaWalletDecisionSourceResolver
 
     resolution = IvaWalletDecisionSourceResolver(decision).resolve(
         CalculationSourceContext(
-            bucket_id=bucket_id,
-            modelo=modelo,
-            filing_year=filing_year,
-            period=period,
-            revision=revision,
+            bucket_id=target.bucket_id,
+            modelo=target.modelo,
+            filing_year=target.filing_year,
+            period=target.period,
+            revision=target.revision,
         ),
     )
     backend_binding_values.update(resolution.binding_values)
+
+
+def apply_iva_compensation_decision_binding(
+    modelo: str,
+    filing_year: int,
+    period: _Period,
+    *,
+    bucket_id: str,
+    revision: ModeloRevision,
+    taxpayer_nif: str | None = None,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None = None,
+    caller_binding_values: dict[BindingId, Decimal],
+    backend_binding_values: dict[BindingId, Decimal],
+    decision: object | None,
+) -> None:
+    """Apply a non-blocking IVA wallet decision to Modelo 303 binding values.
+
+    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` defines the
+    binding channel; the decision amount is written only after target period and
+    taxpayer identity checks pass. Caller and backend inputs for the same binding
+    or casilla must either match the selected decision amount or are refused as
+    conflicts. The effective value is then produced through
+    :class:`~cadrumo.application.calculations.IvaWalletDecisionSourceResolver`, so
+    the calculation source mesh records the IVA-wallet provenance instead of a
+    generic ``previous_filing`` source.
+    """
+    if modelo != Modelo.M303:
+        return
+    target = _WalletBindingTarget(
+        bucket_id=bucket_id,
+        modelo=modelo,
+        filing_year=filing_year,
+        period=period,
+        revision=revision,
+    )
+    inputs = _prior_compensation_inputs(
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=backend_casilla_inputs,
+        caller_binding_values=caller_binding_values,
+        backend_binding_values=backend_binding_values,
+    )
+    if decision is None:
+        _require_decision_for_supplied_inputs(inputs)
+        return
+    validated_decision, selected = _validated_decision_amount(
+        decision,
+        target=target,
+        taxpayer_nif=taxpayer_nif,
+    )
+    _require_inputs_match_decision(inputs, selected)
+    _apply_wallet_resolution(
+        target=target,
+        decision=validated_decision,
+        backend_binding_values=backend_binding_values,
+    )
 
 
 def require_persisted_iva_compensation_decision_for_work_unit(

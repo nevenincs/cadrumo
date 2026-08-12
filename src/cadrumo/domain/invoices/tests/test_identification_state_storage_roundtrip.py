@@ -1,4 +1,4 @@
-"""The counterparty VAT identification survives the encrypted invoice boundary.
+"""The counterparty IVA identification survives the encrypted invoice boundary.
 
 ``counterparty_identification_state`` is what Ley 37/1992 art. 25 exempts on, so
 a save-drops-field / load-re-defaults-field regression on it would not merely

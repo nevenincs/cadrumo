@@ -279,7 +279,7 @@ def test_confirm_by_attachment_id_uses_the_same_in_store_bytes(tmp_path: Path) -
             "--kind", "received",
             "--counterparty-name", "Acme Suministros SL",
             # No --counterparty-nif: the document states the seller's identifier
-            # in its VAT form (ES-prefixed) while an operator would supply the
+            # in its IVA form (ES-prefixed) while an operator would supply the
             # bare national form, and the confirm path compares those with the
             # identity token, which is trim-and-uppercase and nothing more. So
             # supplying the bare form here refuses a match on the SAME BEARER.

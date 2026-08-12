@@ -3,7 +3,7 @@
 Two properties, and they fail in opposite directions.
 
 **A registration must not settle a place, on either side.** The producer resolves
-the identification from the party's own printed VAT number and the establishment
+the identification from the party's own printed IVA number and the establishment
 from country and postal evidence, and neither evidence crosses. Every case is
 asserted from both sides: proving only that a German number stopped establishing
 Germany would be satisfied by a repair that made the Spanish side stricter, and

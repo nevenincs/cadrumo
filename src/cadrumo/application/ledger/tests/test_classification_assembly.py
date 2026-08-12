@@ -36,8 +36,8 @@ from .._evidence_draft import InvoiceDraft
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CUSTOMER_NIF = "12345678Z"
-#: A structurally valid French VAT number. A document whose customer is
-#: VAT-identified in France prints one, and it is what establishes the
+#: A structurally valid French IVA number. A document whose customer is
+#: IVA-identified in France prints one, and it is what establishes the
 #: identification: the printed country code beside it says where the party
 #: IS, which is a different fact and settles nothing here.
 _FRENCH_IVA_NUMBER = "FR40303265045"
@@ -95,7 +95,7 @@ def _complete(**overrides: object):
         "direction": InvoiceKind.ISSUED,
         "inputs": _inputs(),
         "supply_nature": SupplyNature.GOODS,
-        # The country code establishes WHERE the customer is; the printed VAT
+        # The country code establishes WHERE the customer is; the printed IVA
         # number establishes WHICH State identifies it. They are two facts and
         # neither supplies the other, so a case meaning a French taxable
         # customer carries both. The issuer's Spanish territory has no

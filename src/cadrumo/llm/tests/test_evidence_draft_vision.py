@@ -117,13 +117,27 @@ class TestParseVisionExtractionResponse:
         assert parsed.invoice_number == "2026-0142"
 
     def test_no_json_object_refuses(self) -> None:
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no parsable JSON object"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             parse_invoice_extraction_response("I could not read the image clearly.")
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.response_json_object"
+        assert verdict.evidence[0].values == {
+            "evidence_response_json_object": False,
+            "evidence_response_parseable": False,
+        }
 
     def test_schema_violation_refuses(self) -> None:
         """A non-string field value (e.g. a nested object) fails strict schema validation."""
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="schema validation"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             parse_invoice_extraction_response('{"supplier_tax_id": {"nested": "object"}}')
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.response_schema_valid"
+        assert verdict.evidence[0].values == {
+            "evidence_response_schema_valid": False,
+            "evidence_response_validation_error_type": "ValidationError",
+        }
 
 
 class TestGroundExtractedFields:
@@ -349,15 +363,23 @@ class TestLocalVisionDocumentTranscriber:
         def _call() -> DocumentTranscription:
             return transcribe_document_images(images, source_content_sha256=_SOURCE_SHA, model="qwen-test")
 
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="returned no text"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             _run_against_loopback_ollama("   \n  ", _call)
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.transcription_nonempty"
+        assert verdict.evidence[0].values == {"transcription_nonempty": False}
 
     def test_no_pages_refuses_without_dispatching(self) -> None:
         """Model-free: an empty page tuple is caught before any transport."""
         transcriber = LocalVisionDocumentTranscriber(model="qwen-test", settings=load_settings())
 
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no pages"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             transcriber.transcribe(evidence_images=(), source_content_sha256=_SOURCE_SHA)
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.images_present"
+        assert verdict.evidence[0].values == {"evidence_image_count": 0, "evidence_images_present": False}
 
     def test_the_transcriber_identity_folds_the_prompt_version(self) -> None:
         """Two prompts are two readings of the same pixels, so the cache must tell them apart."""

@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
@@ -406,14 +408,13 @@ def test_modelo_303_live_cross_references_forbid_writes() -> None:
     }.issubset(forbidden)
 
 
-def test_modelo_303_construct_links_filing_extractor_verification() -> None:
+def test_modelo_303_construct_links_living_filing_and_extractor_surfaces() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
 
     assert "modelo-303-filing" in construct.application_links
     assert "modelo-303-extractor" in construct.application_links
-    assert "modelo-303-verification" in construct.application_links
     assert "modelo-303-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-303-trimestral",)
     assert "modelo-303-dr-2025" in construct.workbook_parity_refs
@@ -768,7 +769,7 @@ def test_modelo_303_first_quarter_compensation_resolves_from_previous_year_fourt
 
 
 def test_modelo_303_compensation_calculation_applies_available_balance_and_carries_remainder() -> None:
-    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
+    from .. import calculate_registry_snapshot
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="2T")
@@ -819,7 +820,7 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
         "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
-    bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=bound_inputs,
@@ -977,7 +978,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
     tipo general = 21%), NOT from the registry implementation under test; this
     test would fail if the formula were mis-wired or the tipo were wrong.
     """
-    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
+    from .. import calculate_registry_snapshot
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -1027,7 +1028,7 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         "modelo-303-criterio-caja-adquisiciones-base": Decimal("0"),
         "modelo-303-criterio-caja-adquisiciones-cuota": Decimal("0"),
     }
-    bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=bound_inputs,
@@ -1056,7 +1057,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
     tipo 21%), not from a second call to the same formula.  If the formula
     constant were changed to, say, 0.10, this test would catch it immediately.
     """
-    from .. import calculate_registry_snapshot, resolve_bound_inputs_by_casilla_id
+    from .. import calculate_registry_snapshot
 
     modelo, catalogues = _load_modelo_303()
     snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="1T")
@@ -1108,7 +1109,7 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
 
     def _run(base: Decimal) -> Decimal:
         bv = {**zero_bindings, "modelo-303-autoconsumo-promotor-base": base}
-        bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, bv)
+        bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, bv)
         r = calculate_registry_snapshot(
             snapshot,
             inputs=bound,

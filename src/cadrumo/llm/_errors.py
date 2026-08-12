@@ -11,8 +11,8 @@ validators surface :exc:`~llm.LLMValidationError`.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import TYPE_CHECKING
+from collections.abc import Callable, Mapping
+from typing import TYPE_CHECKING, cast
 
 from ..core.errors import CadrumoError
 
@@ -22,6 +22,27 @@ if TYPE_CHECKING:
 
 class LLMError(CadrumoError):
     """Base exception for public LLM package failures."""
+
+
+class LLMPreconditionErrorMixin:
+    """Carry a terminal application verdict without a prose recovery bridge."""
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
+        parent_init = cast(Callable[..., None], super().__init__)
+        parent_init(message, context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Return the exact failed-condition result for boundary projection."""
+        return self._terminal_precondition_verdict
 
 
 class LLMProviderError(LLMError):
@@ -68,32 +89,23 @@ class LLMRateLimitError(LLMProviderError):
         retry_after_seconds: Optional server-provided retry delay in seconds.
     """
 
-    def __init__(self, message: str, retry_after_seconds: float | None = None) -> None:
-        super().__init__(message)
-        self.retry_after_seconds = retry_after_seconds
-
-
-class LLMConfigError(LLMError):
-    """Raised when :class:`~llm.LLMClient` configuration is invalid."""
-
     def __init__(
         self,
         message: str | None = None,
+        retry_after_seconds: float | None = None,
         *,
         context: Mapping[str, object] | None = None,
         translated_message: str | None = None,
-        precondition_verdict: PreconditionVerdict | None = None,
     ) -> None:
         super().__init__(message, context=context, translated_message=translated_message)
-        self._terminal_precondition_verdict = precondition_verdict
-
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the exact configuration verdict for boundary projection."""
-        return self._terminal_precondition_verdict
+        self.retry_after_seconds = retry_after_seconds
 
 
-class LLMContentionError(LLMError):
+class LLMConfigError(LLMPreconditionErrorMixin, LLMError):
+    """Raised when :class:`~llm.LLMClient` configuration is invalid."""
+
+
+class LLMContentionError(LLMPreconditionErrorMixin, LLMError):
     """Raised when this machine has no measured headroom to load the model.
 
     The other half of admission control, and a different question from
@@ -110,28 +122,8 @@ class LLMContentionError(LLMError):
     refusal into several while the memory it is waiting for is still held.
     """
 
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        context: Mapping[str, object] | None = None,
-        translated_message: str | None = None,
-        precondition_verdict: PreconditionVerdict | None = None,
-    ) -> None:
-        super().__init__(
-            message,
-            context=context,
-            translated_message=translated_message,
-        )
-        self._terminal_precondition_verdict = precondition_verdict
 
-    @property
-    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
-        """Return the exact provisioning verdict for later boundary projection."""
-        return self._terminal_precondition_verdict
-
-
-class LLMBusyError(LLMError):
+class LLMBusyError(LLMPreconditionErrorMixin, LLMError):
     """Raised when an on-host inference slot is not free and the request is refused.
 
     The admission half of the local-resource boundary, and deliberately NOT a
@@ -148,7 +140,7 @@ class LLMBusyError(LLMError):
     """
 
 
-class LLMConsentError(LLMError):
+class LLMConsentError(LLMPreconditionErrorMixin, LLMError):
     """Raised when an off-host read of taxpayer evidence is refused.
 
     Deliberately NOT a subclass of
@@ -160,7 +152,7 @@ class LLMConsentError(LLMError):
     """
 
 
-class LLMValidationError(LLMError, ValueError):
+class LLMValidationError(LLMPreconditionErrorMixin, LLMError, ValueError):
     """Raised when an LLM-related object fails validation.
 
     Inherits from both :class:`~llm.LLMError` and

@@ -17,7 +17,7 @@ Three properties are gated here and they fail in three different directions.
 was designed not to pay. A gate proving only the refusal would be satisfied by a
 ladder that asks about every foreign invoice, which is a worse product.
 
-**Conflicted papers surface instead of resolving either way.** A foreign VAT
+**Conflicted papers surface instead of resolving either way.** A foreign IVA
 number beside Spanish-indicating evidence is the characteristic face of an
 establecimiento permanente operating here, and preferring either side would put a
 guess behind a filing.

@@ -46,14 +46,12 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import ProrrataInputs, ProrrataKind, compute_prorrata_general
-from .. import (
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from .. import calculate_registry_snapshot, resolve_ledger_iva_aggregation_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -108,7 +106,7 @@ def _registry_percentage(
     }
     binding_values.update(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()))
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         _VOLUMEN_TOTAL_ID: total,
         _VOLUMEN_CON_DERECHO_ID: con_derecho,
     }

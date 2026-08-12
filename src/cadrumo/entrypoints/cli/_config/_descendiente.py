@@ -52,8 +52,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from datetime import date
 
-    from pydantic import ValidationError
-
     from ....adapters.inbound.tui import FormChoice, FormFieldKind, FormPage
     from ....application.workflow import ProfileBucketPointer
     from ....core.json_contract import Notice
@@ -62,7 +60,6 @@ descendiente_app = typer.Typer(
     name="descendiente",
     help=tr(
         "cli.config.profile.descendiente.help",
-        default="Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.",
     ),
     no_args_is_help=False,
     invoke_without_command=True,
@@ -157,24 +154,6 @@ def _iso_or_dash(value: date | None) -> str:
     return value.isoformat() if value is not None else "-"
 
 
-def _record_refusal_detail(exc: ValidationError) -> str:
-    """Render a canonical-record refusal as the sentence its validator wrote.
-
-    The raw string form of a pydantic error is not operator copy. It carries the
-    model name, a bracketed error type, a documentation URL, and -- the reason
-    this matters beyond tidiness -- an ``input`` echo of the whole record under
-    construction, which is a taxpayer's family facts on this surface.
-
-    What the validators actually wrote is the ``msg``, and it is already good
-    copy: it names the field, the conflicting value and the two ways out.
-    Pydantic prefixes it with ``Value error,`` when the validator raised a
-    ``ValueError`` subclass, which every refusal in the descendant record does,
-    so that prefix is stripped rather than shown.
-    """
-    messages = [str(error.get("msg", "")).removeprefix("Value error, ").strip() for error in exc.errors()]
-    return " ".join(message for message in messages if message)
-
-
 def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
     """Render a descendant's monthly guardería map in the one canonical form.
 
@@ -235,13 +214,6 @@ def _ambiguous_relacion_notice(ambiguous_indices: tuple[int, ...]) -> Notice:
         tr(
             "cli.config.profile.descendiente.ambiguous_relacion_advisory",
             indices=ids,
-            default=(
-                "descendiente %{indices} declares meses_madre_trabajo under the unstated relación. "
-                "The manual grants the mínimo but excludes the Art. 81.1 deducción por maternidad for "
-                "a grandchild/other consanguinidad descendant, or a minor under judicial guarda y "
-                "custodia -- the stored fact cannot distinguish either from a true hijo. Confirm this "
-                "descendant is a hijo, or state the actual relación with RELACION=."
-            ),
         ),
         context={"indices": ids},
     )
@@ -515,7 +487,6 @@ def _check_count(candidate: str) -> str | None:
     "add",
     help=tr(
         "cli.config.profile.descendiente.add_help",
-        default="Add one or more descendants to the active profile.",
     ),
 )
 def descendiente_add(
@@ -531,19 +502,6 @@ def descendiente_add(
         # moment a revision moved it.
         help=tr(
             "cli.config.profile.descendiente.add_flag_help",
-            default=(
-                "NACIMIENTO=YYYY-MM-DD[,RELACION=descendiente|adoptado|"
-                "acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela|"
-                "guarda_y_custodia_judicial]"
-                "[,INSCRIPCION=YYYY-MM-DD][,ACOGIMIENTO=YYYY-MM-DD][,FALLECIMIENTO=YYYY-MM-DD]"
-                "[,DISCAPACIDAD=0|33|65]"
-                "[,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N]"
-                "[,DECLARACION_PROPIA=true|false][,PRORRATA=true|false]"
-                "[,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N]"
-                "[,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX]. "
-                "Repeatable. Run `aeat config profile descendiente` with no "
-                "subcommand to enter these guided."
-            ),
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(
@@ -592,12 +550,12 @@ def descendiente_add(
         except ProfileAnswerTypeError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
-                context={"flag": raw, "detail": str(exc)},
+                context={"error_type": type(exc).__name__},
             ) from exc
         except ValidationError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
-                context={"flag": raw, "detail": _record_refusal_detail(exc)},
+                context={"error_type": type(exc).__name__},
             ) from exc
 
     combined = (*existing, *new_rows)
@@ -629,7 +587,6 @@ def descendiente_add(
     "list",
     help=tr(
         "cli.config.profile.descendiente.list_help",
-        default="List descendants declared on the active profile.",
     ),
 )
 def descendiente_list(
@@ -651,7 +608,6 @@ def descendiente_list(
     "remove",
     help=tr(
         "cli.config.profile.descendiente.remove_help",
-        default="Remove one descendant by 0-based index from the active profile.",
     ),
 )
 def descendiente_remove(

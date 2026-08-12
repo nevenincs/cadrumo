@@ -28,12 +28,13 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from ..core import ImageMediaType
+from ..core import ActionEvidenceProvenance, ImageMediaType
 from ..core.config import LLMProvider
 from ..core.hashing import sha256_hex
 from ..core.identity import ContentDigest
 from ._consent import EvidenceConsentToken
 from ._errors import LLMValidationError
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 _PROMPT_ID_PATTERN = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 
@@ -152,8 +153,14 @@ class LLMRequest(BaseModel):
         """
         normalized = value.strip()
         if not normalized:
-            msg = "Prompt must not be empty."
-            raise LLMValidationError(msg)
+            raise LLMValidationError(
+                context={"request_prompt_nonempty": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.REQUEST_PROMPT_NONEMPTY,
+                    facts={"request_prompt_nonempty": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         return normalized
 
     @field_validator("system")
@@ -220,8 +227,14 @@ class PromptDefinition(BaseModel):
     def validate_id(cls, value: str) -> str:
         """Ensure prompt identifiers are kebab-case."""
         if not _PROMPT_ID_PATTERN.fullmatch(value):
-            msg = f"Prompt id must be kebab-case, got {value!r}"
-            raise LLMValidationError(msg)
+            raise LLMValidationError(
+                context={"prompt_definition_id_valid": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.PROMPT_DEFINITION_ID_VALID,
+                    facts={"prompt_definition_id_valid": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         return value
 
 

@@ -1,11 +1,11 @@
-"""The art. 25 gate reads VAT identification, never country of establishment.
+"""The art. 25 gate reads IVA identification, never country of establishment.
 
 Ley 37/1992 art. 25.Uno exempts an intra-community supply on the acquirer
-holding a VAT identification assigned by ANOTHER Member State. It says nothing
+holding an IVA identification assigned by ANOTHER Member State. It says nothing
 about where that acquirer is established, which arts. 69-70 govern. The two
 facts diverge in both directions and both divergences land in money:
 
-- A Spanish-established acquirer holding a German VAT number is an
+- A Spanish-established acquirer holding a German IVA number is an
   intra-community acquirer. Keyed on establishment it was refused an exemption
   art. 25 grants -- Spanish IVA charged on an exempt supply, OVER-declaration.
 - A German-established acquirer purchasing under a Spanish NIF-IVA is not.
@@ -129,14 +129,14 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
     counterparty facts names Spain. If the gate read establishment, each
     assertion below would hold the opposite value.
     """
-    # Established in Spain, VAT-identified in Germany. Art. 25 exempts this.
+    # Established in Spain, IVA-identified in Germany. Art. 25 exempts this.
     spanish_established_german_identified = _aggregate(
         _intracom_supply(
             "es-established-de-identified", established_in=EUMemberState.ES, identified_in=EUMemberState.DE
         ),
     )
     assert spanish_established_german_identified.issues == (), (
-        "a Spanish-established acquirer holding a German VAT number is an intra-community "
+        "a Spanish-established acquirer holding a German IVA number is an intra-community "
         f"acquirer under art. 25; got {[i.reason.value for i in spanish_established_german_identified.issues]}"
     )
     assert len(spanish_established_german_identified.observations) == 1
@@ -149,7 +149,7 @@ def test_art25_turns_on_identification_in_both_directions() -> None:
         ),
     )
     assert german_established_spanish_identified.observations == (), (
-        "a counterparty purchasing under a Spanish VAT identification is not an "
+        "a counterparty purchasing under a Spanish IVA identification is not an "
         "intra-community acquirer, so its base must not reach casilla 59"
     )
     assert [issue.reason for issue in german_established_spanish_identified.issues] == [

@@ -115,7 +115,7 @@ def _as_bank_transaction(
             "iva_amount": Decimal("0"),
             "iva_category": category,
             "counterparty_country": (country if country is not None else _country_of(member_state)),
-            # Where the acquirer is established and where it is VAT-identified
+            # Where the acquirer is established and where it is IVA-identified
             # agree in this scenario. They are still supplied separately: the
             # art. 25 gate reads only the second, and the parity this module
             # asserts is that BOTH feeds read the same one.

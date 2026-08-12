@@ -11,7 +11,7 @@ covers.  Emission wraps the validated result in
 Field sets match the production payload dicts constructed in ``_ledger.py``
 at their emit sites. Optional fields cover multi-branch payload shapes
 (e.g. ledger.classify has a bulk path and a single-transaction path;
-ledger.import carries optional dry-run and duplicate-warning notices).
+ledger.import carries import facts while advisories use the shared notices channel).
 
 All sequence fields use ``list`` rather than ``tuple`` because
 ``model_dump(mode='json')`` serialises pydantic tuples as JSON arrays, and
@@ -889,9 +889,8 @@ class LedgerImportPayload(OutputSchema):
 
     Distinct from the application
     :class:`LedgerSourceImportResult`: this
-    envelope projects that result's JSON-coerced fields (the nested
-    validation/source/diagnostic reports become the CLI ``*Payload`` shapes) and
-    appends the optional operator-facing notice strings.
+    envelope projects that result's JSON-coerced fields; non-blocking import
+    advisories use the shared envelope ``notices`` channel.
     """
 
     rows: int = Field(ge=0)
@@ -910,38 +909,20 @@ class LedgerImportPayload(OutputSchema):
     validation: LedgerImportValidationPayload
     source: LedgerImportSourcePayload
     diagnostics: list[LedgerImportDiagnosticPayload] = []
-    # Optional notice fields appended at the emit site
-    dry_run_notice: str | None = None
-    empty_import_notice: str | None = None
-    likely_duplicate_notice: str | None = None
 
     @classmethod
-    def from_result(
-        cls,
-        result: _AppLedgerSourceImportResult,
-        *,
-        dry_run_notice: str | None = None,
-        empty_import_notice: str | None = None,
-        likely_duplicate_notice: str | None = None,
-    ) -> LedgerImportPayload:
+    def from_result(cls, result: _AppLedgerSourceImportResult) -> LedgerImportPayload:
         """Project the application import result into this CLI envelope.
 
         ``model_dump(mode="json")`` coerces the typed members (typed-ids, nested
         validation/source/diagnostic reports) to the JSON shape this envelope
-        declares. The three notices are operator-facing display strings computed
-        at the emit site and threaded through so this stays the single
-        construction point; each is attached only when present.
+        declares. Advisories are intentionally excluded because the shared
+        envelope notice schema is their canonical transport.
 
         Returns:
             :class:`LedgerImportPayload` ready for the CLI JSON envelope.
         """
         data = result.model_dump(mode="json")
-        if dry_run_notice is not None:
-            data["dry_run_notice"] = dry_run_notice
-        if empty_import_notice is not None:
-            data["empty_import_notice"] = empty_import_notice
-        if likely_duplicate_notice is not None:
-            data["likely_duplicate_notice"] = likely_duplicate_notice
         return cls.model_validate(data)
 
 

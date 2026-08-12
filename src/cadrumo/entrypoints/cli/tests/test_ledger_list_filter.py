@@ -116,28 +116,49 @@ def test_period_year_options_match_filter_clauses() -> None:
     assert option_rows, "period/year options must match the same non-empty annual subset as --filter"
 
 
-def test_year_option_without_period_refuses_with_annual_guidance() -> None:
-    """Bare ``--year`` refuses with annual-period guidance, not an internal parser token."""
-    result = invoke_cached_cli(["app", "ledger", "list", "--year", "2025"])
+def test_year_option_without_period_preserves_typed_refusal() -> None:
+    """Bare ``--year`` exposes one canonical refusal in every locale."""
+    for locale in ("ca", "en", "es", "hu"):
+        result = invoke_cached_cli(
+            ["--language", locale, "--format", "json", "app", "ledger", "list", "--year", "2025"],
+        )
 
-    assert result.exit_code != 0
-    assert "ledger-period-year-pairing" not in result.output
-    assert "--period 0A --year 2025" in result.output
-    assert "--filter" in result.output
-    assert "period=0A" in result.output
-    assert "year=2025" in result.output
+        assert result.exit_code != 0
+        document = json.loads(result.output)
+        error = document["error"]
+        assert error["code"] == "REFUSED_REVIEW_FILTER_PARSE"
+        assert error["category"] == "REFUSED"
+        assert error["context"] == {
+            "key": "period",
+            "raw_token": "<redacted>",
+            "reason": "ledger-period-year-pairing",
+            "safe_token": "<redacted>",
+        }
+        action = error["action"]
+        assert action["failed_condition_id"] == "cli.ledger.filter.valid"
+        assert action["evidence"] == [
+            {
+                "condition_id": "cli.ledger.filter.valid",
+                "evidence_id": "cli.ledger.filter.valid.observation",
+                "provenance": "runtime_observation",
+                "values": {"ledger_filter_valid": False, "reason": "ledger-period-year-pairing"},
+            },
+        ]
+        assert action["action"] is None
+        assert action["conditionality"] == "not_applicable"
+        assert action["no_recovery_outcome"] == "operator_decision"
 
 
-def test_year_filter_without_period_refuses_with_matching_annual_guidance() -> None:
-    """Bare ``--filter year=...`` guidance keeps the operator's requested year."""
+def test_year_filter_without_period_refuses_with_typed_no_recovery() -> None:
+    """A partial period predicate stays typed without reconstructed guidance."""
     result = invoke_cached_cli(["app", "ledger", "list", "--filter", "year=2026"])
 
     assert result.exit_code != 0
-    assert "ledger-period-year-pairing" not in result.output
-    assert "--period 0A --year 2026" in result.output
-    assert "period=0A" in result.output
-    assert "year=2026" in result.output
-    assert "year=2025" not in result.output
+    assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
+    assert '"ledger_filter_valid":false' in result.output
+    assert '"reason":"ledger-period-year-pairing"' in result.output
+    assert "action.action: null" in result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in result.output
 
 
 def test_classification_filter_narrows_to_one_class() -> None:
@@ -249,13 +270,16 @@ def test_malformed_filter_token_is_rejected() -> None:
     assert result.exit_code != 0
 
 
-def test_period_filter_combined_shape_refuses_with_period_guidance() -> None:
-    """A combined period filter refuses with the same AEAT-token guidance as --period."""
-    combined_period = "2026" + "Q1"
+def test_period_filter_combined_shape_refuses_with_typed_no_recovery() -> None:
+    """A combined period token is redacted and carries no invented action."""
+    combined_period = "2026Q1"
     result = invoke_cached_cli(
         ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", "year=2026"],
     )
 
     assert result.exit_code != 0
-    assert "1T" in result.output
-    assert "--year" in result.output
+    assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
+    assert '"ledger_filter_valid":false' in result.output
+    assert '"reason":"invalid-value-ledger-period"' in result.output
+    assert "action.action: null" in result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in result.output

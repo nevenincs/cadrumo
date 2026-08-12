@@ -13,7 +13,7 @@ art. 25 does not ask about it.
 **The defect this module gates.** The four intra-community rows each declared the
 identification consumed while every one of their predicates read only the
 territorial scopes. The declaration and the code therefore disagreed, and the
-disagreement had a direction: a party holding a non-Spanish VAT identification
+disagreement had a direction: a party holding a non-Spanish IVA identification
 whose establishment resolved to anything other than ``EU_MEMBER`` fell through
 the intra-community row and landed on the export or import row instead — a
 legitimate entrega intracomunitaria exenta reported in the wrong box and left off
@@ -86,7 +86,7 @@ class TestTheSupplyExemptionFollowsTheAcquirersRegistration:
     def test_an_acquirer_identified_elsewhere_is_exempt_though_established_outside_the_union(self) -> None:
         """The case that failed: identification in Germany, establishment not EU.
 
-        A party established outside the Union may hold a German VAT
+        A party established outside the Union may hold a German IVA
         identification and buy under it, and art. 25 asks for exactly that
         number. Keyed on establishment the operation fell to the export row,
         which relieves the same money under art. 21 while filing it in the wrong

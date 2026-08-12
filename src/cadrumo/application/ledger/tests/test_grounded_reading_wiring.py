@@ -24,7 +24,14 @@ from pathlib import Path
 
 import pytest
 
-from ....core import LOCAL_TRANSPORT_LABEL, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ....core import (
+    LLM_EXTRA,
+    LOCAL_TRANSPORT_LABEL,
+    DraftDiscrepancyKind,
+    FieldGroundingOutcome,
+    FieldOrigin,
+    MissingOptionalExtraError,
+)
 from ....core.config import load_settings
 from ....llm import LLMProviderError, ground_extracted_fields, parse_invoice_extraction_response
 from .. import _evidence_draft as _router_module
@@ -339,13 +346,7 @@ def test_the_router_text_path_runs_the_whole_chain() -> None:
 
 
 def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
-    """A missing reader is a typed refusal, not an inferred recovery command.
-
-    The message names ``aeat config provision pull`` rather than reporting a
-    bare failure. A refusal that does not say how to fix itself is a dead end,
-    and this is the most consequential degradation the path can produce: the
-    operator gets no fields at all.
-    """
+    """A missing reader is a typed refusal, not an inferred recovery command."""
     from .._evidence_draft import _refuse_a_text_read_with_no_reader
 
     with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
@@ -355,9 +356,35 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
     assert raised.value.terminal_precondition_verdict.failed_condition_id == (
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
     )
-    message = str(raised.value)
-    assert "was not read" in message, "the operator must be told nothing was extracted"
-    assert "no value was guessed" in message
+    assert raised.value.args == ()
+    assert raised.value.context == {
+        "semantic_reader_available": False,
+        "reader_error_type": "LLMProviderError",
+    }
+    assert raised.value.terminal_precondition_verdict.evidence[0].values == raised.value.context
+
+
+def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose() -> None:
+    """The dependency registry identity crosses the ledger boundary unchanged."""
+    from .._evidence_draft import _refuse_a_text_read_with_no_reader
+
+    dependency_error = MissingOptionalExtraError(LLM_EXTRA)
+    with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
+        _refuse_a_text_read_with_no_reader(dependency_error)
+
+    expected_facts = {
+        "extra": LLM_EXTRA.extra,
+        "import_name": LLM_EXTRA.import_name,
+        "importable": False,
+    }
+    assert raised.value.args == ()
+    assert raised.value.context == expected_facts
+    assert raised.value.__cause__ is dependency_error
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
+    assert verdict.action is None
+    assert verdict.evidence[0].values == expected_facts
 
 
 def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:

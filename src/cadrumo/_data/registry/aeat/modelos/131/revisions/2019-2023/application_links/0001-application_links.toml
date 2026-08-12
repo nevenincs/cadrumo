@@ -27,13 +27,6 @@ requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-dr-131-2019-2023-v101"]
 [[revisions."2019-2023".application_links]]
-id = "modelo-131-2019-2023-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
-source_refs = ["aeat-modelo-131-instructions"]
-[[revisions."2019-2023".application_links]]
 id = "modelo-131-2019-2023-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

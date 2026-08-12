@@ -16,14 +16,13 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
 from ....core import Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    WithholdingObservation,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import WithholdingObservation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 
@@ -74,7 +73,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
         # decl.total-percepciones) rather than a full M190 calc, to keep the smoke
         # scoped to the percepciones box (the importe formulas need their own
         # relations, out of scope here).
-        bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+        bound_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
 
         # Distinct percepciones = 3 (distinct perceptores would be 2) — the #28 fix.
         assert bound_inputs[_TOTAL_PERCEPCIONES] == Decimal(3)

@@ -176,17 +176,22 @@ def test_an_unverifiable_identifier_has_no_key_and_finds_nothing(
     )
     assert resolution.fact is None
 
-    with pytest.raises(ConfirmedCounterpartyFactsInputError):
+    with pytest.raises(ConfirmedCounterpartyFactsInputError) as raised:
         _confirm(repository, tax_identifier="B99999999")
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "ledger.counterparty.identifier_valid"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome == "operator_decision"
 
 
 def test_a_prefixed_foreign_identifier_addresses_a_record_without_a_stated_country(
     repository: ConfirmedCounterpartyFactsRepository,
 ) -> None:
-    """An intra-community VAT number states its own country, so it has an identity.
+    """An intra-community IVA number states its own country, so it has an identity.
 
     The population this whole apparatus exists for. While an absent country
-    defaulted to Spain, a foreign counterparty printing a prefixed VAT number
+    defaulted to Spain, a foreign counterparty printing a prefixed IVA number
     and no address block got no key at all -- so the operator's answer to "where
     is this party established" could be neither stored nor retrieved, and the
     ladder's remembered-fact rung was unreachable for them.

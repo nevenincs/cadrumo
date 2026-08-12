@@ -16,14 +16,6 @@ source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
 
 
 [[revisions."2008-y-siguientes".application_links]]
-id = "modelo-347-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["orden-eha-3012-2008:art-1", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-347-2025", "aeat-modelo-347-procedure"]
-
-[[revisions."2008-y-siguientes".application_links]]
 id = "modelo-347-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"

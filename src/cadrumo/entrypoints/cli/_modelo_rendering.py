@@ -854,8 +854,8 @@ def filing_record_lines(record) -> list[str]:
     return lines
 
 
-def verification_report_notices(report: VerificationReport) -> list[Notice]:
-    """Project every verification finding onto the envelope notices channel.
+def verification_findings_notices(findings: Sequence[ModeloVerificationFinding]) -> list[Notice]:
+    """Project verification findings onto the envelope notices channel.
 
     A verify run that is NOT granted ``verificado_completo`` carries
     blocking and/or warning findings; without this projection the JSON
@@ -889,7 +889,7 @@ def verification_report_notices(report: VerificationReport) -> list[Notice]:
     list and the envelope stays :attr:`EnvelopeStatus.SUCCESS`.
     """
     notices: list[Notice] = []
-    for finding in report.findings:
+    for finding in findings:
         context: dict[str, str] = {
             "severity": finding.severity.value,
             "kind": finding.kind.value,
@@ -919,6 +919,11 @@ def verification_report_notices(report: VerificationReport) -> list[Notice]:
             ),
         )
     return notices
+
+
+def verification_report_notices(report: VerificationReport) -> list[Notice]:
+    """Project one persisted report's findings through the canonical helper."""
+    return verification_findings_notices(report.findings)
 
 
 def _resolved_finding_actions(

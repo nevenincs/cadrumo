@@ -4,7 +4,7 @@ Verification asks two questions of a filed modelo. First, do the numbers AEAT
 received agree with the numbers this application computes? A revision answers
 that by declaring verification *expectations*, and this module owns both halves
 of that answer — the per-expectation declaration and the snapshot-wide fold the
-application verification surface actually consumes. Second, do the filing's
+living modelo reconciliation surface consumes. Second, do the filing's
 values satisfy the cross-casilla invariants the form's law implies? A revision
 answers that by declaring verification *predicates*, and this module owns that
 declaration together with the closed operator vocabulary the registry-build
@@ -244,8 +244,8 @@ class RegistryVerificationPolicy:
 
     Owns the registry-grounded projection (union of computed casilla ids, the
     union of reconcile-when-present casilla ids, the strictest tolerance, the
-    strictest coverage floor) so the application verification surface consumes
-    it rather than re-deriving the fold.
+    strictest coverage floor) so application consumers do not re-derive the
+    fold.
 
     ``computed_casilla_ids`` are the coverage-gated reconciliation targets: a
     filing that fails to reconcile them below ``min_coverage`` is NEEDS_REVIEW.

@@ -25,7 +25,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, localcontext
@@ -749,42 +749,9 @@ def _evaluate_expression(
         return _evaluate_leaf(expression, ctx)
     op = expression.op
     require_formula_operator_arity(op, len(expression.args))
-    if op == "lookup_bracket":
-        return _evaluate_lookup_bracket(expression, ctx)
-    if op == "lookup_bracket_by_ccaa":
-        return _evaluate_lookup_bracket_by_ccaa(expression, ctx)
-    if op == "m100_resolve_renta_inmobiliaria_imputada":
-        return _evaluate_m100_resolve_renta_inmobiliaria_imputada(expression, ctx)
-    if op == "irnr_resolve_tipo_gravamen":
-        return _irnr.evaluate_irnr_resolve_tipo_gravamen(expression, ctx)
-    if op == "m210_resolve_base_imponible":
-        return _irnr.evaluate_m210_resolve_base_imponible(expression, ctx)
-    if op == "lookup_parameter_by_entity_type":
-        return _evaluate_lookup_parameter_by_entity_type(expression, ctx)
-    if op == "lookup_bracket_by_entity_type":
-        return _evaluate_lookup_bracket_by_entity_type(expression, ctx)
-    if op == "if_then_else":
-        return _evaluate_if_then_else(expression, ctx)
-    if op == "age_at_year_end":
-        return _evaluate_age_at_year_end(expression, ctx)
-    if op == "m131_resolve_modulos_previo":
-        return _m131.evaluate_m131_resolve_modulos_previo(expression, ctx)
-    if op == "m131_resolve_modulos_minoracion_empleo":
-        return _m131.evaluate_m131_resolve_modulos_minoracion_empleo(expression, ctx)
-    if op == "m131_resolve_modulos_indice_exceso":
-        return _m131.evaluate_m131_resolve_modulos_indice_exceso(expression, ctx)
-    if op == "m131_resolve_modulos_indices_generales":
-        return _m131.evaluate_m131_resolve_modulos_indices_generales(expression, ctx)
-    if op == "m131_resolve_modulos_pequena_dimension_ignorado_flag":
-        return _m131.evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag(expression, ctx)
-    if op == "m131_resolve_modulos_temporada_inicio_conflicto_flag":
-        return _m131.evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag(expression, ctx)
-    if op == "m100_resolve_eo_agraria_indices_correctores":
-        return _evaluate_m100_resolve_eo_agraria_indices_correctores(expression, ctx)
-    if op == "m303_resolve_modulos_iva_cuota_devengada":
-        return _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression, ctx)
-    if op == "m303_resolve_modulos_iva_cuota_minima_pct":
-        return _evaluate_m303_resolve_modulos_iva_cuota_minima_pct(expression, ctx)
+    evaluator = _SPECIALIZED_EXPRESSION_EVALUATORS.get(op)
+    if evaluator is not None:
+        return evaluator(expression, ctx)
     args = [_evaluate_with_ctx(arg, ctx) for arg in expression.args]
     return _evaluate_args_op(op, args)
 
@@ -1620,6 +1587,33 @@ def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
         "empty formula expression",
         translated_message="errors.calc.empty_expression",
     )
+
+
+_FormulaExpressionEvaluator = Callable[[FormulaExpression, _EvalContext], Decimal]
+_SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
+    "lookup_bracket": _evaluate_lookup_bracket,
+    "lookup_bracket_by_ccaa": _evaluate_lookup_bracket_by_ccaa,
+    "m100_resolve_renta_inmobiliaria_imputada": _evaluate_m100_resolve_renta_inmobiliaria_imputada,
+    "irnr_resolve_tipo_gravamen": _irnr.evaluate_irnr_resolve_tipo_gravamen,
+    "m210_resolve_base_imponible": _irnr.evaluate_m210_resolve_base_imponible,
+    "lookup_parameter_by_entity_type": _evaluate_lookup_parameter_by_entity_type,
+    "lookup_bracket_by_entity_type": _evaluate_lookup_bracket_by_entity_type,
+    "if_then_else": _evaluate_if_then_else,
+    "age_at_year_end": _evaluate_age_at_year_end,
+    "m131_resolve_modulos_previo": _m131.evaluate_m131_resolve_modulos_previo,
+    "m131_resolve_modulos_minoracion_empleo": _m131.evaluate_m131_resolve_modulos_minoracion_empleo,
+    "m131_resolve_modulos_indice_exceso": _m131.evaluate_m131_resolve_modulos_indice_exceso,
+    "m131_resolve_modulos_indices_generales": _m131.evaluate_m131_resolve_modulos_indices_generales,
+    "m131_resolve_modulos_pequena_dimension_ignorado_flag": (
+        _m131.evaluate_m131_resolve_modulos_pequena_dimension_ignorado_flag
+    ),
+    "m131_resolve_modulos_temporada_inicio_conflicto_flag": (
+        _m131.evaluate_m131_resolve_modulos_temporada_inicio_conflicto_flag
+    ),
+    "m100_resolve_eo_agraria_indices_correctores": _evaluate_m100_resolve_eo_agraria_indices_correctores,
+    "m303_resolve_modulos_iva_cuota_devengada": _evaluate_m303_resolve_modulos_iva_cuota_devengada,
+    "m303_resolve_modulos_iva_cuota_minima_pct": _evaluate_m303_resolve_modulos_iva_cuota_minima_pct,
+}
 
 
 EvalContext = _EvalContext

@@ -13,10 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 _REPOSITORY_ROOT = _PACKAGE_ROOT.parents[1]
 _RETIRED_STEM = re.compile(r"(^|[._:/-])vat([._:/-]|$)", re.IGNORECASE)
-_DUPLICATED_IVA = re.compile(
-    r"(?<![A-Za-z0-9])iva(?:[._:/-]+|\s+\(\s*)iva(?=$|[._:/)-])",
-    re.IGNORECASE,
-)
+_DUPLICATED_IVA = re.compile(r"(?<![A-Za-z0-9])iva(?:[._:/-]+|\s+(?:\(\s*)?)iva\b", re.IGNORECASE)
 _ENGLISH_VAT = re.compile(r"\bvat\b", re.IGNORECASE)
 _MIXED_IVA_ALIAS = re.compile(
     r"(?<![A-Za-z0-9])(?:vat[._:/-]+iva|iva[._:/-]+vat)(?=$|[._:/-])",
@@ -31,7 +28,37 @@ _EXTERNAL_IDENTITY_TOKENS = {
     "adapters/inbound/einvoice/_parsers.py": frozenset({"vat", "vatid"}),
     "entrypoints/cli/_config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
 }
-_EXTERNAL_VAT_PROSE_PATHS = frozenset({"adapters/inbound/einvoice/_parsers.py"})
+_EXTERNAL_VAT_PROSE_VALUES = {
+    "adapters/inbound/einvoice/_parsers.py": frozenset({"vat"}),
+    "domain/calculations/registry/tests/test_registry_locales_parity.py": frozenset(
+        {
+            "Output VAT amount at the standard rate (21%)",
+            "Total output VAT calculated at the standard 21% rate.",
+        },
+    ),
+    "domain/iva/tests/test_rate_grounding.py": frozenset(
+        {
+            "(^|[._:/-])vat([._:/-]|$)",
+            "from 1 july 2025, the standard rate of vat in estonia is 24% instead of 22%",
+            "reduced vat rate 13,5%",
+        },
+    ),
+    "domain/iva/tests/test_saturation.py": frozenset({"verify the customer VAT ID"}),
+    "entrypoints/cli/_config/tests/test_apoderado_scopes_payload.py": frozenset({"VAT"}),
+    "tests/fixtures/justificantes/_generate_modelo_390_english.py": frozenset(
+        {
+            "Deductible VAT",
+            "Deductible VAT from internal transactions of current goods and services",
+        },
+    ),
+}
+_EXTERNAL_VAT_PROSE_FRAGMENTS = {
+    "adapters/inbound/einvoice/_parsers.py": frozenset({"``VAT``"}),
+    "application/command_search/tests/test_command_ranking_golden.py": frozenset({"file my quarterly VAT"}),
+    "entrypoints/cli/tests/test_ledger_evidence_confirm_resolution_cli.py": frozenset(
+        {"<cbc:ID>VAT</cbc:ID>"},
+    ),
+}
 _EXTERNAL_SOURCE_PREFIXES = ("http://", "https://", "/Sede/")
 
 
@@ -116,6 +143,8 @@ def test_internal_identity_tokens_use_the_canonical_iva_stem() -> None:
 
 def test_internal_prose_does_not_duplicate_or_alias_the_iva_stem() -> None:
     violations: list[str] = []
+    used_external_values: set[tuple[str, str]] = set()
+    used_external_fragments: set[tuple[str, str]] = set()
     for path in _source_files():
         relative = path.relative_to(_PACKAGE_ROOT).as_posix()
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -127,16 +156,30 @@ def test_internal_prose_does_not_duplicate_or_alias_the_iva_stem() -> None:
             and (_DUPLICATED_IVA.search(node.value) or _MIXED_IVA_ALIAS.search(node.value))
             and not node.value.startswith(_EXTERNAL_SOURCE_PREFIXES)
         )
-        if "/tests/" not in relative and not relative.startswith("tests/"):
-            violations.extend(
-                f"{relative}:{node.lineno}:{node.value}"
-                for node in ast.walk(tree)
-                if isinstance(node, ast.Constant)
-                and isinstance(node.value, str)
-                and _ENGLISH_VAT.search(node.value)
-                and relative not in _EXTERNAL_VAT_PROSE_PATHS
-            )
+        for node in ast.walk(tree):
+            if (
+                not isinstance(node, ast.Constant)
+                or not isinstance(node.value, str)
+                or not _ENGLISH_VAT.search(node.value)
+            ):
+                continue
+            value = node.value
+            if value in _EXTERNAL_VAT_PROSE_VALUES.get(relative, ()):
+                used_external_values.add((relative, value))
+                continue
+            for fragment in _EXTERNAL_VAT_PROSE_FRAGMENTS.get(relative, ()):
+                if fragment in value:
+                    value = value.replace(fragment, "")
+                    used_external_fragments.add((relative, fragment))
+            if _ENGLISH_VAT.search(value):
+                violations.append(f"{relative}:{node.lineno}:{node.value}")
     assert violations == []
+    assert used_external_values == {
+        (relative, value) for relative, values in _EXTERNAL_VAT_PROSE_VALUES.items() for value in values
+    }
+    assert used_external_fragments == {
+        (relative, fragment) for relative, fragments in _EXTERNAL_VAT_PROSE_FRAGMENTS.items() for fragment in fragments
+    }
 
 
 def test_authored_repository_prose_uses_iva_without_a_mixed_alias() -> None:

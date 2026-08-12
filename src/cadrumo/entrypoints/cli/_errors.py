@@ -786,6 +786,11 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
     )
 
 
+def boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | None:
+    """Return the canonical generic boundary outcome for terminal transport."""
+    return _boundary_no_recovery_verdict(error)
+
+
 def _emit_error_and_exit(error: CadrumoError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
@@ -995,7 +1000,16 @@ def _project_former_product_state(error: Exception, callback: Callable[..., obje
 def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
     """Forward a typed :class:`CadrumoError` verbatim."""
     assert isinstance(error, CadrumoError)
-    return error
+    from ...application.cli_exception_preconditions import (
+        cli_exception_envelope_view,
+        nested_terminal_precondition_verdict,
+    )
+    from ._common import attach_cli_policy_verdict
+
+    verdict = nested_terminal_precondition_verdict(error)
+    view = cli_exception_envelope_view(error)
+    assert isinstance(view, CadrumoError)
+    return view if verdict is None else attach_cli_policy_verdict(view, verdict=verdict)
 
 
 def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
@@ -1014,7 +1028,14 @@ def _project_validation_error(error: Exception, callback: Callable[..., object])
         getattr(callback, "__name__", repr(callback)),
         error.errors(),
     )
-    return CliValidationBoundaryError(error)
+    boundary = CliValidationBoundaryError(error)
+    from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
+    from ._common import attach_cli_policy_verdict
+
+    verdict = nested_terminal_precondition_verdict(error)
+    if verdict is None:
+        return boundary
+    return attach_cli_policy_verdict(boundary, verdict=verdict)
 
 
 #: Exception-family projections walked in DECLARATION ORDER by
@@ -1067,14 +1088,25 @@ def _project_boundary_error(error: Exception, callback: Callable[..., object]) -
     return _project_unexpected(error, callback)
 
 
+def project_cli_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Project an escaped exception without duplicating terminal crash logging."""
+    for exc_type, project in _ERROR_PROJECTIONS:
+        if isinstance(error, exc_type):
+            return project(error, callback)
+    wrapped = _unwrap_cadrumo_error(error)
+    return wrapped if wrapped is not None else CliUnexpectedBoundaryError(error)
+
+
 __all__ = [
     "CliCommandGroupUnavailableError",
     "CliOutboundPayloadBoundaryError",
     "CliRefusedBoundaryError",
     "CliStoredDataValidationBoundaryError",
     "CliValidationBoundaryError",
+    "boundary_no_recovery_verdict",
     "decorate_typer_app",
     "error_boundary_under_test",
     "internal_record_fault_context",
+    "project_cli_boundary_error",
     "write_stderr",
 ]

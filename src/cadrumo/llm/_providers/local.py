@@ -89,7 +89,9 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
     try:
         document = pdfium.PdfDocument(pdf_bytes)
     except Exception as exc:
-        raise LLMPdfRasterisationError(f"could not rasterise PDF pages: {exc}") from exc
+        raise LLMPdfRasterisationError(
+            context={"rasterisation_stage": "document_open", "rasterisation_error_type": type(exc).__name__},
+        ) from exc
     try:
         pages: list[str] = []
         for page in document:
@@ -108,7 +110,9 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
                 pdf_page.close()
         return tuple(pages)
     except Exception as exc:
-        raise LLMPdfRasterisationError(f"could not rasterise PDF pages: {exc}") from exc
+        raise LLMPdfRasterisationError(
+            context={"rasterisation_stage": "page_render", "rasterisation_error_type": type(exc).__name__},
+        ) from exc
     finally:
         document.close()
 
@@ -181,7 +185,7 @@ class LocalAdapter(_ProviderAdapter):
             response = await post_provider_request(
                 client,
                 settings.cadrumo_llm_ollama_chat_url,
-                provider_name="Local Ollama",
+                provider_name=LLMProvider.LOCAL.value,
                 model=request.model,
                 logger=_LOG,
                 json={
@@ -198,8 +202,8 @@ class LocalAdapter(_ProviderAdapter):
                     },
                 },
             )
-        check_http_error(response, provider_name="Local Ollama", model=request.model, logger=_LOG)
-        parsed = parse_provider_response(response, provider_name="Local Ollama", response_model=_LocalResponse)
+        check_http_error(response, provider_name=LLMProvider.LOCAL.value, model=request.model, logger=_LOG)
+        parsed = parse_provider_response(response, provider_name=LLMProvider.LOCAL.value, response_model=_LocalResponse)
         return ProviderCompletion(
             text=parsed.message.content.strip(),
             model=parsed.model,

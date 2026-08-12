@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from hashlib import sha256
@@ -433,48 +433,8 @@ def _validate_annual_orden_sidecar(
     if not isinstance(payload_raw, dict):
         raise RegistryLoadError(f"annual Orden sidecar is not a JSON object for {source.id!r}")
     payload = cast(Mapping[str, object], payload_raw)
-    if frozenset(payload) != _SIDECAR_TOP_LEVEL_KEYS:
-        raise RegistryLoadError(f"annual Orden sidecar has extra or missing top-level fields for {source.id!r}")
-    if payload.get("schema_version") != _SIDECAR_SCHEMA_VERSION:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong schema version for {source.id!r}")
-    if payload.get("source_kind") != "normatives_html" or payload.get("status") != "ok":
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong source kind or status for {source.id!r}")
-    expected_source_relpath = f"src/cadrumo/_data/{source.corpus_path}"
-    if payload.get("source_relpath") != expected_source_relpath:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong source path for {source.id!r}")
-    attribution = payload.get("attribution")
-    if not isinstance(attribution, str) or not attribution.strip():
-        raise RegistryLoadError(f"annual Orden sidecar has no attribution for {source.id!r}")
-    if payload.get("source_sha256") != source.sha256:
-        raise RegistryLoadError(f"annual Orden sidecar source digest mismatch for {source.id!r}")
-    if payload.get("preprocessor_id") != _SIDECAR_PREPROCESSOR_ID:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong preprocessor id for {source.id!r}")
-    if payload.get("preprocessor_version") != _SIDECAR_PREPROCESSOR_VERSION:
-        raise RegistryLoadError(f"annual Orden sidecar has the wrong preprocessor version for {source.id!r}")
-    raw_units_value = payload.get("units")
-    if not isinstance(raw_units_value, list):
-        raise RegistryLoadError(f"annual Orden sidecar has no units list for {source.id!r}")
-    raw_units_values = cast(list[object], raw_units_value)
-    raw_units = tuple(unit for value in raw_units_values if (unit := _sidecar_mapping(value)) is not None)
-    if len(raw_units) != len(raw_units_values):
-        raise RegistryLoadError(f"annual Orden sidecar contains a non-object unit for {source.id!r}")
-    rendered_units: list[tuple[str | None, str]] = []
-    for unit in raw_units:
-        if frozenset(unit) != _SIDECAR_UNIT_KEYS:
-            raise RegistryLoadError(f"annual Orden sidecar unit has extra or missing fields for {source.id!r}")
-        title = unit.get("title")
-        section = unit.get("section")
-        anchor = unit.get("anchor")
-        text = unit.get("text")
-        if title is not None and not isinstance(title, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text title for {source.id!r}")
-        if section is not None and not isinstance(section, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text section for {source.id!r}")
-        if anchor is not None and not isinstance(anchor, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text anchor for {source.id!r}")
-        if not isinstance(text, str):
-            raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
-        rendered_units.append((title, text))
+    _validate_sidecar_metadata(payload, source)
+    raw_units, rendered_units = _sidecar_units(payload, source)
     text_sidecar_path = source_path.with_name(source_path.name + ".extracted.md")
     try:
         rendered_text = text_sidecar_path.read_text(encoding="utf-8")
@@ -485,30 +445,115 @@ def _validate_annual_orden_sidecar(
     if rendered_text != render_corpus_sidecar_text(rendered_units):
         raise RegistryLoadError(f"annual Orden sidecar pair diverges for {source.id!r}")
 
-    shared_activities = tuple(_shared_activity_table(activity) for activity in activities)
-    anchors = orden_anual_iva_activity_anchors(shared_activities)
+    _validate_sidecar_tables(raw_units, activities, source)
+
+
+def _validate_sidecar_metadata(payload: Mapping[str, object], source: SourceReference) -> None:
+    if frozenset(payload) != _SIDECAR_TOP_LEVEL_KEYS:
+        raise RegistryLoadError(f"annual Orden sidecar has extra or missing top-level fields for {source.id!r}")
+    checks = (
+        ("schema_version", _SIDECAR_SCHEMA_VERSION, "annual Orden sidecar has the wrong schema version"),
+        ("source_relpath", f"src/cadrumo/_data/{source.corpus_path}", "annual Orden sidecar has the wrong source path"),
+        ("source_sha256", source.sha256, "annual Orden sidecar source digest mismatch"),
+        ("preprocessor_id", _SIDECAR_PREPROCESSOR_ID, "annual Orden sidecar has the wrong preprocessor id"),
+        (
+            "preprocessor_version",
+            _SIDECAR_PREPROCESSOR_VERSION,
+            "annual Orden sidecar has the wrong preprocessor version",
+        ),
+    )
+    if payload.get("source_kind") != "normatives_html" or payload.get("status") != "ok":
+        raise RegistryLoadError(f"annual Orden sidecar has the wrong source kind or status for {source.id!r}")
+    for key, expected, message in checks:
+        if payload.get(key) != expected:
+            raise RegistryLoadError(f"{message} for {source.id!r}")
+    attribution = payload.get("attribution")
+    if not isinstance(attribution, str) or not attribution.strip():
+        raise RegistryLoadError(f"annual Orden sidecar has no attribution for {source.id!r}")
+
+
+def _sidecar_units(
+    payload: Mapping[str, object], source: SourceReference
+) -> tuple[tuple[Mapping[str, object], ...], list[tuple[str | None, str]]]:
+    units = _sidecar_unit_mappings(payload, source)
+    return units, [_rendered_sidecar_unit(unit, source) for unit in units]
+
+
+def _sidecar_unit_mappings(
+    payload: Mapping[str, object],
+    source: SourceReference,
+) -> tuple[Mapping[str, object], ...]:
+    raw = payload.get("units")
+    if not isinstance(raw, list):
+        raise RegistryLoadError(f"annual Orden sidecar has no units list for {source.id!r}")
+    raw_values = cast(list[object], raw)
+    units = tuple(unit for value in raw_values if (unit := _sidecar_mapping(value)) is not None)
+    if len(units) != len(raw_values):
+        raise RegistryLoadError(f"annual Orden sidecar contains a non-object unit for {source.id!r}")
+    return units
+
+
+def _rendered_sidecar_unit(
+    unit: Mapping[str, object],
+    source: SourceReference,
+) -> tuple[str | None, str]:
+    if frozenset(unit) != _SIDECAR_UNIT_KEYS:
+        raise RegistryLoadError(f"annual Orden sidecar unit has extra or missing fields for {source.id!r}")
+    title = _optional_sidecar_text(unit.get("title"), source)
+    _optional_sidecar_text(unit.get("section"), source)
+    _optional_sidecar_text(unit.get("anchor"), source)
+    return title, _required_sidecar_text(unit.get("text"), source)
+
+
+def _optional_sidecar_text(value: object, source: SourceReference) -> str | None:
+    if value is None or isinstance(value, str):
+        return value
+    raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
+
+
+def _required_sidecar_text(value: object, source: SourceReference) -> str:
+    if isinstance(value, str):
+        return value
+    raise RegistryLoadError(f"annual Orden sidecar contains a non-text unit for {source.id!r}")
+
+
+def _validate_sidecar_tables(
+    units: tuple[Mapping[str, object], ...], activities: tuple[M303AnnualOrdenRawActivity, ...], source: SourceReference
+) -> None:
+    anchors = _validated_annual_orden_anchors(activities, source)
+    units_by_anchor = _annual_sidecar_units_by_anchor(units, anchors=anchors, source=source)
+    for activity, anchor in zip(activities, anchors, strict=True):
+        unit_text = normalise_corpus_text(str(units_by_anchor[anchor].get("text")))
+        if unit_text != normalise_corpus_text(m303_annual_orden_table_text(activity)):
+            raise RegistryLoadError(
+                f"annual Orden sidecar table cells differ from the pinned BOE source for {source.id!r} {anchor!r}"
+            )
+
+
+def _validated_annual_orden_anchors(
+    activities: tuple[M303AnnualOrdenRawActivity, ...],
+    source: SourceReference,
+) -> tuple[str, ...]:
+    anchors = orden_anual_iva_activity_anchors(tuple(_shared_activity_table(activity) for activity in activities))
     if len(set(anchors)) != _EXPECTED_ACTIVITY_COUNT:
         raise RegistryLoadError(f"annual Orden sidecar anchors are ambiguous for {source.id!r}")
-    annual_units = [
+    return anchors
+
+
+def _annual_sidecar_units_by_anchor(
+    units: tuple[Mapping[str, object], ...],
+    *,
+    anchors: tuple[str, ...],
+    source: SourceReference,
+) -> dict[str, Mapping[str, object]]:
+    annual_units = tuple(
         unit
-        for unit in raw_units
+        for unit in units
         if isinstance(unit.get("anchor"), str) and str(unit["anchor"]).startswith("#m303-anexo-ii-iva-")
-    ]
+    )
     if len(annual_units) != _EXPECTED_ACTIVITY_COUNT or {unit["anchor"] for unit in annual_units} != set(anchors):
         raise RegistryLoadError(f"annual Orden sidecar has extra, missing, or cross-year table units for {source.id!r}")
-    for activity, anchor in zip(activities, anchors, strict=True):
-        matches = [unit for unit in raw_units if unit.get("anchor") == anchor]
-        if len(matches) != 1:
-            raise RegistryLoadError(
-                f"annual Orden sidecar must contain exactly one complete table unit for {source.id!r} {anchor!r}",
-            )
-        text = matches[0].get("text")
-        if not isinstance(text, str) or normalise_corpus_text(text) != normalise_corpus_text(
-            m303_annual_orden_table_text(activity),
-        ):
-            raise RegistryLoadError(
-                f"annual Orden sidecar table cells differ from the pinned BOE source for {source.id!r} {anchor!r}",
-            )
+    return {str(unit["anchor"]): unit for unit in annual_units}
 
 
 def _sidecar_mapping(value: object) -> Mapping[str, object] | None:
@@ -653,40 +698,82 @@ def load_m303_annual_orden_authority(
     legal: dict[LegalRefId, LegalReference] = {}
     projections: list[M303AnnualOrdenProjection] = []
     for generated_source in manifest.sources:
-        source = sources.get(generated_source.source_ref)
-        if source is None:
-            raise RegistryLoadError(f"annual Orden manifest names unknown source {generated_source.source_ref!r}")
-        census = extract_m303_annual_orden_source(
-            ejercicio=generated_source.ejercicio,
-            source=source,
+        source, census, table_legal_refs = _compile_generated_annual_orden_source(
+            generated_source,
             source_root=source_root,
+            sources=sources,
         )
-        _validate_generated_source_matches_census(generated_source, census)
-        table_legal_refs = _compile_table_legal_references(census, source=source)
-        for legal_ref in table_legal_refs.values():
-            if legal_ref.id in legal:
-                raise RegistryValidationError(f"annual Orden compiler generated duplicate legal ref {legal_ref.id!r}")
-            legal[legal_ref.id] = legal_ref
-        for revision in modelo_303.revisions.values():
-            if not revision.period_selector.includes_year(generated_source.ejercicio):
-                continue
-            if source.id not in revision.source_refs:
-                raise RegistryValidationError(
-                    f"Modelo 303 revision {revision.id!r} does not cite annual Orden source {source.id!r}",
-                )
-            cited_annual_sources = frozenset(revision.source_refs).intersection(annual_source_refs)
-            if cited_annual_sources != frozenset({source.id}):
-                raise RegistryValidationError(
-                    f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
-                )
-            projections.append(
-                compile_m303_annual_orden_projection(
-                    census=census,
-                    registry_revision_id=revision.id,
-                    legal_refs_by_activity={identity: legal_ref.id for identity, legal_ref in table_legal_refs.items()},
-                ),
+        _merge_annual_orden_legal_refs(legal, table_legal_refs.values())
+        projections.extend(
+            _annual_orden_projections_for_source(
+                census=census,
+                source=source,
+                modelo_303=modelo_303,
+                annual_source_refs=annual_source_refs,
+                table_legal_refs=table_legal_refs,
             )
+        )
     return M303AnnualOrdenCompilation(authority=M303AnnualOrdenAuthority(projections=tuple(projections)), legal=legal)
+
+
+def _compile_generated_annual_orden_source(
+    generated_source: M303AnnualOrdenGeneratedSource,
+    *,
+    source_root: Path,
+    sources: Mapping[SourceRefId, SourceReference],
+) -> tuple[SourceReference, M303AnnualOrdenSourceCensus, dict[str, LegalReference]]:
+    source = sources.get(generated_source.source_ref)
+    if source is None:
+        raise RegistryLoadError(f"annual Orden manifest names unknown source {generated_source.source_ref!r}")
+    census = extract_m303_annual_orden_source(
+        ejercicio=generated_source.ejercicio,
+        source=source,
+        source_root=source_root,
+    )
+    _validate_generated_source_matches_census(generated_source, census)
+    table_legal_refs = _compile_table_legal_references(census, source=source)
+    return source, census, table_legal_refs
+
+
+def _annual_orden_projections_for_source(
+    *,
+    census: M303AnnualOrdenSourceCensus,
+    source: SourceReference,
+    modelo_303: ModeloDefinition,
+    annual_source_refs: frozenset[SourceRefId],
+    table_legal_refs: Mapping[str, LegalReference],
+) -> tuple[M303AnnualOrdenProjection, ...]:
+    projections: list[M303AnnualOrdenProjection] = []
+    for revision in modelo_303.revisions.values():
+        if not revision.period_selector.includes_year(census.ejercicio):
+            continue
+        if source.id not in revision.source_refs:
+            raise RegistryValidationError(
+                f"Modelo 303 revision {revision.id!r} does not cite annual Orden source {source.id!r}",
+            )
+        cited_annual_sources = frozenset(revision.source_refs).intersection(annual_source_refs)
+        if cited_annual_sources != frozenset({source.id}):
+            raise RegistryValidationError(
+                f"Modelo 303 revision {revision.id!r} must cite exactly its filing-year annual Orden source",
+            )
+        projections.append(
+            compile_m303_annual_orden_projection(
+                census=census,
+                registry_revision_id=revision.id,
+                legal_refs_by_activity={identity: legal_ref.id for identity, legal_ref in table_legal_refs.items()},
+            ),
+        )
+    return tuple(projections)
+
+
+def _merge_annual_orden_legal_refs(
+    legal: dict[LegalRefId, LegalReference],
+    generated_refs: Iterable[LegalReference],
+) -> None:
+    for legal_ref in generated_refs:
+        if legal_ref.id in legal:
+            raise RegistryValidationError(f"annual Orden compiler generated duplicate legal ref {legal_ref.id!r}")
+        legal[legal_ref.id] = legal_ref
 
 
 def collect_m303_annual_orden_fingerprints(root: Path) -> tuple[tuple[str, int, int, str], ...]:

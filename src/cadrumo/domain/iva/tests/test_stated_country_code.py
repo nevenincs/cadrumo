@@ -83,7 +83,7 @@ class TestTheLookup:
     def test_an_alpha3_code_resolves_through_the_registry_column(self, stated: str, expected: str) -> None:
         """The correspondence is a lookup, and these are the cases that matter here.
 
-        Greece is carried deliberately: its VAT prefix diverges from its ISO code
+        Greece is carried deliberately: its IVA prefix diverges from its ISO code
         (``EL`` against ``GR``), and every catalogue downstream is ISO-keyed, so a
         column that resolved it to the prefix would put two answers into the tree
         for one country.
@@ -159,7 +159,7 @@ class TestTheBundledColumn:
         assert len(_index_country_alpha3(_bundled(), source="bundled")) == len(codes)
 
     def test_northern_ireland_is_absent_from_both_columns(self) -> None:
-        """``XI`` is a VAT jurisdiction rather than an ISO country, and has no alpha-3.
+        """``XI`` is an IVA jurisdiction rather than an ISO country, and has no alpha-3.
 
         Asserted because the name column deliberately excludes it too: it is
         established by a printed NIF-IVA prefix or not at all, and a country

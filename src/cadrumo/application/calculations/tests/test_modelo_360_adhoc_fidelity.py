@@ -20,7 +20,7 @@ between years.
 
 Legal grounding: LIVA art. 117-bis (devolución a no establecidos en la
 Comunidad); Orden EHA/789/2010 arts. 1, 4 (form mandate, filing procedure);
-Directiva 2008/9/CE (EU non-resident VAT refund directive).
+Directiva 2008/9/CE (EU non-resident IVA refund directive).
 """
 
 from __future__ import annotations

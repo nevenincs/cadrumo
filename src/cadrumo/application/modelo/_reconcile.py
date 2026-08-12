@@ -907,15 +907,14 @@ def _reconcile_declaracion_casillas(
     """Compare every registry-reconciled casilla against the filed declaración.
 
     Resolves the registry snapshot for ``work_unit`` and folds its verification
-    expectations into a :class:`~domain.calculations.registry.RegistryVerificationPolicy`
-    (the same policy :func:`application.verification.verify_declaracion`
-    consumes) — the registry's own declared reconciliation scope, never an ad
+    expectations into the canonical
+    :class:`~domain.calculations.registry.RegistryVerificationPolicy` — the
+    registry's own declared reconciliation scope, never an ad
     hoc casilla list. ``computed_casilla_ids`` (the coverage-gated set) is
     compared in full, so a casilla the computed revision resolved but the
     declaración omitted surfaces as ``MISSING_IN_FILED``.
-    ``reconcile_when_present_casilla_ids`` mirrors
-    :func:`application.verification.verify_declaracion`'s treatment: it is
-    value-reconciled only when the declaración actually prints it (omission is
+    ``reconcile_when_present_casilla_ids`` is value-reconciled only when the
+    declaración actually prints it (omission is
     legitimate — that is exactly why the casilla is excluded from the coverage
     denominator — so it never surfaces ``MISSING_IN_FILED``).
 
@@ -1052,8 +1051,7 @@ def _casilla_divergence_diff(
 def _decimal_declaracion_values(declaracion: InboundDeclaracionObservation) -> dict[str, Decimal]:
     """Return decimal printed values keyed by canonical casilla id.
 
-    Mirrors :func:`application.verification._verify._decimal_extracted_values`:
-    a declaración's :class:`~adapters.inbound.pdf.ExtractedCasilla` rows may
+    A declaración's :class:`~adapters.inbound.pdf.ExtractedCasilla` rows may
     carry a ``Decimal``, an ``int``, or a non-numeric printed value (text/enum
     casillas); only the numeric rows participate in a value-level reconcile.
     """

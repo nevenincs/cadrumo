@@ -260,7 +260,7 @@ def test_an_unconfirmed_identification_reads_as_absent_not_as_a_default(tmp_path
 def test_an_identification_can_be_confirmed_without_a_territory(tmp_path: Path) -> None:
     """The two facts are independent, so either may be answered alone.
 
-    An operator may know which State VAT-identifies a counterparty without
+    An operator may know which State IVA-identifies a counterparty without
     knowing where it is established -- that is the whole reason the axis was
     split -- and requiring the territory made the half they knew unrecordable.
     """

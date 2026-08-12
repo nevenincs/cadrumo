@@ -38,8 +38,10 @@ from typing import Never, Self, override
 
 from pydantic import BaseModel, ConfigDict, Field, model_serializer, model_validator
 
+from ..core import ActionEvidenceProvenance
 from ..core.config import LLMProvider, Settings
 from ._errors import LLMConsentError
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [
     "EvidenceConsentToken",
@@ -49,12 +51,6 @@ __all__ = [
 ]
 
 _MINT_REFUSAL_LOCALE_KEY = "llm.evidence.consent.mint_refused"
-
-_SERIALIZATION_REFUSAL = (
-    "EvidenceConsentToken must never be serialized or persisted; it carries a per-invocation "
-    "operator acknowledgement, and a stored one would be the sticky enablement the off-host "
-    "posture forbids (sensitive-financial-data-secure-storage-only)."
-)
 
 
 def provider_reads_off_host(provider: LLMProvider) -> bool:
@@ -145,8 +141,14 @@ class EvidenceConsentToken(BaseModel):
             ValueError: When either field is whitespace-only.
         """
         if not self.surface.strip() or not self.evidence_content_address.strip():
-            msg = "an evidence consent token must name a real surface and a real content address"
-            raise ValueError(msg)
+            raise LLMConsentError(
+                context={"consent_token_binding_valid": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
+                    facts={"consent_token_binding_valid": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         return self
 
     @model_serializer
@@ -162,7 +164,7 @@ class EvidenceConsentToken(BaseModel):
         Raises:
             LLMConsentError: Always.
         """
-        raise LLMConsentError(_SERIALIZATION_REFUSAL)
+        raise _token_serialization_refusal()
 
     @override
     def model_dump(self, *args: object, **kwargs: object) -> Never:
@@ -171,7 +173,7 @@ class EvidenceConsentToken(BaseModel):
         Raises:
             LLMConsentError: Always.
         """
-        raise LLMConsentError(_SERIALIZATION_REFUSAL)
+        raise _token_serialization_refusal()
 
     @override
     def model_dump_json(self, *args: object, **kwargs: object) -> Never:
@@ -180,7 +182,7 @@ class EvidenceConsentToken(BaseModel):
         Raises:
             LLMConsentError: Always.
         """
-        raise LLMConsentError(_SERIALIZATION_REFUSAL)
+        raise _token_serialization_refusal()
 
 
 def mint_evidence_consent_token(
@@ -222,5 +224,34 @@ def mint_evidence_consent_token(
     if not cloud_evidence_read_permitted(settings, profile_eligible=profile_eligible, acknowledged=acknowledged):
         raise LLMConsentError(
             translated_message=_MINT_REFUSAL_LOCALE_KEY,
+            context={
+                "gestor_mode": settings.cadrumo_evidence_gestor_mode,
+                "deployment_permitted": settings.cadrumo_evidence_cloud_upload_permitted,
+                "profile_eligible": profile_eligible,
+                "acknowledged": acknowledged,
+            },
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_OFF_HOST_DISPATCH_PERMITTED,
+                facts={
+                    "gestor_mode": settings.cadrumo_evidence_gestor_mode,
+                    "deployment_permitted": settings.cadrumo_evidence_cloud_upload_permitted,
+                    "profile_eligible": profile_eligible,
+                    "acknowledged": acknowledged,
+                },
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
     return EvidenceConsentToken(surface=surface, evidence_content_address=evidence_content_address)
+
+
+def _token_serialization_refusal() -> LLMConsentError:
+    """Return the terminal refusal for any attempt to persist a consent token."""
+    facts = {"consent_token_serializable": False}
+    return LLMConsentError(
+        context=facts,
+        precondition_verdict=llm_no_recovery_verdict(
+            LLMPreconditionCondition.EVIDENCE_TOKEN_EPHEMERAL,
+            facts=facts,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        ),
+    )

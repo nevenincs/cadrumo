@@ -289,7 +289,7 @@ def test_cuota_chain_manual_grounding_is_enrolled_and_raises_independently_groun
     ``corpus/manual_oracles/modelo-100-2024-cuotas-integras-escala-aragon.json``
     evidence. This test proves the other end of the wire: that every grounded
     cuota casilla reaches the live, validated
-    :class:`RegistryVerificationPolicy` fold ``verify_declaracion`` consumes, so
+    :class:`RegistryVerificationPolicy` fold consumed by the living reconcile flow, so
     it raises ``independently_grounded_fraction`` rather than sitting inert in
     TOML. Not tautological: the grounded set and the fraction are read from the
     registry's own declared+validated data, never hand-computed.

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from functools import cache
-from typing import Protocol
+from typing import Protocol, get_args
 
 import pytest
 
@@ -83,7 +83,17 @@ def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
                 _assert_relation_role_contract(relation, scope=f"{modelo.id}/{revision.id}/{relation.id}")
 
 
-_PROFILE_SCHEDULE_SOURCE_MODELOS = frozenset({"036", "840"})
+def test_every_relation_dependency_role_has_a_bundled_consumer() -> None:
+    """The accepted relation-role vocabulary contains no speculative member."""
+    modelos, _catalogues = _validated_registry_tree()
+    bundled_roles = {
+        relation.dependency_role
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        for relation in revision.relations
+    }
+    declared_roles = set(get_args(RelationDefinition.model_fields["dependency_role"].annotation))
+    assert declared_roles == bundled_roles
 
 
 def _assert_periodic_to_annual_summary_contract(relation: RelationDefinition, *, scope: str) -> None:
@@ -119,10 +129,6 @@ def _assert_factual_evidence_contract(relation: RelationDefinition, *, scope: st
     assert relation.kind == "cross_model_output", scope
 
 
-def _assert_profile_schedule_contract(relation: RelationDefinition, *, scope: str) -> None:
-    assert relation.source_modelo in _PROFILE_SCHEDULE_SOURCE_MODELOS, scope
-
-
 class _RelationRoleContractValidator(Protocol):
     def __call__(self, relation: RelationDefinition, *, scope: str) -> None: ...
 
@@ -132,7 +138,6 @@ _ROLE_CONTRACT_VALIDATORS: Mapping[str, _RelationRoleContractValidator] = {
     "instalment_to_final_settlement": _assert_instalment_to_final_settlement_contract,
     "direct_calculation": _assert_direct_calculation_contract,
     "factual_evidence": _assert_factual_evidence_contract,
-    "profile_schedule": _assert_profile_schedule_contract,
 }
 
 

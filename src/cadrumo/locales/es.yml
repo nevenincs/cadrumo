@@ -1919,7 +1919,7 @@ cli:
         confirm_invoice_number_help: Sobrescribe el número de factura extraido.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
           el valor extraido).
-        confirm_link_hint_message: Esta factura aún no está vinculada a un movimiento
+        confirm_link_hint_message: La factura se registró sin un movimiento coincidente
           del libro.
         confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
           Obligatoria cuando el documento declara una entrega intracomunitaria: la
@@ -1989,8 +1989,8 @@ cli:
           envía su contenido a un tercero. Añade --acknowledge-off-host para confirmarlo,
           solo para esta lectura.
         extract_reference_required: Indique exactamente uno de --evidence-id o --attachment-id.
-        extract_review_hint_message: Este es un borrador aproximado; confirme cada
-          campo antes de crear una factura.
+        extract_review_hint_message: Esta extracción es un borrador aproximado y sus
+          campos no están confirmados.
         field_ambiguous: '{field}: varias lecturas compitieron y no se pudo decidir
           entre ({candidates}). Elija una en lugar de aceptar el borrador tal cual.'
         field_anchor_not_found: '{field}: el lector señala ''{anchor}'', que no aparece
@@ -2137,6 +2137,9 @@ cli:
           el pagador (0,15 para el 15% general, o 0,07 durante el periodo de inicio
           de actividad). Requiere --retention-amount; una fracción sola se rechaza.
         series_help: Serie de numeración de la factura, cuando el emisor utiliza una.
+        simplificada_tax_id_expected_message: Esta factura simplificada no contiene
+          el identificador fiscal de la contraparte, aunque el contexto legal registrado
+          lo exige.
         update_help: Actualiza los datos de una factura de negocio
         view_help: Muestra una factura del catálogo de conciliación por identificador
           o prefijo no ambiguo.
@@ -2452,6 +2455,27 @@ cli:
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: 'Token de periodo: 0A anual, 1T-4T trimestres, 01-12 meses; para
           modelos censales (036) usa alta, modificacion o baja.'
+        readiness:
+          activo_extranjero: activo extranjero
+          borrador_aeat: borrador de la AEAT
+          compensacion_iva_anual: compensación anual del IVA
+          dato_perfil: dato del perfil
+          datos_libro: datos del libro
+          decision_compensacion_iva: decisión de compensación de IVA
+          declaracion_previa: declaración previa presentada
+          donante_donativo: donante del donativo
+          entrada_manual: entrada manual
+          entrada_relacion: entrada de relación
+          evidencia_factura_compra: evidencia de factura de compra
+          factura_emitida: factura emitida
+          factura_recibida: factura recibida
+          miembro_atribucion: miembro de atribución de rentas
+          operacion_reembolso: operación de reembolso
+          operacion_vinculada: operación vinculada
+          registro_retenciones: registro de retenciones
+          regularizacion_bienes_inversion: regularización de bienes de inversión
+          regularizacion_prorrata: regularización de prorrata
+          retencion: retención
         relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\t\
           use --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunas vinculaciones siguientes se alimentan de
@@ -2768,6 +2792,10 @@ cli:
         section_optional: casillas_opcionales_manuales
         section_profile: derivadas_del_perfil
         section_required: casillas_obligatorias_manuales
+        unbucketed_binding_source: Algunas fuentes de enlace declaradas no pertenecen
+          a ninguna categoría del inventario de datos de modelo.requires. Se muestran
+          sin sugerir una reparación porque es necesario revisar la semántica de la
+          fuente.
       review_package:
         actor_help: Etiqueta del operador registrada en el descriptor del paquete
           y en el evento de exportación subyacente.
@@ -3226,6 +3254,8 @@ cli:
           ids exactos quedan como escape avanzado.
         resume_target_help: Id opcional de ejecución de flujo de 16 caracteres o id
           de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
+        review_help: Revisa el esquema, los valores, los hallazgos, el progreso y
+          los bloqueos de una unidad de trabajo de modelo.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_selector_ambiguous: 'Más de una revisión de cálculo coincide con
@@ -3528,8 +3558,7 @@ cli:
         delegate_help: Correo de cuenta de servicio delegada en una suplantación encadenada
           (repetible)
         detail:
-          impersonation_config_invalid: 'la configuración de suplantación no es válida:
-            {detail}'
+          impersonation_config_invalid: La configuración de suplantación no es válida.
           oauth_desktop_rejects_impersonation_options: --kind oauth_desktop no acepta
             --target-principal, --scope, --delegate, --subject ni --lifetime-seconds
           target_principal_required: --target-principal es obligatorio cuando --kind
@@ -3555,11 +3584,11 @@ cli:
       detail:
         client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
           "installed" que no es un objeto
-        client_json_invalid: 'el JSON de cliente en {path} no es JSON válido: {reason}'
+        client_json_invalid: El JSON de cliente de {path} no es un JSON válido.
         client_json_not_desktop: el JSON de cliente en {path} no es un cliente de
           escritorio de Cloud Console; se esperaba una clave envoltorio "installed"
-        client_json_schema_invalid: 'el JSON de cliente en {path} no superó la validación
-          de esquema: {reason}'
+        client_json_schema_invalid: El JSON de cliente de {path} no cumple el esquema
+          requerido.
         client_json_unreadable: 'no se pudo leer el JSON de cliente en {path}: {reason}'
         client_unregistered: no hay ningún cliente OAuth registrado para el perfil
           {profile}
@@ -3645,8 +3674,8 @@ cli:
               anuales, arrastre de trimestres anteriores, etc.)
             root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
               `aeat config google folder set <id>` primero
-            snapshot_failure: 'No se puede construir el snapshot del registry para
-              modelo {modelo} ({period} {year}): {detail}'
+            snapshot_failure: No se puede construir la instantánea del registro para
+              el modelo {modelo} ({period} {year}).
             unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
               son {available}
             year_help: Año de declaración (p. ej. 2025)
@@ -3864,7 +3893,7 @@ cli:
           LIRPF.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
           descendiente(s).
-        invalid_flag: 'El indicador --descendiente %{flag} no es válido: %{detail}'
+        invalid_flag: El valor de --descendiente no es válido.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
@@ -3935,9 +3964,8 @@ cli:
       import_help: Registra un paquete portátil de perfil desde un archivo
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
-      import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
-        válido: %{error}. Corrige el identificador y vuelve a exportar, o importa
-        un paquete válido.'
+      import_invalid_tax_id: El identificador fiscal del paquete de perfil no es válido.
+        Corrígelo y vuelve a exportar, o importa un paquete válido.
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo cuando la etiqueta guardada ya esté en uso.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
@@ -3959,6 +3987,11 @@ cli:
         cuando quieras con 'aeat config profile edit'.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
+      preflight:
+        per_operation_axis_not_assessed: No hay ningún campo de perfil obligatorio
+          del esquema declarado para el modelo {modelo}; la preparación solo cubre
+          la identidad y las comprobaciones condicionales, no una evaluación completa
+          del modelo.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
       preflight_help: Informa qué campos del perfil faltan para un contexto de presentación
         (modelo, revisión, ejercicio, periodo).
@@ -3971,9 +4004,8 @@ cli:
       preflight_revision_id_help: Anulación opcional del id de revisión del registro
         para reproducción exacta (p. ej. 2024-0A); por defecto usa la revisión activa
         para el modelo, ejercicio y periodo.
-      preflight_revision_override_invalid: 'La anulación de la revisión del registro
-        no es válida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}.
-        Ejecute `aeat app modelo describe %{modelo}` para listar las revisiones registradas.'
+      preflight_revision_override_invalid: La revisión del registro no es válida para
+        el modelo {modelo} y el ejercicio {filing_year}.
       preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
         %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
         describe %{modelo}` para ver los periodos y revisiones válidos.
@@ -4032,7 +4064,15 @@ cli:
           del sandbox.
         merge_name_help: Nombre del sandbox (sin el prefijo).
         merge_promoted_info: Se promovió %{scope} de %{source} a %{target}.
+        merge_refused: El entorno aislado {name} no se puede fusionar en {into} porque
+          no se cumplen las precondiciones de la fusión.
+        merge_requires_yes: Fusionar el entorno aislado {name} en {into} con el ámbito
+          {scope} modifica el estado y requiere confirmación explícita.
         merge_scope_help: 'Categoría de datos a promover: ledger, modelo o all.'
+        merge_target_ambiguous: El perfil {into} es ambiguo; identifica el destino
+          mediante su ID de contenedor.
+        merge_target_not_found: No existe ningún perfil activo llamado {into} que
+          pueda usarse como destino de la fusión.
         merge_yes_help: Confirma la promoción de los datos del sandbox.
         prune_dry_run_help: Muestra una vista previa de que sandboxes se descartarian
           sin descartarlos.
@@ -4515,29 +4555,25 @@ cli:
         íntegra; exclusively_non_deductible sin deducción; common al porcentaje general
         de prorrata); solo relevante para operaciones soportadas en un bucket con
         prorrata especial.'
-      input_classification_inert: '--input-classification es inerte para el ejercicio
-        {ejercicio}: no se aplica ninguna elección de prorrata especial, por lo que
-        el input se deduce al porcentaje general. Clasificar todos los inputs del
-        ejercicio también habilita la comprobación de prorrata especial obligatoria
-        (LIVA art. 103.Dos.2) en la liquidación para un régimen general. Ejecuta ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo según
-        LIVA art. 106.'
+      input_classification_inert: '--input-classification no tiene efecto para el
+        ejercicio {ejercicio}: no se aplica ninguna elección de prorrata especial,
+        por lo que el input se deduce al porcentaje general. La clasificación solo
+        es operativa mientras se aplica una elección de prorrata especial.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       notes_help: Notas del operador guardadas con la transacción
       prorrata_reference_help: Referencia de prorrata de IVA
-      prorrata_sector_help: Identificador del sector diferenciado (LIVA arts. 9.1.c
-        / 101) al que pertenece este input; debe coincidir con un sector declarado
-        con 'app ledger prorrata declare-sector'.
+      prorrata_sector_help: Identificador del sector diferenciado (arts. 9.1.c y 101
+        LIVA) al que pertenece este input; debe coincidir con un sector ya declarado.
       purchase_invoice_evidence_help: Id de justificante de factura de compra
       recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
         a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
         del Modelo 303 por tipo de IVA
       sector_unmatched: --sector '{sector_id}' no coincide con ningún sector diferenciado
-        declarado (LIVA arts. 9.1.c / 101), por lo que este input se deduce al porcentaje
-        de uso comun en lugar del propio del sector. Ejecuta 'app ledger prorrata
-        declare-sector --sector-id {sector_id} ...' para enrutarlo, o corrige la etiqueta.
+        declarado (arts. 9.1.c y 101 LIVA), por lo que este input se deduce al porcentaje
+        de uso común y no al porcentaje del sector. El sector debe existir antes de
+        poder asignarle el input.
       source_jurisdiction_help: Código de país ISO 3166-1 alfa-2 (dos letras) que
         identifica la jurisdicción fiscal de origen del ingreso o gasto (p. ej. ES
         para fuente española, FR para fuente francesa). Necesario para IRNR y para
@@ -4555,10 +4591,8 @@ cli:
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
-        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
-        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
-        set <category-id> <ratio>'. No es texto libre.
+      usage_ratio_help: Identificador de una proporción de uso ya configurada para
+        uso profesional proporcional; la categoría debe tener una proporción de uso.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -4570,10 +4604,8 @@ cli:
         libro
       id_help: Id del movimiento del libro a asignar
       prorrata_reference_help: Referencia de prorrata de IVA para flujos de IVA
-      usage_ratio_help: Id de proporción de uso ya configurado para uso profesional
-        proporcional. Usa un id de categoría mostrado por 'aeat app ledger ratios
-        list' o 'aeat app ledger ratios eligible'; créalo con 'aeat app ledger ratios
-        set <category-id> <ratio>'. No es texto libre.
+      usage_ratio_help: Identificador de una proporción de uso ya configurada para
+        uso profesional proporcional; la categoría debe tener una proporción de uso.
     app_help: Gestión de libros contables y registros de IVA
     archive:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -4585,17 +4617,13 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       attachment_help: Id de adjunto seguro a enlazar con el movimiento; repetir para
         varios adjuntos
-      finalized_revision_stale: Justificante guardado en el movimiento del libro,
+      finalized_revision_stale: El justificante se guardó en el movimiento del libro,
         pero el Modelo %{modelo} %{filing_year} %{period} se verificó antes de que
-        existiera y conserva la evidencia agrupada entonces. Esta declaración no lo
-        recogerá; recalcular no lo cambia. Vincula las facturas antes de ejecutar
-        work calculate.
-      help: Adjuntar objetos de evidencia segura a un movimiento del libro. Crea antes
-        un id de justificante de factura de compra con 'aeat app ledger evidence add
-        PATH'.
+        existiera y conserva su conjunto de justificantes anterior.
+      help: Adjunta evidencia existente a un movimiento del libro.
       id_help: Id del movimiento del libro al que adjuntar evidencia
-      purchase_invoice_evidence_help: Id de justificante de factura de compra que
-        soporta el movimiento; créalo con 'aeat app ledger evidence add PATH'
+      purchase_invoice_evidence_help: Identificador de evidencia de factura de compra
+        existente que respalda el movimiento.
     categories:
       family_column: familia
       header: CATEGORÍAS DE GASTO RECONOCIDAS DEL LIBRO
@@ -4668,12 +4696,11 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
-      irpf_category_help: 'Id de categoría de IRPF. Usa aeat app ledger categories.
-        Facturas profesionales cobradas netas usan actividad_economica; alquileres
-        pagados netos usan arrendamiento_local / arrendamiento_vivienda_afecto. Royalties/SGAE:
-        art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor;
-        usa actividad_economica solo para actividad por cuenta propia bajo LIRPF art.
-        27.'
+      irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
+        cobradas en neto usan actividad_economica; los alquileres pagados en neto
+        usan arrendamiento_local o arrendamiento_vivienda_afecto. Los derechos de
+        autor y los ingresos de SGAE pueden ser capital o actividad económica según
+        la actividad subyacente.
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4683,13 +4710,12 @@ cli:
       llm_confidence_label: confianza
       llm_exclusive: --llm no puede combinarse con --classification ni --file; la
         ruta manual es la anulación explícita del operador.
-      llm_failed: 'La clasificación por LLM falló: {reason}'
       llm_help: Pide al lector local on-host que clasifique la transacción; vista
         previa por defecto, persiste con --apply.
       llm_reason_label: motivo
       llm_rejected_label: rechazada
       llm_rejected_message: Sugerencia del modelo rechazada y registrada. La transacción
-        no cambia; clasifícala manualmente cuando quieras.
+        no cambia.
       llm_review_hint: Revisa la sugerencia anterior. Vuelve a ejecutar con --apply
         para aceptarla, con --classification para anularla manualmente, o no hagas
         nada para rechazarla.
@@ -4737,8 +4763,7 @@ cli:
         --llm con un proveedor.
       split_recommended_label: división recomendada
       split_recommended_message: La factura adjunta parece contener varias líneas
-        de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
-        hijos de base e IVA declarables de forma independiente.
+        de tipo o categoría.
       system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED.'
@@ -4748,9 +4773,6 @@ cli:
         configurado.
     counterparty:
       errors:
-        confirmation_conflict: Ya hay confirmada una respuesta distinta para '{identifier}',
-          de modo que confirmar esta descartaría la respuesta anterior. Retírala primero
-          con 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Para confirmar ''{identifier}'' hace falta al menos una
           respuesta: ''--scope'' para dónde está establecida la contraparte, ''--identification-state''
           para qué Estado miembro la identifica a efectos de IVA, o ambas. Son hechos
@@ -4777,11 +4799,6 @@ cli:
       id_help: Identificador de transacción del libro mayor.
       note_help: Nota opcional.
       reference_help: Referencia del enlace al documento.
-      refused: 'No se puede descargar el documento de %{source} para %{reference}%{scope_hint}:
-        la evidencia debe contener los bytes cifrados del documento, y un enlace nunca
-        se guarda por sí solo. Descarga el documento y adjúntalo con ''aeat app ledger
-        attach --attachment-id ...'', o concede el permiso de Google requerido e inténtalo
-        de nuevo.'
       source_help: 'Origen del enlace: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporción de uso profesional %{value} (= %{percent})
@@ -4793,8 +4810,7 @@ cli:
       filter_parse_error: 'Falló al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
       invalid_category: 'Categoría de gasto desconocida ''{category}''. Categorías
-        conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
-        válidos de --category-id.'
+        conocidas: {known}.'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
@@ -4803,9 +4819,9 @@ cli:
       period_year_pairing: Los filtros de periodo del libro requieren periodo y ejercicio
         juntos. Para un año completo use --period 0A --year %{year}, o --filter period=0A
         --filter year=%{year}.
-      unknown_category: --category-id {category!r} no reconocido. Pasa un id de categoría
-        sin prefijo como {example!r}, no una clave compuesta ni con prefijo de familia.
-        Ejecuta `aeat app ledger categories` para ver todos los identificadores reconocidos.
+      unknown_category: --category-id {category!r} no reconocido. Indica un identificador
+        de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
+        prefijo de familia.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
@@ -4830,7 +4846,6 @@ cli:
       include_split_siblings_help: Incluye transacciones hermanas del mismo grupo
         de división
     import:
-      all_files_refused: 'No se pudo importar ningún fichero de extracto: {detail}'
       all_rows_skipped: 'No se importó ninguna entrada nueva: las {skipped} fila(s)
         analizadas ya existen en el libro (ids de transacción duplicados).'
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
@@ -4839,12 +4854,11 @@ cli:
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
       file_help: Ruta al archivo del extracto bancario o directorio
-      file_refused: '{path} no se importó: {reason}'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
-        una transacción que ya está en el libro pero tienen una descripción distinta:
-        un probable duplicado del mismo movimiento importado desde otro archivo o
-        formato. Revísalas con `aeat app ledger list`.'
+        una transacción ya presente en el libro, pero tienen una descripción distinta,
+        lo que indica un probable duplicado del mismo movimiento procedente de otro
+        archivo o formato. Estas filas requieren revisión.'
       no_rows_imported: 'No se importó ninguna entrada: el archivo se analizó pero
         no contenía filas de datos. Un CSV bancario debe tener una fila de cabecera
         con una columna de fecha, importe y descripción seguida de al menos una fila
@@ -4926,17 +4940,13 @@ cli:
       errors:
         cross_bucket_invoice: La factura pertenece a un bucket distinto del perfil
           activo.
-        invoice_not_found: Este id no existe en el catálogo de facturas. Crea antes
-          la factura con 'aeat app ledger invoice add' y después vincúlala; el id
-          que muestra ese verbo es el que debes indicar aquí.
-      help: Vincula un movimiento contable con una factura del catálogo de reconciliación
-        en una única llamada canónica. Para adjuntar evidencia de factura de compra,
-        usa 'aeat app ledger attach'. Rechaza vínculos entre buckets. Local; nunca
-        contacta con AEAT.
+        invoice_not_found: No se encontró el id de factura en el catálogo de facturas
+          del perfil activo.
+      help: Vincula una transacción del libro registro con una factura del catálogo
+        de conciliación en una sola operación atómica. Rechaza vínculos entre buckets.
+        Solo local; nunca contacta con la AEAT.
       id_help: Id de transacción del libro (SHA-256 o prefijo inequívoco).
-      invoice_id_help: Id de factura procedente de una factura importada, reconciliada
-        o añadida manualmente, vinculado bidireccionalmente con el movimiento. Todo
-        id de 'aeat app ledger invoice add' se puede vincular aquí.
+      invoice_id_help: Id de factura que se vinculará bidireccionalmente con la transacción.
     list:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
@@ -4961,8 +4971,8 @@ cli:
       bad_date: '%{option} debe ser una fecha ISO (AAAA-MM-DD); se recibió %{value}.'
       help: Muestra las métricas existentes de uso, coste y confianza de clasificación
         del LLM.
-      no_data_message: Aún no hay métricas de uso o confianza de clasificación del
-        LLM. Ejecuta una clasificación asistida por LLM para generarlas.
+      no_data_message: Aún no hay métricas registradas de uso del LLM ni de confianza
+        de clasificación.
       since_help: Fecha ISO (AAAA-MM-DD) inferior inclusiva para los registros de
         uso.
       threshold_help: Umbral de confianza por debajo del cual una clasificación se
@@ -4979,10 +4989,8 @@ cli:
       reason_help: Motivo registrado en el historial de ciclo de vida
       yes_help: Confirma la fusión de las transacciones hijas
     preflight:
-      empty_ledger_advisory: No se comprobaron transacciones activas del libro para
-        este periodo. Si hubo actividad, añade o importa filas del libro antes de
-        calcular; si realmente no hubo actividad, el libro vacío puede respaldar una
-        presentación local sin actividad.
+      empty_ledger_advisory: No se comprobó ningún movimiento activo del libro para
+        este período.
       help: Informa de los datos contables que faltan (categoría, base imponible,
         importe/tipo de IVA, moneda, referencia de prorrata) para los movimientos
         del perfil activo en un período dado. Local; nunca contacta con AEAT.
@@ -4994,15 +5002,10 @@ cli:
         folder_id_unrecognised: La referencia de carpeta de Drive %{reference} no
           contiene un id de carpeta reconocible. Indica una URL de carpeta de Drive
           o su id.
-        folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}:
-          la carpeta debe ser accesible bajo el permiso drive.file (creada por la
-          app o elegida explícitamente por el operador), o concede el permiso de Google
-          requerido y vuelve a intentarlo.'
       folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
         PDF/imagen.
-      help: Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y
-        guarda cada una como evidencia cifrada (sin vincular a ningún movimiento;
-        vincula con 'aeat app ledger attach' o 'link').
+      help: Obtiene en lote todas las facturas PDF o imagen de una carpeta de Drive
+        y guarda cada una como evidencia cifrada, sin vincularla a ninguna transacción.
       labels:
         fetched: obtenidos
         folder_id: id_carpeta
@@ -5048,9 +5051,8 @@ cli:
       child_amount_help: Importe de una transacción hija como magnitud no negativa;
         se puede repetir
       child_description_help: Descripción de una transacción hija; se puede repetir
-      classification_dropped: La clasificación del padre %{classification} no se copió
-        a los hijos de la división; cada hijo queda como NOT_YET_PROCESSED y necesita
-        reclasificarse.
+      classification_dropped: La clasificación %{classification} del movimiento padre
+        no se heredó en los hijos de la división; cada hijo permanece como NOT_YET_PROCESSED.
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
@@ -5101,8 +5103,8 @@ cli:
     view:
       help: Muestra una transacción del libro
       llm_rejected_label: Sugerencia del modelo
-      llm_rejected_notice: La sugerencia más reciente del modelo para esta transacción
-        fue rechazada; clasifícala manualmente cuando quieras.
+      llm_rejected_notice: Se rechazó la sugerencia más reciente del modelo para esta
+        transacción.
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   log_levels:
     errors:
@@ -5362,10 +5364,10 @@ cli:
     pipeline:
       help: 'Muestra la salud del flujo de trabajo entre dominios para un periodo
         de declaración en una sola tabla: estado de clasificación y revisión del libro
-        contable, preparación de cada modelo (calculado / verificado / presentado
-        / bloqueado) para cada unidad de trabajo del periodo, y hallazgos de verificación
-        pendientes. Solo lectura; seguro de ejecutar repetidamente; nunca contacta
-        con la AEAT.'
+        contable, preparación de cada modelo (calculado / incompleto / verificado
+        / presentado / bloqueado) para cada unidad de trabajo del periodo, y hallazgos
+        de verificación pendientes. Solo lectura; seguro de ejecutar repetidamente;
+        nunca contacta con la AEAT.'
       labels:
         findings_section: 'Hallazgos:'
         ledger_section: 'Libro contable:'
@@ -5374,6 +5376,8 @@ cli:
       no_work_units: Todavía no hay unidades de trabajo de modelo para este periodo.
       period_help: 'Periodo de declaración como token de la AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (meses). Combínalo con --year para elegir el año.'
+      summary:
+        incompleto: 'Modelo %{modelo}: verificación incompleta.'
       year_help: Año de declaración (p. ej. 2026).
     post_filing:
       pending_summary: '%{count} evento(s) posteriores a la presentación de la AEAT
@@ -5739,11 +5743,13 @@ docs:
       computed: Se calcula automáticamente
       informational: Solo informativa
       manual: Lo introduce usted
+      projection_only: Se rellena desde su fila de origen
     input_kind_count:
       bound: rellenadas desde sus registros
       computed: calculadas
       informational: solo informativas
       manual: que introduce usted
+      projection_only: rellenadas desde su fila de origen
     legal_kind:
       instruction: Instrucciones AEAT
     length:
@@ -6709,8 +6715,6 @@ errors:
     integrity_storage_secure_object_unreadable: Un objeto seguro almacenado no se
       pudo descifrar con la clave maestra actual.
     integrity_storage_validation: Un parámetro de almacenamiento no superó la validación.
-    integrity_verification: La verificación falló de forma irrecuperable. Los datos
-      de referencia o el motor de cálculo pueden estar dañados.
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
@@ -7380,6 +7384,137 @@ flows:
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
+  modelo_review:
+    column:
+      action: Acción
+      blocked_by: Bloqueada por
+      casilla: Casilla
+      casilla_id: ID de casilla
+      code: Código
+      concrete: Origen concreto
+      declared: Origen declarado
+      expectation_id: ID de expectativa
+      facts: Hechos
+      grounding: Fundamentación
+      kind: Tipo
+      label: Etiqueta
+      message: Mensaje
+      official: Representación oficial
+      realised: Valor materializado
+      schema: Esquema
+      severity: Gravedad
+    filter:
+      absent: Ausente
+      all: Todos los valores
+      binding_presence: Presencia de vínculo
+      binding_resolved: Resolución del vínculo
+      binding_source: Origen concreto del vínculo
+      casilla_blocker: Acción bloqueante de casilla
+      casilla_blocker_presence: Presencia de bloqueo de casilla
+      filters: Filtros
+      finding_kind: Tipo de incidencia
+      finding_severity: Gravedad de la incidencia
+      formula_presence: Presencia de fórmula
+      input_kind: Tipo de entrada declarado
+      no_matching_blockers: Ningún bloqueo coincide con los filtros activos.
+      no_matching_casillas: Ninguna casilla coincide con los filtros activos.
+      no_matching_findings: Ninguna incidencia coincide con los filtros activos.
+      official_status: Estado de casilla oficial
+      option:
+        binding_source:
+          atribucion_member: Miembro de atribución de rentas
+          bienes_inversion_regularizacion: Regularización de bienes de inversión
+          borrador: Borrador de la AEAT
+          collectible_invoice: Factura emitida
+          donativo_donor: Donante
+          foreign_asset: Activo extranjero
+          iva_compensation_annual_partition: Compensación anual de IVA
+          iva_wallet_decision: Decisión de saldo de IVA
+          ledger_impatriado_income_aggregation: Totales de ingresos de impatriados
+          ledger_irnr_income_aggregation: Totales de ingresos de no residentes
+          ledger_iva_aggregation: Totales del libro de IVA
+          ledger_oss_aggregation: Totales del libro OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Totales de gastos en
+            estimación directa
+          ledger_renta_gastos_pago_fraccionado_aggregation: Totales de gastos del
+            pago fraccionado
+          ledger_renta_income_aggregation: Totales de ingresos
+          ledger_transaction: Movimiento del libro
+          manual_input: Entrada manual
+          payable_invoice: Factura recibida
+          previous_filing: Declaración anterior
+          profile: Perfil
+          prorrata_regularizacion: Regularización de prorrata
+          purchase_invoice_evidence: Evidencia de factura de compra
+          refund_operation: Operación de reembolso
+          related_party_operation: Operación vinculada
+          relation_prefill: Declaración relacionada
+          retenciones_aggregation: Totales de retenciones
+          withholding: Registro de retención
+        finding_kind:
+          advisory: Aviso
+          blocking_rule: Regla bloqueante
+          cross_period_dependency_unclean: Dependencia anterior no limpia
+          missing_required_casilla: Falta una casilla obligatoria
+          reconciliation_mismatch: Discrepancia de conciliación
+        finding_severity:
+          blocking: Bloqueante
+          warning: Advertencia
+        input_kind:
+          bound: Vinculada
+          computed: Calculada
+          informational: Informativa
+          manual: Manual
+          projection_only: Solo proyección
+        official_status:
+          addressed: Representada directamente
+          represented_via_binding: Representada mediante vínculo
+          undefined: Sin definir
+        operator_action:
+          capture_external_evidence: Capturar evidencia externa
+          complete_document_evidence: Completar evidencia documental
+          confirm_group_membership: Confirmar pertenencia al grupo
+          file_prior_period: Presentar periodo anterior
+          import_ledger_data: Importar datos del libro
+          re_verify: Verificar de nuevo
+          resolve_identity: Resolver identidad
+          resolve_revision_mismatch: Resolver discrepancia de revisión
+          resolve_value_divergence: Resolver diferencia de valor
+          review_advisory: Revisar aviso
+          set_profile_fact: Completar dato del perfil
+          supply_manual_input: Aportar dato manual
+        origin_anomaly:
+          broken_calculation_chain: Cadena de cálculo interrumpida
+          operator_override: Sustitución del operador
+        realised_kind:
+          COMPUTED: Calculado
+          DEFAULT: Predeterminado
+          EMPTY: Vacío
+          INHERITED: Heredado
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Vínculo alternativo
+          formula_binding: Vínculo de fórmula
+          formula_relation: Relación de fórmula
+          primary_binding: Vínculo principal
+      origin_anomaly: Anomalía de origen
+      origin_anomaly_presence: Presencia de anomalía de origen
+      present: Presente
+      realised_kind: Tipo de valor realizado
+      record_blocker: Acción bloqueante del registro
+      relation_channel: Canal de relación
+      relation_presence: Presencia de relación
+      reset: Restablecer filtros
+      resolved: Resuelto
+      unresolved: Sin resolver
+    summary:
+      calculation_revision: Revisión del cálculo
+      lifecycle_state: Estado del ciclo de vida
+      progress: Progreso
+      registry_revision: Revisión del registro
+      verification_outcome: Resultado de la verificación
+      work_unit: Unidad de trabajo
+    title: Modelo {modelo} · {filing_year} · {period}
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'
@@ -69021,6 +69156,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -69670,6 +69821,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -70319,6 +70486,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -70968,6 +71151,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada
@@ -71108,7 +71307,8 @@ modelo:
                 - Base
             '107':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Territorio
+                común'
             '108':
               help: null
               label: Rectificativa - Otros ajustes determinados supuestos por discrepancia
@@ -71126,7 +71326,9 @@ modelo:
               label: Rectificativa - Importe de la rectificacion
             '112':
               help: null
-              label: null
+              label: Resultado - Pago a cuenta entregas de gasolinas, gasóleos y biocarburantes
+                tras ultimación del régimen de depósito distinto del aduanero (Administración
+                del Estado)
             '12':
               help: null
               label: IVA devengado otras ops inversion sujeto pasivo excl intracom
@@ -71148,16 +71350,19 @@ modelo:
                 unica
             '125':
               help: null
-              label: null
+              label: Operaciones sujetas con inversión del sujeto pasivo
             '126':
               help: null
-              label: null
+              label: Operaciones no sujetas por reglas de localización acogidas a
+                los regímenes especiales de ventanilla única
             '127':
               help: null
-              label: null
+              label: OSS. Operaciones sujetas y acogidas a los regímenes especiales
+                de ventanilla única
             '128':
               help: null
-              label: null
+              label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+                arts. 78 y 79 LIVA
             '13':
               help: null
               label: IVA devengado otras ops inversion sujeto pasivo excl intracom
@@ -71321,85 +71526,85 @@ modelo:
               label: RS - 4T - Resultado ([48]-[49])
             '500':
               help: null
-              label: null
+              label: Prorratas - 1 - Código CNAE
             '501':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones
             '502':
               help: null
-              label: null
+              label: Prorratas - 1 - Importe de operaciones con derecho a deducción
             '503':
               help: null
-              label: null
+              label: Prorratas - 1 - Tipo de prorrata
             '504':
               help: null
-              label: null
+              label: Prorratas - 1 - % de prorrata
             '505':
               help: null
-              label: null
+              label: Prorratas - 2 - Código CNAE
             '506':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones
             '507':
               help: null
-              label: null
+              label: Prorratas - 2 - Importe de operaciones con derecho a deducción
             '508':
               help: null
-              label: null
+              label: Prorratas - 2 - Tipo de prorrata
             '509':
               help: null
-              label: null
+              label: Prorratas - 2 - % de prorrata
             '51':
               help: null
               label: RS - Cuotas devengadas adquisiciones intracomunitarias bienes
             '510':
               help: null
-              label: null
+              label: Prorratas - 3 - Código CNAE
             '511':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones
             '512':
               help: null
-              label: null
+              label: Prorratas - 3 - Importe de operaciones con derecho a deducción
             '513':
               help: null
-              label: null
+              label: Prorratas - 3 - Tipo de prorrata
             '514':
               help: null
-              label: null
+              label: Prorratas - 3 - % de prorrata
             '515':
               help: null
-              label: null
+              label: Prorratas - 4 - Código CNAE
             '516':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones
             '517':
               help: null
-              label: null
+              label: Prorratas - 4 - Importe de operaciones con derecho a deducción
             '518':
               help: null
-              label: null
+              label: Prorratas - 4 - Tipo de prorrata
             '519':
               help: null
-              label: null
+              label: Prorratas - 4 - % de prorrata
             '52':
               help: null
               label: RS - Cuotas devengadas entregas activos fijos
             '520':
               help: null
-              label: null
+              label: Prorratas - 5 - Código CNAE
             '521':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones
             '522':
               help: null
-              label: null
+              label: Prorratas - 5 - Importe de operaciones con derecho a deducción
             '523':
               help: null
-              label: null
+              label: Prorratas - 5 - Tipo de prorrata
             '524':
               help: null
-              label: null
+              label: Prorratas - 5 - % de prorrata
             '53':
               help: null
               label: RS - Cuotas devengadas IVA devengado inversion sujeto pasivo
@@ -71450,115 +71655,147 @@ modelo:
                 del ejercicio y periodo
             '700':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Base imponible
             '701':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Cuota deducible
             '702':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes inversión - Base imponible
             '703':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores -
+                Bienes inversión - Cuota deducible
             '704':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                corrientes - Base imponible
             '705':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                corrientes - Cuota deducible
             '706':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                inversión - Base imponible
             '707':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+                inversión - Cuota deducible
             '708':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Base imponible
             '709':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Cuota deducible
             '71':
               help: null
               label: Resultado final ([69]-[70]+[109])
             '710':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Base imponible
             '711':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Cuota deducible
             '712':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+                - Base impon.
             '713':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+                - Cuota deduc.
             '714':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones
+                - Base impon.
             '715':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones
+                - Cuota deduc.
             '716':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Regularización de bienes de inversión
             '717':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones
             '718':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Base imponible
             '719':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes y servicios corrientes - Cuota deducible
             '720':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes inversión - Base imponible
             '721':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores -
+                Bienes inversión - Cuota deducible
             '722':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                corrientes - Base imponible
             '723':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                corrientes - Cuota deducible
             '724':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                inversión - Base imponible
             '725':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+                inversión - Cuota deducible
             '726':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Base imponible
             '727':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes corrientes y servicios - Cuota deducible
             '728':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Base imponible
             '729':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+                - Bienes inversión - Cuota deducible
             '730':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+                - Base impon.
             '731':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+                - Cuota deduc.
             '732':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones
+                - Base impon.
             '733':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones
+                - Cuota deduc.
             '734':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Regularización de bienes de inversión
             '735':
               help: null
-              label: null
+              label: 13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones
             '74':
               help: null
               label: Informacion adicional - Adquisiciones criterio caja - Base imponible
@@ -71574,58 +71811,72 @@ modelo:
                 de ingreso
             '79':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Entregas de bienes inmuebles,
+                operaciones financieras y relativas al oro de inversión no habituales
             '80':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                general
             '81':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial del criterio de caja conforme art. 75 LIVA
             '83':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones exentas
+                sin derecho a deducción
             '84':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones no sujetas
+                por reglas de localización (excepto las incluidas en la casilla 126)
             '86':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                simplificado
             '88':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Total volumen de operaciones
             '89':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Álava'
             '90':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Guipuzcoa'
             '91':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Vizcaya'
             '92':
               help: null
-              label: null
+              label: 'Información de la tributación por razón de territorio: Navarra'
             '93':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Entregas intracomunitarias
+                de bienes y servicios
             '94':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Exportaciones y otras
+                operaciones exentas con derecho a deducción
             '95':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial de la agricultura, ganadería y pesca
             '96':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones realizadas
+                por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
             '97':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en Régimen
+                especial de bienes usados, objetos de arte, antigüedades y objetos
+                de colección
             '98':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+                especial de Agencias de Viajes
             '99':
               help: null
-              label: null
+              label: Operaciones realizadas en el ejercicio - Entregas de bienes de
+                inversión
             modulos-iva-1-unidades:
               help: null
               label: 'Módulo 1 (Personal empleado): número de unidades'
@@ -71637,6 +71888,22 @@ modelo:
               help: null
               label: 'Módulo 3 (unidad actividad-específica: consumo de energía eléctrica
                 u otra): número de unidades'
+            modulos-iva-4-unidades:
+              help: null
+              label: 'Módulo 4 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-5-unidades:
+              help: null
+              label: 'Módulo 5 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-6-unidades:
+              help: null
+              label: 'Módulo 6 (unidad actividad-específica adicional): número de
+                unidades'
+            modulos-iva-7-unidades:
+              help: null
+              label: 'Módulo 7 (unidad actividad-específica adicional): número de
+                unidades'
             modulos-iva-cuota-derivada:
               help: null
               label: Cuota derivada del régimen simplificado (mayor de cuota devengada

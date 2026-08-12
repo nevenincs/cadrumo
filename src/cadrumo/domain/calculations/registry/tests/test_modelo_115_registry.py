@@ -7,8 +7,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core.resources import bundled_path
-from .. import InputKind, RegistryValidator, build_snapshot, resolve_bound_inputs_by_casilla_id
+from .. import InputKind, RegistryValidator, build_snapshot
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_modelo
 
@@ -36,7 +38,6 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
         "calculation",
         "filing",
         "export",
-        "verification",
         "review",
         "approval",
         "reconciliation",
@@ -74,7 +75,7 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
         "modelo-115-base-retenciones": Decimal("2700.00"),
     }
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         "04": Decimal("0"),
     }
     result = calculate_registry_snapshot(
@@ -82,8 +83,8 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
         inputs=inputs,
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values=binding_values,
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert result.values["01"] == Decimal("1")

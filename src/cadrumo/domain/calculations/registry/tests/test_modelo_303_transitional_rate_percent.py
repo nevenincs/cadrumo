@@ -51,15 +51,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....period import Period, calculation_filing_date
-from .. import (
-    RegistryCalculationResult,
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from .. import RegistryCalculationResult, calculate_registry_snapshot, resolve_ledger_iva_aggregation_binding_values
 from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -86,7 +83,7 @@ def _calculate(*, filing_year: int, period: str) -> RegistryCalculationResult:
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     filing_period_date = calculation_filing_date(Period.from_year_and_code(filing_year, period))
     return calculate_registry_snapshot(
         snapshot,

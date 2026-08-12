@@ -185,8 +185,11 @@ class TestTheStrictClosedPayloadRefuses:
             },
         )
 
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="schema validation"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             parse_invoice_extraction_response(payload)
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.response_schema_valid"
 
     def test_an_unrecognised_top_level_key_still_refuses(self) -> None:
         """The pre-existing bound, re-asserted beside the new half.
@@ -196,8 +199,11 @@ class TestTheStrictClosedPayloadRefuses:
         """
         payload = json.dumps({"supplier_tax_id": "B12345674", "vendor_confidence": "high"})
 
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="schema validation"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             parse_invoice_extraction_response(payload)
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.response_schema_valid"
 
     def test_a_reply_carrying_no_role_evidence_parses_and_evidences_nothing(self) -> None:
         """Absence is the fail-safe direction, so it must parse rather than raise.

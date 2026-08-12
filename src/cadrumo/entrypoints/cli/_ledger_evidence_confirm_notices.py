@@ -93,43 +93,12 @@ def _outcome_message(outcome: IvaCategoryOutcome) -> str:
     reported as an orphan and swept out from under the notice.
     """
     if outcome is IvaCategoryOutcome.RATE_INFERRED:
-        return tr(
-            "cli.app.ledger.evidence.confirm_category_rate_inferred_message",
-            default=(
-                "This invoice's IVA treatment was settled by the tax rate its lines charged, because "
-                "the rule table could not place the operation -- usually because a party's IVA "
-                "territory is unestablished. The treatment recorded is the ordinary domestic one for "
-                "that rate. Check it if this supply was not a domestic one."
-            ),
-        )
+        return tr("cli.app.ledger.evidence.confirm_category_rate_inferred_message")
     if outcome is IvaCategoryOutcome.UNSUPPORTED_RELIEF:
-        return tr(
-            "cli.app.ledger.evidence.confirm_category_unsupported_relief_message",
-            default=(
-                "The document claims a relief from Spanish output IVA that rests entirely on where "
-                "the counterparty is established, and nothing established it. The treatment is "
-                "withheld rather than the document called wrong, so this invoice is on record with "
-                "no IVA treatment and will not decompose into a declaration until the counterparty's "
-                "country or establishment is settled."
-            ),
-        )
+        return tr("cli.app.ledger.evidence.confirm_category_unsupported_relief_message")
     if outcome is IvaCategoryOutcome.CONTRADICTED:
-        return tr(
-            "cli.app.ledger.evidence.confirm_category_contradicted_message",
-            default=(
-                "The regime this document states and the tax it charged cannot both be true, so no "
-                "IVA treatment could be taken from either side and none was recorded. Re-read the "
-                "document: one of the two was misread, or the document itself is wrong."
-            ),
-        )
-    return tr(
-        "cli.app.ledger.evidence.confirm_category_unresolved_message",
-        default=(
-            "Nothing established an IVA treatment for this invoice: the document declared none and "
-            "the operation's own facts did not reach one. The invoice is on record and will not "
-            "decompose into a declaration until a treatment is established."
-        ),
-    )
+        return tr("cli.app.ledger.evidence.confirm_category_contradicted_message")
+    return tr("cli.app.ledger.evidence.confirm_category_unresolved_message")
 
 
 def _review_message(reason: ConfirmationBlockReason) -> str:
@@ -138,21 +107,8 @@ def _review_message(reason: ConfirmationBlockReason) -> str:
     Branched for the reason :func:`_outcome_message` is branched.
     """
     if reason is ConfirmationBlockReason.CONTRADICTED_REGIME:
-        return tr(
-            "cli.app.ledger.evidence.confirm_review_contradicted_regime_message",
-            default=(
-                "This document contradicts itself about how it is taxed. The detail below names what "
-                "disagreed with what."
-            ),
-        )
-    return tr(
-        "cli.app.ledger.evidence.confirm_review_undetermined_establishment_message",
-        default=(
-            "Where a party to this invoice is established was left undecided by the document as "
-            "read. IVA territory decides the treatment, and it is not assumed to be the mainland. "
-            "The detail below names the party and what was missing."
-        ),
-    )
+        return tr("cli.app.ledger.evidence.confirm_review_contradicted_regime_message")
+    return tr("cli.app.ledger.evidence.confirm_review_undetermined_establishment_message")
 
 
 def confirm_resolution_notices(establishment: ConfirmedEstablishment | None) -> list[Notice]:

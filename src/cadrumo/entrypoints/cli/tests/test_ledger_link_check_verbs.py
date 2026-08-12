@@ -73,18 +73,15 @@ def test_link_help_advertises_local_only() -> None:
     )
 
 
-def test_link_help_names_catalogue_create_for_invoice_id() -> None:
-    """``--invoice-id`` help must name the command that mints linkable ids."""
+def test_link_help_describes_the_canonical_invoice_identity_without_a_command_hint() -> None:
+    """``--invoice-id`` help describes its input without redeclaring a command path."""
 
     result = invoke_cached_cli(["app", "ledger", "link", "--help"], env={"COLUMNS": "240"})
 
     assert result.exit_code == 0, result.output
-    # Whitespace-normalized: Click's plain help formatter wraps prose to the
-    # real terminal width, so a multi-word phrase can legitimately span a
-    # line break at a word boundary.
     flat = " ".join(result.output.split())
-    assert "aeat app ledger invoice add" in flat
-    assert "aeat app ledger invoice add" in flat
+    assert "aeat app ledger invoice add" not in flat
+    assert "--invoice-id" in flat
 
 
 def test_check_empty_catalogue_is_ready() -> None:

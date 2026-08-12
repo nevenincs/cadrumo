@@ -229,13 +229,11 @@ def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProje
             raise TypeError("CLI policy refusal contains an invalid typed projection")
         return value
 
-    terminal_verdict = getattr(error, "terminal_precondition_verdict", None)
+    from ...application.cli_exception_preconditions import nested_terminal_precondition_verdict
+
+    terminal_verdict = nested_terminal_precondition_verdict(error)
     if terminal_verdict is None:
         return None
-    from ...application.operator_actions import PreconditionVerdict
-
-    if not isinstance(terminal_verdict, PreconditionVerdict):
-        raise TypeError("workflow gate error contains an invalid terminal precondition verdict")
     return project_cli_policy_refusal(
         requested_leaf=current_requested_cli_leaf(),
         verdict=terminal_verdict,

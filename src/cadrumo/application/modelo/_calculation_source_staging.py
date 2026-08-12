@@ -84,6 +84,27 @@ class SourceResolutionRegistryValues:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class _ProrrataRegularizacionInputChannels:
+    """Caller-supplied source channels for the staged registry pass."""
+
+    casilla_inputs: Mapping[CasillaId, Decimal] | None
+    text_casilla_inputs: Mapping[CasillaId, str] | None
+    binding_values: Mapping[BindingId, Decimal] | None
+    enum_binding_values: Mapping[BindingId, str] | None
+    date_binding_values: Mapping[BindingId, date] | None
+    relation_values: Mapping[RelationId, Decimal] | None
+
+
+@dataclass(frozen=True, slots=True)
+class _ProrrataRegularizacionCalculationContext:
+    """Period-sensitive context forwarded to the staged registry pass."""
+
+    filing_period_date: date | None
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None
+    m303_annual_orden: M303AnnualOrdenSnapshot | None
+
+
 _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
     "iva.cuota-deducible-total",
     "iva.prorrata-volumen-con-derecho",
@@ -147,50 +168,24 @@ def resolve_prorrata_regularizacion_sources(
     if not any(binding.source is BindingSourceKind.PRORRATA_REGULARIZACION for binding in snapshot_revision.bindings):
         return source_resolution
 
-    caller_binding_values = dict(binding_values or {})
-    caller_relation_values = dict(relation_values or {})
-    effective_binding_values = {**dict(source_resolution.binding_values), **caller_binding_values}
-    revision_casillas = casillas_by_id(snapshot_revision)
-    if any(casilla_id not in revision_casillas for casilla_id in _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS):
-        materialised = SourceResolutionRegistryValues(
-            values=MappingProxyType({}),
-            initial_casilla_ids=initial_value_casilla_ids(snapshot_revision),
-            missing_casilla_ids=_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
-        )
-    else:
-        materialised = materialise_registry_values_for_source_resolution(
-            registry_snapshot=registry_snapshot,
-            work_unit=work_unit,
-            casilla_inputs=casilla_inputs or {},
-            backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
-            binding_values=effective_binding_values,
-            enum_binding_values={**dict(source_resolution.enum_binding_values), **dict(enum_binding_values or {})},
-            date_binding_values={**dict(source_resolution.date_binding_values), **dict(date_binding_values or {})},
+    materialised = _materialise_prorrata_regularizacion_source_values(
+        registry_snapshot=registry_snapshot,
+        work_unit=work_unit,
+        source_resolution=source_resolution,
+        input_channels=_ProrrataRegularizacionInputChannels(
+            casilla_inputs=casilla_inputs,
             text_casilla_inputs=text_casilla_inputs,
-            relation_values={**dict(source_resolution.relation_values), **caller_relation_values},
-            unresolved_relation_ids=tuple(
-                relation_id
-                for relation_id in source_resolution.unresolved_relation_ids
-                if relation_id not in caller_relation_values
-            ),
-            unresolved_binding_ids=tuple(
-                binding_id
-                for binding_id in source_resolution.unresolved_binding_ids
-                if binding_id not in caller_binding_values
-            ),
-            staging_binding_defaults={
-                binding_id: Decimal("0.00")
-                for binding_id in iva_wallet_owned_binding_ids_for_revision(
-                    modelo_id=str(registry_snapshot.modelo.id),
-                    revision_id=str(snapshot_revision.id),
-                    relations=snapshot_revision.relations,
-                )
-                if binding_id not in effective_binding_values
-            },
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            date_binding_values=date_binding_values,
+            relation_values=relation_values,
+        ),
+        calculation_context=_ProrrataRegularizacionCalculationContext(
             filing_period_date=filing_period_date,
             m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
             m303_annual_orden=m303_annual_orden,
-        ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
+        ),
+    )
     prorrata_resolution = ProrrataRegularizacionSourceResolver(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
@@ -203,6 +198,97 @@ def resolve_prorrata_regularizacion_sources(
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
     ).resolve(context)
     return merge_source_resolutions((source_resolution, prorrata_resolution, bienes_resolution))
+
+
+def _materialise_prorrata_regularizacion_source_values(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    source_resolution: CalculationSourceResolution,
+    input_channels: _ProrrataRegularizacionInputChannels,
+    calculation_context: _ProrrataRegularizacionCalculationContext,
+) -> SourceResolutionRegistryValues:
+    """Materialise the current-year registry inputs for both staged resolvers."""
+    snapshot_revision = registry_snapshot.revision
+    missing_values = _missing_prorrata_regularizacion_source_values(snapshot_revision)
+    if missing_values is not None:
+        return missing_values
+
+    caller_binding_values = dict(input_channels.binding_values or {})
+    caller_relation_values = dict(input_channels.relation_values or {})
+    effective_binding_values = {**dict(source_resolution.binding_values), **caller_binding_values}
+    return materialise_registry_values_for_source_resolution(
+        registry_snapshot=registry_snapshot,
+        work_unit=work_unit,
+        casilla_inputs=input_channels.casilla_inputs or {},
+        backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
+        binding_values=effective_binding_values,
+        enum_binding_values={
+            **dict(source_resolution.enum_binding_values),
+            **dict(input_channels.enum_binding_values or {}),
+        },
+        date_binding_values={
+            **dict(source_resolution.date_binding_values),
+            **dict(input_channels.date_binding_values or {}),
+        },
+        text_casilla_inputs=input_channels.text_casilla_inputs,
+        relation_values={**dict(source_resolution.relation_values), **caller_relation_values},
+        unresolved_relation_ids=_unresolved_ids_after_overrides(
+            source_resolution.unresolved_relation_ids,
+            caller_relation_values,
+        ),
+        unresolved_binding_ids=_unresolved_ids_after_overrides(
+            source_resolution.unresolved_binding_ids,
+            caller_binding_values,
+        ),
+        staging_binding_defaults=_iva_wallet_staging_defaults(
+            registry_snapshot=registry_snapshot,
+            effective_binding_values=effective_binding_values,
+        ),
+        filing_period_date=calculation_context.filing_period_date,
+        m303_regimen_simplificado_scope=calculation_context.m303_regimen_simplificado_scope,
+        m303_annual_orden=calculation_context.m303_annual_orden,
+    ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
+
+
+def _missing_prorrata_regularizacion_source_values(
+    revision: ModeloRevision,
+) -> SourceResolutionRegistryValues | None:
+    """Return the explicit missing-value carrier when the revision lacks source casillas."""
+    revision_casillas = casillas_by_id(revision)
+    if all(casilla_id in revision_casillas for casilla_id in _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS):
+        return None
+    return SourceResolutionRegistryValues(
+        values=MappingProxyType({}),
+        initial_casilla_ids=initial_value_casilla_ids(revision),
+        missing_casilla_ids=_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
+    )
+
+
+def _unresolved_ids_after_overrides(
+    unresolved_ids: tuple[str, ...],
+    override_values: Mapping[str, object],
+) -> tuple[str, ...]:
+    """Keep unresolved identifiers that no caller override resolves."""
+    return tuple(item_id for item_id in unresolved_ids if item_id not in override_values)
+
+
+def _iva_wallet_staging_defaults(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    effective_binding_values: Mapping[BindingId, Decimal],
+) -> Mapping[BindingId, Decimal]:
+    """Return zero defaults only for unresolved IVA-wallet-owned bindings."""
+    revision = registry_snapshot.revision
+    return {
+        binding_id: Decimal("0.00")
+        for binding_id in iva_wallet_owned_binding_ids_for_revision(
+            modelo_id=str(registry_snapshot.modelo.id),
+            revision_id=str(revision.id),
+            relations=revision.relations,
+        )
+        if binding_id not in effective_binding_values
+    }
 
 
 def materialise_registry_values_for_source_resolution(

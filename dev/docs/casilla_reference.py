@@ -1203,10 +1203,39 @@ def generate_casilla_reference(docs_root: Path, *, repo_root: Path | None = None
     result = render_casilla_reference(repo_root, records=records, language=language, schema=schema)
     out_dir = docs_root / CASILLA_REFERENCE_DIR
     out_dir.mkdir(parents=True, exist_ok=True)
-    _write_if_changed(out_dir / "index.rst", _render_index(result.pages, schema, language))
+    index_path = out_dir / "index.rst"
+    _write_if_changed(index_path, _render_index(result.pages, schema, language))
     for page in result.pages:
         _write_if_changed(docs_root / page.output_relpath, page.rst)
+    _remove_generated_rst(
+        out_dir,
+        keep=frozenset({index_path, *(docs_root / page.output_relpath for page in result.pages)}),
+    )
     return result
+
+
+def _remove_generated_rst(out_dir: Path, keep: frozenset[Path]) -> None:
+    """Remove direct generated RST files this render no longer produces.
+
+    The output directory is gitignored build residue, so a page left behind by
+    a render that no longer owns it survives every later build. Sphinx then
+    reads it, finds it in no toctree, and reds the nitpicky gate -- which the
+    deploy runs before it uploads, so stale residue fails a publish. Five pages
+    from a removed preview surface did exactly that.
+
+    Only pages absent from ``keep`` are unlinked, mirroring the legal
+    reference's sweep: a page this render still owns keeps its inode and mtime
+    so :func:`_write_if_changed` can leave unchanged bytes untouched, rather
+    than recreating the whole tree and making Sphinx re-read it every build.
+    """
+    for path in out_dir.iterdir():
+        if path.suffix != ".rst":
+            continue
+        if path.is_symlink() or not path.is_file() or path.parent != out_dir:
+            raise CasillaReferenceError(f"refusing to remove unsafe generated casilla path: {path}")
+        if path in keep:
+            continue
+        path.unlink()
 
 
 def _write_if_changed(path: Path, rst: str) -> None:

@@ -165,15 +165,10 @@ def _filer_scope(
     """Resolve the filer's own territory, or surface why it could not be.
 
     The resolver refuses rather than defaulting, and refusing is right: an
-    incomplete profile is a setup gap. It is caught HERE rather than propagated
-    because the gap belongs to the profile and not to the document -- letting it
-    abort the confirm would refuse a document that is perfectly readable, and
-    send the operator to re-read a page that was never the problem.
+    incomplete profile is a setup gap. Its typed refusal propagates unchanged so
+    the shared boundary retains the failed condition, evidence, and closed
+    outcome rather than recasting a profile precondition as document-review text.
     """
-    # Imported at call time: the refusal type lives in the draft module, which
-    # reaches the parsers and the reading package. The sanctioned cycle break.
-    from ._evidence_draft import PurchaseInvoiceEvidenceInputError
-
     if profile_record is None:
         return None, _review_item(
             field=FILER_POSTCODE_FACT_PATH,
@@ -183,10 +178,7 @@ def _filer_scope(
                 "off an invoice"
             ),
         )
-    try:
-        return resolve_filer_territorial_scope(profile_record=profile_record), None
-    except PurchaseInvoiceEvidenceInputError as refusal:
-        return None, _review_item(field=FILER_POSTCODE_FACT_PATH, detail=str(refusal))
+    return resolve_filer_territorial_scope(profile_record=profile_record), None
 
 
 def _counterparty_review_items(

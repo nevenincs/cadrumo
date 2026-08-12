@@ -372,7 +372,7 @@ def test_resolve_invoice_binding_row_values_groups_by_operator_and_clave_summing
 
 
 def test_resolve_invoice_binding_row_values_strips_m349_export_nif_prefix() -> None:
-    """M349 Tipo-2 exports split country code and the VAT number subfield."""
+    """M349 Tipo-2 exports split country code and the IVA number subfield."""
     revision = _revision(
         _with_selector(
             _binding("iva-349-operador-row-codigo-pais"),

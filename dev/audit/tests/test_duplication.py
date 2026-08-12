@@ -16,6 +16,7 @@ import ast
 import shutil
 import subprocess
 import tomllib
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -273,7 +274,7 @@ def test_dispositions_arithmetic_reconciles() -> None:
     dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
     dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
 
-    groups = dispositions["group"]
+    groups = dispositions.get("group", ())
     summary = dispositions["summary"]
 
     assert sum(summary.values()) == len(groups), (
@@ -289,16 +290,16 @@ def test_dispositions_arithmetic_reconciles() -> None:
 def test_a_second_clone_inside_an_already_recorded_file_is_uncovered() -> None:
     """A new intra-file clone must not inherit another group's disposition.
 
-    Drives the real coverage computation with a real recorded self-clone
-    file-set and one more observed group than the record accounts for. Under
-    the previous set-membership read this returned covered, so this is the
-    regression pinning the multiset semantics.
+    Drives the real coverage computation with one independently constructed
+    recorded self-clone file-set and one more observed group than that record
+    accounts for. Under the previous set-membership read this returned covered,
+    so this is the regression pinning the multiset semantics without requiring
+    the live disposition record to retain debt forever.
     """
-    recorded = _recorded_dispositions()
-    self_clone_sets = sorted((paths for paths in recorded if len(paths) == 1), key=sorted)
-    assert self_clone_sets, "the record is expected to carry at least one self-clone entry"
-    path = next(iter(self_clone_sets[0]))
-    recorded_here = recorded[self_clone_sets[0]]
+    path = "application/modelo/example.py"
+    self_clone_set = frozenset({path})
+    recorded = Counter({self_clone_set: 1})
+    recorded_here = recorded[self_clone_set]
 
     at_record = [_self_clone_group(path, 100 * i, 100 * i + 50) for i in range(1, recorded_here + 1)]
     assert _uncovered_groups(at_record, recorded) == [], "observing exactly what is recorded must be covered"

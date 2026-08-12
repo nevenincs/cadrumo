@@ -23,14 +23,6 @@ legal_refs = ["orden-hap-70-2013:art-10", "orden-hap-70-2013:art-11", "orden-hap
 source_refs = ["aeat-modelo-136-procedure", "aeat-modelo-136-procedure-record"]
 
 [[revisions."2026".application_links]]
-id = "modelo-136-2026-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["ley-35-2006:da-33", "orden-hac-763-2018:art-tercero", "orden-hap-70-2013:art-11"]
-source_refs = ["boe-lirpf-lottery-prize-special-levy", "boe-modelo-136-current-form", "boe-modelo-136-current-form-text"]
-
-[[revisions."2026".application_links]]
 id = "modelo-136-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

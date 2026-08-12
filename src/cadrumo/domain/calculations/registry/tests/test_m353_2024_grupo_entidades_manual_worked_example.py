@@ -68,6 +68,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -75,7 +77,6 @@ from .. import (
     IvaLedgerObservation,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 
@@ -136,14 +137,14 @@ def _calculate() -> object:
     )
     binding_values: dict[str, Decimal] = {binding_id: Decimal("0") for binding_id in _RECONCILIATION_BINDING_IDS}
     binding_values.update(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations))
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2024, 3, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

@@ -221,12 +221,8 @@ def test_ratios_set_silent_when_suministros_override_matches_30pct_of_raw() -> N
     assert not warnings, "no warning should fire when the override exactly matches the censo-derived value"
 
 
-def test_ratios_list_surfaces_censo_mismatch_without_hiding_rows() -> None:
-    """list now routes through load_usage_ratios_with_censo_guard. If
-    the persisted HOME_OFFICE override disagrees with the bound censo,
-    a typed censo_mismatch warning row is emitted alongside the regular
-    rows — operators see both the persisted value AND the divergence
-    against AEAT, never one without the other."""
+def test_ratios_list_refuses_a_censo_mismatch_with_typed_no_recovery() -> None:
+    """A legally binding censo mismatch cannot fall back to stale rows."""
 
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
     set_result = _invoke_ratios(["set", "suministros_home_office_luz", "0.5"])
@@ -234,10 +230,11 @@ def test_ratios_list_surfaces_censo_mismatch_without_hiding_rows() -> None:
 
     list_result = _invoke_ratios(["list"])
 
-    assert list_result.exit_code == 0, list_result.output
-    assert "suministros_home_office_luz\t0.5" in list_result.output
-    assert "censo_mismatch" in list_result.output
-    assert "suministros_home_office_luz" in list_result.output
+    assert list_result.exit_code != 0
+    assert 'action.failed_condition_id: "cli.ledger.censo_ratio.consistent"' in list_result.output
+    assert "action.action: null" in list_result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in list_result.output
+    assert "suministros_home_office_luz\t0.5" not in list_result.output
 
 
 def test_ratios_set_silent_for_non_home_office_category() -> None:

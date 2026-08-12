@@ -666,6 +666,26 @@ def _merge_revision_fragment_field(
     value: object,
     merged_revision: dict[str, object],
 ) -> None:
+    _reject_revision_fragment_field(path, key)
+    if key == _REVISION_CONSTRUCTS:
+        _merge_revision_fragment_constructs(path, value, merged_revision)
+        return
+    if key in _REVISION_APPEND_ARRAYS:
+        _merge_revision_fragment_append_array(path, key, value, merged_revision)
+        return
+    if key == _REVISION_EXPORT_LAYOUTS:
+        _merge_revision_fragment_export_layouts(path, value, merged_revision)
+        return
+    if key == _REVISION_COMPLETENESS_MANIFEST:
+        _merge_revision_fragment_completeness(path, value, merged_revision)
+        return
+    if key in merged_revision:
+        raise RegistryLoadError(f"{path}: revision fragment redeclares scalar field {key!r}")
+    merged_revision[key] = value
+
+
+def _reject_revision_fragment_field(path: Path, key: str) -> None:
+    """Reject revision-wide fields hidden inside a section fragment."""
     if key in REVISION_GOVERNANCE_FIELDS:
         raise RegistryLoadError(
             f"{path}: revision governance field {key!r} must be declared in the revision's revision.toml "
@@ -678,54 +698,59 @@ def _merge_revision_fragment_field(
             f"not in a per-section fragment; it is legally load-bearing for the whole revision and must be "
             f"readable in one place",
         )
-    if key == _REVISION_CONSTRUCTS:
-        incoming = _as_toml_array(value)
-        if incoming is None:
-            raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")
-        existing = _as_toml_array(merged_revision.get(key, ()))
-        if existing is None:
-            raise RegistryLoadError(f"{path}: revision fragment field 'constructs' conflicts with a non-array field")
-        merged_revision[key] = _merge_table_array_fragments(
-            path,
-            existing,
-            incoming,
-            item_label="construct",
-            append_array_fields=_CONSTRUCT_APPEND_ARRAYS,
+
+
+def _merge_revision_fragment_constructs(path: Path, value: object, merged_revision: dict[str, object]) -> None:
+    incoming = _as_toml_array(value)
+    if incoming is None:
+        raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")
+    existing = _as_toml_array(merged_revision.get(_REVISION_CONSTRUCTS, ()))
+    if existing is None:
+        raise RegistryLoadError(f"{path}: revision fragment field 'constructs' conflicts with a non-array field")
+    merged_revision[_REVISION_CONSTRUCTS] = _merge_table_array_fragments(
+        path,
+        existing,
+        incoming,
+        item_label="construct",
+        append_array_fields=_CONSTRUCT_APPEND_ARRAYS,
+    )
+
+
+def _merge_revision_fragment_append_array(
+    path: Path,
+    key: str,
+    value: object,
+    merged_revision: dict[str, object],
+) -> None:
+    incoming = _as_toml_array(value)
+    if incoming is None:
+        raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
+    existing = _as_toml_array(merged_revision.get(key, ()))
+    if existing is None:
+        raise RegistryLoadError(f"{path}: revision fragment field {key!r} conflicts with a non-array field")
+    merged_revision[key] = (*existing, *incoming)
+
+
+def _merge_revision_fragment_export_layouts(path: Path, value: object, merged_revision: dict[str, object]) -> None:
+    incoming = _as_toml_array(value)
+    if incoming is None:
+        raise RegistryLoadError(f"{path}: revision fragment field 'export_layouts' must be an array")
+    existing = _as_toml_array(merged_revision.get(_REVISION_EXPORT_LAYOUTS, ()))
+    if existing is None:
+        raise RegistryLoadError(
+            f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field",
         )
-        return
-    if key in _REVISION_APPEND_ARRAYS:
-        incoming = _as_toml_array(value)
-        if incoming is None:
-            raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
-        existing = _as_toml_array(merged_revision.get(key, ()))
-        if existing is None:
-            raise RegistryLoadError(f"{path}: revision fragment field {key!r} conflicts with a non-array field")
-        merged_revision[key] = (*existing, *incoming)
-        return
-    if key == _REVISION_EXPORT_LAYOUTS:
-        incoming = _as_toml_array(value)
-        if incoming is None:
-            raise RegistryLoadError(f"{path}: revision fragment field 'export_layouts' must be an array")
-        existing = _as_toml_array(merged_revision.get(key, ()))
-        if existing is None:
-            raise RegistryLoadError(
-                f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field",
-            )
-        merged_revision[key] = _merge_export_layout_fragments(path, existing, incoming)
-        return
-    if key == _REVISION_COMPLETENESS_MANIFEST:
-        existing = merged_revision.get(key)
-        merged_revision[key] = _merge_singleton_table_fragment(
-            path,
-            key,
-            existing,
-            value,
-            append_array_fields=_COMPLETENESS_MANIFEST_APPEND_ARRAYS,
-        )
-        return
-    if key in merged_revision:
-        raise RegistryLoadError(f"{path}: revision fragment redeclares scalar field {key!r}")
-    merged_revision[key] = value
+    merged_revision[_REVISION_EXPORT_LAYOUTS] = _merge_export_layout_fragments(path, existing, incoming)
+
+
+def _merge_revision_fragment_completeness(path: Path, value: object, merged_revision: dict[str, object]) -> None:
+    merged_revision[_REVISION_COMPLETENESS_MANIFEST] = _merge_singleton_table_fragment(
+        path,
+        _REVISION_COMPLETENESS_MANIFEST,
+        merged_revision.get(_REVISION_COMPLETENESS_MANIFEST),
+        value,
+        append_array_fields=_COMPLETENESS_MANIFEST_APPEND_ARRAYS,
+    )
 
 
 def _merge_singleton_table_fragment(

@@ -38,7 +38,12 @@ from ...domain.transactions import (
 )
 from ...llm import LLMSplitApplyResult
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
-from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
+from ._ledger_support import (
+    _emit_update_result,
+    _ledger_transaction_validation_no_recovery,
+    _ledger_validation_bad,
+    _resolve_id,
+)
 
 if TYPE_CHECKING:
     from ...application.ledger import ManualLedgerTransactionResult
@@ -51,29 +56,17 @@ def register_lifecycle_commands(app: typer.Typer) -> None:
     app.command("attach", help=tr("cli.ledger.attach.help"))(ledger_attach)
     app.command(
         "doclink",
-        help=tr(
-            "cli.ledger.doclink.help",
-            default="Fetch a Drive document link and store its bytes as encrypted evidence on a ledger row.",
-        ),
+        help=tr("cli.ledger.doclink.help"),
     )(ledger_doclink)
     app.command(
         "pull-folder",
-        help=tr(
-            "cli.ledger.pull_folder.help",
-            default=(
-                "Bulk-fetch every PDF/image invoice in a Drive folder and store each as encrypted "
-                "evidence (unlinked to any transaction; link with 'aeat app ledger attach' or 'link')."
-            ),
-        ),
+        help=tr("cli.ledger.pull_folder.help"),
     )(ledger_pull_folder)
     app.command("archive", help=tr("cli.ledger.archive.help"))(ledger_archive)
     app.command("stash", help=tr("cli.ledger.stash.help"))(ledger_stash)
     app.command(
         "exclude",
-        help=tr(
-            "cli.ledger.exclude.help",
-            default="Mark one reviewed ledger transaction as deliberately excluded from filing.",
-        ),
+        help=tr("cli.ledger.exclude.help"),
     )(ledger_exclude)
     app.command("restore", help=tr("cli.ledger.restore.help"))(ledger_restore)
     app.command("remove", help=tr("cli.ledger.remove.help"))(ledger_remove)
@@ -156,13 +149,6 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 modelo=blocker.modelo,
                 filing_year=str(blocker.filing_year),
                 period=blocker.period,
-                default=(
-                    f"Evidence stored on the ledger row, but Modelo {blocker.modelo} "
-                    f"{blocker.filing_year} {blocker.period} was verified before this evidence "
-                    "existed and keeps the evidence bundle captured then. This filing will not "
-                    "pick it up; recalculating does not change that. Link invoices before "
-                    "running work calculate."
-                ),
             ),
             context={
                 "work_unit_id": blocker.work_unit_id,
@@ -172,7 +158,6 @@ def _stale_finalized_revision_notices(result: ManualLedgerTransactionResult) -> 
                 "filing_year": str(blocker.filing_year),
                 "period": blocker.period,
                 "reason": "finalized_revision_predates_evidence",
-                "actionability": "finalized_revision_has_no_safe_recovery_action",
             },
         )
         for blocker in result.stale_finalized_revisions
@@ -203,23 +188,23 @@ def ledger_doclink(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
         ...,
-        help=tr("cli.ledger.doclink.id_help", default="Ledger transaction id."),
+        help=tr("cli.ledger.doclink.id_help"),
     ),
     source: DocumentLinkSource = typer.Option(
         ...,
         "--source",
-        help=tr("cli.ledger.doclink.source_help", default="Link source: gmail, google_drive, or url."),
+        help=tr("cli.ledger.doclink.source_help"),
     ),
     reference: str = typer.Option(
         ...,
         "--reference",
-        help=tr("cli.ledger.doclink.reference_help", default="The document link reference."),
+        help=tr("cli.ledger.doclink.reference_help"),
     ),
-    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help", default="Optional note.")),
+    note: str = typer.Option("", "--note", help=tr("cli.ledger.doclink.note_help")),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr("cli.ledger.doclink.actor_help", default="Operator label."),
+        help=tr("cli.ledger.doclink.actor_help"),
     ),
 ) -> None:
     """Fetch a document link and store its bytes as encrypted evidence on a ledger row.
@@ -234,7 +219,7 @@ def ledger_doclink(
     **refused** — a link is never stored as evidence.
     """
     from ...adapters.outbound.google import resolve_active_profile, resolve_document_link
-    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...application.ledger import attach_manual_transaction_evidence
     from ...domain.attachments import (
@@ -250,33 +235,12 @@ def ledger_doclink(
     resolved_id = _resolve_id(transaction_repository, transaction_id)
 
     profile = resolve_active_profile()
-    try:
-        credentials = build_google_credentials(profile=profile)
-        data = resolve_document_link(
-            source=attachment_source,
-            reference=reference,
-            credentials=credentials,
-        )
-    except OutboundStorageError as exc:
-        required_scope = ""
-        if exc.context is not None:
-            required_scope = str(exc.context.get("required_scope", ""))
-        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
-        raise _bad(
-            tr(
-                "cli.ledger.doclink.refused",
-                source=attachment_source.value,
-                reference=reference,
-                scope_hint=scope_hint,
-                default=(
-                    f"Cannot fetch the {attachment_source.value} document for {reference!r}"
-                    f"{scope_hint}: evidence must carry the document's encrypted bytes, and a "
-                    "link is never stored on its own. Download the document and attach it with "
-                    "'aeat app ledger attach --attachment-id ...', or grant the required Google "
-                    "scope and retry."
-                ),
-            ),
-        ) from exc
+    credentials = build_google_credentials(profile=profile)
+    data = resolve_document_link(
+        source=attachment_source,
+        reference=reference,
+        credentials=credentials,
+    )
 
     store = AttachmentStore()
     attachment = add_attachment(
@@ -329,14 +293,7 @@ def _parse_drive_folder_reference(reference: str) -> str:
     folder_id = parse_drive_file_id(reference)
     if folder_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.pull_folder.errors.folder_id_unrecognised",
-                reference=reference,
-                default=(
-                    f"Google Drive folder reference {reference!r} does not contain a recognisable "
-                    "folder id. Pass a Drive folder URL or its bare folder id."
-                ),
-            ),
+            tr("cli.ledger.pull_folder.errors.folder_id_unrecognised", reference=reference),
         )
     return folder_id
 
@@ -346,15 +303,12 @@ def ledger_pull_folder(
     folder: str = typer.Option(
         ...,
         "--folder",
-        help=tr(
-            "cli.ledger.pull_folder.folder_help",
-            default="Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images from.",
-        ),
+        help=tr("cli.ledger.pull_folder.folder_help"),
     ),
     note: str = typer.Option(
         "",
         "--note",
-        help=tr("cli.ledger.pull_folder.note_help", default="Optional note recorded on every fetched attachment."),
+        help=tr("cli.ledger.pull_folder.note_help"),
     ),
 ) -> None:
     """Bulk-fetch every PDF/image child of a Drive folder into encrypted evidence.
@@ -369,8 +323,7 @@ def ledger_pull_folder(
     fetch-and-encrypt primitive ``doclink`` composes, never re-implemented
     here. Fetched attachments are content-addressed and deduplicate by
     SHA-256, so re-running the sweep is idempotent. Attachments are stored
-    unlinked to any transaction; bind them afterwards with
-    ``aeat app ledger attach --attachment-id`` or ``aeat app ledger link``.
+    unlinked to any transaction; binding is a separate operator action.
 
     A file the app cannot reach under the ``drive.file`` scope is refused
     individually — evidence bytes are never stored as a link-only pointer,
@@ -383,7 +336,7 @@ def ledger_pull_folder(
         resolve_active_profile,
         resolve_document_link,
     )
-    from ...adapters.outbound.storage import OutboundStorageError, build_google_credentials
+    from ...adapters.outbound.storage import build_google_credentials
     from ...adapters.persistence.storage import AttachmentStore
     from ...domain.attachments import (
         AttachmentBytesContent,
@@ -400,25 +353,7 @@ def ledger_pull_folder(
 
     profile = resolve_active_profile()
     credentials = build_google_credentials(profile=profile)
-    try:
-        listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
-    except OutboundStorageError as exc:
-        required_scope = ""
-        if exc.context is not None:
-            required_scope = str(exc.context.get("required_scope", ""))
-        scope_hint = f" (requires the {required_scope} scope)" if required_scope else ""
-        raise _bad(
-            tr(
-                "cli.ledger.pull_folder.errors.folder_refused",
-                folder_id=folder_id,
-                scope_hint=scope_hint,
-                default=(
-                    f"Cannot list the Drive folder {folder_id!r}{scope_hint}: the folder must be "
-                    "reachable under the drive.file scope (created by the app or explicitly picked "
-                    "by the operator), or grant the required Google scope and retry."
-                ),
-            ),
-        ) from exc
+    listing = list_drive_folder_documents(folder_id=folder_id, credentials=credentials)
 
     store = AttachmentStore()
     rows: list[LedgerDocLinkPullFolderFilePayload] = []
@@ -426,30 +361,11 @@ def ledger_pull_folder(
     refused_count = 0
     for document in listing.documents:
         reference = f"https://drive.google.com/file/d/{document.file_id}/view"
-        try:
-            data = resolve_document_link(
-                source=AttachmentSource.GOOGLE_DRIVE,
-                reference=reference,
-                credentials=credentials,
-            )
-        except OutboundStorageError as exc:
-            required_scope = ""
-            if exc.context is not None:
-                required_scope = str(exc.context.get("required_scope", ""))
-            refused_count += 1
-            rows.append(
-                LedgerDocLinkPullFolderFilePayload(
-                    file_id=document.file_id,
-                    name=document.name,
-                    mime_type=document.mime_type,
-                    fetched=False,
-                    refusal_reason=(
-                        f"not reachable under the drive.file scope"
-                        f"{f' (requires {required_scope})' if required_scope else ''}: {exc}"
-                    ),
-                ),
-            )
-            continue
+        data = resolve_document_link(
+            source=AttachmentSource.GOOGLE_DRIVE,
+            reference=reference,
+            credentials=credentials,
+        )
         attachment = add_attachment(
             store,
             content=AttachmentBytesContent(data=data),
@@ -492,12 +408,11 @@ def ledger_pull_folder(
         },
     )
     lines = [
-        f"{tr('cli.ledger.pull_folder.labels.folder_id', default='folder_id')}\t{folder_id}",
-        f"{tr('cli.ledger.pull_folder.labels.total', default='total_documents')}\t{len(listing.documents)}",
-        f"{tr('cli.ledger.pull_folder.labels.fetched', default='fetched_count')}\t{fetched_count}",
-        f"{tr('cli.ledger.pull_folder.labels.refused', default='refused_count')}\t{refused_count}",
-        f"{tr('cli.ledger.pull_folder.labels.skipped', default='skipped_non_document_count')}"
-        f"\t{listing.skipped_non_document_count}",
+        f"{tr('cli.ledger.pull_folder.labels.folder_id')}\t{folder_id}",
+        f"{tr('cli.ledger.pull_folder.labels.total')}\t{len(listing.documents)}",
+        f"{tr('cli.ledger.pull_folder.labels.fetched')}\t{fetched_count}",
+        f"{tr('cli.ledger.pull_folder.labels.refused')}\t{refused_count}",
+        f"{tr('cli.ledger.pull_folder.labels.skipped')}\t{listing.skipped_non_document_count}",
     ]
     lines.extend(
         f"{row.name}\t{row.mime_type}\t{'fetched' if row.fetched else 'refused'}\t"
@@ -513,11 +428,6 @@ def ledger_pull_folder(
                 message=tr(
                     "cli.ledger.pull_folder.notices.files_refused",
                     refused_count=refused_count,
-                    default=(
-                        f"{refused_count} file(s) in this folder could not be fetched under the "
-                        "drive.file scope; download them manually before selecting the matching "
-                        "transaction and attachment."
-                    ),
                 ),
                 context={"folder_id": folder_id, "refused_count": str(refused_count)},
             ),
@@ -601,22 +511,22 @@ def ledger_exclude(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
         ...,
-        help=tr("cli.ledger.exclude.id_help", default="Ledger transaction id."),
+        help=tr("cli.ledger.exclude.id_help"),
     ),
     reason: str = typer.Option(
         "",
         "--reason",
-        help=tr("cli.ledger.exclude.reason_help", default="Optional note recording why the row is excluded."),
+        help=tr("cli.ledger.exclude.reason_help"),
     ),
     yes: bool = typer.Option(
         False,
         "--yes",
-        help=tr("cli.ledger.exclude.yes_help", default="Confirm the reviewed-excluded decision."),
+        help=tr("cli.ledger.exclude.yes_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr("cli.ledger.exclude.actor_help", default="Operator label."),
+        help=tr("cli.ledger.exclude.actor_help"),
     ),
 ) -> None:
     """Mark one active ledger transaction as reviewed and excluded from filing."""
@@ -763,34 +673,22 @@ def ledger_split(
     llm: bool = typer.Option(
         False,
         "--llm",
-        help=tr(
-            "cli.ledger.split.llm_help",
-            default="Propose an evidence-driven N-way split with the on-host reader.",
-        ),
+        help=tr("cli.ledger.split.llm_help"),
     ),
     apply: bool = typer.Option(
         False,
         "--apply",
-        help=tr(
-            "cli.ledger.split.apply_help",
-            default="Persist the proposed --llm split (requires --yes); without it the proposal is previewed only.",
-        ),
+        help=tr("cli.ledger.split.apply_help"),
     ),
     read_evidence: bool = typer.Option(
         False,
         "--read-evidence",
-        help=tr(
-            "cli.ledger.split.read_evidence_help",
-            default="Read the transaction's attached invoice on-host and feed it to the --llm split proposer.",
-        ),
+        help=tr("cli.ledger.split.read_evidence_help"),
     ),
     vision_model: str | None = typer.Option(
         None,
         "--vision-model",
-        help=tr(
-            "cli.ledger.split.vision_model_help",
-            default="Override the local Ollama vision model for a scanned/image invoice read (e.g. qwen2.5vl:7b).",
-        ),
+        help=tr("cli.ledger.split.vision_model_help"),
     ),
     reason: str = typer.Option("", "--reason", help=tr("cli.ledger.split.reason_help")),
     yes: bool = typer.Option(False, "--yes", help=tr("cli.ledger.split.yes_help")),
@@ -876,8 +774,8 @@ def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerS
     ``ledger merge`` requires the full child ids and refuses a partial cohort,
     so a persisted split must surface them (audit M11). The short ``display_id``
     is the shortest unique prefix within the child cohort — the same
-    display-width convention the ledger list surface uses — so the operator can
-    read or copy either form into ``aeat app ledger merge --child-id ...``.
+    display-width convention the ledger list surface uses, so the operator can
+    distinguish and copy either form.
     """
     from ._ledger_payloads import LedgerSplitChildIdPayload
 
@@ -911,7 +809,6 @@ def _split_classification_dropped_notices(
             ),
             context={
                 "parent_classification": parent_classification.value,
-                "actionability": "child_classification_requires_operator_decision",
             },
         ),
     ]
@@ -927,11 +824,7 @@ def _validate_split_llm_options(
     """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
     if child_amount or child_description:
         raise _bad(
-            tr(
-                "cli.ledger.split.llm_exclusive",
-                default="--llm cannot be combined with --child-amount/--child-description; "
-                "the manual path is the explicit operator override.",
-            ),
+            tr("cli.ledger.split.llm_exclusive"),
         )
     if apply and not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
@@ -1103,7 +996,7 @@ def _ledger_split_llm(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(applied, LLMSplitApplyResult)

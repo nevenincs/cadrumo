@@ -51,6 +51,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -59,7 +61,6 @@ from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -97,8 +98,8 @@ _M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disp
 #: WORKAROUND — the 303 2023+ revision carries a ``source = "profile"``
 #: binding ``modelo-303-autoconsumo-promotor-base`` (LIVA art. 9.1.c / 79.4
 #: autoconsumo del promotor). The direct-calculate path does not run the
-#: profile resolver, so the binding is unpopulated and the engine refuses
-#: ("missing binding fact"). Supplying it as zero (no autoconsumo del
+#: profile resolver, so the binding is unpopulated and the engine refuses the
+#: unresolved bound casilla. Supplying it as zero (no autoconsumo del
 #: promotor for this filer) lets the engine resolve the dependent casilla.
 #: This is a registry-gap workaround, NOT a fix of the registry file.
 _AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
@@ -206,7 +207,7 @@ def _calculate_303(
         **cuota_binding_overrides,
         **relation_binding_values,
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

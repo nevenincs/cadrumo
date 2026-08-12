@@ -108,7 +108,7 @@ def _amount(key: str) -> Decimal:
     return value
 
 
-#: The tax-id form the invoice boundary stores. The document states the VAT form
+#: The tax-id form the invoice boundary stores. The document states the IVA form
 #: with its country prefix; the catalogue stores the bare Spanish NIF. This is a
 #: normalisation, not a loss, and hop 5 asserts it AS a transformation so a
 #: future silent change of form is still caught.
@@ -353,7 +353,7 @@ class TestHop5ConfirmAndHop6Invoice:
         self,
         runtime_profile: TestRuntimeProfile,
     ) -> None:
-        """The document states the VAT form; the catalogue stores the bare NIF.
+        """The document states the IVA form; the catalogue stores the bare NIF.
 
         Asserted as a TRANSFORMATION with both forms named, rather than as a
         pass on whichever the code happens to produce. The identifier is what

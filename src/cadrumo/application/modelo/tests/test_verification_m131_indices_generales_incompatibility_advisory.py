@@ -144,6 +144,7 @@ def test_emits_single_advisory_warning_finding_when_pequena_dimension_ignored() 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
+    assert findings[0].casilla_id == _CASILLA_PEQUENA_DIMENSION_FLAG
     assert "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades" in findings[0].legal_refs
     assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
     assert dict(findings[0].message_facts) == {"predicate_id": _PEQUENA_DIMENSION_PREDICATE_ID}
@@ -158,6 +159,7 @@ def test_emits_single_advisory_warning_finding_when_temporada_inicio_conflict() 
     assert len(findings) == 1
     assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
     assert findings[0].severity is ModeloVerificationFindingSeverity.WARNING
+    assert findings[0].casilla_id == _CASILLA_TEMPORADA_INICIO_FLAG
     assert "orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades" in findings[0].legal_refs
     assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
     assert dict(findings[0].message_facts) == {"predicate_id": _TEMPORADA_INICIO_PREDICATE_ID}

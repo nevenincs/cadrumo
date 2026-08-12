@@ -49,8 +49,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG, provenance_stamp_transport
 from ...core.time import UtcInstant
+from ._evidence import PurchaseInvoiceEvidenceInputError
 from ._extracted_document_cache import read_cached_transcription
 from ._extraction_draft_store import load_extraction_drafts, write_extraction_draft
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
     from ...core.config import Settings
@@ -59,6 +61,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "CloudDerivedArtefact",
+    "ConsentRederivationError",
     "ConsentWithdrawalSurvey",
     "ConsentedDispatch",
     "LocalRederivation",
@@ -67,6 +70,10 @@ __all__ = [
     "rederive_artefact_on_host",
     "survey_cloud_consent",
 ]
+
+
+class ConsentRederivationError(PurchaseInvoiceEvidenceInputError):
+    """Typed refusal for an unsatisfied local re-derivation predicate."""
 
 
 class OnHostReader(Protocol):
@@ -351,7 +358,7 @@ def rederive_artefact_on_host(
         The re-derivation, carrying the superseded stamp beside the new one.
 
     Raises:
-        ValueError: When no artefact exists for ``evidence_reference``, when no
+        ConsentRederivationError: When no artefact exists for ``evidence_reference``, when no
             cached transcription exists, or when the reader returned a stamp
             that does not name an on-host transport. All three refuse rather
             than degrading: a re-derivation that quietly re-reads the document
@@ -368,8 +375,13 @@ def rederive_artefact_on_host(
         None,
     )
     if stored is None:
-        msg = f"no pending artefact for evidence reference {evidence_reference!r}; nothing to re-derive"
-        raise ValueError(msg)
+        raise ConsentRederivationError(
+            context={"evidence_reference": evidence_reference, "artefact_available": False},
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.CONSENT_REDERIVATION_ARTEFACT_AVAILABLE,
+                facts={"artefact_available": False},
+            ),
+        )
     transcription = read_cached_transcription(
         bucket_id=bucket_id,
         source_content_sha256=source_content_sha256,
@@ -377,19 +389,23 @@ def rederive_artefact_on_host(
         settings=settings,
     )
     if transcription is None:
-        msg = (
-            f"no cached transcription for {evidence_reference!r}; re-deriving would require re-reading "
-            "the document, which this path deliberately does not do"
+        raise ConsentRederivationError(
+            context={"evidence_reference": evidence_reference, "transcription_available": False},
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.CONSENT_REDERIVATION_TRANSCRIPTION_AVAILABLE,
+                facts={"transcription_available": False},
+            ),
         )
-        raise ValueError(msg)
     draft, stamp = read_on_host(transcription)
     transport = provenance_stamp_transport(stamp)
     if transport != LOCAL_TRANSPORT_LABEL:
-        msg = (
-            f"the re-derivation reader stamped {stamp!r}, which does not name an on-host transport; "
-            "refusing to record it as a local re-derivation"
+        raise ConsentRederivationError(
+            context={"transport": transport, "on_host": False},
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.CONSENT_REDERIVATION_ON_HOST,
+                facts={"on_host": False, "transport": transport or "unknown"},
+            ),
         )
-        raise ValueError(msg)
     write_extraction_draft(
         bucket_id=bucket_id,
         evidence_reference=evidence_reference,

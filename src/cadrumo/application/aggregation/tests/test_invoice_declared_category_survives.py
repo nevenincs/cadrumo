@@ -33,9 +33,17 @@ from decimal import Decimal
 
 import pytest
 
+from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.resources import resources
+from ....domain.calculations.registry import IvaLedgerObservation
 from ....domain.invoices import Invoice, IvaRate
-from ....domain.iva import InvoiceKind, IvaCategory, IvaFlowDirection
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaRateKind,
+)
 from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings import (
     _invoice_line_iva_observation,
@@ -91,6 +99,26 @@ def _observation_for(invoice: Invoice):
         line_index=0,
         devengo_date=_DAY,
         recargo_amount=Decimal("0"),
+        deduction_authority=_received_reverse_charge_deduction_authority(),
+    )
+
+
+def _received_reverse_charge_deduction_authority() -> IvaLedgerObservation:
+    """The exact frozen ledger authority required for received input IVA."""
+    return IvaLedgerObservation(
+        ledger_id="transaction:received-reverse-charge",
+        transaction_date=_DAY,
+        category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+        rate_kind=IvaRateKind.EXEMPT,
+        flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
+        base_amount=_BASE,
+        iva_amount=Decimal("0"),
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_provenance=IvaDeductionClassificationProvenance(
+            authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+            source_locator="invoice:received-reverse-charge",
+            evidence_digest="a" * 64,
+        ),
     )
 
 

@@ -8,12 +8,13 @@ from typing import Any, cast
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import BindingSourceKind, CasillaId, IntracomOperationType
 from .. import (
     InputKind,
     InvoiceObservation,
     invoice_binding_requirements,
-    resolve_bound_inputs_by_casilla_id,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
@@ -563,7 +564,7 @@ def test_committed_modelo_349_full_invoice_to_casilla_pipeline() -> None:
     observations = (*non_rect_obs, rect_obs)
 
     binding_values = resolve_invoice_binding_values(revision, observations)
-    casilla_values = resolve_bound_inputs_by_casilla_id(revision, binding_values)
+    casilla_values = resolve_available_bound_inputs_by_casilla_id(revision, binding_values)
 
     # Assert the four expected casilla keys are present — wiring check.
     expected_casilla_keys = set(_DECLARANT_SUMMARY_CASILLAS)

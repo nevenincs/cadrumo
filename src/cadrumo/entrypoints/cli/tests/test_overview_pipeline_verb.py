@@ -17,12 +17,22 @@ cross-domain pipeline-health dashboard's operator contract from #238:
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....application.overview import ModeloReadinessState
+from ....application.user_profile import profile_storage_session
+from ....core import resolve_active_bucket_id
+from ....domain.modelos import (
+    VerificationCompletenessStatus,
+    VerificationReport,
+    derive_verification_report_id,
+    upsert_verification_report,
+)
 from .._overview_payloads import OverviewPipelineModeloPayload
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
@@ -30,6 +40,33 @@ from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def _create_complete_pipeline_profile() -> None:
+    result = _invoke(
+        [
+            "config", "profile", "create", "operator",
+            "--quiet", "--accept-defaults",
+            "--entity-type", "natural_person",
+            "--tax-id", "12345678Z",
+            "--name", "Operator",
+            "--surnames", "Pipeline Parity",
+            "--activity", "design",
+            "--activity-start-date", "2025-10-01",
+            "--irpf-income-categories", "actividad_economica",
+            "--irpf-estimation-regime", "directa_normal",
+            "--fiscal-residency", "resident_irpf",
+            "--tax-residence-ccaa", "madrid",
+            "--tax-residence-jurisdiction-scope", "common_regime",
+            "--iva-regime", "GENERAL",
+            "--iva-m303-regime-composition", "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+        ],
+    )  # fmt: skip
+    assert result.exit_code == 0, result.output
 
 
 def test_pipeline_fresh_profile_reports_not_ready_with_empty_modelos(_isolated_cli_backend: Path) -> None:
@@ -190,6 +227,90 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready(_isolated_cli_back
     ]
     assert readiness_notices
     assert all(notice["action"] is None for notice in readiness_notices)
+
+
+def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
+    _isolated_cli_backend: Path,
+) -> None:
+    """The latest persisted completeness outcome, not findings or revision state,
+    decides readiness.
+
+    A real calculated revision first renders ``calculated`` because no report
+    exists. Persisting an ``INCOMPLETE`` report with zero findings then makes
+    the exact CLI render ``incomplete``. This pins both distinctions and proves
+    finding severity is not a shadow verification authority.
+    """
+
+    _create_complete_pipeline_profile()
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "130", "--year", "2025", "--period", "4T",
+            "--revision", "2019-y-siguientes",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    work_unit_id = _payload(created.output)["work_unit_id"]
+
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate", work_unit_id,
+            "--casilla", "05=0.00",
+            "--casilla", "06=0.00",
+            "--binding", "irpf.previous_year_economic_activity_net_income=13000",
+            "--binding", "modelo-130-resultados-negativos-anteriores=0",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+
+    before = _invoke(
+        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
+    )
+    assert before.exit_code == 0, before.output
+    before_row = next(row for row in _payload(before.output)["modelos"] if row["modelo"] == "130")
+    assert before_row["state"] == ModeloReadinessState.CALCULATED.value
+    assert before_row["summary"] != "Modelo 130: verification incomplete."
+
+    run_at = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
+    report_id = derive_verification_report_id(
+        calculation_revision_id=calculation_revision_id,
+        completeness_status=VerificationCompletenessStatus.INCOMPLETE,
+        findings=(),
+        verified_by="pipeline-parity-test",
+    )
+    report = VerificationReport(
+        verification_report_id=report_id,
+        calculation_revision_id=calculation_revision_id,
+        completeness_status=VerificationCompletenessStatus.INCOMPLETE,
+        findings=(),
+        missing_required_casilla_ids=(),
+        run_at=run_at,
+        verified_by="pipeline-parity-test",
+        granted_verificado_completo=False,
+    )
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    with profile_storage_session(bucket_id):
+        repository = VerificationReportCatalogueRepository(bucket_id=bucket_id)
+        repository.save(upsert_verification_report(repository.load(), report))
+
+    after = _invoke(
+        ["--format", "json", "app", "overview", "pipeline", "--year", "2025", "--period", "4T"],
+    )
+    assert after.exit_code == 0, after.output
+    payload = _payload(after.output)
+    after_row = next(row for row in payload["modelos"] if row["modelo"] == "130")
+    assert after_row["state"] == ModeloReadinessState.INCOMPLETO.value
+    assert after_row["blocking_finding_count"] == 0
+    assert after_row["summary"] == "Modelo 130: verification incomplete."
+    assert payload["ready"] is False
+    assert any(
+        notice["code"] == "overview.pipeline.modelo.incomplete"
+        for notice in _notices(after.output)
+    )
 
 
 def test_pipeline_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:

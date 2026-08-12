@@ -253,7 +253,6 @@ __all__ = [
     "renta_first_slice_binding_target_casillas",
     "resolve_atribucion_binding_row_values",
     "resolve_bound_casilla_binding_value",
-    "resolve_bound_inputs_by_casilla_id",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
     "resolve_donativo_binding_row_values",
@@ -552,41 +551,6 @@ def resolve_bound_casilla_binding_value(
             },
         )
     return first_value, tuple(binding_id for binding_id, _value in present)
-
-
-def resolve_bound_inputs_by_casilla_id(
-    revision: ModeloRevision,
-    facts: Mapping[BindingId, Decimal],
-) -> dict[CasillaId, Decimal]:
-    """Resolve factual binding values into input values keyed by canonical ``casilla.id``.
-
-    ``facts`` is keyed by registry binding id. The binding layer only selects
-    factual values; it does not own legal rates, thresholds, or casilla meaning.
-
-    Args:
-        revision: The
-            :class:`~domain.calculations.registry.ModeloRevision` whose
-            bindings to resolve against.
-        facts: Mapping of
-            :class:`~domain.calculations.registry.BindingId` to the factual
-            :class:`decimal.Decimal` value.
-    """
-    binding_ids = {binding.id for binding in revision.bindings}
-    unknown = sorted(set(facts).difference(binding_ids))
-    if unknown:
-        raise RegistryValidationError(f"unknown binding fact ids: {unknown!r}")
-    resolved: dict[CasillaId, Decimal] = {}
-    for casilla in revision.casillas:
-        if casilla.input_kind != InputKind.BOUND:
-            continue
-        binding_ids = bound_casilla_binding_ids(casilla)
-        value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, facts)
-        if value is None:
-            raise RegistryValidationError(
-                f"missing binding fact for casilla {casilla.id!r}: one of {binding_ids!r}",
-            )
-        resolved[casilla.id] = value
-    return resolved
 
 
 # Binding-family implementations are split by source family. This module keeps

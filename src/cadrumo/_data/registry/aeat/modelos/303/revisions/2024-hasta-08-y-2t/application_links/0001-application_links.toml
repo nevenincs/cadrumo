@@ -23,14 +23,6 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-modelo-303-procedure"]
 
 [[revisions.2024-hasta-08-y-2t.application_links]]
-id = "modelo-303-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
-source_refs = ["aeat-modelo-303-procedure"]
-
-[[revisions.2024-hasta-08-y-2t.application_links]]
 id = "modelo-303-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

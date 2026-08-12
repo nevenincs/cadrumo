@@ -14,8 +14,10 @@ before production snapshots are served.
 from __future__ import annotations
 
 import importlib
+from collections.abc import Iterable, Mapping
 from datetime import date
 from pathlib import Path
+from typing import Protocol
 
 from ._errors import RegistryValidationError
 from ._export import derive_export_layouts_from_bindings
@@ -43,6 +45,24 @@ _ValidationCacheValue = tuple[ModeloDefinition, RegistryCatalogues]
 
 _SNAPSHOT_CACHE: dict[_SnapshotCacheKey, _SnapshotCacheValue] = {}
 _VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
+
+
+class _IdentifiedRecord(Protocol):
+    """Record whose canonical identifier keys a snapshot projection."""
+
+    @property
+    def id(self) -> str: ...
+
+
+def _records_by_id[RecordT: _IdentifiedRecord](records: Iterable[RecordT]) -> dict[str, RecordT]:
+    """Index records by id while preserving their authored order."""
+    return {record.id: record for record in records}
+
+
+def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[str]) -> dict[str, RecordT]:
+    """Project the selected catalogue records in deterministic id order."""
+    return {record_id: catalogue[record_id] for record_id in sorted(record_ids)}
+
 
 # Peer-domain modules that register a ``CrossDomainSnapshotCheck`` with the
 # registry validator as an import side effect. Each module calls
@@ -196,22 +216,18 @@ def _build_validated_snapshot(
         filing_period=filing_period_from_scope(filing_year, period),
         filing_year=filing_year,
         period=period,
-        legal={ref: catalogues.legal[ref] for ref in sorted(legal_ids)},
-        sources={ref: catalogues.sources[ref] for ref in sorted(source_ids)},
-        extraction_profiles={profile.id: profile for profile in revision.extraction_profiles},
-        live_cross_references={
-            cross_reference.id: cross_reference for cross_reference in revision.live_cross_references
-        },
-        workbook_parity_refs={workbook.id: workbook for workbook in revision.workbook_parity_refs},
-        verification_expectations={expectation.id: expectation for expectation in revision.verification_expectations},
-        application_links={link.id: link for link in revision.application_links},
-        deadline_windows={window.id: window for window in revision.deadline_windows},
-        filing_schedules={schedule.id: schedule for schedule in revision.filing_schedules},
-        support_removal_decisions={decision.id: decision for decision in revision.support_removal_decisions},
-        constructs={construct.id: construct for construct in revision.constructs},
-        dependency_classifications={
-            classification.id: classification for classification in revision.dependency_classifications
-        },
+        legal=_catalogue_slice(catalogues.legal, legal_ids),
+        sources=_catalogue_slice(catalogues.sources, source_ids),
+        extraction_profiles=_records_by_id(revision.extraction_profiles),
+        live_cross_references=_records_by_id(revision.live_cross_references),
+        workbook_parity_refs=_records_by_id(revision.workbook_parity_refs),
+        verification_expectations=_records_by_id(revision.verification_expectations),
+        application_links=_records_by_id(revision.application_links),
+        deadline_windows=_records_by_id(revision.deadline_windows),
+        filing_schedules=_records_by_id(revision.filing_schedules),
+        support_removal_decisions=_records_by_id(revision.support_removal_decisions),
+        constructs=_records_by_id(revision.constructs),
+        dependency_classifications=_records_by_id(revision.dependency_classifications),
         convenio=catalogues.convenio,
         m303_annual_orden=catalogues.m303_annual_orden,
     )
@@ -337,37 +353,56 @@ def _check_revision_scoped_legal_windows(
         reference = catalogues.legal.get(legal_id)
         if reference is None:
             continue
-        if _legal_window_covers_devengo(revision, reference):
-            continue
-        if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
-            if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
-                failures.append(
-                    f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
-                    f"revision applicability starts_on {applicability_window.starts_on.isoformat()}",
-                )
-            elif applicability_window.closes_on is not None:
-                failures.append(
-                    f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
-                    f"revision applicability closes_on {applicability_window.closes_on.isoformat()}",
-                )
-            continue
-        if reference.effective_to is not None and reference.effective_to < revision.valid_from:
-            failures.append(
-                f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
-                f"revision applicability starts_on {revision.valid_from.isoformat()}",
-            )
-        elif revision.valid_to is not None:
-            effective_to_text = f", effective_to {reference.effective_to.isoformat()}" if reference.effective_to else ""
-            failures.append(
-                f"legal reference {legal_id!r} (kind {reference.kind!r}, effective_from "
-                f"{reference.effective_from.isoformat()}{effective_to_text}) does not cover revision "
-                f"{revision.id!r}'s devengo date {revision.valid_to.isoformat()}",
-            )
+        failure = _legal_window_failure(
+            legal_id,
+            reference,
+            revision=revision,
+            applicability_window=applicability_window,
+        )
+        if failure is not None:
+            failures.append(failure)
     if failures:
         raise RegistryValidationError(
             f"modelo {modelo.id} revision {revision.id} cites legal references outside their effective window:\n"
             + "\n".join(f" - {failure}" for failure in failures),
         )
+
+
+def _legal_window_failure(
+    legal_id: str,
+    reference: LegalReference,
+    *,
+    revision: ModeloRevision,
+    applicability_window: RevisionLegalApplicabilityWindow,
+) -> str | None:
+    """Return the existing refusal detail for one out-of-window legal ref."""
+    if _legal_window_covers_devengo(revision, reference):
+        return None
+    if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
+        if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
+            return (
+                f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
+                f"revision applicability starts_on {applicability_window.starts_on.isoformat()}"
+            )
+        if applicability_window.closes_on is not None:
+            return (
+                f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
+                f"revision applicability closes_on {applicability_window.closes_on.isoformat()}"
+            )
+        return None
+    if reference.effective_to is not None and reference.effective_to < revision.valid_from:
+        return (
+            f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
+            f"revision applicability starts_on {revision.valid_from.isoformat()}"
+        )
+    if revision.valid_to is None:
+        return None
+    effective_to_text = f", effective_to {reference.effective_to.isoformat()}" if reference.effective_to else ""
+    return (
+        f"legal reference {legal_id!r} (kind {reference.kind!r}, effective_from "
+        f"{reference.effective_from.isoformat()}{effective_to_text}) does not cover revision "
+        f"{revision.id!r}'s devengo date {revision.valid_to.isoformat()}"
+    )
 
 
 def _check_revision_scoped_source_windows(

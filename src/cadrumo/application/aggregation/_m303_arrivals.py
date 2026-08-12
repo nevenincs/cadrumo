@@ -148,6 +148,46 @@ def resolve_m303_supplier_regime_arrival(
     )
 
 
+def _m303_prorrata_transition_evidence(
+    *,
+    period: Period,
+    prorrata_register: ProrrataRegister,
+) -> tuple[ProrrataRegisterEntry, ...]:
+    entries = prorrata_register.entries_for_ejercicio(period.filing_year)
+    return tuple(entry for entry in entries if entry.especial_transition is not None)
+
+
+def _m303_prorrata_transition_kind(
+    evidence: tuple[ProrrataRegisterEntry, ...],
+) -> ProrrataEspecialTransitionKind | None:
+    transition_kinds: set[ProrrataEspecialTransitionKind] = {
+        entry.especial_transition.kind for entry in evidence if entry.especial_transition is not None
+    }
+    if len(transition_kinds) > 1:
+        raise AggregationValidationError(t("prorrata register carries contradictory option and revocation evidence"))
+    return next(iter(transition_kinds), None)
+
+
+def _validate_m303_prorrata_revocation_evidence(
+    *,
+    period: Period,
+    prorrata_register: ProrrataRegister,
+    evidence: tuple[ProrrataRegisterEntry, ...],
+) -> None:
+    invalid_revocation_sectors: list[str | None] = []
+    for entry in evidence:
+        prior_entry = prorrata_register.entry_for(period.filing_year - 1, sector_id=entry.sector_id)
+        if prior_entry is None or prior_entry.regime is not ProrrataRegisterRegime.ESPECIAL:
+            invalid_revocation_sectors.append(entry.sector_id)
+    if invalid_revocation_sectors:
+        raise AggregationValidationError(
+            t(
+                "prorrata especial revocation evidence has no prior-year especial register state for sector(s) "
+                f"{tuple(invalid_revocation_sectors)}"
+            )
+        )
+
+
 def resolve_m303_prorrata_transition_arrival(
     *,
     period: Period,
@@ -162,27 +202,14 @@ def resolve_m303_prorrata_transition_arrival(
     """
     if period.standard_code not in _M303_PRORRATA_TRANSITION_FINAL_PERIODS:
         return M303ProrrataTransitionArrival(period=period)
-    entries = prorrata_register.entries_for_ejercicio(period.filing_year)
-    evidence = tuple(entry for entry in entries if entry.especial_transition is not None)
-    transition_kinds: set[ProrrataEspecialTransitionKind] = {
-        entry.especial_transition.kind for entry in evidence if entry.especial_transition is not None
-    }
-    if len(transition_kinds) > 1:
-        raise AggregationValidationError(t("prorrata register carries contradictory option and revocation evidence"))
-    transition = next(iter(transition_kinds), None)
+    evidence = _m303_prorrata_transition_evidence(period=period, prorrata_register=prorrata_register)
+    transition = _m303_prorrata_transition_kind(evidence)
     if transition is ProrrataEspecialTransitionKind.REVOCACION:
-        invalid_revocation_sectors: list[str | None] = []
-        for entry in evidence:
-            prior_entry = prorrata_register.entry_for(period.filing_year - 1, sector_id=entry.sector_id)
-            if prior_entry is None or prior_entry.regime is not ProrrataRegisterRegime.ESPECIAL:
-                invalid_revocation_sectors.append(entry.sector_id)
-        if invalid_revocation_sectors:
-            raise AggregationValidationError(
-                t(
-                    "prorrata especial revocation evidence has no prior-year especial register state for sector(s) "
-                    f"{tuple(invalid_revocation_sectors)}"
-                )
-            )
+        _validate_m303_prorrata_revocation_evidence(
+            period=period,
+            prorrata_register=prorrata_register,
+            evidence=evidence,
+        )
     return M303ProrrataTransitionArrival(
         period=period,
         transition=transition,

@@ -1,6 +1,6 @@
-"""The operator can record a counterparty's VAT identification, and must.
+"""The operator can record a counterparty's IVA identification, and must.
 
-A bank transaction has no document to read a printed VAT prefix from, so the
+A bank transaction has no document to read a printed IVA prefix from, so the
 fact Ley 37/1992 art. 25 exempts on can only reach the record from the operator.
 Without that input a row classified as an intra-community supply is refused for
 a fact nothing on the surface could supply — a fail-closed dead end rather than
@@ -95,7 +95,7 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     setting it through its own flag, so this asserts the independence without
     coupling to how establishment happens to be spelled at the CLI. That the
     two may legitimately DIVERGE -- a Spanish-established acquirer trading
-    under a German VAT number is an intra-community acquirer under art. 25 --
+    under a German IVA number is an intra-community acquirer under art. 25 --
     is proven against the aggregation gate, where the money actually moves.
     """
     from ....domain.iva import EUMemberState
@@ -112,7 +112,7 @@ def test_recording_the_identification_leaves_the_establishment_axis_alone() -> N
     assert transaction is not None
     assert transaction.counterparty_identification_state is EUMemberState.DE
     assert transaction.counterparty_eu_member_state == establishment_before, (
-        "recording where a counterparty is VAT-identified must not silently restate where it is established"
+        "recording where a counterparty is IVA-identified must not silently restate where it is established"
     )
 
 

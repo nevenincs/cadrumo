@@ -528,6 +528,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.ledger._consent_withdrawal.ConsentRederivationError",
+        ErrorCode(
+            code="REFUSED_LEDGER_CONSENT_REDERIVATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_ledger_evidence_input",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.ledger._evidence.PurchaseInvoiceEvidenceNotFoundError",
         ErrorCode(
             code="REFUSED_LEDGER_EVIDENCE_NOT_FOUND",

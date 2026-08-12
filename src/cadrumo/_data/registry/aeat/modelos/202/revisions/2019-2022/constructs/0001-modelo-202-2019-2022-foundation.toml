@@ -38,7 +38,6 @@ application_links = [
     "modelo-202-2019-2022-portal",
     "modelo-202-2019-2022-calculation",
     "modelo-202-2019-2022-filing",
-    "modelo-202-2019-2022-verification",
     "modelo-202-2019-2022-review",
     "modelo-202-2019-2022-approval",
     "modelo-202-2019-2022-reconciliation",

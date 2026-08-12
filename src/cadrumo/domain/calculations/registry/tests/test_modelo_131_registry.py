@@ -22,7 +22,6 @@ _COMMON_SURFACES = {
     "portal",
     "reconciliation",
     "review",
-    "verification",
     "workflow",
 }
 _EXTRACTION_PROFILE_TARGET_LEGAL_REFS: frozenset[LegalRefId] = frozenset(

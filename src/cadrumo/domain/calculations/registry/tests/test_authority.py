@@ -76,8 +76,8 @@ def test_authority_snapshot_runs_real_modelo_calculation(_packaged_authority: Va
             "irpf.previous_year_economic_activity_net_income": Decimal("9500.00"),
         },
         date_context={"filing_period": date(2026, 4, 20)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     assert _M130_RESULTADO_CASILLA in result.values

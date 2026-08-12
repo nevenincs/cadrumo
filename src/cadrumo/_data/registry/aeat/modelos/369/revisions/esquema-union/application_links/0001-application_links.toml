@@ -23,14 +23,6 @@ legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-modelo-369-procedure"]
 
 [[revisions."esquema-union".application_links]]
-id = "modelo-369-union-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["orden-hac-610-2021:art-1"]
-source_refs = ["aeat-modelo-369-procedure"]
-
-[[revisions."esquema-union".application_links]]
 id = "modelo-369-union-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"

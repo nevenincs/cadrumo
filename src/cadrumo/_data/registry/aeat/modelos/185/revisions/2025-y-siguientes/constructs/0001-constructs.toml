@@ -3,7 +3,7 @@ id = "modelo-185-informative"
 legal_refs = ["orden-hac-1197-2025:art-1", "orden-hac-1197-2025:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-185-procedure", "enrolled-modelo-185-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-185-filing", "modelo-185-verification", "modelo-185-deadline"]
+application_links = ["modelo-185-filing", "modelo-185-deadline"]
 workbook_parity_refs = ["modelo-185-orden-static-layout"]
 deadline_windows = [
     "modelo-185-2025-01",

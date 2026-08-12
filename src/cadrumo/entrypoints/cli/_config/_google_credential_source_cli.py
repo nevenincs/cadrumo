@@ -179,9 +179,8 @@ def google_credential_source_set(
         except ValueError as exc:
             raise _google_refusal(
                 GoogleAuthError(
-                    str(exc),
                     translated_message="cli.config.google.credential_source.detail.impersonation_config_invalid",
-                    context={"detail": str(exc)},
+                    context={"error_type": type(exc).__name__},
                 ),
             ) from exc
     else:

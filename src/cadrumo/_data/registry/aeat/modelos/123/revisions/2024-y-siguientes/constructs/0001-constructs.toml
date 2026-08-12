@@ -25,7 +25,6 @@ application_links = [
     "modelo-123-calculation",
     "modelo-123-filing",
     "modelo-123-export",
-    "modelo-123-verification",
     "modelo-123-review",
     "modelo-123-approval",
     "modelo-123-reconciliation",

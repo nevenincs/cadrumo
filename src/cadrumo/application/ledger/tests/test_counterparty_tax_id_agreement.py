@@ -37,7 +37,10 @@ _OTHER_VALID = "87654321X"
 
 def test_agreement_confirms_the_value() -> None:
     """The ordinary path: the operator read what the extractor read."""
-    assert _agreed_counterparty_tax_id(supplied=_EXTRACTED, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == _EXTRACTED
+    assert (
+        _agreed_counterparty_tax_id(supplied=_EXTRACTED, extracted=_EXTRACTED, counterparty_country=_COUNTRY)
+        == _EXTRACTED
+    )
 
 
 def test_a_disagreement_refuses() -> None:
@@ -84,7 +87,9 @@ def test_case_and_padding_are_not_a_disagreement(supplied: str) -> None:
     different question and now has a different answer. The separator case is
     covered with the prefix cases at the end of this module.
     """
-    assert _agreed_counterparty_tax_id(supplied=supplied, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == supplied
+    assert (
+        _agreed_counterparty_tax_id(supplied=supplied, extracted=_EXTRACTED, counterparty_country=_COUNTRY) == supplied
+    )
 
 
 def test_extraction_finding_nothing_leaves_the_operator_authoritative() -> None:
@@ -127,7 +132,7 @@ def test_the_comparison_is_what_causes_the_refusal() -> None:
 # ── the country-prefix axis ────────────────────────────────────────────────
 #
 # The second axis of the same over-refusal. A document routinely states an
-# identifier in its VAT form while an operator supplies the bare national form,
+# identifier in its IVA form while an operator supplies the bare national form,
 # and those name one bearer -- but the discount is safe only against THIS
 # counterparty's own country, because the same national body can exist under
 # two different country prefixes.
@@ -138,15 +143,15 @@ def test_the_comparison_is_what_causes_the_refusal() -> None:
 # counts as the taxpayer on every document read.
 
 _NATIONAL = "B12345674"
-_VAT_FORM = "ESB12345674"
+_IVA_FORM = "ESB12345674"
 
 
 @pytest.mark.parametrize(
     ("supplied", "extracted"),
-    [(_NATIONAL, _VAT_FORM), (_VAT_FORM, _NATIONAL)],
+    [(_NATIONAL, _IVA_FORM), (_IVA_FORM, _NATIONAL)],
     ids=["operator-bare-document-prefixed", "operator-prefixed-document-bare"],
 )
-def test_the_vat_form_and_the_national_form_are_one_bearer(supplied: str, extracted: str) -> None:
+def test_the_iva_form_and_the_national_form_are_one_bearer(supplied: str, extracted: str) -> None:
     """The measured over-refusal, in both directions.
 
     Symmetric on purpose: an operator is as likely to type the prefixed form

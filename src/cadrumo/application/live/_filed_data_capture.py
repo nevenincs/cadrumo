@@ -69,7 +69,12 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
 from ...core.time import now
-from ...domain.calculations.registry import RegistryModeloObservation, ValidatedRegistryAuthority
+from ...domain.calculations.registry import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryModeloObservation,
+    ValidatedRegistryAuthority,
+)
 from ..storage.sync_runs import (
     SyncRunRecordRepositoryProtocol,
     bounded_scope_description,
@@ -138,23 +143,37 @@ def _unsupported_filed_capture_failure_row(
     )
 
 
-def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
-    registry_modelos = {str(definition.id): definition for definition in resources().modelos.all()}
-    definition = registry_modelos.get(modelo)
-    if definition is None:
-        return f"registry has no modelo definition for {modelo!r}"
-    revisions = tuple(
-        revision for revision in definition.revisions.values() if revision.period_selector.includes_year(year)
-    )
-    if not revisions:
-        return f"registry has no revision for modelo {modelo!r} filing year {year}"
-    filed_read_refs = tuple(
-        ref
+def _filed_capture_revisions_for_year(
+    definition: ModeloDefinition,
+    *,
+    year: int,
+) -> tuple[ModeloRevision, ...]:
+    """Return this modelo's revisions that cover the requested filing year."""
+    return tuple(revision for revision in definition.revisions.values() if revision.period_selector.includes_year(year))
+
+
+def _declares_filed_declarations_read_surface(revisions: Sequence[ModeloRevision]) -> bool:
+    """Whether a covering registry revision authorizes the declarations-register read."""
+    return any(
+        ref.surface == "authenticated_read_surface" and ref.id.endswith("filed-declarations-read")
         for revision in revisions
         for ref in revision.live_cross_references
-        if ref.surface == "authenticated_read_surface" and ref.id.endswith("filed-declarations-read")
     )
-    if filed_read_refs:
+
+
+def _registered_modelo_definition(modelo: str) -> ModeloDefinition | None:
+    """Look up a registry modelo with the registry's existing duplicate-key resolution."""
+    return {str(definition.id): definition for definition in resources().modelos.all()}.get(modelo)
+
+
+def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
+    definition = _registered_modelo_definition(modelo)
+    if definition is None:
+        return f"registry has no modelo definition for {modelo!r}"
+    revisions = _filed_capture_revisions_for_year(definition, year=year)
+    if not revisions:
+        return f"registry has no revision for modelo {modelo!r} filing year {year}"
+    if _declares_filed_declarations_read_surface(revisions):
         return None
     # States only what is knowable here. Whether AEAT serves a modelo at the
     # consulta view is not derivable from our own registry's silence, and the
@@ -723,6 +742,156 @@ async def _absorb_declarations(
         )
 
 
+def _empty_bulk_filed_capture_report(
+    *,
+    output_root: Path,
+    modelos: Sequence[str],
+    year_from: int,
+    year_to: int,
+    failures: Sequence[FiledDataCaptureFailureRow],
+) -> BulkFiledDataCaptureReport:
+    """Build the local-boundary result when no pair can reach the register."""
+    return BulkFiledDataCaptureReport(
+        output_root=str(output_root),
+        modelos=tuple(modelos),
+        year_from=year_from,
+        year_to=year_to,
+        captured_count=0,
+        reached_count=0,
+        failed_count=len(failures),
+        observation_paths=(),
+        artefact_refs=(),
+        justificante_metadata_count=0,
+        justificante_csvs=(),
+        filing_evidence_stamped_count=0,
+        filing_record_ids=(),
+        filing_evidence_conflict_count=0,
+        filing_evidence_conflict_record_ids=(),
+        casilla_count=0,
+        calculation_observation_count=0,
+        calculation_observation_keys=(),
+        failures=tuple(failures),
+    )
+
+
+async def _capture_filed_data_query_pairs(
+    query_pairs: Sequence[tuple[str, int]],
+    *,
+    register: DeclaracionesRegisterSession | None,
+    accumulator: _CaptureAccumulator,
+    store: FiledDeclaracionObservationStore,
+    bucket_id: str,
+    output_root: Path,
+    limit: int | None,
+    dry_run: bool,
+    failures: list[FiledDataCaptureFailureRow],
+) -> None:
+    """Walk, cap, and absorb every queryable pair in canonical sweep order."""
+    async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
+        opened_register,
+        walk_timeout_ms,
+    ):
+        for code, year in query_pairs:
+            declarations = await _walk_or_failure_row(
+                opened_register.walk(modelo=code, ejercicio=year),
+                modelo=code,
+                year=year,
+                timeout_ms=walk_timeout_ms,
+                failures=failures,
+            )
+            if declarations is None:
+                continue
+            within_limit = _declarations_within_limit(
+                declarations,
+                limit=limit,
+                reached_count=accumulator.reached_count,
+            )
+            if within_limit is None:
+                return
+            await _absorb_declarations(
+                within_limit,
+                opened_register=opened_register,
+                accumulator=accumulator,
+                store=store,
+                bucket_id=bucket_id,
+                output_root=output_root,
+                dry_run=dry_run,
+                modelo=code,
+                year=year,
+                failures=failures,
+            )
+            if limit is not None and accumulator.reached_count >= limit:
+                return
+
+
+def _dry_run_bulk_filed_capture_report(
+    *,
+    output_root: Path,
+    modelos: Sequence[str],
+    year_from: int,
+    year_to: int,
+    accumulator: _CaptureAccumulator,
+    failures: Sequence[FiledDataCaptureFailureRow],
+) -> BulkFiledDataCaptureReport:
+    """Project the read-only bulk result without reaching any persistence finalizer."""
+    return BulkFiledDataCaptureReport(
+        output_root=str(output_root),
+        modelos=tuple(modelos),
+        year_from=year_from,
+        year_to=year_to,
+        failed_count=len(failures),
+        **accumulator.capture_report_fields(),
+        calculation_observation_count=0,
+        calculation_observation_keys=(),
+        failures=tuple(failures),
+        recapture_notices=tuple(accumulator.recapture_notices),
+        dry_run=True,
+    )
+
+
+def _persisted_bulk_filed_capture_report(
+    *,
+    output_root: Path,
+    modelos: Sequence[str],
+    year_from: int,
+    year_to: int,
+    accumulator: _CaptureAccumulator,
+    failures: list[FiledDataCaptureFailureRow],
+    bucket_id: str,
+    sync_run_repository: SyncRunRecordRepositoryProtocol,
+) -> BulkFiledDataCaptureReport:
+    """Finalize persisted observations, then record the completed sweep provenance."""
+    finalization = finalize_filed_capture(
+        tuple(accumulator.observations_for_calculation),
+        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
+        policy=FiledCaptureFailurePolicy.BEST_EFFORT,
+    )
+    calculation_observation_keys = finalization.calculation_observation_keys
+    failures.extend(finalization.failures)
+    record_sync_run(
+        bucket_id=bucket_id,
+        surface=SyncSurface.FILED_DECLARATIONS,
+        resolved_scope=bounded_scope_description(tuple(modelos), suffix=f"{year_from}-{year_to}"),
+        succeeded=not failures,
+        coverage=coverage_of(accumulator),
+        completed_at=now(),
+        repository=sync_run_repository,
+    )
+    return BulkFiledDataCaptureReport(
+        output_root=str(output_root),
+        modelos=tuple(modelos),
+        year_from=year_from,
+        year_to=year_to,
+        failed_count=len(failures),
+        **accumulator.capture_report_fields(),
+        calculation_observation_count=len(calculation_observation_keys),
+        calculation_observation_keys=tuple(calculation_observation_keys),
+        failures=tuple(failures),
+        skipped_casillas=finalization.skipped_casillas,
+        recapture_notices=tuple(accumulator.recapture_notices),
+    )
+
+
 async def capture_filed_data_bulk(
     *,
     year_from: int,
@@ -771,26 +940,12 @@ async def capture_filed_data_bulk(
     query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
 
     if not query_pairs:
-        return BulkFiledDataCaptureReport(
-            output_root=str(output_root),
-            modelos=tuple(resolved_modelos),
+        return _empty_bulk_filed_capture_report(
+            output_root=output_root,
+            modelos=resolved_modelos,
             year_from=year_from,
             year_to=year_to,
-            captured_count=0,
-            reached_count=0,
-            failed_count=len(failures),
-            observation_paths=(),
-            artefact_refs=(),
-            justificante_metadata_count=0,
-            justificante_csvs=(),
-            filing_evidence_stamped_count=0,
-            filing_record_ids=(),
-            filing_evidence_conflict_count=0,
-            filing_evidence_conflict_record_ids=(),
-            casilla_count=0,
-            calculation_observation_count=0,
-            calculation_observation_keys=(),
-            failures=tuple(failures),
+            failures=failures,
         )
 
     if not dry_run and sync_run_repository is None:
@@ -800,123 +955,40 @@ async def capture_filed_data_bulk(
 
     bucket_id = require_active_bucket_id()
 
-    async with _resolved_declarations_register(register, operation="live-expedientes-read") as (
-        opened_register,
-        walk_timeout_ms,
-    ):
-        for code, year in query_pairs:
-            declarations = await _walk_or_failure_row(
-                opened_register.walk(modelo=code, ejercicio=year),
-                modelo=code,
-                year=year,
-                timeout_ms=walk_timeout_ms,
-                failures=failures,
-            )
-            if declarations is None:
-                continue
-            # The reached tally, not len(observation_paths): the paths list
-            # is appended only on the write path, so a preview left it empty
-            # and this residual never shrank -- every batch took a full
-            # `limit` slice instead of what remained. The accumulator's own
-            # docstring already says the paths cannot serve as the tally for
-            # exactly this reason; the outer break below reads it correctly
-            # and this site did not.
-            within_limit = _declarations_within_limit(
-                declarations,
-                limit=limit,
-                reached_count=accumulator.reached_count,
-            )
-            if within_limit is None:
-                break
-            await _absorb_declarations(
-                within_limit,
-                opened_register=opened_register,
-                accumulator=accumulator,
-                store=store,
-                bucket_id=bucket_id,
-                output_root=output_root,
-                dry_run=dry_run,
-                modelo=code,
-                year=year,
-                failures=failures,
-            )
-            if limit is not None and accumulator.reached_count >= limit:
-                break
+    await _capture_filed_data_query_pairs(
+        query_pairs,
+        register=register,
+        accumulator=accumulator,
+        store=store,
+        bucket_id=bucket_id,
+        output_root=output_root,
+        limit=limit,
+        dry_run=dry_run,
+        failures=failures,
+    )
 
-    # finalize_filed_capture WRITES the calculation observations, so a preview
-    # must not reach it. A dry run leaves observations_for_calculation empty
-    # too, so this is belt and braces rather than the only guard -- deliberately,
-    # because the cost of the guard is one branch and the cost of missing it is
-    # a preview that persists.
     if dry_run:
-        return BulkFiledDataCaptureReport(
-            output_root=str(output_root),
-            modelos=tuple(resolved_modelos),
+        return _dry_run_bulk_filed_capture_report(
+            output_root=output_root,
+            modelos=resolved_modelos,
             year_from=year_from,
             year_to=year_to,
-            failed_count=len(failures),
-            **accumulator.capture_report_fields(),
-            calculation_observation_count=0,
-            calculation_observation_keys=(),
-            failures=tuple(failures),
-            recapture_notices=tuple(accumulator.recapture_notices),
-            dry_run=True,
+            accumulator=accumulator,
+            failures=failures,
         )
-
     if sync_run_repository is None:
         raise LiveApplicationInputError(
             message="a persisted filed-data capture requires a sync-run persistence repository",
         )
-
-    finalization = finalize_filed_capture(
-        tuple(accumulator.observations_for_calculation),
-        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
-        policy=FiledCaptureFailurePolicy.BEST_EFFORT,
-    )
-    calculation_observation_keys = finalization.calculation_observation_keys
-    failures.extend(finalization.failures)
-    # Last-sync provenance for the real path only. The preview branch above
-    # returns before reaching this, deliberately: a dry run persists nothing, so
-    # it has no provenance to record, and a record is itself a persist.
-    #
-    # Written on partial failure as well as success -- a run that reached three
-    # of ten pairs and failed the rest still happened, and a record written only
-    # on success would leave that sweep looking like it never ran rather than
-    # like it covered three. `unit_count` is what the run REACHED for the same
-    # reason.
-    record_sync_run(
-        bucket_id=bucket_id,
-        surface=SyncSurface.FILED_DECLARATIONS,
-        resolved_scope=bounded_scope_description(tuple(resolved_modelos), suffix=f"{year_from}-{year_to}"),
-        succeeded=not failures,
-        # BOTH coverage counts from ONE object, which is the whole contract.
-        #
-        # Deliberately not the enrolled key count. Enrolment narrows the
-        # population twice: `select_latest_filed_observations_in_history_order`
-        # collapses to the latest observation per (modelo, ejercicio, period),
-        # and a BEST_EFFORT enrolment failure drops its observation into
-        # `failures` instead. A recapture advisory, meanwhile, is raised once per
-        # observation ABSORBED. Pairing those two populations let
-        # `divergence_count` exceed `unit_count` and refuse the record at the end
-        # of a real sweep -- after every unit had already been fetched and
-        # written, and worst precisely when the run went worst. The enrolled
-        # tally is not lost: it is `calculation_observation_count` below.
-        coverage=coverage_of(accumulator),
-        completed_at=now(),
-        repository=sync_run_repository,
-    )
-    return BulkFiledDataCaptureReport(
-        output_root=str(output_root),
-        modelos=tuple(resolved_modelos),
+    return _persisted_bulk_filed_capture_report(
+        output_root=output_root,
+        modelos=resolved_modelos,
         year_from=year_from,
         year_to=year_to,
-        failed_count=len(failures),
-        **accumulator.capture_report_fields(),
-        calculation_observation_count=len(calculation_observation_keys),
-        calculation_observation_keys=tuple(calculation_observation_keys),
-        failures=tuple(failures),
-        skipped_casillas=finalization.skipped_casillas,
-        recapture_notices=tuple(accumulator.recapture_notices),
+        accumulator=accumulator,
+        failures=failures,
+        bucket_id=bucket_id,
+        sync_run_repository=sync_run_repository,
     )
 
 
@@ -1803,6 +1875,124 @@ class FiledHistoryDiscoveryPort(Protocol):
     ) -> FiledHistoryDiscoveryReport: ...
 
 
+def _filed_history_pair_outcomes(
+    discovery: FiledHistoryDiscoveryReport,
+    capture: BulkFiledDataCaptureReport,
+) -> tuple[FiledHistoryPairOutcome, ...]:
+    """Join the bulk capture's failure and observation facts onto every discovered pair."""
+    failures_by_pair: dict[tuple[str, int], FiledDataCaptureFailureRow] = {}
+    for failure in capture.failures:
+        failures_by_pair.setdefault((failure.modelo, failure.year), failure)
+    captured_by_pair: dict[tuple[str, int], int] = {}
+    for key in capture.calculation_observation_keys:
+        modelo, year_text, _period = key.split(":", 2)
+        coordinate = (modelo, int(year_text))
+        captured_by_pair[coordinate] = captured_by_pair.get(coordinate, 0) + 1
+    return tuple(_filed_history_pair_outcome(pair, failures_by_pair, captured_by_pair) for pair in discovery.pairs)
+
+
+def _filed_history_pair_outcome(
+    pair: FiledHistoryDiscoveryPair,
+    failures_by_pair: Mapping[tuple[str, int], FiledDataCaptureFailureRow],
+    captured_by_pair: Mapping[tuple[str, int], int],
+) -> FiledHistoryPairOutcome:
+    """Project one discovery pair without conflating a typed refusal with a zero row count."""
+    coordinate = (pair.modelo, pair.ejercicio)
+    failure = failures_by_pair.get(coordinate)
+    captured_count = captured_by_pair.get(coordinate, 0)
+    return FiledHistoryPairOutcome(
+        modelo=pair.modelo,
+        ejercicio=pair.ejercicio,
+        signals=pair.signals,
+        row_count=captured_count,
+        captured_count=captured_count,
+        refused=failure is not None,
+        failure_type=failure.error_type if failure is not None else None,
+        failure_message=failure.message if failure is not None else None,
+    )
+
+
+async def _capture_discovered_filed_history(
+    walk_pairs: Sequence[tuple[str, int]],
+    *,
+    output_root: Path,
+    limit: int | None,
+    sync_run_repository: SyncRunRecordRepositoryProtocol | None,
+) -> BulkFiledDataCaptureReport:
+    """Capture the discovered grid with its original modelo order and year span."""
+    modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
+    years = tuple(year for _modelo, year in walk_pairs)
+    return await capture_filed_data_bulk(
+        year_from=min(years),
+        year_to=max(years),
+        output_root=output_root,
+        modelos=modelos,
+        limit=limit,
+        sync_run_repository=sync_run_repository,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _FiledHistoryIvaWalletStage:
+    status: str
+    divergence: str | None
+    blocked: bool
+    failure: str | None = None
+
+
+async def _capture_filed_history_iva_wallet(
+    *,
+    resolved_today: date,
+    output_root: Path,
+) -> _FiledHistoryIvaWalletStage:
+    """Capture the independent IVA wallet stage, retaining its typed partial-failure boundary."""
+    try:
+        from ._iva_remote_state import capture_iva_compensation_wallet
+
+        wallet = await capture_iva_compensation_wallet(
+            target_year=resolved_today.year,
+            target_period=Period.from_year_and_code(resolved_today.year, "1T"),
+            output_root=output_root,
+        )
+    except Exception as exc:
+        return _FiledHistoryIvaWalletStage(
+            status="failed",
+            divergence=None,
+            blocked=False,
+            failure=f"iva_wallet: {bounded_context_text(exc)}",
+        )
+    return _FiledHistoryIvaWalletStage(
+        status="reconciled",
+        divergence=wallet.divergence,
+        blocked=wallet.blocked,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class _FiledHistoryNotificationsStage:
+    status: str
+    row_count: int
+    failure: str | None = None
+
+
+async def _capture_filed_history_notifications() -> _FiledHistoryNotificationsStage:
+    """Capture notifications without allowing an independent failure to erase filed history."""
+    try:
+        from . import capture_notifications
+
+        snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
+    except Exception as exc:
+        return _FiledHistoryNotificationsStage(
+            status="failed",
+            row_count=0,
+            failure=f"notificaciones: {bounded_context_text(exc)}",
+        )
+    return _FiledHistoryNotificationsStage(
+        status="captured",
+        row_count=getattr(snapshot, "row_count", 0) or 0,
+    )
+
+
 async def pull_filed_history(
     *,
     output_root: Path,
@@ -1847,103 +2037,42 @@ async def pull_filed_history(
 
     resolved_today = today or today_madrid()
     discovery = await discover(profile=profile, today=resolved_today)
-    scoping = RegisterScopingSignal.INCONCLUSIVE
-    stage_failures: list[str] = []
-
     walk_pairs = discovery.walk_pairs
     if not walk_pairs:
         return FiledHistoryOnboardingRun(
             pairs=(),
             carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
-            scoping_signal=scoping,
+            scoping_signal=RegisterScopingSignal.INCONCLUSIVE,
             stage_failures=("discovery: no modelo/ejercicio pair to walk",),
         )
 
-    modelos = tuple(dict.fromkeys(modelo for modelo, _year in walk_pairs))
-    years = tuple(year for _modelo, year in walk_pairs)
-    capture = await capture_filed_data_bulk(
-        year_from=min(years),
-        year_to=max(years),
+    capture = await _capture_discovered_filed_history(
+        walk_pairs,
         output_root=output_root,
-        modelos=modelos,
         limit=limit,
         sync_run_repository=sync_run_repository,
     )
-
-    failures_by_pair: dict[tuple[str, int], FiledDataCaptureFailureRow] = {}
-    for failure in capture.failures:
-        failures_by_pair.setdefault((failure.modelo, failure.year), failure)
-    captured_by_pair: dict[tuple[str, int], int] = {}
-    for key in capture.calculation_observation_keys:
-        modelo, year_text, _period = key.split(":", 2)
-        captured_by_pair[(modelo, int(year_text))] = captured_by_pair.get((modelo, int(year_text)), 0) + 1
-
-    pairs = tuple(
-        FiledHistoryPairOutcome(
-            modelo=pair.modelo,
-            ejercicio=pair.ejercicio,
-            signals=pair.signals,
-            row_count=captured_by_pair.get((pair.modelo, pair.ejercicio), 0),
-            captured_count=captured_by_pair.get((pair.modelo, pair.ejercicio), 0),
-            refused=(pair.modelo, pair.ejercicio) in failures_by_pair,
-            failure_type=(
-                failures_by_pair[(pair.modelo, pair.ejercicio)].error_type
-                if (pair.modelo, pair.ejercicio) in failures_by_pair
-                else None
-            ),
-            failure_message=(
-                failures_by_pair[(pair.modelo, pair.ejercicio)].message
-                if (pair.modelo, pair.ejercicio) in failures_by_pair
-                else None
-            ),
-        )
-        for pair in discovery.pairs
+    pairs = _filed_history_pair_outcomes(discovery, capture)
+    iva_wallet = (
+        await _capture_filed_history_iva_wallet(resolved_today=resolved_today, output_root=output_root)
+        if profile is not None
+        else _FiledHistoryIvaWalletStage(status="not_attempted", divergence=None, blocked=False)
     )
-
-    iva_status = "not_attempted"
-    iva_divergence: str | None = None
-    iva_blocked = False
-    notificaciones_status = "not_attempted"
-    notificaciones_rows = 0
-
-    if profile is not None:
-        try:
-            from ._iva_remote_state import capture_iva_compensation_wallet
-
-            wallet = await capture_iva_compensation_wallet(
-                target_year=resolved_today.year,
-                target_period=Period.from_year_and_code(resolved_today.year, "1T"),
-                output_root=output_root,
-            )
-            iva_status = "reconciled"
-            iva_divergence = wallet.divergence
-            iva_blocked = wallet.blocked
-        except Exception as exc:
-            iva_status = "failed"
-            stage_failures.append(f"iva_wallet: {bounded_context_text(exc)}")
-
-    try:
-        from . import capture_notifications
-
-        snapshot = await capture_notifications(bucket_id=require_active_bucket_id())
-        notificaciones_status = "captured"
-        notificaciones_rows = getattr(snapshot, "row_count", 0) or 0
-    except Exception as exc:
-        notificaciones_status = "failed"
-        stage_failures.append(f"notificaciones: {bounded_context_text(exc)}")
+    notifications = await _capture_filed_history_notifications()
+    stage_failures = tuple(failure for failure in (iva_wallet.failure, notifications.failure) if failure is not None)
 
     return FiledHistoryOnboardingRun(
         pairs=pairs,
         captured_count=capture.captured_count,
         reached_count=capture.reached_count,
-        scoping_signal=scoping,
+        scoping_signal=RegisterScopingSignal.INCONCLUSIVE,
         carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
-        iva_wallet_status=iva_status,
-        iva_wallet_divergence=iva_divergence,
-        iva_wallet_blocked=iva_blocked,
-        notificaciones_status=notificaciones_status,
-        notificaciones_row_count=notificaciones_rows,
-        stage_failures=tuple(stage_failures),
+        iva_wallet_status=iva_wallet.status,
+        iva_wallet_divergence=iva_wallet.divergence,
+        iva_wallet_blocked=iva_wallet.blocked,
+        notificaciones_status=notifications.status,
+        notificaciones_row_count=notifications.row_count,
+        stage_failures=stage_failures,
         evidence_notices=capture.evidence_notices,
         recapture_notices=capture.recapture_notices,
     )

@@ -210,7 +210,7 @@ def test_validate_country_code_rejects_invalid_shapes() -> None:
 def test_validate_iva_number_accepts_wellformed_per_country() -> None:
     """A NIF-IVA matching its Member State's published structure is accepted.
 
-    The Greek case proves the ISO/VAT-prefix mismatch is handled: country
+    The Greek case proves the ISO/IVA-prefix mismatch is handled: country
     ``GR`` accepts an ``EL``-prefixed number.
     """
     cases = (

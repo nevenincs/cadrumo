@@ -21,11 +21,12 @@ import json
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ...application.ledger import PurchaseInvoiceEvidenceInputError
-from ...core import FieldOrigin
+from ...core import FieldOrigin, NoRecoveryOutcome
 from ...core.config import load_settings
-from .._errors import LLMConfigError
+from .._errors import LLMConfigError, LLMValidationError
 from .._evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
@@ -37,7 +38,7 @@ from .._invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
-from .._models import LLMProvider
+from .._models import LLMProvider, LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -74,7 +75,7 @@ def _grounded_tax_id(raw: str) -> str | None:
 
 
 class TestForeignCounterpartyTaxIdsSurviveGrounding:
-    """A correct read of a valid EU VAT number must reach the operator.
+    """A correct read of a valid EU IVA number must reach the operator.
 
     Routing every transcribed identifier through the Spanish checksum authority
     alone silently dropped every non-Spanish supplier to ``None`` -- the whole
@@ -96,7 +97,7 @@ class TestForeignCounterpartyTaxIdsSurviveGrounding:
         assert _grounded_tax_id(iva_number) == iva_number
 
     def test_separators_an_operator_or_document_prints_are_normalised_away(self) -> None:
-        """A VAT number printed with spaces or dots still grounds, in canonical form."""
+        """an IVA number printed with spaces or dots still grounds, in canonical form."""
         assert _grounded_tax_id("DE 811.569.869") == "DE811569869"
 
     @pytest.mark.parametrize(
@@ -135,7 +136,7 @@ class TestGroundingStillRefusesWhatItCannotVerify:
         assert _grounded_tax_id(candidate) is None
 
     def test_a_greek_number_under_its_iso_code_rather_than_its_iva_prefix_is_dropped(self) -> None:
-        """Greece's VAT prefix is ``EL``; a ``GR``-prefixed number is not a VAT number."""
+        """Greece's IVA prefix is ``EL``; a ``GR``-prefixed number is not an IVA number."""
         assert _grounded_tax_id("GR123456789") is None
         assert _grounded_tax_id("EL123456789") == "EL123456789"
 
@@ -180,8 +181,31 @@ class TestTextExtractionPrompt:
         assert "Facture 42\nTVA 20%" in prompt
 
     def test_blank_text_refuses_rather_than_asking_a_model_to_read_nothing(self) -> None:
-        with pytest.raises(PurchaseInvoiceEvidenceInputError, match="no text to read"):
+        with pytest.raises(PurchaseInvoiceEvidenceInputError) as raised:
             build_text_field_extraction_prompt("   \n\t ")
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.evidence.text_present"
+        assert verdict.evidence[0].values == {"evidence_content_available": False}
+
+        assert verdict.action is None
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+
+    def test_pydantic_preserves_the_nested_typed_llm_validation_verdict(self) -> None:
+        """The public request contract retains the producer error and verdict."""
+        with pytest.raises(ValidationError) as raised:
+            LLMRequest(prompt=" \t")
+
+        errors = raised.value.errors(include_url=False)
+        assert len(errors) == 1
+        nested = errors[0]["ctx"]["error"]
+        assert isinstance(nested, LLMValidationError)
+        verdict = nested.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.request.prompt_nonempty"
+        assert verdict.action is None
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+        assert verdict.evidence[0].values == {"request_prompt_nonempty": False}
 
 
 class TestAuthoredResponseParsesAndGrounds:
@@ -358,8 +382,15 @@ class TestExtractorPinsTheHostByDefault:
         cannot be reached around by setting an environment variable, which is
         what makes this the stronger half of the fix.
         """
-        with pytest.raises(LLMConfigError, match="must be named explicitly"):
+        with pytest.raises(LLMConfigError) as raised:
             TextInvoiceFieldExtractor(provider=LLMProvider.ANTHROPIC, settings=load_settings())
+        verdict = raised.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.off_host_model.named"
+        assert verdict.evidence[0].values == {
+            "off_host_model_named": False,
+            "provider": LLMProvider.ANTHROPIC.value,
+        }
 
     def test_an_explicitly_named_cloud_provider_and_model_is_still_honoured(self) -> None:
         """Positive control, and it protects a sanctioned route.

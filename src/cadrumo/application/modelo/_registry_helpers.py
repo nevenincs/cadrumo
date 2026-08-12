@@ -30,6 +30,7 @@ from decimal import Decimal
 
 from ...core import CasillaId, Period, validated_casilla_id
 from ...domain.calculations.registry import (
+    CasillaDefinition,
     InputKind,
     ModeloRevision,
     RegistrySnapshot,
@@ -178,6 +179,19 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
     if not casilla_inputs:
         return {}
     revision_casillas_by_id = casillas_by_id(revision)
+    canonical_inputs, malformed = _canonicalise_casilla_inputs(casilla_inputs)
+    _reject_malformed_casilla_input_keys(revision, malformed)
+    _reject_unknown_casilla_input_ids(revision, canonical_inputs)
+    decimal_inputs = _validated_decimal_casilla_inputs(revision, canonical_inputs)
+    _reject_non_numeric_casilla_inputs(revision, revision_casillas_by_id, decimal_inputs)
+    _reject_boolean_casilla_inputs_outside_domain(revision, revision_casillas_by_id, decimal_inputs)
+    return decimal_inputs
+
+
+def _canonicalise_casilla_inputs[CasillaKey, CasillaValue](
+    casilla_inputs: Mapping[CasillaKey, CasillaValue],
+) -> tuple[dict[CasillaId, CasillaValue], list[str]]:
+    """Keep canonical input keys separate from malformed boundary tokens."""
     canonical_inputs: dict[CasillaId, CasillaValue] = {}
     malformed: list[str] = []
     for key, value in casilla_inputs.items():
@@ -187,12 +201,24 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
             malformed.append(repr(key))
             continue
         canonical_inputs[canonical_key] = value
+    return canonical_inputs, malformed
+
+
+def _reject_malformed_casilla_input_keys(revision: ModeloRevision, malformed: list[str]) -> None:
+    """Refuse malformed keys before examining declared membership or values."""
     if malformed:
         raise RegistryValidationError(
             f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
             f"malformed keys: {sorted(malformed)!r}",
             context={"casilla_ids": ",".join(sorted(malformed)), "revision_id": revision.id},
         )
+
+
+def _reject_unknown_casilla_input_ids(
+    revision: ModeloRevision,
+    canonical_inputs: Mapping[CasillaId, object],
+) -> None:
+    """Refuse unknown ids, naming non-canonical reference tokens first."""
     unknown = undeclared_casilla_ids(revision, canonical_inputs)
     if unknown:
         noncanonical, unknown_only = _noncanonical_casilla_reference_details(revision, unknown)
@@ -211,6 +237,13 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
             f"unknown casilla.id values: {unknown_only!r}",
             context={"casilla_ids": ",".join(unknown_only), "revision_id": revision.id},
         )
+
+
+def _validated_decimal_casilla_inputs[CasillaValue](
+    revision: ModeloRevision,
+    canonical_inputs: Mapping[CasillaId, CasillaValue],
+) -> dict[CasillaId, Decimal]:
+    """Refuse non-decimal values before data-type or boolean-domain checks."""
     non_decimal = sorted(
         casilla_id
         for casilla_id, value in canonical_inputs.items()
@@ -226,10 +259,19 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
                 "value_types": ",".join(type(canonical_inputs[casilla_id]).__name__ for casilla_id in non_decimal),
             },
         )
+    return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}
+
+
+def _reject_non_numeric_casilla_inputs(
+    revision: ModeloRevision,
+    revision_casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+    decimal_inputs: Mapping[CasillaId, Decimal],
+) -> None:
+    """Keep the numeric/boolean input-kind policy at this application boundary."""
     accepted_data_types = _NUMERIC_CASILLA_DATA_TYPES | _BOOLEAN_CASILLA_DATA_TYPES
     non_numeric = sorted(
         casilla_id
-        for casilla_id in canonical_inputs
+        for casilla_id in decimal_inputs
         if revision_casillas_by_id[casilla_id].data_type not in accepted_data_types
     )
     if non_numeric:
@@ -246,11 +288,18 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
                 "data_types": ",".join(revision_casillas_by_id[casilla_id].data_type for casilla_id in non_numeric),
             },
         )
+
+
+def _reject_boolean_casilla_inputs_outside_domain(
+    revision: ModeloRevision,
+    revision_casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+    decimal_inputs: Mapping[CasillaId, Decimal],
+) -> None:
+    """Require the engine's exact 0/1 representation for boolean casillas."""
     out_of_domain = sorted(
         casilla_id
-        for casilla_id, value in canonical_inputs.items()
+        for casilla_id, value in decimal_inputs.items()
         if revision_casillas_by_id[casilla_id].data_type in _BOOLEAN_CASILLA_DATA_TYPES
-        and isinstance(value, Decimal)
         and value not in _BOOLEAN_CASILLA_ENCODED_VALUES
     )
     if out_of_domain:
@@ -259,7 +308,7 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
         # move the same refusal further from the operator who typed the value, and
         # guessing which answer a 2 meant is not a guess this boundary can make.
         details = "; ".join(
-            f"{casilla_id}: {canonical_inputs[casilla_id]!s} ({revision_casillas_by_id[casilla_id].label})"
+            f"{casilla_id}: {decimal_inputs[casilla_id]!s} ({revision_casillas_by_id[casilla_id].label})"
             for casilla_id in out_of_domain
         )
         raise RegistryValidationError(
@@ -268,10 +317,9 @@ def validate_casilla_input_ids[CasillaKey, CasillaValue](
                 "casilla_ids": ",".join(out_of_domain),
                 "revision_id": revision.id,
                 "accepted": "0,1",
-                "values": ",".join(str(canonical_inputs[casilla_id]) for casilla_id in out_of_domain),
+                "values": ",".join(str(decimal_inputs[casilla_id]) for casilla_id in out_of_domain),
             },
         )
-    return {casilla_id: value for casilla_id, value in canonical_inputs.items() if isinstance(value, Decimal)}
 
 
 def _noncanonical_casilla_reference_details(

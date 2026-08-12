@@ -87,7 +87,6 @@ application_links = [
     "modelo-131-2025-filing",
     "modelo-131-2025-export",
     "modelo-131-2025-extractor",
-    "modelo-131-2025-verification",
     "modelo-131-2025-review",
     "modelo-131-2025-approval",
     "modelo-131-2025-reconciliation",

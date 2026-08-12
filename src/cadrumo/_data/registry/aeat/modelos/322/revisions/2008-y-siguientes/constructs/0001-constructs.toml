@@ -47,7 +47,6 @@ application_links = [
     "modelo-322-portal",
     "modelo-322-filing",
     "modelo-322-extractor",
-    "modelo-322-verification",
     "modelo-322-review",
     "modelo-322-approval",
     "modelo-322-reconciliation",

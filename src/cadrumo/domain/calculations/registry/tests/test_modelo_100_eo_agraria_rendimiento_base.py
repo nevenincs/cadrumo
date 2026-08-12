@@ -119,8 +119,8 @@ def _run_calculation(
         relation_values={relation.id: Decimal("0") for relation in revision.relations},
         date_binding_values={"renta-2025-profile-taxpayer-birth-date": date(1980, 1, 1)},
         date_context={"filing_period": date(2025, 12, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return calculation.values
 

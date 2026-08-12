@@ -37,6 +37,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -45,11 +47,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import AggregationCaptureKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import BindingSourceKind
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    RegistryModeloObservation,
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import RegistryModeloObservation, calculate_registry_snapshot
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
@@ -168,7 +166,7 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             "modelo-115-base-retenciones": casilla_inputs[_M115_BASE_CASILLA],
         }
         inputs = {
-            **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             _M115_ANTERIORES_CASILLA: casilla_inputs[_M115_ANTERIORES_CASILLA],
         }
         result = calculate_registry_snapshot(
@@ -176,8 +174,8 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
+            m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(

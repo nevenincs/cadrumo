@@ -10,7 +10,7 @@ Scenario (cross-border contract):
     under Ley 37/1992 art. 69), iva_rate=0, iva_amount=0.  Expected: casilla 59
     remains 0; the R12 row flows through the pipeline as a zero-IVA observation
     with category=DOMESTIC_NOT_SUBJECT.
-  - D5 gate: an INTRA_COMMUNITY_SUPPLY row whose counterparty is VAT-identified
+  - D5 gate: an INTRA_COMMUNITY_SUPPLY row whose counterparty is IVA-identified
     in Spain is rejected as
     DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION -- the acquirer's
     identification is what Ley 37/1992 art. 25 exempts on, not its address.
@@ -246,7 +246,7 @@ def test_d5_intracom_with_es_identified_counterparty_is_rejected() -> None:
     """INTRA_COMMUNITY_SUPPLY to a Spanish-IDENTIFIED counterparty is a gate failure.
 
     The establishment is German here and deliberately so: the refusal must come
-    from the Spanish VAT identification the acquirer purchases under, which is
+    from the Spanish IVA identification the acquirer purchases under, which is
     the fact art. 25 reads, not from where it happens to be established.
     """
     tx = _inbound_tx(

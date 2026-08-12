@@ -87,7 +87,6 @@ from ....domain.calculations.registry import (
     InputKind,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
@@ -450,7 +449,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
 
     relay_binding_values = {**relay_resolution.binding_values, **retenciones_resolution.binding_values}
     relay_inputs = {
-        **resolve_bound_inputs_by_casilla_id(snap_180.revision, relay_binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snap_180.revision, relay_binding_values),
         **{c.id: Decimal("0") for c in snap_180.revision.casillas if c.input_kind is InputKind.MANUAL},
     }
     relay_engine_result = calculate_registry_snapshot(

@@ -107,6 +107,7 @@ def test_facts_present_casilla_empty_fires_advisory(snapshot: RegistrySnapshot) 
     finding = findings[0]
     assert finding.kind is ModeloVerificationFindingKind.ADVISORY
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.casilla_id == _CASILLA_1577
     assert finding.message_locale_key == "application.modelo.findings.attribution_received_unfolded"
     assert finding.message_facts["casilla_id"] == _CASILLA_1577
     assert finding.message_facts["total_base"] == Decimal("58100.00")
@@ -119,6 +120,7 @@ def test_casilla_present_no_facts_fires_capture_advisory(snapshot: RegistrySnaps
     assert len(findings) == 1
     finding = findings[0]
     assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.casilla_id == _CASILLA_1577
     # Assertions are locale-robust (this application-layer test runs under the
     # default es output language, and the message routes through tr()):
     # the interpolated casilla id and the machine-token fact-group name survive

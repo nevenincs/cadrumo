@@ -20,7 +20,6 @@ _REQUIRED_SURFACES = {
     "portal",
     "reconciliation",
     "review",
-    "verification",
     "workflow",
 }
 

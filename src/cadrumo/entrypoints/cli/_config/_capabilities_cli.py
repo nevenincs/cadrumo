@@ -77,9 +77,6 @@ def _register_set(capabilities_app: typer.Typer) -> None:
             raise _bad(
                 tr(
                     "cli.config.profile.capabilities.no_active_profile",
-                    default=(
-                        "No active profile; select one with 'aeat config login <name>' before setting a capability."
-                    ),
                 ),
             )
         enabled = state is _Toggle.ON
@@ -93,8 +90,8 @@ def _register_set(capabilities_app: typer.Typer) -> None:
             {"profile_id": profile_id, "capability": capability, "enabled": enabled},
         )
         lines = [
-            f"{tr('cli.config.profile.capabilities.capability_label', default='capability')}\t{capability.value}",
-            f"{tr('cli.config.profile.capabilities.state_label', default='state')}\t{state.value}",
+            f"{tr('cli.config.profile.capabilities.capability_label')}\t{capability.value}",
+            f"{tr('cli.config.profile.capabilities.state_label')}\t{state.value}",
         ]
         _emit_envelope(ctx, command="config.profile.capabilities.set", result=result, lines=lines)
 
@@ -105,7 +102,6 @@ def register(profile_app: typer.Typer) -> None:
         name="capabilities",
         help=tr(
             "cli.config.profile.capabilities.help",
-            default="Opt this profile in or out of external services (cloud upload, LLM vision, Google export).",
         ),
         no_args_is_help=True,
     )

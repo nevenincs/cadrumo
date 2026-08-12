@@ -427,6 +427,7 @@ if TYPE_CHECKING:
 #: Public name -> owning submodule, resolved on first attribute access.
 _LAZY_EXPORTS: dict[str, str] = {
     "CloudDerivedArtefact": "._consent_withdrawal",
+    "ConsentRederivationError": "._consent_withdrawal",
     "ConsentWithdrawalSurvey": "._consent_withdrawal",
     "ConsentedDispatch": "._consent_withdrawal",
     "LocalRederivation": "._consent_withdrawal",

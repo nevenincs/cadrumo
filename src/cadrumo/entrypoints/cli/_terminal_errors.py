@@ -362,10 +362,17 @@ def _emit_crash(exc: Exception) -> NoReturn:
     defect. Forward it verbatim instead, with its own exit code.
     """
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
-    from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, render_error_payload, write_stderr
+    from ._common import cli_policy_refusal_projection, project_cli_policy_refusal
+    from ._errors import (
+        CliUnexpectedBoundaryError,
+        boundary_no_recovery_verdict,
+        project_cli_boundary_error,
+        render_error_payload,
+        write_stderr,
+    )
 
-    typed = _unwrap_cadrumo_error(exc)
-    if typed is None:
+    boundary = project_cli_boundary_error(exc, _emit_crash)
+    if isinstance(boundary, CliUnexpectedBoundaryError):
         # The INTERNAL envelope this path renders tells the operator to consult
         # the diagnostic logs, so the traceback has to actually be in them;
         # without this the isolated-run log carried two DEBUG lines and nothing
@@ -385,9 +392,17 @@ def _emit_crash(exc: Exception) -> NoReturn:
             exc_info=exc,
             extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
         )
-    boundary = typed if typed is not None else CliUnexpectedBoundaryError(exc)
+    projection = cli_policy_refusal_projection(boundary)
+    if projection is None:
+        verdict = boundary_no_recovery_verdict(boundary)
+        if verdict is not None:
+            projection = project_cli_policy_refusal(requested_leaf=None, verdict=verdict)
     code = get_registered_error_code(boundary)
-    payload = render_error_payload(boundary, as_json=_json_requested_for(exc))
+    payload = render_error_payload(
+        boundary,
+        as_json=_json_requested_for(exc),
+        action=None if projection is None else projection.precondition_action,
+    )
     write_stderr(payload)
     sys.exit(get_error_exit_code(code.category))
 

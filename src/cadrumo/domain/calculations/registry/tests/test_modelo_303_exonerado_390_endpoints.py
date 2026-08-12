@@ -172,7 +172,5 @@ def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_
         assert revision.export_layouts == ()
         assert all(not casilla.export_refs for casilla in endpoint_rows)
 
-    exonerado_producer_tokens = {
-        member.value for member in FilingProducerKey if "exonerado_390" in member.value
-    }
+    exonerado_producer_tokens = {member.value for member in FilingProducerKey if "exonerado_390" in member.value}
     assert exonerado_producer_tokens == {FilingProducerKey.M303_EXONERADO_390_APPLICABLE.value}

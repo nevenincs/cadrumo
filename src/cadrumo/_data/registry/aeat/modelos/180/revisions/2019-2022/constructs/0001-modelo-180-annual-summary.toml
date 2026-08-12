@@ -17,7 +17,6 @@ application_links = [
     "modelo-180-2014-filing",
     "modelo-180-2014-export",
     "modelo-180-2014-extractor",
-    "modelo-180-2014-verification",
     "modelo-180-2014-review",
     "modelo-180-2014-approval",
     "modelo-180-2014-reconciliation",

@@ -90,7 +90,6 @@ application_links = [
     "modelo-720-portal",
     "modelo-720-filing",
     "modelo-720-extractor",
-    "modelo-720-verification",
     "modelo-720-deadline",
     "modelo-720-export",
     "modelo-720-review",

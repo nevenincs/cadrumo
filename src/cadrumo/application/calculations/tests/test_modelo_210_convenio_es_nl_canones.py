@@ -22,13 +22,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import BindingId, calculate_registry_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -51,7 +49,7 @@ def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Dec
         validated_casilla_id("gastos_deducibles", surface="es_nl_canones_test"): Decimal("0"),
         validated_casilla_id("retencion_practicada", surface="es_nl_canones_test"): Decimal("0"),
     }
-    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs={**bound, **casilla_inputs},
@@ -59,8 +57,8 @@ def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Dec
         enum_binding_values=enum_binding_values,
         text_inputs=text_inputs,
         date_context={"filing_period": date(_YEAR, 12, 31)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result.values[_TIPO_GRAVAMEN], result.values[_CUOTA_INTEGRA]
 

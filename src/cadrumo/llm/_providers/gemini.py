@@ -14,10 +14,12 @@ from typing import override
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
+from ...core import ActionEvidenceProvenance
 from ...core.config import load_settings
 from ...core.logging import get_logger
 from .._errors import LLMConfigError
 from .._models import LLMProvider
+from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .base import (
     ProviderCompletion,
     ProviderRequest,
@@ -103,8 +105,14 @@ class GeminiAdapter(_ProviderAdapter):
             LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
-            msg = "CADRUMO_LLM_GEMINI_API_KEY must be set for the Gemini provider."
-            raise LLMConfigError(msg)
+            raise LLMConfigError(
+                context={"provider": self.provider.value, "provider_credentials_present": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.PROVIDER_CREDENTIALS_PRESENT,
+                    facts={"provider": self.provider.value, "provider_credentials_present": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         self._api_key = api_key
         self._timeout_s = timeout_s
 
@@ -131,7 +139,7 @@ class GeminiAdapter(_ProviderAdapter):
             response = await post_provider_request(
                 client,
                 endpoint,
-                provider_name="Gemini",
+                provider_name=LLMProvider.GEMINI.value,
                 model=request.model,
                 logger=_logger,
                 headers={"x-goog-api-key": self._api_key},
@@ -143,9 +151,15 @@ class GeminiAdapter(_ProviderAdapter):
                     },
                 },
             )
-        check_http_error(response, provider_name="Gemini", model=request.model, logger=_logger)
-        parsed = parse_provider_response(response, provider_name="Gemini", response_model=_GeminiResponse)
-        candidate = require_provider_response_item(parsed.candidates, provider_name="Gemini", item_name="candidates")
+        check_http_error(response, provider_name=LLMProvider.GEMINI.value, model=request.model, logger=_logger)
+        parsed = parse_provider_response(
+            response, provider_name=LLMProvider.GEMINI.value, response_model=_GeminiResponse
+        )
+        candidate = require_provider_response_item(
+            parsed.candidates,
+            provider_name=LLMProvider.GEMINI.value,
+            item_name="candidates",
+        )
         text = "".join(part.text or "" for part in candidate.content.parts).strip()
         return ProviderCompletion(
             text=text,

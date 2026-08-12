@@ -331,7 +331,7 @@ def _persist_year_of_invoices(
                     period=period,
                     filing_year=filing_year,
                     iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
-                    # Established in Germany AND VAT-identified there. Art. 25
+                    # Established in Germany AND IVA-identified there. Art. 25
                     # exempts an intra-community supply on the acquirer's
                     # IDENTIFICATION, not on establishment, so declaring only the
                     # country leaves the ledger preflight correctly refusing:

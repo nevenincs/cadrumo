@@ -10,10 +10,10 @@ composing three already-existing read models for the requested
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
 * modelo readiness — one :class:`ModeloHealthRow` per
   :class:`~domain.modelos.WorkUnit`
-  targeting the requested period, derived from its
-  :class:`~domain.modelos.CalculationRevision` state
-  (:func:`~application.modelo.get_calculation_revision`) — not-started when
-  no work unit exists yet for a modelo the operator would need to file.
+  targeting the requested period. Filing state comes from the persisted
+  :class:`~domain.modelos.CalculationRevision`; otherwise readiness comes from
+  the latest persisted :class:`~domain.modelos.VerificationReport`, with no
+  report rendered as never verified.
 * outstanding findings — every ``BLOCKING`` / ``WARNING``
   :class:`~domain.modelos.ModeloVerificationFinding` from the latest
   :class:`~domain.modelos.VerificationReport` against each period work
@@ -51,9 +51,11 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
+from ...core.i18n import tr
 from ...domain.modelos import (
     CalculationRevisionState,
     ModeloVerificationFindingSeverity,
+    VerificationCompletenessStatus,
 )
 from ..ledger import LedgerStatusReport
 
@@ -68,18 +70,21 @@ class ModeloReadinessState(StrEnum):
         NOT_STARTED: No :class:`~domain.modelos.WorkUnit` exists yet for
             this ``(modelo, filing_year, period)``.
         CALCULATED: A work unit exists and its current revision has computed
-            casilla values but has not been verified.
-        VERIFIED: The current revision reached
-            :attr:`~domain.modelos.CalculationRevisionState.VERIFICADO_COMPLETO`.
+            casilla values but has no persisted verification report.
+        INCOMPLETO: The latest persisted verification report found required
+            inputs or casillas still missing.
+        VERIFIED: The latest persisted verification report granted the
+            ``verificado_completo`` transition.
         FILED: The work unit's filed revision matches its current revision
             (:attr:`~domain.modelos.CalculationRevisionState.PRESENTADO` or
             superseded by a later filed revision of the same unit).
-        BLOCKED: The latest verification report against the current revision
-            carries at least one ``BLOCKING`` finding.
+        BLOCKED: The latest persisted verification report has a ``BLOCKED``
+            completeness outcome.
     """
 
     NOT_STARTED = "not_started"
     CALCULATED = "calculated"
+    INCOMPLETO = "incomplete"
     VERIFIED = "verified"
     FILED = "filed"
     BLOCKED = "blocked"
@@ -136,10 +141,10 @@ class PipelineHealthReport(BaseModel):
             :attr:`~application.overview.ModeloReadinessState.VERIFIED`, with
             zero modelos in
             :attr:`~application.overview.ModeloReadinessState.BLOCKED`.
-            ``False`` when any modelo has not started or is blocked, or the
-            ledger still carries pending-review rows or readiness issues. A
-            pipeline with zero
-            work units for the period is never reported ready — there is
+            ``False`` when any modelo is not started, never verified,
+            incomplete, or blocked, or the ledger still carries pending-review
+            rows or readiness issues. A pipeline with zero work units for the
+            period is never reported ready — there is
             nothing to be ready about yet.
     """
 
@@ -180,17 +185,6 @@ def _modelo_health_row(
             else:
                 warning += 1
 
-    if blocking > 0:
-        return ModeloHealthRow(
-            modelo=modelo,
-            work_unit_id=work_unit.work_unit_id,
-            state=ModeloReadinessState.BLOCKED,
-            blocking_finding_count=blocking,
-            warning_finding_count=warning,
-            summary=f"Modelo {modelo}: {blocking} blocking finding(s) on the current revision.",
-            next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
-        )
-
     if revision.state is CalculationRevisionState.PRESENTADO:
         return ModeloHealthRow(
             modelo=modelo,
@@ -211,7 +205,19 @@ def _modelo_health_row(
             next_command=f"aeat app modelo work revisions {work_unit.work_unit_id}",
         )
 
-    if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO:
+    if latest_report is None:
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.CALCULATED,
+            summary=f"Modelo {modelo}: calculated, not yet verified.",
+            next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
+        )
+
+    if (
+        latest_report.completeness_status is VerificationCompletenessStatus.COMPLETE
+        and latest_report.granted_verificado_completo
+    ):
         return ModeloHealthRow(
             modelo=modelo,
             work_unit_id=work_unit.work_unit_id,
@@ -221,15 +227,24 @@ def _modelo_health_row(
             next_command=f"aeat app modelo work file {work_unit.work_unit_id}",
         )
 
-    # BORRADOR or DESCARTADO (a discarded unit would already be filtered out
-    # by the caller's non-discarded work-unit load, so BORRADOR is the
-    # remaining real case): calculated but not yet verified.
+    if latest_report.completeness_status is VerificationCompletenessStatus.INCOMPLETE:
+        return ModeloHealthRow(
+            modelo=modelo,
+            work_unit_id=work_unit.work_unit_id,
+            state=ModeloReadinessState.INCOMPLETO,
+            blocking_finding_count=blocking,
+            warning_finding_count=warning,
+            summary=tr("cli.overview.pipeline.summary.incompleto", modelo=modelo),
+            next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
+        )
+
     return ModeloHealthRow(
         modelo=modelo,
         work_unit_id=work_unit.work_unit_id,
-        state=ModeloReadinessState.CALCULATED,
+        state=ModeloReadinessState.BLOCKED,
+        blocking_finding_count=blocking,
         warning_finding_count=warning,
-        summary=f"Modelo {modelo}: calculated, not yet verified.",
+        summary=f"Modelo {modelo}: {blocking} blocking finding(s) on the current revision.",
         next_command=f"aeat app modelo work verify {work_unit.work_unit_id}",
     )
 

@@ -421,6 +421,51 @@ MODELO_READINESS_MISSING_PROFILE_ACTION = OperatorActionAxis.SET_PROFILE_FACT
 """Action spine for every profile requirement in readiness ``missing``."""
 
 
+CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS: Mapping[
+    BindingSourceKind,
+    str,
+] = MappingProxyType(
+    {
+        BindingSourceKind.PROFILE: "cli.app.modelo.bindings.readiness.dato_perfil",
+        BindingSourceKind.PREVIOUS_FILING: "cli.app.modelo.bindings.readiness.declaracion_previa",
+        BindingSourceKind.RELATION_PREFILL: "cli.app.modelo.bindings.readiness.entrada_relacion",
+        BindingSourceKind.MANUAL_INPUT: "cli.app.modelo.bindings.readiness.entrada_manual",
+        BindingSourceKind.LEDGER_OSS_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.LEDGER_IVA_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION: (
+            "cli.app.modelo.bindings.readiness.datos_libro"
+        ),
+        BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION: (
+            "cli.app.modelo.bindings.readiness.datos_libro"
+        ),
+        BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.RETENCIONES_AGGREGATION: "cli.app.modelo.bindings.readiness.registro_retenciones",
+        BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: (
+            "cli.app.modelo.bindings.readiness.compensacion_iva_anual"
+        ),
+        BindingSourceKind.BIENES_INVERSION_REGULARIZACION: (
+            "cli.app.modelo.bindings.readiness.regularizacion_bienes_inversion"
+        ),
+        BindingSourceKind.PRORRATA_REGULARIZACION: "cli.app.modelo.bindings.readiness.regularizacion_prorrata",
+        BindingSourceKind.BORRADOR: "cli.app.modelo.bindings.readiness.borrador_aeat",
+        BindingSourceKind.IVA_WALLET_DECISION: "cli.app.modelo.bindings.readiness.decision_compensacion_iva",
+        BindingSourceKind.PAYABLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_recibida",
+        BindingSourceKind.COLLECTIBLE_INVOICE: "cli.app.modelo.bindings.readiness.factura_emitida",
+        BindingSourceKind.LEDGER_TRANSACTION: "cli.app.modelo.bindings.readiness.datos_libro",
+        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE: "cli.app.modelo.bindings.readiness.evidencia_factura_compra",
+        BindingSourceKind.WITHHOLDING: "cli.app.modelo.bindings.readiness.retencion",
+        BindingSourceKind.FOREIGN_ASSET: "cli.app.modelo.bindings.readiness.activo_extranjero",
+        BindingSourceKind.RELATED_PARTY_OPERATION: "cli.app.modelo.bindings.readiness.operacion_vinculada",
+        BindingSourceKind.ATRIBUCION_MEMBER: "cli.app.modelo.bindings.readiness.miembro_atribucion",
+        BindingSourceKind.REFUND_OPERATION: "cli.app.modelo.bindings.readiness.operacion_reembolso",
+        BindingSourceKind.DONATIVO_DONOR: "cli.app.modelo.bindings.readiness.donante_donativo",
+    },
+)
+"""Total locale-key projection for the noun describing each binding source."""
+
+
 OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE: Mapping[
     BindingSourceKind,
     OperatorActionAxis,
@@ -507,6 +552,21 @@ _assert_total_action_projection(
     tuple(BindingSourceKind),
     OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
 )
+
+
+def _assert_total_binding_source_readiness_projection() -> None:
+    member_set = set(BindingSourceKind)
+    projection_set = set(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS)
+    if member_set != projection_set:
+        missing = sorted(member.value for member in member_set - projection_set)
+        unexpected = sorted(str(member) for member in projection_set - member_set)
+        raise RuntimeError(
+            "every BindingSourceKind must declare exactly one binding-readiness locale key; "
+            f"missing={missing}; unexpected={unexpected}",
+        )
+
+
+_assert_total_binding_source_readiness_projection()
 _assert_total_action_projection(
     LedgerPreflightIssueReason.__name__,
     tuple(LedgerPreflightIssueReason),
@@ -1089,6 +1149,7 @@ def _ensure_profile_key_registry_registered() -> None:
 
 
 __all__ = [
+    "CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS",
     "MODELO_READINESS_MISSING_PROFILE_ACTION",
     "OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE",
     "OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE",

@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import typer
 
+from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.ledger import (
-    ConfirmationBlockedError,
     FindingResolution,
     InvoiceConfirmationResult,
     PurchaseInvoiceEvidence,
-    PurchaseInvoiceEvidenceNotFoundError,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceService,
     confirm_invoice_draft_from_evidence,
@@ -22,7 +21,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceValidationError
 from ...domain.iva import InvoiceKind
-from ...llm import EvidenceConsentToken, LLMConsentError, LLMProvider, mint_evidence_consent_token
+from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
 from ._common import (
     _bad,
     _emit_envelope,
@@ -48,13 +47,11 @@ from ._ledger_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
+from ._ledger_support import _ledger_cli_no_recovery
 
 evidence_app = typer.Typer(
     name="evidence",
-    help=tr(
-        "cli.app.ledger.evidence.group_help",
-        default="Purchase invoice evidence records (PDF or image).",
-    ),
+    help=tr("cli.app.ledger.evidence.group_help"),
     no_args_is_help=True,
 )
 
@@ -77,51 +74,48 @@ def register_evidence_commands(app: typer.Typer) -> None:
 def _register_evidence_add_command() -> None:
     @evidence_app.command(
         "add",
-        help=tr(
-            "cli.app.ledger.evidence.add_help",
-            default="Register a purchase invoice evidence record from a PDF or image file.",
-        ),
+        help=tr("cli.app.ledger.evidence.add_help"),
     )
     def evidence_add(
         ctx: typer.Context,
         source_path: str = typer.Argument(
             ...,
-            help=tr("cli.app.ledger.evidence.source_path_help", default="Path to a PDF or image receipt/invoice."),
+            help=tr("cli.app.ledger.evidence.source_path_help"),
         ),
         supplier: str | None = typer.Option(
             None,
             "--supplier",
-            help=tr("cli.app.ledger.evidence.supplier_help", default="Supplier name."),
+            help=tr("cli.app.ledger.evidence.supplier_help"),
         ),
         invoice_number: str | None = typer.Option(
             None,
             "--invoice-number",
-            help=tr("cli.app.ledger.evidence.invoice_number_help", default="Supplier invoice number."),
+            help=tr("cli.app.ledger.evidence.invoice_number_help"),
         ),
         invoice_date: str | None = typer.Option(
             None,
             "--invoice-date",
-            help=tr("cli.app.ledger.evidence.invoice_date_help", default="Invoice date (ISO-8601)."),
+            help=tr("cli.app.ledger.evidence.invoice_date_help"),
         ),
         taxable_base: str | None = typer.Option(
             None,
             "--taxable-base",
-            help=tr("cli.app.ledger.evidence.taxable_base_help", default="Taxable base (Decimal)."),
+            help=tr("cli.app.ledger.evidence.taxable_base_help"),
         ),
         iva_rate: str | None = typer.Option(
             None,
             "--iva-rate",
-            help=tr("cli.app.ledger.evidence.iva_rate_help", default="IVA rate (Decimal)."),
+            help=tr("cli.app.ledger.evidence.iva_rate_help"),
         ),
         iva_amount: str | None = typer.Option(
             None,
             "--iva-amount",
-            help=tr("cli.app.ledger.evidence.iva_amount_help", default="IVA amount (Decimal)."),
+            help=tr("cli.app.ledger.evidence.iva_amount_help"),
         ),
         notes: str = typer.Option(
             "",
             "--notes",
-            help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes."),
+            help=tr("cli.app.ledger.evidence.notes_help"),
         ),
     ) -> None:
         """Register a purchase invoice evidence record and return its id."""
@@ -152,13 +146,13 @@ def _register_evidence_add_command() -> None:
 def _register_evidence_view_command() -> None:
     @evidence_app.command(
         "view",
-        help=tr("cli.app.ledger.evidence.view_help", default="View one purchase invoice evidence record."),
+        help=tr("cli.app.ledger.evidence.view_help"),
     )
     def evidence_view(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
             ...,
-            help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
+            help=tr("cli.app.ledger.evidence.evidence_id_help"),
         ),
     ) -> None:
         """Show one purchase invoice evidence record by id."""
@@ -175,10 +169,7 @@ def _register_evidence_view_command() -> None:
 def _register_evidence_list_command() -> None:
     @evidence_app.command(
         "list",
-        help=tr(
-            "cli.app.ledger.evidence.list_help",
-            default="List every purchase invoice evidence record in the active profile.",
-        ),
+        help=tr("cli.app.ledger.evidence.list_help"),
     )
     def evidence_list(ctx: typer.Context) -> None:
         """List every purchase invoice evidence record in the active bucket."""
@@ -208,16 +199,13 @@ def _register_evidence_list_command() -> None:
 def _register_evidence_update_command() -> None:
     @evidence_app.command(
         "update",
-        help=tr(
-            "cli.app.ledger.evidence.update_help",
-            default="Update mutable fields on a purchase invoice evidence record.",
-        ),
+        help=tr("cli.app.ledger.evidence.update_help"),
     )
     def evidence_update(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
             ...,
-            help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
+            help=tr("cli.app.ledger.evidence.evidence_id_help"),
         ),
         supplier: str | None = typer.Option(None, "--supplier"),
         invoice_number: str | None = typer.Option(None, "--invoice-number"),
@@ -258,27 +246,24 @@ def _register_evidence_update_command() -> None:
 def _register_evidence_remove_command() -> None:
     @evidence_app.command(
         "remove",
-        help=tr("cli.app.ledger.evidence.remove_help", default="Delete a purchase invoice evidence record."),
+        help=tr("cli.app.ledger.evidence.remove_help"),
     )
     def evidence_remove(
         ctx: typer.Context,
         evidence_id: str = typer.Argument(
             ...,
-            help=tr("cli.app.ledger.evidence.evidence_id_help", default="Evidence record id."),
+            help=tr("cli.app.ledger.evidence.evidence_id_help"),
         ),
         yes: bool = typer.Option(
             False,
             "--yes",
-            help=tr("cli.app.ledger.evidence.yes_help", default="Confirm removal."),
+            help=tr("cli.app.ledger.evidence.yes_help"),
         ),
     ) -> None:
         """Delete one purchase invoice evidence record."""
         if not yes:
             raise _bad(
-                tr(
-                    "cli.app.ledger.evidence.yes_required",
-                    default="--yes is required to remove an evidence record",
-                ),
+                tr("cli.app.ledger.evidence.yes_required"),
             )
         transaction_repository = _tx_repo(_state())
         result = _evidence_service().remove(bucket_id=transaction_repository.bucket_id, evidence_id=evidence_id)
@@ -339,33 +324,15 @@ def _mint_extract_consent(
         return None
     if off_host_provider is None:
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.extract_acknowledge_without_provider",
-                default=(
-                    "--acknowledge-off-host acknowledges a transmission that would not happen. "
-                    "Name --off-host-provider as well, or drop the acknowledgement."
-                ),
-            ),
+            tr("cli.app.ledger.evidence.extract_acknowledge_without_provider"),
         )
     if off_host_provider is LLMProvider.LOCAL:
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.extract_off_host_provider_is_local",
-                default=(
-                    "--off-host-provider local is the default and reads nothing off-host. "
-                    "Omit the flag, or name a hosted provider."
-                ),
-            ),
+            tr("cli.app.ledger.evidence.extract_off_host_provider_is_local"),
         )
     if not acknowledged:
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.extract_provider_without_acknowledge",
-                default=(
-                    "Reading this document off-host sends its contents to a third party. "
-                    "Add --acknowledge-off-host to confirm that, for this one read."
-                ),
-            ),
+            tr("cli.app.ledger.evidence.extract_provider_without_acknowledge"),
         )
 
     # The token binds to the BYTES, so a read with no content-addressable record
@@ -375,86 +342,53 @@ def _mint_extract_consent(
     # never checked.
     if evidence_id is None:
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.extract_off_host_needs_evidence_id",
-                default=(
-                    "An off-host read must name --evidence-id: consent is recorded against the "
-                    "document's content address, which an attachment id does not carry."
-                ),
-            ),
+            tr("cli.app.ledger.evidence.extract_off_host_needs_evidence_id"),
         )
-    try:
-        record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
-    except PurchaseInvoiceEvidenceNotFoundError as exc:
-        raise _bad(str(exc)) from exc
+    record = PurchaseInvoiceEvidenceService().view(bucket_id=bucket_id, evidence_id=evidence_id)
     content_address = record.source_sha256
     if not content_address:
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.extract_off_host_needs_content_address",
-                default=(
-                    "This evidence record carries no content address, so an off-host read cannot be "
-                    "recorded against the bytes it would transmit."
-                ),
-            ),
+            tr("cli.app.ledger.evidence.extract_off_host_needs_content_address"),
         )
 
-    try:
-        return mint_evidence_consent_token(
-            settings=load_settings(),
-            # The SINGLE production reading of the standing per-profile bar. Passed
-            # through rather than re-decided here: the minting path refuses when it
-            # is false, so a surface cannot widen the posture by forgetting it.
-            profile_eligible=cloud_evidence_upload_eligible_for_active_profile(),
-            acknowledged=acknowledged,
-            surface=_EXTRACT_CONSENT_SURFACE,
-            evidence_content_address=content_address,
-        )
-    except LLMConsentError as exc:
-        raise _bad(str(exc)) from exc
+    return mint_evidence_consent_token(
+        settings=load_settings(),
+        # The SINGLE production reading of the standing per-profile bar. Passed
+        # through rather than re-decided here: the minting path refuses when it
+        # is false, so a surface cannot widen the posture by forgetting it.
+        profile_eligible=cloud_evidence_upload_eligible_for_active_profile(),
+        acknowledged=acknowledged,
+        surface=_EXTRACT_CONSENT_SURFACE,
+        evidence_content_address=content_address,
+    )
 
 
 def _register_evidence_extract_command() -> None:
     @evidence_app.command(
         "extract",
-        help=tr(
-            "cli.app.ledger.evidence.extract_help",
-            default="Read an invoice PDF's fields on-host into a reviewable draft.",
-        ),
+        help=tr("cli.app.ledger.evidence.extract_help"),
     )
     def evidence_extract(
         ctx: typer.Context,
         evidence_id: str | None = typer.Option(
             None,
             "--evidence-id",
-            help=tr(
-                "cli.app.ledger.evidence.extract_evidence_id_help",
-                default="Purchase invoice evidence record id to extract from.",
-            ),
+            help=tr("cli.app.ledger.evidence.extract_evidence_id_help"),
         ),
         attachment_id: str | None = typer.Option(
             None,
             "--attachment-id",
-            help=tr(
-                "cli.app.ledger.evidence.extract_attachment_id_help",
-                default="Linked attachment id to extract from (alternative to --evidence-id).",
-            ),
+            help=tr("cli.app.ledger.evidence.extract_attachment_id_help"),
         ),
         off_host_provider: LLMProvider | None = typer.Option(
             None,
             "--off-host-provider",
-            help=tr(
-                "cli.app.ledger.evidence.extract_off_host_provider_help",
-                default="Send this document to a hosted model instead of reading it on-host.",
-            ),
+            help=tr("cli.app.ledger.evidence.extract_off_host_provider_help"),
         ),
         acknowledge_off_host: bool = typer.Option(
             False,
             "--acknowledge-off-host",
-            help=tr(
-                "cli.app.ledger.evidence.extract_acknowledge_off_host_help",
-                default="Acknowledge, for this one read, that the document leaves this machine.",
-            ),
+            help=tr("cli.app.ledger.evidence.extract_acknowledge_off_host_help"),
         ),
     ) -> None:
         """Run the on-host PDF text-layer extractor over stored evidence bytes.
@@ -465,16 +399,11 @@ def _register_evidence_extract_command() -> None:
         prints the best-effort :class:`InvoiceDraft` for operator review.
         Every field the heuristics could not ground in the extracted text is
         ``null`` rather than guessed. Extracting never mints or persists an
-        invoice; confirm the fields, then create the record explicitly with
-        ``aeat app ledger invoice add`` or ``aeat app ledger invoice
-        catalogue create``.
+        invoice; confirmation is a separate operator action.
         """
         if (evidence_id is None) == (attachment_id is None):
             raise _bad(
-                tr(
-                    "cli.app.ledger.evidence.extract_reference_required",
-                    default="Supply exactly one of --evidence-id or --attachment-id.",
-                ),
+                tr("cli.app.ledger.evidence.extract_reference_required"),
             )
         transaction_repository = _tx_repo(_state())
         consent_token = _mint_extract_consent(
@@ -543,11 +472,9 @@ def _register_evidence_extract_command() -> None:
                 code="ledger.evidence.extract.review_hint",
                 message=tr(
                     "cli.app.ledger.evidence.extract_review_hint_message",
-                    default=("This is a best-effort draft; confirm every field before minting an invoice."),
                 ),
                 context={
                     "reference": reviewed_reference,
-                    "actionability": "review_and_required_invoice_fields_need_operator_input",
                 },
             ),
         ]
@@ -567,129 +494,79 @@ def _register_evidence_extract_command() -> None:
 def _register_evidence_confirm_command() -> None:
     @evidence_app.command(
         "confirm",
-        help=tr(
-            "cli.app.ledger.evidence.confirm_help",
-            default="Re-extract evidence on-host and confirm it into a real catalogue Invoice.",
-        ),
+        help=tr("cli.app.ledger.evidence.confirm_help"),
     )
     def evidence_confirm(
         ctx: typer.Context,
         kind: InvoiceKind = typer.Option(
             ...,
             "--kind",
-            help=tr(
-                "cli.app.ledger.invoice.kind_help",
-                default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-            ),
+            help=tr("cli.app.ledger.invoice.kind_help"),
         ),
         evidence_id: str | None = typer.Option(
             None,
             "--evidence-id",
-            help=tr(
-                "cli.app.ledger.evidence.extract_evidence_id_help",
-                default="Purchase invoice evidence record id to extract from.",
-            ),
+            help=tr("cli.app.ledger.evidence.extract_evidence_id_help"),
         ),
         attachment_id: str | None = typer.Option(
             None,
             "--attachment-id",
-            help=tr(
-                "cli.app.ledger.evidence.extract_attachment_id_help",
-                default="Linked attachment id to extract from (alternative to --evidence-id).",
-            ),
+            help=tr("cli.app.ledger.evidence.extract_attachment_id_help"),
         ),
         counterparty_nif: str | None = typer.Option(
             None,
             "--counterparty-nif",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_counterparty_nif_help",
-                default="Override the extracted supplier tax id.",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_counterparty_nif_help"),
         ),
         counterparty_name: str | None = typer.Option(
             None,
             "--counterparty-name",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_counterparty_name_help",
-                default="Counterparty display name (no extraction heuristic yet; normally required).",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_counterparty_name_help"),
         ),
         invoice_number: str | None = typer.Option(
             None,
             "--invoice-number",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_invoice_number_help",
-                default="Override the extracted invoice number.",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_invoice_number_help"),
         ),
         invoice_date: str | None = typer.Option(
             None,
             "--invoice-date",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_invoice_date_help",
-                default="Override the extracted invoice date (YYYY-MM-DD).",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_invoice_date_help"),
         ),
         taxable_base: str | None = typer.Option(
             None,
             "--taxable-base",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_taxable_base_help",
-                default="Override the extracted taxable base.",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_taxable_base_help"),
         ),
         iva_rate: str | None = typer.Option(
             None,
             "--iva-rate",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_iva_rate_help",
-                default="Override the extracted IVA rate (omit to keep the extracted value).",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_iva_rate_help"),
         ),
         country_code: str = typer.Option(
             ...,
             "--country-code",
-            help=tr(
-                "cli.app.ledger.invoice.country_code_help",
-                default="Counterparty ISO 3166-1 alpha-2 country code.",
-            ),
+            help=tr("cli.app.ledger.invoice.country_code_help"),
         ),
         currency: str | None = typer.Option(
             None,
             "--currency",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_currency_help",
-                default="ISO-4217 currency code overriding the one printed on the document.",
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_currency_help"),
         ),
         operation_type: IntracomOperationType | None = typer.Option(
             None,
             "--operation-type",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_operation_type_help",
-                default=(
-                    "Modelo 349 clave for an entrega intracomunitaria. Required when the document "
-                    "states an intra-community supply: the category cannot say whether it followed "
-                    "an exempt importation."
-                ),
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_operation_type_help"),
         ),
         notes: str = typer.Option(
             "",
             "--notes",
-            help=tr("cli.app.ledger.evidence.notes_help", default="Free-text notes."),
+            help=tr("cli.app.ledger.evidence.notes_help"),
         ),
         resolve: list[str] = typer.Option(
             [],
             "--resolve",
-            help=tr(
-                "cli.app.ledger.evidence.confirm_resolve_help",
-                default=(
-                    "Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>. "
-                    "For choose, name the reading by its value or by the digest review showed. "
-                    "Repeat once per finding; there is no bulk flag."
-                ),
-            ),
+            help=tr("cli.app.ledger.evidence.confirm_resolve_help"),
         ),
     ) -> None:
         """Non-interactively confirm a reviewed evidence extraction into an Invoice.
@@ -740,10 +617,7 @@ def _run_evidence_confirm(
 ) -> None:
     if (evidence_id is None) == (attachment_id is None):
         raise _bad(
-            tr(
-                "cli.app.ledger.evidence.extract_reference_required",
-                default="Supply exactly one of --evidence-id or --attachment-id.",
-            ),
+            tr("cli.app.ledger.evidence.extract_reference_required"),
         )
     transaction_repository = _tx_repo(_state())
     bucket_id = transaction_repository.bucket_id
@@ -766,10 +640,12 @@ def _run_evidence_confirm(
             notes=notes,
             resolutions=resolutions,
         )
-    except ConfirmationBlockedError as exc:
-        raise _bad(str(exc)) from exc
     except InvoiceValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"error_type": type(exc).__name__},
+        ) from None
 
     invoice = result.invoice
     payload = {
@@ -824,12 +700,6 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.printed_total_mismatch",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_printed_total_mismatch_message",
-                    default=(
-                        "The total printed on the document does not match the total recorded. "
-                        "The recorded total is derived from the taxable base and the IVA rate, so a "
-                        "difference means the document carries an amount this record does not, such "
-                        "as a recargo de equivalencia, or a figure was misread. Check the document."
-                    ),
                 ),
                 context={
                     "printed_total": format(discrepancy.printed_total, "f"),
@@ -846,10 +716,6 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.already_exists",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_already_exists_message",
-                    default=(
-                        "An invoice with this identity already exists; returning it unchanged "
-                        "rather than creating a duplicate."
-                    ),
                 ),
                 context={"invoice_id": invoice.invoice_id},
             ),
@@ -861,14 +727,9 @@ def _run_evidence_confirm(
                 code="ledger.evidence.confirm.linked_transaction_hint",
                 message=tr(
                     "cli.app.ledger.evidence.confirm_link_hint_message",
-                    default=(
-                        "The invoice was recorded, but confirmation did not identify its matching ledger transaction. "
-                        "Verify the matching transaction before linking the two records."
-                    ),
                 ),
                 context={
                     "invoice_id": invoice.invoice_id,
-                    "actionability": "matching_transaction_requires_operator_selection",
                 },
             ),
         )

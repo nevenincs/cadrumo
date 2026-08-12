@@ -58,6 +58,7 @@ import weakref
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
@@ -77,6 +78,8 @@ from ....domain.bienes_inversion import (
 from ....domain.iva import (
     EUMemberState,
     InvoiceKind,
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
     IvaRateKind,
     derive_flow_for_classification,
     rate_kinds_for_declared_rate,
@@ -209,6 +212,18 @@ class _IndexedTransactionDates:
         return self.eligible_from <= end and self.eligible_to >= start
 
 
+@dataclass(frozen=True, slots=True)
+class _MigratedIvaDeductionFact:
+    """The complete IVA authority axis required to migrate one transaction row."""
+
+    kind: IvaDeductionFactKind
+    provenance: IvaDeductionClassificationProvenance
+    taxable_base: Decimal
+    iva_rate: Decimal
+    iva_amount: Decimal
+    category: IvaCategory
+
+
 def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> None:
     """Reject a persisted per-transaction row missing the mandatory D6 timestamps.
 
@@ -222,6 +237,54 @@ def _validate_persisted_transaction_timestamps(decoded: dict[str, object]) -> No
     if not isinstance(transaction_payload, dict):
         return
     _PersistedTransactionTimestampWitness.validate_payload(_JSON_OBJECT.validate_python(transaction_payload))
+
+
+def _migrated_iva_deduction_fact(transaction: Transaction) -> _MigratedIvaDeductionFact | None:
+    """Return complete persisted IVA authority, refusing partial legacy evidence."""
+    taxable_base = transaction.taxable_base
+    iva_rate = transaction.iva_rate
+    iva_amount = transaction.iva_amount
+    category = transaction.iva_category
+    if all(value is None for value in (taxable_base, iva_rate, iva_amount, category)):
+        return None
+    kind = transaction.deduction_fact_kind
+    provenance = transaction.deduction_provenance
+    if (
+        kind is None
+        or provenance is None
+        or taxable_base is None
+        or iva_rate is None
+        or iva_amount is None
+        or category is None
+    ):
+        raise LedgerStorageError(
+            f"transaction {transaction.transaction_id}: exact IVA kind, provenance, "
+            "amounts, rate, and category are required"
+        )
+    return _MigratedIvaDeductionFact(
+        kind=kind,
+        provenance=provenance,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+        category=category,
+    )
+
+
+def _migrated_iva_rate_kind(
+    transaction: Transaction,
+    fact: _MigratedIvaDeductionFact,
+) -> IvaRateKind:
+    """Resolve the one dated legal rate tier for persisted IVA evidence."""
+    if fact.kind is IvaDeductionFactKind.REAGP_COMPENSATION:
+        return IvaRateKind.EXEMPT
+    operation_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
+    rate_kinds = rate_kinds_for_declared_rate(EUMemberState.ES, fact.iva_rate, operation_date)
+    if len(rate_kinds) != 1:
+        raise LedgerStorageError(
+            f"transaction {transaction.transaction_id}: persisted IVA rate does not resolve to exactly one legal tier"
+        )
+    return rate_kinds[0]
 
 
 class TransactionCatalogueRepository:
@@ -444,55 +507,25 @@ class TransactionCatalogueRepository:
 
     def _validate_migrated_deduction_fact(self, transaction: Transaction) -> None:
         """Validate persisted v1 tax evidence without defaulting any semantic axis."""
-        carries_iva = any(
-            value is not None
-            for value in (
-                transaction.taxable_base,
-                transaction.iva_rate,
-                transaction.iva_amount,
-                transaction.iva_category,
-            )
-        )
-        if not carries_iva:
+        fact = _migrated_iva_deduction_fact(transaction)
+        if fact is None:
             return
-        if (
-            transaction.deduction_fact_kind is None
-            or transaction.deduction_provenance is None
-            or transaction.taxable_base is None
-            or transaction.iva_rate is None
-            or transaction.iva_amount is None
-            or transaction.iva_category is None
-        ):
-            raise LedgerStorageError(
-                f"transaction {transaction.transaction_id}: exact IVA kind, provenance, "
-                "amounts, rate, and category are required"
-            )
-        operation_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-        if transaction.deduction_fact_kind is IvaDeductionFactKind.REAGP_COMPENSATION:
-            rate_kind = IvaRateKind.EXEMPT
-        else:
-            rate_kinds = rate_kinds_for_declared_rate(EUMemberState.ES, transaction.iva_rate, operation_date)
-            if len(rate_kinds) != 1:
-                raise LedgerStorageError(
-                    f"transaction {transaction.transaction_id}: persisted IVA rate does not "
-                    "resolve to exactly one legal tier"
-                )
-            rate_kind = next(iter(rate_kinds))
+        rate_kind = _migrated_iva_rate_kind(transaction, fact)
         invoice_kind = (
             InvoiceKind.RECEIVED if transaction.direction is TransactionDirection.OUTGOING else InvoiceKind.ISSUED
         )
         flow_direction = derive_flow_for_classification(
-            category=transaction.iva_category,
+            category=fact.category,
             invoice_direction=invoice_kind,
         )
         validate_iva_deduction_fact(
-            kind=transaction.deduction_fact_kind,
-            provenance=transaction.deduction_provenance,
-            category=transaction.iva_category,
+            kind=fact.kind,
+            provenance=fact.provenance,
+            category=fact.category,
             rate_kind=rate_kind,
             flow_direction=flow_direction,
-            base_amount=transaction.taxable_base,
-            iva_amount=transaction.iva_amount,
+            base_amount=fact.taxable_base,
+            iva_amount=fact.iva_amount,
             investment_asset_id=transaction.investment_asset_id,
             rectifies_ledger_id=transaction.rectifies_ledger_id,
         )

@@ -21,7 +21,6 @@ live_cross_references = [
 application_links = [
     "modelo-840-portal",
     "modelo-840-filing",
-    "modelo-840-verification",
     "modelo-840-extractor",
 ]
 filing_schedules = ["modelo-840-ad-hoc"]

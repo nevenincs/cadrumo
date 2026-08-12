@@ -8,6 +8,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
@@ -21,9 +23,6 @@ from .....domain.calculations.registry import (
 )
 from .....domain.calculations.registry import (
     RegistryModeloObservation as RegistryModeloObservation,
-)
-from .....domain.calculations.registry import (
-    resolve_bound_inputs_by_casilla_id as resolve_bound_inputs_by_casilla_id,
 )
 from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
@@ -264,7 +263,7 @@ def _assert_annual_relation_closure_chain(
     try:
         result = calculate_registry_snapshot(
             snapshot,
-            inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             date_context={"filing_period": _period_to_date(year, period)},
             binding_values=binding_values,
             relation_values=relation_values,

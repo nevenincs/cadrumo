@@ -13,14 +13,14 @@ from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 auth_diagnostics_app = typer.Typer(
     name="diagnostics",
-    help=tr("cli.config.auth.diagnostics.help", default="Inspect encrypted auth diagnostics."),
+    help=tr("cli.config.auth.diagnostics.help"),
     no_args_is_help=True,
 )
 
 
 @auth_diagnostics_app.command(
     "list",
-    help=tr("cli.config.auth.diagnostics.list_help", default="List encrypted Cl@ve auth diagnostics."),
+    help=tr("cli.config.auth.diagnostics.list_help"),
 )
 def auth_diagnostics_list(
     ctx: typer.Context,
@@ -62,11 +62,11 @@ def auth_diagnostics_list(
 
 @auth_diagnostics_app.command(
     "show",
-    help=tr("cli.config.auth.diagnostics.show_help", default="Show one redacted encrypted auth diagnostic."),
+    help=tr("cli.config.auth.diagnostics.show_help"),
 )
 def auth_diagnostics_show(
     ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help")),
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -139,21 +139,16 @@ def _optional_bool_text(value: bool | None) -> str:
     "report",
     help=tr(
         "cli.config.auth.diagnostics.report_help",
-        default="Record the operator-observed Cl@ve app state for one auth diagnostic.",
     ),
 )
 def auth_diagnostics_report(
     ctx: typer.Context,
-    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help", default="Diagnostic id")),
+    diagnostic_id: str = typer.Argument(..., help=tr("cli.config.auth.diagnostics.id_help")),
     phone_state: AuthDiagnosticPhoneState = typer.Option(
         ...,
         "--phone-state",
         help=tr(
             "cli.config.auth.diagnostics.phone_state_help",
-            default=(
-                "One of: app_prompted_and_accepted, app_prompted_not_accepted, "
-                "app_did_not_prompt, operator_did_not_check."
-            ),
         ),
     ),
     output_language: OutputLanguage | None = typer.Option(

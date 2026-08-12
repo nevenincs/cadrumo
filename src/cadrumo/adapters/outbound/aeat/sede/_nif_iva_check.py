@@ -488,7 +488,7 @@ async def _open_nif_iva_form(page: Page, *, timeout_ms: int) -> None:
         page,
         _IVA_NUMBER_SELECTORS,
         "open-nif-iva-form:iva-number",
-        "NIF-IVA IVA-number control",
+        "NIF-IVA control",
         timeout_ms,
     )
 
@@ -576,14 +576,14 @@ async def _fill_iva_number(page: Page, iva_number: str, *, timeout_ms: int) -> N
         page,
         _IVA_NUMBER_SELECTORS,
         "check-nif:iva-number",
-        "NIF-IVA IVA-number control",
+        "NIF-IVA control",
         timeout_ms,
     )
     await _fill_expected(
         locator,
         iva_number,
         stage="check-nif:iva-number",
-        description="NIF-IVA IVA-number control",
+        description="NIF-IVA control",
         timeout_ms=timeout_ms,
     )
 
@@ -633,7 +633,7 @@ def _split_vies_nif(nif: str) -> tuple[str, str]:
         raise RegistryValidationError(f"NIF-IVA value {nif!r} must start with a two-letter EU country code")
     iva_number = normalized_nif[2:]
     if not iva_number:
-        raise RegistryValidationError(f"NIF-IVA value {nif!r} must include a IVA number after the country code")
+        raise RegistryValidationError(f"NIF-IVA value {nif!r} must include an IVA number after the country code")
     return normalized_nif[:2], iva_number
 
 

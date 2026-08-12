@@ -11,6 +11,7 @@ import typer
 
 from ...application.modelo import (
     DataInventoryCasilla,
+    DataInventoryChecklist,
     ceded_autonomic_modelo_locale_key,
     data_inventory_checklist,
     modelo_work_create_refusal_locale_key,
@@ -31,6 +32,7 @@ from ...application.modelo import (
     registry_support_matrix,
 )
 from ...application.operator_actions import ActionReference
+from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -539,6 +541,10 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
             optional_manual=[_data_inventory_casilla_payload(entry) for entry in checklist.optional_manual],
             ledger_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.ledger_derivable],
             profile_derivable=[_data_inventory_casilla_payload(entry) for entry in checklist.profile_derivable],
+            previous_filing=[_data_inventory_casilla_payload(entry) for entry in checklist.previous_filing],
+            relation_prefill=[_data_inventory_casilla_payload(entry) for entry in checklist.relation_prefill],
+            live_observation=[_data_inventory_casilla_payload(entry) for entry in checklist.live_observation],
+            unbucketed_sources=[_data_inventory_casilla_payload(entry) for entry in checklist.unbucketed_sources],
             unresolved_profile_bindings=list(checklist.unresolved_profile_bindings),
             unresolved_profile_keys=list(checklist.unresolved_profile_keys),
             profile_checked=checklist.profile_checked,
@@ -564,15 +570,32 @@ def _register_requires_command(app: typer.Typer, deps: _DiscoveryDeps) -> None:
                 tr("cli.app.modelo.requires.section_profile", default="profile_derivable"),
                 checklist.profile_derivable,
             ),
+            *_data_inventory_section_lines(
+                "previous_filing",
+                checklist.previous_filing,
+            ),
+            *_data_inventory_section_lines(
+                "relation_prefill",
+                checklist.relation_prefill,
+            ),
+            *_data_inventory_section_lines(
+                "live_observation",
+                checklist.live_observation,
+            ),
+            *_data_inventory_section_lines(
+                "unbucketed_sources",
+                checklist.unbucketed_sources,
+            ),
         ]
         notices = _requires_notices(checklist)
         lines.extend(_notice_text_lines(notices))
         _emit_envelope(ctx, command="modelo.requires", result=result, lines=lines, notices=notices)
 
 
-def _requires_notices(checklist) -> tuple[Notice, ...]:
+def _requires_notices(checklist: DataInventoryChecklist) -> tuple[Notice, ...]:
+    notices: list[Notice] = []
     if not checklist.profile_checked:
-        return (
+        notices.append(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="modelo.requires.no_active_profile",
@@ -586,10 +609,10 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                 context={"modelo": str(checklist.modelo)},
             ),
         )
-    if checklist.unresolved_profile_bindings:
+    elif checklist.unresolved_profile_bindings:
         binding_ids = ", ".join(sorted(str(binding_id) for binding_id in checklist.unresolved_profile_bindings))
         missing = _unresolved_profile_requirements(checklist) or binding_ids
-        return (
+        notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
                 code="modelo.requires.missing_profile_coefficient",
@@ -606,10 +629,29 @@ def _requires_notices(checklist) -> tuple[Notice, ...]:
                 context={"modelo": str(checklist.modelo), "missing_bindings": binding_ids},
             ),
         )
-    return ()
+    if checklist.unbucketed_sources:
+        source_kinds = ", ".join(sorted({entry.binding_source or "" for entry in checklist.unbucketed_sources}))
+        binding_ids = ", ".join(
+            sorted(str(entry.binding_id) for entry in checklist.unbucketed_sources if entry.binding_id is not None),
+        )
+        casilla_ids = ", ".join(sorted({str(entry.casilla_id) for entry in checklist.unbucketed_sources}))
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.requires.unbucketed_binding_source",
+                message=tr("cli.app.modelo.requires.unbucketed_binding_source"),
+                context={
+                    "modelo": str(checklist.modelo),
+                    "source_kinds": source_kinds,
+                    "binding_ids": binding_ids,
+                    "casilla_ids": casilla_ids,
+                },
+            ),
+        )
+    return tuple(notices)
 
 
-def _unresolved_profile_requirements(checklist) -> str:
+def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     """Render the unresolved bindings' profile facts as grounded requirements.
 
     A binding id names the registry's internal consumer of a profile fact, not
@@ -633,25 +675,6 @@ def _unresolved_profile_requirements(checklist) -> str:
             grounding_index=build_profile_grounding_index(resources().modelos.authority),
         ),
     )
-
-
-_BINDING_SOURCE_TO_READINESS: dict[str, str] = {
-    "previous_filing": "prior filed revision",
-    "relation_prefill": "relation input",
-    "live_observation": "live observation",
-    "ledger_iva_aggregation": "ledger source",
-    "ledger_oss_aggregation": "ledger source",
-    "ledger_renta_gastos_estimacion_directa_aggregation": "ledger source",
-    "profile": "profile fact",
-    "profile_fact": "profile fact",
-    "bucket_state": "bucket",
-    "waiver": "waiver",
-    "blocking_finding": "blocking finding",
-}
-
-
-def _readiness_for_source(source: str) -> str:
-    return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
 
 
 def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
@@ -764,7 +787,7 @@ def _binding_list_rows_for_report(
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
-        readiness = _readiness_for_source(row.source)
+        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source])
         encoded_options = binding_encoded_option_payloads(row.encoded_options)
         merged_rows.append(
             BindingListRowPayload(
@@ -871,12 +894,55 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
         _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
 
 
-def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period: str | None) -> tuple[Notice, ...]:
-    missing_filters = tuple(
+def _binding_scope_missing_filters(*, year: int | None, period: str | None) -> tuple[str, ...]:
+    return tuple(
         option
         for option, value in (("--year", year), ("--period", period))
         if value is None or (isinstance(value, str) and not value.strip())
     )
+
+
+def _binding_scope_action_bindings(
+    *,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+) -> tuple[ResolvedActionArgument, ...]:
+    argument_values: tuple[tuple[str, str | int | None], ...] = (
+        ("modelo", modelo),
+        ("year", year),
+        ("period", period),
+    )
+    return tuple(
+        ResolvedActionArgument(
+            argument_name=argument_name,
+            status=ActionArgumentStatus.RESOLVED,
+            value=value,
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key=argument_name,
+        )
+        for argument_name, value in argument_values
+        if value is not None and (not isinstance(value, str) or value.strip())
+    )
+
+
+def _binding_scope_notice_context(
+    *,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    missing_filters: tuple[str, ...],
+) -> dict[str, str]:
+    return {
+        "modelo_filter": modelo or "",
+        "year_filter": "" if year is None else str(year),
+        "period_filter": period or "",
+        "missing_filters": ", ".join(missing_filters),
+    }
+
+
+def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period: str | None) -> tuple[Notice, ...]:
+    missing_filters = _binding_scope_missing_filters(year=year, period=period)
     if not missing_filters:
         return ()
     missing = ", ".join(missing_filters)
@@ -888,28 +954,14 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
             message=message,
             action=resolve_notice_action(
                 action=ActionReference(action_id="operator.modelo.bindings.list"),
-                argument_bindings=tuple(
-                    ResolvedActionArgument(
-                        argument_name=argument_name,
-                        status=ActionArgumentStatus.RESOLVED,
-                        value=value,
-                        source=ActionArgumentSource.VERDICT_CONTEXT,
-                        source_key=argument_name,
-                    )
-                    for argument_name, value in (
-                        ("modelo", modelo),
-                        ("year", year),
-                        ("period", period),
-                    )
-                    if value is not None and (not isinstance(value, str) or value.strip())
-                ),
+                argument_bindings=_binding_scope_action_bindings(modelo=modelo, year=year, period=period),
             ),
-            context={
-                "modelo_filter": modelo or "",
-                "year_filter": "" if year is None else str(year),
-                "period_filter": period or "",
-                "missing_filters": missing,
-            },
+            context=_binding_scope_notice_context(
+                modelo=modelo,
+                year=year,
+                period=period,
+                missing_filters=missing_filters,
+            ),
         ),
     )
 
@@ -1010,7 +1062,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                 BindingPreviewRowPayload(
                     binding_id=row.binding_id,
                     source=row.source,
-                    readiness=_readiness_for_source(row.source),
+                    readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
                     typed_enum=row.typed_enum,
                     override=overrides.get(row.binding_id),
                     legal_refs=row.legal_refs,
@@ -1037,7 +1089,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                     (
                         row.binding_id,
                         row.source,
-                        _readiness_for_source(row.source),
+                        tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
                         overrides.get(row.binding_id) or "-",
                     ),
                 ),

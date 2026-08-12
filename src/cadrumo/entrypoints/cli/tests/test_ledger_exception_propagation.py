@@ -6,9 +6,7 @@ contract assertion: after contract narrows the broad ``except Exception`` catch 
 exception (e.g. a corrupt active-profile pointer file producing a
 ``pydantic.ValidationError``) must NOT be swallowed as the "no active
 profile" refusal.  Instead it must propagate to the top-level error
-boundary and surface as a categorically different response — a
-validation-boundary or unexpected-internal-error envelope, never the
-profile-create guidance.
+boundary and surface as a categorically different typed envelope.
 
 Real-behavior test: uses a genuinely corrupt ``active-profile`` pointer
 file on disk to trigger the unexpected-exception path through the real
@@ -23,36 +21,40 @@ The call chain under test:
             → ``BucketPointer.from_toml(corrupt_text)``
               → ``pydantic.ValidationError`` (not CadrumoError)
 
-Before contract: the broad ``except Exception`` caught this and produced the
-profile-create guidance — masking the real error.
-After contract: only ``NoActiveProfileError`` is caught; the
-``pydantic.ValidationError`` propagates to the CLI boundary and surfaces
-as a ``CliValidationBoundaryError`` ("validation" / "repair").
+Before contract the broad ``except Exception`` erased this distinction. After
+contract only ``NoActiveProfileError`` is caught and the
+``pydantic.ValidationError`` reaches the typed CLI validation boundary.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....core import pointer_path
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Text that the "no active profile" refusal always contains — used as the
-# anti-marker to confirm a response is NOT the profile-create guidance.
-_PROFILE_CREATE_GUIDANCE = "profile create"
+
+def _error_document(output: str) -> dict[str, object]:
+    """Return the real shared-spine JSON document emitted by the CLI."""
+    for line in output.splitlines():
+        if line.startswith("{"):
+            document = json.loads(line)
+            assert isinstance(document, dict)
+            return document
+    raise AssertionError("the CLI emitted no JSON error document")
 
 
-@pytest.fixture(autouse=True)
-def _english_output() -> Iterator[None]:
-    with override_settings(cadrumo_output_language="en"):
-        yield
+def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
+    member = document[key]
+    assert isinstance(member, dict)
+    return {str(name): value for name, value in member.items()}
 
 
 @pytest.fixture
@@ -89,15 +91,21 @@ def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
 # ---------------------------------------------------------------------------
 
 
-def test_no_pointer_produces_profile_create_guidance(_no_pointer_root: Path) -> None:
+def test_no_pointer_projects_the_canonical_profile_action(_no_pointer_root: Path) -> None:
     """With no pointer file the expected NoActiveProfileError surfaces as the
     profile-create guidance — the narrow except still catches it correctly."""
-    result = invoke_cached_cli(["app", "ledger", "ratios", "list"])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "ratios", "list"])
 
-    assert result.exit_code != 0, f"Expected non-zero exit but got 0: {result.output}"
-    assert _PROFILE_CREATE_GUIDANCE in result.output, (
-        f"Expected profile-create guidance in output; got:\n{result.output}"
-    )
+    assert result.exit_code != 0
+    error = _object_member(_error_document(result.output), "error")
+    action = _object_member(error, "action")
+    assert action["failed_condition_id"] == "profile.active.available"
+    reference = _object_member(action, "action")
+    assert reference["action_id"] == "operator.profile.create"
+    assert reference["target_command_key"] == "config.profile.create"
+    assert action["conditionality"] == "requires_arguments"
+    assert action["missing_argument_names"] == ["profile_name"]
+    assert action["no_recovery_outcome"] is None
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +113,7 @@ def test_no_pointer_produces_profile_create_guidance(_no_pointer_root: Path) -> 
 # ---------------------------------------------------------------------------
 
 
-def test_corrupt_pointer_does_not_produce_profile_create_guidance(
+def test_corrupt_pointer_projects_the_validation_boundary(
     _corrupt_pointer_root: Path,
 ) -> None:
     """A corrupt pointer file raises a non-CadrumoError that must NOT be swallowed
@@ -116,23 +124,23 @@ def test_corrupt_pointer_does_not_produce_profile_create_guidance(
     After contract only ``NoActiveProfileError`` is caught; the
     ``pydantic.ValidationError`` from the corrupt pointer propagates to the
     top-level CLI error boundary and surfaces as a validation-boundary
-    envelope — a categorically different response that mentions "repair" or
-    "validation", never "profile create".
+    envelope with its own condition evidence and terminal outcome.
     """
-    result = invoke_cached_cli(["app", "ledger", "ratios", "list"])
+    result = invoke_cached_cli(["--format", "json", "app", "ledger", "ratios", "list"])
 
-    assert result.exit_code != 0, f"Expected non-zero exit but got 0: {result.output}"
-    assert _PROFILE_CREATE_GUIDANCE not in result.output, (
-        "Corrupt-pointer error was silently reclassified as 'no active profile' — "
-        "the broad except Exception catch is still in place.\n"
-        f"Output:\n{result.output}"
-    )
-    # The pydantic.ValidationError propagates to the CLI boundary and is
-    # wrapped as CliValidationBoundaryError, which renders a "validation" /
-    # "repair" message — confirming the error was not swallowed.
-    output_lower = result.output.lower()
-    assert "validation" in output_lower or "repair" in output_lower, (
-        "Expected validation-boundary or repair-hint in output; "
-        f"the non-CadrumoError may not have propagated correctly.\n"
-        f"Output:\n{result.output}"
-    )
+    assert result.exit_code != 0
+    error = _object_member(_error_document(result.output), "error")
+    assert error["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
+    action = _object_member(error, "action")
+    assert action["failed_condition_id"] == "cli.validation.boundary_clean"
+    assert action["evidence"] == [
+        {
+            "condition_id": "cli.validation.boundary_clean",
+            "evidence_id": "cli.validation.boundary_clean.observation",
+            "provenance": "runtime_observation",
+            "values": {"boundary_error_type": "CliValidationBoundaryError"},
+        }
+    ]
+    assert action["action"] is None
+    assert action["conditionality"] == "not_applicable"
+    assert action["no_recovery_outcome"] == "operator_decision"

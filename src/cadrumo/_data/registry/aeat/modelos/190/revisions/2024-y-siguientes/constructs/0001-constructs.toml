@@ -45,7 +45,6 @@ application_links = [
     "modelo-190-portal",
     "modelo-190-calculation",
     "modelo-190-filing",
-    "modelo-190-verification",
     "modelo-190-extractor",
     "modelo-190-review",
     "modelo-190-approval",

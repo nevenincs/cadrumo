@@ -66,25 +66,42 @@ class ReviewProjection(BaseModel):
     @model_validator(mode="after")
     def _derived_state_matches_rows(self) -> ReviewProjection:
         """Refuse projections whose reported review state contradicts their rows."""
-        if any(verdict.ok for verdict in self.flow_verdicts):
-            raise ValueError("review projection flow_verdicts must contain only failures")
-
-        expected_answered_count = sum(1 for row in self.rows if row.status is PageStatus.ANSWERED)
-        if self.answered_count != expected_answered_count:
-            raise ValueError("review projection answered_count must match answered rows")
-
-        expected_required_remaining = sum(
-            1 for row in self.rows if row.required and row.status is not PageStatus.ANSWERED and row.jumpable
-        )
-        if self.required_remaining != expected_required_remaining:
-            raise ValueError("review projection required_remaining must match outstanding required rows")
-
-        expected_blocking = _blocking_verdicts(list(self.rows), self.flow_verdicts)
-        if self.blocking != expected_blocking:
-            raise ValueError("review projection blocking verdicts must match rows and flow failures")
-        if self.submit_eligible != (not expected_blocking):
-            raise ValueError("review projection submit_eligible must match blocking verdicts")
+        _validate_flow_verdicts(self.flow_verdicts)
+        _validate_answered_count(self.rows, self.answered_count)
+        _validate_required_remaining(self.rows, self.required_remaining)
+        _validate_blocking_state(self)
         return self
+
+
+def _validate_flow_verdicts(flow_verdicts: tuple[ValidationVerdict, ...]) -> None:
+    """Review projections retain only failed flow-scope verdicts."""
+    if any(verdict.ok for verdict in flow_verdicts):
+        raise ValueError("review projection flow_verdicts must contain only failures")
+
+
+def _validate_answered_count(rows: tuple[ReviewRow, ...], answered_count: int) -> None:
+    """Confirm the serialized answered count matches its row state."""
+    expected_answered_count = sum(1 for row in rows if row.status is PageStatus.ANSWERED)
+    if answered_count != expected_answered_count:
+        raise ValueError("review projection answered_count must match answered rows")
+
+
+def _validate_required_remaining(rows: tuple[ReviewRow, ...], required_remaining: int) -> None:
+    """Confirm the serialized required count excludes answered and stale rows."""
+    expected_required_remaining = sum(
+        1 for row in rows if row.required and row.status is not PageStatus.ANSWERED and row.jumpable
+    )
+    if required_remaining != expected_required_remaining:
+        raise ValueError("review projection required_remaining must match outstanding required rows")
+
+
+def _validate_blocking_state(projection: ReviewProjection) -> None:
+    """Confirm the blocking verdict tuple and submit flag derive from the same rows."""
+    expected_blocking = _blocking_verdicts(list(projection.rows), projection.flow_verdicts)
+    if projection.blocking != expected_blocking:
+        raise ValueError("review projection blocking verdicts must match rows and flow failures")
+    if projection.submit_eligible != (not expected_blocking):
+        raise ValueError("review projection submit_eligible must match blocking verdicts")
 
 
 def review(definition: FlowDefinition, state: FlowState) -> ReviewProjection:

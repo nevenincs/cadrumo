@@ -7,7 +7,7 @@ and bundled-corpus reachability, key configuration sanity, registry referential
 integrity, and portal-registry assembly health with any recorded portal drift.
 Each probe answers one health question and returns a
 typed :class:`PreflightCheck` — it never raises; a broken dimension is report
-data (an ``error`` severity row with a concrete remediation), not an exception
+data (an ``error`` severity row with typed facts and a precondition verdict), not an exception
 path, so the doctor reports status rather than crashing on a red row.
 
 The certificate / Cl@ve Móvil rows reuse
@@ -27,14 +27,20 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
-from ..core import STRICT_FROZEN_CONFIG, AuthProviderKind
+from ..core import (
+    STRICT_FROZEN_CONFIG,
+    ActionConditionality,
+    ActionEvidenceProvenance,
+    AuthProviderKind,
+    NoRecoveryOutcome,
+)
 from ..core.config import Settings, load_settings
 from ..core.errors import CadrumoError
 from ..core.paths import (
@@ -43,6 +49,7 @@ from ..core.paths import (
     windows_storage_root_long_path_margin,
 )
 from .auth import ProviderProbeResult
+from .operator_actions import ActionReference, ConditionEvidence, PreconditionVerdict
 
 if TYPE_CHECKING:
     from ..domain.portals import PortalDriftEvent
@@ -76,15 +83,26 @@ class HealthSeverity(StrEnum):
     ERROR = "error"
 
 
+class PreflightCondition(StrEnum):
+    """Closed failed-condition identities for workstation health probes."""
+
+    AUTH_PROVIDER_HEALTHY = "preflight.auth.provider_healthy"
+    STORAGE_ROOT_WRITABLE = "preflight.storage.root_writable"
+    CORPUS_PRESENT = "preflight.corpus.present"
+    WINDOWS_PATH_FITS = "preflight.storage.windows_path_fits"
+    REGISTRY_REFERENCES_VALID = "preflight.registry.references_valid"
+    PORTAL_REGISTRY_HEALTHY = "preflight.portal.registry_healthy"
+
+
 class PreflightCheck(BaseModel):
     """One typed workstation-preflight health row.
 
     ``check`` is the stable row id shown by ``aeat config check`` (e.g.
     ``auth-provider:certificate``, ``storage:local-root``,
     ``corpus:normatives``, ``registry:referential-integrity``).
-    ``healthy`` is the boolean verdict; ``severity`` grades it;
-    ``detail`` explains the observed state; ``remediation`` names the
-    concrete operator action when ``healthy`` is false.
+    ``healthy`` is the boolean verdict and ``severity`` grades it. ``facts``
+    carries only locale-neutral observations. An unhealthy row owns one typed
+    precondition verdict; a healthy row owns none.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -92,8 +110,60 @@ class PreflightCheck(BaseModel):
     check: str = Field(min_length=1)
     healthy: bool
     severity: HealthSeverity
-    detail: str = ""
-    remediation: str = ""
+    facts: dict[str, str | int | bool] = Field(default_factory=dict)
+    precondition_verdict: PreconditionVerdict | None = None
+
+    @model_validator(mode="after")
+    def _verdict_matches_health(self) -> PreflightCheck:
+        if self.healthy and self.precondition_verdict is not None:
+            raise ValueError("healthy preflight rows cannot carry a failed precondition")
+        if not self.healthy and self.precondition_verdict is None:
+            raise ValueError("unhealthy preflight rows require a typed precondition verdict")
+        return self
+
+
+def _preflight_verdict(
+    condition: PreflightCondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+    action_id: str | None = None,
+) -> PreconditionVerdict:
+    condition_id = condition.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE if action_id else ActionConditionality.NOT_APPLICABLE,
+        action=ActionReference(action_id=action_id) if action_id else None,
+        no_recovery_outcome=None if action_id else NoRecoveryOutcome.OPERATOR_DECISION,
+    )
+
+
+def _failed_check(
+    *,
+    check: str,
+    severity: HealthSeverity,
+    condition: PreflightCondition,
+    facts: Mapping[str, str | int | bool],
+    action_id: str | None = None,
+) -> PreflightCheck:
+    return PreflightCheck(
+        check=check,
+        healthy=False,
+        severity=severity,
+        facts=dict(facts),
+        precondition_verdict=_preflight_verdict(condition, facts=facts, action_id=action_id),
+    )
+
+
+def _healthy_check(*, check: str, severity: HealthSeverity, facts: Mapping[str, str | int | bool]) -> PreflightCheck:
+    return PreflightCheck(check=check, healthy=True, severity=severity, facts=dict(facts))
 
 
 # ── Per-auth-provider certificate / Cl@ve Móvil health ────────────────
@@ -128,7 +198,7 @@ _OK_PROBE_RESULTS: Final[frozenset[ProviderProbeResult]] = frozenset({ProviderPr
 def grade_provider_probe_result(
     provider: AuthProviderKind,
     result: ProviderProbeResult,
-) -> tuple[HealthSeverity, bool, str]:
+) -> tuple[HealthSeverity, bool]:
     """Grade one ``ProviderProbeResult`` value into a doctor verdict.
 
     The four declared bands partition
@@ -142,30 +212,21 @@ def grade_provider_probe_result(
     an ungraded state green gives the one answer an operator cannot act on.
 
     Args:
-        provider: The :class:`~core.AuthProviderKind` member being graded, used
-            to select the concrete remediation for a red row.
+        provider: The :class:`~core.AuthProviderKind` member being graded.
         result: The probe's typed :class:`~application.auth.ProviderProbeResult`
             member.
 
     Returns:
-        The severity, the healthy verdict, and the operator remediation
-        (empty when there is nothing to act on).
+        The severity and the healthy verdict.
     """
+    del provider
     if result in _ERROR_PROBE_RESULTS:
-        return HealthSeverity.ERROR, False, _auth_error_remediation(provider, result)
+        return HealthSeverity.ERROR, False
     if result in _WARN_PROBE_RESULTS:
-        return (
-            HealthSeverity.WARN,
-            True,
-            "renew the certificate before it expires (obtain a fresh FNMT bundle)",
-        )
+        return HealthSeverity.WARN, True
     if result in _UNCONFIGURED_PROBE_RESULTS or result in _OK_PROBE_RESULTS:
-        return HealthSeverity.OK, True, ""
-    return (
-        HealthSeverity.ERROR,
-        False,
-        "report this: the provider probe returned a state `aeat config check` cannot grade",
-    )
+        return HealthSeverity.OK, True
+    return HealthSeverity.ERROR, False
 
 
 def probe_auth_providers(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
@@ -191,40 +252,32 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
         try:
             probe = probe_provider_configuration(kind.value, settings=settings)
         except CadrumoError as exc:  # never crash the doctor on a probe failure
+            facts = {"provider": kind.value, "probe_error_type": type(exc).__name__}
             rows.append(
-                PreflightCheck(
+                _failed_check(
                     check=check_id,
-                    healthy=False,
                     severity=HealthSeverity.ERROR,
-                    detail=f"provider probe failed: {type(exc).__name__}: {exc}",
-                    remediation="review the provider configuration under `aeat config auth`",
+                    condition=PreflightCondition.AUTH_PROVIDER_HEALTHY,
+                    facts=facts,
+                    action_id="operator.auth.configure",
                 ),
             )
             continue
-        severity, healthy, remediation = grade_provider_probe_result(kind, probe.result)
-        rows.append(
-            PreflightCheck(
-                check=check_id,
-                healthy=healthy,
-                severity=severity,
-                detail=probe.summary or f"provider {kind.value}: {probe.result or 'unknown'}",
-                remediation=remediation,
-            ),
-        )
+        severity, healthy = grade_provider_probe_result(kind, probe.result)
+        facts = {"provider": kind.value, "probe_result": probe.result.value}
+        if healthy:
+            rows.append(_healthy_check(check=check_id, severity=severity, facts=facts))
+        else:
+            rows.append(
+                _failed_check(
+                    check=check_id,
+                    severity=severity,
+                    condition=PreflightCondition.AUTH_PROVIDER_HEALTHY,
+                    facts=facts,
+                    action_id="operator.auth.configure",
+                )
+            )
     return tuple(rows)
-
-
-def _auth_error_remediation(provider: AuthProviderKind, result: ProviderProbeResult) -> str:
-    """Return the concrete operator action for a red auth-provider probe."""
-    if provider is AuthProviderKind.CERTIFICATE:
-        if result is ProviderProbeResult.FILE_MISSING:
-            return "point `aeat config auth certificate --file` at an existing .p12 bundle"
-        if result is ProviderProbeResult.EXPIRED:
-            return "obtain a fresh FNMT certificate and reconfigure `aeat config auth certificate`"
-        if result is ProviderProbeResult.UNREADABLE:
-            return "set the correct PKCS#12 passphrase via `aeat config auth certificate secret set`"
-        return "re-export a valid .p12 bundle and reconfigure `aeat config auth certificate`"
-    return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth configure --provider clave_movil`"
 
 
 # ── Secure-storage, bundled-corpus, and configuration preflight ───────
@@ -268,37 +321,34 @@ def _probe_storage_root(settings: Settings) -> PreflightCheck:
     root = settings.cadrumo_local_storage_root
     ancestor = _nearest_existing_ancestor(root)
     if ancestor is None:
-        return PreflightCheck(
+        facts = {"storage_root": str(root), "existing_ancestor_present": False}
+        return _failed_check(
             check="storage:local-root",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"no existing directory at or above the storage root {root}",
-            remediation=(
-                f"create the storage root directory {root} or set CADRUMO_LOCAL_STORAGE_ROOT to a writable path"
-            ),
+            condition=PreflightCondition.STORAGE_ROOT_WRITABLE,
+            facts=facts,
+            action_id="operator.storage.init",
         )
     if not ancestor.is_dir():
-        return PreflightCheck(
+        facts = {"storage_root": str(root), "ancestor": str(ancestor), "ancestor_is_directory": False}
+        return _failed_check(
             check="storage:local-root",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"the storage root ancestor {ancestor} is not a directory",
-            remediation=f"set CADRUMO_LOCAL_STORAGE_ROOT to a writable directory (currently {root})",
+            condition=PreflightCondition.STORAGE_ROOT_WRITABLE,
+            facts=facts,
         )
     if not os.access(ancestor, os.W_OK):
-        return PreflightCheck(
+        facts = {"storage_root": str(root), "ancestor": str(ancestor), "ancestor_writable": False}
+        return _failed_check(
             check="storage:local-root",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"the storage root ancestor {ancestor} is not writable",
-            remediation=f"grant write access to {ancestor} or set CADRUMO_LOCAL_STORAGE_ROOT to a writable path",
+            condition=PreflightCondition.STORAGE_ROOT_WRITABLE,
+            facts=facts,
         )
-    existing = "present" if root.exists() else "created lazily on first write"
-    return PreflightCheck(
+    return _healthy_check(
         check="storage:local-root",
-        healthy=True,
         severity=HealthSeverity.OK,
-        detail=f"secure-storage root {root} is reachable and writable ({existing})",
+        facts={"storage_root": str(root), "root_present": root.exists(), "ancestor_writable": True},
     )
 
 
@@ -307,26 +357,25 @@ def _probe_corpus(check_id: str, root: Path, label: str) -> PreflightCheck:
     try:
         present = root.is_dir() and any(root.iterdir())
     except OSError as exc:
-        return PreflightCheck(
+        facts = {"corpus_root": str(root), "error_type": type(exc).__name__, "corpus_present": False}
+        return _failed_check(
             check=check_id,
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"the bundled {label} corpus at {root} is unreadable: {type(exc).__name__}",
-            remediation="reinstall the cadrumo package so the bundled corpus data is present",
+            condition=PreflightCondition.CORPUS_PRESENT,
+            facts=facts,
         )
     if not present:
-        return PreflightCheck(
+        facts = {"corpus_root": str(root), "corpus_present": False}
+        return _failed_check(
             check=check_id,
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"the bundled {label} corpus is missing or empty at {root}",
-            remediation="reinstall the cadrumo package so the bundled corpus data is present",
+            condition=PreflightCondition.CORPUS_PRESENT,
+            facts=facts,
         )
-    return PreflightCheck(
+    return _healthy_check(
         check=check_id,
-        healthy=True,
         severity=HealthSeverity.OK,
-        detail=f"the bundled {label} corpus is present at {root}",
+        facts={"corpus_root": str(root), "corpus_present": True},
     )
 
 
@@ -341,20 +390,15 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
     configured one is ``OK``.
     """
     if settings.cadrumo_secret_passphrase is None:
-        return PreflightCheck(
+        return _healthy_check(
             check="env:configuration",
-            healthy=True,
             severity=HealthSeverity.WARN,
-            detail="configuration is valid but no master-key passphrase is configured (locked store)",
-            remediation=(
-                "set CADRUMO_SECRET_PASSPHRASE for non-interactive access, or unlock interactively when prompted"
-            ),
+            facts={"configuration_valid": True, "secret_passphrase_configured": False},
         )
-    return PreflightCheck(
+    return _healthy_check(
         check="env:configuration",
-        healthy=True,
         severity=HealthSeverity.OK,
-        detail="deployment configuration loaded and a master-key passphrase is configured",
+        facts={"configuration_valid": True, "secret_passphrase_configured": True},
     )
 
 
@@ -377,12 +421,6 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
 #: default root survives only about 80, which an ordinary module path reaches.
 #: Tuning this to restore silence would re-hide exactly what that fix surfaced.
 _LONG_PATH_WARN_MARGIN = 40
-
-_LONG_PATH_REGISTRY_REMEDIATION = (
-    "run `New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' "
-    "-Name 'LongPathsEnabled' -Value 1 -PropertyType DWORD -Force` as Administrator, then "
-    "restart the terminal; or move CADRUMO_LOCAL_STORAGE_ROOT to a shorter path"
-)
 
 
 def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_length: int) -> PreflightCheck:
@@ -409,19 +447,17 @@ def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_l
     :func:`~core.paths.windows_long_paths_enabled`.
     """
     if sys.platform != "win32":
-        return PreflightCheck(
+        return _healthy_check(
             check="storage:windows-long-path",
-            healthy=True,
             severity=HealthSeverity.OK,
-            detail="not applicable on this platform",
+            facts={"platform_windows": False, "path_limit_applicable": False},
         )
 
     if windows_long_paths_enabled():
-        return PreflightCheck(
+        return _healthy_check(
             check="storage:windows-long-path",
-            healthy=True,
             severity=HealthSeverity.OK,
-            detail="LongPathsEnabled is set; the Windows MAX_PATH ceiling does not apply",
+            facts={"platform_windows": True, "long_paths_enabled": True, "path_limit_applicable": False},
         )
 
     root = settings.cadrumo_local_storage_root
@@ -430,43 +466,38 @@ def _probe_windows_long_path_support(settings: Settings, *, object_path_suffix_l
         object_path_suffix_length=object_path_suffix_length,
     )
     if margin <= 0:
-        return PreflightCheck(
+        facts = {
+            "storage_root": str(root),
+            "long_paths_enabled": False,
+            "path_margin": margin,
+            "max_path": WINDOWS_MAX_PATH,
+        }
+        return _failed_check(
             check="storage:windows-long-path",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=(
-                f"the storage root {root} is {-margin} characters past the Windows "
-                f"MAX_PATH ({WINDOWS_MAX_PATH}) ceiling for the deepest possible object path; "
-                "LongPathsEnabled is not set"
-            ),
-            remediation=_LONG_PATH_REGISTRY_REMEDIATION,
+            condition=PreflightCondition.WINDOWS_PATH_FITS,
+            facts=facts,
         )
     if margin < _LONG_PATH_WARN_MARGIN:
-        return PreflightCheck(
+        return _healthy_check(
             check="storage:windows-long-path",
-            healthy=True,
             severity=HealthSeverity.WARN,
-            detail=(
-                f"the storage root {root} has only {margin} characters of headroom "
-                f"below the Windows MAX_PATH ({WINDOWS_MAX_PATH}) ceiling; LongPathsEnabled is not set. "
-                # The operator cannot act on a bare headroom figure, because what
-                # consumes it is not their doing: the budget tracks the longest
-                # namespace the build registers, so an upgrade can spend this
-                # margin without the root ever changing. Saying how much
-                # namespace growth is left names the thing that actually moves.
-                f"A storage namespace more than {margin} characters longer than the longest "
-                f"this build registers would put the deepest object path past that ceiling"
-            ),
-            remediation=_LONG_PATH_REGISTRY_REMEDIATION,
+            facts={
+                "storage_root": str(root),
+                "long_paths_enabled": False,
+                "path_margin": margin,
+                "max_path": WINDOWS_MAX_PATH,
+            },
         )
-    return PreflightCheck(
+    return _healthy_check(
         check="storage:windows-long-path",
-        healthy=True,
         severity=HealthSeverity.OK,
-        detail=(
-            f"the storage root {root} has {margin} characters of headroom below the "
-            f"Windows MAX_PATH ({WINDOWS_MAX_PATH}) ceiling"
-        ),
+        facts={
+            "storage_root": str(root),
+            "long_paths_enabled": False,
+            "path_margin": margin,
+            "max_path": WINDOWS_MAX_PATH,
+        },
     )
 
 
@@ -498,16 +529,16 @@ def probe_registry_referential_integrity() -> PreflightCheck:
     try:
         authority = bundled_authority()
     except (RegistryValidationError, RegistrySnapshotError, CadrumoError) as exc:
-        return PreflightCheck(
+        facts = {"registry_loaded": False, "error_type": type(exc).__name__}
+        return _failed_check(
             check="registry:referential-integrity",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"the bundled registry failed to load: {type(exc).__name__}: {exc}",
-            remediation="inspect the registry TOML sources; run the registry validation suite for the failing modelo",
+            condition=PreflightCondition.REGISTRY_REFERENCES_VALID,
+            facts=facts,
         )
 
     revisions_checked = 0
-    failures: list[str] = []
+    failure_count = 0
     for modelo in authority.modelos:
         for revision in modelo.revisions.values():
             filing_year, period = _representative_filing_context(revision)
@@ -521,26 +552,21 @@ def probe_registry_referential_integrity() -> PreflightCheck:
                     period=period,
                     revision_id=revision.id,
                 )
-            except (RegistryValidationError, RegistrySnapshotError) as exc:
-                failures.append(f"modelo {modelo.id} revision {revision.id}: {exc}")
+            except (RegistryValidationError, RegistrySnapshotError):
+                failure_count += 1
 
-    if failures:
-        preview = "; ".join(failures[:3])
-        return PreflightCheck(
+    if failure_count:
+        facts = {"revisions_checked": revisions_checked, "failure_count": failure_count}
+        return _failed_check(
             check="registry:referential-integrity",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=(
-                f"{len(failures)} of {revisions_checked} registry revisions have dangling "
-                f"typed-ID references: {preview}"
-            ),
-            remediation="fix the dangling casilla/formula/binding/legal/source references in the named revision TOML",
+            condition=PreflightCondition.REGISTRY_REFERENCES_VALID,
+            facts=facts,
         )
-    return PreflightCheck(
+    return _healthy_check(
         check="registry:referential-integrity",
-        healthy=True,
         severity=HealthSeverity.OK,
-        detail=f"all {revisions_checked} registry revisions pass the typed-ID referential-integrity gate",
+        facts={"revisions_checked": revisions_checked, "failure_count": 0},
     )
 
 
@@ -603,40 +629,38 @@ def probe_portal_registry_health(
     try:
         portal_count = len(PORTAL_REGISTRY)
     except _PortalRegistryError as exc:  # registry failed structural assembly
-        return PreflightCheck(
+        facts = {"registry_assembled": False, "error_type": type(exc).__name__}
+        return _failed_check(
             check="portal-registry:health",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"the portal registry failed to assemble: {type(exc).__name__}: {exc}",
-            remediation="inspect the portal registry entries under `cadrumo.domain.portals._entries`",
+            condition=PreflightCondition.PORTAL_REGISTRY_HEALTHY,
+            facts=facts,
         )
 
     if not drift_events:
-        return PreflightCheck(
+        return _healthy_check(
             check="portal-registry:health",
-            healthy=True,
             severity=HealthSeverity.OK,
-            detail=f"{portal_count} portals registered; no portal drift recorded",
+            facts={"portal_count": portal_count, "drift_count": 0, "stable_drift_present": False},
         )
 
     has_error = any(str(event.url_stability) in _PORTAL_DRIFT_ERROR_STABILITIES for event in drift_events)
-    preview = "; ".join(
-        f"{event.portal.value} {event.field.value}: {event.expected} -> {event.observed}" for event in drift_events[:3]
-    )
+    facts = {
+        "portal_count": portal_count,
+        "drift_count": len(drift_events),
+        "stable_drift_present": has_error,
+    }
     if has_error:
-        return PreflightCheck(
+        return _failed_check(
             check="portal-registry:health",
-            healthy=False,
             severity=HealthSeverity.ERROR,
-            detail=f"{len(drift_events)} recorded portal drift(s), including a stable-URL divergence: {preview}",
-            remediation="re-verify the drifted portal URL against the AEAT sede and update the portal registry entry",
+            condition=PreflightCondition.PORTAL_REGISTRY_HEALTHY,
+            facts=facts,
         )
-    return PreflightCheck(
+    return _healthy_check(
         check="portal-registry:health",
-        healthy=True,
         severity=HealthSeverity.WARN,
-        detail=f"{len(drift_events)} recorded portal drift(s) on rotatable URLs: {preview}",
-        remediation="confirm the observed portal URL(s) and refresh the registry entry if the rotation is permanent",
+        facts=facts,
     )
 
 

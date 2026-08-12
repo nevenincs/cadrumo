@@ -51,7 +51,12 @@ from ...llm import (
     LLMSuggestionRejectionResult,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo
-from ._ledger_support import _ledger_validation_bad, _parse_decimal, _resolve_id
+from ._ledger_support import (
+    _ledger_transaction_validation_no_recovery,
+    _ledger_validation_bad,
+    _parse_decimal,
+    _resolve_id,
+)
 
 __all__ = [
     "dispatch_autosplit",
@@ -117,14 +122,10 @@ def emit_llm_rejection(
         code="ledger.classify.llm_rejected",
         message=tr(
             "cli.ledger.classify.llm_rejected_message",
-            default=(
-                "LLM suggestion rejected and recorded. The transaction is unchanged; classify it manually when ready."
-            ),
         ),
         context={
             "transaction_id": result.transaction_id,
             "suggestion_kind": result.suggestion_kind,
-            "actionability": "manual_classification_requires_category_selection",
         },
     )
     lines = [
@@ -171,18 +172,10 @@ def split_recommendation_notice(transaction_id: str) -> Notice:
     return Notice(
         severity=NoticeSeverity.INFO,
         code="ledger.classify.split_recommended",
-        message=tr(
-            "cli.ledger.classify.split_recommended_message",
-            default=(
-                "The attached invoice appears to carry multiple rate or category lines. "
-                "Re-run with --auto-split to separate them into independently-filable "
-                "base and IVA children."
-            ),
-        ),
+        message=tr("cli.ledger.classify.split_recommended_message"),
         context={
             "transaction_id": transaction_id,
             "source": "evidence_read",
-            "actionability": "split_requires_operator_review",
         },
     )
 
@@ -236,33 +229,19 @@ def dispatch_autosplit(
 
     if not read_evidence:
         raise _bad(
-            tr(
-                "cli.ledger.classify.auto_split_needs_evidence",
-                default="--auto-split requires --read-evidence: the split decision is read from the invoice.",
-            ),
+            tr("cli.ledger.classify.auto_split_needs_evidence"),
         )
     if classification is not None or file is not None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --file; "
-                "the manual path is the explicit operator override.",
-            ),
+            tr("cli.ledger.classify.llm_exclusive"),
         )
     if reject and apply:
         raise _bad(
-            tr(
-                "cli.ledger.classify.reject_apply_exclusive",
-                default="--reject cannot be combined with --apply: reject records a declined "
-                "suggestion, apply records an accepted one.",
-            ),
+            tr("cli.ledger.classify.reject_apply_exclusive"),
         )
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
 
     state = _state()
@@ -343,7 +322,7 @@ def _emit_split(
             actor=actor or resolve_active_bucket_id() or "operator",
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(applied, LLMSplitApplyResult)
@@ -410,7 +389,7 @@ def _emit_single(
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     transaction_payload = ledger_transaction_payload(result.transaction)
@@ -487,26 +466,15 @@ def _validate_classify_llm_options(
     """
     if classification is not None or file is not None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --file; "
-                "the manual path is the explicit operator override.",
-            ),
+            tr("cli.ledger.classify.llm_exclusive"),
         )
     if reject and apply:
         raise _bad(
-            tr(
-                "cli.ledger.classify.reject_apply_exclusive",
-                default="--reject cannot be combined with --apply: reject records a declined "
-                "suggestion, apply records an accepted one.",
-            ),
+            tr("cli.ledger.classify.reject_apply_exclusive"),
         )
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
     return transaction_id
 
@@ -790,7 +758,7 @@ def ledger_saturate_llm(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(result, ManualLedgerTransactionResult)
@@ -833,20 +801,11 @@ def ledger_operator_iva_derive(
         )
     if transaction_id is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --file is not provided.",
-            ),
+            tr("cli.ledger.classify.id_required"),
         )
     if iva_category is None:
         raise _bad(
-            tr(
-                "cli.ledger.classify.saturate_requires_llm",
-                default=(
-                    "--saturate needs an IVA category: supply --iva-category to derive the "
-                    "base, rate, and amount, or --llm <provider> to have the model select one."
-                ),
-            ),
+            tr("cli.ledger.classify.saturate_requires_llm"),
         )
 
     state = _state()
@@ -862,7 +821,7 @@ def ledger_operator_iva_derive(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
 

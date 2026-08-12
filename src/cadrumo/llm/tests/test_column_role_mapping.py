@@ -156,8 +156,12 @@ def test_prompt_carries_the_headers_and_no_cell_value() -> None:
 
 def test_prompt_refuses_a_table_with_no_columns() -> None:
     """Asking a model to label nothing invites it to invent columns."""
-    with pytest.raises(LLMValidationError):
+    with pytest.raises(LLMValidationError) as raised:
         build_column_role_mapping_prompt(())
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.column_mapping.headers_present"
+    assert verdict.evidence[0].values == {"column_count": 0, "column_headers_present": False}
 
 
 # ── Allow-list refusal, with its positive control ────────────────────────────
@@ -296,8 +300,12 @@ def test_a_fenced_reply_still_parses() -> None:
 
 def test_a_reply_carrying_no_object_raises() -> None:
     """No object means no proposal to report a column against."""
-    with pytest.raises(LLMValidationError):
+    with pytest.raises(LLMValidationError) as raised:
         parse_column_role_mapping_response("I could not do that.", _libro_registro_headers())
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.column_mapping.response_parseable"
+    assert verdict.evidence[0].values == {"column_mapping_response_parseable": False}
 
 
 def test_a_reply_with_a_key_that_was_not_asked_for_is_refused() -> None:
@@ -310,8 +318,15 @@ def test_a_reply_with_a_key_that_was_not_asked_for_is_refused() -> None:
         }
     )
 
-    with pytest.raises(LLMValidationError):
+    with pytest.raises(LLMValidationError) as raised:
         parse_column_role_mapping_response(payload, headers)
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.column_mapping.response_schema_valid"
+    assert verdict.evidence[0].values == {
+        "column_mapping_response_schema_valid": False,
+        "column_mapping_validation_error_type": "ValidationError",
+    }
 
 
 def test_parsing_is_deterministic() -> None:
@@ -456,9 +471,12 @@ def test_an_unusable_reply_from_the_real_transport_raises(tmp_path: Path) -> Non
     with (
         _serve_ollama("I am not able to label these columns.") as (endpoint, _events),
         _mapper(tmp_path, endpoint) as mapper,
-        pytest.raises(LLMValidationError),
+        pytest.raises(LLMValidationError) as raised,
     ):
         mapper.map(_libro_registro_headers())
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.column_mapping.response_parseable"
 
 
 def test_an_out_of_allow_list_reply_from_the_real_transport_still_imports(tmp_path: Path) -> None:

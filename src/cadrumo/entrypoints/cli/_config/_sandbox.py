@@ -66,7 +66,6 @@ sandbox_app = typer.Typer(
     name="sandbox",
     help=tr(
         "cli.config.profile.sandbox.help",
-        default=("Run experiments in an isolated, discardable bucket that never touches main profile state."),
     ),
     no_args_is_help=True,
 )
@@ -90,21 +89,19 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
         "create",
         help=tr(
             "cli.config.profile.sandbox.create_help",
-            default="Fork a new isolated sandbox bucket and activate it.",
         ),
     )
     def config_profile_sandbox_create(
         ctx: typer.Context,
         name: str = typer.Argument(
             ...,
-            help=tr("cli.config.profile.sandbox.create_name_help", default="Sandbox name."),
+            help=tr("cli.config.profile.sandbox.create_name_help"),
         ),
         from_profile: str | None = typer.Option(
             None,
             "--from-profile",
             help=tr(
                 "cli.config.profile.sandbox.create_from_profile_help",
-                default="Seed the sandbox with an existing profile's facts (read-only source).",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -150,10 +147,6 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
             code="config.profile.sandbox.create.active",
             message=tr(
                 "cli.config.profile.sandbox.create_active_info",
-                default=(
-                    "The sandbox is now the ACTIVE profile; every command runs against "
-                    "it until you switch away or discard it."
-                ),
             ),
         )
         _emit_envelope(
@@ -175,7 +168,6 @@ def _register_sandbox_list_command(app: typer.Typer) -> None:
         "list",
         help=tr(
             "cli.config.profile.sandbox.list_help",
-            default="List every sandbox bucket.",
         ),
     )
     def config_profile_sandbox_list(
@@ -229,26 +221,24 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
         "discard",
         help=tr(
             "cli.config.profile.sandbox.discard_help",
-            default="Permanently erase a sandbox bucket.",
         ),
     )
     def config_profile_sandbox_discard(
         ctx: typer.Context,
         name: str = typer.Argument(
             ...,
-            help=tr("cli.config.profile.sandbox.discard_name_help", default="Sandbox name (without the prefix)."),
+            help=tr("cli.config.profile.sandbox.discard_name_help"),
         ),
         confirmed: bool = typer.Option(
             False,
             "--yes",
-            help=tr("cli.config.profile.sandbox.discard_yes_help", default="Confirm the destructive erase."),
+            help=tr("cli.config.profile.sandbox.discard_yes_help"),
         ),
         dry_run: bool = typer.Option(
             False,
             "--dry-run/--no-dry-run",
             help=tr(
                 "cli.config.profile.sandbox.discard_dry_run_help",
-                default="Preview what the discard would remove without removing anything.",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -360,7 +350,6 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
         "prune",
         help=tr(
             "cli.config.profile.sandbox.prune_help",
-            default="Discard every sandbox bucket at once.",
         ),
     )
     def config_profile_sandbox_prune(
@@ -368,14 +357,13 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
         confirmed: bool = typer.Option(
             False,
             "--yes",
-            help=tr("cli.config.profile.sandbox.prune_yes_help", default="Confirm discarding every sandbox."),
+            help=tr("cli.config.profile.sandbox.prune_yes_help"),
         ),
         dry_run: bool = typer.Option(
             False,
             "--dry-run/--no-dry-run",
             help=tr(
                 "cli.config.profile.sandbox.prune_dry_run_help",
-                default="Preview which sandboxes would be discarded without discarding them.",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -455,10 +443,6 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
                 code="config.profile.sandbox.prune.skipped_active",
                 message=tr(
                     "cli.config.profile.sandbox.prune_skipped_active_info",
-                    default=(
-                        "Skipped the active sandbox %{names}; switch to another profile and re-run "
-                        "pruning only after you decide it should be discarded."
-                    ),
                     names=", ".join(skipped_active),
                 ),
             )
@@ -472,26 +456,24 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
         "archive",
         help=tr(
             "cli.config.profile.sandbox.archive_help",
-            default="Move a sandbox into reversible dormancy without erasing it.",
         ),
     )
     def config_profile_sandbox_archive(
         ctx: typer.Context,
         name: str = typer.Argument(
             ...,
-            help=tr("cli.config.profile.sandbox.archive_name_help", default="Sandbox name (without the prefix)."),
+            help=tr("cli.config.profile.sandbox.archive_name_help"),
         ),
         confirmed: bool = typer.Option(
             False,
             "--yes",
-            help=tr("cli.config.profile.sandbox.archive_yes_help", default="Confirm the archive."),
+            help=tr("cli.config.profile.sandbox.archive_yes_help"),
         ),
         dry_run: bool = typer.Option(
             False,
             "--dry-run/--no-dry-run",
             help=tr(
                 "cli.config.profile.sandbox.archive_dry_run_help",
-                default="Preview the archive without moving the sandbox out of the live surface.",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -567,7 +549,6 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
             code="config.profile.sandbox.archive.restorable",
             message=tr(
                 "cli.config.profile.sandbox.archive_restorable_info",
-                default=("The sandbox is now dormant; the available recovery action can bring %{name} back."),
                 name=name,
             ),
             action=resolve_notice_action(
@@ -602,14 +583,13 @@ def _register_sandbox_restore_command(app: typer.Typer) -> None:
         "restore",
         help=tr(
             "cli.config.profile.sandbox.restore_help",
-            default="Bring an archived sandbox back to active status.",
         ),
     )
     def config_profile_sandbox_restore(
         ctx: typer.Context,
         name: str = typer.Argument(
             ...,
-            help=tr("cli.config.profile.sandbox.restore_name_help", default="Sandbox name (without the prefix)."),
+            help=tr("cli.config.profile.sandbox.restore_name_help"),
         ),
         output_language: OutputLanguage | None = typer.Option(
             None,
@@ -682,7 +662,6 @@ def _register_sandbox_usage_command(app: typer.Typer) -> None:
         "usage",
         help=tr(
             "cli.config.profile.sandbox.usage_help",
-            default="Report the on-disk footprint of one sandbox, or every sandbox at once.",
         ),
     )
     def config_profile_sandbox_usage(
@@ -691,7 +670,6 @@ def _register_sandbox_usage_command(app: typer.Typer) -> None:
             None,
             help=tr(
                 "cli.config.profile.sandbox.usage_name_help",
-                default="Sandbox name (without the prefix); omit to report every sandbox.",
             ),
         ),
         output_language: OutputLanguage | None = typer.Option(
@@ -773,21 +751,19 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
         "merge",
         help=tr(
             "cli.config.profile.sandbox.merge_help",
-            default="Promote a sandbox's ledger and/or modelo records into another profile.",
         ),
     )
     def config_profile_sandbox_merge(
         ctx: typer.Context,
         name: str = typer.Argument(
             ...,
-            help=tr("cli.config.profile.sandbox.merge_name_help", default="Sandbox name (without the prefix)."),
+            help=tr("cli.config.profile.sandbox.merge_name_help"),
         ),
         into: str = typer.Option(
             ...,
             "--into",
             help=tr(
                 "cli.config.profile.sandbox.merge_into_help",
-                default="Target profile name the sandbox's records are promoted into.",
             ),
         ),
         scope: SandboxMergeScope = typer.Option(
@@ -795,13 +771,12 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
             "--scope",
             help=tr(
                 "cli.config.profile.sandbox.merge_scope_help",
-                default="Data category to promote: ledger, modelo, or all.",
             ),
         ),
         confirmed: bool = typer.Option(
             False,
             "--yes",
-            help=tr("cli.config.profile.sandbox.merge_yes_help", default="Confirm promoting sandbox data."),
+            help=tr("cli.config.profile.sandbox.merge_yes_help"),
         ),
         output_language: OutputLanguage | None = typer.Option(
             None,
@@ -840,21 +815,17 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
             target_pointer = read_profile_bucket(into)
         except ProfileLabelAmbiguousError as exc:
             raise _CliRefusedBoundaryError(
-                message=f"profile name {into!r} is ambiguous; use its bucket id instead",
+                translated_message="cli.config.profile.sandbox.merge_target_ambiguous",
                 context={"into": into},
             ) from exc
         if target_pointer is None:
             raise _CliRefusedBoundaryError(
-                message=f"no live profile named {into!r} to merge into",
+                translated_message="cli.config.profile.sandbox.merge_target_not_found",
                 context={"into": into},
             )
         if not confirmed:
             raise _CliRefusedBoundaryError(
-                message=(
-                    f"promoting sandbox {name!r} into {into!r} is a state-mutating operation. "
-                    f"Re-run 'aeat config profile sandbox merge {name} --into {into} "
-                    f"--scope {scope.value} --yes' to confirm."
-                ),
+                translated_message="cli.config.profile.sandbox.merge_requires_yes",
                 context={"name": name, "into": into, "scope": scope.value},
             )
 
@@ -873,7 +844,10 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
                 context={"name": name},
             ) from exc
         except SandboxMergeRefusedError as exc:
-            raise _CliRefusedBoundaryError(message=str(exc), context={"name": name, "into": into}) from exc
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.sandbox.merge_refused",
+                context={"name": name, "into": into},
+            ) from exc
 
         result = ConfigProfileSandboxMergeResult(
             scope=outcome.scope.value,
@@ -892,7 +866,6 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
             code="config.profile.sandbox.merge.promoted",
             message=tr(
                 "cli.config.profile.sandbox.merge_promoted_info",
-                default="Promoted %{scope} from %{source} into %{target}.",
                 scope=outcome.scope.value,
                 source=source_pointer.label,
                 target=target_pointer.label,

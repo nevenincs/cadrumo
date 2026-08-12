@@ -8,6 +8,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....application.filing import _filing_binding_values
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
@@ -16,7 +18,6 @@ from ....domain.calculations.registry import (
     RegistrySnapshotRef,
     calculate_registry_snapshot,
     load_modelo_path,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....domain.filing import (
     ModeloCasillaProvenance,
@@ -139,14 +140,14 @@ def _calculated_revision(
         "iva-349-declarante-numero-rectificaciones": Decimal("0"),
         "iva-349-declarante-importe-rectificaciones": Decimal("0"),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     engine_result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         date_context={"filing_period": work_unit.period.end_date},
         binding_values=binding_values,
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     raw_casilla_values = dict(engine_result.values)
     raw_observations = build_typed_observations(engine_result=engine_result, snapshot=snapshot)
@@ -176,7 +177,7 @@ def _calculated_revision(
         detail_rows=detail_rows,
         created_at=_CLOCK,
         updated_at=_CLOCK,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
     calc_lines: Any = calculation_revision_lines
     calc_payload: Any = calculation_revision_payload
@@ -214,7 +215,7 @@ def _calculated_revision(
             detail_rows=detail_rows,
             created_at=_CLOCK,
             updated_at=_CLOCK,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         ),
     )
 

@@ -118,9 +118,7 @@ class ModeloVerificationFindingKind(StrEnum):
 
     MISSING_REQUIRED_CASILLA = "missing_required_casilla"
     RECONCILIATION_MISMATCH = "reconciliation_mismatch"
-    UNRESOLVED_BINDING = "unresolved_binding"
     CROSS_PERIOD_DEPENDENCY_UNCLEAN = "cross_period_dependency_unclean"
-    INVALID_WAIVER = "invalid_waiver"
     BLOCKING_RULE = "blocking_rule"
     ADVISORY = "advisory"
 
@@ -132,9 +130,7 @@ OPERATOR_ACTION_BY_MODELO_VERIFICATION_FINDING_KIND: Mapping[
     {
         ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ModeloVerificationFindingKind.RECONCILIATION_MISMATCH: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
-        ModeloVerificationFindingKind.UNRESOLVED_BINDING: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ModeloVerificationFindingKind.CROSS_PERIOD_DEPENDENCY_UNCLEAN: OperatorActionAxis.FILE_PRIOR_PERIOD,
-        ModeloVerificationFindingKind.INVALID_WAIVER: OperatorActionAxis.RE_VERIFY,
         ModeloVerificationFindingKind.BLOCKING_RULE: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ModeloVerificationFindingKind.ADVISORY: OperatorActionAxis.REVIEW_ADVISORY,
     },

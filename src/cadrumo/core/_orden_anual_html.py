@@ -105,34 +105,9 @@ def _extract_activity_table(table: Tag, *, source_label: str) -> OrdenAnualIvaAc
             f"annual Orden source {source_label!r} quota table is not structurally scoped by ANEXO II",
         )
     table_text = _normalise_html_text(table.get_text(" ", strip=True))
-    activity_name, iae_epigrafe = _activity_heading_from_text(table_text)
-    if activity_name is None or iae_epigrafe is None:
-        activity_name, iae_epigrafe = _activity_heading_from_preceding_siblings(table)
-    if activity_name is None or iae_epigrafe is None:
-        raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} has a quota table without activity/IAE headings",
-        )
-    footer = table.find("tfoot")
-    footer_text = _normalise_html_text(" ".join(footer.stripped_strings)) if footer is not None else ""
-    minimum_quota_match = _MINIMUM_QUOTA_RE.search(footer_text)
-    if minimum_quota_match is None:
-        raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} quota table lacks a numeric cuota mínima footer",
-        )
-    try:
-        cuota_minima_pct = Decimal(minimum_quota_match.group(1).replace(",", "."))
-    except InvalidOperation as exc:
-        raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} cuota mínima percentage is not a decimal",
-        ) from exc
-    body = table.find("tbody")
-    if body is None:
-        raise OrdenAnualHtmlParseError(f"annual Orden source {source_label!r} quota table has no module body")
-    modules = tuple(_extract_module_row(row, source_label=source_label) for row in body.find_all("tr", recursive=False))
-    if tuple(module.order for module in modules) != tuple(range(1, len(modules) + 1)):
-        raise OrdenAnualHtmlParseError(
-            f"annual Orden source {source_label!r} has incomplete or unordered module rows",
-        )
+    activity_name, iae_epigrafe = _extract_activity_identity(table, table_text, source_label=source_label)
+    footer_text, cuota_minima_pct = _extract_minimum_quota(table, source_label=source_label)
+    modules = _extract_modules(table, source_label=source_label)
     return OrdenAnualIvaActivityTable(
         annex_heading=annex_heading,
         activity_name=activity_name,
@@ -147,6 +122,46 @@ def _extract_activity_table(table: Tag, *, source_label: str) -> OrdenAnualIvaAc
             *(module.required_text for module in modules),
         ),
     )
+
+
+def _extract_activity_identity(table: Tag, table_text: str, *, source_label: str) -> tuple[str, str]:
+    activity_name, iae_epigrafe = _activity_heading_from_text(table_text)
+    if activity_name is None or iae_epigrafe is None:
+        activity_name, iae_epigrafe = _activity_heading_from_preceding_siblings(table)
+    if activity_name is None or iae_epigrafe is None:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} has a quota table without activity/IAE headings",
+        )
+    return activity_name, iae_epigrafe
+
+
+def _extract_minimum_quota(table: Tag, *, source_label: str) -> tuple[str, Decimal]:
+    footer = table.find("tfoot")
+    footer_text = _normalise_html_text(" ".join(footer.stripped_strings)) if footer is not None else ""
+    minimum_quota_match = _MINIMUM_QUOTA_RE.search(footer_text)
+    if minimum_quota_match is None:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} quota table lacks a numeric cuota mínima footer",
+        )
+    try:
+        cuota_minima_pct = Decimal(minimum_quota_match.group(1).replace(",", "."))
+    except InvalidOperation as exc:
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} cuota mínima percentage is not a decimal",
+        ) from exc
+    return footer_text, cuota_minima_pct
+
+
+def _extract_modules(table: Tag, *, source_label: str) -> tuple[OrdenAnualIvaModule, ...]:
+    body = table.find("tbody")
+    if body is None:
+        raise OrdenAnualHtmlParseError(f"annual Orden source {source_label!r} quota table has no module body")
+    modules = tuple(_extract_module_row(row, source_label=source_label) for row in body.find_all("tr", recursive=False))
+    if tuple(module.order for module in modules) != tuple(range(1, len(modules) + 1)):
+        raise OrdenAnualHtmlParseError(
+            f"annual Orden source {source_label!r} has incomplete or unordered module rows",
+        )
+    return modules
 
 
 def _extract_module_row(row: Tag, *, source_label: str) -> OrdenAnualIvaModule:

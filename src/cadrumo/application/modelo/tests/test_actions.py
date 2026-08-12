@@ -39,6 +39,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
+from ...calculations import M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
 from ...workflow import WorkflowInputMismatchError
 from .. import ModeloAggregationBindingError
 from .._calculation_actions import (
@@ -59,6 +60,7 @@ from .._verification_actions import (
     _dt12_antiquity_advisory_finding,
     _dt12_reduccion_advisory_finding,
     _evaluate_verification_predicates,
+    _iva_wallet_error_verification_finding,
     _missing_required_casilla_finding,
 )
 from .._workflow_gate import (
@@ -333,7 +335,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         casilla_values={},
         created_at=_T0,
         updated_at=_T0,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
 
@@ -408,8 +410,23 @@ def test_cross_casilla_invariant_finding_is_locale_neutral() -> None:
             _PREDICATE_REQUIRED_RIGHT_CASILLA: Decimal(0),
         },
     )
+    assert finding.casilla_id is None
     assert finding.message_locale_key == "application.modelo.findings.cross_casilla_invariant_violated"
     assert dict(finding.message_facts) == {"predicate_id": "test-cross-casilla-001"}
+
+
+def test_single_casilla_blocking_predicate_attributes_its_canonical_casilla() -> None:
+    """A firing one-casilla BLOCKING predicate identifies the affected registry casilla."""
+    _predicate, finding = _predicate_finding(
+        predicate_id="test-single-casilla-blocking-001",
+        legal_ref="irpf:art1",
+        expression=f'all_nonzero(["{_PREDICATE_REQUIRED_LEFT_CASILLA}"])',
+        casilla_values={_PREDICATE_REQUIRED_LEFT_CASILLA: Decimal(0)},
+    )
+
+    assert finding.kind == "blocking_rule"
+    assert finding.severity == "blocking"
+    assert finding.casilla_id == _PREDICATE_REQUIRED_LEFT_CASILLA
 
 
 def test_registry_snapshot_unresolved_finding_is_locale_neutral() -> None:
@@ -708,6 +725,7 @@ def test_iva_wallet_blocked_exception_carries_translated_message_key() -> None:
         "modelo.work.calculate.iva_wallet.ready",
         "modelo.work.calculate.iva_wallet.filed_history_requires_override",
     )
+    assert _iva_wallet_error_verification_finding(exc).casilla_id == M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
     assert not hasattr(exc, "suggestion")
 
 
@@ -903,8 +921,8 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
         date_binding_values=date_binding_values,
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     assert result.values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA] == Decimal("10000.00")
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied as inputs"):
@@ -916,8 +934,8 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
             date_binding_values=date_binding_values,
-        m303_regimen_simplificado_scope=None,
-        m303_annual_orden=None,
+            m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
     binding_overrides = {
@@ -945,7 +963,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         observations=result.observations,
         created_at=_T0,
         updated_at=_T0,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
     informational_replay_inputs = _informational_casilla_replay_inputs(

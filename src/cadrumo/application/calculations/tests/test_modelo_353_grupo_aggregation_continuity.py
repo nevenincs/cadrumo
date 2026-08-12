@@ -50,6 +50,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -57,7 +59,6 @@ from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -149,14 +150,14 @@ def _calculate_322_member(*, member_nif: str, filing_year: int, period: str) -> 
         snapshot.revision,
         _member_ledger(member_nif=member_nif, filing_year=filing_year, period=period),
     )
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, int(period), 28)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -217,14 +218,14 @@ def _resolve_353_aggregate(
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()),
         **prefill.binding_values,
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, int(period), 28)},
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

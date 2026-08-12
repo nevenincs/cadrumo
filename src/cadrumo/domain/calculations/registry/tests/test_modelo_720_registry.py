@@ -299,7 +299,6 @@ def test_committed_modelo_720_construct_includes_revision_members() -> None:
             "portal",
             "filing",
             "extractor",
-            "verification",
             "deadline",
             "export",
             "review",

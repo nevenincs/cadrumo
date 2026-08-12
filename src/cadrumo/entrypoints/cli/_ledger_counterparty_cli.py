@@ -64,10 +64,7 @@ if TYPE_CHECKING:
 
 counterparty_app = typer.Typer(
     name="counterparty",
-    help=tr(
-        "cli.app.ledger.counterparty.group_help",
-        default="Confirm what is known about a counterparty, once, for every later document.",
-    ),
+    help=tr("cli.app.ledger.counterparty.group_help"),
     no_args_is_help=True,
 )
 
@@ -111,10 +108,7 @@ def _payload(fact: ConfirmedCounterpartyFacts) -> CounterpartyEstablishmentPaylo
 
 @counterparty_app.command(
     "confirm",
-    help=tr(
-        "cli.app.ledger.counterparty.confirm_help",
-        default="Confirm where a counterparty is established and which State IVA-identifies it.",
-    ),
+    help=tr("cli.app.ledger.counterparty.confirm_help"),
 )
 def counterparty_confirm(
     ctx: typer.Context,
@@ -123,20 +117,14 @@ def counterparty_confirm(
     # every single-subject ledger verb takes.
     tax_identifier: str = typer.Argument(
         ...,
-        help=tr(
-            "cli.app.ledger.counterparty.tax_identifier_help",
-            default="The counterparty's tax identifier as printed on the document.",
-        ),
+        help=tr("cli.app.ledger.counterparty.tax_identifier_help"),
     ),
     # Declared as the enum so click renders the accepted set on a parse failure,
     # rather than the operator meeting a late refusal that names no alternatives.
     scope: IvaTerritorialScope | None = typer.Option(
         None,
         "--scope",
-        help=tr(
-            "cli.app.ledger.counterparty.scope_help",
-            default="The IVA territory the counterparty is established in.",
-        ),
+        help=tr("cli.app.ledger.counterparty.scope_help"),
     ),
     # A SECOND axis, not a synonym for --scope. Ley 37/1992 art. 25 exempts on
     # where a counterparty is IVA-IDENTIFIED; arts. 69-70 govern where it is
@@ -146,58 +134,30 @@ def counterparty_confirm(
     identification_state: EUMemberState | None = typer.Option(
         None,
         "--identification-state",
-        help=tr(
-            "cli.app.ledger.counterparty.identification_state_help",
-            default=(
-                "Member State that IVA-identifies the counterparty. A different fact from --scope: "
-                "art. 25 exempts on this, not on where the party is established."
-            ),
-        ),
+        help=tr("cli.app.ledger.counterparty.identification_state_help"),
     ),
     country_code: str | None = typer.Option(
         None,
         "--country-code",
-        help=tr(
-            "cli.app.ledger.counterparty.country_code_help",
-            default="Country the identifier is stated under, when it is not Spanish.",
-        ),
+        help=tr("cli.app.ledger.counterparty.country_code_help"),
     ),
     note: str = typer.Option(
         "",
         "--note",
-        help=tr(
-            "cli.app.ledger.counterparty.note_help",
-            default="What the answer rests on, in your own words. Recorded, never consulted.",
-        ),
+        help=tr("cli.app.ledger.counterparty.note_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--actor",
-        help=tr(
-            "cli.app.ledger.counterparty.actor_help",
-            default="Operator identifier recorded as having made the assertion.",
-        ),
+        help=tr("cli.app.ledger.counterparty.actor_help"),
     ),
 ) -> None:
     """Persist the operator's answer, or report the stored one unchanged."""
-    from ...application.ledger import (
-        ConfirmedCounterpartyFactsInputError,
-        CounterpartyEstablishmentConflictError,
-        record_confirmed_counterparty_facts,
-    )
+    from ...application.ledger import record_confirmed_counterparty_facts
 
     if scope is None and identification_state is None:
         raise _bad(
-            tr(
-                "cli.ledger.counterparty.errors.nothing_asserted",
-                identifier=tax_identifier,
-                default=(
-                    f"Confirming '{tax_identifier}' needs at least one answer: '--scope' for where the "
-                    f"counterparty is established, '--identification-state' for which Member State "
-                    f"IVA-identifies it, or both. They are independent facts and either may be supplied "
-                    f"alone."
-                ),
-            ),
+            tr("cli.ledger.counterparty.errors.nothing_asserted", identifier=tax_identifier),
         )
     bucket_id = _counterparty_bucket_id()
     asserted_by = actor or bucket_id or "operator"
@@ -208,47 +168,16 @@ def counterparty_confirm(
     # handed in has no window at all, because the writer preserves the ORIGINAL
     # stamp on a retry precisely so a repeat cannot look like a fresh answer.
     stamped_at = now()
-    try:
-        fact = record_confirmed_counterparty_facts(
-            bucket_id=bucket_id,
-            tax_identifier=tax_identifier,
-            territorial_scope=scope,
-            asserted_by=asserted_by,
-            identification_state=identification_state,
-            country_code=country_code,
-            note=note,
-            asserted_at=stamped_at,
-        )
-    except ConfirmedCounterpartyFactsInputError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.counterparty.errors.unverifiable_identifier",
-                identifier=tax_identifier,
-                default=(
-                    f"'{tax_identifier}' is not a verifiable tax identifier, so there is no counterparty "
-                    f"to confirm anything about."
-                ),
-            ),
-        ) from exc
-    except CounterpartyEstablishmentConflictError as exc:
-        # The refusal names neither axis itself: the conflict is raised for a
-        # changed territory OR a changed identification State, and an
-        # identification-only assertion carries no scope to name. The writer's
-        # own message states which axis diverged and both of its values, so the
-        # wrapper carries the actionable route and defers the diagnosis.
-        raise _bad(
-            tr(
-                "cli.ledger.counterparty.errors.confirmation_conflict",
-                identifier=tax_identifier,
-                detail=str(exc),
-                default=(
-                    f"A different answer is already confirmed for '{tax_identifier}', so confirming this "
-                    f"one would discard the earlier answer. Withdraw it first with "
-                    f"'aeat app ledger counterparty withdraw'. {exc}"
-                ),
-            ),
-        ) from exc
-
+    fact = record_confirmed_counterparty_facts(
+        bucket_id=bucket_id,
+        tax_identifier=tax_identifier,
+        territorial_scope=scope,
+        asserted_by=asserted_by,
+        identification_state=identification_state,
+        country_code=country_code,
+        note=note,
+        asserted_at=stamped_at,
+    )
     recorded = fact.asserted_at == stamped_at
     notices: list[Notice] = []
     if not recorded:
@@ -274,11 +203,6 @@ def counterparty_confirm(
                     identifier=fact.canonical_tax_identifier,
                     answered=answered,
                     asserted_by=fact.asserted_by,
-                    default=(
-                        f"'{fact.canonical_tax_identifier}' was already confirmed by '{fact.asserted_by}' "
-                        f"as '{answered}'; this call created no new confirmation and the original "
-                        f"provenance stands."
-                    ),
                 ),
                 context=context,
             ),
@@ -299,27 +223,18 @@ def counterparty_confirm(
 
 @counterparty_app.command(
     "withdraw",
-    help=tr(
-        "cli.app.ledger.counterparty.withdraw_help",
-        default="Withdraw what was confirmed about a counterparty, stating the earlier answer was wrong.",
-    ),
+    help=tr("cli.app.ledger.counterparty.withdraw_help"),
 )
 def counterparty_withdraw(
     ctx: typer.Context,
     tax_identifier: str = typer.Argument(
         ...,
-        help=tr(
-            "cli.app.ledger.counterparty.tax_identifier_help",
-            default="The counterparty's tax identifier as printed on the document.",
-        ),
+        help=tr("cli.app.ledger.counterparty.tax_identifier_help"),
     ),
     country_code: str | None = typer.Option(
         None,
         "--country-code",
-        help=tr(
-            "cli.app.ledger.counterparty.country_code_help",
-            default="Country the identifier is stated under, when it is not Spanish.",
-        ),
+        help=tr("cli.app.ledger.counterparty.country_code_help"),
     ),
 ) -> None:
     """Remove a confirmed fact so a corrected one can be confirmed."""
@@ -328,14 +243,7 @@ def counterparty_withdraw(
     bucket_id = _counterparty_bucket_id()
     if confirmed_counterparty_facts_key(tax_identifier, country_code=country_code) is None:
         raise _bad(
-            tr(
-                "cli.ledger.counterparty.errors.unverifiable_identifier",
-                identifier=tax_identifier,
-                default=(
-                    f"'{tax_identifier}' is not a verifiable tax identifier, so there is no counterparty "
-                    f"to confirm anything about."
-                ),
-            ),
+            tr("cli.ledger.counterparty.errors.unverifiable_identifier", identifier=tax_identifier),
         )
     withdrawn = forget_confirmed_counterparty_facts(
         bucket_id=bucket_id,
@@ -351,10 +259,6 @@ def counterparty_withdraw(
                 message=tr(
                     "cli.ledger.counterparty.notices.nothing_to_withdraw",
                     identifier=tax_identifier,
-                    default=(
-                        f"Nothing was confirmed for '{tax_identifier}', so nothing was "
-                        f"withdrawn and the store is already in the state you asked for."
-                    ),
                 ),
                 context={"tax_identifier": tax_identifier},
             ),
@@ -373,39 +277,23 @@ def counterparty_withdraw(
 
 @counterparty_app.command(
     "show",
-    help=tr(
-        "cli.app.ledger.counterparty.show_help",
-        default="Show the establishment confirmed for a counterparty, if any.",
-    ),
+    help=tr("cli.app.ledger.counterparty.show_help"),
 )
 def counterparty_show(
     ctx: typer.Context,
     tax_identifier: str = typer.Argument(
         ...,
-        help=tr(
-            "cli.app.ledger.counterparty.tax_identifier_help",
-            default="The counterparty's tax identifier as printed on the document.",
-        ),
+        help=tr("cli.app.ledger.counterparty.tax_identifier_help"),
     ),
     country_code: str | None = typer.Option(
         None,
         "--country-code",
-        help=tr(
-            "cli.app.ledger.counterparty.country_code_help",
-            default="Country the identifier is stated under, when it is not Spanish.",
-        ),
+        help=tr("cli.app.ledger.counterparty.country_code_help"),
     ),
     evidenced_scope: IvaTerritorialScope | None = typer.Option(
         None,
         "--evidenced-scope",
-        help=tr(
-            "cli.app.ledger.counterparty.evidenced_scope_help",
-            default=(
-                "Territory a document in hand places this party in. Supply it to ask what the "
-                "ladder will answer for that document, which is the only way to see a "
-                "disagreement with what you confirmed before a confirm refuses on it."
-            ),
-        ),
+        help=tr("cli.app.ledger.counterparty.evidenced_scope_help"),
     ),
 ) -> None:
     """Report what the ladder's last rung will answer for this counterparty.
@@ -455,12 +343,6 @@ def counterparty_show(
                     identifier=tax_identifier,
                     confirmed=contradiction.confirmed_scope.value,
                     evidenced=contradiction.evidenced_scope.value,
-                    default=(
-                        f"'{tax_identifier}' was confirmed as established in "
-                        f"{contradiction.confirmed_scope.value}, but the evidence you supplied places "
-                        f"the same party in {contradiction.evidenced_scope.value}. The ladder will "
-                        f"settle no territory for this counterparty until one of the two is withdrawn."
-                    ),
                 ),
                 context={
                     "tax_identifier": tax_identifier,
@@ -477,11 +359,6 @@ def counterparty_show(
                 message=tr(
                     "cli.ledger.counterparty.notices.not_confirmed",
                     identifier=tax_identifier,
-                    default=(
-                        f"No establishment is confirmed for '{tax_identifier}', so the ladder settles "
-                        f"nothing from this rung and a document whose paper is non-decisive will raise "
-                        f"the question."
-                    ),
                 ),
                 context={"tax_identifier": tax_identifier},
             ),

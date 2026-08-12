@@ -175,54 +175,80 @@ class LocalHttpBoundary:
         host, port = cast("tuple[str, int]", self._server.server_address)
         return f"http://{host}:{port}{path}"
 
-    async def route(self, route: Route) -> None:
-        requested_url = route.request.url
+    def _retry_path(self) -> str | None:
         scenario = self.scenario
-        self.navigation_count += 1
-        self.requested_urls.append(requested_url)
         if scenario == "first-failure-then-success":
-            local_path = "/failure" if self.navigation_count == 1 else "/success"
-        elif scenario == "failure":
-            local_path = "/failure"
-        elif scenario == "wrong-host":
-            local_path = "/redirect-wrong-host" if requested_url == AEAT_CERTIFICATE_PROTECTED_URL else "/success"
-        elif scenario == "wrong-path":
-            local_path = "/redirect-wrong-path" if requested_url == AEAT_CERTIFICATE_PROTECTED_URL else "/success"
-        elif scenario == "sensitive-error":
-            local_path = "/redirect-sensitive" if requested_url == AEAT_CERTIFICATE_PROTECTED_URL else "/disconnect"
-        elif scenario == "blocking":
-            local_path = "/blocking"
-        elif scenario == "clave-movil-pending":
-            local_path = (
+            return "/failure" if self.navigation_count == 1 else "/success"
+        if scenario == "failure":
+            return "/failure"
+        if scenario == "blocking":
+            return "/blocking"
+        return None
+
+    def _redirect_path(self, requested_url: str) -> str | None:
+        scenario = self.scenario
+        if scenario == "wrong-host":
+            return "/redirect-wrong-host" if requested_url == AEAT_CERTIFICATE_PROTECTED_URL else "/success"
+        if scenario == "wrong-path":
+            return "/redirect-wrong-path" if requested_url == AEAT_CERTIFICATE_PROTECTED_URL else "/success"
+        if scenario == "sensitive-error":
+            return "/redirect-sensitive" if requested_url == AEAT_CERTIFICATE_PROTECTED_URL else "/disconnect"
+        return None
+
+    def _retry_or_failure_path(self, requested_url: str) -> str | None:
+        local_path = self._retry_path()
+        if local_path is not None:
+            return local_path
+        return self._redirect_path(requested_url)
+
+    def _clave_movil_path(self, requested_url: str) -> str | None:
+        scenario = self.scenario
+        if scenario == "clave-movil-pending":
+            return (
                 "/clave-movil-selector-pending"
                 if _CLAVE_MOVIL.selector_access_path_marker in requested_url
                 else "/clave-movil-pending"
             )
-        elif scenario in {"clave-movil-representation", "clave-movil-representation-missing"}:
-            if _CLAVE_MOVIL.selector_access_path_marker in requested_url:
-                local_path = "/clave-movil-selector-representation"
-            elif _CLAVE_MOVIL.dialogo_representacion_path_marker in requested_url:
-                local_path = (
-                    "/clave-movil-representation-missing"
-                    if scenario.endswith("-missing")
-                    else "/clave-movil-representation"
-                )
-            else:
-                local_path = "/clave-success"
-        elif scenario == "clave-permanente-success":
-            local_path = (
+        if scenario not in {"clave-movil-representation", "clave-movil-representation-missing"}:
+            return None
+        if _CLAVE_MOVIL.selector_access_path_marker in requested_url:
+            return "/clave-movil-selector-representation"
+        if _CLAVE_MOVIL.dialogo_representacion_path_marker in requested_url:
+            return (
+                "/clave-movil-representation-missing"
+                if scenario.endswith("-missing")
+                else "/clave-movil-representation"
+            )
+        return "/clave-success"
+
+    def _clave_permanente_path(self, requested_url: str) -> str | None:
+        scenario = self.scenario
+        if scenario == "clave-permanente-success":
+            return (
                 "/clave-permanente-form-success"
                 if _CLAVE_PERMANENTE.selector_access_path_marker in requested_url
                 else "/clave-success"
             )
-        elif scenario == "clave-permanente-invalid":
-            local_path = (
+        if scenario == "clave-permanente-invalid":
+            return (
                 "/clave-permanente-form-invalid"
                 if _CLAVE_PERMANENTE.selector_access_path_marker in requested_url
                 else "/clave-permanente-invalid"
             )
-        else:
-            local_path = "/success"
+        return None
+
+    def _local_path_for_request(self, requested_url: str) -> str:
+        for resolver in (self._retry_or_failure_path, self._clave_movil_path, self._clave_permanente_path):
+            local_path = resolver(requested_url)
+            if local_path is not None:
+                return local_path
+        return "/success"
+
+    async def route(self, route: Route) -> None:
+        requested_url = route.request.url
+        self.navigation_count += 1
+        self.requested_urls.append(requested_url)
+        local_path = self._local_path_for_request(requested_url)
         try:
             response = await route.fetch(
                 url=self._local_url(local_path),

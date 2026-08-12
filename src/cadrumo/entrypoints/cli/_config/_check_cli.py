@@ -22,7 +22,7 @@ from ....core.i18n import tr
 from .._common import _emit_envelope, resolve_cli_precondition_action
 
 # Eager import so the @register_schema decorator runs on the CLI build path.
-from ._check_payloads import CheckDependencyPayload, ConfigCheckResult
+from ._check_payloads import CheckDependencyPayload, CheckPreflightPayload, ConfigCheckResult
 from ._status_rendering import precondition_action_lines
 
 
@@ -135,7 +135,17 @@ def register(app: typer.Typer) -> None:
         # storage adapter owns, so it is supplied here at the composition root rather
         # than reached for from the application layer.
         preflight = [
-            row.model_dump(mode="python")
+            CheckPreflightPayload(
+                check=row.check,
+                healthy=row.healthy,
+                severity=row.severity,
+                facts=row.facts,
+                precondition_action=(
+                    resolve_cli_precondition_action(row.precondition_verdict)
+                    if row.precondition_verdict is not None
+                    else None
+                ),
+            )
             for row in run_preflight_checks(
                 object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
             )
@@ -170,7 +180,7 @@ def register(app: typer.Typer) -> None:
                 "issues": issues,
             },
         )
-        lines = [f"{tr('cli.config.check.profile_label', default='profile')}\t{profile_id or '-'}"]
+        lines = [f"{tr('cli.config.check.profile_label')}\t{profile_id or '-'}"]
         capability_label = tr("cli.config.check.capability_label")
         preflight_label = tr("cli.config.check.preflight_label")
         for cap in capabilities:
@@ -183,10 +193,12 @@ def register(app: typer.Typer) -> None:
         for dependency in dependency_payloads:
             lines.extend(_dependency_text_lines(dependency))
         for row in preflight:
-            tail = f"\t{row['remediation']}" if row["remediation"] else ""
-            lines.append(f"{preflight_label}\t{row['check']}\t{row['severity']}\t{row['detail']}{tail}")
+            lines.append(f"{preflight_label}\t{row.check}\t{row.severity}")
+            action = row.precondition_action
+            if action is not None:
+                lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(action))
         for issue in issues:
-            lines.append(f"{tr('cli.config.check.issue_label', default='issue')}\t{issue}")
+            lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
         _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))
         if not ok:
             raise typer.Exit(code=2)

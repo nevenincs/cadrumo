@@ -39,6 +39,7 @@ from ._validate import RegistryValidator
 __all__ = [
     "RegistryRelationHandoffApplicabilityAudit",
     "RegistryRelationHandoffAudit",
+    "RelationConsumptionChannel",
     "RelationHandoffApplicabilityRecord",
     "RelationHandoffRecord",
     "audit_registry_relation_handoff_applicability",
@@ -48,7 +49,8 @@ __all__ = [
     "relation_is_consumed",
 ]
 
-_RelationConsumptionChannel = Literal["primary_binding", "alternate_binding", "formula_relation", "formula_binding"]
+RelationConsumptionChannel = Literal["primary_binding", "alternate_binding", "formula_relation", "formula_binding"]
+"""Canonical closed channels through which a relation feeds a casilla."""
 
 
 class _RelationConsumptionIndex(NamedTuple):
@@ -83,9 +85,9 @@ def relation_consumption_index(revision: ModeloRevision) -> _RelationConsumption
 def relation_consumption_channels(
     relation: RelationDefinition,
     index: _RelationConsumptionIndex,
-) -> tuple[_RelationConsumptionChannel, ...]:
+) -> tuple[RelationConsumptionChannel, ...]:
     """Return every declared channel that consumes ``relation`` in stable order."""
-    channels: list[_RelationConsumptionChannel] = []
+    channels: list[RelationConsumptionChannel] = []
     if relation.target_binding in index.primary_bindings:
         channels.append("primary_binding")
     if relation.target_binding in index.alternate_bindings:
@@ -112,7 +114,6 @@ class RelationHandoffRecord(BaseModel):
     relation_id: RelationId
     relation_kind: Literal["previous_period", "annual_summary", "cross_model_output"]
     dependency_role: Literal[
-        "profile_schedule",
         "periodic_to_annual_summary",
         "instalment_to_final_settlement",
         "direct_calculation",
@@ -124,7 +125,7 @@ class RelationHandoffRecord(BaseModel):
     target_binding: BindingId
     target_binding_source: BindingSourceKind | None
     target_casilla_ids: tuple[CasillaId, ...]
-    consumption_channels: tuple[_RelationConsumptionChannel, ...]
+    consumption_channels: tuple[RelationConsumptionChannel, ...]
     period_alignment: RelationPeriodAlignment
     source_periods: tuple[str, ...]
     target_periods: tuple[str, ...]

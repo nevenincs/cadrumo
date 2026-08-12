@@ -21,6 +21,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
+from ..core import ActionEvidenceProvenance
 from ..core.config import Settings
 from ..core.errors import get_registered_error_code
 from ..core.hashing import content_hash_hex
@@ -35,6 +36,7 @@ from ._errors import (
     LLMContentionError,
     LLMRateLimitError,
 )
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 if TYPE_CHECKING:
     # The three persistence-touching stores stay on the CORE side of the
@@ -621,15 +623,11 @@ class LLMClient:
             return
         verdict = snapshot.precondition_verdict
         assert verdict is not None
-        # Keep the message derived from the authority's closed cause vocabulary;
-        # this boundary carries the result without re-deriving the decision.
-        causes = ", ".join(cause.value for cause in snapshot.causes)
         raise LLMContentionError(
-            message=(
-                f"loading {model!r} was refused: this machine has no measured headroom"
-                + (f" ({causes})" if causes else "")
-            ),
-            context={"model": model, "causes": causes},
+            context={
+                "model": model,
+                "contention_causes": tuple(cause.value for cause in snapshot.causes),
+            },
             precondition_verdict=verdict,
         )
 
@@ -748,12 +746,21 @@ class LLMClient:
             return
         arena = _on_host_inference_arena(self.settings)
         if not arena.try_acquire():
-            msg = (
-                f"This process already runs {arena.limit} on-host inference request(s), "
-                f"its configured maximum, so this one was refused rather than queued."
-            )
             raise LLMBusyError(
-                message=msg,
+                context={
+                    "provider": provider.value,
+                    "local_inference_limit": arena.limit,
+                    "local_inference_slot_available": False,
+                },
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.LOCAL_INFERENCE_SLOT_AVAILABLE,
+                    facts={
+                        "provider": provider.value,
+                        "local_inference_limit": arena.limit,
+                        "local_inference_slot_available": False,
+                    },
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                ),
             )
         try:
             yield
@@ -821,7 +828,20 @@ class LLMClient:
         if self.settings.cadrumo_evidence_gestor_mode or token is None:
             raise LLMConsentError(
                 translated_message=_EVIDENCE_CONSENT_DISPATCH_REFUSAL_LOCALE_KEY,
-                context={"provider": provider.value},
+                context={
+                    "provider": provider.value,
+                    "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
+                    "consent_token_present": token is not None,
+                },
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.EVIDENCE_OFF_HOST_DISPATCH_PERMITTED,
+                    facts={
+                        "provider": provider.value,
+                        "gestor_mode": self.settings.cadrumo_evidence_gestor_mode,
+                        "consent_token_present": token is not None,
+                    },
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
             )
         self.consent_ledger.append(
             evidence_content_address=token.evidence_content_address,
@@ -886,12 +906,21 @@ class LLMClient:
         if not request.images or adapter.supports_images:
             return
         provider = adapter.provider.value
-        msg = (
-            f"Provider {provider!r} cannot accept images, but this request carries "
-            f"{len(request.images)} image input(s); it would be sent as a text-only prompt."
-        )
         raise LLMConfigError(
-            message=msg,
+            context={
+                "provider": provider,
+                "image_input_count": len(request.images),
+                "vision_input_supported": False,
+            },
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.VISION_INPUT_SUPPORTED,
+                facts={
+                    "provider": provider,
+                    "image_input_count": len(request.images),
+                    "vision_input_supported": False,
+                },
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
         )
 
     def _record_run_telemetry(
@@ -933,8 +962,14 @@ class LLMClient:
         try:
             return LLMProvider(raw_provider)
         except ValueError as exc:
-            msg = f"Unsupported CADRUMO_LLM_PROVIDER value: {raw_provider!r}"
-            raise LLMConfigError(msg) from exc
+            raise LLMConfigError(
+                context={"configured_provider": raw_provider, "provider_selection_valid": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.PROVIDER_SELECTION_VALID,
+                    facts={"configured_provider": raw_provider, "provider_selection_valid": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            ) from exc
 
     def _default_model(self, provider: LLMProvider) -> str:
         if provider is self._default_provider():

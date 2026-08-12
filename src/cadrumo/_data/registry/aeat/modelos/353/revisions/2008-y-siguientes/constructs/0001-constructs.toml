@@ -48,7 +48,6 @@ application_links = [
     "modelo-353-portal",
     "modelo-353-filing",
     "modelo-353-extractor",
-    "modelo-353-verification",
     "modelo-353-review",
     "modelo-353-approval",
     "modelo-353-reconciliation",

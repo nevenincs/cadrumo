@@ -17,8 +17,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, override
 
+from ...core import ActionEvidenceProvenance
 from .._errors import LLMConfigError, LLMProviderError, LLMTransientTransportError
 from .._models import LLMProvider
+from .._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, raise_rate_limit
 
 if TYPE_CHECKING:
@@ -184,8 +186,14 @@ class AnthropicAdapter(_ProviderAdapter):
             LLMConfigError: When ``api_key`` is empty.
         """
         if not api_key:
-            msg = "CADRUMO_LLM_ANTHROPIC_API_KEY must be set for the Anthropic provider."
-            raise LLMConfigError(msg)
+            raise LLMConfigError(
+                context={"provider": self.provider.value, "provider_credentials_present": False},
+                precondition_verdict=llm_no_recovery_verdict(
+                    LLMPreconditionCondition.PROVIDER_CREDENTIALS_PRESENT,
+                    facts={"provider": self.provider.value, "provider_credentials_present": False},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                ),
+            )
         self._sdk = _load_anthropic_sdk()
         self._client = self._sdk.AsyncAnthropic(api_key=api_key, timeout=timeout_s)
 
@@ -222,15 +230,33 @@ class AnthropicAdapter(_ProviderAdapter):
             response = await self._client.messages.create(**build_message_kwargs(request))
         except sdk.RateLimitError as exc:
             headers = exc.response.headers if exc.response is not None else None
-            raise_rate_limit("Anthropic rate limit exceeded.", headers.get("retry-after") if headers else None)
+            raise_rate_limit(
+                provider_name=self.provider.value,
+                model=request.model,
+                retry_after=headers.get("retry-after") if headers else None,
+            )
         except (sdk.AuthenticationError, sdk.BadRequestError) as exc:
-            raise LLMProviderError(str(exc)) from exc
+            raise LLMProviderError(
+                context={
+                    "provider": self.provider.value,
+                    "provider_error_type": type(exc).__name__,
+                },
+            ) from exc
         except (sdk.APIConnectionError, sdk.APITimeoutError) as exc:
-            raise LLMTransientTransportError(f"Anthropic connection failure: {exc}") from exc
+            raise LLMTransientTransportError(
+                context={
+                    "provider": self.provider.value,
+                    "transport_error_type": type(exc).__name__,
+                },
+            ) from exc
         except sdk.APIStatusError as exc:
             if exc.status_code >= 500:
-                raise LLMTransientTransportError(f"Anthropic API failure ({exc.status_code}).") from exc
-            raise LLMProviderError(f"Anthropic API failure ({exc.status_code}).") from exc
+                raise LLMTransientTransportError(
+                    context={"provider": self.provider.value, "http_status": exc.status_code},
+                ) from exc
+            raise LLMProviderError(
+                context={"provider": self.provider.value, "http_status": exc.status_code},
+            ) from exc
 
         assert response is not None
         text_parts = [block.text for block in response.content if isinstance(block, sdk.TextBlock)]

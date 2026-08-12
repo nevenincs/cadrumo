@@ -97,12 +97,12 @@ from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
     _emit_update_result,
     _invoice_link_error_bad_parameter,
-    _ledger_transaction_validation_bad,
+    _ledger_cli_no_recovery,
+    _ledger_transaction_validation_no_recovery,
     _ledger_validation_bad,
     _parse_amount_magnitude,
     _parse_decimal,
     _parse_required_decimal,
-    _prefix_error_bad,
     _resolve_business_pct_with_censo,
     _resolve_id,
     _resolve_source_jurisdiction,
@@ -161,7 +161,13 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
     try:
         return resolve_lineage_transaction_id(prefix, catalogue)
     except TransactionIdPrefixError as exc:
-        raise _prefix_error_bad(exc) from exc
+        from ...application.cli_exception_preconditions import CliExceptionPrecondition
+
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_TRANSACTION_ID_RESOLVES,
+            facts={"transaction_id_resolves": False},
+        ) from None
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
@@ -198,13 +204,6 @@ def _prorrata_especial_inert_notice(
     message = tr(
         "cli.ledger.add.input_classification_inert",
         ejercicio=ejercicio,
-        default=(
-            f"--input-classification is inert for ejercicio {ejercicio}: no prorrata especial "
-            f"election applies, so the input deducts under the general percentage. Classifying every "
-            f"input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial "
-            f"check on a general bucket. Run 'app ledger prorrata elect-especial --ejercicio {ejercicio}' "
-            f"to route it by LIVA art. 106."
-        ),
     )
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -248,11 +247,6 @@ def _prorrata_sector_unmatched_notice(
     message = tr(
         "cli.ledger.add.sector_unmatched",
         sector_id=sector_id,
-        default=(
-            f"--sector '{sector_id}' matches no declared differentiated sector (LIVA arts. 9.1.c / 101), "
-            f"so this input deducts under the common-use percentage rather than the sector's own. Run "
-            f"'app ledger prorrata declare-sector --sector-id {sector_id} ...' to route it, or correct the tag."
-        ),
     )
     return Notice(
         severity=NoticeSeverity.WARNING,
@@ -318,13 +312,7 @@ def ledger_add(
     prorrata_sector: str | None = typer.Option(
         None,
         "--sector",
-        help=tr(
-            "cli.ledger.add.prorrata_sector_help",
-            default=(
-                "Differentiated-sector id (LIVA arts. 9.1.c / 101) this input belongs to; "
-                "must match a sector declared via 'app ledger prorrata declare-sector'."
-            ),
-        ),
+        help=tr("cli.ledger.add.prorrata_sector_help"),
     ),
     purchase_invoice_evidence_id: str | None = typer.Option(
         None,
@@ -359,15 +347,7 @@ def ledger_add(
         # row is BUSINESS, PERSONAL, MIXED, or left at the NOT_YET_PROCESSED
         # default; refuse the internal states instructively.
         raise _bad(
-            tr(
-                "cli.ledger.add.system_state_not_assignable",
-                value=business_classification.value,
-                default=(
-                    f"Classification '{business_classification.value}' is set automatically by cadrumo "
-                    "and cannot be assigned by hand. Choose one of: BUSINESS, PERSONAL, MIXED, or "
-                    "omit --classification to leave the row unclassified."
-                ),
-            ),
+            tr("cli.ledger.add.system_state_not_assignable", value=business_classification.value),
         )
     current_state = _state()
     transaction_repository = _tx_repo(current_state)
@@ -421,7 +401,7 @@ def ledger_add(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_bad(exc) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     # The gross-invariant (`taxable_base + iva_amount == amount`) and other
     # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
     # raising a pydantic `ValidationError` whose default rendering dumps the full
@@ -456,10 +436,6 @@ def ledger_add(
         noop_message = tr(
             "cli.ledger.add.idempotent_noop",
             transaction_id=result.ref.transaction_id,
-            default=(
-                f"Idempotent no-op: a transaction with this idempotency key already exists "
-                f"({result.ref.transaction_id}); nothing was added."
-            ),
         )
         notices.append(
             Notice(
@@ -573,14 +549,7 @@ _FileOpt = Annotated[
     str | None,
     typer.Option(
         "--file",
-        help=tr(
-            "cli.ledger.classify.file_help",
-            default=(
-                "Path to a CSV file with columns transaction_id, classification"
-                "[, category_id, business_pct, taxable_base, iva_rate, iva_amount, iva_category, "
-                "irpf_category]."
-            ),
-        ),
+        help=tr("cli.ledger.classify.file_help"),
     ),
 ]
 
@@ -776,7 +745,7 @@ def ledger_classify(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_bad(exc) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     from ._ledger_payloads import LedgerClassifySingleResult
 
     _emit_update_result(
@@ -862,33 +831,23 @@ register_lifecycle_commands(app)
 
 @app.command(
     "link",
-    help=tr(
-        "cli.ledger.link.help",
-        default=(
-            "Bind a ledger transaction to a reconciliation-catalogue invoice in one "
-            "atomic call. Refuses cross-bucket links. To attach purchase-invoice "
-            "evidence, use 'aeat app ledger attach'. Local-only; never contacts AEAT."
-        ),
-    ),
+    help=tr("cli.ledger.link.help"),
 )
 def ledger_link(
     ctx: typer.Context,
     transaction_id: str = typer.Argument(
         ...,
-        help=tr("cli.ledger.link.id_help", default="Ledger transaction id (SHA-256 or unambiguous prefix)."),
+        help=tr("cli.ledger.link.id_help"),
     ),
     invoice_id: str = typer.Option(
         ...,
         "--invoice-id",
-        help=tr(
-            "cli.ledger.link.invoice_id_help",
-            default="Invoice id to bind bidirectionally to the transaction.",
-        ),
+        help=tr("cli.ledger.link.invoice_id_help"),
     ),
     actor: str | None = typer.Option(
         None,
         "--by",
-        help=tr("cli.ledger.link.actor_help", default="Operator label recorded on bucket events."),
+        help=tr("cli.ledger.link.actor_help"),
     ),
 ) -> None:
     """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
@@ -910,17 +869,11 @@ def ledger_link(
     invoice_record = invoice_repo.load().invoices.get(invoice_id)
     if invoice_record is None:
         raise _bad(
-            tr(
-                "cli.ledger.link.errors.invoice_not_found",
-                default="Invoice id not found in the active profile invoice catalogue.",
-            ),
+            tr("cli.ledger.link.errors.invoice_not_found"),
         )
     if invoice_record.bucket_id not in (None, bucket_id):
         raise _bad(
-            tr(
-                "cli.ledger.link.errors.cross_bucket_invoice",
-                default="Invoice belongs to a different bucket than the active profile.",
-            ),
+            tr("cli.ledger.link.errors.cross_bucket_invoice"),
         )
     try:
         link_manual_transaction_invoice(

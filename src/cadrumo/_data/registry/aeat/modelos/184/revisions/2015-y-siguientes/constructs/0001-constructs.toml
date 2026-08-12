@@ -35,7 +35,6 @@ application_links = [
     "modelo-184-portal",
     "modelo-184-filing",
     "modelo-184-extractor",
-    "modelo-184-verification",
     "modelo-184-deadline",
 ]
 filing_schedules = ["modelo-184-anual"]

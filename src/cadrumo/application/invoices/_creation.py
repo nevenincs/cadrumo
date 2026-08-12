@@ -265,6 +265,63 @@ def _resolve_invoice_line_totals(
     )
 
 
+def _apply_operator_asserted_invoice_facts(
+    invoice_payload: dict[str, object],
+    *,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    recargo_amount: Decimal | None,
+    iva_category: IvaCategory | None,
+    operation_type: IntracomOperationType | None,
+    operation_date: date | None,
+    retention_rate: Decimal | None,
+    retention_amount: Decimal | None,
+) -> None:
+    if series is not None:
+        invoice_payload["series"] = series
+    if rectifies_invoice_number is not None:
+        invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
+    if recargo_amount is not None:
+        invoice_payload["recargo_amount"] = format(recargo_amount, "f")
+    if iva_category is not None:
+        invoice_payload["iva_category"] = iva_category.value
+    _require_operation_type_where_the_category_cannot_settle_it(
+        iva_category=iva_category,
+        operation_type=operation_type,
+    )
+    if operation_type is not None:
+        invoice_payload["operation_type"] = operation_type.value
+    if operation_date is not None:
+        # LIVA art. 75.Uno: the general-regime devengo. The art. 75.Dos
+        # advance-payment role carries its own preconditions (money actually
+        # received, art. 25 entregas excluded) and is not something this
+        # operator-supplied date can assert, so it is not offered here.
+        invoice_payload["operation_date"] = operation_date.isoformat()
+        invoice_payload["operation_date_role"] = InvoiceOperationDateRole.OPERATION_PERFORMED.value
+    if retention_rate is not None:
+        invoice_payload["retention_rate"] = format(retention_rate, "f")
+    if retention_amount is not None:
+        invoice_payload["retention_amount"] = format(retention_amount, "f")
+
+
+def _apply_fx_conversion_stamp(
+    invoice_payload: dict[str, object],
+    *,
+    currency: str,
+    issued_at: date,
+    rate_provider: ExchangeRateProvider | None,
+) -> None:
+    fx_stamp = resolve_fx_conversion_stamp(
+        currency=currency,
+        on_date=issued_at,
+        rate_provider=rate_provider or default_ecb_rate_provider(),
+    )
+    if fx_stamp is not None:
+        invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
+        invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
+        invoice_payload["fx_rate_source"] = fx_stamp.source
+
+
 def build_catalogue_invoice(
     *,
     bucket_id: str | None,
@@ -383,45 +440,28 @@ def build_catalogue_invoice(
         "notes": notes,
         "invoice_class": invoice_class.value,
     }
-    if series is not None:
-        invoice_payload["series"] = series
-    if rectifies_invoice_number is not None:
-        invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
-    if recargo_amount is not None:
-        invoice_payload["recargo_amount"] = format(recargo_amount, "f")
-    if iva_category is not None:
-        invoice_payload["iva_category"] = iva_category.value
-    _require_operation_type_where_the_category_cannot_settle_it(
+    _apply_operator_asserted_invoice_facts(
+        invoice_payload,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=recargo_amount,
         iva_category=iva_category,
         operation_type=operation_type,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
     )
-    if operation_type is not None:
-        invoice_payload["operation_type"] = operation_type.value
-    if operation_date is not None:
-        # LIVA art. 75.Uno: the general-regime devengo. The art. 75.Dos
-        # advance-payment role carries its own preconditions (money actually
-        # received, art. 25 entregas excluded) and is not something this
-        # operator-supplied date can assert, so it is not offered here.
-        invoice_payload["operation_date"] = operation_date.isoformat()
-        invoice_payload["operation_date_role"] = InvoiceOperationDateRole.OPERATION_PERFORMED.value
-    if retention_rate is not None:
-        invoice_payload["retention_rate"] = format(retention_rate, "f")
-    if retention_amount is not None:
-        invoice_payload["retention_amount"] = format(retention_amount, "f")
     # The euro-conversion stamp. ``currency`` is already the canonical uppercase
     # ISO 4217 token (normalised once above), so the provider is queried with the
     # same token the record stores. WHICH date the rate is taken at, and when a
     # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
     # answer -- this only writes the result into the payload shape.
-    fx_stamp = resolve_fx_conversion_stamp(
+    _apply_fx_conversion_stamp(
+        invoice_payload,
         currency=currency,
-        on_date=issued_at,
-        rate_provider=rate_provider or default_ecb_rate_provider(),
+        issued_at=issued_at,
+        rate_provider=rate_provider,
     )
-    if fx_stamp is not None:
-        invoice_payload["fx_rate"] = format(fx_stamp.rate, "f")
-        invoice_payload["fx_rate_date"] = fx_stamp.rate_date.isoformat()
-        invoice_payload["fx_rate_source"] = fx_stamp.source
     return Invoice.model_validate(invoice_payload)
 
 

@@ -35,6 +35,7 @@ from .....core.resources import bundled_path, resources
 from .....core.time import now
 from .....domain.calculations.registry import (
     BindingId,
+    CasillaDefinition,
     CasillaFieldKind,
     CasillaObservation,
     ExportFieldDefinition,
@@ -58,6 +59,7 @@ from .....domain.iva_compensation import (
     M303_COMPENSATION_GENERADA_CASILLA,
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
+    M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
 )
 from ....inbound.declaracion import DeclaracionParseError, parse_declaracion_bytes
@@ -641,26 +643,11 @@ def non_numeric_observed_casillas(
     return tuple(skips)
 
 
-def registry_observation_from_filed_declaration(
+def _validate_filed_observation_extraction_coverage(
     observation: FiledDeclaracionObservation,
-) -> RegistryModeloObservation:
-    """Convert a filed-declaration observation into registry observation rows.
-
-    The :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
-    is checked against the selected
-    :class:`RegistrySnapshot`; each accepted
-    :class:`~adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
-    provenance-bearing :class:`CasillaObservation`
-    inside the returned
-    :class:`~domain.calculations.registry.RegistryModeloObservation`.
-    """
-    period_token = observation.period.registry_token
-    snapshot = _registry_authority().snapshot(
-        observation.modelo,
-        filing_year=observation.ejercicio,
-        period=period_token,
-    )
-    revision_casillas_by_id = casillas_by_id(snapshot.revision)
+    *,
+    period_token: str,
+) -> None:
     if not observation.extraction_coverage:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "
@@ -674,42 +661,55 @@ def registry_observation_from_filed_declaration(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "
             "has incomplete extraction coverage",
         )
-    casilla_values: dict[CasillaId, Decimal] = {}
-    for casilla in observation.casillas:
-        if casilla.source_artefact_kind == "justificante_pdf":
-            raise SedeParseError("justificante metadata cannot populate registry casilla values")
-        registry_casilla = revision_casillas_by_id.get(casilla.casilla_id)
-        if registry_casilla is None:
-            raise SedeParseError(
-                f"observed casilla {casilla.casilla_id!r} is not a canonical casilla.id for "
-                f"modelo {observation.modelo} revision {snapshot.revision.id}",
-            )
-        if not registry_casilla.legal_refs or not registry_casilla.source_refs:
-            raise SedeParseError(
-                f"observed casilla {casilla.casilla_id!r} in modelo {observation.modelo} "
-                f"revision {snapshot.revision.id} has incomplete registry legal_refs/source_refs",
-            )
-        # Ask what the casilla IS, never what its token parses as. A free-text
-        # Modelo 100 casilla can hold a token that converts cleanly to a plausible
-        # wrong number -- `0065` (clave) reads as 15, `0167` (epígrafe IAE) as 22 --
-        # so a conversion attempt admits exactly the values it needed to reject.
-        #
-        # A casilla this channel cannot carry is skipped rather than fatal: a modelo
-        # whose schema declares free-text or boolean casillas has them on EVERY
-        # filing, so refusing here discarded a whole return's numeric evidence over
-        # fields that were never destined for a Decimal map. The skipped set is not
-        # lost -- non_numeric_observed_casillas enumerates it for the operator, and
-        # a return with no numeric casilla at all still refuses below.
-        if casilla.value_kind is not CasillaValueKind.NUMERIC:
-            continue
-        try:
-            value = casilla.decimal_value()
-        except InvalidOperation:
-            continue
-        previous = casilla_values.get(casilla.casilla_id)
-        if previous is not None and previous != value:
-            raise SedeParseError(f"observed casilla {casilla.casilla_id!r} has contradictory values")
-        casilla_values[casilla.casilla_id] = value
+
+
+def _numeric_registry_observation_value(
+    *,
+    observation: FiledDeclaracionObservation,
+    casilla: ObservedCasillaValue,
+    snapshot: RegistrySnapshot,
+    revision_casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> tuple[CasillaId, Decimal] | None:
+    if casilla.source_artefact_kind == "justificante_pdf":
+        raise SedeParseError("justificante metadata cannot populate registry casilla values")
+    registry_casilla = revision_casillas_by_id.get(casilla.casilla_id)
+    if registry_casilla is None:
+        raise SedeParseError(
+            f"observed casilla {casilla.casilla_id!r} is not a canonical casilla.id for "
+            f"modelo {observation.modelo} revision {snapshot.revision.id}",
+        )
+    if not registry_casilla.legal_refs or not registry_casilla.source_refs:
+        raise SedeParseError(
+            f"observed casilla {casilla.casilla_id!r} in modelo {observation.modelo} "
+            f"revision {snapshot.revision.id} has incomplete registry legal_refs/source_refs",
+        )
+    # Ask what the casilla IS, never what its token parses as. A free-text
+    # Modelo 100 casilla can hold a token that converts cleanly to a plausible
+    # wrong number -- `0065` (clave) reads as 15, `0167` (epígrafe IAE) as 22 --
+    # so a conversion attempt admits exactly the values it needed to reject.
+    #
+    # A casilla this channel cannot carry is skipped rather than fatal: a modelo
+    # whose schema declares free-text or boolean casillas has them on EVERY
+    # filing, so refusing here discarded a whole return's numeric evidence over
+    # fields that were never destined for a Decimal map. The skipped set is not
+    # lost -- non_numeric_observed_casillas enumerates it for the operator, and
+    # a return with no numeric casilla at all still refuses below.
+    if casilla.value_kind is not CasillaValueKind.NUMERIC:
+        return None
+    try:
+        value = casilla.decimal_value()
+    except InvalidOperation:
+        return None
+    return casilla.casilla_id, value
+
+
+def _build_registry_observation(
+    *,
+    observation: FiledDeclaracionObservation,
+    period_token: str,
+    revision_casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+    casilla_values: Mapping[CasillaId, Decimal],
+) -> RegistryModeloObservation:
     if not casilla_values:
         raise SedeParseError(
             f"filed declaration {observation.modelo!r}/{observation.ejercicio}/{period_token!r} "
@@ -731,6 +731,99 @@ def registry_observation_from_filed_declaration(
     )
 
 
+def registry_observation_from_filed_declaration(
+    observation: FiledDeclaracionObservation,
+) -> RegistryModeloObservation:
+    """Convert a filed-declaration observation into registry observation rows.
+
+    The :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation`
+    is checked against the selected
+    :class:`RegistrySnapshot`; each accepted
+    :class:`~adapters.outbound.aeat.sede.ObservedCasillaValue` becomes a
+    provenance-bearing :class:`CasillaObservation`
+    inside the returned
+    :class:`~domain.calculations.registry.RegistryModeloObservation`.
+    """
+    period_token = observation.period.registry_token
+    snapshot = _registry_authority().snapshot(
+        observation.modelo,
+        filing_year=observation.ejercicio,
+        period=period_token,
+    )
+    revision_casillas_by_id = casillas_by_id(snapshot.revision)
+    _validate_filed_observation_extraction_coverage(observation, period_token=period_token)
+    casilla_values: dict[CasillaId, Decimal] = {}
+    for casilla in observation.casillas:
+        numeric_value = _numeric_registry_observation_value(
+            observation=observation,
+            casilla=casilla,
+            snapshot=snapshot,
+            revision_casillas_by_id=revision_casillas_by_id,
+        )
+        if numeric_value is None:
+            continue
+        casilla_id, value = numeric_value
+        previous = casilla_values.get(casilla_id)
+        if previous is not None and previous != value:
+            raise SedeParseError(f"observed casilla {casilla_id!r} has contradictory values")
+        casilla_values[casilla_id] = value
+    return _build_registry_observation(
+        observation=observation,
+        period_token=period_token,
+        revision_casillas_by_id=revision_casillas_by_id,
+        casilla_values=casilla_values,
+    )
+
+
+def _m303_compensation_source_values(
+    observation: FiledDeclaracionObservation,
+) -> dict[CasillaId, Decimal]:
+    source_casilla_ids = {
+        M303_COMPENSATION_POSTERIOR_CASILLA,
+        M303_COMPENSATION_RESULTADO_CASILLA,
+        M303_COMPENSATION_GENERADA_CASILLA,
+    }
+    values: dict[CasillaId, Decimal] = {}
+    for casilla in observation.casillas:
+        if casilla.casilla_id not in source_casilla_ids or casilla.source_artefact_kind == "justificante_pdf":
+            continue
+        try:
+            values[casilla.casilla_id] = casilla.decimal_value()
+        except (InvalidOperation, SedeValidationError) as exc:
+            raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
+    return values
+
+
+def _m303_compensation_source_metadata(
+    *,
+    observation: FiledDeclaracionObservation,
+    derivation: M303CompensationAvailableDerivation,
+) -> tuple[Literal["derived_registry_formula", "derived_carry_policy"], str]:
+    if derivation.basis == "generated":
+        snapshot = resources().modelos.authority.snapshot(
+            Modelo.M303.value,
+            filing_year=observation.ejercicio,
+            period=observation.period.registry_token,
+        )
+        formula = next(
+            item for item in snapshot.revision.formulas if item.target_casilla_id == M303_COMPENSATION_AVAILABLE_CASILLA
+        )
+        expected_operand_refs = expression_casilla_refs(formula.expression)
+        if derivation.operand_refs != expected_operand_refs:
+            raise SedeParseError(
+                f"Modelo 303 derived compensation available operands {derivation.operand_refs!r} do not match "
+                f"registry formula {formula.id!r} projection {expected_operand_refs!r}",
+            )
+        return (
+            "derived_registry_formula",
+            f"formula:{M303_COMPENSATION_POSTERIOR_CASILLA}+{M303_COMPENSATION_GENERADA_CASILLA}",
+        )
+    return (
+        "derived_carry_policy",
+        f"carry-policy:compensacion-assumed:{M303_COMPENSATION_POSTERIOR_CASILLA}+max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})",
+    )
+
+
 def _with_derived_303_compensation_available_observation(
     observation: FiledDeclaracionObservation,
 ) -> FiledDeclaracionObservation:
@@ -738,22 +831,7 @@ def _with_derived_303_compensation_available_observation(
     target_id = M303_COMPENSATION_AVAILABLE_CASILLA
     if observation.modelo != Modelo.M303 or any(casilla.casilla_id == target_id for casilla in observation.casillas):
         return observation
-    values: dict[CasillaId, Decimal] = {}
-    for casilla in observation.casillas:
-        if (
-            casilla.casilla_id
-            not in {
-                M303_COMPENSATION_POSTERIOR_CASILLA,
-                M303_COMPENSATION_RESULTADO_CASILLA,
-                M303_COMPENSATION_GENERADA_CASILLA,
-            }
-            or casilla.source_artefact_kind == "justificante_pdf"
-        ):
-            continue
-        try:
-            values[casilla.casilla_id] = casilla.decimal_value()
-        except (InvalidOperation, SedeValidationError) as exc:
-            raise SedeParseError(f"observed casilla {casilla.casilla_id!r} is not decimal-valued") from exc
+    values = _m303_compensation_source_values(observation)
     # A fetched AEAT filing carries casillas only, and the compensación /
     # devolución election is not one: Modelo 303 has no devolución casilla, so
     # the fichero header that records it is not in what we observe here. The
@@ -764,27 +842,10 @@ def _with_derived_303_compensation_available_observation(
     derivation = derive_m303_compensation_available_from_casillas(values, refunded=False)
     if derivation is None:
         return observation
-    if derivation.basis == "generated":
-        snapshot = resources().modelos.authority.snapshot(
-            Modelo.M303.value,
-            filing_year=observation.ejercicio,
-            period=observation.period.registry_token,
-        )
-        formula = next(item for item in snapshot.revision.formulas if item.target_casilla_id == target_id)
-        expected_operand_refs = expression_casilla_refs(formula.expression)
-        if derivation.operand_refs != expected_operand_refs:
-            raise SedeParseError(
-                f"Modelo 303 derived compensation available operands {derivation.operand_refs!r} do not match "
-                f"registry formula {formula.id!r} projection {expected_operand_refs!r}",
-            )
-        source_artefact_kind = "derived_registry_formula"
-        source_locator = f"formula:{M303_COMPENSATION_POSTERIOR_CASILLA}+{M303_COMPENSATION_GENERADA_CASILLA}"
-    else:
-        source_artefact_kind = "derived_carry_policy"
-        source_locator = (
-            f"carry-policy:compensacion-assumed:"
-            f"{M303_COMPENSATION_POSTERIOR_CASILLA}+max(0,-{M303_COMPENSATION_RESULTADO_CASILLA})"
-        )
+    source_artefact_kind, source_locator = _m303_compensation_source_metadata(
+        observation=observation,
+        derivation=derivation,
+    )
     derived = ObservedCasillaValue(
         casilla_id=target_id,
         value=str(derivation.available),

@@ -36,6 +36,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -44,7 +46,6 @@ from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import ModeloVerificationFindingKind
@@ -148,12 +149,12 @@ def _calculate_200(
     # pre-existing BIN-stock 00670 carry) from the local observation store, so all
     # bound casillas have a fact. Bindings the store cannot satisfy default to
     # zero — the present-or-zero-carry semantics (a first-year filer has no prior
-    # stock; the strict resolver below then sees a complete fact set).
+    # stock), leaving the available-value projector a complete carry set.
     prefilled = resolve_bindings_from_local_store(snapshot, repository=obs_repo).binding_values
     bound_binding_ids = {c.binding for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding}
     carry_defaults = {bid: Decimal("0") for bid in bound_binding_ids}
     binding_values = {**carry_defaults, **prefilled, **relation_binding_values, **_PROFILE_DECIMAL_BINDINGS}
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

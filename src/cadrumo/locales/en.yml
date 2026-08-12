@@ -740,42 +740,6 @@ application:
       errors:
         build_failed: 'invoice wizard refused: %{detail}'
         field_errors: 'invoice wizard refused %{field_count} field(s): %{detail}'
-  iva_wallet:
-    decision_reason:
-      aeat_wallet_uncrosschecked: The latest valid AEAT wallet observation is selected;
-        no local recurrence was available for cross-checking.
-      aeat_wallet_validated: The latest valid AEAT wallet observation matches the
-        local recurrence for Modelo 303 prior compensation.
-      caller_zero_matches_local_authority: The caller-provided zero matches the persisted
-        local zero authority.
-      filed_history_requires_override: AEAT wallet evidence is unavailable; filed-history
-        recurrence requires an explicit taxpayer override before automatic output.
-      filed_history_zero: Committed Modelo 303 filing-history evidence establishes
-        zero carry-forward compensation.
-      first_period_zero_activity_start_uncontrasted: 'UNCONTRASTED: The first-period
-        zero rests on the operator-declared activity-start date; Cadrumo cannot verify
-        that date against current AEAT censo evidence.'
-      first_period_zero_aeat_wallet: The AEAT wallet confirms zero prior compensation
-        for the first registered IVA period.
-      first_period_zero_local_recurrence: A seeded local zero establishes no prior
-        compensation for the first registered IVA period.
-      local_evidence_unreadable: A prior Modelo 303 record exists but cannot be read
-        as prior-compensation evidence, and no AEAT wallet observation is available.
-      local_recurrence_requires_override: The AEAT wallet is unavailable; local recurrence
-        requires an explicit taxpayer override before automatic output.
-      local_recurrence_zero: Local Modelo 303 recurrence establishes zero carry-forward
-        compensation.
-      no_usable_authority: No AEAT wallet observation or usable local recurrence is
-        available for Modelo 303 prior compensation.
-      stale_wallet_local_recurrence_requires_override: The AEAT wallet observation
-        is stale; local recurrence requires an explicit taxpayer override before automatic
-        output.
-      stale_wallet_no_local_recurrence: The AEAT wallet observation is stale and no
-        local recurrence fallback is available.
-      taxpayer_override: Taxpayer override selected; the separately recorded operator
-        explanation states its evidence basis.
-      wallet_local_recurrence_divergence: The AEAT wallet and local recurrence differ;
-        review is required before automatic output.
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -1766,7 +1730,8 @@ cli:
         confirm_invoice_number_help: Override the extracted invoice number.
         confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
           value).
-        confirm_link_hint_message: This invoice is not yet linked to a ledger transaction.
+        confirm_link_hint_message: The invoice was recorded without a matching ledger
+          transaction.
         confirm_operation_type_help: 'Modelo 349 clave for an entrega intracomunitaria.
           Required when the document states an intra-community supply: the category
           cannot say whether it followed an exempt importation.'
@@ -1826,8 +1791,8 @@ cli:
           its contents to a third party. Add --acknowledge-off-host to confirm that,
           for this one read.
         extract_reference_required: Supply exactly one of --evidence-id or --attachment-id.
-        extract_review_hint_message: This is a best-effort draft; confirm every field
-          before minting an invoice.
+        extract_review_hint_message: This extraction is a best-effort draft and its
+          fields are not confirmed.
         field_ambiguous: '{field}: several readings competed and none could be decided
           between ({candidates}). Choose one rather than accepting the draft as read.'
         field_anchor_not_found: '{field}: the reader points at ''{anchor}'', which
@@ -1967,6 +1932,8 @@ cli:
           (0.15 for the general 15%, or 0.07 during the inicio-de-actividad window).
           Requires --retention-amount; a rate alone is refused.
         series_help: Invoice numbering series, when the issuer uses one.
+        simplificada_tax_id_expected_message: This simplified invoice has no counterparty
+          tax identifier even though the recorded legal context expects one.
         update_help: Update business invoice details
         view_help: Show one reconciliation catalogue invoice by id or unambiguous
           prefix.
@@ -2255,6 +2222,27 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
+        readiness:
+          activo_extranjero: foreign asset
+          borrador_aeat: AEAT draft
+          compensacion_iva_anual: annual IVA compensation
+          dato_perfil: profile fact
+          datos_libro: ledger data
+          decision_compensacion_iva: IVA compensation decision
+          declaracion_previa: prior filed declaration
+          donante_donativo: donation donor
+          entrada_manual: manual input
+          entrada_relacion: relation input
+          evidencia_factura_compra: purchase-invoice evidence
+          factura_emitida: issued invoice
+          factura_recibida: received invoice
+          miembro_atribucion: income-attribution member
+          operacion_reembolso: refund operation
+          operacion_vinculada: related-party operation
+          registro_retenciones: withholding register
+          regularizacion_bienes_inversion: capital-goods adjustment
+          regularizacion_prorrata: prorrata adjustment
+          retencion: withholding
         relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
           \ --relation %{relation_id}=VALUE"
         relation_input_guidance: Some bindings below are fed by registry relations
@@ -2551,6 +2539,9 @@ cli:
         section_optional: optional_manual
         section_profile: profile_derivable
         section_required: required_manual
+        unbucketed_binding_source: Some declared binding sources do not belong to
+          a modelo.requires data-inventory bucket. They are reported without a suggested
+          repair because their source semantics require review.
       review_package:
         actor_help: Operator label recorded into the package descriptor and the underlying
           export event.
@@ -2979,6 +2970,8 @@ cli:
           ids remain advanced escape hatches.
         resume_target_help: Optional 16-character workflow run id or 64-character
           work-unit id. Prefer --modelo --year --period.
+        review_help: Review one modelo work unit's schema, values, findings, progress,
+          and blockers.
         revision_help: Stable id of the targeted registry modelo revision; run `aeat
           app modelo describe MODELO` to see the available revision ids.
         revision_selector_ambiguous: 'More than one calculation revision matches this
@@ -3258,8 +3251,7 @@ cli:
       credential_source:
         delegate_help: Chained impersonation delegate service-account email (repeatable)
         detail:
-          impersonation_config_invalid: 'the impersonation configuration is invalid:
-            {detail}'
+          impersonation_config_invalid: The impersonation configuration is invalid.
           oauth_desktop_rejects_impersonation_options: --kind oauth_desktop does not
             accept --target-principal, --scope, --delegate, --subject, or --lifetime-seconds
           target_principal_required: --target-principal is required when --kind is
@@ -3281,11 +3273,11 @@ cli:
       detail:
         client_json_bad_wrapper: client JSON at {path} has a non-object "installed"
           wrapper
-        client_json_invalid: 'client JSON at {path} is not valid JSON: {reason}'
+        client_json_invalid: The client JSON at {path} is not valid JSON.
         client_json_not_desktop: client JSON at {path} is not a Cloud Console Desktop
           client; expected an "installed" wrapper key
-        client_json_schema_invalid: 'client JSON at {path} failed schema validation:
-          {reason}'
+        client_json_schema_invalid: The client JSON at {path} does not satisfy the
+          required schema.
         client_json_unreadable: 'could not read client JSON from {path}: {reason}'
         client_unregistered: no OAuth client is registered for profile {profile}
         no_metadata_for_refresh: no OAuth session for profile {profile}; cannot refresh
@@ -3358,8 +3350,8 @@ cli:
               carry-forward etc.)
             root_folder_required: No Drive root folder id is configured; run `aeat
               config google folder set <id>` first
-            snapshot_failure: 'Cannot build registry snapshot for modelo {modelo}
-              ({period} {year}): {detail}'
+            snapshot_failure: Cannot build the registry snapshot for modelo {modelo}
+              ({period} {year}).
             unknown_modelo: Unknown modelo {modelo!r}; available modelos are {available}
             year_help: Filing year (e.g. 2025)
           export_help: Export the registry calculation surface for a modelo+period
@@ -3566,7 +3558,7 @@ cli:
         help: Declare descendants for the Art. 58/61 LIRPF minimo por descendientes.
         index_out_of_range: Index %{index} is out of range; the profile has %{total}
           descendant(s).
-        invalid_flag: 'The --descendiente flag %{flag} is invalid: %{detail}'
+        invalid_flag: The --descendiente value is invalid.
         list_help: List descendants declared on the active profile.
         remove_help: Remove one descendant by 0-based index from the active profile.
         remove_index_help: 0-based index of the descendant to remove.
@@ -3637,8 +3629,8 @@ cli:
       import_help: Register a portable profile bundle from a file
       import_invalid_bundle: 'Invalid profile bundle: the JSON does not conform to
         the profile bundle schema.'
-      import_invalid_tax_id: 'The profile bundle''s tax identifier is invalid: %{error}.
-        Fix the identifier and re-export, or import a valid bundle.'
+      import_invalid_tax_id: The profile bundle's tax identifier is invalid. Correct
+        it and export again, or import a valid bundle.
       import_label_help: Display name for the imported profile; defaults to the name
         stored in the bundle. Use it when the stored label is already in use.
       import_label_taken: A profile named %{name} already exists. Re-run with `--label
@@ -3659,6 +3651,10 @@ cli:
         time with 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
+      preflight:
+        per_operation_axis_not_assessed: No schema-required profile field is declared
+          for Modelo {modelo}; readiness covers identity and conditional checks only,
+          not a complete per-modelo assessment.
       preflight_filing_year_help: Four-digit filing year.
       preflight_help: Report which profile fields are missing for a given (modelo,
         revision, filing-year, period) filing context.
@@ -3671,9 +3667,8 @@ cli:
       preflight_revision_id_help: Optional registry revision id override for exact
         replay (e.g. 2024-0A); defaults to the active revision for the modelo, filing
         year, and period.
-      preflight_revision_override_invalid: 'Registry revision override is not valid
-        for modelo %{modelo} filing year %{filing_year}: %{detail}. Run `aeat app
-        modelo describe %{modelo}` to list the registered revisions.'
+      preflight_revision_override_invalid: The registry revision is not valid for
+        modelo {modelo} and filing year {filing_year}.
       preflight_revision_unresolved: No registry revision covers modelo %{modelo}
         filing year %{filing_year} period %{period}. Run `aeat app modelo describe
         %{modelo}` to see the valid periods and revisions.
@@ -3729,7 +3724,14 @@ cli:
         merge_into_help: Target profile name the sandbox's records are promoted into.
         merge_name_help: Sandbox name (without the prefix).
         merge_promoted_info: Promoted %{scope} from %{source} into %{target}.
+        merge_refused: Sandbox {name} cannot be merged into {into} because the merge
+          preconditions are not satisfied.
+        merge_requires_yes: Merging sandbox {name} into {into} with scope {scope}
+          changes state and requires explicit confirmation.
         merge_scope_help: 'Data category to promote: ledger, modelo, or all.'
+        merge_target_ambiguous: Profile {into} is ambiguous; identify the target by
+          its bucket ID.
+        merge_target_not_found: No live profile named {into} exists as a merge target.
         merge_yes_help: Confirm promoting sandbox data.
         prune_dry_run_help: Preview which sandboxes would be discarded without discarding
           them.
@@ -4165,27 +4167,25 @@ cli:
         per-input use classification (exclusively_deductible: deducted in full; exclusively_non_deductible:
         no deduction; common: deducted at the general prorrata percentage); meaningful
         only for input rows in a bucket under prorrata especial.'
-      input_classification_inert: '--input-classification is inert for ejercicio {ejercicio}:
-        no prorrata especial election applies, so the input deducts under the general
-        percentage. Classifying every input of the ejercicio also enables the settlement
-        LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' to route it by LIVA
-        art. 106.'
+      input_classification_inert: 'Input classification has no effect for ejercicio
+        {ejercicio}: no special-prorrata election applies, so the input is deducted
+        at the general percentage. Classification becomes operative only while a special-prorrata
+        election applies.'
       irpf_category_help: IRPF-specific category key
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
       notes_help: Operator notes stored with the transaction
       prorrata_reference_help: IVA prorrata substrate reference
-      prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) this
-        input belongs to; must match a sector declared via 'app ledger prorrata declare-sector'.
+      prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) to which
+        this input belongs; it must match an already declared sector.
       purchase_invoice_evidence_help: Canonical purchase-invoice evidence id
       recargo_amount_help: Recargo de equivalencia cuota charged on this sale to a
         recargo-regime retailer (LIVA art. 161); aggregated into the Modelo 303 recargo
         cuota by IVA rate tier
       sector_unmatched: --sector '{sector_id}' matches no declared differentiated
-        sector (LIVA arts. 9.1.c / 101), so this input deducts under the common-use
-        percentage rather than the sector's own. Run 'app ledger prorrata declare-sector
-        --sector-id {sector_id} ...' to route it, or correct the tag.
+        sector (LIVA arts. 9.1.c / 101), so this input is deducted at the common-use
+        percentage rather than the sector percentage. The sector must exist before
+        it can own the input.
       source_jurisdiction_help: Two-letter ISO 3166-1 alpha-2 country code identifying
         the regulatory source jurisdiction of the income or expense (e.g. ES for Spanish-source,
         FR for French-source). Required for IRNR scope and the Art. 93 LIRPF Beckham
@@ -4202,9 +4202,7 @@ cli:
         PERSONAL, MIXED, or omit --classification to leave the row unclassified.'
       taxable_base_help: IVA-exclusive base amount
       usage_ratio_help: Existing configured usage-ratio id for proportional business
-        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
-        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
-        <ratio>'. Not arbitrary prose.
+        use; the category must already have a usage ratio.
       value_date_help: Value date (YYYY-MM-DD)
     allocate:
       actor_help: Operator name recorded on the bucket event
@@ -4216,9 +4214,7 @@ cli:
       id_help: Ledger transaction id to allocate
       prorrata_reference_help: IVA prorrata reference for IVA workflows
       usage_ratio_help: Existing configured usage-ratio id for proportional business
-        use. Use a category id shown by 'aeat app ledger ratios list' or 'aeat app
-        ledger ratios eligible'; create one with 'aeat app ledger ratios set <category-id>
-        <ratio>'. Not arbitrary prose.
+        use; the category must already have a usage ratio.
     app_help: Management of accounting ledgers and IVA records
     archive:
       actor_help: Operator name recorded on the bucket event
@@ -4230,15 +4226,13 @@ cli:
       actor_help: Operator name recorded on the bucket event
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
-      finalized_revision_stale: Evidence stored on the ledger row, but Modelo %{modelo}
-        %{filing_year} %{period} was verified before this evidence existed and keeps
-        the evidence bundle captured then. This filing will not pick it up; recalculating
-        does not change that. Link invoices before running work calculate.
-      help: Attach secure evidence objects to one ledger transaction. Create a purchase
-        invoice evidence id first with 'aeat app ledger evidence add PATH'.
+      finalized_revision_stale: Evidence was stored on the ledger row, but Modelo
+        %{modelo} %{filing_year} %{period} was verified before that evidence existed
+        and retains its earlier evidence bundle.
+      help: Attach existing evidence to a ledger transaction.
       id_help: Ledger transaction id to attach evidence to
-      purchase_invoice_evidence_help: Purchase invoice evidence id supporting the
-        transaction; create one with 'aeat app ledger evidence add PATH'
+      purchase_invoice_evidence_help: Existing purchase-invoice evidence id supporting
+        the transaction.
     categories:
       family_column: family
       header: RECOGNISED LEDGER SPENDING CATEGORIES
@@ -4309,11 +4303,10 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
-      irpf_category_help: 'IRPF category id. Use aeat app ledger categories. Net-paid
-        professional invoices use actividad_economica; net-paid rent uses arrendamiento_local
-        / arrendamiento_vivienda_afecto. Royalties/SGAE: Art. 25.4 can be capital
-        mobiliario when the taxpayer is not the author; use actividad_economica only
-        for own-account activity under LIRPF Art. 27.'
+      irpf_category_help: IRPF category id. Net-paid professional invoices use actividad_economica;
+        net-paid rent uses arrendamiento_local or arrendamiento_vivienda_afecto. Royalties
+        and SGAE income may be capital or economic activity depending on the underlying
+        activity.
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4323,13 +4316,12 @@ cli:
       llm_confidence_label: confidence
       llm_exclusive: --llm cannot be combined with --classification or --file; the
         manual path is the explicit operator override.
-      llm_failed: 'LLM classification failed: {reason}'
       llm_help: Ask the on-host local reader to classify the transaction; preview
         by default, persist with --apply.
       llm_reason_label: reason
       llm_rejected_label: rejected
       llm_rejected_message: LLM suggestion rejected and recorded. The transaction
-        is unchanged; classify it manually when ready.
+        is unchanged.
       llm_review_hint: Review the suggestion above. Re-run with --apply to accept
         it, with --classification to override manually, or do nothing to reject it.
       llm_suggestion_label: llm-suggestion
@@ -4373,8 +4365,7 @@ cli:
         --llm with a provider.
       split_recommended_label: split recommended
       split_recommended_message: The attached invoice appears to carry multiple rate
-        or category lines. Re-run with --auto-split to separate them into independently-filable
-        base and IVA children.
+        or category lines.
       system_state_not_assignable: 'Classification ''%{value}'' is set automatically
         by the application and cannot be assigned by hand. Choose one of: BUSINESS,
         PERSONAL, MIXED.'
@@ -4383,9 +4374,6 @@ cli:
         read (e.g. qwen2.5vl:7b); defaults to the configured model.
     counterparty:
       errors:
-        confirmation_conflict: A different answer is already confirmed for '{identifier}',
-          so confirming this one would discard the earlier answer. Withdraw it first
-          with 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Confirming ''{identifier}'' needs at least one answer:
           ''--scope'' for where the counterparty is established, ''--identification-state''
           for which Member State VAT-identifies it, or both. They are independent
@@ -4412,10 +4400,6 @@ cli:
       id_help: Ledger transaction id.
       note_help: Optional note.
       reference_help: The document link reference.
-      refused: 'Cannot fetch the %{source} document for %{reference}%{scope_hint}:
-        evidence must carry the document''s encrypted bytes, and a link is never stored
-        on its own. Download the document and attach it with ''aeat app ledger attach
-        --attachment-id ...'', or grant the required Google scope and retry.'
       source_help: 'Link source: gmail, google_drive, or url.'
     errors:
       business_pct_out_of_range: Business-use share %{value} (= %{percent}) is out
@@ -4425,7 +4409,7 @@ cli:
       confirm_required: Pass --yes to confirm this destructive ledger operation.
       filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
-        {known}. Run ''aeat app ledger categories'' for valid --category-id values.'
+        {known}.'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
         separator with no thousands grouping, e.g. 1234.56.'
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
@@ -4434,9 +4418,8 @@ cli:
       period_year_pairing: Ledger period filters require period and year together.
         For a full year use --period 0A --year %{year}, or --filter period=0A --filter
         year=%{year}.
-      unknown_category: Unrecognised --category-id {category!r}. Pass a bare category
-        id such as {example!r} - not a family-prefixed or compound key. Run `aeat
-        app ledger categories` to list every recognised id.
+      unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
+        id such as {example!r}, not a family-prefixed or compound key.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
@@ -4460,7 +4443,6 @@ cli:
       include_split_siblings_help: Expand the chain to include events for every split
         sibling that shares a split_group_id with this transaction
     import:
-      all_files_refused: 'No statement file could be imported: {detail}'
       all_rows_skipped: 'No new entries were imported: all {skipped} parsed row(s)
         already exist in the ledger (duplicate transaction ids).'
       dry_run_help: Run the import in dry-run mode (without saving)
@@ -4468,12 +4450,11 @@ cli:
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
       file_help: Path to the bank statement file or directory
-      file_refused: '{path} was not imported: {reason}'
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
-        already in the ledger but have a different description - a likely duplicate
-        of the same movement imported from another file or format. Review them with
-        `aeat app ledger list`.'
+        already in the ledger but have a different description, indicating a likely
+        duplicate of the same movement from another file or format. These rows require
+        review.'
       no_rows_imported: 'No entries were imported: the file parsed but contained no
         data rows. A bank CSV must have a header row naming a date, an amount, and
         a description column followed by at least one data row.'
@@ -4554,16 +4535,11 @@ cli:
       errors:
         cross_bucket_invoice: Invoice belongs to a different bucket than the active
           profile.
-        invoice_not_found: This id was not found in the invoice catalogue. Create
-          the invoice first with 'aeat app ledger invoice add', then link it; the
-          id that verb reports is the one to pass here.
+        invoice_not_found: Invoice id not found in the active profile invoice catalogue.
       help: Bind a ledger transaction to a reconciliation-catalogue invoice in one
-        atomic call. To attach purchase-invoice evidence, use 'aeat app ledger attach'.
-        Refuses cross-bucket links. Local-only; never contacts AEAT.
+        atomic call. Refuses cross-bucket links. Local-only; never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
-      invoice_id_help: Invoice id from an imported, reconciled, or manually added
-        invoice, bound bidirectionally to the transaction. Every 'aeat app ledger
-        invoice add' id is linkable here.
+      invoice_id_help: Invoice id to bind bidirectionally to the transaction.
     list:
       by_group_help: Section the listing by group label.
       column_header: "id\tfull_id\tdate\tamount\tdescription\treview_status"
@@ -4587,8 +4563,8 @@ cli:
     llm_diagnostics:
       bad_date: '%{option} must be an ISO date (YYYY-MM-DD); got %{value}.'
       help: Report existing LLM usage, cost, and classification-confidence metrics.
-      no_data_message: No LLM usage or classification-confidence metrics recorded
-        yet. Run an LLM-assisted classification to populate them.
+      no_data_message: No LLM usage or classification-confidence metrics are recorded
+        yet.
       since_help: Inclusive lower ISO date (YYYY-MM-DD) bound on usage records.
       threshold_help: Confidence floor below which a classification counts as low-confidence.
       threshold_range: --low-confidence-below must be within the inclusive 0..1 range.
@@ -4605,9 +4581,6 @@ cli:
         fresh content-addressed merged transaction)
     preflight:
       empty_ledger_advisory: No active ledger transactions were checked for this period.
-        If activity occurred, add or import ledger rows before calculating; if there
-        was genuinely no activity, the empty ledger can support a zero-activity local
-        filing.
       help: Report missing ledger facts (category, taxable base, IVA amount/rate,
         currency, proportionality reference) for the active profile's transactions
         in a given period. Local-only; never contacts AEAT.
@@ -4619,15 +4592,10 @@ cli:
         folder_id_unrecognised: Google Drive folder reference %{reference} does not
           contain a recognisable folder id. Pass a Drive folder URL or its bare folder
           id.
-        folder_refused: 'Cannot list the Drive folder %{folder_id}%{scope_hint}: the
-          folder must be reachable under the drive.file scope (created by the app
-          or explicitly picked by the operator), or grant the required Google scope
-          and retry.'
       folder_help: Drive folder URL or bare folder id to bulk-fetch invoice PDFs/images
         from.
       help: Bulk-fetch every PDF/image invoice in a Drive folder and store each as
-        encrypted evidence (unlinked to any transaction; link with 'aeat app ledger
-        attach' or 'link').
+        encrypted evidence, unlinked to any transaction.
       labels:
         fetched: fetched_count
         folder_id: folder_id
@@ -4673,8 +4641,8 @@ cli:
         currency. Repeat once per child; the count must match --child-description.
       child_description_help: One child narrative. Repeat once per child; the count
         must match --child-amount.
-      classification_dropped: Parent classification %{classification} was not copied
-        to the split children; each child is NOT_YET_PROCESSED and needs re-classification.
+      classification_dropped: The parent %{classification} classification was not
+        inherited by the split children; each child remains NOT_YET_PROCESSED.
       errors:
         child_args_mismatch: ledger split requires the same number of --child-amount
           and --child-description arguments
@@ -4728,7 +4696,7 @@ cli:
       help: View one ledger transaction in the active profile
       llm_rejected_label: LLM suggestion
       llm_rejected_notice: The most recent LLM suggestion for this transaction was
-        rejected; classify it manually when ready.
+        rejected.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   log_levels:
     errors:
@@ -4965,9 +4933,9 @@ cli:
       (months). Combine with --year to choose the year.'
     pipeline:
       help: 'Show cross-domain pipeline health for one filing period in one table:
-        ledger classification/review state, modelo readiness (calculated / verified
-        / filed / blocked) for every work unit in the period, and outstanding verification
-        findings. Read-only; safe to run repeatedly; never contacts AEAT.'
+        ledger classification/review state, modelo readiness (calculated / incomplete
+        / verified / filed / blocked) for every work unit in the period, and outstanding
+        verification findings. Read-only; safe to run repeatedly; never contacts AEAT.'
       labels:
         findings_section: 'Findings:'
         ledger_section: 'Ledger:'
@@ -4976,6 +4944,8 @@ cli:
       no_work_units: No modelo work units for this period yet.
       period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual),
         01-12 (months). Combine with --year to choose the year.'
+      summary:
+        incompleto: 'Modelo %{modelo}: verification incomplete.'
       year_help: Filing year (e.g. 2026).
     post_filing:
       pending_summary: '%{count} AEAT post-filing event(s) require attention: %{kinds}.'
@@ -5333,11 +5303,13 @@ docs:
       computed: Calculated for you
       informational: Reference only
       manual: You enter this
+      projection_only: Filled from its source row
     input_kind_count:
       bound: filled from your records
       computed: calculated
       informational: reference only
       manual: you enter
+      projection_only: filled from a source row
     legal_kind:
       instruction: AEAT instructions
     length:
@@ -6237,8 +6209,6 @@ errors:
     integrity_storage_secure_object_unreadable: A stored secure object could not be
       decrypted under the current master key.
     integrity_storage_validation: A storage parameter failed validation.
-    integrity_verification: Verification failed unrecoverably. The reference data
-      or the calculation engine may be corrupted.
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
@@ -6873,6 +6843,137 @@ flows:
     required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
+  modelo_review:
+    column:
+      action: Action
+      blocked_by: Blocked by
+      casilla: Casilla
+      casilla_id: Casilla ID
+      code: Code
+      concrete: Concrete origin
+      declared: Declared origin
+      expectation_id: Expectation ID
+      facts: Facts
+      grounding: Grounding
+      kind: Kind
+      label: Label
+      message: Message
+      official: Official representation
+      realised: Realised value
+      schema: Schema
+      severity: Severity
+    filter:
+      absent: Absent
+      all: All values
+      binding_presence: Binding presence
+      binding_resolved: Binding resolution
+      binding_source: Concrete binding source
+      casilla_blocker: Casilla blocker action
+      casilla_blocker_presence: Casilla blocker presence
+      filters: Filters
+      finding_kind: Finding kind
+      finding_severity: Finding severity
+      formula_presence: Formula presence
+      input_kind: Declared input kind
+      no_matching_blockers: No blockers match the active filters.
+      no_matching_casillas: No casillas match the active filters.
+      no_matching_findings: No findings match the active filters.
+      official_status: Official box status
+      option:
+        binding_source:
+          atribucion_member: Income-attribution member
+          bienes_inversion_regularizacion: Investment-goods adjustment
+          borrador: AEAT draft
+          collectible_invoice: Customer invoice
+          donativo_donor: Donation donor
+          foreign_asset: Foreign asset
+          iva_compensation_annual_partition: Annual VAT compensation
+          iva_wallet_decision: VAT wallet decision
+          ledger_impatriado_income_aggregation: Inbound-expatriate income totals
+          ledger_irnr_income_aggregation: Non-resident income totals
+          ledger_iva_aggregation: VAT ledger totals
+          ledger_oss_aggregation: OSS ledger totals
+          ledger_renta_gastos_estimacion_directa_aggregation: Direct-estimation expense
+            ledger totals
+          ledger_renta_gastos_pago_fraccionado_aggregation: Instalment-payment expense
+            totals
+          ledger_renta_income_aggregation: Income ledger totals
+          ledger_transaction: Ledger transaction
+          manual_input: Manual input
+          payable_invoice: Supplier invoice
+          previous_filing: Previous filing
+          profile: Profile
+          prorrata_regularizacion: Pro-rata adjustment
+          purchase_invoice_evidence: Purchase-invoice evidence
+          refund_operation: Refund operation
+          related_party_operation: Related-party operation
+          relation_prefill: Related filing
+          retenciones_aggregation: Withholding totals
+          withholding: Withholding record
+        finding_kind:
+          advisory: Advisory
+          blocking_rule: Blocking rule
+          cross_period_dependency_unclean: Prior-period dependency not clean
+          missing_required_casilla: Missing required casilla
+          reconciliation_mismatch: Reconciliation mismatch
+        finding_severity:
+          blocking: Blocking
+          warning: Warning
+        input_kind:
+          bound: Bound
+          computed: Computed
+          informational: Informational
+          manual: Manual
+          projection_only: Projection only
+        official_status:
+          addressed: Directly addressed
+          represented_via_binding: Represented through binding
+          undefined: Undefined
+        operator_action:
+          capture_external_evidence: Capture external evidence
+          complete_document_evidence: Complete document evidence
+          confirm_group_membership: Confirm group membership
+          file_prior_period: File prior period
+          import_ledger_data: Import ledger data
+          re_verify: Verify again
+          resolve_identity: Resolve identity
+          resolve_revision_mismatch: Resolve revision mismatch
+          resolve_value_divergence: Resolve value difference
+          review_advisory: Review advisory
+          set_profile_fact: Set profile fact
+          supply_manual_input: Supply manual input
+        origin_anomaly:
+          broken_calculation_chain: Broken calculation chain
+          operator_override: Operator override
+        realised_kind:
+          COMPUTED: Computed
+          DEFAULT: Default
+          EMPTY: Empty
+          INHERITED: Inherited
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Alternate binding
+          formula_binding: Formula binding
+          formula_relation: Formula relation
+          primary_binding: Primary binding
+      origin_anomaly: Origin anomaly
+      origin_anomaly_presence: Origin anomaly presence
+      present: Present
+      realised_kind: Realised value kind
+      record_blocker: Record blocker action
+      relation_channel: Relation channel
+      relation_presence: Relation presence
+      reset: Reset filters
+      resolved: Resolved
+      unresolved: Unresolved
+    summary:
+      calculation_revision: Calculation revision
+      lifecycle_state: Lifecycle state
+      progress: Progress
+      registry_revision: Registry revision
+      verification_outcome: Verification outcome
+      work_unit: Work unit
+    title: Modelo {modelo} · {filing_year} · {period}
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'
@@ -66251,6 +66352,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -66892,6 +67005,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -67537,6 +67662,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -68178,6 +68315,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -68909,6 +69058,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:

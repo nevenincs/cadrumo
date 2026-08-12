@@ -1,6 +1,6 @@
 """The prefixed spelling of a tax identity must not survive the funnel either.
 
-The two shipped tax-identity rules anchor on ``\\b``, and a VAT country prefix is
+The two shipped tax-identity rules anchor on ``\\b``, and an IVA country prefix is
 a word character, so a prefixed identifier presents no boundary before the body
 and neither rule fires. Measured before this arm existed: ``B12345674`` redacted
 to a digest while ``ESB12345674`` -- the SAME taxpayer, in the spelling this
@@ -12,7 +12,7 @@ verbatim inside a notice context, exit code 0.
 **The gate is the property, not a list of countries.** Enumerating today's
 Member States here would pin the vocabulary the way a fixture once pinned a
 country and stopped testing anything when the table moved. So the cases below
-ask the shipped identity authorities what a VAT number IS and assert that
+ask the shipped identity authorities what an IVA number IS and assert that
 whatever they recognise does not survive redaction --- the same shape as the
 IBAN arm, which admits on the checksum rather than on the look of the string.
 
@@ -45,7 +45,7 @@ _REDACTED_MARKER = "sha256:"
 # matching its own pattern is the table's defect rather than this file's.
 _SHIPPED_EXAMPLES = tuple(sorted((prefix, spec.example) for prefix, spec in NIF_IVA_FORMATS.items()))
 
-# The Spanish prefixed spelling, which is absent from the VAT format table
+# The Spanish prefixed spelling, which is absent from the IVA format table
 # because Spain's own identities belong to the AEAT control-character authority.
 # It is the case the whole arm exists for and it must be stated explicitly.
 _ES_PREFIXED = "ESB12345674"
@@ -73,7 +73,7 @@ def test_the_shipped_example_corpus_is_populated() -> None:
 
 @pytest.mark.parametrize(("prefix", "example"), _SHIPPED_EXAMPLES)
 def test_every_shipped_member_state_number_is_redacted(prefix: str, example: str) -> None:
-    """Whatever the VAT format table recognises must not reach an operator."""
+    """Whatever the IVA format table recognises must not reach an operator."""
     assert _redacts(example), f"{prefix} example {example!r} survived the funnel"
 
 
@@ -116,7 +116,7 @@ def test_a_prefixed_spanish_identifier_failing_its_check_character_is_not_an_ide
 def test_ordinary_output_survives_the_wide_scan(ordinary: str) -> None:
     """The negative half: a wide scan admitted by a strict gate, not a hash-all.
 
-    Each of these matches the scanning shape and none is a VAT number. A rule
+    Each of these matches the scanning shape and none is an IVA number. A rule
     that hashed on the shape would pass every positive case above and quietly
     destroy the operator's readable output, which is the failure a positives-only
     suite cannot see.

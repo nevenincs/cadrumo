@@ -6,6 +6,7 @@ import pytest
 
 from ....application.ledger import LedgerPreflightIssue, LedgerPreflightIssueReason
 from ....application.state_projection import (
+    CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS,
     MODELO_READINESS_MISSING_PROFILE_ACTION,
     OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE,
     OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE,
@@ -14,6 +15,7 @@ from ....application.state_projection import (
 )
 from ....application.user_profile import ProfilePreflightRequirement
 from ....core import BindingSourceKind, OperatorActionAxis, Period
+from ....core.i18n import tr
 from .._modelo_readiness_cli import _readiness_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -25,6 +27,17 @@ def test_readiness_action_projections_are_total_over_their_native_codes() -> Non
     assert set(OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE) == set(LedgerPreflightIssueReason)
     assert set(OPERATOR_ACTION_BY_MODELO_READINESS_BINDING_SOURCE.values()) <= set(OperatorActionAxis)
     assert set(OPERATOR_ACTION_BY_MODELO_READINESS_LEDGER_ISSUE.values()) <= set(OperatorActionAxis)
+    assert set(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS) == set(BindingSourceKind)
+
+
+def test_binding_readiness_locale_projection_resolves_every_key_in_every_catalogue() -> None:
+    sentinel = "__missing_binding_readiness_translation__"
+    for key in set(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS.values()):
+        for locale in ("ca", "en", "es", "hu"):
+            assert tr(key, locale=locale, default=sentinel) != sentinel
+
+    with pytest.raises(TypeError):
+        CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind.PROFILE] = "forbidden"  # type: ignore[index]
 
 
 @pytest.mark.parametrize(

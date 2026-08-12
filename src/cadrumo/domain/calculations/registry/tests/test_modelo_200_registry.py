@@ -116,7 +116,6 @@ def test_modelo_200_validates_with_deadline_and_schedule_catalogue_refs() -> Non
         "calculation",
         "filing",
         "review",
-        "verification",
         "approval",
         "reconciliation",
         "deadline",

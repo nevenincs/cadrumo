@@ -279,7 +279,7 @@ def _emit_profile_record_unreadable_repair(
         "registered_bucket": True,
         "profile_record_present": False,
         "status": "profile_record_unreadable",
-        "error": f"{type(error).__name__}: {str(error).splitlines()[0] if str(error) else type(error).__name__}",
+        "error": type(error).__name__,
         "precondition_action": resolve_cli_precondition_action(
             unavailable_profile_record_verdict(
                 status="profile_record_unreadable",

@@ -623,7 +623,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
         observations=(observation,),
         created_at=_CALCULATION_REVISION_TIMESTAMP,
         updated_at=_CALCULATION_REVISION_TIMESTAMP,
-    filing_instance_evidence=None,
+        filing_instance_evidence=None,
     )
 
     roundtripped = CalculationRevision.model_validate_json(revision.model_dump_json())

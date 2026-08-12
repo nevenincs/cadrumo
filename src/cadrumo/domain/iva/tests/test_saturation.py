@@ -91,7 +91,7 @@ def test_non_domestic_categories_surface_not_derivable() -> None:
 
 
 def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> None:
-    """EU VAT / reverse-charge reasons must not read like legal filing certainty."""
+    """EU IVA / reverse-charge reasons must not read like legal filing certainty."""
     cases: tuple[tuple[IvaCategory, tuple[str, ...]], ...] = (
         (
             IvaCategory.DOMESTIC_REVERSE_CHARGE,

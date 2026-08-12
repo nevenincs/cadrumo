@@ -3,7 +3,7 @@ id = "modelo-490-autoliquidacion"
 legal_refs = ["orden-hac-590-2021:art-1", "orden-hac-590-2021:art-3", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-490-procedure", "enrolled-modelo-490-layout"]
 casilla_ids = ["decl.ejercicio", "decl.periodo"]
-application_links = ["modelo-490-filing", "modelo-490-verification", "modelo-490-deadline"]
+application_links = ["modelo-490-filing", "modelo-490-deadline"]
 workbook_parity_refs = ["modelo-490-orden-static-layout"]
 deadline_windows = [
     "modelo-490-2025-1t",

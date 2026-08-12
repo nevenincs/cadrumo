@@ -821,45 +821,6 @@ application:
         build_failed: 'l''assistent de factures ha rebutjat: %{detail}'
         field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s):
           %{detail}'
-  iva_wallet:
-    decision_reason:
-      aeat_wallet_uncrosschecked: S'ha seleccionat l'última observació vàlida de la
-        cartera de l'AEAT; no hi havia recurrència local disponible per contrastar-la.
-      aeat_wallet_validated: L'última observació vàlida de la cartera de l'AEAT coincideix
-        amb la recurrència local per a la compensació anterior del Model 303.
-      caller_zero_matches_local_authority: El zero proporcionat pel cridador coincideix
-        amb l'autoritat local de zero persistent.
-      filed_history_requires_override: No hi ha prova de la cartera de l'AEAT; la
-        recurrència de l'historial presentat requereix una anul·lació expressa del
-        contribuent abans de generar el resultat automàtic.
-      filed_history_zero: La prova registrada de l'historial presentat del Model 303
-        estableix una compensació a traslladar de zero.
-      first_period_zero_activity_start_uncontrasted: 'NO CONTRASTAT: El zero del primer
-        període es basa en la data d''inici d''activitat declarada per l''operador;
-        Cadrumo no pot verificar aquesta data amb la informació censal actual de l''AEAT.'
-      first_period_zero_aeat_wallet: La cartera de l'AEAT confirma que la compensació
-        anterior és zero en el primer període d'IVA registrat.
-      first_period_zero_local_recurrence: Un zero local inicial estableix que no hi
-        ha compensació anterior en el primer període d'IVA registrat.
-      local_evidence_unreadable: Hi ha un registre anterior del Model 303, però no
-        es pot llegir com a prova de compensació anterior i no hi ha cap observació
-        disponible de la cartera de l'AEAT.
-      local_recurrence_requires_override: La cartera de l'AEAT no està disponible;
-        la recurrència local requereix una anul·lació expressa del contribuent abans
-        de generar el resultat automàtic.
-      local_recurrence_zero: La recurrència local del Model 303 estableix una compensació
-        a traslladar de zero.
-      no_usable_authority: No hi ha cap observació de la cartera de l'AEAT ni recurrència
-        local utilitzable per a la compensació anterior del Model 303.
-      stale_wallet_local_recurrence_requires_override: L'observació de la cartera
-        de l'AEAT està desactualitzada; la recurrència local requereix una anul·lació
-        expressa del contribuent abans de generar el resultat automàtic.
-      stale_wallet_no_local_recurrence: L'observació de la cartera de l'AEAT està
-        desactualitzada i no hi ha cap recurrència local alternativa disponible.
-      taxpayer_override: S'ha seleccionat l'anul·lació expressa del contribuent; l'explicació
-        de l'operador registrada per separat n'indica el fonament probatori.
-      wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
-        difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1905,7 +1866,7 @@ cli:
         confirm_invoice_number_help: Sobreescriu el número de factura extret.
         confirm_iva_rate_help: Sobreescriu el tipus d'IVA extret (ometre per mantenir
           el valor extret).
-        confirm_link_hint_message: Aquesta factura encara no està vinculada a un moviment
+        confirm_link_hint_message: La factura es va registrar sense cap moviment coincident
           del llibre.
         confirm_operation_type_help: 'Clau del model 349 per a un lliurament intracomunitari.
           Obligatòria quan el document declara un lliurament intracomunitari: la categoria
@@ -1974,8 +1935,8 @@ cli:
           envia el seu contingut a un tercer. Afegeix --acknowledge-off-host per confirmar-ho,
           només per a aquesta lectura.
         extract_reference_required: Indiqueu exactament un de --evidence-id o --attachment-id.
-        extract_review_hint_message: Aquest és un esborrany aproximat; confirmeu cada
-          camp abans de crear una factura.
+        extract_review_hint_message: Aquesta extracció és un esborrany aproximat i
+          els seus camps no estan confirmats.
         field_ambiguous: '{field}: diverses lectures van competir i no s''ha pogut
           decidir entre ({candidates}). Trieu-ne una en lloc d''acceptar l''esborrany
           tal com és.'
@@ -2124,6 +2085,9 @@ cli:
           pagador (0,15 per al 15% general, o 0,07 durant el període d'inici d'activitat).
           Requereix --retention-amount; una fracció sola es rebutja.
         series_help: Sèrie de numeració de la factura, quan l'emissor n'utilitza una.
+        simplificada_tax_id_expected_message: Aquesta factura simplificada no conté
+          l identificador fiscal de la contrapart, tot i que el context legal registrat
+          l exigeix.
         update_help: Actualitza les dades d'una factura de negoci
         view_help: Mostra una factura del catàleg de conciliació per identificador
           o prefix no ambigu.
@@ -2428,6 +2392,27 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: 'Token de període: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
+        readiness:
+          activo_extranjero: actiu estranger
+          borrador_aeat: esborrany de l’AEAT
+          compensacion_iva_anual: compensació anual de l'IVA
+          dato_perfil: dada del perfil
+          datos_libro: dades del llibre
+          decision_compensacion_iva: decisió de compensació d’IVA
+          declaracion_previa: declaració anterior presentada
+          donante_donativo: donant del donatiu
+          entrada_manual: entrada manual
+          entrada_relacion: entrada de relació
+          evidencia_factura_compra: evidència de factura de compra
+          factura_emitida: factura emesa
+          factura_recibida: factura rebuda
+          miembro_atribucion: membre d'atribució de rendes
+          operacion_reembolso: operació de reemborsament
+          operacion_vinculada: operació vinculada
+          registro_retenciones: registre de retencions
+          regularizacion_bienes_inversion: regularització de béns d’inversió
+          regularizacion_prorrata: regularització de prorrata
+          retencion: retenció
         relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
           useu --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunes vinculacions següents s'alimenten de relacions
@@ -2740,6 +2725,9 @@ cli:
         section_optional: caselles_opcionals_manuals
         section_profile: derivades_del_perfil
         section_required: caselles_obligatories_manuals
+        unbucketed_binding_source: Algunes fonts d'enllaç declarades no pertanyen
+          a cap categoria de l'inventari de dades de modelo.requires. Es mostren sense
+          suggerir una reparació perquè cal revisar la semàntica de la font.
       review_package:
         actor_help: Etiqueta de l'operador registrada al descriptor del paquet i a
           l'esdeveniment d'exportació subjacent.
@@ -3200,6 +3188,8 @@ cli:
           els ids exactes queden com a escape avançat.
         resume_target_help: Id opcional d'execució de flux de 16 caràcters o id d'unitat
           de treball de 64 caràcters. Prefereix --modelo --year --period.
+        review_help: Revisa l'esquema, els valors, les troballes, el progrés i els
+          bloquejos d'una unitat de treball de model.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_selector_ambiguous: 'Més d''una revisió de càlcul coincideix amb
@@ -3499,8 +3489,7 @@ cli:
         delegate_help: Correu de compte de servei delegat en una suplantació encadenada
           (repetible)
         detail:
-          impersonation_config_invalid: 'la configuració de suplantació no és vàlida:
-            {detail}'
+          impersonation_config_invalid: La configuració de suplantació no és vàlida.
           oauth_desktop_rejects_impersonation_options: --kind oauth_desktop no accepta
             --target-principal, --scope, --delegate, --subject ni --lifetime-seconds
           target_principal_required: --target-principal és obligatori quan --kind
@@ -3525,11 +3514,11 @@ cli:
       detail:
         client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
           que no és un objecte
-        client_json_invalid: 'el JSON de client a {path} no és JSON vàlid: {reason}'
+        client_json_invalid: El JSON de client de {path} no és un JSON vàlid.
         client_json_not_desktop: el JSON de client a {path} no és un client d'escriptori
           de Cloud Console; calia una clau embolcall "installed"
-        client_json_schema_invalid: 'el JSON de client a {path} no ha superat la validació
-          d''esquema: {reason}'
+        client_json_schema_invalid: El JSON de client de {path} no compleix l'esquema
+          requerit.
         client_json_unreadable: 'no s''ha pogut llegir el JSON de client a {path}:
           {reason}'
         client_unregistered: no hi ha cap client OAuth registrat per al perfil {profile}
@@ -3614,8 +3603,8 @@ cli:
               arrossegament de trimestres anteriors, etc.)
             root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
               executeu `aeat config google folder set <id>` primer
-            snapshot_failure: 'No es pot construir el snapshot del registry per al
-              model {modelo} ({period} {year}): {detail}'
+            snapshot_failure: No es pot construir la instantània del registre per
+              al model {modelo} ({period} {year}).
             unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
               {available}
             year_help: Any de declaració (p. ex. 2025)
@@ -3830,7 +3819,7 @@ cli:
           que aquest descendent es un fill, o indiqueu la relacio real amb RELACION=.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} descendent(s).
-        invalid_flag: 'L''indicador --descendiente %{flag} no és vàlid: %{detail}'
+        invalid_flag: El valor de --descendiente no és vàlid.
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
@@ -3902,9 +3891,8 @@ cli:
       import_help: Registra un paquet portable de perfil des d'un fitxer
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
-      import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
-        %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
-        vàlid.'
+      import_invalid_tax_id: L'identificador fiscal del paquet de perfil no és vàlid.
+        Corregeix-lo i torna a exportar, o importa un paquet vàlid.
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir quan l'etiqueta desada ja s'estigui utilitzant.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
@@ -3925,6 +3913,11 @@ cli:
         quan vulguis amb 'aeat config profile edit'.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF>` first.
+      preflight:
+        per_operation_axis_not_assessed: No hi ha cap camp de perfil obligatori de
+          l'esquema declarat per al model {modelo}; la preparació només cobreix la
+          identitat i les comprovacions condicionals, no una avaluació completa del
+          model.
       preflight_filing_year_help: Exercici de presentació (quatre dígits).
       preflight_help: Informa quins camps del perfil falten per a un context de presentació
         (model, revisió, exercici, període).
@@ -3937,9 +3930,8 @@ cli:
       preflight_revision_id_help: Anul-lació opcional de l'id de revisió del registre
         per a reproducció exacta (p. ex. 2024-0A); per defecte fa servir la revisió
         activa per al model, exercici i període.
-      preflight_revision_override_invalid: 'L''anul-lació de la revisió del registre
-        no és vàlida per al model %{modelo} exercici %{filing_year}: %{detail}. Executeu
-        `aeat app modelo describe %{modelo}` per llistar les revisions registrades.'
+      preflight_revision_override_invalid: La revisió del registre no és vàlida per
+        al model {modelo} i l'exercici {filing_year}.
       preflight_revision_unresolved: Cap revisió del registre cobreix el model %{modelo}
         exercici %{filing_year} període %{period}. Executeu `aeat app modelo describe
         %{modelo}` per veure els períodes i revisions vàlids.
@@ -3995,7 +3987,15 @@ cli:
           del sandbox.
         merge_name_help: Nom del sandbox (sense el prefix).
         merge_promoted_info: S'ha promogut %{scope} de %{source} a %{target}.
+        merge_refused: L'entorn aïllat {name} no es pot fusionar a {into} perquè no
+          es compleixen les precondicions de la fusió.
+        merge_requires_yes: Fusionar l'entorn aïllat {name} a {into} amb l'àmbit {scope}
+          modifica l'estat i requereix confirmació explícita.
         merge_scope_help: 'Categoria de dades a promoure: ledger, modelo o all.'
+        merge_target_ambiguous: El perfil {into} és ambigu; identifica la destinació
+          mitjançant el seu ID de contenidor.
+        merge_target_not_found: No existeix cap perfil actiu anomenat {into} que es
+          pugui usar com a destinació de la fusió.
         merge_yes_help: Confirma la promoció de les dades del sandbox.
         prune_dry_run_help: Mostra una previsualització de quins sandboxes es descartarien
           sense descartar-los.
@@ -4478,29 +4478,25 @@ cli:
         exclusively_non_deductible sense deducció; common al percentatge general de
         prorrata); només rellevant per a operacions suportades en un bucket amb prorrata
         especial.'
-      input_classification_inert: '--input-classification és inert per a l''exercici
+      input_classification_inert: '--input-classification no té efecte per a l''exercici
         {ejercicio}: no s''aplica cap elecció de prorrata especial, de manera que
-        l''input es dedueix al percentatge general. Classificar tots els inputs de
-        l''exercici també habilita la comprovació de prorrata especial obligatòria
-        (LIVA art. 103.Dos.2) en la liquidació per a un règim general. Executa ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' per enrutar-lo segons
-        LIVA art. 106.'
+        l''input es dedueix al percentatge general. La classificació només és operativa
+        mentre s''aplica una elecció de prorrata especial.'
       irpf_category_help: Categoria d'IRPF per a càlculs de models
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Notes de l'operador desades amb la transacció
       prorrata_reference_help: Referència de prorrata d'IVA
-      prorrata_sector_help: Identificador del sector diferenciat (LIVA arts. 9.1.c
-        / 101) al qual pertany aquest input; ha de coincidir amb un sector declarat
-        amb 'app ledger prorrata declare-sector'.
+      prorrata_sector_help: Identificador del sector diferenciat (arts. 9.1.c i 101
+        LIVA) al qual pertany aquest input; ha de coincidir amb un sector ja declarat.
       purchase_invoice_evidence_help: Id de justificant de factura de compra
       recargo_amount_help: Quota del recàrrec d'equivalència repercutida en aquesta
         venda a un minorista en recàrrec (art. 161 LIVA); s'agrega a la quota de recàrrec
         del Model 303 per tipus d'IVA
       sector_unmatched: --sector '{sector_id}' no coincideix amb cap sector diferenciat
-        declarat (LIVA arts. 9.1.c / 101), de manera que aquest input es dedueix al
-        percentatge d'ús comú en lloc del propi del sector. Executa 'app ledger prorrata
-        declare-sector --sector-id {sector_id} ...' per enrutar-lo, o corregeix l'etiqueta.
+        declarat (arts. 9.1.c i 101 LIVA), de manera que aquest input es dedueix al
+        percentatge d'ús comú i no al percentatge del sector. El sector ha d'existir
+        abans que se li pugui assignar l'input.
       source_jurisdiction_help: Codi de país ISO 3166-1 alfa-2 (dues lletres) que
         identifica la jurisdicció fiscal d'origen de l'ingrés o despesa (p. ex. ES
         per font espanyola, FR per font francesa). Necessari per a IRNR i el filtre
@@ -4516,10 +4512,8 @@ cli:
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED, o omet --classification per deixar la fila sense classificar.'
       taxable_base_help: Import de base imposable
-      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
-        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
-        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
-        <ràtio>'. No és text lliure.
+      usage_ratio_help: Identificador d'una proporció d'ús ja configurada per a ús
+        professional proporcional; la categoria ha de tenir una proporció d'ús.
       value_date_help: Data valor de la transacció (AAAA-MM-DD)
     allocate:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -4531,10 +4525,8 @@ cli:
         llibre
       id_help: Id del moviment del llibre a assignar
       prorrata_reference_help: Referència de prorrata d'IVA per a fluxos d'IVA
-      usage_ratio_help: Id de proporció d'ús ja configurat per a ús professional proporcional.
-        Usa un id de categoria mostrat per 'aeat app ledger ratios list' o 'aeat app
-        ledger ratios eligible'; crea'l amb 'aeat app ledger ratios set <category-id>
-        <ràtio>'. No és text lliure.
+      usage_ratio_help: Identificador d'una proporció d'ús ja configurada per a ús
+        professional proporcional; la categoria ha de tenir una proporció d'ús.
     app_help: Gestió de llibres comptables i registres d'IVA
     archive:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
@@ -4546,16 +4538,13 @@ cli:
       actor_help: Nom de l'operador registrat a l'esdeveniment del bucket
       attachment_help: Id d'adjunt segur a enllaçar amb el moviment; repetir per a
         diversos adjunts
-      finalized_revision_stale: Justificant desat al moviment del llibre, però el
-        Model %{modelo} %{filing_year} %{period} es va verificar abans que existís
-        i conserva l'evidència agrupada llavors. Aquesta declaració no el recollirà;
-        recalcular no ho canvia. Vincula les factures abans d'executar work calculate.
-      help: Adjuntar objectes d'evidència segura a un moviment del llibre. Crea abans
-        un id de justificant de factura de compra amb 'aeat app ledger evidence add
-        PATH'.
+      finalized_revision_stale: El justificant es va desar al moviment del llibre,
+        però el Model %{modelo} %{filing_year} %{period} es va verificar abans que
+        existís i conserva el conjunt de justificants anterior.
+      help: Adjunta evidència existent a un moviment del llibre.
       id_help: Id del moviment del llibre al qual adjuntar evidència
-      purchase_invoice_evidence_help: Id de justificant de factura de compra que suporta
-        el moviment; crea'l amb 'aeat app ledger evidence add PATH'
+      purchase_invoice_evidence_help: Identificador d'evidència de factura de compra
+        existent que acredita el moviment.
     categories:
       family_column: família
       header: CATEGORIES DE DESPESA RECONEGUDES DEL LLIBRE
@@ -4628,11 +4617,11 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
-      irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories.
-        Factures professionals cobrades netes usen actividad_economica; lloguers pagats
-        nets usen arrendamiento_local / arrendamiento_vivienda_afecto. Royalties/SGAE:
-        art. 25.4 pot ser capital mobiliario quan el contribuent no és l''autor; usa
-        actividad_economica només per activitat per compte propi sota LIRPF art. 27.'
+      irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
+        cobrades en net usen actividad_economica; els lloguers pagats en net usen
+        arrendamiento_local o arrendamiento_vivienda_afecto. Els drets d'autor i els
+        ingressos de la SGAE poden ser capital o activitat econòmica segons l'activitat
+        subjacent.
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -4642,13 +4631,12 @@ cli:
       llm_confidence_label: confiança
       llm_exclusive: --llm no es pot combinar amb --classification ni --file; la ruta
         manual es l'anul-lació explícita de l'operador.
-      llm_failed: 'La classificació per LLM ha fallat: {reason}'
       llm_help: Demana al lector local on-host que classifiqui la transacció; vista
         prèvia per defecte, persisteix amb --apply.
       llm_reason_label: motiu
       llm_rejected_label: rebutjada
       llm_rejected_message: Suggeriment del model rebutjat i registrat. La transacció
-        no canvia; classifica-la manualment quan vulguis.
+        no canvia.
       llm_review_hint: Revisa el suggeriment anterior. Torna a executar amb --apply
         per acceptar-lo, amb --classification per anul-lar-lo manualment, o no facis
         res per rebutjar-lo.
@@ -4696,8 +4684,7 @@ cli:
         --llm amb un proveïdor.
       split_recommended_label: divisió recomanada
       split_recommended_message: La factura adjunta sembla contenir diverses línies
-        de tipus o categoria. Torna a executar amb --auto-split per separar-les en
-        fills de base i IVA declarables de manera independent.
+        de tipus o categoria.
       system_state_not_assignable: 'La classificació ''%{value}'' l''assigna Cadrumo
         automàticament i no es pot establir a mà. Tria''n una: BUSINESS, PERSONAL,
         MIXED.'
@@ -4707,9 +4694,6 @@ cli:
         el model configurat.
     counterparty:
       errors:
-        confirmation_conflict: Ja hi ha confirmada una resposta diferent per a '{identifier}',
-          de manera que confirmar aquesta descartaria la resposta anterior. Retireu-la
-          primer amb 'aeat app ledger counterparty withdraw'. {detail}
         nothing_asserted: 'Per confirmar ''{identifier}'' cal almenys una resposta:
           ''--scope'' per a on està establerta la contrapart, ''--identification-state''
           per a quin Estat membre la identifica a efectes d''IVA, o totes dues. Són
@@ -4736,11 +4720,6 @@ cli:
       id_help: Identificador de transacció del llibre major.
       note_help: Nota opcional.
       reference_help: Referència de l'enllaç al document.
-      refused: 'No es pot descarregar el document de %{source} per a %{reference}%{scope_hint}:
-        l''evidència ha de contenir els bytes xifrats del document, i un enllaç mai
-        no es desa tot sol. Descàrrega el document i adjunta''l amb ''aeat app ledger
-        attach --attachment-id ...'', o concedeix el permís de Google requerit i torna-ho
-        a provar.'
       source_help: 'Origen de l''enllaç: gmail, google_drive o url.'
     errors:
       business_pct_out_of_range: La proporció d'ús professional %{value} (= %{percent})
@@ -4753,8 +4732,7 @@ cli:
       filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
         %{reason}.'
       invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories
-        conegudes: {known}. Executa ''aeat app ledger categories'' per veure valors
-        vàlids de --category-id.'
+        conegudes: {known}.'
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el
         punt com a separador decimal i sense separador de milers, p. ex. 1234.56.'
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
@@ -4763,9 +4741,9 @@ cli:
       period_year_pairing: Els filtres de període del llibre requereixen període i
         exercici junts. Per a un any complet useu --period 0A --year %{year}, o --filter
         period=0A --filter year=%{year}.
-      unknown_category: --category-id {category!r} no reconegut. Passa un id de categoria
-        sense prefix com {example!r}, no una clau composta ni amb prefix de família.
-        Executa `aeat app ledger categories` per veure tots els identificadors reconeguts.
+      unknown_category: --category-id {category!r} no reconegut. Indica un identificador
+        de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
+        de família.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     exclude:
@@ -4790,7 +4768,6 @@ cli:
       include_split_siblings_help: Inclou transaccions germanes del mateix grup de
         divisió
     import:
-      all_files_refused: 'No s''ha pogut importar cap fitxer d''extracte: {detail}'
       all_rows_skipped: 'No s''ha importat cap entrada nova: les {skipped} fila(es)
         analitzades ja existeixen al llibre (ids de transacció duplicats).'
       dry_run_help: Executar la importació en mode de prova (sense desar)
@@ -4799,12 +4776,11 @@ cli:
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
-      file_refused: '{path} no s''ha importat: {reason}'
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
-        amb una transacció que ja és al llibre però tenen una descripció diferent:
-        un probable duplicat del mateix moviment importat des d''un altre arxiu o
-        format. Revisa-les amb `aeat app ledger list`.'
+        amb una transacció ja present al llibre, però tenen una descripció diferent,
+        fet que indica un probable duplicat del mateix moviment procedent d''un altre
+        fitxer o format. Aquestes files requereixen revisió.'
       no_rows_imported: 'No s''ha importat cap entrada: l''arxiu s''ha analitzat però
         no contenia files de dades. Un CSV bancari ha de tenir una fila de capçalera
         amb una columna de data, import i descripció seguida d''almenys una fila de
@@ -4885,17 +4861,13 @@ cli:
       actor_help: Etiqueta de l'operador registrada als esdeveniments del bucket.
       errors:
         cross_bucket_invoice: La factura pertany a un bucket diferent del perfil actiu.
-        invoice_not_found: Aquest id no existeix al catàleg de factures. Crea abans
-          la factura amb 'aeat app ledger invoice add' i després vincula-la; l'id
-          que mostra aquest verb és el que has d'indicar aquí.
-      help: Vincula un moviment del llibre amb una factura del catàleg de reconciliació
-        en una única crida canònica. Per adjuntar evidència de factura de compra,
-        usa 'aeat app ledger attach'. Rebutja vincles entre buckets. Local; mai contacta
-        amb AEAT.
+        invoice_not_found: No s'ha trobat l'id de factura al catàleg de factures del
+          perfil actiu.
+      help: Vincula una transacció del llibre registre amb una factura del catàleg
+        de conciliació en una sola operació atòmica. Rebutja enllaços entre buckets.
+        Només local; mai contacta amb l'AEAT.
       id_help: Id de transacció del llibre (SHA-256 o prefix inequívoc).
-      invoice_id_help: Id de factura procedent d'una factura importada, reconciliada
-        o afegida manualment, vinculat bidireccionalment amb el moviment. Qualsevol
-        id de 'aeat app ledger invoice add' es pot vincular aquí.
+      invoice_id_help: Id de factura que es vincularà bidireccionalment amb la transacció.
     list:
       by_group_help: Agrupa el llistat per etiqueta de grup.
       column_header: "id\tid_complet\tdata\timport\tdescripció\testat_revisió"
@@ -4921,8 +4893,8 @@ cli:
       bad_date: '%{option} ha de ser una data ISO (AAAA-MM-DD); s''ha rebut %{value}.'
       help: Mostra les mètriques existents d'ús, cost i confiança de classificació
         del LLM.
-      no_data_message: Encara no hi ha mètriques d'ús ni de confiança de classificació
-        del LLM. Executa una classificació assistida per LLM per generar-les.
+      no_data_message: Encara no hi ha mètriques registrades d'ús del LLM ni de confiança
+        de classificació.
       since_help: Data ISO (AAAA-MM-DD) inferior inclusiva per als registres d'ús.
       threshold_help: Llindar de confiança per sota del qual una classificació es
         considera de baixa confiança.
@@ -4938,10 +4910,8 @@ cli:
       reason_help: Motiu registrat a l'historial de cicle de vida
       yes_help: Confirma la fusió de les transaccions filles
     preflight:
-      empty_ledger_advisory: No s'han comprovat transaccions actives del llibre per
-        a aquest període. Si hi va haver activitat, afegeix o importa files del llibre
-        abans de calcular; si realment no hi va haver activitat, el llibre buit pot
-        donar suport a una presentació local sense activitat.
+      empty_ledger_advisory: No s ha comprovat cap moviment actiu del llibre per a
+        aquest període.
       help: Informa de les dades comptables que falten (categoria, base imposable,
         import/tipus d'IVA, moneda, referència de prorrata) per als moviments del
         perfil actiu en un període donat. Local; mai contacta amb AEAT.
@@ -4953,15 +4923,10 @@ cli:
         folder_id_unrecognised: La referència de carpeta de Drive %{reference} no
           conté un id de carpeta reconeixible. Indica una URL de carpeta de Drive
           o el seu id.
-        folder_refused: 'No es pot llistar la carpeta de Drive %{folder_id}%{scope_hint}:
-          la carpeta ha de ser accessible sota el permís drive.file (creada per l''app
-          o triada explícitament per l''operador), o concedeix el permís de Google
-          requerit i torna-ho a provar.'
       folder_help: URL de la carpeta de Drive o el seu id per obtenir en bloc les
         factures PDF/imatge.
-      help: Obté en bloc cada PDF/imatge de factura d'una carpeta de Drive i desa
-        cadascuna com a evidència xifrada (sense vincular a cap moviment; vincula
-        amb 'aeat app ledger attach' o 'link').
+      help: Obté en lot totes les factures PDF o imatge d'una carpeta de Drive i desa
+        cadascuna com a evidència xifrada, sense vincular-la a cap transacció.
       labels:
         fetched: obtinguts
         folder_id: id_carpeta
@@ -5007,9 +4972,8 @@ cli:
       child_amount_help: Import d'una transacció filla com a magnitud no negativa;
         es pot repetir
       child_description_help: Descripció d'una transacció filla; es pot repetir
-      classification_dropped: La classificació del pare %{classification} no s'ha
-        copiat als fills de la divisió; cada fill queda com a NOT_YET_PROCESSED i
-        necessita reclassificar-se.
+      classification_dropped: La classificació %{classification} del moviment pare
+        no es va heretar als fills de la divisió; cada fill roman com a NOT_YET_PROCESSED.
       errors:
         child_args_mismatch: Cada import fill ha de tenir una descripció filla corresponent
         min_two_children: Has d'indicar almenys dues transaccions filles
@@ -5060,8 +5024,8 @@ cli:
     view:
       help: Mostra una transacció del llibre
       llm_rejected_label: Suggeriment del model
-      llm_rejected_notice: El suggeriment més recent del model per a aquesta transacció
-        es va rebutjar; classifica-la manualment quan vulguis.
+      llm_rejected_notice: S'ha rebutjat el suggeriment més recent del model per a
+        aquesta transacció.
       transaction_id_help: Id de la transacció (o prefix no ambigu)
   log_levels:
     errors:
@@ -5313,9 +5277,10 @@ cli:
     pipeline:
       help: 'Mostra la salut del flux de treball entre dominis per a un període de
         declaració en una sola taula: estat de classificació i revisió del llibre
-        comptable, preparació de cada model (calculat / verificat / presentat / bloquejat)
-        per a cada unitat de treball del període, i troballes de verificació pendents.
-        Només lectura; segur d''executar repetidament; mai contacta amb l''AEAT.'
+        comptable, preparació de cada model (calculat / incomplet / verificat / presentat
+        / bloquejat) per a cada unitat de treball del període, i troballes de verificació
+        pendents. Només lectura; segur d''executar repetidament; mai contacta amb
+        l''AEAT.'
       labels:
         findings_section: 'Troballes:'
         ledger_section: 'Llibre comptable:'
@@ -5324,6 +5289,8 @@ cli:
       no_work_units: Encara no hi ha unitats de treball de model per a aquest període.
       period_help: 'Període de declaració com a token de l''AEAT: 1T-4T (trimestres),
         0A (anual), 01-12 (mesos). Combina''l amb --year per triar l''any.'
+      summary:
+        incompleto: 'Model %{modelo}: verificació incompleta.'
       year_help: Any de declaració (p. ex. 2026).
     post_filing:
       pending_summary: '%{count} esdeveniment(s) de l''AEAT posterior(s) a la presentació
@@ -5687,11 +5654,13 @@ docs:
       computed: Es calcula automàticament
       informational: Només informativa
       manual: Ho introdueix vostè
+      projection_only: S'omple des de la seva fila d'origen
     input_kind_count:
       bound: omplertes des dels seus registres
       computed: calculades
       informational: només informatives
       manual: que introdueix vostè
+      projection_only: omplertes des de la seva fila d'origen
     legal_kind:
       instruction: Instruccions de l'AEAT
     length:
@@ -6661,8 +6630,6 @@ errors:
     integrity_storage_secure_object_unreadable: Un objecte segur emmagatzemat no s'ha
       pogut desxifrar amb la clau mestra actual.
     integrity_storage_validation: Un paràmetre d'emmagatzematge no ha superat la validació.
-    integrity_verification: La verificació ha fallat de manera irrecuperable. Les
-      dades de referència o el motor de càlcul poden estar malmesos.
     profile_import_signature: L'arxiu de perfil no ha superat la comprovació de signatura
       o integritat. No importis arxius d'origen no fiable.
   internal:
@@ -7328,6 +7295,137 @@ flows:
     required_field_unavailable: Camp obligatori del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
+  modelo_review:
+    column:
+      action: Acció
+      blocked_by: Bloquejada per
+      casilla: Casella
+      casilla_id: ID de casella
+      code: Codi
+      concrete: Origen concret
+      declared: Origen declarat
+      expectation_id: ID d'expectativa
+      facts: Fets
+      grounding: Fonamentació
+      kind: Tipus
+      label: Etiqueta
+      message: Missatge
+      official: Representació oficial
+      realised: Valor materialitzat
+      schema: Esquema
+      severity: Gravetat
+    filter:
+      absent: Absent
+      all: Tots els valors
+      binding_presence: Presència de vincle
+      binding_resolved: Resolució del vincle
+      binding_source: Origen concret del vincle
+      casilla_blocker: Acció bloquejant de casella
+      casilla_blocker_presence: Presència de bloqueig de casella
+      filters: Filtres
+      finding_kind: Tipus d'incidència
+      finding_severity: Gravetat de la incidència
+      formula_presence: Presència de fórmula
+      input_kind: Tipus d'entrada declarat
+      no_matching_blockers: Cap bloqueig coincideix amb els filtres actius.
+      no_matching_casillas: Cap casella coincideix amb els filtres actius.
+      no_matching_findings: Cap incidència coincideix amb els filtres actius.
+      official_status: Estat de casella oficial
+      option:
+        binding_source:
+          atribucion_member: Membre d'atribució de rendes
+          bienes_inversion_regularizacion: Regularització de béns d'inversió
+          borrador: Esborrany de l'AEAT
+          collectible_invoice: Factura emesa
+          donativo_donor: Donant
+          foreign_asset: Actiu estranger
+          iva_compensation_annual_partition: Compensació anual d'IVA
+          iva_wallet_decision: Decisió de saldo d'IVA
+          ledger_impatriado_income_aggregation: Totals d'ingressos d'impatriats
+          ledger_irnr_income_aggregation: Totals d'ingressos de no residents
+          ledger_iva_aggregation: Totals del llibre d'IVA
+          ledger_oss_aggregation: Totals del llibre OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Totals de despeses en
+            estimació directa
+          ledger_renta_gastos_pago_fraccionado_aggregation: Totals de despeses del
+            pagament fraccionat
+          ledger_renta_income_aggregation: Totals d'ingressos
+          ledger_transaction: Moviment del llibre
+          manual_input: Entrada manual
+          payable_invoice: Factura rebuda
+          previous_filing: Declaració anterior
+          profile: Perfil
+          prorrata_regularizacion: Regularització de prorrata
+          purchase_invoice_evidence: Evidència de factura de compra
+          refund_operation: Operació de reemborsament
+          related_party_operation: Operació vinculada
+          relation_prefill: Declaració relacionada
+          retenciones_aggregation: Totals de retencions
+          withholding: Registre de retenció
+        finding_kind:
+          advisory: Avís
+          blocking_rule: Regla bloquejant
+          cross_period_dependency_unclean: Dependència anterior no neta
+          missing_required_casilla: Falta una casella obligatòria
+          reconciliation_mismatch: Discrepància de conciliació
+        finding_severity:
+          blocking: Bloquejant
+          warning: Advertiment
+        input_kind:
+          bound: Vinculada
+          computed: Calculada
+          informational: Informativa
+          manual: Manual
+          projection_only: Només projecció
+        official_status:
+          addressed: Representada directament
+          represented_via_binding: Representada mitjançant vincle
+          undefined: Sense definir
+        operator_action:
+          capture_external_evidence: Captura evidència externa
+          complete_document_evidence: Completa l'evidència documental
+          confirm_group_membership: Confirma la pertinença al grup
+          file_prior_period: Presenta el període anterior
+          import_ledger_data: Importa dades del llibre
+          re_verify: Torna a verificar
+          resolve_identity: Resol la identitat
+          resolve_revision_mismatch: Resol la discrepància de revisió
+          resolve_value_divergence: Resol la diferència de valor
+          review_advisory: Revisa l'avís
+          set_profile_fact: Completa una dada del perfil
+          supply_manual_input: Aporta una dada manual
+        origin_anomaly:
+          broken_calculation_chain: Cadena de càlcul interrompuda
+          operator_override: Substitució de l'operador
+        realised_kind:
+          COMPUTED: Calculat
+          DEFAULT: Predeterminat
+          EMPTY: Buit
+          INHERITED: Heretat
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Vincle alternatiu
+          formula_binding: Vincle de fórmula
+          formula_relation: Relació de fórmula
+          primary_binding: Vincle principal
+      origin_anomaly: Anomalia d'origen
+      origin_anomaly_presence: Presència d'anomalia d'origen
+      present: Present
+      realised_kind: Tipus de valor realitzat
+      record_blocker: Acció bloquejant del registre
+      relation_channel: Canal de relació
+      relation_presence: Presència de relació
+      reset: Restableix els filtres
+      resolved: Resolt
+      unresolved: Sense resoldre
+    summary:
+      calculation_revision: Revisió del càlcul
+      lifecycle_state: Estat del cicle de vida
+      progress: Progrés
+      registry_revision: Revisió del registre
+      verification_outcome: Resultat de la verificació
+      work_unit: Unitat de treball
+    title: Modelo {modelo} · {filing_year} · {period}
   progress:
     current_answer: 'Resposta actual: {value}'
     current_answer_secret: 'Resposta actual: (oculta)'
@@ -66672,6 +66770,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -67313,6 +67423,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -67958,6 +68080,18 @@ modelo:
             modulos-iva-3-unidades:
               help: null
               label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
+              help: null
+              label: null
             modulos-iva-cuota-derivada:
               help: null
               label: null
@@ -68599,6 +68733,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:
@@ -69345,6 +69491,18 @@ modelo:
               help: null
               label: null
             modulos-iva-3-unidades:
+              help: null
+              label: null
+            modulos-iva-4-unidades:
+              help: null
+              label: null
+            modulos-iva-5-unidades:
+              help: null
+              label: null
+            modulos-iva-6-unidades:
+              help: null
+              label: null
+            modulos-iva-7-unidades:
               help: null
               label: null
             modulos-iva-cuota-derivada:

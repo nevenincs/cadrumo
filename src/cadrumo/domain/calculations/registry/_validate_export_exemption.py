@@ -37,9 +37,12 @@ The scan is casilla-keyed, and that is a blind spot in the instrument
 "No record addresses it" means no record addresses it BY CASILLA ID. A
 ``BINDING``-kind export field names the binding, not the casilla, so a value the
 export genuinely writes at a declared offset is invisible to this scan and looks
-exactly like one AEAT never prints. Modelo 720's ejercicio (design positions
-5-8) and declaración complementaria/sustitutiva (121-122) are both written that
-way, and reading their names alone suggests the opposite conclusion.
+exactly like one AEAT never prints. Modelo 720 is the worked case: its raw export
+records deliberately carry zero inline fields, while registry bindings declare
+``ejercicio`` at positions 5-8 and declaración complementaria/sustitutiva at
+121-122. :func:`derive_export_layouts_from_bindings` materialises those selectors
+as ``BINDING`` fields before this validator scans the layout. The positions belong
+to the binding-derived layout, not to fields authored inline on the raw records.
 
 A value can reach a casilla through THREE channels, and this gate sees two:
 

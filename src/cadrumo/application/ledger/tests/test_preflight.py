@@ -242,7 +242,7 @@ def test_preflight_renders_intracom_domestic_identification_detail_in_hungarian(
         LedgerPreflightIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
     ]
     # The narrowed concept, in the operator's own language: the refusal names the
-    # VAT IDENTIFICATION, not where the counterparty is established.
+    # IVA IDENTIFICATION, not where the counterparty is established.
     assert "héa-azonosító" in report.issues[0].detail
     assert not report.issues[0].detail.startswith("aggregation.")
 

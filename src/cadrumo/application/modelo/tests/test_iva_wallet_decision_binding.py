@@ -60,7 +60,7 @@ def _revision():
 
 def _apply(
     *,
-    taxpayer_nif: str = _TAXPAYER_REF,
+    taxpayer_nif: str | None = _TAXPAYER_REF,
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
     backend_casilla_inputs: dict[CasillaId, Decimal] | None = None,
     caller_binding_values: dict[BindingId, Decimal] | None = None,
@@ -122,6 +122,29 @@ def test_blocked_iva_wallet_decision_refuses_modelo_303_automatic_calculation() 
         exc_info.value.precondition_failure.scenario_id
         == "modelo.work.calculate.iva_wallet.wallet_local_recurrence_divergence"
     )
+
+
+def test_blocked_wallet_refusal_precedes_caller_binding_conflict() -> None:
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+        _apply(
+            caller_binding_values={_M303_PRIOR_COMPENSATION_BINDING: Decimal("800")},
+            decision=_decision(blocked=True, amount=None),
+        )
+
+    assert (
+        exc_info.value.translated_message == "application.iva_wallet.decision_reason.wallet_local_recurrence_divergence"
+    )
+
+
+def test_target_mismatch_refusal_precedes_missing_taxpayer_identity() -> None:
+    wrong_period = _decision().model_copy(
+        update={"target_period": Period.from_year_and_code(2026, "1T")},
+    )
+
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+        _apply(taxpayer_nif=None, decision=wrong_period)
+
+    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_target_mismatch"
 
 
 def test_caller_binding_conflict_with_wallet_decision_is_refused() -> None:
@@ -239,3 +262,21 @@ def test_modelo_303_prior_compensation_casilla_conflict_with_wallet_decision_is_
             decision=_decision(),
         )
     assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_caller_casilla_conflict"
+
+
+def test_backend_prior_compensation_casilla_conflict_with_wallet_decision_is_refused() -> None:
+    with pytest.raises(ModeloIvaWalletReconciliationBlocked) as exc_info:
+        _apply(
+            backend_casilla_inputs={_M303_PRIOR_COMPENSATION_CASILLA: Decimal("800")},
+            decision=_decision(),
+        )
+
+    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_backend_casilla_conflict"
+
+
+def test_wallet_authority_replaces_the_existing_lower_precedence_backend_binding() -> None:
+    backend = {_M303_PRIOR_COMPENSATION_BINDING: Decimal("800")}
+
+    _apply(backend_binding_values=backend, decision=_decision())
+
+    assert backend[_M303_PRIOR_COMPENSATION_BINDING] == Decimal("1200")

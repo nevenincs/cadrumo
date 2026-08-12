@@ -60,7 +60,11 @@ def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is True
     assert cert.severity is HealthSeverity.OK
-    assert cert.remediation == ""
+    assert cert.precondition_verdict is None
+    assert cert.facts["probe_result"] in {
+        ProviderProbeResult.NO_PROVIDER.value,
+        ProviderProbeResult.NO_PATH_SET.value,
+    }
 
 
 def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_path: Path) -> None:
@@ -71,7 +75,10 @@ def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_pa
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is False
     assert cert.severity is HealthSeverity.ERROR
-    assert cert.remediation, "a red certificate row must name a concrete remediation"
+    assert cert.precondition_verdict is not None
+    assert cert.precondition_verdict.action is not None
+    assert cert.precondition_verdict.action.action_id == "operator.auth.configure"
+    assert cert.precondition_verdict.evidence[0].values == cert.facts
 
 
 def test_auth_provider_clave_invalid_identity_is_error() -> None:
@@ -81,7 +88,8 @@ def test_auth_provider_clave_invalid_identity_is_error() -> None:
     clave = _row(rows, "auth-provider:clave_movil")
     assert clave.healthy is False
     assert clave.severity is HealthSeverity.ERROR
-    assert clave.remediation
+    assert clave.precondition_verdict is not None
+    assert clave.precondition_verdict.evidence[0].values == clave.facts
 
 
 def test_every_probe_result_belongs_to_exactly_one_severity_band() -> None:
@@ -112,8 +120,7 @@ def test_every_probe_result_belongs_to_exactly_one_severity_band() -> None:
 def test_every_declared_probe_result_grades_without_the_defect_fall_through() -> None:
     """No real probe result reaches the fall-through, so the fall-through only reports defects."""
     for member in ProviderProbeResult:
-        severity, healthy, remediation = grade_provider_probe_result(AuthProviderKind.CERTIFICATE, member)
-        assert "cannot grade" not in remediation, member.value
+        severity, healthy = grade_provider_probe_result(AuthProviderKind.CERTIFICATE, member)
         if member in _OK_PROBE_RESULTS | _UNCONFIGURED_PROBE_RESULTS:
             assert healthy is True and severity is HealthSeverity.OK, member.value
 
@@ -139,7 +146,8 @@ def test_storage_root_error_when_ancestor_is_a_file(tmp_path: Path) -> None:
     storage = _row(rows, "storage:local-root")
     assert storage.healthy is False
     assert storage.severity is HealthSeverity.ERROR
-    assert storage.remediation
+    assert storage.precondition_verdict is not None
+    assert storage.precondition_verdict.evidence[0].values == storage.facts
 
 
 def test_corpus_row_healthy_for_bundled_normatives() -> None:
@@ -157,7 +165,9 @@ def test_corpus_row_error_when_corpus_root_missing(tmp_path: Path) -> None:
     normatives = _row(rows, "corpus:normatives")
     assert normatives.healthy is False
     assert normatives.severity is HealthSeverity.ERROR
-    assert "reinstall" in normatives.remediation
+    assert normatives.facts["corpus_present"] is False
+    assert normatives.precondition_verdict is not None
+    assert normatives.precondition_verdict.action is None
 
 
 def test_env_configuration_warns_without_passphrase() -> None:
@@ -242,11 +252,14 @@ def test_windows_long_path_row_flags_a_deep_root(tmp_path: Path) -> None:
 
     if sys.platform != "win32" or windows_long_paths_enabled():
         assert row.healthy is True
-        assert "not applicable" in row.detail or "LongPathsEnabled is set" in row.detail
+        assert row.facts["path_limit_applicable"] is False
     else:
-        assert str(deep_root) in row.detail
+        assert row.facts["storage_root"] == str(deep_root)
         assert row.severity in (HealthSeverity.ERROR, HealthSeverity.WARN)
-        assert row.remediation
+        if row.healthy:
+            assert row.precondition_verdict is None
+        else:
+            assert row.precondition_verdict is not None
 
 
 # ── #413 — portal-registry health / recorded portal drift ────────────────────
@@ -258,7 +271,7 @@ def test_portal_health_ok_offline_when_no_drift_recorded() -> None:
     assert row.check == "portal-registry:health"
     assert row.healthy is True
     assert row.severity is HealthSeverity.OK
-    assert "no portal drift recorded" in row.detail
+    assert row.facts["drift_count"] == 0
 
 
 def test_portal_health_warns_on_recorded_volatile_url_drift() -> None:
@@ -277,8 +290,9 @@ def test_portal_health_warns_on_recorded_volatile_url_drift() -> None:
     row = probe_portal_registry_health(drift_events=(drift,))
     assert row.healthy is True
     assert row.severity is HealthSeverity.WARN
-    assert entry.portal.value in row.detail
-    assert row.remediation
+    assert row.facts["drift_count"] == 1
+    assert row.facts["stable_drift_present"] is False
+    assert row.precondition_verdict is None
 
 
 def test_portal_health_errors_on_recorded_stable_url_drift() -> None:
@@ -297,4 +311,7 @@ def test_portal_health_errors_on_recorded_stable_url_drift() -> None:
     row = probe_portal_registry_health(drift_events=(drift,))
     assert row.healthy is False
     assert row.severity is HealthSeverity.ERROR
-    assert row.remediation
+    assert row.facts["drift_count"] == 1
+    assert row.facts["stable_drift_present"] is True
+    assert row.precondition_verdict is not None
+    assert row.precondition_verdict.evidence[0].values == row.facts

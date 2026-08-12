@@ -168,4 +168,4 @@ def test_committed_modelo_347_construct_includes_revision_members() -> None:
         assert construct.deadline_windows == tuple(w.id for w in revision.deadline_windows)
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
         link_surfaces = {link.surface for link in revision.application_links}
-        assert {"portal", "filing", "extractor", "verification", "deadline"} <= link_surfaces, revision.id
+        assert {"portal", "filing", "extractor", "deadline"} <= link_surfaces, revision.id

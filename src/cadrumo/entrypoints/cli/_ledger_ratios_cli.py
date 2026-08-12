@@ -17,12 +17,13 @@ from ...domain.categories import SpendingCategory
 from ._common import _bad, _emit_envelope, parse_decimal_amount
 from ._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ._common import active_bucket_id_or_refuse as _ratios_bucket_id
+from ._ledger_support import _ledger_cli_no_recovery
 
 _log = get_logger(__name__)
 
 ratios_app = typer.Typer(
     name="ratios",
-    help=tr("cli.app.ledger.ratios.group_help", default="Per-category proportional-deduction overrides."),
+    help=tr("cli.app.ledger.ratios.group_help"),
     no_args_is_help=True,
 )
 
@@ -137,10 +138,7 @@ def _emit_ratios_censo_override_warning(
 
 @ratios_app.command(
     "list",
-    help=tr(
-        "cli.app.ledger.ratios.list_help",
-        default="List every per-category usage-ratio override on the active profile.",
-    ),
+    help=tr("cli.app.ledger.ratios.list_help"),
 )
 def ratios_list(
     ctx: typer.Context,
@@ -154,7 +152,6 @@ def ratios_list(
     """List every per-category proportional-deduction override stored on the active bucket."""
     _activate_subcommand_output_language(ctx, output_language)
     from ...adapters.persistence.profile.usage_ratios import (
-        load_usage_ratios,
         load_usage_ratios_with_censo_guard,
     )
     from ...application.user_profile import CensoSyncService
@@ -167,20 +164,21 @@ def ratios_list(
         raw_afectacion = CensoSyncService(bucket_id=bucket_id).bound_raw_afectacion_ratio(
             profile_id=profile_id,
         )
-    censo_mismatch: str | None = None
     try:
         profile = load_usage_ratios_with_censo_guard(
             bucket_id=bucket_id,
             raw_afectacion_ratio=raw_afectacion,
         )
     except CensoRatioMismatchError as exc:
-        _log.debug("ledger ratios censo mismatch surfaced as warning", exc_info=True)
-        censo_mismatch = str(exc)
-        profile = load_usage_ratios(bucket_id=bucket_id)
+        from ...application.cli_exception_preconditions import CliExceptionPrecondition
+
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_CENSO_RATIO_CONSISTENT,
+            facts={"censo_ratio_consistent": False},
+        ) from None
     rows = [RatiosRowPayload(category=category, ratio=str(ratio)) for category, ratio in profile.ratios.items()]
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    if censo_mismatch is not None:
-        lines.append(f"censo_mismatch\t{censo_mismatch}")
     lines.extend(f"{row.category.value}\t{row.ratio}" for row in rows)
     _emit_envelope(
         ctx,
@@ -189,7 +187,7 @@ def ratios_list(
             bucket_id=bucket_id,
             rows=rows,
             count=len(rows),
-            censo_mismatch=censo_mismatch,
+            censo_mismatch=None,
         ),
         lines=lines,
     )
@@ -197,17 +195,17 @@ def ratios_list(
 
 @ratios_app.command(
     "set",
-    help=tr("cli.app.ledger.ratios.set_help", default="Set or replace one per-category usage-ratio override."),
+    help=tr("cli.app.ledger.ratios.set_help"),
 )
 def ratios_set(
     ctx: typer.Context,
     category: SpendingCategory = typer.Argument(
         ...,
-        help=tr("cli.app.ledger.ratios.category_help", default="Spending category id (e.g. vehiculo_combustible)."),
+        help=tr("cli.app.ledger.ratios.category_help"),
     ),
     ratio: str = typer.Argument(
         ...,
-        help=tr("cli.app.ledger.ratios.ratio_help", default="Override ratio in the closed interval [0, 1]."),
+        help=tr("cli.app.ledger.ratios.ratio_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -256,13 +254,13 @@ def ratios_set(
 
 @ratios_app.command(
     "unset",
-    help=tr("cli.app.ledger.ratios.unset_help", default="Clear one per-category usage-ratio override."),
+    help=tr("cli.app.ledger.ratios.unset_help"),
 )
 def ratios_unset(
     ctx: typer.Context,
     category: SpendingCategory = typer.Argument(
         ...,
-        help=tr("cli.app.ledger.ratios.unset_category_help", default="Spending category id whose override to clear."),
+        help=tr("cli.app.ledger.ratios.unset_category_help"),
     ),
     output_language: OutputLanguage | None = typer.Option(
         None,
@@ -284,7 +282,6 @@ def ratios_unset(
         raise _bad(
             tr(
                 "cli.app.ledger.ratios.no_override_error",
-                default="No persisted override for category {category!r} on bucket {bucket_id!r}",
                 category=category.value,
                 bucket_id=bucket_id,
             ),
@@ -306,10 +303,7 @@ def ratios_unset(
 
 @ratios_app.command(
     "eligible",
-    help=tr(
-        "cli.app.ledger.ratios.eligible_help",
-        default="List every category that may carry a per-category override.",
-    ),
+    help=tr("cli.app.ledger.ratios.eligible_help"),
 )
 def ratios_eligible(
     ctx: typer.Context,
@@ -357,10 +351,7 @@ def ratios_eligible(
 
 @ratios_app.command(
     "validate",
-    help=tr(
-        "cli.app.ledger.ratios.validate_help",
-        default="Validate the per-category overrides against eligibility + bound rules.",
-    ),
+    help=tr("cli.app.ledger.ratios.validate_help"),
 )
 def ratios_validate(
     ctx: typer.Context,

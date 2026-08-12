@@ -79,8 +79,8 @@ def test_modelo_202_modalidad_chains_calculate_for_synthetic_inputs(
             "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores": Decimal("3000"),
             "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior": inputs[_M202_CUOTA_BASE_CASILLA],
         },
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
     entries = {entry.target_casilla_id: entry for entry in result.entries}
@@ -140,8 +140,8 @@ def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementari
         binding_values={
             "modelo-202-2023-2024-pagos-fraccionados-anteriores": Decimal("0"),
         },
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 
@@ -216,8 +216,8 @@ def test_modelo_200_cuota_a_ingresar_aggregates_modelo_202_pagos_fraccionados(
         },
         date_context={"filing_period": date(2024, 12, 31)},
         relation_values=relation_values,
-    m303_regimen_simplificado_scope=None,
-    m303_annual_orden=None,
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     entries = {entry.target_casilla_id: entry for entry in result.entries}
     assert "DP200014B:00599" in entries

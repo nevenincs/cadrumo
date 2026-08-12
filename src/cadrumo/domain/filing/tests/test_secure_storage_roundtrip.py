@@ -275,7 +275,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             observations=(observation,),
             created_at=_DRAFT_TIMESTAMP,
             updated_at=_DRAFT_TIMESTAMP,
-        filing_instance_evidence=None,
+            filing_instance_evidence=None,
         )
         catalogue = CalculationRevisionCatalogue(
             revisions={revision.calculation_revision_id: revision},

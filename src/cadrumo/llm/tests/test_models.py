@@ -12,8 +12,11 @@ from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
-from .. import LLMProvider, LLMRequest, LLMResponse, Translation
+from ...core import NoRecoveryOutcome
+from .. import LLMProvider, LLMRequest, LLMResponse, PromptDefinition, Translation
+from .._errors import LLMValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -34,6 +37,41 @@ def test_llm_request_round_trip() -> None:
         model_override="claude-sonnet-4-6",
     )
     assert LLMRequest.model_validate_json(request.model_dump_json()) == request
+
+
+def test_blank_request_prompt_preserves_its_terminal_condition_through_pydantic() -> None:
+    """The model validator keeps the exact refusal for the outer CLI boundary."""
+    with pytest.raises(ValidationError) as raised:
+        LLMRequest(prompt=" \t")
+
+    nested = raised.value.errors(include_url=False)[0]["ctx"]["error"]
+    assert isinstance(nested, LLMValidationError)
+    verdict = nested.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.request.prompt_nonempty"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values == {"request_prompt_nonempty": False}
+
+
+def test_invalid_prompt_definition_id_preserves_its_terminal_condition_through_pydantic() -> None:
+    """Invalid authored prompt metadata cannot fall back to producer prose."""
+    with pytest.raises(ValidationError) as raised:
+        PromptDefinition(
+            id="Not a canonical prompt id",
+            version=1,
+            template="{{ value }}",
+            description="test prompt",
+        )
+
+    nested = raised.value.errors(include_url=False)[0]["ctx"]["error"]
+    assert isinstance(nested, LLMValidationError)
+    verdict = nested.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.prompt_definition.id_valid"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values == {"prompt_definition_id_valid": False}
 
 
 def test_llm_response_round_trip() -> None:

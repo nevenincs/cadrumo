@@ -42,7 +42,6 @@ Subpackages
    cadrumo.application.storage_management
    cadrumo.application.transactions
    cadrumo.application.user_profile
-   cadrumo.application.verification
    cadrumo.application.wizard
    cadrumo.application.workflow
 

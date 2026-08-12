@@ -10,9 +10,11 @@ from __future__ import annotations
 
 import pytest
 
+from ....core import BindingSourceKind
 from ....core.resources import resources
 from ....domain.calculations.registry import binding_profile_keys
-from .._data_inventory import _profile_keys_for_bindings
+from ...aggregation import AtribucionMemberSourceResolver
+from .._data_inventory import _LIVE_OBSERVATION_SOURCE_KINDS, _profile_keys_for_bindings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -51,3 +53,9 @@ def test_an_empty_binding_set_maps_to_no_keys() -> None:
     _binding, revision, _keys = _a_committed_profile_binding()
 
     assert _profile_keys_for_bindings(revision, ()) == ()
+
+
+def test_profile_backed_atribucion_resolver_is_not_a_live_observation_source() -> None:
+    """The real M184 resolver ownership must stay out of the local-observation bucket."""
+    assert AtribucionMemberSourceResolver.owned_sources == (BindingSourceKind.ATRIBUCION_MEMBER,)
+    assert set(AtribucionMemberSourceResolver.owned_sources).isdisjoint(_LIVE_OBSERVATION_SOURCE_KINDS)

@@ -24,7 +24,6 @@ application_links = [
     "modelo-193-calculation",
     "modelo-193-filing",
     "modelo-193-deadline",
-    "modelo-193-verification",
     "modelo-193-extractor",
     "modelo-193-review",
     "modelo-193-approval",

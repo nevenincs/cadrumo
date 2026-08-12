@@ -27,6 +27,7 @@ from typing import override
 import pytest
 
 from ...adapters.outbound.llm import LLMCache, LLMRunTelemetryRecorder, UsageRecorder
+from ...core import NoRecoveryOutcome
 from ...core.config import LLMProvider, override_settings
 from ...tests.fixtures.settings import EnvFileFreeSettings
 from ...tests.loopback_llm import (
@@ -170,7 +171,16 @@ def test_second_concurrent_on_host_request_is_refused_while_the_first_holds_the_
     # The refused request never reached the runtime: the arena is admission
     # control, not a post-hoc failure, so nothing was loaded and abandoned.
     assert runtime.arrived.empty()
-    assert "refused rather than queued" in str(refusal.value)
+    verdict = refusal.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "llm.local_inference.slot_available"
+    assert verdict.action is None
+    assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+    assert verdict.evidence[0].values == {
+        "local_inference_limit": 1,
+        "local_inference_slot_available": False,
+        "provider": LLMProvider.LOCAL.value,
+    }
 
 
 def test_both_concurrent_requests_proceed_when_the_bound_permits_two(tmp_path: Path) -> None:

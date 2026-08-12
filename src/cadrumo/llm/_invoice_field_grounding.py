@@ -47,7 +47,13 @@ from ..application.ledger import (
     InvoiceDraft,
     PurchaseInvoiceEvidenceInputError,
 )
-from ..core import STRICT_FROZEN_CONFIG, DraftDiscrepancyKind, FieldGroundingOutcome, FieldOrigin
+from ..core import (
+    STRICT_FROZEN_CONFIG,
+    ActionEvidenceProvenance,
+    DraftDiscrepancyKind,
+    FieldGroundingOutcome,
+    FieldOrigin,
+)
 from ..core.decimal import coerce_finite_european_decimal, european_thousands_reading_is_ambiguous
 from ..core.errors import CoreValidationError
 from ..core.identity import (
@@ -65,6 +71,7 @@ from ._invoice_field_contract import (
     InvoiceFieldForm,
     contract_for_field,
 )
+from ._preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 
 __all__ = [
     "ExtractedFieldAnchors",
@@ -228,17 +235,39 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
     payload = _extract_json_object(text)
     if payload is None:
         raise PurchaseInvoiceEvidenceInputError(
-            f"invoice reading model returned no parsable JSON object: {text[:200]!r}",
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_RESPONSE_JSON_OBJECT,
+                facts={"evidence_response_json_object": False, "evidence_response_parseable": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
         )
     try:
         raw = json.loads(payload)
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
-            f"invoice reading model response was not valid JSON: {str(exc)[:200]}",
+            context={"evidence_response_error_type": type(exc).__name__},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_RESPONSE_JSON_OBJECT,
+                facts={
+                    "evidence_response_error_type": type(exc).__name__,
+                    "evidence_response_json_object": False,
+                    "evidence_response_parseable": False,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
         ) from exc
     if not isinstance(raw, dict):
         raise PurchaseInvoiceEvidenceInputError(
-            f"invoice reading model response was not a JSON object: {type(raw).__name__}",
+            context={"evidence_response_type": type(raw).__name__},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_RESPONSE_JSON_OBJECT,
+                facts={
+                    "evidence_response_json_object": False,
+                    "evidence_response_parseable": True,
+                    "evidence_response_type": type(raw).__name__,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
         )
 
     values: dict[str, object] = {}
@@ -270,7 +299,15 @@ def parse_invoice_extraction_response(text: str) -> ExtractedInvoiceResponse:
         )
     except ValueError as exc:
         raise PurchaseInvoiceEvidenceInputError(
-            f"invoice reading model response failed schema validation: {str(exc)[:200]}",
+            context={"evidence_response_validation_error_type": type(exc).__name__},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.EVIDENCE_RESPONSE_SCHEMA_VALID,
+                facts={
+                    "evidence_response_schema_valid": False,
+                    "evidence_response_validation_error_type": type(exc).__name__,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
         ) from exc
 
 

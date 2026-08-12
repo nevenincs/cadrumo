@@ -112,6 +112,40 @@ def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -
         validate_casilla_input_ids(snapshot.revision, {1: Decimal("1")})
 
 
+def test_validate_casilla_input_ids_keeps_unknown_only_context() -> None:
+    """A syntactically canonical but undeclared id retains its precise context."""
+    snapshot = _modelo_100_registry_snapshot()
+    unknown_casilla_id = "modelo-100-not-declared-test"
+
+    with pytest.raises(RegistryValidationError, match=r"unknown casilla.id values") as raised:
+        validate_casilla_input_ids(snapshot.revision, {unknown_casilla_id: Decimal("1")})
+
+    assert raised.value.context == {
+        "casilla_ids": unknown_casilla_id,
+        "revision_id": snapshot.revision.id,
+    }
+
+
+def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_failures() -> None:
+    """Malformed keys refuse before unknown ids or invalid values are considered."""
+    snapshot = _modelo_100_registry_snapshot()
+
+    with pytest.raises(RegistryValidationError, match="malformed keys") as raised:
+        validate_casilla_input_ids(
+            snapshot.revision,
+            {
+                1: Decimal("1"),
+                "modelo-100-not-declared-test": "not-a-decimal",
+                _M100_NUMERIC_CASILLA: "also-not-a-decimal",
+            },
+        )
+
+    assert raised.value.context == {
+        "casilla_ids": "1",
+        "revision_id": snapshot.revision.id,
+    }
+
+
 def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> None:
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2025, period="1T")
     result_casilla = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _M303_RESULT_CASILLA)

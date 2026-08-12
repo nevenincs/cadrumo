@@ -2,7 +2,7 @@
 
 RD 1619/2012 art. 6.1.d requires, for an entrega intracomunitaria exenta
 (LIVA art. 25), a NIF "atribuido ... por la de otro Estado miembro" -- the
-acquirer must purchase under a VAT identification another Member State issued.
+acquirer must purchase under an IVA identification another Member State issued.
 That is a fact about REGISTRATION, and the record now carries it as
 :attr:`~cadrumo.domain.invoices.Invoice.counterparty_identification_state`.
 
@@ -10,7 +10,7 @@ The guard previously read
 :attr:`~cadrumo.domain.invoices.Invoice.counterparty_country` as a stand-in for
 it. The two are different facts and they diverge in real trade, so the stand-in
 was wrong in both directions: it refused a Spanish-ESTABLISHED acquirer holding
-a French VAT number -- an entrega intracomunitaria art. 25 exempts, which could
+a French IVA number -- an entrega intracomunitaria art. 25 exempts, which could
 not previously be recorded at all -- while accepting a German-established
 acquirer purchasing under a Spanish NIF-IVA, which is a domestic supply.
 
@@ -96,7 +96,7 @@ def test_an_intracommunity_supply_to_a_spanish_identified_acquirer_is_refused() 
 def test_a_spanish_established_acquirer_identified_abroad_is_accepted() -> None:
     """The direction the old country-keyed guard refused outright.
 
-    A Spanish-established acquirer holding a French VAT number is an
+    A Spanish-established acquirer holding a French IVA number is an
     intra-community acquirer under art. 25. Keyed on the address this invoice
     could not be constructed, so the exemption was unreachable and the supply
     was declared with Spanish IVA -- over-declaration.
@@ -142,7 +142,7 @@ def test_the_recorded_identification_governs_over_the_printed_number() -> None:
     """The guard reads the recorded fact, not whatever the document happened to print.
 
     Every other field here says Germany -- the address AND a structurally valid
-    German VAT number. Only the recorded identification says Spain, and that
+    German IVA number. Only the recorded identification says Spain, and that
     alone refuses. This is the separation the field exists for: a printed number
     is evidence about identification, not identification itself, and an operator
     who has established that the acquirer actually purchases under a Spanish

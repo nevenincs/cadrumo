@@ -5,13 +5,11 @@
 casillas must be hand-entered, which are optional, which the bucket ledger
 populates automatically, and which come from the active taxpayer profile
 (warning when a profile-derivable coefficient is still unset). This module
-proves the classification against the REAL bundled registry snapshot for
-Modelo 130 (no external numeric authority is needed — the assertion is that
-the composer's classification matches the registry's own
-``input_kind``/``binding.source`` declarations, not a hand-computed figure)
-and the profile-coefficient warning against a REAL partial taxpayer profile
-for Modelo 100, mirroring the strict-subset pattern of
-``test_bindings_list_missing_filter.py``.
+proves the classification against committed, non-trivial bindings in the REAL
+bundled registry for Modelos 100, 130, and 390, plus the profile-coefficient
+warning against a REAL partial taxpayer profile. Expected rows are anchored to
+those registry declarations rather than produced by a second implementation
+of the classifier under test.
 """
 
 from __future__ import annotations
@@ -25,10 +23,6 @@ import pytest
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
-from ....core import Period
-from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
-from ....core.resources import resources
-from ....domain.calculations.registry import InputKind
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -45,38 +39,9 @@ _M100_MODELO = "100"
 _M100_YEAR = 2025
 _M100_PERIOD = "0A"
 
-
-def _registry_derived_expectation(*, modelo: str, filing_year: int, period: str) -> dict[str, set[str]]:
-    """Derive the expected casilla-number classification from the live registry.
-
-    Mirrors exactly the classification rule the composer implements
-    (``input_kind``/``binding.source``), reading it independently from the
-    bundled registry snapshot so the test does not assert against a
-    hand-copied literal casilla list that could silently drift from the
-    registry.
-    """
-    authority = resources().modelos.authority
-    snapshot = authority.snapshot(modelo, filing_year=filing_year, period=period)
-    binding_sources = {binding.id: binding.source for binding in snapshot.revision.bindings}
-    required_manual: set[str] = set()
-    optional_manual: set[str] = set()
-    ledger_derivable: set[str] = set()
-    profile_derivable: set[str] = set()
-    for casilla in snapshot.revision.casillas:
-        if casilla.input_kind == InputKind.MANUAL:
-            (required_manual if casilla.required else optional_manual).add(casilla.number)
-        elif casilla.input_kind == InputKind.BOUND and casilla.binding is not None:
-            source = binding_sources.get(casilla.binding)
-            if source in LEDGER_BINDING_SOURCE_KINDS:
-                ledger_derivable.add(casilla.number)
-            elif source == BindingSourceKind.PROFILE:
-                profile_derivable.add(casilla.number)
-    return {
-        "required_manual": required_manual,
-        "optional_manual": optional_manual,
-        "ledger_derivable": ledger_derivable,
-        "profile_derivable": profile_derivable,
-    }
+_M390_MODELO = "390"
+_M390_YEAR = 2025
+_M390_PERIOD = "0A"
 
 
 @pytest.fixture(autouse=True)
@@ -96,19 +61,13 @@ def _numbers_by_section(result: dict[str, list[dict[str, str]]]) -> dict[str, se
     }
 
 
-def test_requires_classifies_m130_casillas_against_live_registry_no_active_profile() -> None:
-    """``requires`` for Modelo 130 matches the registry's own input_kind/source split.
+def test_requires_classifies_real_m130_sources_without_an_active_profile() -> None:
+    """``requires`` exposes committed manual, ledger, and prior-filing rows.
 
     No active profile is set: the operator has not created a taxpayer profile
     yet, but the checklist must still tell them what data is needed from the
     registry alone (required/optional manual casillas, ledger-derivable casillas).
     """
-    expected = _registry_derived_expectation(
-        modelo=_M130_MODELO,
-        filing_year=_M130_YEAR,
-        period=Period.from_year_and_code(_M130_YEAR, _M130_PERIOD).registry_token,
-    )
-
     invocation = invoke_cached_cli(
         [
             "--format",
@@ -129,20 +88,17 @@ def test_requires_classifies_m130_casillas_against_live_registry_no_active_profi
     assert result["modelo"] == _M130_MODELO
     assert result["filing_year"] == _M130_YEAR
     assert result["period"] == _M130_PERIOD
-    assert _numbers_by_section(result) == expected
-
-    # Real Modelo 130 2T-2024 has no required manual casillas (H1 gasto bind;
-    # see test_verificado_completo_regression.py) and two ledger-derivable
-    # income/expense casillas -- a real, non-trivial classification, proving
-    # this is not a vacuous all-empty comparison.
-    assert expected["ledger_derivable"], "fixture expectation must be non-trivial"
-    assert {"01", "02"} == expected["ledger_derivable"]
-    assert expected["optional_manual"], "fixture expectation must be non-trivial"
+    sections = _numbers_by_section(result)
+    assert {"01", "02"} <= sections["ledger_derivable"]
+    assert result["optional_manual"]
 
     # Ledger-derivable rows carry their binding provenance for the checklist.
     ledger_rows = {row["number"]: row["binding_source"] for row in result["ledger_derivable"]}
     assert ledger_rows["01"] == "ledger_renta_income_aggregation"
     assert ledger_rows["02"] == "ledger_renta_gastos_pago_fraccionado_aggregation"
+    assert {(row["number"], row["binding_source"]) for row in result["previous_filing"]} >= {
+        ("05", "previous_filing"),
+    }
 
     # No active profile: the checklist cannot check profile coefficients and
     # must say so via a non-blocking advisory notice, not silently.
@@ -153,15 +109,8 @@ def test_requires_classifies_m130_casillas_against_live_registry_no_active_profi
     assert no_profile_notice["action"] is None
 
 
-def test_requires_omits_previous_filing_bound_casillas_from_every_section() -> None:
-    """A ``previous_filing``-bound casilla needs no operator data-gathering action.
-
-    Modelo 130 casilla 05 (pagos fraccionados anteriores) is BOUND with
-    ``source = "previous_filing"`` -- a same-modelo direct carry the engine
-    resolves automatically once a prior period is filed. It must not appear
-    in any of the four checklist sections (it is neither hand-entered, nor
-    ledger-derived, nor profile-derived).
-    """
+def test_requires_reads_relation_prefill_alternates_and_advises_on_unbucketed_sources() -> None:
+    """Real M100 alternates remain visible instead of collapsing to the primary."""
     invocation = invoke_cached_cli(
         [
             "--format",
@@ -169,17 +118,56 @@ def test_requires_omits_previous_filing_bound_casillas_from_every_section() -> N
             "app",
             "modelo",
             "requires",
-            _M130_MODELO,
+            _M100_MODELO,
             "--year",
-            str(_M130_YEAR),
+            str(_M100_YEAR),
             "--period",
-            _M130_PERIOD,
+            _M100_PERIOD,
         ],
     )
     assert invocation.exit_code == 0, invocation.output
     result = unwrap_schema_envelope(invocation.output)
-    all_numbers = set().union(*_numbers_by_section(result).values())
-    assert "05" not in all_numbers
+    relation_pairs = {(row["binding_id"], row["binding_source"]) for row in result["relation_prefill"]}
+    assert {
+        ("renta-2025-modelo-111-retenciones-periodicas", "relation_prefill"),
+        ("renta-2025-modelo-190-retenciones-anuales", "relation_prefill"),
+    } <= relation_pairs
+    unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
+    assert ("renta-2025-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
+
+    notices = unwrap_envelope_notices(invocation.output)
+    advisory = next(notice for notice in notices if notice["code"] == "modelo.requires.unbucketed_binding_source")
+    assert advisory["severity"] == "warning"
+    assert advisory["action"] is None
+    assert "manual_input" in advisory["context"]["source_kinds"]
+    assert "renta-2025-certificado-trabajo-retenciones" in advisory["context"]["binding_ids"]
+
+
+def test_requires_buckets_local_register_resolvers_as_live_observations() -> None:
+    """M390 exposes its committed local-state resolver bindings without claiming a remote read."""
+    invocation = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "requires",
+            _M390_MODELO,
+            "--year",
+            str(_M390_YEAR),
+            "--period",
+            _M390_PERIOD,
+        ],
+    )
+    assert invocation.exit_code == 0, invocation.output
+    result = unwrap_schema_envelope(invocation.output)
+
+    live_pairs = {(row["number"], row["binding_source"]) for row in result["live_observation"]}
+    assert {
+        ("63", "bienes_inversion_regularizacion"),
+        ("97", "iva_compensation_annual_partition"),
+        ("662", "iva_compensation_annual_partition"),
+    } <= live_pairs
 
 
 @pytest.fixture

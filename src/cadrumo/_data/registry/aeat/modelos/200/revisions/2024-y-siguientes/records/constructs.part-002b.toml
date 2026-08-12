@@ -745,7 +745,6 @@ application_links = [
     "modelo-200-2024-portal",
     "modelo-200-2024-calculation",
     "modelo-200-2024-filing",
-    "modelo-200-2024-verification",
     "modelo-200-2024-deadline",
     "modelo-200-2024-review",
     "modelo-200-2024-approval",

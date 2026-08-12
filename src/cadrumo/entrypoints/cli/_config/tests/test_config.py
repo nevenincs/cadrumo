@@ -26,6 +26,7 @@ from click.testing import Result
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....core.config import override_settings
+from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._errors import ConfigBoundaryError
@@ -42,6 +43,7 @@ def _create_profile(name: str = "test-operator") -> None:
             "create",
             name,
             "--quiet",
+            "--accept-defaults",
             "--entity-type",
             "natural_person",
             "--name",
@@ -52,8 +54,24 @@ def _create_profile(name: str = "test-operator") -> None:
             "00000000T",
             "--activity",
             "Servicios",
+            "--activity-start-date",
+            "2026-01-01",
+            "--irpf-income-categories",
+            "actividad_economica",
+            "--irpf-estimation-regime",
+            "directa_normal",
+            "--tax-residence-ccaa",
+            "madrid",
             "--iva-regime",
             "GENERAL",
+            "--iva-m303-regime-composition",
+            "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -106,7 +124,13 @@ def test_cadrumo_error_envelope_is_well_formed_in_json_mode() -> None:
     # (unhandled exception) would produce an exit_code of 1 but no structured
     # payload.  Verify the boundary produced a non-empty stderr payload.
     stderr_payload = result.stderr if hasattr(result, "stderr") else result.output
-    assert stderr_payload or result.exit_code != 0
+    document = json.loads(stderr_payload)
+    error = document["error"]
+    assert document["command"] == "config.profile.show"
+    assert error["message"] == tr("cli.config.profile.unknown_profile", name="no-such-profile")
+    assert "ValueError" not in error["message"]
+    assert "suggestion" not in error
+    assert error["action"] is not None
 
 
 # ---------------------------------------------------------------------------

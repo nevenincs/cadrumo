@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ....core import Period
+from ....core import Modelo, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
 from ....domain.deadlines import M303RegimeComposition
@@ -85,6 +85,28 @@ def _work_unit(period: Period) -> WorkUnit:
     )
 
 
+def _non_m303_work_unit() -> WorkUnit:
+    period = Period.from_year_and_code(2026, "1T")
+    registry_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=Modelo.M130.value,
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=registry_snapshot.revision.id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=Modelo.M130.value,
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=registry_snapshot.revision.id,
+        name="130-2026-1T",
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+
 def _evidence(period: Period) -> FilingInstanceEvidence:
     scope = _general_scope()
     registry_snapshot = resources().modelos.authority.snapshot(
@@ -152,6 +174,44 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
         )
 
     assert validated == evidence
+
+
+def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None:
+    work_unit = _non_m303_work_unit()
+    registry_snapshot = resources().modelos.authority.snapshot("130", filing_year=2026, period="1T")
+
+    assert (
+        validate_m303_filing_instance_evidence_for_revision(
+            work_unit=work_unit,
+            registry_snapshot=registry_snapshot,
+            evidence=None,
+            casilla_values={},
+            observations=(),
+        )
+        is None
+    )
+
+    with pytest.raises(ModeloError, match="currently valid only for modelo 303"):
+        validate_m303_filing_instance_evidence_for_revision(
+            work_unit=work_unit,
+            registry_snapshot=registry_snapshot,
+            evidence=_evidence(Period.from_year_and_code(2026, "1T")),
+            casilla_values={},
+            observations=(),
+        )
+
+
+def test_m303_evidence_is_required_before_profile_lookup() -> None:
+    period = Period.from_year_and_code(2026, "1T")
+
+    with pytest.raises(ModeloError, match="filing-instance evidence is required"):
+        validate_m303_filing_instance_evidence_for_revision(
+            work_unit=_work_unit(period),
+            registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
+            evidence=None,
+            casilla_values={},
+            observations=(),
+        )
 
 
 def test_evidence_scope_disagreeing_with_active_censo_refuses(tmp_path: Path) -> None:

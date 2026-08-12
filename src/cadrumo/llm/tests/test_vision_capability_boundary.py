@@ -126,9 +126,14 @@ class TestTextOnlyProviderRefusesImages:
         )
         with pytest.raises(LLMConfigError) as caught:
             asyncio.run(_client(settings).complete(request))
-        message = str(caught.value)
-        assert LLMProvider.OPENAI.value in message
-        assert "cannot accept images" in message
+        verdict = caught.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.vision.input_supported"
+        assert verdict.evidence[0].values == {
+            "image_input_count": 1,
+            "provider": LLMProvider.OPENAI.value,
+            "vision_input_supported": False,
+        }
 
     def test_the_refusal_also_covers_gemini(self, tmp_path: Path) -> None:
         """The second text-only adapter is gated by the same one guard.
@@ -145,7 +150,14 @@ class TestTextOnlyProviderRefusesImages:
         )
         with pytest.raises(LLMConfigError) as caught:
             asyncio.run(_client(settings).complete(request))
-        assert LLMProvider.GEMINI.value in str(caught.value)
+        verdict = caught.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.vision.input_supported"
+        assert verdict.evidence[0].values == {
+            "image_input_count": 1,
+            "provider": LLMProvider.GEMINI.value,
+            "vision_input_supported": False,
+        }
 
     def test_a_text_only_request_at_a_text_only_provider_still_succeeds(self, tmp_path: Path) -> None:
         """The guard is scoped to image-bearing requests and regresses nothing.

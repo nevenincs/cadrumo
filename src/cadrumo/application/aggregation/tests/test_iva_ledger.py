@@ -705,8 +705,7 @@ def test_future_out_of_window_row_is_a_nonblocking_review_advisory() -> None:
     assert len(result.issues) == 1
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD
     assert (
-        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[result.issues[0].reason]
-        is OperatorActionAxis.REVIEW_ADVISORY
+        OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[result.issues[0].reason] is OperatorActionAxis.REVIEW_ADVISORY
     )
 
 

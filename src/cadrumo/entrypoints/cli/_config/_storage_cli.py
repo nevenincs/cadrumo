@@ -57,7 +57,7 @@ operator the one control that does relocate, having refused to do it for them.
 
 storage_app = typer.Typer(
     name="storage",
-    help=tr("cli.config.storage.help", default="Inspect and maintain the local storage tree"),
+    help=tr("cli.config.storage.help"),
     no_args_is_help=True,
 )
 
@@ -71,7 +71,6 @@ def register_storage_commands(config_app: typer.Typer) -> None:
     "list",
     help=tr(
         "cli.config.storage.list.area_help",
-        default="Show aggregate occupancy and footprint for every storage area",
     ),
 )
 def config_storage_list(
@@ -106,13 +105,13 @@ def config_storage_list(
 
 @storage_app.command(
     "show",
-    help=tr("cli.config.storage.show.area_help", default="Show one storage area in full"),
+    help=tr("cli.config.storage.show.area_help"),
 )
 def config_storage_show(
     ctx: typer.Context,
     area: StorageArea = typer.Argument(
         ...,
-        help=tr("cli.config.storage.show.area_argument_help", default="Storage area to show"),
+        help=tr("cli.config.storage.show.area_argument_help"),
     ),
     output_language: _OutputLanguage | None = typer.Option(
         None,
@@ -204,9 +203,6 @@ def config_storage_check(
                 code="storage_root_mode_unenforced",
                 message=tr(
                     "cli.config.storage.check.mode_unenforced",
-                    default=(
-                        "This platform does not implement POSIX permission bits, so root permissions were not checked."
-                    ),
                 ),
                 context={"storage_root": str(report.storage_root)},
             ),
@@ -218,7 +214,6 @@ def config_storage_check(
                 code="storage_tree_drifted",
                 message=tr(
                     "cli.config.storage.check.drifted",
-                    default="The storage tree does not match its declaration.",
                 ),
                 action=resolve_notice_action(action=ActionReference(action_id="operator.storage.init")),
                 context={"issue_count": str(len(report.issues))},
@@ -265,7 +260,6 @@ def config_storage_init(
                 code="storage_tree_already_materialised",
                 message=tr(
                     "cli.config.storage.init.already_materialised",
-                    default="Every declared directory already existed; nothing was created.",
                 ),
                 context={"storage_root": str(report.storage_root)},
             ),
@@ -278,14 +272,13 @@ def config_storage_init(
     "reclaim",
     help=tr(
         "cli.config.storage.reclaim.area_help",
-        default="Delete regenerable contents from a storage area",
     ),
 )
 def config_storage_reclaim(
     ctx: typer.Context,
     area: StorageArea = typer.Argument(
         ...,
-        help=tr("cli.config.storage.reclaim.area_argument_help", default="Storage area to reclaim"),
+        help=tr("cli.config.storage.reclaim.area_argument_help"),
     ),
     confirmed: bool = typer.Option(False, "--yes", help=tr("cli.config.storage.reclaim.yes_help")),
     output_language: _OutputLanguage | None = typer.Option(
@@ -328,7 +321,6 @@ def config_storage_reclaim(
                 code="storage_reclaim_incomplete",
                 message=tr(
                     "cli.config.storage.reclaim.incomplete",
-                    default="Some entries could not be removed and are still on disk.",
                 ),
                 context={
                     "area": report.area.value,
@@ -352,11 +344,6 @@ def _relocation_notice(storage_root: str) -> Notice:
         code="storage_root_relocation_is_manual",
         message=tr(
             "cli.config.storage.list.relocation_is_manual",
-            default=(
-                "To move the tree, stop Cadrumo, copy it yourself, then point "
-                "%{variable} at the new location. No command moves it, because a copy "
-                "that completes for the records but not for the key material leaves neither usable."
-            ),
             variable=_ROOT_ENV_VAR,
         ),
         context={"storage_root": storage_root, "variable": _ROOT_ENV_VAR},
@@ -435,7 +422,7 @@ def _public_issue_detail(kind: StorageTreeIssueKind) -> str:
 
 def _label(name: str, default: str) -> str:
     """Return one localized text-mode label."""
-    return tr(f"cli.config.storage.labels.{name}", default=default)
+    return tr(f"cli.config.storage.labels.{name}")
 
 
 def _boolean_label(value: bool) -> str:
@@ -445,7 +432,7 @@ def _boolean_label(value: bool) -> str:
 
 def _value_label(axis: str, value: str) -> str:
     """Render a closed report value in the selected output language."""
-    return tr(f"cli.config.storage.values.{axis}.{value}", default=value)
+    return tr(f"cli.config.storage.values.{axis}.{value}")
 
 
 def _format_bytes(value: int) -> str:

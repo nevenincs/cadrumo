@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from ....application.preflight import HealthSeverity
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
@@ -74,8 +74,9 @@ class CheckPreflightPayload(OutputSchema):
     (e.g. ``auth-provider:certificate``, ``storage:local-root``,
     ``registry:referential-integrity``); ``severity`` renders the
     :class:`HealthSeverity` verdict
-    (``ok`` / ``warn`` / ``error``); ``remediation`` names the concrete
-    operator action when the row is not healthy. These rows are reported
+    (``ok`` / ``warn`` / ``error``). Machine facts are preserved without
+    forwarding producer prose. Until S66 gives these rows typed verdicts, an
+    unhealthy row carries an explicit no-recovery outcome. These rows are reported
     for operator visibility and do not, on their own, change the
     command's ``ok`` verdict — the capability/dependency contract owns
     the exit code.
@@ -84,8 +85,16 @@ class CheckPreflightPayload(OutputSchema):
     check: str = Field(min_length=1)
     healthy: bool
     severity: HealthSeverity
-    detail: str = ""
-    remediation: str = ""
+    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    precondition_action: ResolvedPreconditionAction | None = None
+
+    @model_validator(mode="after")
+    def _unhealthy_rows_have_one_outcome(self) -> CheckPreflightPayload:
+        if self.healthy and self.precondition_action is not None:
+            raise ValueError("healthy preflight rows cannot carry a recovery projection")
+        if not self.healthy and self.precondition_action is None:
+            raise ValueError("unhealthy preflight rows require one resolved precondition outcome")
+        return self
 
 
 @register_schema("config.check")

@@ -80,7 +80,7 @@ from ...domain.calculations.registry import (
     derive_modelo_202_modality,
     derive_taxpayer_files_economic_activity,
 )
-from ...domain.deadlines import TaxpayerProfile
+from ...domain.deadlines import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing import ModeloDraft
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...domain.modelos import (
@@ -113,9 +113,11 @@ from ..filing import (
     AmendmentEvidence,
     DeclaracionExportResult,
     FilingElectionFacts,
+    FilingModelProfileFacts,
     FilingProducerSnapshot,
     FilingProducerSnapshotError,
     GeneralFilingProfileFacts,
+    M303FilingFacts,
     Modelo111ProfileFacts,
     Modelo202ProducerProfile,
     PresenterIdentity,
@@ -688,77 +690,23 @@ def _build_export_producer_snapshot(
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write."""
-    evidence = command.amendment_evidence
-    if command.presenter is None or command.taxpayer_identity is None:
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "explicit presenter and taxpayer identity facts are required",
-            },
-        )
-    if (evidence is None) != (revision.amendment_kind is None) or (
-        evidence is not None and evidence.kind is not revision.amendment_kind
-    ):
-        raise ModeloExportError(
-            translated_message="application.modelo.errors.export_draft_write_failed",
-            context={
-                "calculation_revision_id": command.calculation_revision_id,
-                "cause": "typed amendment evidence does not match calculation revision",
-            },
-        )
+    presenter, taxpayer_identity = _require_export_identity(command)
+    evidence = _require_matching_amendment_evidence(command, revision)
     try:
         modelo = Modelo(str(work_unit.modelo))
         iva_profile = workflow_profile.iva
-        if modelo is Modelo.M303:
-            model_profile = iva_profile
-            if model_profile is None:
-                raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
-            filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
-                work_unit=work_unit,
-                revision=revision,
-            )
-            assert filing_instance_evidence is not None
-            prorrata_register = ProrrataRegisterService().list_all()
-            iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
-                bucket_id=work_unit.bucket_id,
-                period=work_unit.period,
-            )
-            differentiated_contributions, bienes_register, regularisation_result = _resolve_m303_export_arrivals(
-                work_unit=work_unit,
-                period=filing_instance_evidence.m303.period,
-                prorrata_register=prorrata_register,
-                iva_aggregation=iva_aggregation,
-            )
-            m303_filing_facts = resolve_m303_filing_facts(
-                evidence=filing_instance_evidence,
-                supplier_regime=resolve_m303_supplier_regime_arrival(
-                    period=work_unit.period,
-                    iva_aggregation=iva_aggregation,
-                ),
-                prorrata_transition=resolve_m303_prorrata_transition_arrival(
-                    period=work_unit.period,
-                    prorrata_register=prorrata_register,
-                ),
-                prorrata_register=prorrata_register,
-                differentiated_contributions=differentiated_contributions,
-                bienes_register=bienes_register,
-                regularisation_result=regularisation_result,
-            )
-        elif modelo is Modelo.M202:
-            model_profile = Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=())
-            m303_filing_facts = None
-        elif modelo is Modelo.M111:
-            model_profile = Modelo111ProfileFacts(colegio_concertado=None)
-            m303_filing_facts = None
-        else:
-            model_profile = GeneralFilingProfileFacts()
-            m303_filing_facts = None
+        model_profile, m303_filing_facts = _resolve_export_model_profile(
+            modelo=modelo,
+            work_unit=work_unit,
+            revision=revision,
+            workflow_profile=workflow_profile,
+            iva_profile=iva_profile,
+        )
         return build_filing_producer_snapshot(
             modelo=modelo,
             taxpayer_tax_id=workflow_profile.tax_id,
-            taxpayer_identity=command.taxpayer_identity,
-            presenter=command.presenter,
+            taxpayer_identity=taxpayer_identity,
+            presenter=presenter,
             model_profile=model_profile,
             elections=FilingElectionFacts(
                 result_disposition=resolved_result_disposition,
@@ -776,6 +724,96 @@ def _build_export_producer_snapshot(
             translated_message="application.modelo.errors.export_draft_write_failed",
             context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
         ) from exc
+
+
+def _require_export_identity(command: ModeloExportCommand) -> tuple[PresenterIdentity, TaxpayerIdentityFacts]:
+    if command.presenter is None or command.taxpayer_identity is None:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": "explicit presenter and taxpayer identity facts are required",
+            },
+        )
+    return command.presenter, command.taxpayer_identity
+
+
+def _require_matching_amendment_evidence(
+    command: ModeloExportCommand,
+    revision: CalculationRevision,
+) -> AmendmentEvidence | None:
+    evidence = command.amendment_evidence
+    if (evidence is None) != (revision.amendment_kind is None) or (
+        evidence is not None and evidence.kind is not revision.amendment_kind
+    ):
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause": "typed amendment evidence does not match calculation revision",
+            },
+        )
+    return evidence
+
+
+def _resolve_export_model_profile(
+    *,
+    modelo: Modelo,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    iva_profile: ModeloIVAProfile | None,
+) -> tuple[FilingModelProfileFacts, M303FilingFacts | None]:
+    if modelo is Modelo.M303:
+        if iva_profile is None:
+            raise FilingProducerSnapshotError("modelo 303 requires an explicitly declared IVA profile")
+        return iva_profile, _resolve_m303_filing_facts_for_export(
+            work_unit=work_unit,
+            revision=revision,
+        )
+    if modelo is Modelo.M202:
+        return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
+    if modelo is Modelo.M111:
+        return Modelo111ProfileFacts(colegio_concertado=None), None
+    return GeneralFilingProfileFacts(), None
+
+
+def _resolve_m303_filing_facts_for_export(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+) -> M303FilingFacts:
+    filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
+        work_unit=work_unit,
+        revision=revision,
+    )
+    assert filing_instance_evidence is not None
+    prorrata_register = ProrrataRegisterService().list_all()
+    iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=work_unit.bucket_id,
+        period=work_unit.period,
+    )
+    differentiated_contributions, bienes_register, regularisation_result = _resolve_m303_export_arrivals(
+        work_unit=work_unit,
+        period=filing_instance_evidence.m303.period,
+        prorrata_register=prorrata_register,
+        iva_aggregation=iva_aggregation,
+    )
+    return resolve_m303_filing_facts(
+        evidence=filing_instance_evidence,
+        supplier_regime=resolve_m303_supplier_regime_arrival(
+            period=work_unit.period,
+            iva_aggregation=iva_aggregation,
+        ),
+        prorrata_transition=resolve_m303_prorrata_transition_arrival(
+            period=work_unit.period,
+            prorrata_register=prorrata_register,
+        ),
+        prorrata_register=prorrata_register,
+        differentiated_contributions=differentiated_contributions,
+        bienes_register=bienes_register,
+        regularisation_result=regularisation_result,
+    )
 
 
 def _persist_exported_draft(

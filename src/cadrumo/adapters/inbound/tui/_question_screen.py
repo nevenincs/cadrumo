@@ -68,22 +68,37 @@ _TEXTUAL_INPUT_WIDGETS = frozenset(
 )
 
 
-def _operator_answer(page: FlowPage, raw: str) -> str:
-    """Render a committed answer without exposing a closed-choice token."""
-    if not raw:
-        return ""
-    if page.widget is FlowWidgetKind.CONFIRM:
-        parsed = parse_bool(raw)
-        if parsed is not None:
-            return tr("flows.confirm.yes" if parsed else "flows.confirm.no")
-    if page.widget is FlowWidgetKind.COMPARE_SELECT and raw == DEFER_TOKEN:
-        return tr("flows.compare_select.defer_label")
+def _operator_confirm_answer(page: FlowPage, raw: str) -> str | None:
+    if page.widget is not FlowWidgetKind.CONFIRM:
+        return None
+    parsed = parse_bool(raw)
+    if parsed is None:
+        return None
+    return tr("flows.confirm.yes" if parsed else "flows.confirm.no")
+
+
+def _operator_choice_answer(page: FlowPage, raw: str) -> str | None:
     if page.widget in {FlowWidgetKind.SELECT, FlowWidgetKind.COMPARE_SELECT, FlowWidgetKind.CHECKBOX}:
         labels = {choice.value: choice.label for choice in assemble_page_copy(page).choices}
         tokens = raw.split(",") if page.widget is FlowWidgetKind.CHECKBOX else [raw]
         if any(token not in labels for token in tokens):
             return tr("flows.tui.choice_unavailable")
         return ", ".join(labels[token] for token in tokens)
+    return None
+
+
+def _operator_answer(page: FlowPage, raw: str) -> str:
+    """Render a committed answer without exposing a closed-choice token."""
+    if not raw:
+        return ""
+    confirm_answer = _operator_confirm_answer(page, raw)
+    if confirm_answer is not None:
+        return confirm_answer
+    if page.widget is FlowWidgetKind.COMPARE_SELECT and raw == DEFER_TOKEN:
+        return tr("flows.compare_select.defer_label")
+    choice_answer = _operator_choice_answer(page, raw)
+    if choice_answer is not None:
+        return choice_answer
     return raw
 
 
