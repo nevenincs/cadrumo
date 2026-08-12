@@ -445,6 +445,50 @@ correct single-rate draft raises none, a multi-tier breakdown draft is
 untouched, and a mutation proof removing the identity restores the silent
 clean confirm.
 
+**Ruling (tenth amendment): the supply-nature proposal is made at S1/S2
+from the transcription, opt-in, and never from line descriptions.** The
+second amendment permits a model to pre-suggest the supply nature "from
+the line descriptions", and that input does not exist where it is needed.
+Measured 2026-08-12: `InvoiceDraft.lines` is populated ONLY by the
+structured reader, and a text- or vision-read draft carries no
+decomposition at all — it keeps `raw_text_length`, a number, not the
+text. So on the lane the suggestion targets there are no line
+descriptions to read, while on the structured lane, where they exist, the
+document also declares its IVA category and frequently a statutory
+citation, both of which now settle the axis deterministically ahead of any
+model. The permission was written against an input the pipeline does not
+produce.
+
+The residual population also shrank twice since that amendment: the
+printed-citation route was dormant and is now wired, and a category route
+was added, each deciding by law. What remains is a cross-border document
+stating no citation, declaring no category, and carrying no line
+decomposition.
+
+- **The proposal is made where the transcription is still in hand**, at
+  the reading stage, and never by re-reading the document later. A
+  separate later verb would re-run S1 to recover text the pipeline
+  already had, which spends a document read to answer a question worth
+  one short call. The input is the transcription, which exists on both
+  model-read lanes by construction — it is what S2 extracts from.
+- **It is OPT-IN and default-off, on the shipped precedent.** The
+  existing suggest surface takes `read_evidence` off by default for the
+  same reason: a verb that silently reaches a model changes what it costs
+  and what leaves the host. An extraction that proposes must be asked to.
+- **It never reaches the classifier unconfirmed**, unchanged from the
+  second amendment. The proposal rides to the operator on the review item
+  that already asks them to state goods or services; the value entering
+  the classifier is the one they type at confirm, so it is their
+  assertion and the classifier's inputs stay facts.
+- **A proposal is not an extraction.** It carries no anchor and never
+  enters `ExtractedInvoiceFields`, because it is a judgement rather than
+  a transcription and the anchor check would have nothing to point at.
+  Folding it into the extraction contract would put an unanchorable value
+  inside the model whose whole guarantee is that values are copied.
+
+Implementing rows are opened with this amendment rather than after it,
+per the standing rule that a ruling on code is not self-executing.
+
 ### D5 — Per-field provenance, and structural rather than numeric confidence
 
 Every draft field carries a typed provenance envelope: an origin StrEnum in
