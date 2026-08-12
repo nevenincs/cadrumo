@@ -112,7 +112,13 @@ def _rendered_doc_registry_keys() -> set[str]:
 
 
 def test_typer_positional_renders_as_argument() -> None:
-    """A real Typer positional renders as an ``Argument``, never an ``Option``."""
+    """A real Typer positional renders as an ``Argument``, never an ``Option``.
+
+    Rendered in the source language explicitly: the assertions below read the
+    English role labels, so pinning the language here keeps them honest rather
+    than leaving them at the mercy of whatever default the renderer picks.
+    """
+    from cadrumo.core.external_constants import OutputLanguage
     from dev.docs.cli_reference import _render_param_table
 
     app = typer.Typer()
@@ -125,7 +131,7 @@ def test_typer_positional_renders_as_argument() -> None:
     if hasattr(command, "commands"):
         command = next(iter(command.commands.values()))
 
-    rendered = _render_param_table(list(command.params))
+    rendered = _render_param_table(OutputLanguage.EN, list(command.params))
 
     assert "transaction_id" in rendered
     positional_line = next(line for line in rendered.splitlines() if "Argument" in line or "Option" in line)
