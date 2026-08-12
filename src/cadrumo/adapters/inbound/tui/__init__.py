@@ -50,6 +50,7 @@ from ._manager_screen import (
     ProfileManagerApp,
     run_profile_manager_tui,
 )
+from ._modelo_work_review_screen import ModeloWorkReviewApp, ModeloWorkReviewScreen
 from ._registration_screen import (
     PassphraseVerdict,
     RegistrationApp,
@@ -111,6 +112,8 @@ __all__ = [
     "ManagerActionDisposition",
     "ManagerActionOutcome",
     "ManagerProgressSinkBinder",
+    "ModeloWorkReviewApp",
+    "ModeloWorkReviewScreen",
     "NoticeBand",
     "PassphraseVerdict",
     "PinnedStatusBar",

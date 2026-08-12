@@ -7153,6 +7153,31 @@ flows:
     required_field_unavailable: Kötelező profilmező
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
+  modelo_review:
+    column:
+      action: Művelet
+      blocked_by: Blokkolja
+      casilla: Rovat
+      casilla_id: Rovatazonosító
+      code: Kód
+      concrete: Konkrét eredet
+      declared: Deklarált eredet
+      facts: Tények
+      grounding: Megalapozás
+      kind: Típus
+      label: Címke
+      official: Hivatalos megjelenítés
+      realised: Materializált érték
+      schema: Séma
+      severity: Súlyosság
+    summary:
+      calculation_revision: Számítási verzió
+      lifecycle_state: Életciklus-állapot
+      progress: Előrehaladás
+      registry_revision: Nyilvántartás verziója
+      verification_outcome: Ellenőrzés eredménye
+      work_unit: Munkamegység
+    title: Modelo {modelo} · {filing_year} · {period}
   progress:
     current_answer: 'Jelenlegi válasz: {value}'
     current_answer_secret: 'Jelenlegi válasz: (rejtett)'

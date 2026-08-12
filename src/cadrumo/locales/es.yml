@@ -7384,6 +7384,31 @@ flows:
     required_field_unavailable: Campo obligatorio del perfil
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
+  modelo_review:
+    column:
+      action: Acción
+      blocked_by: Bloqueada por
+      casilla: Casilla
+      casilla_id: ID de casilla
+      code: Código
+      concrete: Origen concreto
+      declared: Origen declarado
+      facts: Hechos
+      grounding: Fundamentación
+      kind: Tipo
+      label: Etiqueta
+      official: Representación oficial
+      realised: Valor materializado
+      schema: Esquema
+      severity: Gravedad
+    summary:
+      calculation_revision: Revisión del cálculo
+      lifecycle_state: Estado del ciclo de vida
+      progress: Progreso
+      registry_revision: Revisión del registro
+      verification_outcome: Resultado de la verificación
+      work_unit: Unidad de trabajo
+    title: Modelo {modelo} · {filing_year} · {period}
   progress:
     current_answer: 'Respuesta actual: {value}'
     current_answer_secret: 'Respuesta actual: (oculta)'

@@ -6843,6 +6843,31 @@ flows:
     required_field_unavailable: Required profile field
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
+  modelo_review:
+    column:
+      action: Action
+      blocked_by: Blocked by
+      casilla: Casilla
+      casilla_id: Casilla ID
+      code: Code
+      concrete: Concrete origin
+      declared: Declared origin
+      facts: Facts
+      grounding: Grounding
+      kind: Kind
+      label: Label
+      official: Official representation
+      realised: Realised value
+      schema: Schema
+      severity: Severity
+    summary:
+      calculation_revision: Calculation revision
+      lifecycle_state: Lifecycle state
+      progress: Progress
+      registry_revision: Registry revision
+      verification_outcome: Verification outcome
+      work_unit: Work unit
+    title: Modelo {modelo} · {filing_year} · {period}
   progress:
     current_answer: 'Current answer: {value}'
     current_answer_secret: 'Current answer: (hidden)'
