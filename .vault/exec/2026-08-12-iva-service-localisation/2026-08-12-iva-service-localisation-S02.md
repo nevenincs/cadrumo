@@ -5,45 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:a9c2fcc138aed384cc37d2b0262b13ba0e9c61d10bb75816a91377d82f79e71c'
+body_hash: 'sha256:f81140a7c47f36ac6449a22a35544603e57fee6e9a651fa968ecefbccf241d79'
 step_id: 'S02'
 related:
   - "[[2026-08-12-iva-service-localisation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace iva-service-localisation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S02 and 2026-08-12-iva-service-localisation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add citation rows for LIVA arts 68 (goods), 69 and 70 (services), each pinned to its anchor in the consolidated law. Verify through the gate rather than by assertion: each row's claim must survive reading the article's own rubric. The disconfirming observation: if any category turns out to cite art 68 alongside 69 or 70 the join now reports CONTRADICTED for it, which would be a real finding about the component table rather than a reason to drop a row - stop and report it and ## Scope
-
-- `src/cadrumo/domain/iva/_supply_nature.py`
-- `src/cadrumo/domain/iva/tests/test_supply_nature.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add citation rows for LIVA arts 68 (goods), 69 and 70 (services), each pinned to its anchor in the consolidated law. Verify through the gate rather than by assertion: each row's claim must survive reading the article's own rubric. The disconfirming observation: if any category turns out to cite art 68 alongside 69 or 70 the join now reports CONTRADICTED for it, which would be a real finding about the component table rather than a reason to drop a row - stop and report it
 
