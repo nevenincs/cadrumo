@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import cast
 
 import pytest
 import yaml
@@ -13,11 +15,12 @@ from textual.widgets import Button, Checkbox, DataTable, Input, RadioSet, Select
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from .....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from .....application.modelo import ModeloWorkReview, build_modelo_work_review
-from .....core import ModeloWorkProgressState, OperatorActionAxis, Period
+from .....application.modelo import ModeloWorkOriginAnomaly, ModeloWorkReview, build_modelo_work_review
+from .....core import BindingSourceKind, ModeloWorkProgressState, OfficialBoxStatus, OperatorActionAxis, Period
 from .....core.config import override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from .....domain.calculations.registry import bundled_authority
+from .....domain.calculations.registry import CasillaObservation, InputKind, bundled_authority
+from .....domain.filing import ModeloValueKind
 from .....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -38,6 +41,7 @@ from .....domain.modelos import (
 from .....tests.locales_root_fixture import locales_root_scope
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import ModeloWorkReviewApp
+from .._modelo_work_review_screen import _ABSENT, _PRESENT, _enum_options, _presence_options
 from .._theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
@@ -53,6 +57,7 @@ def _real_review(
     filing_year: int,
     period_code: str,
     blocked: bool = False,
+    materialised: bool = False,
 ) -> ModeloWorkReview:
     """Build the public review record from genuine encrypted repositories."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
@@ -71,14 +76,39 @@ def _real_review(
             period=period,
             revision_id=snapshot.revision.id,
         )
+        casilla_values: dict[str, Decimal] = {}
+        binding_overrides: dict[str, str] = {}
+        observations: tuple[CasillaObservation, ...] = ()
+        if materialised:
+            materialised_values = {
+                "01": Decimal("10000"),
+                "02": Decimal("5000"),
+                "03": Decimal("5000"),
+                "06": Decimal("0"),
+            }
+            definitions = {str(casilla.id): casilla for casilla in snapshot.revision.casillas}
+            casilla_values = dict(materialised_values)
+            binding_overrides = {
+                "modelo-130-actividad-economica-ingresos-cumulative": "9000",
+                "modelo-130-actividad-economica-gastos-cumulative": "5000",
+            }
+            observations = tuple(
+                CasillaObservation(
+                    casilla_id=casilla_id,
+                    value=value,
+                    legal_refs=tuple(definitions[casilla_id].legal_refs),
+                    source_refs=tuple(definitions[casilla_id].source_refs),
+                )
+                for casilla_id, value in materialised_values.items()
+            )
         calculation_revision_id = (
             derive_calculation_revision_id(
                 work_unit_id=work_unit_id,
                 input_values_by_casilla_id={},
-                binding_overrides={},
-                casilla_values={},
+                binding_overrides=binding_overrides,
+                casilla_values=casilla_values,
             )
-            if blocked
+            if blocked or materialised
             else None
         )
         work_unit = WorkUnit(
@@ -100,6 +130,9 @@ def _real_review(
                 calculation_revision_id=calculation_revision_id,
                 work_unit_id=work_unit_id,
                 state=CalculationRevisionState.BORRADOR,
+                binding_overrides=binding_overrides,
+                casilla_values=casilla_values,
+                observations=observations,
                 created_at=_NOW,
                 updated_at=_NOW,
             )
@@ -151,6 +184,11 @@ def _cells(table: DataTable[str]) -> tuple[str, ...]:
     return tuple(str(cell) for row_index in range(table.row_count) for cell in table.get_row_at(row_index))
 
 
+def _row_keys(table: DataTable[str]) -> tuple[str, ...]:
+    """Read the canonical row identities in their current presentation order."""
+    return tuple(key.value for key in table.rows if key.value is not None)
+
+
 def _visible_in(widget: Widget, container: Widget) -> bool:
     """Whether the compositor places any part of a widget inside its host."""
     return (
@@ -162,7 +200,7 @@ def _visible_in(widget: Widget, container: Widget) -> bool:
 
 
 @pytest.mark.asyncio
-async def test_blocked_review_renders_all_canonical_grains_without_filter_controls(tmp_path: Path) -> None:
+async def test_blocked_review_renders_all_canonical_grains_without_mutation_controls(tmp_path: Path) -> None:
     review = _real_review(tmp_path, modelo="130", filing_year=2026, period_code="1T", blocked=True)
     app = ModeloWorkReviewApp(review)
     locale_root = tmp_path / "review-locales"
@@ -209,8 +247,232 @@ async def test_blocked_review_renders_all_canonical_grains_without_filter_contro
             assert affected.declared_input_kind.value in affected_cells
             assert affected.realised_kind.value in " ".join(affected_cells)
             assert affected.blocked_by[0].native_code in " ".join(affected_cells)
-            excluded_controls = (Input, Select, SelectionList, Checkbox, RadioSet, Button)
+            excluded_controls = (Input, SelectionList, Checkbox, RadioSet)
             assert not tuple(widget for control in excluded_controls for widget in screen.query(control))
+            assert len(screen.query("#modelo-review-filters Select")) == 14
+
+
+def test_facet_option_sets_are_exactly_the_canonical_closed_axes() -> None:
+    for enum_type in (
+        InputKind,
+        BindingSourceKind,
+        ModeloValueKind,
+        ModeloWorkOriginAnomaly,
+        OfficialBoxStatus,
+        OperatorActionAxis,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    ):
+        assert _enum_options(enum_type) == tuple((member.value, member.value) for member in enum_type)
+    assert tuple(value for _, value in _presence_options()) == (_PRESENT, _ABSENT)
+
+
+@pytest.mark.asyncio
+async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutation(tmp_path: Path) -> None:
+    review = _real_review(tmp_path, modelo="100", filing_year=2024, period_code="0A")
+    original_record = review.model_dump(mode="json")
+    app = ModeloWorkReviewApp(review)
+
+    async with app.run_test(size=(160, 48)) as pilot:
+        await pilot.pause()
+        screen = app.screen
+        table = screen.query_one("#modelo-review-casillas-table", DataTable)
+        original_rows = _row_keys(table)
+        checks = (
+            (
+                "#modelo-review-filter-input-kind",
+                InputKind.COMPUTED.value,
+                tuple(str(row.casilla_id) for row in review.casillas if row.declared_input_kind is InputKind.COMPUTED),
+            ),
+            (
+                "#modelo-review-filter-binding-source",
+                BindingSourceKind.PROFILE.value,
+                tuple(
+                    str(row.casilla_id)
+                    for row in review.casillas
+                    if any(binding.source is BindingSourceKind.PROFILE for binding in row.concrete_bindings)
+                ),
+            ),
+            (
+                "#modelo-review-filter-binding-presence",
+                _PRESENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.concrete_bindings),
+            ),
+            (
+                "#modelo-review-filter-binding-presence",
+                _ABSENT,
+                tuple(str(row.casilla_id) for row in review.casillas if not row.concrete_bindings),
+            ),
+            (
+                "#modelo-review-filter-formula-presence",
+                _PRESENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.concrete_formula is not None),
+            ),
+            (
+                "#modelo-review-filter-formula-presence",
+                _ABSENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.concrete_formula is None),
+            ),
+            (
+                "#modelo-review-filter-relation-presence",
+                _PRESENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.relation_consumption),
+            ),
+            (
+                "#modelo-review-filter-relation-presence",
+                _ABSENT,
+                tuple(str(row.casilla_id) for row in review.casillas if not row.relation_consumption),
+            ),
+            (
+                "#modelo-review-filter-origin-anomaly",
+                ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN.value,
+                tuple(
+                    str(row.casilla_id)
+                    for row in review.casillas
+                    if row.origin_anomaly is ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN
+                ),
+            ),
+            (
+                "#modelo-review-filter-origin-anomaly-presence",
+                _ABSENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.origin_anomaly is None),
+            ),
+            (
+                "#modelo-review-filter-official-status",
+                OfficialBoxStatus.ADDRESSED.value,
+                tuple(
+                    str(row.casilla_id)
+                    for row in review.casillas
+                    if row.official_box_status is OfficialBoxStatus.ADDRESSED
+                ),
+            ),
+        )
+        for selector, value, expected_rows in checks:
+            chooser = cast("Select[str]", screen.query_one(selector, Select))
+            chooser.value = value
+            await pilot.pause()
+            assert expected_rows
+            assert len(expected_rows) < len(original_rows)
+            assert _row_keys(table) == expected_rows
+            chooser.clear()
+            await pilot.pause()
+            assert _row_keys(table) == original_rows
+
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select)
+        ).value = InputKind.COMPUTED.value
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-official-status", Select)
+        ).value = OfficialBoxStatus.ADDRESSED.value
+        await pilot.pause()
+        screen.query_one("#modelo-review-filter-reset", Button).press()
+        await pilot.pause()
+        assert _row_keys(table) == original_rows
+        assert review.model_dump(mode="json") == original_record
+
+
+@pytest.mark.asyncio
+async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_truthfully(tmp_path: Path) -> None:
+    review = _real_review(
+        tmp_path,
+        modelo="130",
+        filing_year=2026,
+        period_code="1T",
+        blocked=True,
+        materialised=True,
+    )
+    original_record = review.model_dump(mode="json")
+    app = ModeloWorkReviewApp(review)
+
+    async with app.run_test(size=(120, 36)) as pilot:
+        await pilot.pause()
+        screen = app.screen
+        casillas = screen.query_one("#modelo-review-casillas-table", DataTable)
+        findings = screen.query_one("#modelo-review-findings-table", DataTable)
+        blockers = screen.query_one("#modelo-review-blockers-table", DataTable)
+        original_casillas = _row_keys(casillas)
+        original_findings = _row_keys(findings)
+        original_blockers = _row_keys(blockers)
+
+        casilla_checks = (
+            (
+                "#modelo-review-filter-realised-kind",
+                ModeloValueKind.LITERAL.value,
+                tuple(str(row.casilla_id) for row in review.casillas if row.realised_kind is ModeloValueKind.LITERAL),
+            ),
+            (
+                "#modelo-review-filter-origin-anomaly",
+                ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE.value,
+                tuple(
+                    str(row.casilla_id)
+                    for row in review.casillas
+                    if row.origin_anomaly is ModeloWorkOriginAnomaly.OPERATOR_OVERRIDE
+                ),
+            ),
+            (
+                "#modelo-review-filter-origin-anomaly-presence",
+                _PRESENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.origin_anomaly is not None),
+            ),
+            (
+                "#modelo-review-filter-casilla-blocker",
+                OperatorActionAxis.SUPPLY_MANUAL_INPUT.value,
+                tuple(
+                    str(row.casilla_id)
+                    for row in review.casillas
+                    if any(blocker.axis is OperatorActionAxis.SUPPLY_MANUAL_INPUT for blocker in row.blocked_by)
+                ),
+            ),
+            (
+                "#modelo-review-filter-casilla-blocker-presence",
+                _PRESENT,
+                tuple(str(row.casilla_id) for row in review.casillas if row.blocked_by),
+            ),
+        )
+        for selector, value, expected_rows in casilla_checks:
+            chooser = cast("Select[str]", screen.query_one(selector, Select))
+            chooser.value = value
+            await pilot.pause()
+            assert expected_rows
+            assert len(expected_rows) < len(original_casillas)
+            assert _row_keys(casillas) == expected_rows
+            chooser.clear()
+            await pilot.pause()
+
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-finding-kind", Select)
+        ).value = ModeloVerificationFindingKind.BLOCKING_RULE.value
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-finding-severity", Select)
+        ).value = ModeloVerificationFindingSeverity.BLOCKING.value
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-record-blocker", Select)
+        ).value = OperatorActionAxis.SUPPLY_MANUAL_INPUT.value
+        await pilot.pause()
+        assert _row_keys(findings) == original_findings
+        assert _row_keys(blockers) == original_blockers
+
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-realised-kind", Select)
+        ).value = ModeloValueKind.DEFAULT.value
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-finding-kind", Select)
+        ).value = ModeloVerificationFindingKind.ADVISORY.value
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-record-blocker", Select)
+        ).value = OperatorActionAxis.RE_VERIFY.value
+        await pilot.pause()
+        assert casillas.row_count == findings.row_count == blockers.row_count == 0
+        assert screen.query_one("#modelo-review-casillas-empty", Static).display
+        assert screen.query_one("#modelo-review-findings-empty", Static).display
+        assert screen.query_one("#modelo-review-blockers-empty", Static).display
+
+        screen.query_one("#modelo-review-filter-reset", Button).press()
+        await pilot.pause()
+        assert _row_keys(casillas) == original_casillas
+        assert _row_keys(findings) == original_findings
+        assert _row_keys(blockers) == original_blockers
+        assert review.model_dump(mode="json") == original_record
 
 
 @pytest.mark.parametrize(

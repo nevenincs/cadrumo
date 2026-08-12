@@ -7314,6 +7314,29 @@ flows:
       realised: Valor materialitzat
       schema: Esquema
       severity: Gravetat
+    filter:
+      absent: Absent
+      all: Tots els valors
+      binding_presence: Presència de vincle
+      binding_source: Origen concret del vincle
+      casilla_blocker: Acció bloquejant de casella
+      casilla_blocker_presence: Presència de bloqueig de casella
+      filters: Filtres
+      finding_kind: Tipus d'incidència
+      finding_severity: Gravetat de la incidència
+      formula_presence: Presència de fórmula
+      input_kind: Tipus d'entrada declarat
+      no_matching_blockers: Cap bloqueig coincideix amb els filtres actius.
+      no_matching_casillas: Cap casella coincideix amb els filtres actius.
+      no_matching_findings: Cap incidència coincideix amb els filtres actius.
+      official_status: Estat de casella oficial
+      origin_anomaly: Anomalia d'origen
+      origin_anomaly_presence: Presència d'anomalia d'origen
+      present: Present
+      realised_kind: Tipus de valor realitzat
+      record_blocker: Acció bloquejant del registre
+      relation_presence: Presència de relació
+      reset: Restableix els filtres
     summary:
       calculation_revision: Revisió del càlcul
       lifecycle_state: Estat del cicle de vida

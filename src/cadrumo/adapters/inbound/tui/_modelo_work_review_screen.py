@@ -9,25 +9,55 @@ screen cannot derive a competing readiness verdict or mutate modelo work.
 The casilla table keeps declared, concrete, and realised origins in distinct
 columns.  Progress counts appear only beside their named completeness-manifest
 denominator; an undefined denominator renders the closed ``undefined`` state
-without manufacturing a zero.  Filtering is intentionally absent: faceted
-filtering belongs to the following plan step.
+without manufacturing a zero. Facets inspect only closed enum and presence
+facts already carried by the frozen record; they never derive domain state.
 """
 
 from __future__ import annotations
 
 import json
+from enum import StrEnum
 from typing import ClassVar, cast, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
 from textual.containers import Vertical
 from textual.screen import Screen
-from textual.widgets import Footer, Static
+from textual.widgets import Button, Collapsible, Footer, Label, Select, Static
 
-from ....application.modelo import ModeloWorkProgressDenominator, ModeloWorkReview
-from ....core import ModeloWorkProgressState
+from ....application.modelo import (
+    BlockerRef,
+    ModeloWorkOriginAnomaly,
+    ModeloWorkProgressDenominator,
+    ModeloWorkReview,
+    ModeloWorkReviewCasilla,
+)
+from ....core import BindingSourceKind, ModeloWorkProgressState, OfficialBoxStatus, OperatorActionAxis
 from ....core.i18n import tr
+from ....domain.calculations.registry import InputKind
+from ....domain.filing import ModeloValueKind
+from ....domain.modelos import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
 from ._theme import BASE_CSS, ContentDataTable, ContentScroll, install_cadrumo_themes, toggle_appearance
+
+_PRESENT = "present"
+_ABSENT = "absent"
+
+
+def _enum_options[EnumT: StrEnum](enum_type: type[EnumT]) -> tuple[tuple[str, str], ...]:
+    """Return the exact selectable members of one canonical closed axis."""
+    return tuple((member.value, member.value) for member in enum_type)
+
+
+def _presence_options() -> tuple[tuple[str, str], ...]:
+    """Return the localized closed choices for a nullable/presence fact."""
+    return (
+        (tr("flows.modelo_review.filter.present"), _PRESENT),
+        (tr("flows.modelo_review.filter.absent"), _ABSENT),
+    )
 
 
 def _json(value: object) -> str:
@@ -54,6 +84,106 @@ class ModeloWorkReviewScreen(Screen[None]):
             ),
         ):
             yield Static(id="modelo-review-summary", classes="cadrumo-panel")
+            with (
+                Collapsible(
+                    title=tr("flows.modelo_review.filter.filters"),
+                    collapsed=True,
+                    id="modelo-review-filter-disclosure",
+                    classes="cadrumo-panel",
+                ),
+                Vertical(id="modelo-review-filters"),
+            ):
+                yield Label(tr("flows.modelo_review.filter.input_kind"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(InputKind),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-input-kind",
+                )
+                yield Label(tr("flows.modelo_review.filter.binding_source"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(BindingSourceKind),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-binding-source",
+                )
+                yield Label(tr("flows.modelo_review.filter.binding_presence"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _presence_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-binding-presence",
+                )
+                yield Label(tr("flows.modelo_review.filter.formula_presence"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _presence_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-formula-presence",
+                )
+                yield Label(tr("flows.modelo_review.filter.relation_presence"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _presence_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-relation-presence",
+                )
+                yield Label(tr("flows.modelo_review.filter.realised_kind"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(ModeloValueKind),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-realised-kind",
+                )
+                yield Label(tr("flows.modelo_review.filter.origin_anomaly"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(ModeloWorkOriginAnomaly),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-origin-anomaly",
+                )
+                yield Label(
+                    tr("flows.modelo_review.filter.origin_anomaly_presence"),
+                    classes="modelo-review-filter-label",
+                )
+                yield Select[str](
+                    _presence_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-origin-anomaly-presence",
+                )
+                yield Label(tr("flows.modelo_review.filter.official_status"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(OfficialBoxStatus),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-official-status",
+                )
+                yield Label(tr("flows.modelo_review.filter.casilla_blocker"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(OperatorActionAxis),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-casilla-blocker",
+                )
+                yield Label(
+                    tr("flows.modelo_review.filter.casilla_blocker_presence"),
+                    classes="modelo-review-filter-label",
+                )
+                yield Select[str](
+                    _presence_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-casilla-blocker-presence",
+                )
+                yield Label(tr("flows.modelo_review.filter.finding_kind"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(ModeloVerificationFindingKind),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-finding-kind",
+                )
+                yield Label(tr("flows.modelo_review.filter.finding_severity"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(ModeloVerificationFindingSeverity),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-finding-severity",
+                )
+                yield Label(tr("flows.modelo_review.filter.record_blocker"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _enum_options(OperatorActionAxis),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-record-blocker",
+                )
+                yield Button(tr("flows.modelo_review.filter.reset"), id="modelo-review-filter-reset")
             yield Static(id="modelo-review-casillas", classes="cadrumo-panel")
             yield Static(id="modelo-review-findings", classes="cadrumo-panel")
             yield Static(id="modelo-review-blockers", classes="cadrumo-panel")
@@ -75,6 +205,19 @@ class ModeloWorkReviewScreen(Screen[None]):
         self._mount_findings(review)
         self._mount_blockers(review)
 
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Re-project visible rows when any closed facet changes."""
+        if event.select.id is not None and event.select.id.startswith("modelo-review-filter-"):
+            self._refresh_filtered_rows()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Restore every facet to the canonical unfiltered projection."""
+        if event.button.id != "modelo-review-filter-reset":
+            return
+        for chooser in self.query("#modelo-review-filters Select"):
+            cast("Select[str]", chooser).clear()
+        self._refresh_filtered_rows()
+
     @property
     def review_app(self) -> ModeloWorkReviewApp:
         """Return the one owning application, refusing a foreign screen host."""
@@ -89,6 +232,73 @@ class ModeloWorkReviewScreen(Screen[None]):
             ],
         )
         self.refresh_bindings()
+
+    def _selected(self, selector: str) -> str | None:
+        value = cast("Select[str]", self.query_one(selector, Select)).value
+        return value if isinstance(value, str) else None
+
+    @staticmethod
+    def _matches_presence(selected: str | None, present: bool) -> bool:
+        return selected is None or (selected == _PRESENT) is present
+
+    def _casilla_matches(self, row: ModeloWorkReviewCasilla) -> bool:
+        input_kind = self._selected("#modelo-review-filter-input-kind")
+        binding_source = self._selected("#modelo-review-filter-binding-source")
+        realised_kind = self._selected("#modelo-review-filter-realised-kind")
+        anomaly = self._selected("#modelo-review-filter-origin-anomaly")
+        official_status = self._selected("#modelo-review-filter-official-status")
+        blocker_axis = self._selected("#modelo-review-filter-casilla-blocker")
+        return all(
+            (
+                input_kind is None or row.declared_input_kind.value == input_kind,
+                binding_source is None
+                or any(binding.source.value == binding_source for binding in row.concrete_bindings),
+                self._matches_presence(
+                    self._selected("#modelo-review-filter-binding-presence"),
+                    bool(row.concrete_bindings),
+                ),
+                self._matches_presence(
+                    self._selected("#modelo-review-filter-formula-presence"),
+                    row.concrete_formula is not None,
+                ),
+                self._matches_presence(
+                    self._selected("#modelo-review-filter-relation-presence"),
+                    bool(row.relation_consumption),
+                ),
+                realised_kind is None or row.realised_kind.value == realised_kind,
+                anomaly is None or (row.origin_anomaly is not None and row.origin_anomaly.value == anomaly),
+                self._matches_presence(
+                    self._selected("#modelo-review-filter-origin-anomaly-presence"),
+                    row.origin_anomaly is not None,
+                ),
+                official_status is None or row.official_box_status.value == official_status,
+                blocker_axis is None or any(blocker.axis.value == blocker_axis for blocker in row.blocked_by),
+                self._matches_presence(
+                    self._selected("#modelo-review-filter-casilla-blocker-presence"),
+                    bool(row.blocked_by),
+                ),
+            ),
+        )
+
+    def _finding_matches(self, finding: ModeloVerificationFinding) -> bool:
+        kind = self._selected("#modelo-review-filter-finding-kind")
+        severity = self._selected("#modelo-review-filter-finding-severity")
+        return (kind is None or finding.kind.value == kind) and (severity is None or finding.severity.value == severity)
+
+    def _blocker_matches(self, blocker: BlockerRef) -> bool:
+        axis = self._selected("#modelo-review-filter-record-blocker")
+        return axis is None or blocker.axis.value == axis
+
+    def _refresh_filtered_rows(self) -> None:
+        review = self.review_app.review
+        casillas = tuple(row for row in review.casillas if self._casilla_matches(row))
+        self._populate_casillas(casillas)
+        if review.findings:
+            findings = tuple(finding for finding in review.findings if self._finding_matches(finding))
+            self._populate_findings(findings)
+        if review.blockers:
+            blockers = tuple(blocker for blocker in review.blockers if self._blocker_matches(blocker))
+            self._populate_blockers(blockers)
 
     def _mount_summary(self, review: ModeloWorkReview) -> None:
         progress = review.progress
@@ -129,6 +339,13 @@ class ModeloWorkReviewScreen(Screen[None]):
             zebra_stripes=True,
         )
         panel.mount(table)
+        panel.mount(
+            Static(
+                tr("flows.modelo_review.filter.no_matching_casillas"),
+                id="modelo-review-casillas-empty",
+                classes="modelo-review-filter-empty",
+            ),
+        )
         table.add_columns(
             tr("flows.modelo_review.column.casilla"),
             tr("flows.modelo_review.column.label"),
@@ -140,7 +357,15 @@ class ModeloWorkReviewScreen(Screen[None]):
             tr("flows.modelo_review.column.grounding"),
             tr("flows.modelo_review.column.blocked_by"),
         )
-        for row in review.casillas:
+        self._populate_casillas(review.casillas)
+
+    def _populate_casillas(self, rows: tuple[ModeloWorkReviewCasilla, ...]) -> None:
+        table = cast(
+            "ContentDataTable[str]",
+            self.query_one("#modelo-review-casillas-table", ContentDataTable),
+        )
+        table.clear()
+        for row in rows:
             concrete = _json(
                 {
                     "bindings": tuple(binding.model_dump(mode="json") for binding in row.concrete_bindings),
@@ -189,6 +414,7 @@ class ModeloWorkReviewScreen(Screen[None]):
                 blocked_by,
                 key=str(row.casilla_id),
             )
+        self.query_one("#modelo-review-casillas-empty", Static).display = not rows
 
     def _mount_findings(self, review: ModeloWorkReview) -> None:
         panel = self.query_one("#modelo-review-findings", Static)
@@ -201,6 +427,13 @@ class ModeloWorkReviewScreen(Screen[None]):
             zebra_stripes=True,
         )
         panel.mount(table)
+        panel.mount(
+            Static(
+                tr("flows.modelo_review.filter.no_matching_findings"),
+                id="modelo-review-findings-empty",
+                classes="modelo-review-filter-empty",
+            ),
+        )
         table.add_columns(
             tr("flows.modelo_review.column.severity"),
             tr("flows.modelo_review.column.kind"),
@@ -210,7 +443,15 @@ class ModeloWorkReviewScreen(Screen[None]):
             tr("flows.modelo_review.column.facts"),
             tr("flows.modelo_review.column.grounding"),
         )
-        for index, finding in enumerate(review.findings):
+        self._populate_findings(review.findings)
+
+    def _populate_findings(self, findings: tuple[ModeloVerificationFinding, ...]) -> None:
+        table = cast(
+            "ContentDataTable[str]",
+            self.query_one("#modelo-review-findings-table", ContentDataTable),
+        )
+        table.clear()
+        for index, finding in enumerate(findings):
             table.add_row(
                 finding.severity.value,
                 finding.kind.value,
@@ -226,6 +467,7 @@ class ModeloWorkReviewScreen(Screen[None]):
                 ),
                 key=f"finding-{index}",
             )
+        self.query_one("#modelo-review-findings-empty", Static).display = not findings
 
     def _mount_blockers(self, review: ModeloWorkReview) -> None:
         panel = self.query_one("#modelo-review-blockers", Static)
@@ -238,18 +480,34 @@ class ModeloWorkReviewScreen(Screen[None]):
             zebra_stripes=True,
         )
         panel.mount(table)
+        panel.mount(
+            Static(
+                tr("flows.modelo_review.filter.no_matching_blockers"),
+                id="modelo-review-blockers-empty",
+                classes="modelo-review-filter-empty",
+            ),
+        )
         table.add_columns(
             tr("flows.modelo_review.column.action"),
             tr("flows.modelo_review.column.code"),
             tr("flows.modelo_review.column.facts"),
         )
-        for index, blocker in enumerate(review.blockers):
+        self._populate_blockers(review.blockers)
+
+    def _populate_blockers(self, blockers: tuple[BlockerRef, ...]) -> None:
+        table = cast(
+            "ContentDataTable[str]",
+            self.query_one("#modelo-review-blockers-table", ContentDataTable),
+        )
+        table.clear()
+        for index, blocker in enumerate(blockers):
             table.add_row(
                 blocker.axis.value,
                 blocker.native_code,
                 _json(dict(blocker.facts)),
                 key=f"blocker-{index}",
             )
+        self.query_one("#modelo-review-blockers-empty", Static).display = not blockers
 
     def action_quit_review(self) -> None:
         self.review_app.exit(None)
@@ -275,6 +533,16 @@ class ModeloWorkReviewApp(App[None]):
         + """
     #modelo-review-body { width: 100%; height: 1fr; }
     #modelo-review-summary-lines { height: auto; }
+    #modelo-review-filters {
+        height: auto;
+        layout: grid;
+        grid-size: 2;
+        grid-columns: 2fr 3fr;
+        grid-rows: auto;
+        grid-gutter: 0 1;
+    }
+    .modelo-review-filter-label,
+    .modelo-review-filter-empty { height: auto; }
     #modelo-review-casillas DataTable,
     #modelo-review-findings DataTable,
     #modelo-review-blockers DataTable { width: 100%; height: auto; background: $surface; }

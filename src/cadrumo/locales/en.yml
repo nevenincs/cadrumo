@@ -6862,6 +6862,29 @@ flows:
       realised: Realised value
       schema: Schema
       severity: Severity
+    filter:
+      absent: Absent
+      all: All values
+      binding_presence: Binding presence
+      binding_source: Concrete binding source
+      casilla_blocker: Casilla blocker action
+      casilla_blocker_presence: Casilla blocker presence
+      filters: Filters
+      finding_kind: Finding kind
+      finding_severity: Finding severity
+      formula_presence: Formula presence
+      input_kind: Declared input kind
+      no_matching_blockers: No blockers match the active filters.
+      no_matching_casillas: No casillas match the active filters.
+      no_matching_findings: No findings match the active filters.
+      official_status: Official box status
+      origin_anomaly: Origin anomaly
+      origin_anomaly_presence: Origin anomaly presence
+      present: Present
+      realised_kind: Realised value kind
+      record_blocker: Record blocker action
+      relation_presence: Relation presence
+      reset: Reset filters
     summary:
       calculation_revision: Calculation revision
       lifecycle_state: Lifecycle state

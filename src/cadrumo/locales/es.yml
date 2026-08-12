@@ -7403,6 +7403,29 @@ flows:
       realised: Valor materializado
       schema: Esquema
       severity: Gravedad
+    filter:
+      absent: Ausente
+      all: Todos los valores
+      binding_presence: Presencia de vínculo
+      binding_source: Origen concreto del vínculo
+      casilla_blocker: Acción bloqueante de casilla
+      casilla_blocker_presence: Presencia de bloqueo de casilla
+      filters: Filtros
+      finding_kind: Tipo de incidencia
+      finding_severity: Gravedad de la incidencia
+      formula_presence: Presencia de fórmula
+      input_kind: Tipo de entrada declarado
+      no_matching_blockers: Ningún bloqueo coincide con los filtros activos.
+      no_matching_casillas: Ninguna casilla coincide con los filtros activos.
+      no_matching_findings: Ninguna incidencia coincide con los filtros activos.
+      official_status: Estado de casilla oficial
+      origin_anomaly: Anomalía de origen
+      origin_anomaly_presence: Presencia de anomalía de origen
+      present: Presente
+      realised_kind: Tipo de valor realizado
+      record_blocker: Acción bloqueante del registro
+      relation_presence: Presencia de relación
+      reset: Restablecer filtros
     summary:
       calculation_revision: Revisión del cálculo
       lifecycle_state: Estado del ciclo de vida

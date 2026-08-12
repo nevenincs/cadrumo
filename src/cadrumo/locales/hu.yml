@@ -7172,6 +7172,29 @@ flows:
       realised: Materializált érték
       schema: Séma
       severity: Súlyosság
+    filter:
+      absent: Nincs jelen
+      all: Minden érték
+      binding_presence: Kötés megléte
+      binding_source: Konkrét kötési forrás
+      casilla_blocker: Mező blokkoló művelete
+      casilla_blocker_presence: Mezőblokkoló megléte
+      filters: Szűrők
+      finding_kind: Megállapítás típusa
+      finding_severity: Megállapítás súlyossága
+      formula_presence: Képlet megléte
+      input_kind: Deklarált beviteli típus
+      no_matching_blockers: Egy blokkoló sem felel meg az aktív szűrőknek.
+      no_matching_casillas: Egy mező sem felel meg az aktív szűrőknek.
+      no_matching_findings: Egy megállapítás sem felel meg az aktív szűrőknek.
+      official_status: Hivatalos mező állapota
+      origin_anomaly: Eredetanomália
+      origin_anomaly_presence: Eredetanomália megléte
+      present: Jelen van
+      realised_kind: Megvalósult érték típusa
+      record_blocker: Rekord blokkoló művelete
+      relation_presence: Kapcsolat megléte
+      reset: Szűrők visszaállítása
     summary:
       calculation_revision: Számítási verzió
       lifecycle_state: Életciklus-állapot
