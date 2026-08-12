@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ed64e77cde1da89bd03fe401a9369f3581356a6a31e85d9e22e13b0fbca7e83a'
+body_hash: 'sha256:5082f1d451ed3b0727815bb8fc19b8a9f1c1e65041197ce4d49f048dcb5cdda8'
 step_id: 'S33'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -44,3 +44,5 @@ Verification:
 ## Notes
 
 The locale batch was applied through the catalogue authority after an earlier interrupted partial batch. No compatibility helper, fallback, alias, or mirrored business mapping remains.
+
+Concurrent shared-worktree commits split the Step delivery: `954fb76297` landed the code, tests, and four catalogue changes; `25c101ee57` landed this execution record alongside unrelated S114 lifecycle work. This violates the plan's one-Step/one-atomic-commit convention. Shared history is not rewritten; the final S33 closure is limited to this factual correction, the formal review audit, and the plan checkbox.
