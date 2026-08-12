@@ -56,7 +56,14 @@ def _invoke(args: Sequence[str]) -> Result:
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     dispose_engine()
     with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
+        # revolut-multi.csv carries GBP/USD rows, so importing it drives the CLI's
+        # live ECB euro reference-rate normalizer; opt in explicitly rather than
+        # relying on the provider's now-guarded default (see fx._ecb_provider).
+        override_settings(
+            cadrumo_local_storage_root=tmp_path,
+            cadrumo_output_language="en",
+            cadrumo_live_tests_enabled="1",
+        ),
         isolated_profile_storage_root(tmp_path=tmp_path),
         profile_create_storage_span("00000000-0000-4000-8000-000000000000"),
     ):
