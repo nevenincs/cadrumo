@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-12'
-body_hash: 'sha256:e5936ea3ed17553ff6742ae31e5ab3fa78f9751ea0e25f10d6ea34237a78f0bd'
+body_hash: 'sha256:521dd068c748916b3f72209df81abc78659df7cf4e6ff71d0bfc241bd79abb5d'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -169,7 +169,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S101` - Migrate application user-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/user_profile/_profile_repository.py; src/cadrumo/application/user_profile/_bundle.py; src/cadrumo/application/user_profile/_bundle_encryption.py; src/cadrumo/application/user_profile/_censo_sync.py; src/cadrumo/application/user_profile/_custody.py; src/cadrumo/application/user_profile/_integrity.py; src/cadrumo/application/user_profile/_login_session.py; src/cadrumo/application/user_profile/_orchestration.py; src/cadrumo/application/user_profile/_registration.py; src/cadrumo/application/user_profile/_repository.py`.
 - [x] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
 - [x] `W05.P08.S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/export/_tabular.py`.
-- [ ] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py; src/cadrumo/application/storage/calc_sheets/_translator.py`.
+- [x] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py; src/cadrumo/application/storage/calc_sheets/_translator.py`.
 - [ ] `W05.P08.S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/invoices/_service.py; src/cadrumo/domain/iva/_lookup.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/invoices/_enums.py; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/domain/iva/_saturation.py`.
 - [x] `W05.P08.S106` - Migrate config-reset exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/_config_reset_repository.py; src/cadrumo/application/config_reset.py`.
 - [x] `W05.P08.S116` - Replace runtime pkgutil result-schema discovery with one canonical schema-module declaration reconciled bidirectionally to the live command and result-schema surface; `src/cadrumo/entrypoints/cli/_app_contract.py; src/cadrumo/entrypoints/schema_surface.py; src/cadrumo/entrypoints/cli/tests/test_app_contract_resilience.py; src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
