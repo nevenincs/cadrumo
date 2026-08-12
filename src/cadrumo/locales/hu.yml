@@ -1904,6 +1904,10 @@ cli:
         confirm_counterparty_nif_help: Felülírja a kinyert szállítói adóazonosítót.
         confirm_currency_help: ISO-4217 pénznemkód.
         confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
+        confirm_invoice_class_help: Adja meg a számla osztályát, ha a dokumentum nem
+          jelöli. A helyesbítő számlát a dokumentumból olvassuk ki, ha megnevezi a
+          javított számlát, ezért ez a beállítás azokra a dokumentumokra való, amelyek
+          nem teszik.
         confirm_invoice_date_help: Felülírja a kinyert számla dátumát (ÉÉÉÉ-HH-NN).
         confirm_invoice_number_help: Felülírja a kinyert számlaszámot.
         confirm_iva_rate_help: Felülírja a kinyert ÁFA-kulcsot (hagyja ki a kinyert
@@ -1919,6 +1923,9 @@ cli:
           olyan összeget tartalmaz, amelyet ez a nyilvántartás nem, például egyenértékűségi
           felárat (recargo de equivalencia), vagy valamelyik érték félreolvasásra
           került. Ellenőrizze a dokumentumot.
+        confirm_rectifies_help: Annak a számlának a száma, amelyet ez a helyesbítő
+          számla javít. Az RD 1619/2012 6.1.a.2 cikke a saját sorozattal együtt megköveteli,
+          és a dokumentumból olvassuk ki, ha megadja.
         confirm_resolve_help: 'Válaszoljon egy blokkoló észrevételre: <finding-id>=<choose|supply|attest>:<érték-vagy-indok>.
           A choose esetén az olvasatot az értékével vagy a review által mutatott kivonattal
           nevezze meg. Észrevételenként egyszer ismételje; nincs tömeges kapcsoló.'
@@ -1928,6 +1935,10 @@ cli:
           formájában eldöntetlenül hagyta, hogy a számla egyik fele hol telepedett
           le. Az áfaterület dönti el a kezelést, és nem feltételezzük, hogy a félsziget.
           Az alábbi részlet megnevezi a felet és azt, ami hiányzott.
+        confirm_series_help: A sorozat, amelyben a számlát kiállították. Az RD 1619/2012
+          6.1.a.2 cikke előírja, hogy a helyesbítő számla saját sorozatba kerüljön,
+          ezért ennek az osztálynak a megadásához sorozat is kell; a dokumentumból
+          olvassuk ki, ha megadja.
         confirm_supply_nature_help: Adja meg, hogy az ügylet termékértékesítés vagy
           szolgáltatásnyújtás. A teljesítési hely szabályai eltérnek, ezért ha a dokumentum
           nem jelöli, a kezelés eldöntetlen marad.

@@ -1976,6 +1976,10 @@ cli:
         confirm_currency_help: Codi de moneda ISO-4217.
         confirm_help: Torna a extreure el justificant en local i confirma'l com a
           factura real del catàleg.
+        confirm_invoice_class_help: Indiqueu la classe de factura quan el document
+          no la declari. Una rectificativa es llegeix del document quan aquest anomena
+          la factura que rectifica, de manera que aquesta opció és la correcció per
+          als documents que no ho fan.
         confirm_invoice_date_help: Sobreescriu la data de factura extreta (AAAA-MM-DD).
         confirm_invoice_number_help: Sobreescriu el número de factura extret.
         confirm_iva_rate_help: Sobreescriu el tipus d'IVA extret (ometre per mantenir
@@ -1990,6 +1994,9 @@ cli:
           i del tipus d'IVA, de manera que una diferència significa que el document
           inclou un import que aquest registre no recull, com ara un recàrrec d'equivalència,
           o que s'ha llegit malament alguna xifra. Reviseu el document.
+        confirm_rectifies_help: Número de la factura que rectifica aquesta rectificativa.
+          El RD 1619/2012 art. 6.1.a.2 l'exigeix juntament amb la seva pròpia sèrie,
+          i es llegeix del document quan aquest l'indica.
         confirm_resolve_help: 'Respongui a una troballa bloquejant: <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
           Per a choose, indiqui la lectura pel seu valor o pel resum que va mostrar
           review. Repeteixi un cop per troballa; no hi ha opció massiva.'
@@ -2000,6 +2007,10 @@ cli:
           llegit, ha deixat sense decidir on està establerta una de les parts d'aquesta
           factura. El territori d'IVA determina el tractament i no es dona per suposat
           que sigui la península. El detall següent anomena la part i el que faltava.
+        confirm_series_help: Sèrie de numeració en què es va expedir la factura. El
+          RD 1619/2012 art. 6.1.a.2 obliga que una rectificativa vagi en la seva pròpia
+          sèrie, de manera que declarar aquesta classe requereix indicar-la; es llegeix
+          del document quan aquest la indica.
         confirm_supply_nature_help: Indiqueu si l'operació és un lliurament de béns
           o una prestació de serveis. Les regles de localització difereixen, de manera
           que un document que no ho indica deixa el tractament sense resoldre.

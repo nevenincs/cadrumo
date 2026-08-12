@@ -1994,6 +1994,10 @@ cli:
         confirm_currency_help: Código de moneda ISO-4217.
         confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
           como una factura real del catálogo.
+        confirm_invoice_class_help: Indique la clase de factura cuando el documento
+          no la declare. Una rectificativa se lee del documento cuando este nombra
+          la factura que rectifica, de modo que esta opción es la corrección para
+          los documentos que no lo hacen.
         confirm_invoice_date_help: Sobrescribe la fecha de factura extraida (AAAA-MM-DD).
         confirm_invoice_number_help: Sobrescribe el número de factura extraido.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
@@ -2008,6 +2012,9 @@ cli:
           imponible y del tipo de IVA, por lo que una diferencia significa que el
           documento incluye un importe que este registro no recoge, como un recargo
           de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
+        confirm_rectifies_help: Número de la factura que rectifica esta rectificativa.
+          El RD 1619/2012 art. 6.1.a.2 lo exige junto con su propia serie, y se lee
+          del documento cuando este lo indica.
         confirm_resolve_help: 'Responda a un hallazgo bloqueante: <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
           Para choose, indique la lectura por su valor o por el resumen que mostró
           review. Repita una vez por hallazgo; no hay opción masiva.'
@@ -2019,6 +2026,10 @@ cli:
           de esta factura. El territorio de IVA determina el tratamiento y no se da
           por supuesto que sea la península. El detalle siguiente nombra la parte
           y lo que faltaba.
+        confirm_series_help: Serie de numeración en la que se expidió la factura.
+          El RD 1619/2012 art. 6.1.a.2 obliga a que una rectificativa vaya en su propia
+          serie, de modo que declarar esa clase requiere indicarla; se lee del documento
+          cuando este la indica.
         confirm_supply_nature_help: Indique si la operación es una entrega de bienes
           o una prestación de servicios. Las reglas de localización difieren, por
           lo que un documento que no lo indica deja el tratamiento sin resolver.

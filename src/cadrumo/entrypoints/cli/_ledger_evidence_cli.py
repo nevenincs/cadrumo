@@ -19,7 +19,7 @@ from ...core import IntracomOperationType
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ...domain.invoices import InvoiceValidationError
+from ...domain.invoices import InvoiceClass, InvoiceValidationError
 from ...domain.iva import InvoiceKind, SupplyNature
 from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
 from ._common import (
@@ -563,6 +563,21 @@ def _register_evidence_confirm_command() -> None:
             "--supply-nature",
             help=tr("cli.app.ledger.evidence.confirm_supply_nature_help"),
         ),
+        invoice_class: InvoiceClass | None = typer.Option(
+            None,
+            "--invoice-class",
+            help=tr("cli.app.ledger.evidence.confirm_invoice_class_help"),
+        ),
+        rectifies: str | None = typer.Option(
+            None,
+            "--rectifies",
+            help=tr("cli.app.ledger.evidence.confirm_rectifies_help"),
+        ),
+        series: str | None = typer.Option(
+            None,
+            "--series",
+            help=tr("cli.app.ledger.evidence.confirm_series_help"),
+        ),
         notes: str = typer.Option(
             "",
             "--notes",
@@ -598,6 +613,9 @@ def _register_evidence_confirm_command() -> None:
             currency=currency,
             operation_type=operation_type,
             supply_nature=supply_nature,
+            invoice_class=invoice_class,
+            rectifies=rectifies,
+            series=series,
             notes=notes,
             resolve=resolve,
         )
@@ -619,6 +637,9 @@ def _run_evidence_confirm(
     currency: str | None,
     operation_type: IntracomOperationType | None,
     supply_nature: SupplyNature | None,
+    invoice_class: InvoiceClass | None,
+    rectifies: str | None,
+    series: str | None,
     notes: str,
     resolve: list[str],
 ) -> None:
@@ -645,6 +666,12 @@ def _run_evidence_confirm(
             currency=currency,
             operation_type=operation_type,
             supply_nature=supply_nature,
+            # Omitted rather than defaulted when the operator says nothing, so the
+            # DOCUMENT's own statement stands. Passing ORDINARIA here would
+            # override a rectificativa the reader correctly recovered.
+            **({} if invoice_class is None else {"invoice_class": invoice_class}),
+            rectifies_invoice_number=rectifies,
+            series=series,
             notes=notes,
             resolutions=resolutions,
         )

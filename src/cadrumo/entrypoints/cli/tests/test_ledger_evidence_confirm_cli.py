@@ -473,3 +473,112 @@ def test_not_answering_leaves_the_confirm_exactly_as_it_was(tmp_path: Path) -> N
 
     assert confirmed.exit_code == 0, confirmed.output
     assert json.loads(confirmed.output)["result"]["created"] is True
+
+
+# -- the invoice CLASS, at the operator's end -------------------------------
+#
+# A rectificativa is read from the document where it names the invoice it
+# corrects, so these options are the override for documents that do not -- a
+# scanned or photographed one, where no Corrective element exists to read.
+#
+# Omission is load-bearing here in a way it is not for most options: the confirm
+# service defaults the class to ORDINARIA, so passing that default through when
+# the operator said nothing would OVERRIDE a rectificativa the reader correctly
+# recovered. The runner therefore omits the argument entirely rather than
+# sending a default, and the case below is what holds that.
+
+
+def test_the_class_and_its_correction_can_be_stated_by_the_operator(tmp_path: Path) -> None:
+    """The override channel for a document that states no class of its own."""
+    evidence_id = _add_evidence(tmp_path)
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+            "--invoice-class", "RECTIFICATIVA",
+            "--rectifies", "0028",
+            "--series", "R-2026",
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code == 0, confirmed.output
+    assert json.loads(confirmed.output)["result"]["created"] is True
+
+
+def test_declaring_the_class_without_its_series_is_refused(tmp_path: Path) -> None:
+    """RD 1619/2012 art. 6.1.a.2 obliges a rectificativa into its own series.
+
+    The model has always encoded that; what it could not do was enforce it,
+    because nothing ever told it an invoice was a rectificativa. Now that the
+    class is stated the invariant bites, and the override channel is only
+    complete because the series can be stated alongside it.
+    """
+    evidence_id = _add_evidence(tmp_path, filename="no-series.xml")
+
+    refused = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+            "--invoice-class", "RECTIFICATIVA",
+            "--rectifies", "0028",
+        ],
+    )  # fmt: skip
+
+    assert refused.exit_code != 0, refused.output
+    # On structure rather than prose: the message is localised, and asserting
+    # its wording would make this suite fail on a translation.
+    envelope = json.loads(refused.output)
+    assert envelope["status"] == "error"
+    assert envelope["error"]["category"] == "REFUSED"
+
+
+def test_a_class_outside_the_closed_set_is_refused_naming_what_is_accepted(tmp_path: Path) -> None:
+    """Typed at the boundary, so click renders the members on the parse failure."""
+    evidence_id = _add_evidence(tmp_path)
+
+    refused = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+            "--invoice-class", "PROFORMA",
+        ],
+    )  # fmt: skip
+
+    assert refused.exit_code != 0
+    assert "RECTIFICATIVA" in refused.output
+    assert "ORDINARIA" in refused.output
+
+
+def test_saying_nothing_leaves_the_documents_own_class_standing(tmp_path: Path) -> None:
+    """The case that matters most, and the reason the runner omits rather than defaults.
+
+    The bundled document names the invoice it corrects, so it IS a
+    rectificativa. A confirm that passed the service's ORDINARIA default
+    through whenever the operator was silent would overwrite that with the
+    default on every single confirm -- reinstating exactly the silent
+    misclassification the reader change removed.
+    """
+    evidence_id = _add_evidence(tmp_path)
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code == 0, confirmed.output
+    assert json.loads(confirmed.output)["result"]["created"] is True

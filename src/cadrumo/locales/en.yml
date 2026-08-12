@@ -1836,6 +1836,9 @@ cli:
         confirm_currency_help: ISO-4217 currency code.
         confirm_help: Re-extract evidence on-host and confirm it into a real catalogue
           Invoice.
+        confirm_invoice_class_help: Declare the invoice class when the document does
+          not state one. A rectificativa is read from the document where it names
+          the invoice it corrects, so this is the override for documents that do not.
         confirm_invoice_date_help: Override the extracted invoice date (YYYY-MM-DD).
         confirm_invoice_number_help: Override the extracted invoice number.
         confirm_iva_rate_help: Override the extracted IVA rate (omit to keep the extracted
@@ -1850,6 +1853,9 @@ cli:
           taxable base and the IVA rate, so a difference means the document carries
           an amount this record does not, such as a recargo de equivalencia, or a
           figure was misread. Check the document.
+        confirm_rectifies_help: Number of the invoice this rectificativa corrects.
+          Required by RD 1619/2012 art. 6.1.a.2 alongside its own series, and read
+          from the document where one is named.
         confirm_resolve_help: 'Answer one blocking finding: <finding-id>=<choose|supply|attest>:<value-or-reason>.
           For choose, name the reading by its value or by the digest review showed.
           Repeat once per finding; there is no bulk flag.'
@@ -1859,6 +1865,9 @@ cli:
           is established was left undecided by the document as read. IVA territory
           decides the treatment, and it is not assumed to be the mainland. The detail
           below names the party and what was missing.
+        confirm_series_help: Numbering series the invoice was issued in. RD 1619/2012
+          art. 6.1.a.2 obliges a rectificativa into its own series, so declaring that
+          class needs one; read from the document where it states one.
         confirm_supply_nature_help: State whether the operation is a supply of goods
           or of services. The place-of-supply rules differ, so a document that does
           not say leaves the treatment unresolved.
