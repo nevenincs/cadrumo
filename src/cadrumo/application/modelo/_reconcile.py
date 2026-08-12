@@ -272,7 +272,8 @@ def _require_declaration_enrolled_modelo(work_unit_id: WorkUnitId) -> WorkUnit:
     work_unit = catalogue.work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"work unit {work_unit_id!r} not found in the active bucket catalogue",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
         )
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(
@@ -412,13 +413,17 @@ def _reconcile_parsed_justificante(
     work_unit = catalogue.work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"work unit {work_unit_id!r} not found in the active bucket catalogue",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
         )
     if work_unit.bucket_id != active_bucket_id:
         raise ReconciliationCrossBucketRefusedError(
-            f"work unit {work_unit_id!r} belongs to bucket "
-            f"{work_unit.bucket_id!r} but the active profile bucket is "
-            f"{active_bucket_id!r}; switch profile before reconciling",
+            translated_message="errors.refused.reconciliation_cross_bucket",
+            context={
+                "work_unit_id": work_unit_id,
+                "work_unit_bucket_id": work_unit.bucket_id,
+                "active_bucket_id": active_bucket_id,
+            },
         )
 
     diffs: list[ModeloReconciliationDiff] = []
@@ -471,13 +476,17 @@ def _reconcile_parsed_declaracion(
     work_unit = catalogue.work_units.get(work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"work unit {work_unit_id!r} not found in the active bucket catalogue",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
         )
     if work_unit.bucket_id != active_bucket_id:
         raise ReconciliationCrossBucketRefusedError(
-            f"work unit {work_unit_id!r} belongs to bucket "
-            f"{work_unit.bucket_id!r} but the active profile bucket is "
-            f"{active_bucket_id!r}; switch profile before reconciling",
+            translated_message="errors.refused.reconciliation_cross_bucket",
+            context={
+                "work_unit_id": work_unit_id,
+                "work_unit_bucket_id": work_unit.bucket_id,
+                "active_bucket_id": active_bucket_id,
+            },
         )
     if str(work_unit.modelo) not in _DECLARATION_CASILLA_RECONCILE_MODELOS:
         raise ReconciliationDeclaracionSourceUnsupportedError(
@@ -1032,8 +1041,11 @@ def _casilla_divergence_diff(
     casilla = revision_casillas.get(divergence.casilla_id)
     if casilla is None:
         raise ReconciliationDeclaracionSourceUnsupportedError(
-            f"reconciliation divergence names casilla {divergence.casilla_id!r}, which the "
-            f"revision does not declare, so the diff has no legal grounding",
+            translated_message="errors.refused.reconciliation_declaration_source_unsupported",
+            context={
+                "casilla_id": str(divergence.casilla_id),
+                "declared_by_revision": False,
+            },
         )
     legal_refs = tuple(str(ref) for ref in casilla.legal_refs)
     source_refs = tuple(str(ref) for ref in casilla.source_refs)

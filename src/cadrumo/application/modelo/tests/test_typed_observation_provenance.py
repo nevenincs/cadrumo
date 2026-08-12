@@ -138,9 +138,13 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     )
     polluted_result = engine_result.model_copy(update={"observations": polluted_observations})
 
-    with pytest.raises(CasillaProvenanceMissingError, match=orphan_casilla):
+    with pytest.raises(CasillaProvenanceMissingError) as raised_1:
         _build_typed_observations(engine_result=polluted_result, snapshot=snapshot)
 
+
+    # The orphan casilla is a machine fact now, not part of a sentence.
+    assert raised_1.value.context is not None
+    assert raised_1.value.context["casilla_id"] == orphan_casilla
 
 def _baseline_revision(
     casilla_values: dict[CasillaId, Decimal],
@@ -196,10 +200,14 @@ def test_amendment_override_orphan_casilla_raises_instead_of_emitting_empty_prov
     )
     corrected_values = {registry_casilla.id: baseline_value, orphan_casilla: Decimal("123")}
 
-    with pytest.raises(CasillaProvenanceMissingError, match=orphan_casilla):
+    with pytest.raises(CasillaProvenanceMissingError) as raised_2:
         _amendment_observations(
             corrected_values=corrected_values,
             overrides={orphan_casilla: Decimal("123")},
             baseline_revision=baseline,
             snapshot=snapshot,
         )
+
+    # The orphan casilla is a machine fact now, not part of a sentence.
+    assert raised_2.value.context is not None
+    assert raised_2.value.context["casilla_id"] == orphan_casilla

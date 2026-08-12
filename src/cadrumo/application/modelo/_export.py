@@ -459,7 +459,6 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
     if revision.ledger_filing_snapshot is not None:
         return
     raise ModeloExportEvidenceMissingError(
-        "ledger-derived export requires ledger_filing_evidence or ledger_filing_snapshot",
         translated_message="application.modelo.errors.export_ledger_evidence_missing",
         context={"calculation_revision_id": revision.calculation_revision_id},
     )
@@ -569,11 +568,12 @@ def _require_prior_domiciliation_marker_layout(
     ):
         return
     raise ModeloPriorDomiciliationElectionRefusedError(
-        "the active registry revision cannot render the prior domiciliation action marker",
+        translated_message="errors.refused.refused_modelo_prior_domiciliation_election",
         context={
             "modelo": str(work_unit.modelo),
             "revision_id": work_unit.revision_id,
             "producer_key": marker_producer_key.value,
+            "revision_renders_action_marker": False,
         },
     )
 

@@ -295,7 +295,7 @@ def file_modelo_revision(
         from ._action_errors import ModeloPriorDomiciliationElectionRefusedError
 
         raise ModeloPriorDomiciliationElectionRefusedError(
-            "prior domiciliation election must be a PriorDomiciliationElection value",
+            translated_message="errors.refused.refused_modelo_prior_domiciliation_election",
             context={"received_type": type(prior_domiciliation_election).__name__},
         )
     _concrete_bv = bv_repo if isinstance(bv_repo, BucketEventHistoryRepository) else BucketEventHistoryRepository()
@@ -312,7 +312,11 @@ def file_modelo_revision(
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={
+                "calculation_revision_id": calculation_revision_id,
+                "work_unit_id": target.work_unit_id,
+            },
         )
     require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
     require_revision_parent_active(

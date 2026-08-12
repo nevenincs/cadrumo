@@ -342,8 +342,7 @@ def _persisted_decimal_bindings(
             decimal_bindings[binding_id] = Decimal(raw_value)
         except InvalidOperation as exc:
             raise StoredCalculationDriftError(
-                f"stored revision {revision.calculation_revision_id!r} has non-decimal value "
-                f"{raw_value!r} for decimal binding {binding_id!r}",
+                translated_message="errors.storage.stored_data_validation_boundary",
                 context={
                     "calculation_revision_id": revision.calculation_revision_id,
                     "binding_id": binding_id,
