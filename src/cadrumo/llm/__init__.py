@@ -128,10 +128,18 @@ from ._models import (
 )
 from ._providers import rasterise_pdf_pages_to_base64_png
 from ._retention import select_retention_removal_keys
+from ._supply_nature_proposal import (
+    UNDETERMINED_SUPPLY_NATURE,
+    SupplyNatureProposal,
+    build_supply_nature_prompt,
+    parse_supply_nature_response,
+    permitted_supply_natures,
+)
 from ._text_classifier import LocalTextLLMClassifier
 
 __all__ = [
     "COLUMN_ROLE_MAPPING_PROMPT_ID",
+    "UNDETERMINED_SUPPLY_NATURE",
     "CacheKey",
     "CacheStats",
     "CachedEntry",
@@ -172,12 +180,14 @@ __all__ = [
     "PromptRegistry",
     "RejectedRoleProposal",
     "SemanticColumnRoleMapper",
+    "SupplyNatureProposal",
     "TextInvoiceFieldExtractor",
     "Translation",
     "UnknownColumnClaim",
     "UsageRecord",
     "UsageSummary",
     "build_column_role_mapping_prompt",
+    "build_supply_nature_prompt",
     "build_text_field_extraction_prompt",
     "cloud_evidence_read_permitted",
     "extract_invoice_fields_from_text",
@@ -186,7 +196,9 @@ __all__ = [
     "mint_evidence_consent_token",
     "parse_column_role_mapping_response",
     "parse_invoice_extraction_response",
+    "parse_supply_nature_response",
     "permitted_column_roles",
+    "permitted_supply_natures",
     "provider_pacing_remaining_s",
     "rasterise_pdf_pages_to_base64_png",
     "render_invoice_extraction_prompt",
