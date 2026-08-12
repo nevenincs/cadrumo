@@ -310,9 +310,23 @@ def _index_columns(headers: list[str]) -> dict[str, int]:
             idx["titular"] = i
         elif "modo" in lower:
             idx["modo"] = i
-        elif "fecha de notificaci" in lower:
+        # The two sede surfaces label these columns DIFFERENTLY, and matching
+        # only one spelling silently emptied the other surface. The summary
+        # renders "Fecha de emisión"; the query renders "Fecha emisión", with no
+        # "de". Keyed on the article-free stems, both forms index.
+        #
+        # This mattered far more than a column label usually does.
+        # ``_row_from_cells`` treats an unresolvable ``fecha_emision`` as an
+        # unclassifiable row and returns ``None``, so an unindexed date column
+        # did not surface as a missing FIELD -- it dropped every ROW. The query
+        # verb reported a clean ``row_count 0`` against a populated AEAT inbox,
+        # with no error and no warning.
+        #
+        # ``modo`` is matched above and therefore claims "Modo notificación"
+        # before this branch sees it; keep that ordering.
+        elif "fecha" in lower and "notificaci" in lower:
             idx["fecha_notificacion"] = i
-        elif "fecha de emisi" in lower:
+        elif "fecha" in lower and "emisi" in lower:
             idx["fecha_emision"] = i
         elif "le" in lower and "da" in lower:
             # "Leída" / "Leida" — accented or not.

@@ -236,3 +236,99 @@ class TestNotificationsLandingIsRefusedWhenUnreadable:
         context = excinfo.value.context
         assert context is not None
         assert context["requested_url"] == _SUMMARY_URL
+
+
+def _query_table(date_headers: tuple[str, str], modo_header: str) -> str:
+    """Return a minimal query-results table using the supplied column labels.
+
+    Only the header labels vary between calls; the body is identical, so a row
+    that parses under one spelling and vanishes under another isolates the
+    column indexer rather than anything about the data.
+    """
+    return f"""
+    <html><body><table>
+      <thead><tr>
+        <th>Nº Certificado</th><th>Concepto</th><th>Tipo</th>
+        <th>Titular</th><th>Destinatario</th>
+        <th>{date_headers[0]}</th><th>{date_headers[1]}</th><th>{modo_header}</th>
+      </tr></thead>
+      <tbody><tr>
+        <td>2699101808461</td><td>Requerimiento</td><td>Notificación</td>
+        <td>X0000000Z TITULAR PRUEBA</td><td>X0000000Z TITULAR PRUEBA</td>
+        <td>01-07-2026</td><td>05-07-2026</td><td>Comparecencia electrónica</td>
+      </tr></tbody>
+    </table></body></html>
+    """
+
+
+class TestQueryColumnLabelsAcrossBothSedeSpellings:
+    """AEAT labels these columns differently on its two notification surfaces.
+
+    The summary renders "Fecha de emisión"; the query surface renders "Fecha
+    emisión", with no article. The indexer matched only the "de" spelling, and
+    because an unresolved ``fecha_emision`` makes ``_row_from_cells`` classify
+    the row as unusable, the mismatch did not drop a FIELD -- it dropped every
+    ROW. ``notifications pull`` reported a clean zero against a populated AEAT
+    inbox: no error, no warning, no partial row.
+
+    The bundled query fixture still carries the "de" spelling and a ``Leída``
+    column the live surface no longer serves, which is why the existing suite
+    stayed green while production returned nothing. These cases pin the labels
+    directly so a fixture that lags the sede cannot hide the same defect again.
+    """
+
+    def test_the_de_less_spelling_the_query_surface_serves_yields_a_row(self) -> None:
+        """The live query spelling. This is the case that was returning zero."""
+        html = _query_table(("Fecha emisión", "Fecha notificación"), "Modo notificación")
+
+        snapshot = parse_notifications_query(html, source_url=_QUERY_URL)
+
+        assert len(snapshot.rows) == 1, (
+            "the query surface's own column spelling parsed to zero rows; an unindexed date "
+            "column silently drops every row rather than leaving a field empty"
+        )
+        assert snapshot.rows[0].fecha_emision.isoformat() == "2026-07-01"
+        assert snapshot.rows[0].fecha_notificacion is not None
+
+    def test_the_de_spelling_the_summary_surface_serves_still_yields_a_row(self) -> None:
+        """The other spelling must keep working; the fix widens, never swaps."""
+        html = _query_table(("Fecha de emisión", "Fecha de notificación"), "Modo de notificación")
+
+        snapshot = parse_notifications_query(html, source_url=_QUERY_URL)
+
+        assert len(snapshot.rows) == 1
+        assert snapshot.rows[0].fecha_emision.isoformat() == "2026-07-01"
+
+    def test_modo_still_claims_its_column_rather_than_the_notificacion_date(self) -> None:
+        """Anti-regression on the matcher ORDER, not just its patterns.
+
+        "Modo notificación" contains the same ``notificaci`` stem the date branch
+        now keys on. If the date branch were ever reordered above ``modo``, it
+        would capture the modo column and the notification date would go
+        unindexed -- a silent field loss that no row count would reveal.
+        """
+        html = _query_table(("Fecha emisión", "Fecha notificación"), "Modo notificación")
+
+        row = parse_notifications_query(html, source_url=_QUERY_URL).rows[0]
+
+        assert row.modo_notificacion == "Comparecencia electrónica"
+        assert row.fecha_notificacion is not None
+        assert row.fecha_notificacion.isoformat() == "2026-07-05"
+
+    def test_an_unlabelled_date_column_still_drops_the_row(self) -> None:
+        """ANTI-TAUTOLOGY: prove the tests above measure the indexer.
+
+        If the parser had begun accepting rows regardless of whether the date
+        column resolved, every assertion above would pass while proving nothing.
+        A header the indexer genuinely cannot key on must still produce zero
+        rows -- that is the behaviour whose trigger was too narrow, not
+        behaviour that was wrong.
+        """
+        html = _query_table(("Expedida el", "Entregada el"), "Modo notificación")
+
+        snapshot = parse_notifications_query(html, source_url=_QUERY_URL)
+
+        assert len(snapshot.rows) == 0, (
+            "a row with no resolvable emission-date column parsed anyway, so the cases above "
+            "would pass even with the column indexer removed"
+        )
