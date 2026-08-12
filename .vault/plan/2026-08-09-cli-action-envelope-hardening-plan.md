@@ -4,7 +4,7 @@ tags:
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
 modified: '2026-08-12'
-body_hash: 'sha256:87a4ef6a82030cb711e963fd2409b8e1757645b920fc2f1f6b1995c2302dad83'
+body_hash: 'sha256:9f68b44d716e708f7de548dbe0f1f0a7c04f3cf556217ead6ab251e2df51c3e8'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -167,7 +167,7 @@ Convert registered defaults and exception-level action overrides into catalogue 
 - [x] `W05.P08.S99` - Migrate justificante exception action forwarding through cooperative MRO to the retired-error boundary and canonical typed actions; `src/cadrumo/domain/justificante/_errors.py`.
 - [ ] `W05.P08.S100` - Migrate core corpus, access-gate, and active-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/core/corpus_manifest/__init__.py; src/cadrumo/core/access_gate/__init__.py; src/cadrumo/core/config.py; src/cadrumo/core/corpus_manifest/_errors.py`.
 - [x] `W05.P08.S101` - Migrate application user-profile exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/user_profile/_profile_repository.py; src/cadrumo/application/user_profile/_bundle.py; src/cadrumo/application/user_profile/_bundle_encryption.py; src/cadrumo/application/user_profile/_censo_sync.py; src/cadrumo/application/user_profile/_custody.py; src/cadrumo/application/user_profile/_integrity.py; src/cadrumo/application/user_profile/_login_session.py; src/cadrumo/application/user_profile/_orchestration.py; src/cadrumo/application/user_profile/_registration.py; src/cadrumo/application/user_profile/_repository.py`.
-- [ ] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
+- [x] `W05.P08.S102` - Migrate IVA-compensation exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/iva_compensation/_carry_forward.py; src/cadrumo/domain/iva_compensation/_reconciliation.py`.
 - [x] `W05.P08.S103` - Migrate application export exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/export/_tabular.py`.
 - [ ] `W05.P08.S104` - Migrate calc-sheets exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/application/storage/calc_sheets/_engine.py; src/cadrumo/application/storage/calc_sheets/_evidence.py; src/cadrumo/application/storage/calc_sheets/_layout.py; src/cadrumo/application/storage/calc_sheets/_translator.py`.
 - [ ] `W05.P08.S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions; `src/cadrumo/domain/invoices/_service.py; src/cadrumo/domain/iva/_lookup.py; src/cadrumo/domain/portals/_registry.py; src/cadrumo/domain/invoices/_enums.py; src/cadrumo/domain/invoices/_models.py; src/cadrumo/domain/iva/_classification.py; src/cadrumo/domain/iva/_saturation.py`.
