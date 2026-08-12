@@ -77,6 +77,7 @@ def _fully_populated_draft() -> InvoiceDraft:
         customer_stated_country_code=an_uncatalogued_alpha3(),
         invoice_number="0042",
         invoice_series="FA",
+        rectifies_invoice_number="0028",
         invoice_date="2026-03-14",
         taxable_base=Decimal("1000.00"),
         iva_rate=Decimal("21"),

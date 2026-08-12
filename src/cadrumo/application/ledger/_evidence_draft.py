@@ -690,6 +690,7 @@ class InvoiceDraft(BaseModel):
     customer_stated_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
+    rectifies_invoice_number: str | None = None
     invoice_date: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
@@ -1371,6 +1372,11 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         customer_stated_country_code=_stated_country_code(parsed.customer_country_code),
         invoice_number=parsed.invoice_number,
         invoice_series=parsed.invoice_series,
+        # Read and DISCARDED until now. A rectificativa is a different class
+        # of invoice under RD 1619/2012 art. 15, and a confirm that cannot say
+        # so mints one as ordinaria -- so the Invoice model's own rectificativa
+        # invariants never fire, because nothing ever states the class.
+        rectifies_invoice_number=parsed.rectifies_invoice_number,
         invoice_date=parsed.invoice_date,
         taxable_base=parsed.taxable_base,
         iva_amount=parsed.iva_amount,
@@ -2674,6 +2680,31 @@ def confirm_invoice_draft_from_evidence(
     #
     # The operator's explicit value still wins, as it does on every field.
     resolved_iva_category = _operator_value_or_reading(iva_category, establishment.category.category)
+    # The document's own statement of what it corrects, layered under the
+    # operator exactly as every other read field is. Until this, the parser
+    # read the corrected number and the confirm defaulted the class to
+    # ORDINARIA regardless -- so a rectificativa reached the catalogue as an
+    # ordinary invoice, and the Invoice model's rectificativa invariants
+    # (a specific series per RD 1619/2012 art. 6.1.a.2, and naming the invoice
+    # it corrects per LIVA art. 89) never fired, because nothing ever stated
+    # the class for them to check.
+    resolved_rectifies = _operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
+    # The series the document numbered itself in, layered the same way. It was
+    # read into the draft and never carried across either, which only became
+    # visible once the class above started being stated: RD 1619/2012
+    # art. 6.1.a.2 obliges a rectificativa into its OWN series, so the model
+    # refuses one without a series -- correctly, and it could not refuse
+    # before, because nothing ever told it the invoice was a rectificativa.
+    resolved_series = _operator_value_or_reading(series, draft.invoice_series)
+    # Derived from the corrected reference rather than carried as a second
+    # field: the Invoice model already ties the two together in BOTH
+    # directions, so a class and a reference that could disagree would be two
+    # spellings of one fact with no authority between them.
+    resolved_invoice_class = (
+        InvoiceClass.RECTIFICATIVA
+        if invoice_class is InvoiceClass.ORDINARIA and resolved_rectifies is not None
+        else invoice_class
+    )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     # Built with the SAME argument set `create_catalogue_invoice` is handed below,
@@ -2699,9 +2730,9 @@ def confirm_invoice_draft_from_evidence(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
-        invoice_class=invoice_class,
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
+        invoice_class=resolved_invoice_class,
+        series=resolved_series,
+        rectifies_invoice_number=resolved_rectifies,
         recargo_amount=resolved_recargo_amount,
         lines=confirmed_lines,
         rate_provider=rate_provider,
