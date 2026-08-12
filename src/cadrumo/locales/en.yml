@@ -6866,6 +6866,7 @@ flows:
       absent: Absent
       all: All values
       binding_presence: Binding presence
+      binding_resolved: Binding resolution
       binding_source: Concrete binding source
       casilla_blocker: Casilla blocker action
       casilla_blocker_presence: Casilla blocker presence
@@ -6878,13 +6879,95 @@ flows:
       no_matching_casillas: No casillas match the active filters.
       no_matching_findings: No findings match the active filters.
       official_status: Official box status
+      option:
+        binding_source:
+          atribucion_member: Income-attribution member
+          bienes_inversion_regularizacion: Investment-goods adjustment
+          borrador: AEAT draft
+          collectible_invoice: Customer invoice
+          donativo_donor: Donation donor
+          foreign_asset: Foreign asset
+          iva_compensation_annual_partition: Annual VAT compensation
+          iva_wallet_decision: VAT wallet decision
+          ledger_impatriado_income_aggregation: Inbound-expatriate income totals
+          ledger_irnr_income_aggregation: Non-resident income totals
+          ledger_iva_aggregation: VAT ledger totals
+          ledger_oss_aggregation: OSS ledger totals
+          ledger_renta_gastos_estimacion_directa_aggregation: Direct-estimation expense
+            ledger totals
+          ledger_renta_gastos_pago_fraccionado_aggregation: Instalment-payment expense
+            totals
+          ledger_renta_income_aggregation: Income ledger totals
+          ledger_transaction: Ledger transaction
+          manual_input: Manual input
+          payable_invoice: Supplier invoice
+          previous_filing: Previous filing
+          profile: Profile
+          prorrata_regularizacion: Pro-rata adjustment
+          purchase_invoice_evidence: Purchase-invoice evidence
+          refund_operation: Refund operation
+          related_party_operation: Related-party operation
+          relation_prefill: Related filing
+          retenciones_aggregation: Withholding totals
+          withholding: Withholding record
+        finding_kind:
+          advisory: Advisory
+          blocking_rule: Blocking rule
+          cross_period_dependency_unclean: Prior-period dependency not clean
+          invalid_waiver: Invalid waiver
+          missing_required_casilla: Missing required casilla
+          reconciliation_mismatch: Reconciliation mismatch
+          unresolved_binding: Unresolved binding
+        finding_severity:
+          blocking: Blocking
+          warning: Warning
+        input_kind:
+          bound: Bound
+          computed: Computed
+          informational: Informational
+          manual: Manual
+          projection_only: Projection only
+        official_status:
+          addressed: Directly addressed
+          represented_via_binding: Represented through binding
+          undefined: Undefined
+        operator_action:
+          capture_external_evidence: Capture external evidence
+          complete_document_evidence: Complete document evidence
+          confirm_group_membership: Confirm group membership
+          file_prior_period: File prior period
+          import_ledger_data: Import ledger data
+          re_verify: Verify again
+          resolve_identity: Resolve identity
+          resolve_revision_mismatch: Resolve revision mismatch
+          resolve_value_divergence: Resolve value difference
+          review_advisory: Review advisory
+          set_profile_fact: Set profile fact
+          supply_manual_input: Supply manual input
+        origin_anomaly:
+          broken_calculation_chain: Broken calculation chain
+          operator_override: Operator override
+        realised_kind:
+          COMPUTED: Computed
+          DEFAULT: Default
+          EMPTY: Empty
+          INHERITED: Inherited
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Alternate binding
+          formula_binding: Formula binding
+          formula_relation: Formula relation
+          primary_binding: Primary binding
       origin_anomaly: Origin anomaly
       origin_anomaly_presence: Origin anomaly presence
       present: Present
       realised_kind: Realised value kind
       record_blocker: Record blocker action
+      relation_channel: Relation channel
       relation_presence: Relation presence
       reset: Reset filters
+      resolved: Resolved
+      unresolved: Unresolved
     summary:
       calculation_revision: Calculation revision
       lifecycle_state: Lifecycle state

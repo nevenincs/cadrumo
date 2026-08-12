@@ -7407,6 +7407,7 @@ flows:
       absent: Ausente
       all: Todos los valores
       binding_presence: Presencia de vínculo
+      binding_resolved: Resolución del vínculo
       binding_source: Origen concreto del vínculo
       casilla_blocker: Acción bloqueante de casilla
       casilla_blocker_presence: Presencia de bloqueo de casilla
@@ -7419,13 +7420,95 @@ flows:
       no_matching_casillas: Ninguna casilla coincide con los filtros activos.
       no_matching_findings: Ninguna incidencia coincide con los filtros activos.
       official_status: Estado de casilla oficial
+      option:
+        binding_source:
+          atribucion_member: Miembro de atribución de rentas
+          bienes_inversion_regularizacion: Regularización de bienes de inversión
+          borrador: Borrador de la AEAT
+          collectible_invoice: Factura emitida
+          donativo_donor: Donante
+          foreign_asset: Activo extranjero
+          iva_compensation_annual_partition: Compensación anual de IVA
+          iva_wallet_decision: Decisión de saldo de IVA
+          ledger_impatriado_income_aggregation: Totales de ingresos de impatriados
+          ledger_irnr_income_aggregation: Totales de ingresos de no residentes
+          ledger_iva_aggregation: Totales del libro de IVA
+          ledger_oss_aggregation: Totales del libro OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Totales de gastos en
+            estimación directa
+          ledger_renta_gastos_pago_fraccionado_aggregation: Totales de gastos del
+            pago fraccionado
+          ledger_renta_income_aggregation: Totales de ingresos
+          ledger_transaction: Movimiento del libro
+          manual_input: Entrada manual
+          payable_invoice: Factura recibida
+          previous_filing: Declaración anterior
+          profile: Perfil
+          prorrata_regularizacion: Regularización de prorrata
+          purchase_invoice_evidence: Evidencia de factura de compra
+          refund_operation: Operación de reembolso
+          related_party_operation: Operación vinculada
+          relation_prefill: Declaración relacionada
+          retenciones_aggregation: Totales de retenciones
+          withholding: Registro de retención
+        finding_kind:
+          advisory: Aviso
+          blocking_rule: Regla bloqueante
+          cross_period_dependency_unclean: Dependencia anterior no limpia
+          invalid_waiver: Exención no válida
+          missing_required_casilla: Falta una casilla obligatoria
+          reconciliation_mismatch: Discrepancia de conciliación
+          unresolved_binding: Vínculo sin resolver
+        finding_severity:
+          blocking: Bloqueante
+          warning: Advertencia
+        input_kind:
+          bound: Vinculada
+          computed: Calculada
+          informational: Informativa
+          manual: Manual
+          projection_only: Solo proyección
+        official_status:
+          addressed: Representada directamente
+          represented_via_binding: Representada mediante vínculo
+          undefined: Sin definir
+        operator_action:
+          capture_external_evidence: Capturar evidencia externa
+          complete_document_evidence: Completar evidencia documental
+          confirm_group_membership: Confirmar pertenencia al grupo
+          file_prior_period: Presentar periodo anterior
+          import_ledger_data: Importar datos del libro
+          re_verify: Verificar de nuevo
+          resolve_identity: Resolver identidad
+          resolve_revision_mismatch: Resolver discrepancia de revisión
+          resolve_value_divergence: Resolver diferencia de valor
+          review_advisory: Revisar aviso
+          set_profile_fact: Completar dato del perfil
+          supply_manual_input: Aportar dato manual
+        origin_anomaly:
+          broken_calculation_chain: Cadena de cálculo interrumpida
+          operator_override: Sustitución del operador
+        realised_kind:
+          COMPUTED: Calculado
+          DEFAULT: Predeterminado
+          EMPTY: Vacío
+          INHERITED: Heredado
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Vínculo alternativo
+          formula_binding: Vínculo de fórmula
+          formula_relation: Relación de fórmula
+          primary_binding: Vínculo principal
       origin_anomaly: Anomalía de origen
       origin_anomaly_presence: Presencia de anomalía de origen
       present: Presente
       realised_kind: Tipo de valor realizado
       record_blocker: Acción bloqueante del registro
+      relation_channel: Canal de relación
       relation_presence: Presencia de relación
       reset: Restablecer filtros
+      resolved: Resuelto
+      unresolved: Sin resolver
     summary:
       calculation_revision: Revisión del cálculo
       lifecycle_state: Estado del ciclo de vida

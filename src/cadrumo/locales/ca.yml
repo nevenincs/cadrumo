@@ -7318,6 +7318,7 @@ flows:
       absent: Absent
       all: Tots els valors
       binding_presence: Presència de vincle
+      binding_resolved: Resolució del vincle
       binding_source: Origen concret del vincle
       casilla_blocker: Acció bloquejant de casella
       casilla_blocker_presence: Presència de bloqueig de casella
@@ -7330,13 +7331,95 @@ flows:
       no_matching_casillas: Cap casella coincideix amb els filtres actius.
       no_matching_findings: Cap incidència coincideix amb els filtres actius.
       official_status: Estat de casella oficial
+      option:
+        binding_source:
+          atribucion_member: Membre d'atribució de rendes
+          bienes_inversion_regularizacion: Regularització de béns d'inversió
+          borrador: Esborrany de l'AEAT
+          collectible_invoice: Factura emesa
+          donativo_donor: Donant
+          foreign_asset: Actiu estranger
+          iva_compensation_annual_partition: Compensació anual d'IVA
+          iva_wallet_decision: Decisió de saldo d'IVA
+          ledger_impatriado_income_aggregation: Totals d'ingressos d'impatriats
+          ledger_irnr_income_aggregation: Totals d'ingressos de no residents
+          ledger_iva_aggregation: Totals del llibre d'IVA
+          ledger_oss_aggregation: Totals del llibre OSS
+          ledger_renta_gastos_estimacion_directa_aggregation: Totals de despeses en
+            estimació directa
+          ledger_renta_gastos_pago_fraccionado_aggregation: Totals de despeses del
+            pagament fraccionat
+          ledger_renta_income_aggregation: Totals d'ingressos
+          ledger_transaction: Moviment del llibre
+          manual_input: Entrada manual
+          payable_invoice: Factura rebuda
+          previous_filing: Declaració anterior
+          profile: Perfil
+          prorrata_regularizacion: Regularització de prorrata
+          purchase_invoice_evidence: Evidència de factura de compra
+          refund_operation: Operació de reemborsament
+          related_party_operation: Operació vinculada
+          relation_prefill: Declaració relacionada
+          retenciones_aggregation: Totals de retencions
+          withholding: Registre de retenció
+        finding_kind:
+          advisory: Avís
+          blocking_rule: Regla bloquejant
+          cross_period_dependency_unclean: Dependència anterior no neta
+          invalid_waiver: Exempció no vàlida
+          missing_required_casilla: Falta una casella obligatòria
+          reconciliation_mismatch: Discrepància de conciliació
+          unresolved_binding: Vincle sense resoldre
+        finding_severity:
+          blocking: Bloquejant
+          warning: Advertiment
+        input_kind:
+          bound: Vinculada
+          computed: Calculada
+          informational: Informativa
+          manual: Manual
+          projection_only: Només projecció
+        official_status:
+          addressed: Representada directament
+          represented_via_binding: Representada mitjançant vincle
+          undefined: Sense definir
+        operator_action:
+          capture_external_evidence: Captura evidència externa
+          complete_document_evidence: Completa l'evidència documental
+          confirm_group_membership: Confirma la pertinença al grup
+          file_prior_period: Presenta el període anterior
+          import_ledger_data: Importa dades del llibre
+          re_verify: Torna a verificar
+          resolve_identity: Resol la identitat
+          resolve_revision_mismatch: Resol la discrepància de revisió
+          resolve_value_divergence: Resol la diferència de valor
+          review_advisory: Revisa l'avís
+          set_profile_fact: Completa una dada del perfil
+          supply_manual_input: Aporta una dada manual
+        origin_anomaly:
+          broken_calculation_chain: Cadena de càlcul interrompuda
+          operator_override: Substitució de l'operador
+        realised_kind:
+          COMPUTED: Calculat
+          DEFAULT: Predeterminat
+          EMPTY: Buit
+          INHERITED: Heretat
+          LITERAL: Literal
+        relation_channel:
+          alternate_binding: Vincle alternatiu
+          formula_binding: Vincle de fórmula
+          formula_relation: Relació de fórmula
+          primary_binding: Vincle principal
       origin_anomaly: Anomalia d'origen
       origin_anomaly_presence: Presència d'anomalia d'origen
       present: Present
       realised_kind: Tipus de valor realitzat
       record_blocker: Acció bloquejant del registre
+      relation_channel: Canal de relació
       relation_presence: Presència de relació
       reset: Restableix els filtres
+      resolved: Resolt
+      unresolved: Sense resoldre
     summary:
       calculation_revision: Revisió del càlcul
       lifecycle_state: Estat del cicle de vida

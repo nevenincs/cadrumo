@@ -23,7 +23,7 @@ scaffold and parity checks.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, Protocol, get_args
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
@@ -191,7 +191,37 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             storage_area_disposition=StorageAreaDisposition,
             storage_occupancy=StorageOccupancy,
         ),
+        *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
+    )
+
+
+def _modelo_review_filter_registrations() -> tuple[FStringKeyRegistration, ...]:
+    """Register every closed value used by the modelo-review facet labels."""
+    from cadrumo.application.modelo import ModeloWorkOriginAnomaly
+    from cadrumo.core import BindingSourceKind, OfficialBoxStatus, OperatorActionAxis
+    from cadrumo.domain.calculations.registry import InputKind, RelationConsumptionChannel
+    from cadrumo.domain.filing import ModeloValueKind
+    from cadrumo.domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+
+    axes = (
+        ("input_kind", tuple(member.value for member in InputKind)),
+        ("binding_source", tuple(member.value for member in BindingSourceKind)),
+        ("realised_kind", tuple(member.value for member in ModeloValueKind)),
+        ("origin_anomaly", tuple(member.value for member in ModeloWorkOriginAnomaly)),
+        ("official_status", tuple(member.value for member in OfficialBoxStatus)),
+        ("operator_action", tuple(member.value for member in OperatorActionAxis)),
+        ("finding_kind", tuple(member.value for member in ModeloVerificationFindingKind)),
+        ("finding_severity", tuple(member.value for member in ModeloVerificationFindingSeverity)),
+        ("relation_channel", get_args(RelationConsumptionChannel)),
+    )
+    return tuple(
+        FStringKeyRegistration(
+            description=f"flows.modelo_review.filter.option.{axis}.*",
+            key_factory=lambda value, axis=axis: f"flows.modelo_review.filter.option.{axis}.{value}",
+            values=values,
+        )
+        for axis, values in axes
     )
 
 

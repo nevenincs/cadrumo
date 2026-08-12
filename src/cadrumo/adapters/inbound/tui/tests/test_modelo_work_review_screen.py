@@ -5,12 +5,23 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import cast
+from typing import cast, get_args
 
 import pytest
 import yaml
 from textual.widget import Widget
-from textual.widgets import Button, Checkbox, DataTable, Input, RadioSet, Select, SelectionList, Static
+from textual.widgets import (
+    Button,
+    Checkbox,
+    Collapsible,
+    DataTable,
+    Input,
+    OptionList,
+    RadioSet,
+    Select,
+    SelectionList,
+    Static,
+)
 
 from .....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from .....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -19,7 +30,12 @@ from .....application.modelo import ModeloWorkOriginAnomaly, ModeloWorkReview, b
 from .....core import BindingSourceKind, ModeloWorkProgressState, OfficialBoxStatus, OperatorActionAxis, Period
 from .....core.config import override_settings
 from .....core.i18n import SUPPORTED_OUTPUT_LANGUAGES, tr
-from .....domain.calculations.registry import CasillaObservation, InputKind, bundled_authority
+from .....domain.calculations.registry import (
+    CasillaObservation,
+    InputKind,
+    RelationConsumptionChannel,
+    bundled_authority,
+)
 from .....domain.filing import ModeloValueKind
 from .....domain.modelos import (
     CalculationRevision,
@@ -41,7 +57,14 @@ from .....domain.modelos import (
 from .....tests.locales_root_fixture import locales_root_scope
 from .....tests.secure_sql import isolated_runtime_profile
 from .. import ModeloWorkReviewApp
-from .._modelo_work_review_screen import _ABSENT, _PRESENT, _enum_options, _presence_options
+from .._modelo_work_review_screen import (
+    _ABSENT,
+    _PRESENT,
+    _enum_options,
+    _presence_options,
+    _relation_channel_options,
+    _resolved_options,
+)
 from .._theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME, ContentScroll
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_inbound_adapter]
@@ -150,16 +173,35 @@ def _real_review(
                 legal_refs=tuple(affected.legal_refs),
                 source_refs=tuple(affected.source_refs),
             )
+            findings = (finding,)
+            if materialised:
+                findings = (
+                    finding,
+                    ModeloVerificationFinding(
+                        kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
+                        severity=ModeloVerificationFindingSeverity.WARNING,
+                        message_locale_key=("application.modelo.findings.m303_m349_intracom_reconciliation_mismatch"),
+                        message_facts={
+                            "period_code": period.registry_token,
+                            "filing_year": filing_year,
+                            "m303_total": Decimal("100"),
+                            "m349_total": Decimal("80"),
+                            "gap": Decimal("20"),
+                        },
+                        legal_refs=tuple(affected.legal_refs),
+                        source_refs=tuple(affected.source_refs),
+                    ),
+                )
             report = VerificationReport(
                 verification_report_id=derive_verification_report_id(
                     calculation_revision_id=calculation_revision_id,
                     completeness_status=VerificationCompletenessStatus.BLOCKED,
-                    findings=(finding,),
+                    findings=findings,
                     verified_by="modelo-review-tui-test",
                 ),
                 calculation_revision_id=calculation_revision_id,
                 completeness_status=VerificationCompletenessStatus.BLOCKED,
-                findings=(finding,),
+                findings=findings,
                 run_at=_NOW,
                 verified_by="modelo-review-tui-test",
                 granted_verificado_completo=False,
@@ -249,22 +291,26 @@ async def test_blocked_review_renders_all_canonical_grains_without_mutation_cont
             assert affected.blocked_by[0].native_code in " ".join(affected_cells)
             excluded_controls = (Input, SelectionList, Checkbox, RadioSet)
             assert not tuple(widget for control in excluded_controls for widget in screen.query(control))
-            assert len(screen.query("#modelo-review-filters Select")) == 14
+            assert len(screen.query("#modelo-review-filters Select")) == 16
 
 
 def test_facet_option_sets_are_exactly_the_canonical_closed_axes() -> None:
-    for enum_type in (
-        InputKind,
-        BindingSourceKind,
-        ModeloValueKind,
-        ModeloWorkOriginAnomaly,
-        OfficialBoxStatus,
-        OperatorActionAxis,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
+    for enum_type, axis in (
+        (InputKind, "input_kind"),
+        (BindingSourceKind, "binding_source"),
+        (ModeloValueKind, "realised_kind"),
+        (ModeloWorkOriginAnomaly, "origin_anomaly"),
+        (OfficialBoxStatus, "official_status"),
+        (OperatorActionAxis, "operator_action"),
+        (ModeloVerificationFindingKind, "finding_kind"),
+        (ModeloVerificationFindingSeverity, "finding_severity"),
     ):
-        assert _enum_options(enum_type) == tuple((member.value, member.value) for member in enum_type)
+        assert tuple(value for _, value in _enum_options(enum_type, axis=axis)) == tuple(
+            member.value for member in enum_type
+        )
+    assert tuple(value for _, value in _relation_channel_options()) == get_args(RelationConsumptionChannel)
     assert tuple(value for _, value in _presence_options()) == (_PRESENT, _ABSENT)
+    assert tuple(value for _, value in _resolved_options()) == (True, False)
 
 
 @pytest.mark.asyncio
@@ -324,6 +370,15 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
                 tuple(str(row.casilla_id) for row in review.casillas if not row.relation_consumption),
             ),
             (
+                "#modelo-review-filter-relation-channel",
+                "primary_binding",
+                tuple(
+                    str(row.casilla_id)
+                    for row in review.casillas
+                    if any("primary_binding" in relation.channels for relation in row.relation_consumption)
+                ),
+            ),
+            (
                 "#modelo-review-filter-origin-anomaly",
                 ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN.value,
                 tuple(
@@ -358,16 +413,41 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
             await pilot.pause()
             assert _row_keys(table) == original_rows
 
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select)
-        ).value = InputKind.COMPUTED.value
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-official-status", Select)
-        ).value = OfficialBoxStatus.ADDRESSED.value
+        resolved = cast(
+            "Select[bool]",
+            screen.query_one("#modelo-review-filter-binding-resolved", Select),
+        )
+        resolved.value = False
         await pilot.pause()
+        expected_unresolved = tuple(
+            str(row.casilla_id)
+            for row in review.casillas
+            if any(not binding.resolved for binding in row.concrete_bindings)
+        )
+        assert expected_unresolved
+        assert _row_keys(table) == expected_unresolved
+        resolved.clear()
+        await pilot.pause()
+        assert _row_keys(table) == original_rows
+
+        cast("Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select)).value = InputKind.BOUND.value
+        cast(
+            "Select[str]", screen.query_one("#modelo-review-filter-binding-source", Select)
+        ).value = BindingSourceKind.PROFILE.value
+        await pilot.pause()
+        expected_intersection = tuple(
+            str(row.casilla_id)
+            for row in review.casillas
+            if row.declared_input_kind is InputKind.BOUND
+            and any(binding.source is BindingSourceKind.PROFILE for binding in row.concrete_bindings)
+        )
+        assert expected_intersection
+        assert len(expected_intersection) < sum(row.declared_input_kind is InputKind.BOUND for row in review.casillas)
+        assert _row_keys(table) == expected_intersection
         screen.query_one("#modelo-review-filter-reset", Button).press()
         await pilot.pause()
         assert _row_keys(table) == original_rows
+        assert all(chooser.selection is None for chooser in screen.query("#modelo-review-filters Select"))
         assert review.model_dump(mode="json") == original_record
 
 
@@ -439,17 +519,45 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
             chooser.clear()
             await pilot.pause()
 
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-finding-kind", Select)
-        ).value = ModeloVerificationFindingKind.BLOCKING_RULE.value
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-finding-severity", Select)
-        ).value = ModeloVerificationFindingSeverity.BLOCKING.value
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-record-blocker", Select)
-        ).value = OperatorActionAxis.SUPPLY_MANUAL_INPUT.value
+        resolved = cast(
+            "Select[bool]",
+            screen.query_one("#modelo-review-filter-binding-resolved", Select),
+        )
+        resolved.value = True
         await pilot.pause()
-        assert _row_keys(findings) == original_findings
+        expected_resolved = tuple(
+            str(row.casilla_id) for row in review.casillas if any(binding.resolved for binding in row.concrete_bindings)
+        )
+        assert expected_resolved
+        assert _row_keys(casillas) == expected_resolved
+        resolved.clear()
+
+        finding_kind = cast(
+            "Select[str]",
+            screen.query_one("#modelo-review-filter-finding-kind", Select),
+        )
+        finding_kind.value = ModeloVerificationFindingKind.BLOCKING_RULE.value
+        await pilot.pause()
+        assert findings.row_count == 1 < len(original_findings)
+        assert review.findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
+        finding_kind.clear()
+
+        finding_severity = cast(
+            "Select[str]",
+            screen.query_one("#modelo-review-filter-finding-severity", Select),
+        )
+        finding_severity.value = ModeloVerificationFindingSeverity.WARNING.value
+        await pilot.pause()
+        assert findings.row_count == 1 < len(original_findings)
+        assert review.findings[1].severity is ModeloVerificationFindingSeverity.WARNING
+        finding_severity.clear()
+
+        record_blocker = cast(
+            "Select[str]",
+            screen.query_one("#modelo-review-filter-record-blocker", Select),
+        )
+        record_blocker.value = OperatorActionAxis.SUPPLY_MANUAL_INPUT.value
+        await pilot.pause()
         assert _row_keys(blockers) == original_blockers
 
         cast(
@@ -472,6 +580,7 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
         assert _row_keys(casillas) == original_casillas
         assert _row_keys(findings) == original_findings
         assert _row_keys(blockers) == original_blockers
+        assert all(chooser.selection is None for chooser in screen.query("#modelo-review-filters Select"))
         assert review.model_dump(mode="json") == original_record
 
 
@@ -568,12 +677,14 @@ async def test_large_outlier_frame_scroll_focus_and_last_row_are_usable_at_three
 
 
 @pytest.mark.asyncio
-async def test_representative_outlier_localizes_at_narrow_and_wide_sizes_and_toggles_theme(tmp_path: Path) -> None:
-    """M720 paints localized frame content and both appearances across the width boundary."""
+async def test_representative_outlier_localizes_opened_filters_at_narrow_width_and_toggles_theme(
+    tmp_path: Path,
+) -> None:
+    """M720 keeps the opened localized facet disclosure usable at narrow width."""
     review = _real_review(tmp_path, modelo="720", filing_year=2024, period_code="0A")
 
-    for index, language in enumerate(SUPPORTED_OUTPUT_LANGUAGES):
-        size = (80, 24) if index % 2 == 0 else (160, 48)
+    for language in SUPPORTED_OUTPUT_LANGUAGES:
+        size = (80, 24)
         with override_settings(cadrumo_output_language=language):
             app = ModeloWorkReviewApp(review)
             async with app.run_test(size=size) as pilot:
@@ -582,6 +693,7 @@ async def test_representative_outlier_localizes_at_narrow_and_wide_sizes_and_tog
                 header = screen.query_one("#modelo-review-header", Static)
                 body = screen.query_one("#modelo-review-body", ContentScroll)
                 table = screen.query_one("#modelo-review-casillas-table", DataTable)
+                disclosure = screen.query_one("#modelo-review-filter-disclosure", Collapsible)
                 expected_title = tr(
                     "flows.modelo_review.title",
                     modelo=review.modelo,
@@ -593,6 +705,52 @@ async def test_representative_outlier_localizes_at_narrow_and_wide_sizes_and_tog
                 assert _visible_in(header, screen)
                 assert _visible_in(table, body)
                 assert table.row_count == len(review.casillas)
+                assert disclosure.collapsed
+
+                disclosure.collapsed = False
+                await pilot.pause()
+                assert not disclosure.collapsed
+                assert disclosure.region.x >= body.region.x
+                assert disclosure.region.right <= body.region.right
+
+                binding_source = cast(
+                    "Select[str]",
+                    screen.query_one("#modelo-review-filter-binding-source", Select),
+                )
+                binding_source.value = BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION.value
+                await pilot.pause()
+                expected_option = tr(
+                    "flows.modelo_review.filter.option.binding_source."
+                    "ledger_renta_gastos_estimacion_directa_aggregation",
+                )
+                option_list = binding_source.query_one(OptionList)
+                option_index = (
+                    list(BindingSourceKind).index(BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION)
+                    + 1
+                )
+                mounted_prompt = str(option_list.get_option_at_index(option_index).prompt)
+                assert expected_option in mounted_prompt
+                assert BindingSourceKind.LEDGER_RENTA_GASTOS_ESTIMACION_DIRECTA_AGGREGATION.value not in mounted_prompt
+
+                first = screen.query_one("#modelo-review-filter-input-kind", Select)
+                reset = screen.query_one("#modelo-review-filter-reset", Button)
+                assert reset in screen.focus_chain
+                screen.set_focus(first)
+                for _ in range(64):
+                    if app.focused is reset:
+                        break
+                    screen.focus_next()
+                    await pilot.pause()
+                await pilot.pause()
+                assert app.focused is reset
+                assert _visible_in(reset, body)
+
+                disclosure.collapsed = True
+                body.scroll_end(animate=False)
+                await pilot.pause()
+                assert disclosure.collapsed
+                assert _visible_in(table, body)
+                screen.set_focus(table)
                 assert app.focused is table
 
                 app.theme = CADRUMO_DARK_THEME_NAME

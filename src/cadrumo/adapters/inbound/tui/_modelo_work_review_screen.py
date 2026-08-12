@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from enum import StrEnum
-from typing import ClassVar, cast, override
+from typing import ClassVar, cast, get_args, override
 
 from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingsMap
@@ -34,7 +34,7 @@ from ....application.modelo import (
 )
 from ....core import BindingSourceKind, ModeloWorkProgressState, OfficialBoxStatus, OperatorActionAxis
 from ....core.i18n import tr
-from ....domain.calculations.registry import InputKind
+from ....domain.calculations.registry import InputKind, RelationConsumptionChannel
 from ....domain.filing import ModeloValueKind
 from ....domain.modelos import (
     ModeloVerificationFinding,
@@ -47,9 +47,21 @@ _PRESENT = "present"
 _ABSENT = "absent"
 
 
-def _enum_options[EnumT: StrEnum](enum_type: type[EnumT]) -> tuple[tuple[str, str], ...]:
-    """Return the exact selectable members of one canonical closed axis."""
-    return tuple((member.value, member.value) for member in enum_type)
+def _option_label(axis: str, value: str) -> str:
+    """Resolve one localized label while preserving its canonical payload."""
+    return tr("flows.modelo_review.filter.option." + f"{axis}.{value}")
+
+
+def _enum_options[EnumT: StrEnum](enum_type: type[EnumT], *, axis: str) -> tuple[tuple[str, str], ...]:
+    """Return localized labels paired with every canonical enum member value."""
+    return tuple((_option_label(axis, member.value), member.value) for member in enum_type)
+
+
+def _relation_channel_options() -> tuple[tuple[str, str], ...]:
+    """Return the registry-owned Literal's exact localized option set."""
+    return tuple(
+        (_option_label("relation_channel", channel), channel) for channel in get_args(RelationConsumptionChannel)
+    )
 
 
 def _presence_options() -> tuple[tuple[str, str], ...]:
@@ -57,6 +69,14 @@ def _presence_options() -> tuple[tuple[str, str], ...]:
     return (
         (tr("flows.modelo_review.filter.present"), _PRESENT),
         (tr("flows.modelo_review.filter.absent"), _ABSENT),
+    )
+
+
+def _resolved_options() -> tuple[tuple[str, bool], ...]:
+    """Return localized labels paired with the canonical resolved boolean."""
+    return (
+        (tr("flows.modelo_review.filter.resolved"), True),
+        (tr("flows.modelo_review.filter.unresolved"), False),
     )
 
 
@@ -95,13 +115,13 @@ class ModeloWorkReviewScreen(Screen[None]):
             ):
                 yield Label(tr("flows.modelo_review.filter.input_kind"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(InputKind),
+                    _enum_options(InputKind, axis="input_kind"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-input-kind",
                 )
                 yield Label(tr("flows.modelo_review.filter.binding_source"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(BindingSourceKind),
+                    _enum_options(BindingSourceKind, axis="binding_source"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-binding-source",
                 )
@@ -110,6 +130,12 @@ class ModeloWorkReviewScreen(Screen[None]):
                     _presence_options(),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-binding-presence",
+                )
+                yield Label(tr("flows.modelo_review.filter.binding_resolved"), classes="modelo-review-filter-label")
+                yield Select[bool](
+                    _resolved_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-binding-resolved",
                 )
                 yield Label(tr("flows.modelo_review.filter.formula_presence"), classes="modelo-review-filter-label")
                 yield Select[str](
@@ -123,15 +149,21 @@ class ModeloWorkReviewScreen(Screen[None]):
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-relation-presence",
                 )
+                yield Label(tr("flows.modelo_review.filter.relation_channel"), classes="modelo-review-filter-label")
+                yield Select[str](
+                    _relation_channel_options(),
+                    prompt=tr("flows.modelo_review.filter.all"),
+                    id="modelo-review-filter-relation-channel",
+                )
                 yield Label(tr("flows.modelo_review.filter.realised_kind"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(ModeloValueKind),
+                    _enum_options(ModeloValueKind, axis="realised_kind"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-realised-kind",
                 )
                 yield Label(tr("flows.modelo_review.filter.origin_anomaly"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(ModeloWorkOriginAnomaly),
+                    _enum_options(ModeloWorkOriginAnomaly, axis="origin_anomaly"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-origin-anomaly",
                 )
@@ -146,13 +178,13 @@ class ModeloWorkReviewScreen(Screen[None]):
                 )
                 yield Label(tr("flows.modelo_review.filter.official_status"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(OfficialBoxStatus),
+                    _enum_options(OfficialBoxStatus, axis="official_status"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-official-status",
                 )
                 yield Label(tr("flows.modelo_review.filter.casilla_blocker"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(OperatorActionAxis),
+                    _enum_options(OperatorActionAxis, axis="operator_action"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-casilla-blocker",
                 )
@@ -167,19 +199,19 @@ class ModeloWorkReviewScreen(Screen[None]):
                 )
                 yield Label(tr("flows.modelo_review.filter.finding_kind"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(ModeloVerificationFindingKind),
+                    _enum_options(ModeloVerificationFindingKind, axis="finding_kind"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-finding-kind",
                 )
                 yield Label(tr("flows.modelo_review.filter.finding_severity"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(ModeloVerificationFindingSeverity),
+                    _enum_options(ModeloVerificationFindingSeverity, axis="finding_severity"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-finding-severity",
                 )
                 yield Label(tr("flows.modelo_review.filter.record_blocker"), classes="modelo-review-filter-label")
                 yield Select[str](
-                    _enum_options(OperatorActionAxis),
+                    _enum_options(OperatorActionAxis, axis="operator_action"),
                     prompt=tr("flows.modelo_review.filter.all"),
                     id="modelo-review-filter-record-blocker",
                 )
@@ -237,6 +269,10 @@ class ModeloWorkReviewScreen(Screen[None]):
         value = cast("Select[str]", self.query_one(selector, Select)).value
         return value if isinstance(value, str) else None
 
+    def _selected_bool(self, selector: str) -> bool | None:
+        value = cast("Select[bool]", self.query_one(selector, Select)).value
+        return value if isinstance(value, bool) else None
+
     @staticmethod
     def _matches_presence(selected: str | None, present: bool) -> bool:
         return selected is None or (selected == _PRESENT) is present
@@ -244,6 +280,8 @@ class ModeloWorkReviewScreen(Screen[None]):
     def _casilla_matches(self, row: ModeloWorkReviewCasilla) -> bool:
         input_kind = self._selected("#modelo-review-filter-input-kind")
         binding_source = self._selected("#modelo-review-filter-binding-source")
+        binding_resolved = self._selected_bool("#modelo-review-filter-binding-resolved")
+        relation_channel = self._selected("#modelo-review-filter-relation-channel")
         realised_kind = self._selected("#modelo-review-filter-realised-kind")
         anomaly = self._selected("#modelo-review-filter-origin-anomaly")
         official_status = self._selected("#modelo-review-filter-official-status")
@@ -257,6 +295,8 @@ class ModeloWorkReviewScreen(Screen[None]):
                     self._selected("#modelo-review-filter-binding-presence"),
                     bool(row.concrete_bindings),
                 ),
+                binding_resolved is None
+                or any(binding.resolved is binding_resolved for binding in row.concrete_bindings),
                 self._matches_presence(
                     self._selected("#modelo-review-filter-formula-presence"),
                     row.concrete_formula is not None,
@@ -265,6 +305,8 @@ class ModeloWorkReviewScreen(Screen[None]):
                     self._selected("#modelo-review-filter-relation-presence"),
                     bool(row.relation_consumption),
                 ),
+                relation_channel is None
+                or any(relation_channel in relation.channels for relation in row.relation_consumption),
                 realised_kind is None or row.realised_kind.value == realised_kind,
                 anomaly is None or (row.origin_anomaly is not None and row.origin_anomaly.value == anomaly),
                 self._matches_presence(

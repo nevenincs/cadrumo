@@ -7176,6 +7176,7 @@ flows:
       absent: Nincs jelen
       all: Minden érték
       binding_presence: Kötés megléte
+      binding_resolved: Kötés feloldása
       binding_source: Konkrét kötési forrás
       casilla_blocker: Mező blokkoló művelete
       casilla_blocker_presence: Mezőblokkoló megléte
@@ -7188,13 +7189,95 @@ flows:
       no_matching_casillas: Egy mező sem felel meg az aktív szűrőknek.
       no_matching_findings: Egy megállapítás sem felel meg az aktív szűrőknek.
       official_status: Hivatalos mező állapota
+      option:
+        binding_source:
+          atribucion_member: Jövedelem-hozzárendelési tag
+          bienes_inversion_regularizacion: Beruházási javak kiigazítása
+          borrador: AEAT-tervezet
+          collectible_invoice: Kimenő számla
+          donativo_donor: Adományozó
+          foreign_asset: Külföldi eszköz
+          iva_compensation_annual_partition: Éves áfakompenzáció
+          iva_wallet_decision: Áfaegyenleg-döntés
+          ledger_impatriado_income_aggregation: Bevándorló jövedelmek összesítése
+          ledger_irnr_income_aggregation: Nem rezidens jövedelmek összesítése
+          ledger_iva_aggregation: Áfanyilvántartás összesítése
+          ledger_oss_aggregation: OSS-nyilvántartás összesítése
+          ledger_renta_gastos_estimacion_directa_aggregation: Közvetlen becslésű költségek
+            összesítése
+          ledger_renta_gastos_pago_fraccionado_aggregation: Részletfizetési költségek
+            összesítése
+          ledger_renta_income_aggregation: Jövedelmek összesítése
+          ledger_transaction: Nyilvántartási tétel
+          manual_input: Kézi adatbevitel
+          payable_invoice: Bejövő számla
+          previous_filing: Előző bevallás
+          profile: Profil
+          prorrata_regularizacion: Arányosítás kiigazítása
+          purchase_invoice_evidence: Beszerzési számla bizonylata
+          refund_operation: Visszatérítési művelet
+          related_party_operation: Kapcsolt ügylet
+          relation_prefill: Kapcsolódó bevallás
+          retenciones_aggregation: Levonások összesítése
+          withholding: Levonási nyilvántartás
+        finding_kind:
+          advisory: Tájékoztatás
+          blocking_rule: Blokkoló szabály
+          cross_period_dependency_unclean: Előző időszaki függőség rendezetlen
+          invalid_waiver: Érvénytelen felmentés
+          missing_required_casilla: Kötelező mező hiányzik
+          reconciliation_mismatch: Egyeztetési eltérés
+          unresolved_binding: Feloldatlan kötés
+        finding_severity:
+          blocking: Blokkoló
+          warning: Figyelmeztetés
+        input_kind:
+          bound: Kötött
+          computed: Számított
+          informational: Tájékoztató
+          manual: Kézi
+          projection_only: Csak előrevetítés
+        official_status:
+          addressed: Közvetlenül megjelenített
+          represented_via_binding: Kötésen keresztül megjelenített
+          undefined: Meghatározatlan
+        operator_action:
+          capture_external_evidence: Külső bizonyíték rögzítése
+          complete_document_evidence: Dokumentumbizonyíték kiegészítése
+          confirm_group_membership: Csoporttagság megerősítése
+          file_prior_period: Előző időszak benyújtása
+          import_ledger_data: Nyilvántartási adatok importálása
+          re_verify: Újraellenőrzés
+          resolve_identity: Azonosság feloldása
+          resolve_revision_mismatch: Verzióeltérés feloldása
+          resolve_value_divergence: Értékkülönbség feloldása
+          review_advisory: Tájékoztatás áttekintése
+          set_profile_fact: Profiladat megadása
+          supply_manual_input: Kézi adat megadása
+        origin_anomaly:
+          broken_calculation_chain: Megszakadt számítási lánc
+          operator_override: Kezelői felülírás
+        realised_kind:
+          COMPUTED: Számított
+          DEFAULT: Alapértelmezett
+          EMPTY: Üres
+          INHERITED: Örökölt
+          LITERAL: Közvetlen érték
+        relation_channel:
+          alternate_binding: Alternatív kötés
+          formula_binding: Képletkötés
+          formula_relation: Képletkapcsolat
+          primary_binding: Elsődleges kötés
       origin_anomaly: Eredetanomália
       origin_anomaly_presence: Eredetanomália megléte
       present: Jelen van
       realised_kind: Megvalósult érték típusa
       record_blocker: Rekord blokkoló művelete
+      relation_channel: Kapcsolati csatorna
       relation_presence: Kapcsolat megléte
       reset: Szűrők visszaállítása
+      resolved: Feloldott
+      unresolved: Feloldatlan
     summary:
       calculation_revision: Számítási verzió
       lifecycle_state: Életciklus-állapot
