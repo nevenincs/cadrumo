@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:53dc75aad637203fb7f56980beb66d726db06f4dc269598448b8623d8dd43283'
+body_hash: 'sha256:c216d4f52ba292dac810e053aee62dd5d55bedff4687edf6d752135fca7a39ef'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -65,6 +65,18 @@ A new real isolated CLI proof stores genuine structured evidence, invokes `ledge
 Verification: the isolated consent proof passes (1 passed in 5.39s). The full S90 ledger action conformance module plus the two focused filter-refusal cases pass (11 passed in 73.25s). Ruff is clean on the changed scope and `git diff --check` reports no owned whitespace errors. Direct-file BasedPyright remains unsuitable as a closure lane because the CLI package carries pre-existing private-import and Typer callback diagnostics outside the changed lines.
 
 S90 remains open for independent review.
+
+### Final import and consent re-derivation blockers
+
+The remaining import bridge caught every `CadrumoError`, rendered it through `resolve_error_message`, accumulated `(path, reason)` strings, and finally emitted `_all_files_refused` as one `BadParameter`. That aggregation was removed. Per-file import now catches only `TransactionValidationError` long enough to attach the existing `cli.ledger.transaction.valid` fact-only verdict, then re-raises the same registered exception; every other registered error reaches the shared boundary unchanged. The two now-orphaned import refusal locale leaves were removed from ca/en/es/hu through the canonical locale authority.
+
+Consent re-derivation now owns three distinct application predicates instead of raising raw `ValueError`: `ledger.consent_rederivation.artefact_available`, `ledger.consent_rederivation.transcription_available`, and `ledger.consent_rederivation.on_host`. The registered `ConsentRederivationError` carries the exact failed predicate, application-state evidence, no action, `not_applicable` conditionality, and `operator_decision`. The CLI performs no message matching or presentation reconstruction.
+
+The conformance corpus already includes `_ledger_import_cli`; it now explicitly rejects `resolve_error_message`, `_all_files_refused`, and broad `CadrumoError` catch aggregation. A real isolated missing-CSV invocation proves `ERROR_TRANSACTION_VALIDATION` with condition `cli.ledger.transaction.valid`, typed error-kind evidence, and no generic `REFUSED_CLI_BOUNDARY`. Two real isolated consent re-derivation invocations prove the distinct missing-artefact and missing-transcription conditions and their fact-only terminal outcomes. The prior English sentence and regex assertions were replaced by structural condition/evidence/action/outcome assertions.
+
+Verification: the complete selected integration lane passes 21 tests in 72.30s. Application consent-withdrawal plus registry enforcement passes 25 tests in 27.50s. Focused BasedPyright reports zero errors, warnings, or notes; Ruff and compile checks pass.
+
+S90 remains open for final independent review.
 
 ## Coordinated rehoming reconciliation
 
