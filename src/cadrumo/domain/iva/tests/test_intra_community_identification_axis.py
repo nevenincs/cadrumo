@@ -56,6 +56,7 @@ from .. import (
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
+    category_cuota_is_zero_by_law,
     classify_iva,
     country_code_for_printed_tax_identifier,
     identification_state_for_printed_tax_identifier,
@@ -459,3 +460,67 @@ def test_the_population_used_to_classify_as_nothing_at_all() -> None:
 
     assert not _third_country_only(IvaTerritorialScope.ES_CANARIAS)
     assert _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS) is not IvaCategory.UNKNOWN
+
+
+# -- a peninsular rate charged to a non-peninsular customer ------------------
+#
+# The contradiction this composes could not be asserted while the operation did
+# not classify at all: there is no contradiction between a charged rate and a
+# treatment nothing established. With the outbound branch above in place the
+# operation resolves, and the resolved category is cuota-less BY LAW -- so a
+# peninsular registry rate charged on it contradicts the document's own
+# treatment.
+#
+# The charged rate is ISSUER-ASSERTED TREATMENT EVIDENCE and never establishes
+# territory. Territory comes from the establishment ladder; the rate is what the
+# issuer DID about the operation, which is a claim to be checked rather than a
+# fact to resolve from. The cases below hold that separation explicitly, because
+# a fix that let a charged rate place a party would classify every mis-rated
+# invoice as domestic and never report anything.
+
+
+@pytest.mark.parametrize(
+    ("customer", "kind"),
+    [
+        (IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS),
+        (IvaTerritorialScope.ES_CANARIAS, TransactionKind.SERVICES_GENERAL),
+        (IvaTerritorialScope.ES_CEUTA_MELILLA, TransactionKind.GOODS),
+        (IvaTerritorialScope.ES_CEUTA_MELILLA, TransactionKind.SERVICES_GENERAL),
+    ],
+    ids=["canarias-goods", "canarias-services", "ceuta-melilla-goods", "ceuta-melilla-services"],
+)
+def test_the_resolved_treatment_admits_no_cuota_at_all(
+    customer: IvaTerritorialScope,
+    kind: TransactionKind,
+) -> None:
+    """Every outbound non-peninsular treatment is cuota-less by law.
+
+    That is what makes a charged peninsular rate a contradiction rather than a
+    disagreement about the number: a category admitting no cuota admits no tipo
+    either, so one of the two facts is wrong.
+    """
+    category = _outbound(customer, kind)
+
+    assert category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED)
+
+
+def test_a_domestic_treatment_is_not_cuota_less_so_the_check_stays_narrow() -> None:
+    """The precision half: the contradiction must not fire on ordinary invoices."""
+    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
+
+
+def test_the_charged_rate_never_places_the_customer() -> None:
+    """The separation the row insists on, asserted rather than assumed.
+
+    The criteria carry no charged rate at all on this branch -- territory comes
+    from the establishment ladder and the rate is evidence about TREATMENT. Were
+    a rate allowed to place a party, a peninsular rate charged in error would
+    silently reclassify the operation as domestic and the contradiction would
+    never be raised, which is the failure this ordering exists to prevent.
+    """
+    canarian = _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS)
+    peninsular_customer_would_be_domestic = IvaTerritorialScope.ES_MAINLAND
+
+    assert canarian is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert canarian is not IvaCategory.DOMESTIC_GENERAL
+    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope.ES_CANARIAS
