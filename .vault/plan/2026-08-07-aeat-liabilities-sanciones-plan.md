@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-12'
-body_hash: 'sha256:7e69041a86a79138ad40d15e63afff93bb2d0e7c6ae5377830e7578e65f7699c'
+body_hash: 'sha256:0675d9d622de11b03dac754f88002221c0a2980381b941d797c69513a1d88dce'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -88,6 +88,46 @@ asserted per bloque, but the standing grounding rule distrusts any bundled text
 on a number, and the reviewer's reading is what discharges that. Retiring the
 per-article excerpts in favour of the consolidated file is a separate question
 this correction deliberately does not settle.
+
+**Correction (2026-08-12): the P05 specimen block is discharged in part, and
+what replaced it is a different blocker.** The paragraph above states that P05
+is blocked end-to-end on an operator-authorised live specimen capture and is not
+startable before then. An authenticated Cl@ve Móvil discovery session has now
+run against the live sede, so that sentence is out of date — but only for the
+rows the capture actually grounds.
+
+What the capture established, and S15 consumed: the consulta path (now a
+declared sede path rather than a feature-module literal); that *pagar todas mis
+deudas* is served from the SAME AEAT application as the consulta, which is why
+the allow-list names the endpoint and never the shared prefix; that the consulta
+is a two-step surface whose listing exists only behind a POST query, admitted
+through the same scoped mechanism the IVA wallet reader uses; the three further
+payment and aplazamiento launchers beside it; that the surface is served as
+ISO-8859-15; and that a retrieval failure surfaces as an error line naming the
+NIF.
+
+What the capture could NOT establish, and why the block moved rather than
+lifted: this taxpayer has **no outstanding deudas**. That is an observation, not
+an assumption — an invalid NIF drew AEAT's retrieval error while the valid query
+re-rendered the form byte-identically apart from the clock, which proves the
+form processes and the empty result is real. So the zero-state is now observed
+and the populated listing is not: no row DOM, no `situacion` label vocabulary,
+no importe or periodo formatting.
+
+**S13, S14, S16, S17 and S18 therefore stay open, and the reason has changed
+from absent ACCESS to absent DATA.** They are unblocked the moment a listing
+with rows can be observed — either because a deuda arises, or under a
+representation the operator holds for a taxpayer who has one. Neither is
+something this campaign can schedule.
+
+**What the standing goal still asks for that this excludes.** The goal is that
+an operator can see, inside the application, what AEAT currently reports as
+owed. S15 hardens the wall around that read; it does not perform it. There is
+still no `walk_deudas_consulta`, no `pull` verb, no write-guard enrollment and
+no harness entry, so an operator today still gets three verbs over zero rows.
+Closing S15 moves the guard from refusing everything to refusing everything
+except one endpoint nothing yet navigates to. That is real progress on safety
+and none on the goal, and the two must not be confused at closeout.
 
 ## Steps
 
