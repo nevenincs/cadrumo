@@ -78,6 +78,16 @@ A broader 39-case boundary, LLM-model, and registry selection produced 36 passes
 
 S114 remains open for independent review and ledger reconciliation.
 
+## Terminal nested-validation parity
+
+The standalone terminal previously attempted only direct `CadrumoError` unwrapping. An escaped Pydantic `ValidationError` therefore became `CliUnexpectedBoundaryError` even when its structural context contained one registered LLM refusal. The terminal now calls the same ordered boundary projector as callbacks, then applies the same generic no-recovery fallback when no unique typed candidate exists.
+
+A real `LLMRequest` blank-prompt validation is exercised through `run_standalone_with_error_contract` in JSON and text modes for every `SUPPORTED_OUTPUT_LANGUAGES` member. It retains `REFUSED_CLI_VALIDATION_BOUNDARY`, category `REFUSED`, the exact `llm.request.prompt_nonempty` evidence and terminal outcome, and refusal exit code rather than INTERNAL exit 6. Real non-typed validation and a two-error Pydantic aggregate prove fail-closed `cli.validation.boundary_clean` behavior. Existing callback producer, LLM-model, and registry coverage remains green.
+
+Verification: terminal boundary integration passes 12 tests; the callback/LLM/registry lane passes 33 tests. Ruff passes.
+
+S114 remains open for independent review and ledger reconciliation.
+
 ## Envelope-safe registered producer views
 
 Final boundary review found that attaching the correct action was insufficient: rendering the original registered producer still allowed `feature`, `install_hint`, raw producer text, and full Pydantic validation detail to enter the envelope. The application owner now creates a narrow envelope view only for the two S114 families. It preserves the original registered class and therefore its canonical code, category, message key, retryability, and runbook identity, while replacing message resolution with the registry locale key and constraining context to declared machine facts.
