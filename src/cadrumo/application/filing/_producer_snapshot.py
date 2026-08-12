@@ -303,23 +303,42 @@ class FilingProducerSnapshot(BaseModel):
 
 def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M111:
-        if not isinstance(snapshot.model_profile, Modelo111ProfileFacts):
-            raise ValueError("modelo 111 requires Modelo111ProfileFacts")
-        if snapshot.model_profile.colegio_concertado is None:
-            raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
-    elif snapshot.modelo is Modelo.M202:
-        if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
-            raise ValueError("modelo 202 requires Modelo202ProducerProfile")
-        unsupported = ", ".join(item.value for item in snapshot.model_profile.unsupported_producer_ids)
-        raise ValueError(f"Modelo 202 producer snapshot is incomplete: {unsupported}")
-    elif snapshot.modelo is Modelo.M303:
-        if not isinstance(snapshot.model_profile, ModeloIVAProfile):
-            raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
-        if snapshot.m303_filing_facts is None:
-            raise ValueError("modelo 303 requires complete M303FilingFacts")
-    elif not isinstance(snapshot.model_profile, GeneralFilingProfileFacts):
+        _validate_modelo_111_snapshot(snapshot)
+        return
+    if snapshot.modelo is Modelo.M202:
+        _validate_modelo_202_snapshot(snapshot)
+        return
+    if snapshot.modelo is Modelo.M303:
+        _validate_modelo_303_snapshot(snapshot)
+        return
+    _validate_general_modelo_snapshot(snapshot)
+
+
+def _validate_modelo_111_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    if not isinstance(snapshot.model_profile, Modelo111ProfileFacts):
+        raise ValueError("modelo 111 requires Modelo111ProfileFacts")
+    if snapshot.model_profile.colegio_concertado is None:
+        raise ValueError("Modelo 111 colegio_concertado must be explicitly declared")
+
+
+def _validate_modelo_202_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    if not isinstance(snapshot.model_profile, Modelo202ProducerProfile):
+        raise ValueError("modelo 202 requires Modelo202ProducerProfile")
+    unsupported = ", ".join(item.value for item in snapshot.model_profile.unsupported_producer_ids)
+    raise ValueError(f"Modelo 202 producer snapshot is incomplete: {unsupported}")
+
+
+def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    if not isinstance(snapshot.model_profile, ModeloIVAProfile):
+        raise ValueError("modelo 303 requires the canonical ModeloIVAProfile")
+    if snapshot.m303_filing_facts is None:
+        raise ValueError("modelo 303 requires complete M303FilingFacts")
+
+
+def _validate_general_modelo_snapshot(snapshot: FilingProducerSnapshot) -> None:
+    if not isinstance(snapshot.model_profile, GeneralFilingProfileFacts):
         raise ValueError(f"modelo {snapshot.modelo.value} requires GeneralFilingProfileFacts")
-    elif snapshot.m303_filing_facts is not None:
+    if snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
 
 

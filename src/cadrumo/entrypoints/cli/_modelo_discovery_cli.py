@@ -871,12 +871,55 @@ def _register_bindings_list_command(bindings_app: typer.Typer, deps: _DiscoveryD
         _emit_envelope(ctx, command="modelo.bindings.list", result=result, lines=lines, notices=notices)
 
 
-def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period: str | None) -> tuple[Notice, ...]:
-    missing_filters = tuple(
+def _binding_scope_missing_filters(*, year: int | None, period: str | None) -> tuple[str, ...]:
+    return tuple(
         option
         for option, value in (("--year", year), ("--period", period))
         if value is None or (isinstance(value, str) and not value.strip())
     )
+
+
+def _binding_scope_action_bindings(
+    *,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+) -> tuple[ResolvedActionArgument, ...]:
+    argument_values: tuple[tuple[str, str | int | None], ...] = (
+        ("modelo", modelo),
+        ("year", year),
+        ("period", period),
+    )
+    return tuple(
+        ResolvedActionArgument(
+            argument_name=argument_name,
+            status=ActionArgumentStatus.RESOLVED,
+            value=value,
+            source=ActionArgumentSource.VERDICT_CONTEXT,
+            source_key=argument_name,
+        )
+        for argument_name, value in argument_values
+        if value is not None and (not isinstance(value, str) or value.strip())
+    )
+
+
+def _binding_scope_notice_context(
+    *,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    missing_filters: tuple[str, ...],
+) -> dict[str, str]:
+    return {
+        "modelo_filter": modelo or "",
+        "year_filter": "" if year is None else str(year),
+        "period_filter": period or "",
+        "missing_filters": ", ".join(missing_filters),
+    }
+
+
+def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period: str | None) -> tuple[Notice, ...]:
+    missing_filters = _binding_scope_missing_filters(year=year, period=period)
     if not missing_filters:
         return ()
     missing = ", ".join(missing_filters)
@@ -888,28 +931,14 @@ def _bindings_list_scope_notices(*, modelo: str | None, year: int | None, period
             message=message,
             action=resolve_notice_action(
                 action=ActionReference(action_id="operator.modelo.bindings.list"),
-                argument_bindings=tuple(
-                    ResolvedActionArgument(
-                        argument_name=argument_name,
-                        status=ActionArgumentStatus.RESOLVED,
-                        value=value,
-                        source=ActionArgumentSource.VERDICT_CONTEXT,
-                        source_key=argument_name,
-                    )
-                    for argument_name, value in (
-                        ("modelo", modelo),
-                        ("year", year),
-                        ("period", period),
-                    )
-                    if value is not None and (not isinstance(value, str) or value.strip())
-                ),
+                argument_bindings=_binding_scope_action_bindings(modelo=modelo, year=year, period=period),
             ),
-            context={
-                "modelo_filter": modelo or "",
-                "year_filter": "" if year is None else str(year),
-                "period_filter": period or "",
-                "missing_filters": missing,
-            },
+            context=_binding_scope_notice_context(
+                modelo=modelo,
+                year=year,
+                period=period,
+                missing_filters=missing_filters,
+            ),
         ),
     )
 

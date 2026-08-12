@@ -44,6 +44,15 @@ from ....core.json_contract import Notice, NoticeSeverity
 from .._common import _emit_envelope, _state
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
 
+# The divergence helper selects one of these keys by data rather than passing a
+# literal directly to ``tr()``. Keep the bounded selection scanner-visible so
+# catalogue scaffold and parity cannot prune a live warning.
+_LOCALE_KEYS: tuple[str, ...] = (
+    "cli.config.profile.censo.pull_divergences_notice",
+    "cli.config.profile.censo.pull_withheld_notice",
+    "cli.config.profile.censo.pull_cleared_notice",
+)
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
 

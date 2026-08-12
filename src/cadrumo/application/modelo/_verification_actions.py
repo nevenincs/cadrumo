@@ -1383,6 +1383,199 @@ def _missing_oss_evidence_finding(
     )
 
 
+def _resolve_verification_snapshot(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> RegistrySnapshot | None:
+    from ...domain.calculations.registry import RegistrySnapshotError
+
+    try:
+        authority = _authority_via_resources()
+        return authority.snapshot(
+            work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        )
+    except (FileNotFoundError, RegistrySnapshotError):
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.registry_snapshot_unresolved",
+            message_facts={
+                "modelo": str(work_unit.modelo),
+                "filing_year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
+            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+        )
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.registry_snapshot.available",
+            scenario_id="modelo.work.verify.registry_snapshot.unavailable",
+            evidence_id="modelo.work.verify.registry_snapshot",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+            },
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+            action_id="operator.registry.verify",
+        )
+        return None
+
+
+def _append_required_casilla_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    findings: list[ModeloVerificationFinding],
+    resolved_casilla_ids: list[CasillaId],
+    missing_required_casilla_ids: list[CasillaId],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    revision_keys = set(target.input_values_by_casilla_id)
+    for casilla in snapshot.revision.casillas:
+        if casilla.input_kind != InputKind.MANUAL or not casilla.required:
+            continue
+        if _detail_row_template_casilla_is_satisfied(work_unit=work_unit, target=target, casilla=casilla):
+            resolved_casilla_ids.append(casilla.id)
+            continue
+        if casilla.id in revision_keys:
+            resolved_casilla_ids.append(casilla.id)
+            continue
+        missing_required_casilla_ids.append(casilla.id)
+        finding = _missing_required_casilla_finding(casilla.id, casilla_def=casilla)
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.required_casillas.complete",
+            scenario_id="modelo.work.verify.required_casillas.missing",
+            evidence_id="modelo.work.verify.required_casillas",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "casilla_id": str(casilla.id),
+            },
+            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+        )
+
+
+def _append_oss_verification_finding(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    oss_source_finding = _m369_unresolved_oss_source_finding(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+    )
+    if oss_source_finding is None:
+        return
+    findings.append(oss_source_finding)
+    unrouted_issue_count = sum(
+        1
+        for issue in target.source_issues
+        if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
+    )
+    is_unrouted = unrouted_issue_count > 0
+    failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
+        calculation_revision_id=target.calculation_revision_id,
+        work_unit_id=target.work_unit_id,
+        condition_id=(
+            "modelo.work.verify.oss_source.routed" if is_unrouted else "modelo.work.verify.oss_evidence.present"
+        ),
+        scenario_id=(
+            "modelo.work.verify.oss_source.unrouted" if is_unrouted else "modelo.work.verify.oss_evidence.missing"
+        ),
+        evidence_id=("modelo.work.verify.oss_source" if is_unrouted else "modelo.work.verify.oss_evidence"),
+        evidence_values={
+            "modelo": str(work_unit.modelo),
+            "unrouted_issue_count": unrouted_issue_count,
+            "source_ref_count": len(oss_source_finding.source_refs),
+        },
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+    )
+
+
+def _append_registry_predicate_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    predicate_profile: TaxpayerProfile,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    findings.extend(
+        _evaluate_verification_predicates(
+            snapshot.revision.verification_predicates,
+            target.casilla_values,
+            predicate_profile,
+            target.input_values_by_casilla_id,
+            blocking_finding_observer=lambda finding, predicate: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.registry_predicate.satisfied",
+                    scenario_id="modelo.work.verify.registry_predicate.failed",
+                    evidence_id="modelo.work.verify.registry_predicate",
+                    evidence_values={"predicate_id": predicate.predicate_id},
+                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
+                ),
+            ),
+        ),
+    )
+
+
+def _append_unresolved_outcome_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    predicate_profile: TaxpayerProfile,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    findings.extend(
+        _m210_unresolved_outcome_findings(
+            target.unresolved_outcomes,
+            profile=predicate_profile,
+            snapshot=snapshot,
+            year=work_unit.filing_year,
+            tipo_renta="",
+            blocking_finding_observer=lambda finding, outcome: failures_by_finding_id.__setitem__(
+                id(finding),
+                build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.m210.rate.resolved",
+                    scenario_id="modelo.work.verify.m210.rate.unresolved",
+                    evidence_id="modelo.work.verify.m210.rate",
+                    evidence_values={
+                        "reason_code": outcome.reason.value,
+                        "tipo_renta": outcome.context.get("tipo_renta", ""),
+                        "year": work_unit.filing_year,
+                    },
+                    provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+                ),
+            ),
+        ),
+    )
+
+
 def _collect_revision_verification_findings(
     *,
     work_unit: WorkUnit,
@@ -1418,176 +1611,52 @@ def _collect_revision_verification_findings(
     resolved_casilla_ids: list[CasillaId] = []
     missing_required_casilla_ids: list[CasillaId] = []
     failures_by_finding_id: dict[int, ModeloPreconditionFailure] = {}
-
-    from ...domain.calculations.registry import RegistrySnapshotError
-
-    try:
-        authority = _authority_via_resources()
-        snapshot = authority.snapshot(
-            work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-        )
-    except (FileNotFoundError, RegistrySnapshotError):
-        finding = ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message_locale_key="application.modelo.findings.registry_snapshot_unresolved",
-            message_facts={
-                "modelo": str(work_unit.modelo),
-                "filing_year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-            },
-            legal_refs=WORKFLOW_GATE_LEGAL_REFS,
-        )
-        findings.append(finding)
-        failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.registry_snapshot.available",
-            scenario_id="modelo.work.verify.registry_snapshot.unavailable",
-            evidence_id="modelo.work.verify.registry_snapshot",
-            evidence_values={
-                "modelo": str(work_unit.modelo),
-                "year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-            },
-            provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-            action_id="operator.registry.verify",
-        )
+    snapshot = _resolve_verification_snapshot(
+        work_unit=work_unit,
+        target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    if snapshot is None:
         return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
-    revision_keys = set(target.input_values_by_casilla_id)
-    for casilla in snapshot.revision.casillas:
-        casilla_id = casilla.id
-        if casilla.input_kind == InputKind.MANUAL and casilla.required:
-            if _detail_row_template_casilla_is_satisfied(
-                work_unit=work_unit,
-                target=target,
-                casilla=casilla,
-            ):
-                resolved_casilla_ids.append(casilla_id)
-                continue
-            if casilla_id in revision_keys:
-                resolved_casilla_ids.append(casilla_id)
-            else:
-                missing_required_casilla_ids.append(casilla_id)
-                finding = _missing_required_casilla_finding(
-                    casilla_id,
-                    casilla_def=casilla,
-                )
-                findings.append(finding)
-                failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
-                    calculation_revision_id=target.calculation_revision_id,
-                    work_unit_id=target.work_unit_id,
-                    condition_id="modelo.work.verify.required_casillas.complete",
-                    scenario_id="modelo.work.verify.required_casillas.missing",
-                    evidence_id="modelo.work.verify.required_casillas",
-                    evidence_values={
-                        "modelo": str(work_unit.modelo),
-                        "year": work_unit.filing_year,
-                        "period": work_unit.period.registry_token,
-                        "casilla_id": str(casilla_id),
-                    },
-                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-                )
-
-    oss_source_finding = _m369_unresolved_oss_source_finding(
+    _append_required_casilla_findings(
         work_unit=work_unit,
         target=target,
         snapshot=snapshot,
+        findings=findings,
+        resolved_casilla_ids=resolved_casilla_ids,
+        missing_required_casilla_ids=missing_required_casilla_ids,
+        failures_by_finding_id=failures_by_finding_id,
     )
-    if oss_source_finding is not None:
-        findings.append(oss_source_finding)
-        unrouted_issue_count = sum(
-            1
-            for issue in target.source_issues
-            if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
-        )
-        is_unrouted = unrouted_issue_count > 0
-        failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id=(
-                "modelo.work.verify.oss_source.routed" if is_unrouted else "modelo.work.verify.oss_evidence.present"
-            ),
-            scenario_id=(
-                "modelo.work.verify.oss_source.unrouted" if is_unrouted else "modelo.work.verify.oss_evidence.missing"
-            ),
-            evidence_id=("modelo.work.verify.oss_source" if is_unrouted else "modelo.work.verify.oss_evidence"),
-            evidence_values={
-                "modelo": str(work_unit.modelo),
-                "unrouted_issue_count": unrouted_issue_count,
-                "source_ref_count": len(oss_source_finding.source_refs),
-            },
-            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-        )
-
+    _append_oss_verification_finding(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
     predicate_profile = _profile_with_art109_period_evidence(
         work_unit=work_unit,
         profile=profile,
         transaction_repository=transaction_repository,
     )
-
-    # Layer 2: cross-casilla predicate gate. target.input_values_by_casilla_id
-    # carries the operator-entered raw strings (independent of the Decimal
-    # casilla_values projection) for the text-reading operators
-    # (casilla_equals_implies_nonzero categorical antecedent,
-    # deduccion_requires_adquisicion_before date casillas); the other operators
-    # ignore it.
-    findings.extend(
-        _evaluate_verification_predicates(
-            snapshot.revision.verification_predicates,
-            target.casilla_values,
-            predicate_profile,
-            target.input_values_by_casilla_id,
-            blocking_finding_observer=lambda finding, predicate: failures_by_finding_id.__setitem__(
-                id(finding),
-                build_verification_precondition_failure(
-                    calculation_revision_id=target.calculation_revision_id,
-                    work_unit_id=target.work_unit_id,
-                    condition_id="modelo.work.verify.registry_predicate.satisfied",
-                    scenario_id="modelo.work.verify.registry_predicate.failed",
-                    evidence_id="modelo.work.verify.registry_predicate",
-                    evidence_values={"predicate_id": predicate.predicate_id},
-                    provenance=ActionEvidenceProvenance.REGISTRY_RECORD,
-                ),
-            ),
-        ),
+    _append_registry_predicate_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        predicate_profile=predicate_profile,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
     )
-
-    # Typed unresolved-outcome gate: the engine reports an unresolvable IRNR rate
-    # beside the Decimal value channels (its casilla is omitted, not filled with a
-    # sentinel). Convert each persisted outcome into a BLOCKING finding. The
-    # consumer filters by reason, so the call is modelo-neutral: it no-ops for a
-    # revision that carries no rate outcome. ``tipo_renta`` is left empty here so
-    # the consumer reads it from the outcome's own captured context.
-    findings.extend(
-        _m210_unresolved_outcome_findings(
-            target.unresolved_outcomes,
-            profile=predicate_profile,
-            snapshot=snapshot,
-            year=work_unit.filing_year,
-            tipo_renta="",
-            blocking_finding_observer=lambda finding, outcome: failures_by_finding_id.__setitem__(
-                id(finding),
-                build_verification_precondition_failure(
-                    calculation_revision_id=target.calculation_revision_id,
-                    work_unit_id=target.work_unit_id,
-                    condition_id="modelo.work.verify.m210.rate.resolved",
-                    scenario_id="modelo.work.verify.m210.rate.unresolved",
-                    evidence_id="modelo.work.verify.m210.rate",
-                    evidence_values={
-                        "reason_code": outcome.reason.value,
-                        "tipo_renta": outcome.context.get("tipo_renta", ""),
-                        "year": work_unit.filing_year,
-                    },
-                    provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-                ),
-            ),
-        ),
+    _append_unresolved_outcome_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        predicate_profile=predicate_profile,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
     )
-
     _append_revision_advisory_findings(
         findings,
         work_unit=work_unit,
@@ -1595,7 +1664,6 @@ def _collect_revision_verification_findings(
         profile=profile,
         snapshot=snapshot,
     )
-
     return findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id
 
 

@@ -30,7 +30,7 @@ from ...application.aggregation import (
     PerModeloAggregationResult,
 )
 from ...application.calculations import ObservationSourceKind, PriorDomiciliationElectionProjection
-from ...application.modelo import validate_modelo_work_deadline_posture
+from ...application.modelo import ModeloWorkReview, validate_modelo_work_deadline_posture
 from ...core import (
     BindingSourceKind,
     CasillaId,
@@ -618,6 +618,19 @@ class WorkVerifyResult(OutputSchema):
     run_at: str
     verified_by: str
     findings: list[FindingPayload]
+
+
+@register_schema("modelo.work.review")
+class WorkReviewResult(OutputSchema):
+    """Envelope payload carrying the canonical application review record.
+
+    The CLI boundary wraps :class:`ModeloWorkReview` unchanged. Schema,
+    origins, realised values, progress, findings, and blocker references remain
+    owned by ``application.modelo`` rather than being redeclared here.
+    """
+
+    operation: Literal["modelo.work.review"] = "modelo.work.review"
+    review: ModeloWorkReview
 
 
 @register_schema("modelo.work.dependencies")
@@ -1407,6 +1420,7 @@ __all__ = [
     "WorkPreviewMaritimeExemptionResult",
     "WorkRenameResult",
     "WorkResumeResult",
+    "WorkReviewResult",
     "WorkRevisionResult",
     "WorkRevisionsResult",
     "WorkRunsResult",
