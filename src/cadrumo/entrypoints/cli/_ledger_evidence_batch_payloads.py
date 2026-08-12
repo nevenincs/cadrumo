@@ -28,6 +28,7 @@ is the wrong home for the thing the command exists to produce
 from __future__ import annotations
 
 from collections.abc import Mapping
+from decimal import Decimal
 
 from pydantic import Field
 
@@ -44,9 +45,12 @@ __all__ = [
 class EvidenceBatchItemPayload(OutputSchema):
     """One document's row, mirroring :class:`~cadrumo.application.ledger.BatchItemResult`.
 
-    ``refusal_code`` and ``refusal_detail`` are present exactly when ``status``
-    is ``refused``; the engine's own model enforces that pairing in both
-    directions before the row ever reaches this transport.
+    ``refusal_code``, ``refusal_facts`` and ``refusal_action`` are present
+    exactly when ``status`` is ``refused``; the engine's own model enforces that
+    pairing in both directions before the row ever reaches this transport. The
+    application owns the failed condition and its facts; this transport only
+    resolves the verdict against the live action surface, adding no instruction
+    or rendered explanation of its own.
     """
 
     content_address: str
@@ -55,7 +59,8 @@ class EvidenceBatchItemPayload(OutputSchema):
     source_name: str
     status: str
     refusal_code: str | None = None
-    refusal_detail: str | None = None
+    refusal_facts: Mapping[str, str | int | bool | Decimal] = Field(default_factory=dict)
+    refusal_action: ResolvedPreconditionAction | None = None
     needed_inference: bool = True
 
 
@@ -70,7 +75,8 @@ class EvidenceBatchUnresolvedPayload(OutputSchema):
 
     source_name: str
     refusal_code: str
-    refusal_detail: str
+    refusal_facts: Mapping[str, str | int | bool | Decimal] = Field(default_factory=dict)
+    refusal_action: ResolvedPreconditionAction | None = None
 
 
 class EvidenceBatchPausePayload(OutputSchema):

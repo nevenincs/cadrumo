@@ -31,6 +31,7 @@ See Also:
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from typing import TYPE_CHECKING
 
 import typer
@@ -54,7 +55,8 @@ from ._config._status_rendering import precondition_action_lines
 from ._ledger_evidence_batch_payloads import EvidenceBatchResult
 
 if TYPE_CHECKING:
-    from ...application.ledger import BatchItemResult, BatchRunResult
+    from ...application.ledger import BatchItemResult, BatchRunResult, UnresolvedBatchSource
+    from ...application.operator_actions import PreconditionVerdict
 
 __all__ = ["register_evidence_batch_command"]
 
@@ -129,19 +131,55 @@ def register_evidence_batch_command(evidence_app: typer.Typer) -> None:
             raise typer.Exit(code=1)
 
 
+def _refusal_projection(verdict: PreconditionVerdict | None) -> dict[str, object]:
+    """Return the wire halves of one typed refusal: its facts and its resolved action.
+
+    The facts are the application's own evidence values, carried verbatim. The
+    action is resolved here because only the CLI knows the live action surface;
+    a verdict with no bound recovery resolves to its explicit no-recovery
+    outcome rather than to an invented instruction.
+    """
+    if verdict is None:
+        return {"refusal_facts": {}, "refusal_action": None}
+    facts: dict[str, str | int | bool | Decimal] = {}
+    for evidence in verdict.evidence:
+        facts.update(evidence.values)
+    return {
+        "refusal_facts": facts,
+        "refusal_action": resolve_cli_precondition_action(verdict),
+    }
+
+
+def _item_payload(item: BatchItemResult) -> dict[str, object]:
+    """Return one item row on the wire, with its verdict resolved into two fields."""
+    dumped = item.model_dump(mode="json", exclude={"refusal_verdict"})
+    return {**dumped, **_refusal_projection(item.refusal_verdict)}
+
+
+def _unresolved_payload(source: UnresolvedBatchSource) -> dict[str, object]:
+    """Return one unreadable-source row on the wire, with its verdict resolved."""
+    dumped = source.model_dump(mode="json", exclude={"refusal_verdict"})
+    return {**dumped, **_refusal_projection(source.refusal_verdict)}
+
+
 def _batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> EvidenceBatchResult:
     """Project the run onto its wire schema from the run's own dump.
 
     Built by re-validating the engine's serialisation rather than by copying
     field by field, so a row field added upstream either arrives here by name or
     reds the strict schema. A hand-written projection would silently drop it.
+
+    The one field that cannot arrive by name is the refusal verdict: the engine
+    owns a typed ``PreconditionVerdict`` while the wire carries its facts beside
+    the action this transport resolves. That resolution is the CLI's own job,
+    so it is spelled out here rather than dumped.
     """
     return EvidenceBatchResult.model_validate(
         {
             "bucket_id": bucket_id,
             "direction": direction.value,
-            "items": [item.model_dump(mode="json") for item in run.items],
-            "unresolved": [source.model_dump(mode="json") for source in run.unresolved],
+            "items": [_item_payload(item) for item in run.items],
+            "unresolved": [_unresolved_payload(source) for source in run.unresolved],
             "inference_pause": (
                 {
                     "facts": run.inference_pause.facts,
@@ -269,6 +307,30 @@ def _notice_line(notice: Notice) -> str:
     return "\t".join(values)
 
 
+def _condition_of(verdict: PreconditionVerdict | None) -> str:
+    """Return the failed-condition identity a refusal row reports."""
+    return "-" if verdict is None else verdict.failed_condition_id
+
+
+def _refusal_lines(verdict: PreconditionVerdict | None) -> list[str]:
+    """Return the fact and resolved-action lines beneath one refusal row.
+
+    Derived from the same verdict the JSON payload resolves, so the two
+    surfaces cannot report different reasons for the same refusal.
+    """
+    if verdict is None:
+        return []
+    lines = [
+        # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-REFUSAL-FACT: tab-separated
+        # machine record (key, JSON value).
+        f"refusal.facts.{key}\t{json.dumps(value, ensure_ascii=False, sort_keys=True)}"
+        for evidence in verdict.evidence
+        for key, value in sorted(evidence.values.items())
+    ]
+    lines.extend(precondition_action_lines(resolve_cli_precondition_action(verdict)))
+    return lines
+
+
 def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> list[str]:
     """Return the closing text block: the tally, then every row needing attention.
 
@@ -286,12 +348,16 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
     for item in run.items:
         if item.status == "refused":
             # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-REFUSAL: tab-separated
-            # machine record (source, code, detail).
-            lines.append(f"refused\t{item.source_name}\t{item.refusal_code}\t{item.refusal_detail}")
+            # machine record (source, code, condition).
+            lines.append(f"refused\t{item.source_name}\t{item.refusal_code}\t{_condition_of(item.refusal_verdict)}")
+            lines.extend(_refusal_lines(item.refusal_verdict))
     for source in run.unresolved:
         # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-UNRESOLVED: tab-separated
-        # machine record (source, code, detail).
-        lines.append(f"unreadable\t{source.source_name}\t{source.refusal_code}\t{source.refusal_detail}")
+        # machine record (source, code, condition).
+        lines.append(
+            f"unreadable\t{source.source_name}\t{source.refusal_code}\t{_condition_of(source.refusal_verdict)}",
+        )
+        lines.extend(_refusal_lines(source.refusal_verdict))
     pause = run.inference_pause
     if pause is not None:
         lines.extend(
