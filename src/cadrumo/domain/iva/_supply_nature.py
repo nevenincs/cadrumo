@@ -73,6 +73,7 @@ __all__ = [
     "SupplyNatureDerivationOutcome",
     "derive_supply_nature_from_citation",
     "match_statutory_citations",
+    "supply_nature_implied_by_category",
     "supply_nature_is_required",
 ]
 
@@ -363,6 +364,104 @@ def derive_supply_nature_from_citation(*, printed_citation: str | None) -> Suppl
             note=(
                 f"the document cites articles that establish different natures of supply ({cited}); "
                 "which citation is the mistake is not decidable from the document"
+            ),
+        )
+    return SupplyNatureDerivation(
+        outcome=SupplyNatureDerivationOutcome.DERIVED,
+        nature=natures.pop(),
+        citations=citations,
+    )
+
+
+#: Separates the norm from its article in a component-table legal reference,
+#: as in ``ley-37-1992:art-25``. Named because this module and the table it
+#: reads must agree on it exactly, and a literal spelled twice drifts silently.
+_ARTICLE_REFERENCE_SEPARATOR: Final[str] = ":art-"
+
+
+def supply_nature_implied_by_category(category: IvaCategory | None) -> SupplyNatureDerivation:
+    """Derive the nature from the articles the CATEGORY itself rests on.
+
+    The second route to the same answer, and it needs no citation printed on the
+    page: a category is grounded in specific LIVA articles, and some of those
+    articles define the operation as one of goods. An *entrega intracomunitaria*
+    is exempt under art. 25, which exempts "las entregas de bienes definidas en
+    el artículo 8" -- so an operator asked goods-or-services about one is being
+    asked a question the law has already answered.
+
+    **Two existing authorities, joined; no third judgement.** Which articles
+    ground a category is already declared once, in the component table's
+    ``legal_refs``. What an article establishes about the nature is already
+    declared once, in :data:`STATUTORY_CITATIONS`, each row carrying its
+    ``corpus_ref``. This walks from one to the other and rules on nothing
+    itself, which is what keeps a second category-keyed table -- a rival
+    authority on one question -- from existing.
+
+    **The dangerous case excludes itself, and that is the design rather than
+    luck.** LIVA art. 22, assimilated exports, covers "las entregas,
+    construcciones, transformaciones, reparaciones, mantenimiento, fletamento...
+    y arrendamiento": services as much as goods. A hand-written map over the
+    export family would have asserted GOODS on service exports. Art. 22 has no
+    row in the citation table because nothing ever ruled what it establishes, so
+    the join finds nothing and the category stays open.
+
+    Measured over the shipped tables: exactly three categories derive --
+    intra-community supply and export, both GOODS via arts. 25 and 21, and
+    intra-community acquisition, GOODS via art. 15. The two SERVICE members
+    derive nothing, because their grounding articles are the general
+    place-of-supply rules 69 and 70, which the citation table deliberately
+    omits; that gap is the table's, and closing it is its own change rather
+    than a special case here.
+
+    Args:
+        category: The category the document declared, or ``None``.
+
+    Returns:
+        :class:`SupplyNatureDerivation`: One of the three outcomes, carrying
+        exactly what that outcome establishes. ``ABSENT`` whenever the category
+        is unknown, ungrounded, or grounded only in articles that fix nothing.
+    """
+    if category is None:
+        return _NOTHING_DERIVED
+
+    # Imported at call time: the component table reaches the schema and the
+    # classification modules, so a module-scope import would make this lean
+    # module pay for them. The sanctioned cycle-break shape, and it changes only
+    # WHEN the owning module executes.
+    from ._components import IVA_CATEGORY_COMPONENTS
+
+    grounding = {
+        reference
+        for key, components in IVA_CATEGORY_COMPONENTS.items()
+        # The table is keyed per category AND direction, and the nature is a
+        # property of the supply rather than of who filed it -- so every row for
+        # this category contributes, whichever way the document ran.
+        if (key[0] if isinstance(key, tuple) else key) is category
+        for reference in components.legal_refs
+    }
+    articles = {
+        reference.split(_ARTICLE_REFERENCE_SEPARATOR, 1)[1]
+        for reference in grounding
+        if _ARTICLE_REFERENCE_SEPARATOR in reference
+    }
+    citations = tuple(citation for citation in STATUTORY_CITATIONS if citation.article in articles)
+    if not citations:
+        return _NOTHING_DERIVED
+
+    natures = {citation.establishes for citation in citations if citation.establishes is not None}
+    if not natures:
+        return SupplyNatureDerivation(
+            outcome=SupplyNatureDerivationOutcome.ABSENT,
+            citations=citations,
+        )
+    if len(natures) > 1:
+        grounded = ", ".join(f"art. {citation.article}" for citation in citations)
+        return SupplyNatureDerivation(
+            outcome=SupplyNatureDerivationOutcome.CONTRADICTED,
+            citations=citations,
+            note=(
+                f"the {category.value!r} category is grounded in articles that establish different "
+                f"natures of supply ({grounded}); the category cannot settle which"
             ),
         )
     return SupplyNatureDerivation(

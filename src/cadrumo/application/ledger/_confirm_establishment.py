@@ -77,6 +77,7 @@ from ...domain.iva import (
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
     record_country_code_status,
+    supply_nature_implied_by_category,
 )
 from ._classification_assembly import (
     ClassificationAssembly,
@@ -282,6 +283,21 @@ def _declared_facts(
         # nature -- the record refuses to hold one side of a disagreement -- and
         # ABSENT is the ordinary outcome for the domestic majority, which is
         # obliged to cite no article at all.
+        if derivation.outcome is not SupplyNatureDerivationOutcome.DERIVED or derivation.nature is None:
+            # THIRD route, and the one that needs nothing printed. A category is
+            # grounded in specific articles, and some of those DEFINE the
+            # operation as one of goods -- an entrega intracomunitaria is exempt
+            # under art. 25, which exempts "las entregas de bienes definidas en
+            # el articulo 8". Asking the operator there asks a question the law
+            # already answered.
+            #
+            # Ranked BELOW the printed citation because the page is more
+            # specific than the family: a document citing an article states
+            # something about itself, while the category states what its family
+            # rests on.
+            derivation = supply_nature_implied_by_category(
+                None if stated_category is None else stated_category.value,
+            )
         if derivation.outcome is SupplyNatureDerivationOutcome.DERIVED and derivation.nature is not None:
             derived_nature = DeclaredFact(
                 value=derivation.nature,

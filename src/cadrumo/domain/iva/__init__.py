@@ -246,6 +246,7 @@ from ._supply_nature import (
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
     match_statutory_citations,
+    supply_nature_implied_by_category,
     supply_nature_is_required,
 )
 from ._verify import verify_catalogue
@@ -410,6 +411,7 @@ __all__ = [
     "split_gross_at_rate",
     "stated_country_code_status",
     "sum_deductible_amounts",
+    "supply_nature_implied_by_category",
     "supply_nature_is_required",
     "territorial_scope_for_country",
     "territorial_scope_for_printed_country_name",

@@ -28,7 +28,14 @@ from __future__ import annotations
 import pytest
 
 from ....core import ClassifierInputSource
-from ....domain.iva import InvoiceKind, IvaTerritorialScope, SupplyNature
+from ....domain.iva import (
+    InvoiceKind,
+    IvaCategory,
+    IvaTerritorialScope,
+    SupplyNature,
+    supply_nature_implied_by_category,
+)
+from ...ledger._classification_assembly import DeclaredFact
 from ...ledger._confirm_establishment import _declared_facts
 from ...ledger._establishment_ladder import CounterpartyEstablishment
 
@@ -240,3 +247,131 @@ def test_reading_the_citation_is_what_settles_it() -> None:
 
     assert without_citation.supply_nature is None
     assert with_citation.supply_nature is not None
+
+
+# -- the THIRD route: what the category itself rests on ---------------------
+#
+# A category is grounded in specific LIVA articles, and some of those DEFINE the
+# operation as one of goods -- an entrega intracomunitaria is exempt under
+# art. 25, which exempts "las entregas de bienes definidas en el articulo 8". So
+# an operator asked goods-or-services about one is being asked a question the
+# law has already answered, with no citation needing to be printed at all.
+#
+# Two existing authorities are JOINED and nothing new is ruled: the component
+# table already declares which articles ground each category, and the citation
+# table already declares what each article establishes, each row with its
+# corpus_ref. That is what keeps a second category-keyed table -- a rival
+# authority on one question -- from existing.
+
+
+def _stated(category: IvaCategory) -> DeclaredFact[IvaCategory]:
+    """The category as a document record declares it."""
+    return DeclaredFact(value=category, source=ClassifierInputSource.DOCUMENT_EVIDENCE)
+
+
+def test_a_declared_category_settles_the_nature_with_nothing_printed() -> None:
+    """The population this closes: cross-border documents citing no article."""
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=_stated(IvaCategory.INTRA_COMMUNITY_SUPPLY),
+    )
+
+    assert declared.supply_nature is not None, "the declared category did not settle the nature"
+    assert declared.supply_nature.value is SupplyNature.GOODS
+    assert declared.supply_nature.source is ClassifierInputSource.DOCUMENT_EVIDENCE
+
+
+@pytest.mark.parametrize(
+    "category",
+    [IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED, IvaCategory.DOMESTIC_REVERSE_CHARGE],
+    ids=["assimilated-exports-art-22", "domestic-reverse-charge-art-84"],
+)
+def test_a_category_whose_law_reaches_both_limbs_stays_open(category: IvaCategory) -> None:
+    """The two traps, and the reason this is a join rather than a hand-written map.
+
+    LIVA art. 22 covers "las entregas, construcciones, transformaciones,
+    reparaciones, mantenimiento, fletamento... y arrendamiento" -- services as
+    much as goods -- so a map that treated the export family uniformly would
+    assert GOODS on service exports. Art. 84 reaches both limbs likewise.
+    Neither may produce a nature, and neither does: art. 22 has no row in the
+    citation table because nothing ever ruled what it establishes, and art. 84's
+    row establishes nothing on purpose.
+    """
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=_stated(category),
+    )
+
+    assert declared.supply_nature is None
+
+
+def test_the_traps_are_excluded_by_the_tables_rather_than_by_a_special_case() -> None:
+    """Anchor: the safety is structural, so it survives someone editing this file.
+
+    If a row for art. 22 is ever added to the citation table, this fails here
+    rather than silently starting to assert a nature on service exports.
+    """
+    assert supply_nature_implied_by_category(IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED).nature is None
+    assert supply_nature_implied_by_category(IvaCategory.DOMESTIC_REVERSE_CHARGE).nature is None
+
+
+def test_a_printed_citation_outranks_the_category_it_disagrees_with() -> None:
+    """The page is more specific than the family.
+
+    A document citing an article states something about ITSELF; the category
+    states what its family rests on. So a services citation beats a goods
+    category rather than contradicting it into silence.
+    """
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=_stated(IvaCategory.INTRA_COMMUNITY_SUPPLY),
+        printed_citation="Exencion art. 163 octiesdecies LIVA",
+    )
+
+    assert declared.supply_nature is not None
+    assert declared.supply_nature.value is SupplyNature.SERVICES
+
+
+def test_the_operator_still_outranks_both_derivations() -> None:
+    """The precedence holds all the way down, provenance included."""
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=_stated(IvaCategory.INTRA_COMMUNITY_SUPPLY),
+        supply_nature=SupplyNature.SERVICES,
+    )
+
+    assert declared.supply_nature is not None
+    assert declared.supply_nature.value is SupplyNature.SERVICES
+    assert declared.supply_nature.source is ClassifierInputSource.OPERATOR_ASSERTION
+
+
+def test_the_category_join_is_what_settles_it() -> None:
+    """Mutation proof: without the category route the same document asks again.
+
+    Re-runs the builder with no category declared, which is the pre-change
+    input. It leaves the axis open on an operation whose own exemption article
+    defines it as goods.
+    """
+    without_category = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+    )
+    with_category = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=_stated(IvaCategory.INTRA_COMMUNITY_SUPPLY),
+    )
+
+    assert without_category.supply_nature is None
+    assert with_category.supply_nature is not None
