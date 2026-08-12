@@ -16,6 +16,7 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.core import M303ProductSoftwareIdentity
 from cadrumo.domain.calculations.registry import (
     ENCODING_ALIAS_MAP,
     CasillaFieldKind,
@@ -27,12 +28,20 @@ from cadrumo.domain.calculations.registry import (
     ExportPadding,
     ExportRecordDefinition,
     ExportValuePolicy,
+    FixedWidthRecordRenderError,
     ModeloId,
     RegistryValidationError,
     RevisionId,
     SourceRefId,
+    render_fixed_width_export_record_payload,
 )
 
+from ._m303_variable_envelope import (
+    M303EnvelopeBodyMember,
+    M303EnvelopeBytes,
+    M303EnvelopeGenerationInput,
+    render_m303_variable_envelope_bytes,
+)
 from ._provenance_manifest import (
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
@@ -127,6 +136,7 @@ class RenderedExportTree(_StrictModel):
     field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
     output_files: tuple[str, ...] = Field(min_length=2)
     provenance_manifest: ExportFragmentProvenanceManifest
+    m303_variable_envelope: M303EnvelopeBytes | None = None
 
 
 def render_complete_export_tree(
@@ -138,6 +148,8 @@ def render_complete_export_tree(
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    m303_envelope_input: M303EnvelopeGenerationInput | None = None,
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
 
@@ -146,12 +158,39 @@ def render_complete_export_tree(
     responsibilities deliberately remain later generator steps.
     """
     _validate_transport_profile(joined, transport_profile)
-    if joined.variable_envelopes:
+    if joined.variable_envelopes and joined.m303_variable_envelope is None:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
             "fixed-width export generation refuses variable envelopes without a separately typed and proven "
             f"composition contract: {identities}",
         )
+    if joined.m303_variable_envelope is not None and product_software_identity is None:
+        raise RegistryValidationError(
+            "typed Modelo 303 DP30300 generation requires explicit product/software identity authority",
+        )
+    if joined.m303_variable_envelope is None and product_software_identity is not None:
+        raise RegistryValidationError(
+            "product/software identity is only admitted for a typed Modelo 303 DP30300 envelope",
+        )
+    if joined.m303_variable_envelope is not None and m303_envelope_input is None:
+        raise RegistryValidationError(
+            "typed Modelo 303 DP30300 generation requires explicit filing period and canonical body values",
+        )
+    if joined.m303_variable_envelope is None and m303_envelope_input is not None:
+        raise RegistryValidationError(
+            "M303 envelope filing period and body values are only admitted for a typed Modelo 303 DP30300 envelope",
+        )
+    if joined.m303_variable_envelope is not None:
+        assert m303_envelope_input is not None
+        if joined.revision_id != revision_id:
+            raise RegistryValidationError(
+                f"typed Modelo 303 DP30300 target revision {revision_id!r} does not match the selected "
+                f"snapshot revision {joined.revision_id!r}",
+            )
+        if joined.filing_period != m303_envelope_input.filing_period:
+            raise RegistryValidationError(
+                "typed Modelo 303 DP30300 filing period does not match the exact selected snapshot period",
+            )
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
     records, derivations = _render_records(joined.records, transport_profile, render_profile)
     layout = ExportLayoutDefinition.model_validate(
@@ -169,6 +208,16 @@ def render_complete_export_tree(
         },
     )
     _require_semantic_map_attestation(joined, semantic_map)
+    m303_variable_envelope = (
+        _render_m303_variable_envelope(
+            records,
+            joined=joined,
+            product_software_identity=product_software_identity,
+            generation_input=m303_envelope_input,
+        )
+        if joined.m303_variable_envelope is not None
+        else None
+    )
     rendered_files = _render_tree_files(revision_id=revision_id, layout=layout)
     _prepare_target(target_export_dir)
     for relative_path, payload in rendered_files:
@@ -187,12 +236,15 @@ def render_complete_export_tree(
         field_derivations=tuple(derivations),
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        product_software_identity=product_software_identity,
+        m303_variable_envelope=m303_variable_envelope,
     )
     return RenderedExportTree(
         layout=layout,
         field_derivations=tuple(derivations),
         output_files=output_files,
         provenance_manifest=provenance_manifest,
+        m303_variable_envelope=m303_variable_envelope,
     )
 
 
@@ -275,6 +327,69 @@ def _render_records(
     if not records:
         raise RegistryValidationError("joined record design contains no records to render")
     return tuple(records), tuple(derivations)
+
+
+def _render_m303_variable_envelope(
+    records: tuple[ExportRecordDefinition, ...],
+    *,
+    joined: JoinedRecordDesign,
+    product_software_identity: M303ProductSoftwareIdentity | None,
+    generation_input: M303EnvelopeGenerationInput | None,
+) -> M303EnvelopeBytes:
+    """Compose DP30300 from the canonical record payload writer in memory only."""
+    if product_software_identity is None or generation_input is None or joined.m303_variable_envelope is None:
+        raise RegistryValidationError("typed Modelo 303 DP30300 composition requires every explicit authority")
+    supplied_ids = tuple(item.record_id for item in generation_input.body_records)
+    rendered_ids = tuple(record.id for record in records)
+    if supplied_ids != rendered_ids:
+        raise RegistryValidationError(
+            "M303 envelope body values must match the exact generated fixed-record order; "
+            f"supplied={supplied_ids!r}, generated={rendered_ids!r}",
+        )
+    _require_explicit_m303_body_values(records, generation_input)
+    try:
+        body_members = tuple(
+            M303EnvelopeBodyMember(
+                record_id=record.id,
+                payload=render_fixed_width_export_record_payload(
+                    record,
+                    field_values={value.casilla_id: value.value for value in supplied.casilla_values},
+                ),
+            )
+            for record, supplied in zip(records, generation_input.body_records, strict=True)
+        )
+    except FixedWidthRecordRenderError as exc:
+        raise RegistryValidationError(
+            f"M303 envelope body record {exc.export_record_id!r} cannot render through the canonical record codec: "
+            f"{exc}",
+        ) from exc
+    return render_m303_variable_envelope_bytes(
+        joined.m303_variable_envelope.semantic,
+        joined.m303_variable_envelope.parser_envelope,
+        source=joined.source,
+        product_software_identity=product_software_identity,
+        filing_period=generation_input.filing_period,
+        body_members=body_members,
+    )
+
+
+def _require_explicit_m303_body_values(
+    records: tuple[ExportRecordDefinition, ...],
+    generation_input: M303EnvelopeGenerationInput,
+) -> None:
+    """Refuse an implicit blank for any generated DP30300 body casilla."""
+    for record, supplied in zip(records, generation_input.body_records, strict=True):
+        declared = tuple(
+            field.casilla_id
+            for field in record.fields
+            if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None
+        )
+        provided = tuple(value.casilla_id for value in supplied.casilla_values)
+        if set(provided) != set(declared):
+            raise RegistryValidationError(
+                f"M303 envelope body record {record.id!r} requires one explicit value for every declared casilla; "
+                f"declared={declared!r}, provided={provided!r}",
+            )
 
 
 def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> None:

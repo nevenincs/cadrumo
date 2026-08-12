@@ -363,6 +363,7 @@ from .compatibility_lifecycle import (
 )
 from .corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
 from .external_constants import M347_THRESHOLD_EUR
+from .hashing import content_hash_hex, sha256_hex
 from .manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
     MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
@@ -373,6 +374,9 @@ from .product_identity import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     IdentityReferent,
+    M303ProductSoftwareEvidence,
+    M303ProductSoftwareIdentity,
+    M303ProgramIdentifier,
     ProductIdentity,
     normalise_product_identity_references,
 )
@@ -557,6 +561,9 @@ __all__: list[str] = [
     "M303Exonerado390ActivityField",
     "M303Exonerado390ActivityProjectionRef",
     "M303Exonerado390OperacionesTercerosProjectionRef",
+    "M303ProductSoftwareEvidence",
+    "M303ProductSoftwareIdentity",
+    "M303ProgramIdentifier",
     "M303ProrrataActivityProjectionField",
     "M303ProrrataActivityProjectionRef",
     "M303RegimenSimplificadoActivityField",
@@ -646,6 +653,7 @@ __all__: list[str] = [
     "classify_post_filing_event_kind",
     "clear_pointer",
     "compile_filing_projection_ref",
+    "content_hash_hex",
     "default_model_runtime_id",
     "derive_result_disposition",
     "detect_image_media_type",
@@ -705,6 +713,7 @@ __all__: list[str] = [
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "result_disposition_requires_bank_account",
+    "sha256_hex",
     "spanish_stemmer",
     "spanish_word_tokens",
     "stale_persisted_format_declarations",

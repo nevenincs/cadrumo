@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry import (
     casillas_by_id,
 )
 
+from ._m303_variable_envelope import validate_m303_variable_envelope
 from ._record_design_ir import RecordDesignIntermediate, RecordDesignIntermediateField
 from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, SemanticMapRecord
 
@@ -75,9 +76,9 @@ def validate_semantic_map(
     _validate_scope(semantic_map, intermediate, snapshot)
     _validate_source_authority(intermediate, snapshot)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
-    _validate_variable_envelope_boundary(intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
+    _validate_variable_envelope_boundary(semantic_map, intermediate)
     _validate_entry_references(semantic_map, snapshot)
 
 
@@ -146,8 +147,11 @@ def _validate_anomaly_exceptions(
             )
 
 
-def _validate_variable_envelope_boundary(intermediate: RecordDesignIntermediate) -> None:
-    """Retain envelopes as distinct, unjoined composition authorities."""
+def _validate_variable_envelope_boundary(
+    semantic_map: SemanticMap,
+    intermediate: RecordDesignIntermediate,
+) -> None:
+    """Retain envelopes as distinct, source-pinned composition authorities."""
     fixed_keys = {(sheet.sheet, sheet.record_identity) for sheet in intermediate.sheets}
     envelope_keys = tuple((envelope.sheet, envelope.record_identity) for envelope in intermediate.variable_envelopes)
     duplicate_envelopes = _duplicate_record_keys(envelope_keys)
@@ -162,6 +166,48 @@ def _validate_variable_envelope_boundary(intermediate: RecordDesignIntermediate)
             "parser intermediate cannot classify one identity as both fixed record and variable envelope: "
             f"{_format_record_keys(collisions)}",
         )
+    if not envelope_keys:
+        if semantic_map.variable_envelopes:
+            raise RegistryValidationError(
+                "semantic map declares a variable-envelope contract but parser output contains no variable envelope",
+            )
+        return
+    m303_envelopes = tuple(
+        envelope for envelope in intermediate.variable_envelopes if envelope.record_identity == "DP30300"
+    )
+    if not m303_envelopes:
+        if semantic_map.variable_envelopes:
+            raise RegistryValidationError(
+                "semantic map variable-envelope contracts are only admitted for parser-owned Modelo 303 DP30300",
+            )
+        return
+    if semantic_map.modelo != "303" or len(m303_envelopes) != 1 or len(envelope_keys) != 1:
+        raise RegistryValidationError(
+            "Modelo 303 variable-envelope authority requires exactly one parser DP30300 envelope",
+        )
+    if len(semantic_map.variable_envelopes) != 1:
+        raise RegistryValidationError(
+            "Modelo 303 DP30300 parser output requires exactly one reviewed variable-envelope semantic contract",
+        )
+    semantic = semantic_map.variable_envelopes[0]
+    if (
+        semantic.source_ref != intermediate.source.source_ref
+        or semantic.source_sha256 != intermediate.source.source_sha256
+    ):
+        raise RegistryValidationError(
+            "M303 variable-envelope semantic contract is not pinned to the exact parser source",
+        )
+    records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
+    body_record_ids = tuple(
+        records_by_anchor[_intermediate_record_key(sheet.sheet, sheet.record_identity)].export_record_id
+        for sheet in intermediate.sheets
+    )
+    validate_m303_variable_envelope(
+        semantic,
+        m303_envelopes[0],
+        source=intermediate.source,
+        body_record_ids=body_record_ids,
+    )
 
 
 def _validate_exact_bijection(

@@ -33,11 +33,9 @@ from collections.abc import Mapping
 
 from .....core import CasillaId
 from .....domain.calculations.registry import (
-    CasillaFieldKind,
-    ExportFieldDefinition,
     ExportRecordDefinition,
-    RegistryValidationError,
-    render_fixed_width_export_field,
+    FixedWidthRecordRenderError,
+    render_fixed_width_export_record_body,
 )
 from .....domain.modelos import ModeloExportError
 
@@ -48,29 +46,6 @@ def _export_error(message: str, *, field_id: str | None, reason: str, **context:
     if field_id is not None:
         payload["export_field_id"] = field_id
     return ModeloExportError(message, context=payload)
-
-
-def _ordered_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
-    """Order fields by wire position, keeping unpositioned ones deterministic.
-
-    An unpositioned field is a declaration error this renderer refuses, but it
-    must sort somewhere first for the refusal to name it deterministically
-    rather than depending on declaration order.
-    """
-    return tuple(
-        sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)),
-    )
-
-
-def _require_coordinates(field: ExportFieldDefinition) -> tuple[int, int]:
-    """Return the field's one-based offset and length, refusing a partial declaration."""
-    if field.offset is None or field.length is None:
-        raise _export_error(
-            f"export field {field.id!r} lacks fixed-width coordinates",
-            field_id=field.id,
-            reason="missing_coordinates",
-        )
-    return field.offset, field.length
 
 
 class RegistryFixedWidthRecordRenderer:
@@ -86,52 +61,15 @@ class RegistryFixedWidthRecordRenderer:
         field_values: Mapping[CasillaId, str],
     ) -> bytes:
         """Return the encoded body for ``record``, without a line terminator."""
-        fields = _ordered_fields(record)
-        if not fields:
+        try:
+            return render_fixed_width_export_record_body(record, field_values=field_values)
+        except FixedWidthRecordRenderError as exc:
             raise _export_error(
-                f"export record {record.id!r} declares no renderable fields",
-                field_id=None,
-                reason="empty_record",
-                export_record_id=record.id,
-            )
-        total_length = max(offset + length - 1 for field in fields for offset, length in (_require_coordinates(field),))
-        buffer = bytearray(b" " * total_length)
-        occupied = bytearray(total_length)
-        encoding = record.encoding
-        for field in fields:
-            offset, length = _require_coordinates(field)
-            if field.kind not in {CasillaFieldKind.LITERAL, CasillaFieldKind.FILLER, CasillaFieldKind.CASILLA}:
-                raise _export_error(
-                    f"export field {field.id!r} cannot be mapped to the fixed-width renderer",
-                    field_id=field.id,
-                    reason="field_kind",
-                )
-            try:
-                raw_value = field_values.get(field.casilla_id, "") if field.casilla_id is not None else ""
-                rendered = render_fixed_width_export_field(field, raw_value).encode(encoding)
-            except (LookupError, UnicodeError, RegistryValidationError) as exc:
-                raise _export_error(
-                    f"export field {field.id!r} has an invalid fixed-width value",
-                    field_id=field.id,
-                    reason="fixed_width_value",
-                ) from exc
-            if len(rendered) != length:
-                raise _export_error(
-                    f"export field {field.id!r} encoded to {len(rendered)} bytes instead of {length}",
-                    field_id=field.id,
-                    reason="encoded_width",
-                )
-            start = offset - 1
-            end = start + length
-            if any(occupied[start:end]):
-                raise _export_error(
-                    f"export field {field.id!r} overlaps another field",
-                    field_id=field.id,
-                    reason="overlap",
-                )
-            buffer[start:end] = rendered
-            occupied[start:end] = b"\x01" * length
-        return bytes(buffer)
+                str(exc),
+                field_id=exc.field_id,
+                reason=exc.reason,
+                export_record_id=exc.export_record_id,
+            ) from exc
 
 
 __all__ = ["RegistryFixedWidthRecordRenderer"]
