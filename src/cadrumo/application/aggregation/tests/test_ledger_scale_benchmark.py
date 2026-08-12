@@ -36,6 +36,17 @@ wall P95 moved from 2.07 s to 4.10 s across runs while its CPU P95 stayed at
 1.83 s. Wall-clock stays measured and PRINTED as an advisory on every row
 (run with ``-s`` to surface it in job logs) but is never asserted.
 
+The budgeted row additionally keeps its former WALL threshold as a warning,
+because the print alone could not carry it. CPU-time is blind by construction
+to a test blocked on a wedged mount -- a blocked test burns no CPU however
+long it stalls -- so the conversion had to retain some wall instrument or
+lose that class entirely. A ``print`` is not that instrument here: the broad
+serial pass runs ``pytest -q ... -n0`` with no ``-s``, so capture discards
+every print from a test that PASSES, which is precisely the run the advisory
+exists to annotate. :func:`dev.ci.perf_measurement.wall_advisory_message`
+raises it on the warnings channel instead, and fires only when wall is high
+AND the wall-to-CPU ratio is wedge-shaped, so a merely loaded box stays quiet.
+
 Real-behaviour, real-adapter: real encrypted-SQLite secure store via
 :class:`SecureObjectRepository` + :func:`isolated_runtime_profile`, the real
 transaction repository, the real registry authority, the real calculation
@@ -63,6 +74,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
+from dev.ci.perf_measurement import wall_advisory_message
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -119,6 +131,21 @@ _TAX_ID = "40404040D"
 #: ``test_iva_quarterly_budget_still_fails_without_the_partition`` asserts that
 #: separation on every run so the budget can never go vacuous.
 _P95_BUDGET_CPU_SECONDS = 3.0
+
+#: Retained wall threshold for the partitioned quarterly path. This is the
+#: former wall budget, kept as a non-failing advisory rather than deleted by
+#: the CPU conversion: CPU-time cannot see a test blocked on a wedged mount,
+#: because a blocked test burns no CPU however long it stalls.
+_P95_WALL_ADVISORY_SECONDS = 3.0
+
+#: Wall-to-CPU ratio above which crossing the advisory threshold is
+#: wedge-shaped rather than load-shaped. Derived from this path's own
+#: measurements rather than picked: it ran wall 2.07 s against CPU 1.83 s quiet
+#: (1.13x) and wall 4.10 s against the same 1.83 s CPU under full fleet load
+#: (2.24x), so co-residency on this box tops out near 2.2x for an in-process
+#: aggregation. 4.0 clears that measured ceiling with headroom while sitting
+#: far below anything a real block produces.
+_P95_WEDGE_WALL_TO_CPU_RATIO = 4.0
 
 #: The bundled spending-category profile registry only defines 2024/2025 (see
 #: ``src/cadrumo/_data/registry/aeat/categories/profiles/``); the renta-ledger
@@ -677,11 +704,20 @@ def test_iva_quarterly_aggregation_partitioned_p95_cpu_within_budget(
         f"cpu_min={min(samples.partitioned_cpu):.3f}s cpu_max={max(samples.partitioned_cpu):.3f}s "
         f"gate=cpu<{_P95_BUDGET_CPU_SECONDS:.1f}s "
         f"wall_p95={partitioned_wall_p95:.3f}s wall_mean={statistics.mean(samples.partitioned_wall):.3f}s "
-        f"wall_max={max(samples.partitioned_wall):.3f}s (wall advisory, never asserted) "
+        f"wall_max={max(samples.partitioned_wall):.3f}s "
+        f"(wall advisory<{_P95_WALL_ADVISORY_SECONDS:.1f}s, warned never asserted) "
         f"paired_cpu_p95_delta_vs_full_scan="
         f"{(full_scan_cpu_p95 - _p95(list(samples.paired_partitioned_cpu))):.3f}s "
         f"partition_reads={partition_read_count} partition_in_window_rows={partition_in_window_rows}",
     )
+    wall_advisory_message(
+        "iva_quarterly_partitioned p95",
+        wall_seconds=partitioned_wall_p95,
+        cpu_seconds=partitioned_cpu_p95,
+        wall_advisory_seconds=_P95_WALL_ADVISORY_SECONDS,
+        hang_wall_to_cpu_ratio=_P95_WEDGE_WALL_TO_CPU_RATIO,
+    )
+
     assert partitioned_cpu_p95 < _P95_BUDGET_CPU_SECONDS, (
         f"IVA quarterly aggregation (partitioned) P95 {partitioned_cpu_p95:.3f} CPU-s at "
         f"{_TOTAL_TRANSACTIONS}-row ledger scale exceeds the {_P95_BUDGET_CPU_SECONDS:.1f} CPU-s budget "
