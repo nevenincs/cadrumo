@@ -36,7 +36,7 @@ type SheetA1Reference = str
 class TranslationError(CadrumoError):
     """A registry expression has no closed-form Sheets equivalent."""
 
-    def __init__(self, message: str, *, op: str | None = None, hint: str | None = None) -> None:
+    def __init__(self, *, op: str | None = None, hint: str | None = None) -> None:
         context: dict[str, object] = {"reason": "formula_translation_failed"}
         if op is not None and op in _SUPPORTED_OPS:
             context["op"] = op
@@ -125,7 +125,6 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     op = expression.op
     if op not in _SUPPORTED_OPS:
         raise TranslationError(
-            f"registry op {op!r} has no closed-form Sheets translation yet",
             op=op,
             hint="cross-revision relations are the only outstanding leaf gap",
         )
@@ -145,7 +144,7 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     args = [_translate(arg, layout=layout) for arg in expression.args]
     builder = _ARG_OP_BUILDERS.get(op)
     if builder is None:
-        raise TranslationError(f"internal: op {op!r} fell through dispatch", op=op)
+        raise TranslationError(op=op)
     return builder(op, args)
 
 
@@ -165,7 +164,7 @@ def _build_required_variadic_join(joiner: str) -> Callable[[str, list[str]], str
 
     def builder(op: str, args: list[str]) -> str:
         if not args:
-            raise TranslationError(f"{op} requires at least one arg", op=op)
+            raise TranslationError(op=op)
         return f"({joiner.join(args)})"
 
     return builder
@@ -176,7 +175,7 @@ def _build_call(name: str) -> Callable[[str, list[str]], str]:
 
     def builder(op: str, args: list[str]) -> str:
         if not args:
-            raise TranslationError(f"{op} requires at least one arg", op=op)
+            raise TranslationError(op=op)
         return f"{name}({','.join(args)})"
 
     return builder
@@ -231,11 +230,8 @@ def _translate_leaf(expression: FormulaExpression, *, layout: SheetLayout) -> st
     if expression.relation is not None:
         return _relation_reference(expression.relation, layout=layout)
     if expression.dispatch_table is not None:
-        raise TranslationError(
-            "dispatch_table leaves are only valid inside lookup_bracket_by_ccaa "
-            "(they cannot be translated to an A1 reference on their own)",
-        )
-    raise TranslationError("empty formula leaf encountered")
+        raise TranslationError()
+    raise TranslationError()
 
 
 def _bracket_lookup_formula(*, base_a1: str, parameter: ParameterId, layout: SheetLayout) -> str:
@@ -253,7 +249,6 @@ def _bracket_lookup_formula(*, base_a1: str, parameter: ParameterId, layout: She
     ranges = layout.bracket_ranges.get(parameter)
     if ranges is None:
         raise TranslationError(
-            f"parameter {parameter!r} is referenced by a lookup_bracket op but has no bracket ranges in the layout",
             op="lookup_bracket",
             hint="the layout planner must emit Tarifas bracket rows for every "
             "bracket_table parameter the formulas reach",
@@ -269,13 +264,11 @@ def _bracket_lookup_formula(*, base_a1: str, parameter: ParameterId, layout: She
 def _translate_lookup_bracket(expression: FormulaExpression, *, layout: SheetLayout) -> str:
     if len(expression.args) != 2:
         raise TranslationError(
-            "lookup_bracket expects 2 args (base, bracket_parameter)",
             op="lookup_bracket",
         )
     base_expr, bracket_arg = expression.args
     if bracket_arg.parameter is None:
         raise TranslationError(
-            "lookup_bracket args[1] must be a parameter leaf",
             op="lookup_bracket",
         )
     base_a1 = _translate(base_expr, layout=layout)
@@ -303,18 +296,15 @@ def _translate_lookup_bracket_by_binding(
     """
     if len(expression.args) != 3:
         raise TranslationError(
-            f"{op} expects 3 args (base, binding, dispatch_table)",
             op=op,
         )
     base_expr, binding_arg, dispatch_arg = expression.args
     if binding_arg.binding is None:
         raise TranslationError(
-            f"{op} args[1] must be a binding leaf",
             op=op,
         )
     if dispatch_arg.dispatch_table is None:
         raise TranslationError(
-            f"{op} args[2] must be a dispatch_table leaf",
             op=op,
         )
     base_a1 = _translate(base_expr, layout=layout)
@@ -349,18 +339,15 @@ def _translate_lookup_parameter_by_entity_type(
     """
     if len(expression.args) != 3:
         raise TranslationError(
-            "lookup_parameter_by_entity_type expects 3 args (placeholder, binding, dispatch_table)",
             op="lookup_parameter_by_entity_type",
         )
     _placeholder_expr, binding_arg, dispatch_arg = expression.args
     if binding_arg.binding is None:
         raise TranslationError(
-            "lookup_parameter_by_entity_type args[1] must be a binding leaf",
             op="lookup_parameter_by_entity_type",
         )
     if dispatch_arg.dispatch_table is None:
         raise TranslationError(
-            "lookup_parameter_by_entity_type args[2] must be a dispatch_table leaf",
             op="lookup_parameter_by_entity_type",
         )
     binding_a1 = _binding_reference(binding_arg.binding, layout=layout)
@@ -369,8 +356,6 @@ def _translate_lookup_parameter_by_entity_type(
         param_cell = layout.parameter_cells.get(parameter_id)
         if param_cell is None:
             raise TranslationError(
-                f"parameter {parameter_id!r} is referenced by lookup_parameter_by_entity_type "
-                f"but has no anchor cell in the layout",
                 op="lookup_parameter_by_entity_type",
                 hint="the layout planner must mirror every dispatched parameter into Tarifas",
             )
@@ -389,13 +374,12 @@ def _translate_age_at_year_end(expression: FormulaExpression, *, layout: SheetLa
     year is the constant carried on the layout from the snapshot.
     """
     if len(expression.args) != 1:
-        raise TranslationError("age_at_year_end expects 1 arg (date_binding)", op="age_at_year_end")
+        raise TranslationError(op="age_at_year_end")
     arg = expression.args[0]
     if arg.date_binding is None:
-        raise TranslationError("age_at_year_end args[0] must be a date_binding leaf", op="age_at_year_end")
+        raise TranslationError(op="age_at_year_end")
     if layout.filing_year <= 0:
         raise TranslationError(
-            "age_at_year_end requires a non-zero filing_year on the layout",
             op="age_at_year_end",
             hint="plan_layout must be called with a bracket_filter_date so the filing year is known",
         )
@@ -403,7 +387,6 @@ def _translate_age_at_year_end(expression: FormulaExpression, *, layout: SheetLa
         cell = layout.address_for_date_binding(arg.date_binding)
     except CalcSheetsEngineError as exc:
         raise TranslationError(
-            "date_binding reference has no anchor cell in the layout",
             op="age_at_year_end",
             hint="the layout planner must reserve an Entradas cell for every referenced date_binding",
         ) from exc
@@ -416,7 +399,6 @@ def _casilla_cell_reference(casilla_id: CasillaId, *, layout: SheetLayout) -> Sh
         address = layout.address_for(casilla_id)
     except CalcSheetsEngineError as exc:
         raise TranslationError(
-            "casilla reference has no anchor cell in the layout",
             hint="the layout planner must reserve a cell for every referenced casilla",
         ) from exc
     return address.qualified()
@@ -427,7 +409,6 @@ def _binding_reference(binding: BindingId, *, layout: SheetLayout) -> str:
         address = layout.address_for_binding(binding)
     except CalcSheetsEngineError as exc:
         raise TranslationError(
-            "binding reference has no anchor cell in the layout",
             hint="the layout planner must reserve a cell for every referenced binding",
         ) from exc
     return address.qualified()
@@ -438,7 +419,6 @@ def _relation_reference(relation: RelationId, *, layout: SheetLayout) -> str:
         address = layout.address_for_relation(relation)
     except CalcSheetsEngineError as exc:
         raise TranslationError(
-            "relation reference has no anchor cell in the layout",
             hint="the layout planner must mirror every referenced relation into Tarifas",
         ) from exc
     return address.qualified()
@@ -448,7 +428,6 @@ def _parameter_reference(parameter: ParameterId, *, layout: SheetLayout) -> str:
     cell = layout.parameter_cells.get(parameter)
     if cell is None:
         raise TranslationError(
-            f"parameter {parameter!r} has no anchor cell in the layout",
             hint="the layout planner must mirror every referenced parameter into Tarifas",
         )
     return cell.anchor.qualified()
@@ -457,7 +436,6 @@ def _parameter_reference(parameter: ParameterId, *, layout: SheetLayout) -> str:
 def _expect_arg_count(op: str, args: list[str], expected: int) -> None:
     if len(args) != expected:
         raise TranslationError(
-            f"op {op!r} expects {expected} args; got {len(args)}",
             op=op,
         )
 
