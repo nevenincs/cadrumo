@@ -156,11 +156,12 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
     with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {result_casilla.number: Decimal("1")})
 
+    # The alias-to-target mapping is a machine fact now, not a rendered sentence.
     assert raised.value.context == {
         "casilla_ids": result_casilla.number,
         "revision_id": snapshot.revision.id,
+        "noncanonical_reference_targets": f"{result_casilla.number!r} -> {result_casilla.id}",
     }
-    assert f"{result_casilla.number!r} -> {result_casilla.id}" in str(raised.value)
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
@@ -172,11 +173,11 @@ def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() ->
     assert raised.value.context == {
         "casilla_ids": _M200_AMBIGUOUS_PRINTED_NUMBER,
         "revision_id": snapshot.revision.id,
+        "noncanonical_reference_targets": (
+            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
+            f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+        ),
     }
-    assert (
-        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
-    ) in str(raised.value)
 
 
 def test_validate_casilla_input_ids_rejects_decimal_value_for_non_numeric_casilla() -> None:
