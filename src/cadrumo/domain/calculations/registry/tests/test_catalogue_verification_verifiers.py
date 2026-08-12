@@ -664,6 +664,119 @@ def test_verify_legal_catalogue_rejects_missing_required_text_on_single_path(tmp
         verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
 
 
+def test_verify_legal_catalogue_rejects_forbidden_text_present_in_corpus(tmp_path: Path) -> None:
+    """A forbidden-text clause refuses a corpus document that still carries the named phrase.
+
+    This is the case the clause exists for: a repealed clause surviving in a
+    cited document, which no set of must-be-present phrases could express.
+    """
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text(
+        "<p>current text carrying the current phrase and the repealed phrase</p>",
+        encoding="utf-8",
+    )
+    _write_extracted_unit(
+        corpus_path,
+        anchor="a110",
+        text="current text carrying the current phrase and the repealed phrase",
+    )
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
+            "required_text": ("the current phrase",),
+            "forbidden_text": ("the repealed phrase",),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="corpus text contains forbidden text"):
+        verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
+
+
+def test_verify_legal_catalogue_accepts_forbidden_text_genuinely_absent_from_corpus(tmp_path: Path) -> None:
+    """A declared forbidden-text clause must not fire when the phrase is genuinely absent.
+
+    The negative clause must not over-reach: a document that carries the
+    required text and none of the forbidden text passes cleanly.
+    """
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>current text carrying only the current phrase</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="a110", text="current text carrying only the current phrase")
+    reference = _legal_reference().model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
+            "required_text": ("the current phrase",),
+            "forbidden_text": ("a phrase this document never contains",),
+        },
+    )
+
+    assert verify_legal_catalogue({reference.id: reference}, source_root=tmp_path) is None
+
+
+def test_verify_legal_catalogue_distinguishes_missing_required_from_present_forbidden(tmp_path: Path) -> None:
+    """A missing required phrase and a present forbidden phrase diagnose opposite defects.
+
+    One failure message must never claim the other clause's defect.
+    """
+    corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
+    corpus_path.parent.mkdir(parents=True)
+    corpus_path.write_text("<p>text missing the sought phrase</p>", encoding="utf-8")
+    _write_extracted_unit(corpus_path, anchor="a110", text="text missing the sought phrase")
+    missing_required = _legal_reference(ref_id="rd-439-2007:art-110-missing").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
+            "required_text": ("phrase this document lacks",),
+        },
+    )
+    present_forbidden = _legal_reference(ref_id="rd-439-2007:art-110-forbidden").model_copy(
+        update={
+            "corpus_ref": "corpus/normatives/html/rd-439-2007-art-110.html#a110",
+            "required_text": ("text missing the sought phrase",),
+            "forbidden_text": ("the sought phrase",),
+        },
+    )
+
+    with pytest.raises(RegistryValidationError, match="corpus text missing required text") as missing_exc:
+        verify_legal_catalogue({missing_required.id: missing_required}, source_root=tmp_path)
+    with pytest.raises(RegistryValidationError, match="corpus text contains forbidden text") as forbidden_exc:
+        verify_legal_catalogue({present_forbidden.id: present_forbidden}, source_root=tmp_path)
+
+    assert "contains forbidden text" not in str(missing_exc.value)
+    assert "missing required text" not in str(forbidden_exc.value)
+
+
+def test_legal_reference_rejects_forbidden_text_overlapping_required_text() -> None:
+    """The same phrase cannot be both mandatory and forbidden on one entry."""
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload["required_text"] = ("shared phrase",)
+    payload["forbidden_text"] = ("shared phrase",)
+
+    with pytest.raises(ValidationError, match="required_text and forbidden_text must not overlap"):
+        LegalReference.model_validate(payload)
+
+
+def test_legal_reference_rejects_blank_forbidden_text_entry() -> None:
+    """A forbidden_text entry must carry real text, mirroring required_text."""
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload["forbidden_text"] = ("   ",)
+
+    with pytest.raises(ValidationError, match="forbidden_text entries must be non-empty"):
+        LegalReference.model_validate(payload)
+
+
+def test_legal_reference_rejects_duplicate_forbidden_text_entries() -> None:
+    """Duplicate forbidden_text entries are rejected, mirroring required_text."""
+    reference = _legal_reference()
+    payload = reference.model_dump(mode="python")
+    payload["forbidden_text"] = ("phrase", "phrase")
+
+    with pytest.raises(ValidationError, match="forbidden_text entries must be unique"):
+        LegalReference.model_validate(payload)
+
+
 def test_registry_validator_rejects_missing_required_text(tmp_path: Path) -> None:
     """RegistryValidator must not admit a legal reference whose required_text is absent."""
     corpus_path = tmp_path / "corpus" / "normatives" / "html" / "rd-439-2007-art-110.html"
