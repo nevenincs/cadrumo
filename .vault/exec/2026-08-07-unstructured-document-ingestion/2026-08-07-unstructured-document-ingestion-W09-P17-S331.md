@@ -5,44 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:7126602ac8a638a389c7f4373a23b02c971f6d80d9bf475eeb78201a580d79a8'
+body_hash: 'sha256:f3fb327ecddbc858b9ddd6a685f0a20e9333dc4d7cc467532a279d51361aa464'
 step_id: 'S331'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S331 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Wire the printed-statutory-citation supply-nature derivation into the confirm path, which is fully built and has NO production caller. MEASURED 2026-08-12: derive_supply_nature_from_citation and match_statutory_citations are exported on the domain facade and covered by their own suite, and nothing in the application layer calls either - so the axis is built and switched off, the dormant-resolver shape the aggregation rule names. The cost is not theoretical: the assembly's own gap message TELLS the operator the axis is settled by a printed statutory citation or an explicit assertion, and the declared-facts builder's comment calls the citation one of the two sanctioned sources - yet a document printing an art. 25 mention still asks the operator, because nothing reads it. The legend the reader already recovers is the input, and the derivation returns a typed three-state outcome whose DERIVED case carries the nature and its citations. Feed it into declared.supply_nature under DOCUMENT_EVIDENCE provenance, with the operator's own assertion continuing to take precedence, and surface CONTRADICTED as a review item rather than resolving it - the model refuses to carry a nature there precisely so a caller cannot use one side of a disagreement and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Wire the printed-statutory-citation supply-nature derivation into the confirm path, which is fully built and has NO production caller. MEASURED 2026-08-12: derive_supply_nature_from_citation and match_statutory_citations are exported on the domain facade and covered by their own suite, and nothing in the application layer calls either - so the axis is built and switched off, the dormant-resolver shape the aggregation rule names. The cost is not theoretical: the assembly's own gap message TELLS the operator the axis is settled by a printed statutory citation or an explicit assertion, and the declared-facts builder's comment calls the citation one of the two sanctioned sources - yet a document printing an art. 25 mention still asks the operator, because nothing reads it. The legend the reader already recovers is the input, and the derivation returns a typed three-state outcome whose DERIVED case carries the nature and its citations. Feed it into declared.supply_nature under DOCUMENT_EVIDENCE provenance, with the operator's own assertion continuing to take precedence, and surface CONTRADICTED as a review item rather than resolving it - the model refuses to carry a nature there precisely so a caller cannot use one side of a disagreement
 
@@ -99,8 +66,6 @@ article at all. Both are gated, alongside art. 84, which the table records as
 establishing NOTHING because its sub-rules reach goods and services alike.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 FOUND BY REFUSING TO BUILD THE ROW THAT ASKED FOR A MODEL. The sibling row
 proposes an LLM pre-suggestion for this axis. Tracing what already settles the

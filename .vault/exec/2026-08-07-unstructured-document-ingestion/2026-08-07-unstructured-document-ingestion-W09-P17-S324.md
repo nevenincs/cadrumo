@@ -5,44 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:9ae42714b28c60bffeda0ce9cac174b6e8f9337621c259a9475abca02cdb3919'
+body_hash: 'sha256:81b66caf19e440bc18a14a4120666fd5c2ffa5512d8e8696598f61c9516a8f5f'
 step_id: 'S324'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S324 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The TAX REVIEW DONE AND GROUNDED 2026-08-12 against the bundled consolidated LIVA. The branch itself is the remaining half. THE CHAIN, read from the corpus rather than assumed: art. 3.Dos.1 excludes from Estado miembro slash interior del pais both (a) Ceuta y Melilla, en cuanto territorios no comprendidos en la Union Aduanera, and (b) Canarias, listed beside the French overseas territories, Monte Athos and the Channel Islands. Art. 3.Dos.2 then defines Comunidad and territorio de la Comunidad as the set of territories constituting interior del pais under 1. And art. 3.Dos.3 defines territorio tercero as cualquier territorio distinto de los definidos como interior del pais. So all three are THIRD TERRITORIES by the law's own definitional chain, and art. 21 - which exempts las entregas de bienes expedidos o transportados fuera de la Comunidad - reaches all three. THE THREE DO SHARE AN ANSWER ON GOODS, contrary to the row's caution, and the reason the row was right to be cautious is visible in the text: Ceuta and Melilla are excluded for being outside the CUSTOMS union while Canarias is excluded on separate grounds, so they differ for customs and coincide for IVA. GOODS AND SERVICES DO FORK, as the row warned. Art. 21 is about entregas de BIENES only. A service to a customer established in the Canaries is localised by arts. 69 and 70, and under the general B2B rule lands where the recipient is established - so it is NO SUJETA rather than exempt, a different outcome with a different Modelo 303 consequence. REMAINING: the rule-table rows themselves, one per axis, plus their grounding refs and gates. R30 stays the inbound direction and is not touched and ## Scope
-
-- `src/cadrumo/domain/iva` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # TAX REVIEW DONE AND GROUNDED 2026-08-12 against the bundled consolidated LIVA. The branch itself is the remaining half. THE CHAIN, read from the corpus rather than assumed: art. 3.Dos.1 excludes from Estado miembro slash interior del pais both (a) Ceuta y Melilla, en cuanto territorios no comprendidos en la Union Aduanera, and (b) Canarias, listed beside the French overseas territories, Monte Athos and the Channel Islands. Art. 3.Dos.2 then defines Comunidad and territorio de la Comunidad as the set of territories constituting interior del pais under 1. And art. 3.Dos.3 defines territorio tercero as cualquier territorio distinto de los definidos como interior del pais. So all three are THIRD TERRITORIES by the law's own definitional chain, and art. 21 - which exempts las entregas de bienes expedidos o transportados fuera de la Comunidad - reaches all three. THE THREE DO SHARE AN ANSWER ON GOODS, contrary to the row's caution, and the reason the row was right to be cautious is visible in the text: Ceuta and Melilla are excluded for being outside the CUSTOMS union while Canarias is excluded on separate grounds, so they differ for customs and coincide for IVA. GOODS AND SERVICES DO FORK, as the row warned. Art. 21 is about entregas de BIENES only. A service to a customer established in the Canaries is localised by arts. 69 and 70, and under the general B2B rule lands where the recipient is established - so it is NO SUJETA rather than exempt, a different outcome with a different Modelo 303 consequence. REMAINING: the rule-table rows themselves, one per axis, plus their grounding refs and gates. R30 stays the inbound direction and is not touched
 

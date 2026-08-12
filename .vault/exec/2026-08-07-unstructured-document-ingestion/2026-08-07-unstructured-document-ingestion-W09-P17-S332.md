@@ -5,44 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:b5349c6e538a509fcea0de0eba141e42e26616dbf1f610ac970d198ae97d97cf'
+body_hash: 'sha256:f00f1aaae7b31452b6122c4366dc13a5a0534ce1e932904f307e940b8b66e6df'
 step_id: 'S332'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S332 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The CANDIDATE, needing its own grounding pass: derive the supply nature from the DECLARED IVA category, which fixes it by legal definition on most of the branches that demand it. Verified against the bundled corpus 2026-08-12 - art. 25 exempts las entregas de bienes definidas en el articulo 8, art. 21 las entregas de bienes expedidos o transportados fuera de la Comunidad, art. 13 las adquisiciones intracomunitarias de bienes, and two members name services in their own identifiers. So an operator asked goods-or-services on an intra-community supply is being asked a question the law already answers. THE TRAP IS ART. 22 AND THE CORPUS SHOWS IT PLAINLY: assimilated exports cover las entregas, construcciones, transformaciones, reparaciones, mantenimiento, fletamento and arrendamiento, which are services as much as goods, so a derivation treating the export family uniformly would silently assert GOODS on service exports. Domestic reverse charge is the other open one, art. 84 reaching both. DESIGN CONSTRAINT, not optional: the citation table ALREADY encodes this project's rulings on which article establishes which nature, each with a corpus_ref, so a second category-keyed table would be a rival authority on one question. Route category to its defining article to that existing table instead, which makes the new data a mapping rather than a second judgement and ## Scope
-
-- `src/cadrumo/domain/iva` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # CANDIDATE, needing its own grounding pass: derive the supply nature from the DECLARED IVA category, which fixes it by legal definition on most of the branches that demand it. Verified against the bundled corpus 2026-08-12 - art. 25 exempts las entregas de bienes definidas en el articulo 8, art. 21 las entregas de bienes expedidos o transportados fuera de la Comunidad, art. 13 las adquisiciones intracomunitarias de bienes, and two members name services in their own identifiers. So an operator asked goods-or-services on an intra-community supply is being asked a question the law already answers. THE TRAP IS ART. 22 AND THE CORPUS SHOWS IT PLAINLY: assimilated exports cover las entregas, construcciones, transformaciones, reparaciones, mantenimiento, fletamento and arrendamiento, which are services as much as goods, so a derivation treating the export family uniformly would silently assert GOODS on service exports. Domestic reverse charge is the other open one, art. 84 reaching both. DESIGN CONSTRAINT, not optional: the citation table ALREADY encodes this project's rulings on which article establishes which nature, each with a corpus_ref, so a second category-keyed table would be a rival authority on one question. Route category to its defining article to that existing table instead, which makes the new data a mapping rather than a second judgement
 
@@ -95,8 +62,6 @@ category states what its family rests on. The operator still outranks both,
 provenance included. All three routes and their full precedence are gated.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 KNOWN LIMITATION, recorded rather than worked around: the two SERVICE members
 derive nothing. Their grounding articles are the general place-of-supply rules

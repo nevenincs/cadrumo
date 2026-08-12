@@ -5,46 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:41f8f9441a75d30cf780180058e9e3c69417195e99879f91dba0e24ac34548ca'
+body_hash: 'sha256:5875d2c7b0e0b5529e0fd93d7831c49ceb07c129d80ab6e27eea99063eb867c4'
 step_id: 'S43'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace ci-lane-deconflation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S43 and 2026-08-05-ci-lane-deconflation-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add the format check to the per-push blocking lane and sweep the tree that must pass it first, in that order, because ruff format --check is enforced by nothing today and the tree is far from able to satisfy it. The recipe check-format exists and is invoked by zero workflows, and the per-push Lint step runs check-style and check-relative-imports only, so the sole configured format gate is the ruff-format hook in prek.toml, which this fleet is instructed never to run because it stashes the shared tree. Two configured gates cover formatting and the intersection of what they enforce is empty, which is the same shape as a gate that exists while nothing selects it. THE ROW THIS SUPERSEDES SAID EIGHT FILES AND THAT NUMBER IS SRC-SCOPED. The recipe checks the whole repository, and measured against HEAD by excluding every file dirty in the working tree, 333 files would be reformatted, of which the eight are a subset. So the one-line workflow edit is NOT the fix on its own, because adding the step to a tree in this state reds the lane on its first run and a permanently red lane is one everyone learns to ignore, which is the failure this campaign has already documented for continue-on-error. Sequence the sweep first and the gate second, and treat the sweep as mechanical but wide, since it spans dev and src and cannot be done by pathspec while peers hold those files and ## Scope
-
-- `.github/workflows/ci.yml`
-- `justfile`
-- `prek.toml` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add the format check to the per-push blocking lane and sweep the tree that must pass it first, in that order, because ruff format --check is enforced by nothing today and the tree is far from able to satisfy it. The recipe check-format exists and is invoked by zero workflows, and the per-push Lint step runs check-style and check-relative-imports only, so the sole configured format gate is the ruff-format hook in prek.toml, which this fleet is instructed never to run because it stashes the shared tree. Two configured gates cover formatting and the intersection of what they enforce is empty, which is the same shape as a gate that exists while nothing selects it. THE ROW THIS SUPERSEDES SAID EIGHT FILES AND THAT NUMBER IS SRC-SCOPED. The recipe checks the whole repository, and measured against HEAD by excluding every file dirty in the working tree, 333 files would be reformatted, of which the eight are a subset. So the one-line workflow edit is NOT the fix on its own, because adding the step to a tree in this state reds the lane on its first run and a permanently red lane is one everyone learns to ignore, which is the failure this campaign has already documented for continue-on-error. Sequence the sweep first and the gate second, and treat the sweep as mechanical but wide, since it spans dev and src and cannot be done by pathspec while peers hold those files
 

@@ -5,45 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:b35ab361fa8f7a6bd2f7caca7eefc3267ea39aac4b13cb1faf0f036d0622bfbb'
+body_hash: 'sha256:053042f5e5e65239f1c667cdf86b9d5d9c52a8f147a694896348f0ec97a0ee1f'
 step_id: 'S24'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S24 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The DONE. The silent misclassification is closed end to end. The Facturae reader walked past Corrective/InvoiceNumber deliberately - its own comment said a rectificativa restates the corrected number there - while the confirm defaulted the class to ORDINARIA regardless, so the fact was seen and discarded and the Invoice model's rectificativa invariants never fired because nothing ever stated the class. Now read, carried on the draft, layered under the operator at confirm, and exposed as --invoice-class, --rectifies and --series for documents that state none of their own. GROUNDING LANDED: RD 1619/2012 art. 15 has a legal-catalogue entry quoted verbatim from the bundled consolidated text at the a15 anchor, attributed reviewed_by agent-review, which the shipped catalogue already establishes as practice - the earlier claim that this surface was operator-gated was WRONG, inferred from convention rather than read from the schema. THE CLASS IS DERIVED from the corrected reference because the model ties the two in both directions. Facturae's own InvoiceClass code element is deliberately NOT read: a closed regulatory vocabulary this repo does not bundle, and mapping its tokens from memory would be inventing one. Stating the class exposed three latent gaps, all closed - the document's own series was never layered, the new draft field had to reach the extract payload which the loss-forbidden waist gate caught, and the override channel needed --series because art. 6.1.a.2 obliges a rectificativa into its own. Omission is load-bearing: the runner omits the class argument rather than sending the service default, or every confirm would overwrite a recovered rectificativa and ## Scope
-
-- `src/cadrumo/application/ledger`
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # DONE. The silent misclassification is closed end to end. The Facturae reader walked past Corrective/InvoiceNumber deliberately - its own comment said a rectificativa restates the corrected number there - while the confirm defaulted the class to ORDINARIA regardless, so the fact was seen and discarded and the Invoice model's rectificativa invariants never fired because nothing ever stated the class. Now read, carried on the draft, layered under the operator at confirm, and exposed as --invoice-class, --rectifies and --series for documents that state none of their own. GROUNDING LANDED: RD 1619/2012 art. 15 has a legal-catalogue entry quoted verbatim from the bundled consolidated text at the a15 anchor, attributed reviewed_by agent-review, which the shipped catalogue already establishes as practice - the earlier claim that this surface was operator-gated was WRONG, inferred from convention rather than read from the schema. THE CLASS IS DERIVED from the corrected reference because the model ties the two in both directions. Facturae's own InvoiceClass code element is deliberately NOT read: a closed regulatory vocabulary this repo does not bundle, and mapping its tokens from memory would be inventing one. Stating the class exposed three latent gaps, all closed - the document's own series was never layered, the new draft field had to reach the extract payload which the loss-forbidden waist gate caught, and the override channel needed --series because art. 6.1.a.2 obliges a rectificativa into its own. Omission is load-bearing: the runner omits the class argument rather than sending the service default, or every confirm would overwrite a recovered rectificativa
 

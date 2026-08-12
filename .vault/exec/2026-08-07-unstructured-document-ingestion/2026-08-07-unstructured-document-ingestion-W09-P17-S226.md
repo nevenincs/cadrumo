@@ -5,44 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:3139e6618be52ce21e0e26983484c58f8d9cab9a34daca26fad92baf2eabe1c5'
+body_hash: 'sha256:575f202d0ad8c18d230f4aebf57482ed019abea2c67cd4bcc5468a61103e6861'
 step_id: 'S226'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S226 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The OPERATOR-GATED, and the gate is STRUCTURAL rather than my judgement - verified 2026-08-12. The code half is genuinely mine and safe by construction as the row says: the establishment side composes through the country resolver which returns nothing for Spain by design, so a Spanish prefix in the IDENTIFICATION vocabulary cannot leak a Spanish ESTABLISHMENT, and validate_spanish_tax_id already ships unwired. The row's own BLOCKING precondition is to ground the printed format against a provision the way every other regulatory value is, and that is where it stops. The provision is RD 1065/2007 art. 25, which is NOT in the bundled corpus - the bundled articles are 3, 9, 10, 11, 18, 31, 35, 42 and 54 - so grounding needs a fetch AND a legal-catalogue entry. THE CATALOGUE ENTRY CANNOT BE AGENT-AUTHORED: review_status on a LegalReference is Literal-reviewed, so the type makes any pending or agent state unrepresentable, and every shipped entry names reviewed_by as the operator. Authoring one is by construction asserting a completed human review of filing-grade text. The revision governance stamp does carry an AGENT_REVIEWED state for an operator to countersign later, and the legal catalogue deliberately does not. So the sequence is: operator grounds and reviews the provision, then the core/identity wiring follows mechanically and ## Scope
-
-- `src/cadrumo/core` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # OPERATOR-GATED, and the gate is STRUCTURAL rather than my judgement - verified 2026-08-12. The code half is genuinely mine and safe by construction as the row says: the establishment side composes through the country resolver which returns nothing for Spain by design, so a Spanish prefix in the IDENTIFICATION vocabulary cannot leak a Spanish ESTABLISHMENT, and validate_spanish_tax_id already ships unwired. The row's own BLOCKING precondition is to ground the printed format against a provision the way every other regulatory value is, and that is where it stops. The provision is RD 1065/2007 art. 25, which is NOT in the bundled corpus - the bundled articles are 3, 9, 10, 11, 18, 31, 35, 42 and 54 - so grounding needs a fetch AND a legal-catalogue entry. THE CATALOGUE ENTRY CANNOT BE AGENT-AUTHORED: review_status on a LegalReference is Literal-reviewed, so the type makes any pending or agent state unrepresentable, and every shipped entry names reviewed_by as the operator. Authoring one is by construction asserting a completed human review of filing-grade text. The revision governance stamp does carry an AGENT_REVIEWED state for an operator to countersign later, and the legal catalogue deliberately does not. So the sequence is: operator grounds and reviews the provision, then the core/identity wiring follows mechanically
 
