@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:da7aa9e404393fdb023bf92036ba9da4c128c50245080f9797623858de3583f1'
+body_hash: 'sha256:14a6c02e95ac2f001941305a01afb1e13cb08724bac003a02f9c320620f90684'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
+  - '[[2026-08-12-aeat-liabilities-sanciones-exec]]'
 ---
 
 # `aeat-liabilities-sanciones` feature index
@@ -51,6 +52,7 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 - `2026-08-07-aeat-liabilities-sanciones-P04-S11` - Wire aeat app live deudas list, view and latest into the app live command group, matching the expedientes latest, list, view verb shape exactly
 - `2026-08-07-aeat-liabilities-sanciones-P04-S12` - Add the three new leaves to the reviewed-non-mutating roster as pure reads over persisted snapshots, verified by test_every_app_leaf_is_accounted_for_by_name_independent_census and a new CLI integration test asserting the three verb shapes
 - `2026-08-07-aeat-liabilities-sanciones-P07-S23` - Author real es, en, ca and hu values for the new deudas CLI help and label keys via python -m dev.locales set, then scaffold and scaffold --check clean. Lands as ONE unit with P04.S10 through S12 because the codebase-to-locale parity gate is tree-wide and immediate, so no ordering exists in which the CLI rows are green before these values exist in all four catalogues. The original en.yml and hu.yml peer-WIP blocker is discharged
+- `2026-08-12-aeat-liabilities-sanciones-exec` - populate the deudas guard's real allowed path prefixes
 
 ### plan
 

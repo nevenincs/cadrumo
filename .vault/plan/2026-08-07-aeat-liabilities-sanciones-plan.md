@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
-modified: '2026-08-10'
-body_hash: 'sha256:fc9f1599ab5e0f7323eab8d3a68a0de9413faff6e4a3b02b84da5a48ab12a496'
+modified: '2026-08-12'
+body_hash: 'sha256:7e69041a86a79138ad40d15e63afff93bb2d0e7c6ae5377830e7578e65f7699c'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -129,7 +129,7 @@ Wire the live AEAT fetch once an operator authorises a specimen capture: the DOM
 
 - [ ] `P05.S13` - BLOCKED on an operator-authorised live specimen capture of Consultar deudas: observe the real situacion label vocabulary and confirm the str Field length bound is adequate, per the Declaracion.estado precedent, with no type change since situacion stays str; `no type change, situacion stays str; `src/cadrumo/core, src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 - [ ] `P05.S14` - BLOCKED on the same specimen: write walk_deudas_consulta mapping the real DOM to Deuda rows, verified by a parse test against the captured fixture with sensitive fields never committed to the repo; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
-- [ ] `P05.S15` - BLOCKED on the same specimen: populate the guard real allowed_path_prefixes from the captured consulta path, verified by the guard test refusing every known payment and aplazamiento path observed in the specimen; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [x] `P05.S15` - BLOCKED on the same specimen: populate the guard real allowed_path_prefixes from the captured consulta path, verified by the guard test refusing every known payment and aplazamiento path observed in the specimen; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 - [ ] `P05.S16` - BLOCKED on the same specimen: wire aeat app live deudas pull calling the walker and DeudasService capture, named pull never capture or refresh or fetch or sync per the CLI contract; `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py`.
 - [ ] `P05.S17` - Enroll app live deudas pull in PROFILE_BOUND_WRITE_VERB_PATHS with a comment stating it persists a captured snapshot to bucket storage, verified by test_root_fallback_guard_predicate_covers_profile_bound_mutations extended with the new entry; `src/cadrumo/application/storage_write_policy.py`.
 - [ ] `P05.S18` - Add deudas pull to the operator-orientation agent-harness document alongside expedientes pull and notifications pull in the same commit as the verb, verified by test_documented_command_conformance; `src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md`.
