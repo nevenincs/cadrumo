@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#user-docs-search-consolidation'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:b9fc7900f426a248e36b21c44179df99b5730ebae7840912b16f84dcaf51d868'
+body_hash: 'sha256:563ee251eca0439b431fc1af1740142a891eb5e98690523273bb36e1c3708b69'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -103,6 +103,20 @@ The alias-authority module argued in its docstring that its schema id must be ke
 - Re-run the built-site multilingual recall gate, the Diseño fail-closed gate and the relevance re-sweep once CLOSE-005 clears, in that order, and close P03.S08, P06.S27 and CLOSE-006 on their results.
 - Re-authenticate and publish to close P04.S12 and P04.S13; preserve the current 404 evidence until real live checks replace it.
 - Do not soften the casilla projection's refusal on a missing source-locale label. It is the only thing currently making the violation visible.
+
+## 2026-08-12 second revision: a stale-call-site pattern, and why the re-sweep is not being forced
+
+**CLOSE-006 stays open, and the reason is now a judgement rather than a blocker.** The re-sweep is mechanically possible: the projection works and a targeted sweep produces the corrected Hungarian row. Two things argue against forcing it at closeout.
+
+The RAG index is mid-rebuild -- its code and vault generations both report running -- which is why the sweep cannot confirm a reindex and honestly stamps its output as swept against an unconfirmed index. That is transient.
+
+The durable objection is proportionality. A full re-sweep regenerates the whole committed mapping, which is the input the 0.1875 held-out miss rate was measured from and which ADR Update 12 records as the project's final honest recall statement. Regenerating it would move a ratified figure and demand a fresh measurement and an amendment -- to retire one dead row for one concept in a corpus of 112 queries and 8,507 records. A targeted sweep avoids that but mixes one concept's rows, swept against an unconfirmed index, into a corpus-wide artifact carrying a single provenance note.
+
+So the row is left as the recorded carry-forward it already was, now with its cost stated: it belongs with a re-measurement, not with a close.
+
+**A pattern worth more than any of its instances: three stale call sites in the docs gates, all in shared helpers whose signatures moved.** The deployment parity gate never passed the sequence-check argument its environment helper had gained; the same file treated the source language as a localized root because the deploy language set already contains it; and the CLI reference conformance gate never passed the language argument its param-table helper had gained, dying on a TypeError before asserting anything.
+
+Each is trivial alone. Together they say something: `dev/docs` production helpers gained parameters and the `dev/docs/tests` call sites were not swept with them. Every one was invisible while the gates were red for unrelated reasons, which is the real lesson -- a blocker that hides a gate hides that gate's own rot, and clearing the blocker is what exposes it. Expect more of this class as the remaining peer-owned failures clear.
 
 ## 2026-08-12 revision: CLOSE-005 cleared, and a correction to this audit
 
