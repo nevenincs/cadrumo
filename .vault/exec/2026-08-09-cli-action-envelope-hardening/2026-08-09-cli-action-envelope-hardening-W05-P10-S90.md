@@ -52,6 +52,16 @@ Verification: the strengthened integration module passes 5 tests; a separate fix
 
 S90 remains open for final independent review.
 
+## Import UX test-integrity fixed point
+
+The complete `test_ledger_import_ux.py` module was audited rather than retaining a notice-only subset. Every assertion coupled to rendered CSV-row, currency-column, invalid-date, validation, configuration-repair, expected-format, unsupported-format, or no-data prose was removed. Import behavior now binds the real JSON result DTO or the shared refusal envelope: error code and category, failed condition, exact evidence identity and provenance, typed runtime fact, null action, `not_applicable` conditionality, and `operator_decision` outcome. The invalid-date path proves the same machine contract under ca/en/es/hu without inspecting translated text. Provider choices are derived from `LedgerProviderID`, not redeclared as a test-owned accepted set.
+
+A source-level conformance assertion now scans the whole import UX module and rejects direct rendered-output comparisons against string literals, case-folded presentation assertions, and a forced English invocation. JSON DTO member assertions remain admitted because they test canonical machine fields, not presentation. The exact source scan finds no `.lower()`, `.casefold()`, message regex, translated fragment assertion, or former rendered literals.
+
+Verification selectors and results: `pytest -m integration -n 0 test_ledger_import_ux.py` passes all 23 cases; `pytest -m integration -n 0 test_ledger_import_ux.py test_ledger_notice_action_conformance.py` passes all 35 cases; `pytest -m "unit or integration" -n 0 test_consent_withdrawal.py test_registry_enforcement.py` passes all 25 cases. The requested reviewer superset collected 73 cases across exception propagation, evidence consent, import UX, list filters, ratios, and notice/action conformance; 72 passed and one separately located list-filter test failed because it asserts that canonical reason `ledger-period-year-pairing` is absent even though the live typed evidence now correctly carries that reason. This is outside the import UX file and is reported without weakening the canonical evidence or hiding the failure.
+
+S90 remains open for final independent review.
+
 ## Canonical import notice transport closure
 
 The final import payload review found three advisory strings redeclared inside `LedgerImportPayload`: dry-run preview, empty-import explanation, and likely-duplicate warning. Those fields duplicated the envelope's typed `Notice` authority and made machine consumers depend on localized prose embedded in a command-specific result schema.
