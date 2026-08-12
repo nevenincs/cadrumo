@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:e39a963bb282e3bd399dcd046f7c45b163a652f4eb1b4af109522270830b3ad4'
+body_hash: 'sha256:6c5b45dfca44bba0511269315421911ae50a82d99945e67b5e7960eb6315064e'
 related:
   - "[[2026-08-12-iva-service-localisation-reference]]"
 ---
@@ -142,10 +142,21 @@ art. 69.Dos genuinely excepts the service, the operator sees a subject
 classification and must say otherwise, rather than the application silently
 agreeing with an under-declaration.
 
-The art. 69.Dos list remains unmodelled, so its population is over-taxed by
-default. This is the direction the project's own mandate warns is unwatched --
+**The unmodelled population is wider than art. 69.Dos's list, and the honest
+statement is the wider one.** Art. 70's *reglas especiales* override art. 69 and
+several are themselves B2C rules. The rows key on the general services kind, so
+land-related, passenger-transport and restaurant supplies are insulated by
+carrying their own kind -- but electronically supplied services are not: the
+bundled art. 69.Dos list runs a) to l) and names no e-services item, so an
+outbound B2C e-service recorded as a general service reaches the subject branch.
+Whether that is right turns on art. 70.Uno.4.º and art. 70.Dos's *uso efectivo*
+clause, which the missing service-kind axis is what would let anyone settle.
+
+This is the direction the project's own mandate warns is unwatched --
 over-payment produces valid output and no refusal -- so it is recorded here as a
-named, visible carry-forward rather than left to be discovered.
+named, visible carry-forward rather than left to be discovered. The next change
+on this axis reads art. 70's B2C rules alongside 69.Dos, not only the lettered
+list.
 
 Anchored `corpus_ref` values become available to the citation table generally,
 which means a future row can cite any article of any consolidated document the

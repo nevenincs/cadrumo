@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:8f2f6642b6a0decd8bb75155a620686cb1c7b17cdf8da2029356ea4afd2a963b'
+body_hash: 'sha256:a04d7f80bb933155653376f08af16e68f0de0b434d88b417e4aed665c6e8b278'
 step_id: 'S06'
 related:
   - "[[2026-08-12-iva-service-localisation-plan]]"
@@ -109,3 +109,29 @@ on human review. Art. 69.Tres.4.º treats a legal person holding an IVA
 identification as an empresario for these rules even when it does not act as
 one, and that is a ruling with its own grounding rather than a default anyone
 should pick.
+
+**Honesty pass, run against this record after closing and sharpening the
+carry-forward rather than confirming it.** The gap is wider than "art. 69.Dos's
+list", and the wider statement is the one a later reader needs.
+
+Art. 70's *reglas especiales* override art. 69 and several of them are B2C
+rules. This feature is insulated from most of them by construction: the two rows
+key on `SERVICES_GENERAL`, and land-related, passenger-transport and restaurant
+supplies are their own `TransactionKind` members that these rows never match.
+That insulation is only as good as the kind the operator picks.
+
+The population it does NOT insulate is electronically supplied services. The
+bundled art. 69.Dos list runs a) to l) and names no e-services item -- it stops
+at the gas and electricity networks and goes straight to "Tres. A efectos de
+esta Ley" -- so an outbound B2C e-service recorded as `SERVICES_GENERAL` now
+reaches the subject branch. Whether that is right turns on art. 70.Uno.4.º and
+on art. 70.Dos's *uso efectivo* clause, which this pass did not settle and which
+the missing service-kind axis is what would let anyone settle. The bundled
+corpus's own vintage is under separate work, which is a second reason not to
+rule on it here.
+
+The disposition stands unchanged and is stated deliberately rather than by
+default: over-taxing a population an operator can see and correct beats
+relieving one silently. But "art. 69.Dos is unmodelled" understated it, and the
+next change on this axis should read art. 70's B2C rules alongside 69.Dos rather
+than only the lettered list.
