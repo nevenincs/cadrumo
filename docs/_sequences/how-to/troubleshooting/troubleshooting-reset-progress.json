@@ -33,7 +33,7 @@
         "result": {
           "dry_run": false,
           "fingerprint": {
-            "byte_length": 1256,
+            "byte_length": 1317,
             "reason_class": "readable",
             "recovered_bucket_id": "<profile-id>",
             "schema_version": 1,

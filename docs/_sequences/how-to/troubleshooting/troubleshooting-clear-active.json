@@ -8,6 +8,8 @@
         "create",
         "me",
         "--quiet",
+        "--tax-residence-jurisdiction-scope",
+        "common_regime",
         "--entity-type",
         "natural_person",
         "--tax-id",
@@ -40,7 +42,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "dry_run\tTrue\ncleared_pointer\tFalse\nactive_profile\t<profile-id>\nsource\tpointer\nstatus\tready\nregistered_bucket\tTrue\nprofile_record_present\tTrue\nrepairable_by_clearing_pointer\tFalse\nnext_action\taeat app overview status\n"
+      "text": "dry_run\tFalse\ncleared_pointer\tTrue\nactive_profile\t\nsource\tnone\nstatus\tnone\nregistered_bucket\tFalse\nprofile_record_present\tFalse\nrepairable_by_clearing_pointer\tFalse\nprecondition_action.failed_condition_id\t\"profile.active.available\"\nprecondition_action.evidence\t[{\"condition_id\":\"profile.active.available\",\"evidence_id\":\"profile.active.state\",\"provenance\":\"application_state\",\"values\":{\"active_profile_present\":false,\"registered_profile_count\":2}}]\nprecondition_action.action\t{\"action_id\":\"operator.profile.login\",\"cli_path\":[\"config\",\"login\"],\"target_command_key\":\"config.login\"}\nprecondition_action.argument_bindings\t[{\"argument_name\":\"name\",\"source\":null,\"source_evidence_id\":null,\"source_key\":null,\"status\":\"missing\",\"value\":null}]\nprecondition_action.missing_argument_names\t[\"name\"]\nprecondition_action.conditionality\t\"requires_arguments\"\nprecondition_action.no_recovery_outcome\tnull\n"
     },
     {
       "argv": [
@@ -57,13 +59,13 @@
         "command": "config.login",
         "notices": [
           {
+            "action": null,
             "code": "config.login.session_not_persisted",
             "context": {
               "profile_id": "<profile-id>"
             },
             "message": "No usable OS keychain found, so the session cannot be saved; this login applies to the current command only.",
-            "severity": "warning",
-            "suggestion": null
+            "severity": "warning"
           }
         ],
         "result": {

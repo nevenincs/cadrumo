@@ -26,6 +26,14 @@ contention still inflate it. The measured inflation on the workstation is
 ~1.64x (a steady-state calculation measuring 1.97 CPU-s quiet and 3.23 CPU-s
 under full co-resident load), so ceilings derived from a baseline must carry
 that margin rather than pretending CPU-time is perfectly load-invariant.
+
+That same exclusion of wait-time is a HOLE as well as a virtue, which is why
+:func:`wall_advisory_message` also lives here. A test blocked on a wedged
+network mount burns almost no CPU, so converting a gate to CPU-time removes
+the only instrument that could ever notice it stalling. The conversions keep
+their wall threshold as a non-failing advisory rather than deleting it, and
+this module owns that emission for the same reason it owns the measurement:
+so the two sites cannot drift into two conventions.
 """
 
 from __future__ import annotations
@@ -33,6 +41,7 @@ from __future__ import annotations
 import subprocess
 import sys
 import time
+import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,8 +52,81 @@ _UTF_8: Final[str] = "utf-8"
 #: Measured SMT/cache-contention inflation of CPU-time on the shared
 #: workstation (3.23 CPU-s loaded against 1.97 CPU-s quiet for one
 #: steady-state calculation). A ceiling derived from a baseline measurement
-#: multiplies by this rather than assuming CPU-time is perfectly load-immune.
+#: multiplies by this rather than assuming CPU-time is perfectly load-invariant.
 CPU_CONTENTION_MARGIN: Final[float] = 1.64
+
+
+class WallClockAdvisory(UserWarning):
+    """A CPU-gated benchmark's WALL time looks wedged rather than merely loaded.
+
+    Never a failure. It is raised on the warnings channel rather than printed
+    because the channel is the only one that reaches a reader on a PASSING
+    test: the broad serial pass runs ``pytest -q ... -n0`` with no ``-s``, so
+    fd-level capture swallows every ``print`` from a test that passes, which is
+    exactly the run this signal exists for. pytest renders its warnings summary
+    by default, including under ``-q``.
+    """
+
+
+def wall_advisory_message(
+    label: str,
+    *,
+    wall_seconds: float,
+    cpu_seconds: float,
+    wall_advisory_seconds: float,
+    hang_wall_to_cpu_ratio: float,
+) -> str | None:
+    """Return a wedge advisory for ``label``, or ``None`` when nothing is wrong.
+
+    Moving a perf gate from wall-clock to CPU-time is the correct instrument
+    choice for the co-residency this fleet has (see the module docstring), but
+    a straight conversion DELETES the only bound that can see a share hang: a
+    test blocked on a wedged network mount burns almost no CPU, so a CPU
+    ceiling can never fire on it however long it stalls. This keeps the wall
+    threshold as the trigger and hands the reader both clocks.
+
+    The ratio is what stops the retained bound decaying into noise. On a box
+    this loaded the wall threshold alone is crossed constantly by tests that
+    are merely queued behind co-resident work, and an advisory that fires on
+    every run is one every reader learns to skip. Load inflates BOTH clocks;
+    a block inflates only wall. So the advisory needs both conditions, and
+    ``hang_wall_to_cpu_ratio`` is per-site rather than global because the
+    ratio a healthy site runs at depends on how much of its wall time is
+    spawn-wait: an in-process aggregation sits near 1, while a subprocess cold
+    start pays process creation the SUT is not answerable for.
+
+    Args:
+        label: Benchmark identity, quoted verbatim into the advisory.
+        wall_seconds: Measured wall-clock seconds (the advisory's trigger).
+        cpu_seconds: Measured process CPU seconds (the asserted gate's figure).
+        wall_advisory_seconds: Retained wall threshold; at or below it the site
+            is healthy by definition and nothing is emitted.
+        hang_wall_to_cpu_ratio: Wall-to-CPU ratio above which a crossing is
+            wedge-shaped rather than load-shaped, derived per site from that
+            site's own measured loaded maximum.
+
+    Returns:
+        The advisory text when it fired, so a caller can also route it
+        somewhere durable; ``None`` when it did not.
+    """
+    if wall_seconds <= wall_advisory_seconds:
+        return None
+    # A zero-CPU sample is the wedge in its purest form, not a division to
+    # guard around: it is what a fully-blocked test measures.
+    ratio = float("inf") if cpu_seconds <= 0.0 else wall_seconds / cpu_seconds
+    if ratio <= hang_wall_to_cpu_ratio:
+        return None
+
+    message = (
+        f"{label}: wall {wall_seconds:.3f}s crossed its {wall_advisory_seconds:.3f}s advisory "
+        f"threshold on {cpu_seconds:.3f} CPU-s (ratio {ratio:.1f}x, wedge above "
+        f"{hang_wall_to_cpu_ratio:.1f}x). CPU is the asserted gate and it is unaffected, so "
+        f"this is NOT a performance regression — it is wall time spent not computing, which "
+        f"is what a blocked mount or a wedged child looks like and what a CPU ceiling can "
+        f"never see. A merely loaded box inflates both clocks and does not reach here."
+    )
+    warnings.warn(message, WallClockAdvisory, stacklevel=2)
+    return message
 
 
 class ProcessCpuMeasurementError(RuntimeError):

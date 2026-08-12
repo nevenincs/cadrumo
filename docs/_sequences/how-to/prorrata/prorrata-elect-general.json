@@ -28,6 +28,7 @@
             "definitive_volume_con_derecho": null,
             "definitive_volume_sin_derecho": null,
             "ejercicio": 2026,
+            "especial_transition": null,
             "interrupted": false,
             "provisional_percentage": "80",
             "provisional_provenance": "carried_prior_definitiva",

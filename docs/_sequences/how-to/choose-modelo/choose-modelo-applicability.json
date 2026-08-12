@@ -123,21 +123,33 @@
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.preflight",
-        "notices": [],
+        "notices": [
+          {
+            "action": null,
+            "code": "config.profile.preflight.per_operation_axis_not_assessed",
+            "context": {
+              "modelo": "303",
+              "ready": "True"
+            },
+            "message": "No schema-required profile field is declared for Modelo 303; readiness covers identity and conditional checks only, not a complete per-modelo assessment.",
+            "severity": "warning"
+          }
+        ],
         "result": {
           "filing_year": 2026,
           "missing": [],
           "modelo": "303",
+          "per_operation_requirements_assessed": false,
           "period": {
             "code": "1T",
             "filing_year": 2026
           },
           "profile_id": "<profile-id>",
           "ready": true,
-          "revision_id": "2023-y-siguientes"
+          "revision_id": "2026-y-siguientes"
         },
         "schema_version": "2",
-        "status": "success"
+        "status": "warning"
       },
       "envelope_source": "stdout",
       "exit_code": 0,

@@ -29,7 +29,7 @@ import sys
 import textwrap
 
 import pytest
-from dev.ci.perf_measurement import SubprocessTiming, min_subprocess_cpu_seconds
+from dev.ci.perf_measurement import SubprocessTiming, min_subprocess_cpu_seconds, wall_advisory_message
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -64,6 +64,24 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _MARGINAL_COLD_START_BUDGET_CPU_S = 3.0
 _COLD_START_SAMPLES = 3
 _COLD_START_TIMEOUT_S = 300.0
+
+# The CPU conversion cannot see a WEDGE — a spawn blocked on a stalled mount
+# burns no CPU however long it hangs — so the former wall budget is retained as
+# a non-failing advisory rather than deleted. It is raised on the warnings
+# channel, not printed: the broad serial pass runs without `-s`, so capture
+# discards the print above on exactly the passing runs this is meant to
+# annotate.
+#
+# Threshold and ratio are both derived from this site's own measurements, and
+# the ratio has to be far looser here than at an in-process benchmark because
+# the wall time of a SPAWN is dominated by process creation this SUT does not
+# answer for: a bare `python -c "import sys"` measured 1.63-5.00 s of wall for
+# 0.08 s of CPU on this box. The measured CLI spawn ran 3.23-6.75 s of wall
+# against 1.45-1.89 CPU-s, so a healthy loaded spawn tops out near 4.7x. 12.0
+# clears that with headroom; reaching it needs roughly 20 s of wall, about four
+# times the worst spawn wait ever measured here.
+_COLD_START_WALL_ADVISORY_S = 7.0
+_COLD_START_WEDGE_WALL_TO_CPU_RATIO = 12.0
 
 # Modules that must stay out of ``sys.modules`` after a state-free CLI
 # surface runs. The registry parse is the headline cost; the heavy
@@ -145,7 +163,10 @@ def test_version_cold_start_completes_under_cpu_budget() -> None:
     The gate binds the marginal CHILD CPU-time over a bare-interpreter
     baseline; wall-clock is measured and printed but never asserted, because
     on this shared machine the spawn's wall time reports the load average
-    rather than the import cost (see the module-level note).
+    rather than the import cost (see the module-level note). Wall does keep a
+    retained WARNING threshold, which is a different claim from an assertion:
+    it fires only on the wedge shape a CPU ceiling is structurally blind to,
+    and it cannot fail this test.
     """
 
     baseline_cpu, baseline_wall, _ = _min_cold_start("import sys")
@@ -158,6 +179,14 @@ def test_version_cold_start_completes_under_cpu_budget() -> None:
         f"cpu={sut_cpu:.3f}s baseline_cpu={baseline_cpu:.3f}s | "
         f"wall={sut_wall:.3f}s baseline_wall={baseline_wall:.3f}s "
         f"marginal_wall={(sut_wall - baseline_wall):.3f}s (wall advisory, never asserted)",
+    )
+
+    wall_advisory_message(
+        "aeat --version cold start",
+        wall_seconds=sut_wall,
+        cpu_seconds=sut_cpu,
+        wall_advisory_seconds=_COLD_START_WALL_ADVISORY_S,
+        hang_wall_to_cpu_ratio=_COLD_START_WEDGE_WALL_TO_CPU_RATIO,
     )
 
     assert completed.returncode == 0, completed.stderr

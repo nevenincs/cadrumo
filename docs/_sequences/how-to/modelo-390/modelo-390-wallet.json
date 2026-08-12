@@ -30,7 +30,8 @@
             "code": "4T",
             "filing_year": 2024
           },
-          "status": "seeded",
+          "provenance": "operator_seed",
+          "register_status": null,
           "taxpayer_nif": "sha256:1c9f9632"
         },
         "schema_version": "2",

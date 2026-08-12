@@ -135,15 +135,34 @@
       "captures": [],
       "envelope": {
         "active_profile": "docs-sequence-sandbox",
-        "command": null,
+        "command": "ledger.view",
         "error": {
+          "action": {
+            "action": null,
+            "argument_bindings": [],
+            "conditionality": "not_applicable",
+            "evidence": [
+              {
+                "condition_id": "cli.ledger.transaction_id.resolves",
+                "evidence_id": "cli.ledger.transaction_id.resolves.observation",
+                "provenance": "runtime_observation",
+                "values": {
+                  "transaction_id_resolves": false
+                }
+              }
+            ],
+            "failed_condition_id": "cli.ledger.transaction_id.resolves",
+            "missing_argument_names": [],
+            "no_recovery_outcome": "operator_decision"
+          },
           "category": "REFUSED",
-          "code": "REFUSED_CLI_BOUNDARY",
-          "context": null,
-          "message": "Invalid value: no transaction matches id prefix '1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb'",
+          "code": "REFUSED_FINANCIAL_LEDGER_TRANSACTION_ID_PREFIX",
+          "context": {
+            "prefix": "'1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb'"
+          },
+          "message": "no transaction matches id prefix '1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb'",
           "retryable": false,
           "runbook_id": null,
-          "suggestion": null,
           "trace_id": null
         },
         "notices": [],

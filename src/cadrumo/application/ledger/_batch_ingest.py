@@ -47,6 +47,7 @@ from ...core import LOCAL_TRANSPORT_LABEL, STRICT_FROZEN_CONFIG
 from ...core.identity import ContentDigest
 from ...domain.iva import InvoiceKind
 from ..operator_actions import PreconditionVerdict
+from ._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -120,8 +121,10 @@ class BatchItemResult(BaseModel):
         status: How the item ended.
         refusal_code: Machine-readable reason, present exactly when the item was
             refused.
-        refusal_detail: The same reason in operator-facing terms, naming what
-            was seen rather than only that something failed.
+        refusal_verdict: The application-owned failed condition and its machine
+            facts, present exactly when the item was refused. Carries what was
+            seen rather than only that something failed, without retaining the
+            producer's exception text.
         needed_inference: Whether this document required the inference lane at
             all. Carried per item because the run-level counts cannot be
             reconstructed afterwards: a completed row looks identical whether it
@@ -139,7 +142,7 @@ class BatchItemResult(BaseModel):
     source_name: str = ""
     status: BatchItemStatus
     refusal_code: str | None = None
-    refusal_detail: str | None = None
+    refusal_verdict: PreconditionVerdict | None = None
     needed_inference: bool = True
 
     @override
@@ -153,8 +156,12 @@ class BatchItemResult(BaseModel):
         refused = self.status == "refused"
         if refused and not self.refusal_code:
             raise ValueError("a refused batch item must carry the reason it was refused")
+        if refused and self.refusal_verdict is None:
+            raise ValueError("a refused batch item must carry the typed verdict explaining what was seen")
         if not refused and self.refusal_code:
             raise ValueError(f"refusal_code is only meaningful for a refused item; got status={self.status!r}")
+        if not refused and self.refusal_verdict is not None:
+            raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={self.status!r}")
 
 
 class UnresolvedBatchSource(BaseModel):
@@ -171,14 +178,15 @@ class UnresolvedBatchSource(BaseModel):
     Attributes:
         source_name: The source as the operator named it.
         refusal_code: Machine-readable reason the bytes could not be read.
-        refusal_detail: The same reason in operator-facing terms.
+        refusal_verdict: The application-owned failed condition and its machine
+            facts for that same reason.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     source_name: str = Field(min_length=1)
     refusal_code: str = Field(min_length=1)
-    refusal_detail: str = Field(min_length=1)
+    refusal_verdict: PreconditionVerdict
 
 
 class InferencePause(BaseModel):
@@ -596,7 +604,14 @@ def run_evidence_batch(
                 UnresolvedBatchSource(
                     source_name=str(path),
                     refusal_code="unreadable_source",
-                    refusal_detail=f"could not read {path.name}: {exc.strerror or exc}",
+                    refusal_verdict=ledger_no_recovery_verdict(
+                        LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                        facts={
+                            "source_name": path.name,
+                            "file_readable": False,
+                            "read_error_type": exc.__class__.__name__,
+                        },
+                    ),
                 ),
             )
             continue
@@ -647,6 +662,32 @@ def run_evidence_batch(
     return summarise_batch(rows, unresolved, lane.pause())
 
 
+def _refusal_verdict(
+    exc: Exception,
+    *,
+    code: str,
+    condition: LedgerPreconditionCondition,
+) -> PreconditionVerdict:
+    """Return the typed refusal for one failed document, never its exception text.
+
+    A producer that already owns a typed verdict keeps it verbatim, so the row
+    carries the exact failed condition the reader established rather than this
+    runner's re-reading of it. Only a producer with no verdict falls back to the
+    stage's own condition, and then the error's registered type -- not its
+    message -- is the fact that survives.
+    """
+    owned = getattr(exc, "terminal_precondition_verdict", None)
+    if isinstance(owned, PreconditionVerdict):
+        return owned
+    return ledger_no_recovery_verdict(
+        condition,
+        facts={
+            "refusal_code": code,
+            "producer_error_type": exc.__class__.__name__,
+        },
+    )
+
+
 # reason: every collaborator is an explicit seam; binding them ambiently is what
 # makes a batch runner untestable without reaching into module globals.
 def _ingest_one_batch_item(
@@ -670,7 +711,7 @@ def _ingest_one_batch_item(
     """
     identity = batch_item_identity(content_address=content_address, direction=direction)
 
-    def refused(code: str, detail: str) -> BatchItemResult:
+    def refused(code: str, exc: Exception, *, condition: LedgerPreconditionCondition) -> BatchItemResult:
         return BatchItemResult(
             content_address=content_address,
             identity=identity,
@@ -678,14 +719,18 @@ def _ingest_one_batch_item(
             source_name=path.name,
             status="refused",
             refusal_code=code,
-            refusal_detail=detail,
+            refusal_verdict=_refusal_verdict(exc, code=code, condition=condition),
             needed_inference=needed_inference,
         )
 
     try:
         attached = service.add(bucket_id=bucket_id, source_path=path, idempotency_key=identity)
     except Exception as exc:  # reason: one document's failure is its own row, never the run's end.
-        return refused("evidence_refused", str(exc))
+        return refused(
+            "evidence_refused",
+            exc,
+            condition=LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE,
+        )
 
     evidence_id = attached.record.evidence_id
     # An empty event tuple is the store's guarded-no-op signal. It alone is not
@@ -706,7 +751,11 @@ def _ingest_one_batch_item(
     try:
         draft = extract(bucket_id=bucket_id, evidence_id=evidence_id, settings=settings)
     except Exception as exc:  # reason: an unreadable document is a refusal row, not a dead run.
-        return refused("not_readable", str(exc))
+        return refused(
+            "not_readable",
+            exc,
+            condition=LedgerPreconditionCondition.EVIDENCE_BYTES_READABLE,
+        )
 
     try:
         write_draft(
@@ -718,7 +767,11 @@ def _ingest_one_batch_item(
             settings=settings,
         )
     except Exception as exc:  # reason: a draft that could not be stored is this item's refusal.
-        return refused("draft_not_stored", str(exc))
+        return refused(
+            "draft_not_stored",
+            exc,
+            condition=LedgerPreconditionCondition.EVIDENCE_DOCUMENT_BYTES_AVAILABLE,
+        )
 
     # A draft carrying an unresolved finding is held rather than reported clean.
     # Batch never confirms anything either way; the distinction tells the

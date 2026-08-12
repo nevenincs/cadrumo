@@ -34,8 +34,10 @@ from ....application.ledger import (
     BatchItemResult,
     BatchRunResult,
     InferencePause,
+    LedgerPreconditionCondition,
     UnresolvedBatchSource,
     batch_item_identity,
+    ledger_no_recovery_verdict,
 )
 from ....application.operator_actions import ConditionEvidence, PreconditionVerdict
 from ....application.provisioning import ProvisioningPreconditionCondition
@@ -143,7 +145,8 @@ def test_a_poisoned_item_is_reported_as_a_row_and_the_run_still_completes(
     poison = rows[_POISON]
     assert poison["status"] == "refused"
     assert poison["refusal_code"], "a refused row must name the reason it was refused"
-    assert poison["refusal_detail"], "a refused row must say what was seen, not only that it failed"
+    assert poison["refusal_facts"], "a refused row must say what was seen, not only that it failed"
+    assert poison["refusal_action"], "a refused row must carry its resolved action or no-recovery outcome"
 
     good = rows[_GOOD]
     assert good["status"] in {"ingested", "pending_review"}, good
@@ -294,7 +297,10 @@ def _refused_row(name: str) -> BatchItemResult:
         source_name=name,
         status="refused",
         refusal_code="not_readable",
-        refusal_detail="no text layer",
+        refusal_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_TEXT_LAYER_AVAILABLE,
+            facts={"layer_available": False},
+        ),
     )
 
 
@@ -387,7 +393,10 @@ def test_an_unreadable_source_counts_as_a_failure_without_becoming_an_item() -> 
             UnresolvedBatchSource(
                 source_name="gone.pdf",
                 refusal_code="unreadable_source",
-                refusal_detail="could not read gone.pdf: No such file or directory",
+                refusal_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.EVIDENCE_FILE_READABLE,
+                    facts={"source_name": "gone.pdf", "file_readable": False},
+                ),
             ),
         ),
     )

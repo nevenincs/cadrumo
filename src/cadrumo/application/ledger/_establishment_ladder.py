@@ -772,12 +772,25 @@ def resolve_counterparty_establishment_scope(
 
 
 def _charged_iva_rates(draft: InvoiceDraft) -> tuple[Decimal, ...]:
-    """Return every IVA percentage the document charges, from lines and subtotals.
+    """Return every IVA percentage the document charges, from all three carriers.
 
-    Both carriers are read because a document uses either: some print a rate per
-    line and some only a per-rate subtotal block, and a walk of one would report
-    no charged tax for every document using the other -- silently turning a
-    Spain-indicating signal off for a whole population of layouts.
+    All three are read because a document uses whichever its reader could
+    recover: some print a rate per line, some only a per-rate subtotal block,
+    and a text- or vision-read document carries neither -- it states one flat
+    rate, because those readers recover printed totals rather than a
+    decomposition. A walk of a subset reports no charged tax for every document
+    using the rest, silently turning a Spain-indicating signal off for a whole
+    population.
+
+    **The flat rate was the missing one, and it is the model-read lane's ONLY
+    carrier.** The line and subtotal carriers are populated exclusively by the
+    structured reader, so this collected nothing at all for every text and
+    vision document: ``spanish_iva_charged`` is derived from this list alone, so
+    the establecimiento-permanente contradiction lost its rate signal and the
+    non-establishment concordance lost a corroborator, on exactly the documents
+    a model read. The sibling authority on the same question --
+    :func:`~application.ledger.draft_prints_a_repercutido_line` -- already reads
+    the flat rate, so the two disagreed about what a document charged.
 
     A rate is what is collected, never a cuota amount. Whether the rate is a
     SPANISH one is the question this feeds, and only the percentage can answer
@@ -785,6 +798,8 @@ def _charged_iva_rates(draft: InvoiceDraft) -> tuple[Decimal, ...]:
     """
     rates = [line.iva_rate for line in draft.lines if line.iva_rate is not None]
     rates.extend(subtotal.iva_rate for subtotal in draft.iva_breakdown if subtotal.iva_rate is not None)
+    if draft.iva_rate is not None:
+        rates.append(draft.iva_rate)
     return tuple(rates)
 
 

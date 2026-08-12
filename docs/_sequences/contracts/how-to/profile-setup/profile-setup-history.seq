@@ -1,4 +1,4 @@
-@setup aeat config profile create carla-2026 --quiet --entity-type natural_person --tax-id 44444444A --name "Carla" --surnames "Lopez Sanz"
+@setup aeat config profile create carla-2026 --quiet --tax-residence-jurisdiction-scope common_regime --entity-type natural_person --tax-id 44444444A --name "Carla" --surnames "Lopez Sanz"
 @setup aeat config profile rename carla-2026 carla-real
 @setup aeat config profile edit carla-real --quiet --address-postcode 28013
 @step Filter to a single event type.

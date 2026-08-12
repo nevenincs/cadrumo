@@ -396,6 +396,10 @@ if TYPE_CHECKING:
         party_regions,
         resolve_party_attribution_by_colocation,
     )
+    from ._preconditions import (
+        LedgerPreconditionCondition,
+        ledger_no_recovery_verdict,
+    )
     from ._preflight import (
         OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE,
         LedgerPreflightIssue,
@@ -584,6 +588,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "LedgerExportRow": "._models",
     "LedgerImportDiagnosticReport": "._models",
     "LedgerImportOperationResult": "._models",
+    "LedgerPreconditionCondition": "._preconditions",
     "LedgerPreflightIssue": "._preflight",
     "LedgerPreflightIssueReason": "._preflight",
     "LedgerPreflightReport": "._preflight",
@@ -656,6 +661,7 @@ _LAZY_EXPORTS: dict[str, str] = {
     "get_transaction_participation": "._participation_read",
     "import_ledger_source": "._actions_import",
     "import_ledger_transactions": "._actions_import",
+    "ledger_no_recovery_verdict": "._preconditions",
     "ledger_transaction_payload": "._actions_manual",
     "ledger_transaction_result_payload": "._actions_manual",
     "ledger_transaction_review_payload": "._actions_manual",
@@ -816,6 +822,7 @@ __all__ = [
     "LedgerExportRow",
     "LedgerImportDiagnosticReport",
     "LedgerImportOperationResult",
+    "LedgerPreconditionCondition",
     "LedgerPreflightIssue",
     "LedgerPreflightIssueReason",
     "LedgerPreflightReport",
@@ -926,6 +933,7 @@ __all__ = [
     "ground_self_reported_anchor",
     "import_ledger_source",
     "import_ledger_transactions",
+    "ledger_no_recovery_verdict",
     "ledger_transaction_payload",
     "ledger_transaction_result_payload",
     "ledger_transaction_review_payload",

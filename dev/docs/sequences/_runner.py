@@ -126,6 +126,18 @@ _SANDBOX_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="activities.description", value="documentation examples"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
+    # Declaring an IVA regime claims the IVA block, which requires the Modelo
+    # 303 composition to be stated explicitly rather than inferred from it.
+    # ``general`` is the arm matching the regime above.
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    # The IVA block also requires each optional-regime enrolment to be declared
+    # rather than assumed absent, so a taxpayer is never silently treated as
+    # outside a regime nobody asked about. The sandbox is a plain general-regime
+    # filer enrolled in none of them.
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
 )
 
 #: The ``@expect`` pseudo-path asserting a frame's process exit code.

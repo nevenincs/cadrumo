@@ -157,8 +157,10 @@ def test_the_refused_row_says_what_was_wrong_with_that_document(
     poison = next(item for item in result.items if item.source_name == _POISON)
 
     assert poison.refusal_code
-    assert poison.refusal_detail
-    assert poison.refusal_detail.strip() != ""
+    assert poison.refusal_verdict is not None, "a refusal must name the condition that failed"
+    assert poison.refusal_verdict.failed_condition_id
+    facts = {key: value for evidence in poison.refusal_verdict.evidence for key, value in evidence.values.items()}
+    assert facts, "a refusal an operator cannot act on is barely better than a silent drop"
 
 
 def test_the_good_document_is_actually_persisted_not_merely_reported(
@@ -517,7 +519,7 @@ class TestInferencePacing:
         assert result.inference_pause.facts["binding_free_measured"] is False
         # No per-item refusal text: the model forbids a reason under a non-refused
         # status, so this also proves the pause did not smuggle one in per row.
-        assert all(item.refusal_detail is None for item in result.items)
+        assert all(item.refusal_verdict is None for item in result.items)
 
     def test_a_paused_run_is_not_a_failed_run_but_is_not_silent_either(
         self,

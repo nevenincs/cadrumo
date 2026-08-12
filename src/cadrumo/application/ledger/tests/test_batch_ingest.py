@@ -14,6 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.iva import InvoiceKind
+from ...operator_actions import PreconditionVerdict
 from .._batch_ingest import (
     BATCH_ITEM_STATUSES,
     BatchItemResult,
@@ -23,8 +24,18 @@ from .._batch_ingest import (
     order_batch_sources,
     summarise_batch,
 )
+from .._preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _reader_unavailable_verdict() -> PreconditionVerdict:
+    """Return the typed refusal a row carries when no on-host reader is available."""
+    return ledger_no_recovery_verdict(
+        LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
+        facts={"reader_available": False},
+    )
+
 
 _A = "a" * 64
 _B = "b" * 64
@@ -37,7 +48,7 @@ def _item(
     *,
     direction: InvoiceKind = InvoiceKind.RECEIVED,
     refusal_code: str | None = None,
-    refusal_detail: str | None = None,
+    refusal_verdict: PreconditionVerdict | None = None,
 ) -> BatchItemResult:
     """Build one row, naming the fields a case varies.
 
@@ -52,7 +63,7 @@ def _item(
         direction=direction,
         status=status,
         refusal_code=refusal_code,
-        refusal_detail=refusal_detail,
+        refusal_verdict=refusal_verdict,
     )
 
 
@@ -112,7 +123,12 @@ def test_a_refused_item_does_not_remove_the_others_from_the_report() -> None:
     """The whole point: one bad document leaves every other row intact."""
     result = summarise_batch(
         [
-            _item(_A, "refused", refusal_code="no_reader_available", refusal_detail="no on-host reader"),
+            _item(
+                _A,
+                "refused",
+                refusal_code="no_reader_available",
+                refusal_verdict=_reader_unavailable_verdict(),
+            ),
             _item(_B, "ingested"),
             _item(_C, "no_op"),
         ],
@@ -126,8 +142,12 @@ def test_a_refused_item_does_not_remove_the_others_from_the_report() -> None:
 
 def test_the_run_fails_when_any_item_failed_not_when_the_first_did() -> None:
     """Exit status reads 'any item failed', so work still gets done on a failed run."""
-    trailing_failure = summarise_batch([_item(_A, "ingested"), _item(_C, "refused", refusal_code="x")])
-    leading_failure = summarise_batch([_item(_A, "refused", refusal_code="x"), _item(_C, "ingested")])
+    trailing_failure = summarise_batch(
+        [_item(_A, "ingested"), _item(_C, "refused", refusal_code="x", refusal_verdict=_reader_unavailable_verdict())]
+    )
+    leading_failure = summarise_batch(
+        [_item(_A, "refused", refusal_code="x", refusal_verdict=_reader_unavailable_verdict()), _item(_C, "ingested")]
+    )
 
     assert trailing_failure.any_failed
     assert leading_failure.any_failed
