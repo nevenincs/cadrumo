@@ -42,7 +42,6 @@ Focused evidence: the seven integration pilots passed in 37.81 seconds; focused 
 
 - [ ] `src/cadrumo/adapters/inbound/tui/tests/test_modelo_work_review_screen.py:175` rejects only Textual `Input`. A premature S35 filter built with `Select`, `SelectionList`, `Checkbox`, `RadioSet`, `Button`, or another interactive control would pass this gate. Current whole-file inspection found no such filtering or write control, so this is a regression-proof gap rather than a present behavior defect.
 
-
 ### transitional-placement-curation | resolved | Placement is a sanctioned transitional receipt
 
 The follow-up `2026-08-12-casilla-schema-s34-tui-architecture-curation-audit` establishes the accepted dependency sequence: casilla-schema delivers and closes this surface in the legacy owner, then the blocked TUI architecture campaign performs the consumer-complete migration and legacy deletion. This re-review accepts that curation and does not reopen the historical placement finding.
@@ -65,13 +64,11 @@ The current S34 execution record says commit `0c5fb5253d` landed the initial scr
 
 Re-review verification: nine real encrypted-storage/Textual pilots passed in 55.00 seconds; focused Ruff lint passed; focused BasedPyright reported zero errors, warnings, or notes; 25 literal screen keys resolve in Catalan, English, Spanish, and Hungarian; scoped diff-check passed; feature-scoped VaultSpec checks carry only the known stale feature-index and old S02 body warnings. No fake, mock, stub, patch, monkeypatch, skip, xfail, mirrored business logic, staging, commit, or unrelated edit was introduced by the review.
 
-
 ### execution-receipt-history | resolved | Commit boundaries and focused gate evidence are now truthful
 
 The corrected execution record distinguishes `0c5fb5253d` as the code, test, facade, and locale commit; `4e7de18d4b` as the initial execution-record and review-audit commit; and `bcc1c6bca0` as the architecture-curation audit commit. Its atomicity note explicitly records the pending repair/closure commit and the one-Step/one-atomic-commit violation without rewriting shared history. The exact receipt-only recheck reports all three touched Python files already formatted, Ruff lint clean, and scoped `git diff --check` clean. The prior receipt-honesty finding is closed.
 
 Final verdict: **PASS**. No open S34 findings remain. The accepted curation owns the transitional placement; localized finding identity and text, responsive real-pilot proof, and S35-control exclusion are verified; and the execution receipt now matches Git history and the reproducible focused gates. This PASS authorizes normal S34 lifecycle closure while preserving the recorded non-atomic history and later consumer-complete migration obligation.
-
 
 ## Recommendations
 
