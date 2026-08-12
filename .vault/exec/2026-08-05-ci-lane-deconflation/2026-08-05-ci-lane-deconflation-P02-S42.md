@@ -79,20 +79,35 @@ already looks for the answer.
 
 ## Notes
 
-The implementing edit is deliberately NOT made in this row, and the reason is
-a constraint rather than a preference. A 142-file unresolved merge is open in
-this worktree, and the census gates read the source tree that the merge has
-left holding conflict markers. Their current red is merge damage, not a
-backlog: `src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py` carries
-markers at lines 1211-1215 and does not parse, which is the direct cause of
-the exception-override census raising. That file parses clean at HEAD.
+The implementing edit is deliberately NOT made in this row. The decision the
+row asks for does not depend on the census gates being green; the edit does,
+because adding a red directory to a blocking recipe reds the lane on its first
+run.
 
-That matters for this row specifically because the exact path list to add to
-`test-dev-ci` needs one clean measurement of `dev/registry/tests`, which is
-currently unmeasurable for the same reason. The decision the row asks for does
-not depend on it; the edit does. Recording the decision now and the edit
-against a clean tree is the honest split, and it is stated here rather than
-left for a reader to discover.
+CORRECTION, recorded rather than silently amended. This record first stated
+that the census red was merge damage and not a backlog. That was measured
+while a 142-file merge held conflict markers in
+`src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py`, which did not
+parse and did cause the exception-override census to raise. Re-measured after
+the merge landed, the red does NOT go away: 17 failed against 126 passed in
+4 minutes 16 seconds. The merge explained the failure MESSAGE at the time; it
+did not explain the failure. The original claim was wrong and is withdrawn.
+
+What the clean measurement shows is two populations with different owners.
+The exception-override census failures are STABLE and real: the dispositions
+data lists override owners whose observation sites no longer exist, naming
+`parse_certificado_censal_bytes` and five `InventoryService` methods among
+others. That is exactly the drift the census exists to detect, and it belongs
+to the campaign that owns those dispositions. The variable-envelope failures
+are TRANSIENT peer churn of two kinds -- a loader-cache race reported as
+`registry directory changed during cache fingerprinting` while peers write the
+registry tree, and a semantic map that omits M303 differentiated-deduction
+projection declarations landed by the campaign that merged minutes earlier.
+
+So the edit is gated on the first population closing, not on the second, and
+the two must not be counted together. Whoever lands the recipe change should
+re-measure rather than trusting the 17: it is a sum over a stable backlog and a
+moving one.
 
 The near-miss is worth recording because it nearly became this campaign's
 sixth wider-or-blinder remedy. The first measurement showed 12 failures across
