@@ -149,7 +149,7 @@ def _calculate_200(
     # pre-existing BIN-stock 00670 carry) from the local observation store, so all
     # bound casillas have a fact. Bindings the store cannot satisfy default to
     # zero — the present-or-zero-carry semantics (a first-year filer has no prior
-    # stock; the strict resolver below then sees a complete fact set).
+    # stock), leaving the available-value projector a complete carry set.
     prefilled = resolve_bindings_from_local_store(snapshot, repository=obs_repo).binding_values
     bound_binding_ids = {c.binding for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding}
     carry_defaults = {bid: Decimal("0") for bid in bound_binding_ids}

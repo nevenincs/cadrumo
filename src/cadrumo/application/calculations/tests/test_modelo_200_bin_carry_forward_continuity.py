@@ -151,9 +151,8 @@ def _calculate_200(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     # Resolve every previous_filing carry binding (BIN-stock 00670 AND the art.13
     # dotaciones-deterioro 01494/01495) from the local observation store; any the
-    # store cannot satisfy default to zero (present-or-zero-carry) so the strict
-    # resolver below sees a complete fact set regardless of which carries this
-    # scenario seeds.
+    # store cannot satisfy default to zero (present-or-zero-carry), so the
+    # available-value projector below receives every carry this scenario seeds.
     prefilled = resolve_bindings_from_local_store(snapshot).binding_values
     carry_defaults = {
         c.binding: Decimal("0") for c in snapshot.revision.casillas if c.input_kind.value == "bound" and c.binding

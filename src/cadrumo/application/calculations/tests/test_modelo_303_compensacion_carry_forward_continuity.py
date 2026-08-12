@@ -98,8 +98,8 @@ _M303_SALDO_COMPENSACION_CASILLA: CasillaId = _casilla_id("iva.compensacion-disp
 #: WORKAROUND — the 303 2023+ revision carries a ``source = "profile"``
 #: binding ``modelo-303-autoconsumo-promotor-base`` (LIVA art. 9.1.c / 79.4
 #: autoconsumo del promotor). The direct-calculate path does not run the
-#: profile resolver, so the binding is unpopulated and the engine refuses
-#: ("missing binding fact"). Supplying it as zero (no autoconsumo del
+#: profile resolver, so the binding is unpopulated and the engine refuses the
+#: unresolved bound casilla. Supplying it as zero (no autoconsumo del
 #: promotor for this filer) lets the engine resolve the dependent casilla.
 #: This is a registry-gap workaround, NOT a fix of the registry file.
 _AUTOCONSUMO_PROMOTOR_BASE_BINDING = "modelo-303-autoconsumo-promotor-base"
