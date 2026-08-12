@@ -152,7 +152,7 @@ def config_reset_status(operation_id: str | None = None) -> ConfigResetOperation
             return repository.load(operation_id)
         except ConfigResetJournalNotFoundError as exc:
             raise ConfigResetOperationNotFoundError(
-                "configuration reset operation was not found",
+                translated_message="errors.error.error_cadrumo_core_not_found",
                 context={"operation_id": operation_id},
             ) from exc
     return repository.latest()
@@ -174,7 +174,7 @@ def resume_config_reset(
             operation = repository.load(operation_id)
         except ConfigResetJournalNotFoundError as exc:
             raise ConfigResetOperationNotFoundError(
-                "configuration reset operation was not found",
+                translated_message="errors.error.error_cadrumo_core_not_found",
                 context={"operation_id": operation_id},
             ) from exc
         except ConfigResetJournalCorruptError as exc:

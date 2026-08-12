@@ -64,7 +64,8 @@ def _require_target_present(
     )
     if target is None:
         raise ConfigResetJournalOwnershipError(
-            f"reset operation {operation_id} does not contain target {bucket_id}",
+            translated_message="errors.error.error_config_boundary",
+            context={"operation_id": str(operation_id), "bucket_id": str(bucket_id), "target_contained": False},
         )
     return target
 
@@ -79,7 +80,8 @@ def _require_owned_fingerprint(
     fingerprint = target.fingerprint
     if not target.exists_at_snapshot or fingerprint is None or fingerprint.digest != expected_fingerprint:
         raise ConfigResetJournalOwnershipError(
-            f"reset operation {operation_id} does not own fingerprint for target {bucket_id}",
+            translated_message="errors.error.error_config_boundary",
+            context={"operation_id": str(operation_id), "bucket_id": str(bucket_id), "fingerprint_owned": False},
         )
 
 
@@ -92,7 +94,12 @@ def _require_approved_retention(
     retention = target.retention
     if retention is None or (retention.blocks_erase and not retention.override_approved):
         raise ConfigResetJournalOwnershipError(
-            f"reset operation {operation_id} has no approved retention decision for target {bucket_id}",
+            translated_message="errors.error.error_config_boundary",
+            context={
+                "operation_id": str(operation_id),
+                "bucket_id": str(bucket_id),
+                "retention_decision_approved": False,
+            },
         )
 
 
@@ -112,7 +119,8 @@ def _require_deleting_marker(
         or target.phase not in {ConfigResetTargetPhase.DELETING, ConfigResetTargetPhase.DELETED}
     ):
         raise ConfigResetJournalOwnershipError(
-            f"reset operation {operation_id} has no deleting marker for target {bucket_id}",
+            translated_message="errors.error.error_config_boundary",
+            context={"operation_id": str(operation_id), "bucket_id": str(bucket_id), "deleting_marker_present": False},
         )
 
 
