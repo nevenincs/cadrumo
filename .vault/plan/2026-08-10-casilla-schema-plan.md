@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:b540047484a61df28386b87d7044092d1afc1da73aa43790dad4823a82f1bbe0'
+body_hash: 'sha256:6a55bb68e78d9e4df80920214a0df314079c7bb9c9c3b5168cacde4e5ee8e601'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -78,7 +78,7 @@ The four-channel consumption predicate becomes importable production code.
 The three-state official-box answer, truthful on the outliers.
 
 - [x] `W02.P05.S14` - add the three-state OfficialBoxStatus enum to core; `src/cadrumo/core/`.
-- [ ] `W02.P05.S15` - add classify_official_boxes composing the fixed-width, binding-derived and xml-dictionary mechanisms after derivation, facade-export it, and regression-test M720, M100 2024 and M349; `src/cadrumo/domain/calculations/registry/_export.py`.
+- [x] `W02.P05.S15` - add classify_official_boxes composing the fixed-width, binding-derived and xml-dictionary mechanisms after derivation, facade-export it, and regression-test M720, M100 2024 and M349; `src/cadrumo/domain/calculations/registry/_export.py`.
 
 ### Phase `W02.P06` - operator action spine
 
