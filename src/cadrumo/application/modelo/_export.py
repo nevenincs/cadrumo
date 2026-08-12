@@ -734,7 +734,10 @@ def _build_export_producer_snapshot(
     except (FilingProducerSnapshotError, ValueError) as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause_type": type(exc).__name__,
+            },
         ) from exc
 
 
@@ -1229,7 +1232,10 @@ def export_modelo_revision(
     except ModeloError as exc:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
-            context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+            context={
+                "calculation_revision_id": command.calculation_revision_id,
+                "cause_type": type(exc).__name__,
+            },
         ) from exc
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(

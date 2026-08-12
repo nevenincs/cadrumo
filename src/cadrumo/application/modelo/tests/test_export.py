@@ -351,7 +351,10 @@ def test_m303_export_refuses_revision_missing_filing_evidence(
         )
 
     assert isinstance(exc_info.value.context, dict)
-    assert "filing-instance evidence" in str(exc_info.value.context["cause"])
+    # The cause is identified by its registered error type, not by prose: the
+    # producer now carries a declared precondition failure instead of a
+    # sentence this assertion could match on.
+    assert exc_info.value.context["cause_type"] == "M303FilingEvidenceError"
     assert not output.exists()
     assert not output.with_name(output.name + ".tmp").exists()
 

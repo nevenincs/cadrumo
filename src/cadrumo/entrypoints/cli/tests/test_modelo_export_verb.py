@@ -684,9 +684,10 @@ def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(tmp_path
     payload = json.loads(result.output)
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "FAIL_MODELO_EXPORT"
-    assert payload["error"]["context"]["cause"] == (
-        "modelo 303 filing-instance evidence is required before verification or export"
-    )
+    # The envelope identifies the cause by its registered error type. The
+    # producer carries a declared precondition failure now, so there is no
+    # English sentence here for a consumer to match on.
+    assert payload["error"]["context"]["cause_type"] == "M303FilingEvidenceError"
     assert not out.exists()
     assert not out.with_name(out.name + ".tmp").exists()
     assert "Traceback" not in result.output
