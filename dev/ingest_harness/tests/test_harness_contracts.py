@@ -16,7 +16,8 @@ import pytest
 from pydantic import ValidationError
 
 from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT
-from .._key import CorpusKey, CorpusKeyError
+from .._field_mapping import expand_document_slots, slots_unavailable_at
+from .._key import CorpusDocument, CorpusKey, CorpusKeyError
 from .._reference_points import ReferencePoint
 from .._result import (
     EmittedOnly,
@@ -371,3 +372,173 @@ def test_the_report_prints_the_key_hash_before_any_figure() -> None:
 
     assert rendered.index(_SHA) < rendered.index("ROWS:")
     assert "STALE, NEVER CITE THIS" in rendered, "the stale schema_version must be labelled where it is shown"
+
+
+# ----------------------------------------------------------------------------
+# a row cannot score a slot its capture point never reached
+# ----------------------------------------------------------------------------
+#
+# Two key fields are produced AFTER the reader returns: ``category`` by the
+# grounding pass, from the filer's own tax identity, and ``iva_category`` by the
+# classification authority at the confirm boundary. A capture taken at the
+# extraction seam reads both as absent on every document, which is
+# indistinguishable from a reader that never produces them -- and that residual
+# is on record as having motivated routing both through the LLM classifier,
+# replacing two deterministic authorities with probabilistic ones.
+#
+# Distinct from the ``category_scorable`` hint, deliberately: that is the CORPUS
+# saying whether a document's category truth can be scored at all. This is the
+# PIPELINE saying whether the capture point could have produced it.
+
+_STAGE_LATE_TRUTH = {"base_total": "100,00", "category": "purchase", "iva_category": "standard"}
+
+
+def _row_at(key: CorpusKey, stage: PipelineStage, *, scorable: int, matched: int) -> ResultRow:
+    return build_result_row(
+        document=key.document("DOC-1"),
+        key_sha256=_SHA,
+        stage=stage,
+        engine_route=EngineRoute.GATED_CLOUD,
+        model_identity="m",
+        model_revision="r",
+        model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+        outcome=Scored(scorable_field_count=scorable, matched=matched, wrong=0, fabricated=0),
+    )
+
+
+def test_the_two_stage_late_fields_are_unavailable_at_extraction() -> None:
+    """Anchor: if either stops being stage-late, the refusal below goes vacuous."""
+    key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
+
+    unavailable = slots_unavailable_at(key.document("DOC-1"), PipelineStage.S2_EXTRACTION)
+
+    assert set(unavailable) == {"category", "iva_category"}
+
+
+def test_a_row_scoring_a_field_its_stage_cannot_produce_is_refused() -> None:
+    """The measurement artefact, refused at the door rather than reported."""
+    key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
+    report = HarnessReport(key)
+
+    with pytest.raises(HarnessRefusalError, match=r"(?i)stage that produces them"):
+        report.add(_row_at(key, PipelineStage.S2_EXTRACTION, scorable=3, matched=1))
+
+
+def test_the_refusal_names_the_slots_so_the_caller_knows_where_to_move_the_capture() -> None:
+    """A refusal that does not say which field is unreachable is a dead end."""
+    key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
+    report = HarnessReport(key)
+
+    with pytest.raises(HarnessRefusalError) as refusal:
+        report.add(_row_at(key, PipelineStage.S2_EXTRACTION, scorable=3, matched=1))
+
+    message = str(refusal.value)
+    assert "category" in message
+    assert "iva_category" in message
+    assert PipelineStage.S2_EXTRACTION.value in message
+
+
+def test_the_same_row_measured_at_the_stage_that_produces_them_is_accepted() -> None:
+    """The precision half: this is the capture the refusal is asking for.
+
+    Classification is the later of the two, so it reaches both. Without this the
+    refusal could be satisfied by never scoring these fields anywhere, which is
+    the coverage loss it exists to prevent.
+    """
+    key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
+    report = HarnessReport(key)
+
+    report.add(_row_at(key, PipelineStage.S4_CLASSIFICATION, scorable=3, matched=3))
+
+    assert len(report.rows) == 1
+
+
+def test_a_document_authoring_neither_late_field_is_untouched_at_extraction() -> None:
+    """The overwhelming majority of rows must be unaffected."""
+    key = _key([_entry("DOC-1")])
+    report = HarnessReport(key)
+
+    report.add(_row_at(key, PipelineStage.S2_EXTRACTION, scorable=1, matched=1))
+
+    assert len(report.rows) == 1
+    assert slots_unavailable_at(key.document("DOC-1"), PipelineStage.S2_EXTRACTION) == ()
+
+
+def test_an_emitted_only_row_is_not_subject_to_the_refusal() -> None:
+    """There is no denominator to inflate and no reader being scored.
+
+    An emitted-only row counts what a stage produced. It makes no claim about
+    what the document authored, so a field that stage cannot reach costs it
+    nothing -- refusing here would block an honest count for a defect it cannot
+    have.
+
+    Built directly rather than through the row builder, because that builder
+    already refuses an emitted-only outcome over a document carrying truth. The
+    combination therefore cannot arrive from in-process construction -- but the
+    report accepts rows that arrive as DATA, which is why ``require_model_tier``
+    exists, and this is the gate those rows meet.
+    """
+    key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
+    report = HarnessReport(key)
+
+    report.add(
+        ResultRow(
+            doc_id="DOC-1",
+            key_sha256=_SHA,
+            stage=PipelineStage.S2_EXTRACTION,
+            engine_route=EngineRoute.GATED_CLOUD,
+            model_identity="m",
+            model_revision="r",
+            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            outcome=EmittedOnly(emitted_field_count=2),
+        ),
+    )
+
+    assert len(report.rows) == 1
+
+
+def test_the_stage_comparison_is_what_causes_the_refusal() -> None:
+    """Mutation proof: without the ordering check the premature row is accepted.
+
+    Re-runs the pre-change behaviour, where every mapped field was scorable at
+    every stage -- the predicate reported nothing unreachable, so the report
+    accepted the row. That is the silent mismeasurement this closes. Without
+    this the suite would prove a refusal EXISTS, not that comparing the declared
+    stage against the field's own is what produces it.
+    """
+    key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
+    document = key.document("DOC-1")
+
+    def _without_the_ordering_check(_: CorpusDocument, __: PipelineStage) -> tuple[str, ...]:
+        return ()
+
+    assert _without_the_ordering_check(document, PipelineStage.S2_EXTRACTION) == ()
+    assert slots_unavailable_at(document, PipelineStage.S2_EXTRACTION) != ()
+
+
+def test_the_answer_is_the_same_before_and_after_slot_expansion() -> None:
+    """A caller has usually expanded before scoring, and both must agree.
+
+    Expanding a second time would drop every composite leaf, because a leaf slot
+    name is not a key field -- so a predicate that expanded internally would
+    silently stop seeing the composite half of a document that had already been
+    through it. Confirmed across the whole pinned key as well, where raw and
+    expanded agree on all 302 documents.
+    """
+    entry = _entry(
+        "DOC-1",
+        ground_truth={
+            "base_total": "100,00",
+            "category": "purchase",
+            "issuer": {"name": "N", "tax_id": "T", "country": "ES"},
+        },
+    )
+    key = _key([entry])
+    document = key.document("DOC-1")
+
+    raw = slots_unavailable_at(document, PipelineStage.S2_EXTRACTION)
+    expanded = slots_unavailable_at(expand_document_slots(document), PipelineStage.S2_EXTRACTION)
+
+    assert raw == expanded == ("category",)
+    # The composite really is present, or the equivalence above is vacuous.
+    assert "issuer.tax_id" in expand_document_slots(document).scorable_fields

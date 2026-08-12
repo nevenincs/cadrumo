@@ -119,6 +119,11 @@ _SANDBOX_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.name", value="Docs"),
     UserProfileFact(path="identity.surnames", value="Sandbox"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    # Required by the profile schema: the territorial regime is declared
+    # explicitly rather than inferred. The sandbox declares the common regime,
+    # since the foral branch is the unsupported one and no documented sequence
+    # exercises it.
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="activities.description", value="documentation examples"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
 )

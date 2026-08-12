@@ -61,6 +61,7 @@ from ._field_mapping import (
     MappingValidationError,
     expand_document_slots,
     project_emission,
+    slots_unavailable_at,
     unmapped_slot_census,
     validate_mapping_targets,
 )
@@ -177,6 +178,7 @@ __all__ = [
     "require_model_tier",
     "score_emission",
     "slot_name",
+    "slots_unavailable_at",
     "sorted_rows_by_document",
     "unmapped_slot_census",
     "validate_mapping_targets",

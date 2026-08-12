@@ -287,3 +287,167 @@ def test_findings_are_deterministic_and_stably_ordered() -> None:
         DraftDiscrepancyKind.ARITHMETIC_CLOSURE,
         DraftDiscrepancyKind.RATE_INCONSISTENT,
     ]
+
+
+# ── the flat triple, which nothing checked ─────────────────────────────────
+#
+# The per-tier check above iterates ``iva_breakdown``, populated only by the
+# STRUCTURED reader; a flat ``iva_rate`` is populated only by the model-read
+# lane. The two representations are disjoint, so until the identity below
+# existed the unchecked one was exactly the one a model produced.
+#
+# The identity is the same accounting one the tier check uses, so these cases
+# are legitimate on the terms this module's docstring sets: the expectation
+# comes from what "a rate charged on a base" means, not from a registry file.
+
+#: A two-rate invoice as a text or vision lane reads it: 1000 at 21% plus 1000
+#: at 10%, so the printed TOTAL base and TOTAL cuota, and ONE of the two rates.
+#: The total identity holds, which is why this confirmed clean.
+_COLLAPSED_BASE = Decimal("2000.00")
+_COLLAPSED_CUOTA = Decimal("310.00")
+_COLLAPSED_TOTAL = Decimal("2310.00")
+
+
+def test_the_collapsed_figures_are_the_two_rate_document_they_are_named_for() -> None:
+    """Anchor: if these stop being a two-rate invoice, the case below goes vacuous."""
+    assert Decimal("1000.00") * Decimal("21") / Decimal("100") == Decimal("210.00")
+    assert Decimal("1000.00") * Decimal("10") / Decimal("100") == Decimal("100.00")
+    assert Decimal("1000.00") + Decimal("1000.00") == _COLLAPSED_BASE
+    assert Decimal("210.00") + Decimal("100.00") == _COLLAPSED_CUOTA
+    # The reason nothing caught it: the TOTAL identity holds perfectly.
+    assert _COLLAPSED_BASE + _COLLAPSED_CUOTA == _COLLAPSED_TOTAL
+
+
+def test_a_multi_rate_document_collapsed_to_one_rate_is_reported() -> None:
+    """The measured silence, closed.
+
+    A single rate cannot describe this document, and the rate is what decides
+    which Modelo 303 tier the base lands in -- so confirming it files the whole
+    base under one tier and its cuota under another.
+    """
+    draft = InvoiceDraft(
+        taxable_base=_COLLAPSED_BASE,
+        iva_rate=Decimal("21"),
+        iva_amount=_COLLAPSED_CUOTA,
+        grand_total=_COLLAPSED_TOTAL,
+    )
+
+    assert _closure_over(draft) == (DraftDiscrepancyKind.RATE_INCONSISTENT,)
+
+
+def test_the_finding_names_the_rate_rather_than_the_cuota() -> None:
+    """The rate is the field an operator must correct; the cuota is as printed.
+
+    Both figures were copied from the document. The one that cannot be right is
+    the single rate, so pointing the operator at the cuota would send them to
+    re-read a number the document states correctly.
+    """
+    draft = InvoiceDraft(
+        taxable_base=_COLLAPSED_BASE,
+        iva_rate=Decimal("21"),
+        iva_amount=_COLLAPSED_CUOTA,
+        grand_total=_COLLAPSED_TOTAL,
+    )
+
+    (finding,) = closure_findings(draft)
+
+    assert finding.field == "iva_rate"
+
+
+def test_a_correctly_read_single_rate_invoice_stays_silent() -> None:
+    """The precision half. This is the overwhelming majority of documents."""
+    draft = InvoiceDraft(
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        iva_amount=Decimal("210.00"),
+        grand_total=Decimal("1210.00"),
+    )
+
+    assert closure_findings(draft) == ()
+
+
+@pytest.mark.parametrize(
+    ("rate", "cuota"),
+    [(Decimal("21"), None), (None, Decimal("210.00")), (Decimal("0"), Decimal("0.00"))],
+    ids=["no-cuota-stated", "no-rate-stated", "exempt-or-reverse-charge"],
+)
+def test_a_document_stating_no_charge_is_not_checked_rather_than_flagged(
+    rate: Decimal | None,
+    cuota: Decimal | None,
+) -> None:
+    """An exempt or reverse-charge invoice is ordinary, not malformed.
+
+    Two of these have a missing term, so the identity does not run; the third
+    states a real zero, and zero percent of a base is zero. None is a finding.
+    """
+    draft = InvoiceDraft(taxable_base=Decimal("1000.00"), iva_rate=rate, iva_amount=cuota)
+
+    assert closure_findings(draft) == ()
+
+
+def test_a_recargo_de_equivalencia_charge_is_not_read_as_a_rate_disagreement() -> None:
+    """Recargo carries its own rate and amount and is not inside the cuota.
+
+    Handled by the field split rather than by tolerance: were the recargo folded
+    into ``iva_amount``, every recargo invoice in the corpus would fire here.
+    """
+    draft = InvoiceDraft(
+        taxable_base=Decimal("1000.00"),
+        iva_rate=Decimal("21"),
+        iva_amount=Decimal("210.00"),
+        recargo_amount=Decimal("52.00"),
+        grand_total=Decimal("1262.00"),
+    )
+
+    assert closure_findings(draft) == ()
+
+
+def test_a_multi_tier_breakdown_leaves_the_flat_rate_alone() -> None:
+    """Where the breakdown exists it is the authority, and it is already checked.
+
+    A flat rate beside a two-tier breakdown is legitimately not a single rate,
+    so checking it against the summed base would report a disagreement that is
+    only an artefact of asking the flat triple a question it does not answer.
+    """
+    draft = InvoiceDraft(
+        taxable_base=_COLLAPSED_BASE,
+        iva_rate=Decimal("21"),
+        iva_amount=_COLLAPSED_CUOTA,
+        grand_total=_COLLAPSED_TOTAL,
+        iva_breakdown=(
+            InvoiceDraftRateBreakdown(
+                iva_rate=Decimal("21"),
+                taxable_base=Decimal("1000.00"),
+                iva_amount=Decimal("210.00"),
+            ),
+            InvoiceDraftRateBreakdown(
+                iva_rate=Decimal("10"),
+                taxable_base=Decimal("1000.00"),
+                iva_amount=Decimal("100.00"),
+            ),
+        ),
+    )
+
+    assert closure_findings(draft) == ()
+
+
+def test_the_identity_is_what_causes_the_finding() -> None:
+    """Mutation proof: without the comparison the collapse confirms clean again.
+
+    Re-runs the pre-change behaviour, where the flat triple was simply not an
+    identity anyone checked. It reports nothing -- which is the measured silence
+    this closes. Without this the suite would prove a finding EXISTS, not that
+    comparing the three figures is what produces it.
+    """
+    draft = InvoiceDraft(
+        taxable_base=_COLLAPSED_BASE,
+        iva_rate=Decimal("21"),
+        iva_amount=_COLLAPSED_CUOTA,
+        grand_total=_COLLAPSED_TOTAL,
+    )
+
+    def _without_the_flat_identity(candidate: InvoiceDraft) -> tuple[DraftDiscrepancyKind, ...]:
+        return tuple(finding.kind for finding in closure_findings(candidate) if finding.field != "iva_rate")
+
+    assert _without_the_flat_identity(draft) == ()
+    assert _closure_over(draft) == (DraftDiscrepancyKind.RATE_INCONSISTENT,)

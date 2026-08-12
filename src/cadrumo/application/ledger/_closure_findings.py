@@ -181,6 +181,63 @@ def _rate_consistency_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFin
     return tuple(findings)
 
 
+def _flat_rate_consistency_finding(draft: InvoiceDraft) -> DraftDiscrepancyFinding | None:
+    """Check the flat ``base * rate == cuota`` triple against itself.
+
+    The same identity :func:`_rate_consistency_findings` applies per tier,
+    applied to the flat triple -- which until this existed was the one
+    representation nothing checked. The per-tier check iterates
+    ``iva_breakdown``, and only the STRUCTURED reader populates that; only the
+    model-read lane populates a flat ``iva_rate``. The two representations are
+    disjoint, so the unchecked one was exactly the one a model produced.
+
+    What it catches is the multi-rate collapse. A document charging two rates
+    has no flat representation: a reader that copies the printed total base and
+    total cuota and then one of the two printed rates produces a draft whose
+    total identity still HOLDS -- base plus cuota does equal the total -- while
+    the rate it carries is wrong about half its own base, and that rate decides
+    which Modelo 303 tier the base lands in. Measured: a 1000-at-21%-plus-
+    1000-at-10% invoice read this way raised no finding at all.
+
+    It reads no prose and needs no transcription, which is what keeps it
+    precise: it asks only whether three figures the reader already produced are
+    mutually consistent. The confounds are handled by the field split rather
+    than by tolerance -- recargo carries its own rate and amount and is not
+    inside ``iva_amount``, suplidos sit outside the base imponible in their own
+    field, retención has its own identity above -- and an exempt or
+    reverse-charge document states no rate or no cuota, so the identity does not
+    run.
+
+    Skipped when the breakdown carries more than one tier, because there the
+    flat rate is legitimately not a single rate and the per-tier and sum checks
+    already cover the figures. No producer populates both today; the guard
+    states which representation wins before one can.
+    """
+    if len(draft.iva_breakdown) > 1:
+        return None
+
+    if draft.taxable_base is None or draft.iva_rate is None or draft.iva_amount is None:
+        return None
+
+    expected = draft.taxable_base * draft.iva_rate / Decimal("100")
+    if within_rounding_allowance(draft.iva_amount - expected, term_count=2):
+        return None
+
+    return DraftDiscrepancyFinding(
+        kind=DraftDiscrepancyKind.RATE_INCONSISTENT,
+        field="iva_rate",
+        detail=(
+            f"the stated cuota {draft.iva_amount} is not {draft.iva_rate}% of the stated base "
+            f"{draft.taxable_base} ({expected}); one flat rate cannot describe this document, so "
+            f"either a figure was misread or the invoice charges more than one rate and the "
+            f"per-rate split is missing -- Modelo 303 declares base and cuota devengada per tier, "
+            f"so confirming this would file the whole base under the wrong one"
+        ),
+        expected=expected,
+        observed=draft.iva_amount,
+    )
+
+
 def _breakdown_sum_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]:
     """Check the per-rate subtotals against the flat base and cuota."""
     if not draft.iva_breakdown:
@@ -238,9 +295,9 @@ def closure_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]
         draft: The draft to check, carrying the figures the document stated.
 
     Returns:
-        Findings in a stable order -- total closure, cash closure, per-tier rate
-        consistency, then breakdown sums -- so an operator surface and a test
-        both read them the same way.
+        Findings in a stable order -- total closure, cash closure, flat rate
+        consistency, per-tier rate consistency, then breakdown sums -- so an
+        operator surface and a test both read them the same way.
     """
     findings: list[DraftDiscrepancyFinding] = []
 
@@ -251,6 +308,10 @@ def closure_findings(draft: InvoiceDraft) -> tuple[DraftDiscrepancyFinding, ...]
     cash_finding = _cash_closure_finding(draft)
     if cash_finding is not None:
         findings.append(cash_finding)
+
+    flat_rate_finding = _flat_rate_consistency_finding(draft)
+    if flat_rate_finding is not None:
+        findings.append(flat_rate_finding)
 
     findings.extend(_rate_consistency_findings(draft))
     findings.extend(_breakdown_sum_findings(draft))
