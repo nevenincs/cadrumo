@@ -454,6 +454,7 @@ from ._relation_aggregation import relation_aggregation_op
 from ._handoffs import (
     RegistryRelationHandoffApplicabilityAudit,
     RegistryRelationHandoffAudit,
+    RelationConsumptionChannel,
     RelationHandoffApplicabilityRecord,
     RelationHandoffRecord,
     audit_registry_relation_handoff_applicability,
@@ -992,6 +993,7 @@ __all__ = [
     "RegistryValidator",
     "RegistryVerificationPolicy",
     "RelatedPartyOperationObservation",
+    "RelationConsumptionChannel",
     "RelationDefinition",
     "RelationHandoffApplicabilityRecord",
     "RelationHandoffPathRecord",

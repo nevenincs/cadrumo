@@ -32,6 +32,7 @@ from ...domain.calculations.registry import (
     InputKind,
     LegalRefId,
     RegistrySnapshot,
+    RelationConsumptionChannel,
     RelationDefinition,
     RelationId,
     RevisionId,
@@ -86,7 +87,7 @@ class ModeloWorkRelationConsumption(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
     relation_id: RelationId
-    channels: tuple[str, ...]
+    channels: tuple[RelationConsumptionChannel, ...]
 
 
 class ModeloWorkBindingOrigin(BaseModel):
@@ -218,7 +219,7 @@ class _ReviewRowContext:
     binding_to_casillas: Mapping[BindingId, tuple[CasillaId, ...]]
     relations_by_binding: Mapping[BindingId, tuple[RelationDefinition, ...]]
     relations: tuple[RelationDefinition, ...]
-    relation_channels: Mapping[RelationId, tuple[str, ...]]
+    relation_channels: Mapping[RelationId, tuple[RelationConsumptionChannel, ...]]
     persisted_decimal_bindings: Mapping[BindingId, Decimal]
     persisted_binding_ids: frozenset[BindingId]
     statuses: Mapping[CasillaId, OfficialBoxStatus]

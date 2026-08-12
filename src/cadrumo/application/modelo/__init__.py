@@ -559,9 +559,11 @@ from ._work_plazo import (
 )
 from ._work_review import (
     BlockerRef,
+    ModeloWorkBindingOrigin,
     ModeloWorkOriginAnomaly,
     ModeloWorkProgress,
     ModeloWorkProgressDenominator,
+    ModeloWorkRelationConsumption,
     ModeloWorkReview,
     ModeloWorkReviewCasilla,
     build_modelo_work_review,
@@ -716,6 +718,7 @@ __all__ = [
     "ModeloVisibleFilingTarget",
     "ModeloWorkAddress",
     "ModeloWorkAddressNotFoundError",
+    "ModeloWorkBindingOrigin",
     "ModeloWorkCalculationServiceResult",
     "ModeloWorkConditionalRecargoPreview",
     "ModeloWorkCreateApplicabilityRefusal",
@@ -728,6 +731,7 @@ __all__ = [
     "ModeloWorkProgress",
     "ModeloWorkProgressDenominator",
     "ModeloWorkRegistryYearMismatchError",
+    "ModeloWorkRelationConsumption",
     "ModeloWorkResolution",
     "ModeloWorkReview",
     "ModeloWorkReviewCasilla",
