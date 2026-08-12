@@ -17,7 +17,10 @@ from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
 from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
 from ._action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
-from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
+from ._m303_regimen_simplificado_scope import (
+    m303_profile_readiness_failure,
+    m303_regimen_simplificado_scope_for_profile,
+)
 from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 _EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
@@ -214,9 +217,16 @@ def _active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
     try:
         record = UserProfileLifecycleRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError as exc:
-        raise ModeloProfileReadinessError("Modelo 303 requires an active secure profile") from exc
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
+        ) from exc
     if record.status is not UserProfileStatus.ACTIVE:
-        raise ModeloProfileReadinessError("Modelo 303 requires an active secure profile")
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure(
+                "profile_inactive",
+                {"profile_present": True, "profile_status": str(record.status)},
+            ),
+        )
     return projection_for_taxpayer(record)
 
 

@@ -108,19 +108,31 @@ def test_secure_profile_without_iva_composition_blocks_m303_scope_resolution(tmp
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile(composition=None)
 
-        with pytest.raises(ModeloProfileReadinessError, match="complete IVA profile composition"):
+        with pytest.raises(ModeloProfileReadinessError) as raised_1:
             resolve_m303_regimen_simplificado_scope(_work_unit())
 
+
+        failure_1 = raised_1.value.precondition_failure
+        assert failure_1 is not None, "the refusal must carry its declared precondition failure"
+        assert failure_1.scenario_id == "modelo.work.calculate.m303_profile_readiness.iva_composition_missing"
 
 def test_raw_unknown_composition_is_refused() -> None:
     raw_composition: object = "unrecognised"
 
-    with pytest.raises(ModeloProfileReadinessError, match="composition is unknown"):
+    with pytest.raises(ModeloProfileReadinessError) as raised_2:
         m303_regimen_simplificado_scope_for_composition(raw_composition)  # type: ignore[arg-type]
 
+
+    failure_2 = raised_2.value.precondition_failure
+    assert failure_2 is not None, "the refusal must carry its declared precondition failure"
+    assert failure_2.scenario_id == "modelo.work.calculate.m303_profile_readiness.iva_composition_unknown"
 
 def test_profile_without_iva_is_refused_by_the_profile_mapper() -> None:
     profile = TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime.GENERAL)
 
-    with pytest.raises(ModeloProfileReadinessError, match="complete IVA profile composition"):
+    with pytest.raises(ModeloProfileReadinessError) as raised_3:
         m303_regimen_simplificado_scope_for_profile(profile)
+
+    failure_3 = raised_3.value.precondition_failure
+    assert failure_3 is not None, "the refusal must carry its declared precondition failure"
+    assert failure_3.scenario_id == "modelo.work.calculate.m303_profile_readiness.iva_composition_missing"

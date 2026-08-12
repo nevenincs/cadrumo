@@ -264,6 +264,19 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     *(
         _profile(
             "modelo.work.calculate",
+            "modelo.work.calculate.m303_profile_readiness.ready",
+            f"modelo.work.calculate.m303_profile_readiness.{scenario_code}",
+        )
+        for scenario_code in (
+            "iva_composition_missing",
+            "iva_composition_unknown",
+            "profile_absent",
+            "profile_inactive",
+        )
+    ),
+    *(
+        _profile(
+            "modelo.work.calculate",
             "modelo.work.calculate.m303_filing_evidence.valid",
             f"modelo.work.calculate.m303_filing_evidence.{scenario_code}",
         )

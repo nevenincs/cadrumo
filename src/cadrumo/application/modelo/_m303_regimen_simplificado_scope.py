@@ -2,13 +2,33 @@
 
 from __future__ import annotations
 
-from ...core import Modelo
+from collections.abc import Mapping
+
+from ...core import ActionEvidenceProvenance, Modelo
 from ...domain.deadlines import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
 from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
 from ._action_errors import ModeloProfileReadinessError
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+
+_READINESS_SUBJECT_LEAF_KEY = "modelo.work.calculate"
+_READINESS_SCENARIO_PREFIX = "modelo.work.calculate.m303_profile_readiness"
+
+
+def m303_profile_readiness_failure(
+    scenario_code: str,
+    evidence_values: Mapping[str, str | int | bool],
+) -> ModeloPreconditionFailure:
+    """Return the declared failure for one Modelo 303 profile-readiness scenario."""
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=_READINESS_SUBJECT_LEAF_KEY,
+        scenario_id=f"{_READINESS_SCENARIO_PREFIX}.{scenario_code}",
+        evidence_id=f"{_READINESS_SCENARIO_PREFIX}.{scenario_code}.observation",
+        evidence_values=evidence_values,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+    )
 
 
 def resolve_m303_regimen_simplificado_scope(
@@ -20,9 +40,16 @@ def resolve_m303_regimen_simplificado_scope(
     try:
         record = UserProfileLifecycleRepository(bucket_id=work_unit.bucket_id).load(work_unit.bucket_id)
     except ProfileNotFoundError as exc:
-        raise ModeloProfileReadinessError("Modelo 303 requires an active secure profile") from exc
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure("profile_absent", {"profile_present": False}),
+        ) from exc
     if record.status is not UserProfileStatus.ACTIVE:
-        raise ModeloProfileReadinessError("Modelo 303 requires an active secure profile")
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure(
+                "profile_inactive",
+                {"profile_present": True, "profile_status": str(record.status)},
+            ),
+        )
     return m303_regimen_simplificado_scope_for_profile(projection_for_taxpayer(record))
 
 
@@ -32,7 +59,12 @@ def m303_regimen_simplificado_scope_for_profile(
     """Map the canonical secure IVA profile composition to the closed S59 scope."""
     iva_profile = profile.iva
     if iva_profile is None:
-        raise ModeloProfileReadinessError("Modelo 303 requires a complete IVA profile composition")
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure(
+                "iva_composition_missing",
+                {"iva_profile_present": False},
+            ),
+        )
     return m303_regimen_simplificado_scope_for_composition(iva_profile.regime_composition)
 
 
@@ -45,7 +77,12 @@ def m303_regimen_simplificado_scope_for_composition(
     elif composition in {M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED}:
         scope = M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED
     else:
-        raise ModeloProfileReadinessError("Modelo 303 IVA regime composition is unknown")
+        raise ModeloProfileReadinessError(
+            precondition_failure=m303_profile_readiness_failure(
+                "iva_composition_unknown",
+                {"iva_profile_present": True, "regime_composition": str(composition)},
+            ),
+        )
     return M303RegimenSimplificadoScopeDecision(
         scope=scope,
     )

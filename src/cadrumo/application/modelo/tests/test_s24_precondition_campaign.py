@@ -195,6 +195,26 @@ _IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
 _EXPECTED_PROFILE_IDENTITIES = {
     (
         "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.iva_composition_missing",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.iva_composition_unknown",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.profile_absent",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.profile_inactive",
+    ),
+    (
+        "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
         "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoint_coverage_incomplete",
     ),
