@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cli-action-envelope-hardening'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:441a327f277f458968e0a7eb7daffdf226b05622d92d6f1b3d3abfc06015930c'
+body_hash: 'sha256:53dc75aad637203fb7f56980beb66d726db06f4dc269598448b8623d8dd43283'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -51,6 +51,20 @@ The conformance gate now resolves every `cli.ledger.*` leaf in ca/en/es/hu and r
 Verification: the strengthened integration module passes 5 tests; a separate fixed-point scan reports `COMMAND_VALUES ca 0`, `COMMAND_VALUES en 0`, `COMMAND_VALUES es 0`, and `COMMAND_VALUES hu 0`; real `add --help`, `attach --help`, and `classify --help` succeed in all four locales (12 direct console checks); Ruff and format checks pass. Locale scaffold remains globally red only on separately owned schema/profile omissions, one Modelo-work leaf, and the concurrent IVA-wallet cluster.
 
 S90 remains open for final independent review.
+
+### Frozen typed-error full-scope remediation
+
+The frozen review identified remaining ledger CLI consumers that converted registered typed exceptions into `BadParameter` prose. Fresh semantic discovery re-confirmed the canonical split: `LLMConsentError` already owns a terminal LLM precondition verdict; transaction and invoice validation failures retain registered domain identities but require a fact-only CLI projection where no genuine operator action can be bound.
+
+The evidence-extract consent catch was deleted, so `LLMConsentError` now reaches the shared boundary unchanged. Transaction-validation consumers in ledger add/update, M210 classification, lifecycle split, and all LLM classification paths now re-raise the same `TransactionValidationError` with condition `cli.ledger.transaction.valid`, typed error-kind evidence, no action, `not_applicable` conditionality, and `operator_decision`. Invoice add, wizard, import, update, and evidence-confirm consumers likewise preserve `InvoiceValidationError` under `cli.ledger.invoice.valid`. Pydantic validation in rich-invoice construction and classification-rule construction now reaches the shared validation boundary instead of exposing field/error prose. The adjacent evidence-consent re-derivation `ValueError` prose bridge was also removed.
+
+The structural conformance gate now rejects typed ledger errors converted to `_bad` or text, and rejects caught exception text embedded in local `BadParameter` messages. Locale/source parity explicitly retains the registered `cli.ledger.errors.period_year_pairing` identity even though no presentation helper consumes it. Filter integration assertions now bind the exact machine reason and evidence facts rather than relying on absence of rendered prose.
+
+A new real isolated CLI proof stores genuine structured evidence, invokes `ledger evidence extract --off-host-provider OPENAI --acknowledge-off-host` with deployment opt-in disabled, and observes `REFUSED_LLM_CONSENT`. It asserts failed condition `llm.evidence.off_host_dispatch_permitted`, exact application-state facts, `action=null`, `conditionality=not_applicable`, and `no_recovery_outcome=operator_decision`; `REFUSED_CLI_BOUNDARY` is explicitly rejected.
+
+Verification: the isolated consent proof passes (1 passed in 5.39s). The full S90 ledger action conformance module plus the two focused filter-refusal cases pass (11 passed in 73.25s). Ruff is clean on the changed scope and `git diff --check` reports no owned whitespace errors. Direct-file BasedPyright remains unsuitable as a closure lane because the CLI package carries pre-existing private-import and Typer callback diagnostics outside the changed lines.
+
+S90 remains open for independent review.
 
 ## Coordinated rehoming reconciliation
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f27ef850ade5d26c812766f48d8cf4173dbfee2e7809ce90a57017f594045d3'
+body_hash: 'sha256:8dd9ff0b8bfaaa538872ba34c75db282803bfbebeb36a216c1d898aeeb7aec5c'
 step_id: 'S89'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -37,10 +37,9 @@ related:
 
 ## Verification
 
-- Exact-scope conformance and real isolated multilingual `config check` JSON/text tests: 12 passed.
+- Exact-scope conformance, real isolated multilingual `config check` JSON/text, bundle, profile, and Google tests: 45 passed.
 - Ruff check and formatting plus Python compilation pass for the complete config package.
 - Locale-authority writes completed for `ca`, `en`, `es`, and `hu`; the global locale audit remains red only on unrelated concurrent Renta, IVA-wallet, modelo-work, and ledger catalogue drift.
-- The broader certificate and sandbox real-CLI lane remains blocked before affected operations because its shared profile fixture omits the newly required `--tax-residence-jurisdiction-scope`; eight tests not dependent on that stale fixture pass and 57 stop at profile creation.
 
 ## Notes
 
