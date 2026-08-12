@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca80b92ba7c6718026c4d67b31f10c192c4189d4c28a64ba7a7cbfd297eb096f'
+body_hash: 'sha256:4f76da9596a6c61326a5ae49ec81fbfa92964c93c18bf4466f9b461f9c54e275'
 step_id: 'S29'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -36,7 +36,7 @@ The adjudication finds no missing semantic that should be absorbed into the live
 | Build calculation inputs and execute a fresh registry calculation from printed values | Reconcile reads `CalculationRevision.casilla_values` selected by `_filed_revision_for_work_unit`; pulled-filing reconciliation reads the target revision under verification | dropped-with-grounded-reason | The reconciliation contract explicitly compares filed evidence with the canonical persisted revision. Fresh calculation is a different pre-filing question, duplicates the calculate lifecycle, and the dead wrapper is incomplete for current M100 because it cannot supply relation, enum, or date binding channels. |
 | Detect missing formula-only binding values | The calculation lifecycle resolves and validates binding channels before a revision can become the persisted reconcile target | dropped-with-grounded-reason | Binding readiness belongs where the canonical revision is calculated. Reconcile should not reconstruct calculation inputs from a filed PDF or acquire a second missing-binding contract. |
 | Convert numeric extracted values while excluding booleans and non-numeric rows | `_decimal_declaracion_values` implements the same Decimal/int-only projection | covered | The living declaration reconcile already owns the projection required for PDF value comparison. |
-| Reconcile all computed casillas and reconcile situational casillas only when both sides carry them | `_reconcile_declaracion_casillas` compares non-export-exempt computed ids in full and separately compares reconcile-when-present ids present on both sides | covered | This is the same registry-declared scope, strengthened for filed evidence by explicit missing/extra classifications and printed-record export exemptions. |
+| Reconcile extracted computed casillas and reconcile situational casillas only when both sides carry them | `verify_declaracion` iterates extracted values and handles omitted computed casillas only through coverage/status; `_reconcile_declaracion_casillas` is stronger because it compares non-export-exempt computed ids in full and separately compares reconcile-when-present ids present on both sides | covered | The policy sets are the same, but the live filed-evidence path is intentionally stronger: it emits explicit missing/extra classifications and respects printed-record export exemptions rather than laundering omitted computed boxes into a ratio. |
 | Apply registry tolerance to value comparison | `detect_casilla_divergences` receives `policy.tolerance`; pulled-filing findings use `_registry_reconcile_tolerance` | covered | The living path consumes the same strictest registry-published threshold. |
 | Classify extraction-unreliable, unmodelled-rule, rounding, and correctness discrepancies | Parser coverage/failure semantics and the provisional-profile advisory own extraction reliability; authoritative policy scoping excludes unmodelled ids; within-tolerance differences produce no finding; material deltas become `VALUE_MISMATCH` | dropped-with-grounded-reason | The four-way taxonomy mixes parser quality, registry membership, tolerated noise, and value divergence. Those concerns already have separate living owners; porting the classifier would collapse them and duplicate `CasillaDivergenceKind`. |
 | Carry expected, actual, signed delta, and casilla id per discrepancy | `CasillaDivergence` carries computed value, filed value, signed delta, id, and missing/extra/value kind; reconciliation diffs persist both rendered values | covered | The living carrier is at least as informative for the post-filing question. |
@@ -52,13 +52,14 @@ The accepted `2026-08-10-casilla-schema-dead-surface-adr` therefore remains impl
 
 ## Verification
 
-- Mandatory code RAG: `uv run --no-sync vaultspec-rag search "verify_declaracion fresh calculation classification coverage status narrative snapshot binding external grounding reconciliation only:prod" --type code --port 8766 --timeout 120` — exit 0; the dead verifier and registry verification-policy owner were the leading cluster.
-- Mandatory ADR RAG: `uv run --no-sync vaultspec-rag search "accepted dead verification surface verify_declaracion overlap live reconcile disposition" --type vault --doc-type adr --port 8766 --timeout 120` — exit 0; the accepted dead-surface ADR was the leading result.
-- Production reachability census: parsed production Python imports under `src/cadrumo` while excluding tests and the package itself — zero importers; only `_reconcile.py` and `_reconcile_casilla.py` contain textual `verify_declaracion` references, both in explanatory prose.
-- Behaviour: `uv run --no-sync pytest -q src/cadrumo/application/verification/tests src/cadrumo/application/modelo/tests/test_reconcile_casilla_divergence.py src/cadrumo/application/modelo/tests/test_reconcile_declaracion_casillas.py src/cadrumo/application/modelo/tests/test_reconcile_declaracion_casillas_multi_modelo.py src/cadrumo/application/modelo/tests/test_pulled_filing_divergence_reconcile.py src/cadrumo/application/modelo/tests/test_m303_m349_intracom_reconcile.py` — 78 passed in 33.00 seconds.
+- Mandatory code RAG: `uv run --no-sync vaultspec-rag search "verify_declaracion fresh calculation classification coverage status narrative snapshot binding external grounding reconciliation only:prod" --type code --port 8766 --timeout 120` â€” exit 0; the dead verifier and registry verification-policy owner were the leading cluster.
+- Mandatory ADR RAG: `uv run --no-sync vaultspec-rag search "accepted dead verification surface verify_declaracion overlap live reconcile disposition" --type vault --doc-type adr --port 8766 --timeout 120` â€” exit 0; the accepted dead-surface ADR was the leading result.
+- Production reachability census: parsed production Python imports under `src/cadrumo` while excluding tests and the package itself â€” zero importers; only `_reconcile.py` and `_reconcile_casilla.py` contain textual `verify_declaracion` references, both in explanatory prose.
+- Behaviour: `uv run --no-sync pytest -q src/cadrumo/application/verification/tests src/cadrumo/application/modelo/tests/test_reconcile_casilla_divergence.py src/cadrumo/application/modelo/tests/test_reconcile_declaracion_casillas.py src/cadrumo/application/modelo/tests/test_reconcile_declaracion_casillas_multi_modelo.py src/cadrumo/application/modelo/tests/test_pulled_filing_divergence_reconcile.py src/cadrumo/application/modelo/tests/test_m303_m349_intracom_reconcile.py` â€” 78 passed in 33.00 seconds.
 
 ## Notes
 
 - No production or test code changed. The verification package remains intact for S30.
 - No registry consumer row, facade export, or displaced citation was removed; those are S30 scope.
 - No audit, plan check, staging, or commit was performed.
+
