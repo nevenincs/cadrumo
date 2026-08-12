@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:21fcfe3b8a10ca2fb9c6c080cabb84616806948e326cb5d606bd3ff2c4f5c4fb'
+body_hash: 'sha256:1c90cdffd9d39cbef830dd4a0fa63b5f28cd7404ada8ed55b4040414c74233f9'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
@@ -100,6 +100,45 @@ project holds toward AEAT. The notifications LIST surface is different and is
 safe — the shipped reader is documented as never telling AEAT a notification was
 read — and that is the only side of this that may be exercised without an
 explicit operator decision.
+
+### Re-established, this time with a discriminating control
+
+The withdrawal above was right to withdraw. A second authenticated session then
+supplied the control the first attempt lacked, and the original conclusion is
+re-established on much stronger evidence than it originally had.
+
+**The control.** Within ONE session, two authenticated read surfaces were driven
+back to back. AEAT's notifications summary rendered three populated tables. The
+deudas consulta, queried immediately afterwards, rendered no table at all and
+returned the form byte-for-byte apart from the clock.
+
+That separates the hypotheses the first attempt could not. A session that
+renders content elsewhere is authenticated, un-gated and capable of returning
+rows, so the empty consulta is not a session artefact, not an authentication
+artefact, and not a generic gate. The pending-notifications banner was also
+tested directly rather than reasoned about: the notifications summary was
+visited — which is what AEAT's "antes de continuar acceda al enlace" asks for —
+and the consulta was re-queried afterwards, returning the identical empty form.
+So the banner is not gating the listing either.
+
+**Conclusion, now supported.** Hypothesis 2 of the three listed above is the
+live one: the operator's liabilities exist at NOTIFICATION stage — liquidaciones,
+sanciones, providencias served as messages — and are not present in the
+recaudación register the *Consultar deudas* surface reads. Those are different
+AEAT registers at different procedural stages, and the operator's statement that
+the debts and penalties are "clearly indicated in the messages" is consistent
+with exactly that, not in conflict with it.
+
+**What this does NOT license.** It does not license inventing the row DOM. The
+register is empty for this taxpayer today, so S13 and S14 still have nothing to
+observe, and the deferral stands on evidence rather than on the unsupported
+reasoning that was withdrawn.
+
+**Method note worth keeping.** The first pass reached the right answer by the
+wrong route and would have been indistinguishable from a wrong answer. What
+fixed it was not more care with the same probe but a SECOND surface driven in
+the same session as a positive control. When a read returns nothing, prove the
+reader can return something before concluding the thing is absent.
 
 ## FINDING-2: the specimen established more than S15 consumed, and the surplus is unrecorded in code
 
@@ -230,9 +269,57 @@ not inherit them as unexplained.
 
 ## Verdict
 
-P06 is complete. P05 is not, and its remaining five Steps are **deferred
-carry-forward** under the campaign-close mandate, blocked on data no schedule
-controls.
+### FINDING-7 (OUT OF SCOPE, needs an owner): the notifications reader silently reports zero against a populated surface
+
+**Pathway:** `adapters/outbound/aeat/sede/_notifications.py` →
+`aeat app live notifications pull`
+
+Found while establishing the control for FINDING-1, and reported rather than
+absorbed because it belongs to the notifications feature, not this plan.
+
+`aeat app live notifications pull` completed successfully against a live
+authenticated session and persisted a snapshot with `row_count 0`. The AEAT
+summary surface it reads, fetched directly in the same session, carries THREE
+tables each with one populated data row. AEAT's own banner states the taxpayer
+has pending notifications.
+
+So the verb reports an empty inbox while the surface behind it is populated. It
+does not fail, warn, or refuse — it returns a clean zero.
+
+The likely cause is a stale parse. The module docstring records the summary as
+"two tables keyed by número de certificado"; the surface now renders three, and
+the header sets differ between them (the first carries `Destinatario` where the
+other two carry `Concepto`). A parser keyed to the two-table shape would find
+nothing to bind.
+
+**Why this matters beyond a missing feature.** This is the exact shape the
+`no-silent-under-declaration` rule exists to prevent, on a surface where the
+missing rows are AEAT telling the taxpayer about liabilities and deadlines. An
+operator reading `row_count 0` would conclude they have no pending
+notifications. For a taxpayer with late filings and served penalties, that
+reading is not merely unhelpful, it is dangerous — electronic notifications are
+deemed served after ten days whether or not anyone looked.
+
+**Remediation, owed by the notifications feature:** re-capture the summary and
+query surfaces, repair the parse against the current three-table layout, and add
+a regression that fails when a populated surface yields zero rows. A reader that
+cannot distinguish "empty inbox" from "parse found nothing" should refuse rather
+than return zero. **Not fixed here:** it is outside this plan's scope, and the
+campaign rule against opportunistically editing another campaign's surface
+applies.
+
+## Verdict
+
+P06 is complete: 18 grounded entries across four subjects, every figure
+confirmed on two independent channels.
+
+P05 is not. S13, S14, S16, S17 and S18 are **deferred carry-forward**, blocked
+because the recaudación register holds no rows for this taxpayer — now
+established with a positive control rather than asserted. The liabilities are
+real and sit at notification stage; they are simply not in the register this
+surface reads.
 
 The plan may be recorded as closed on that basis. It must not be recorded as
-having delivered its goal.
+having delivered its goal: an operator still cannot see what AEAT reports as
+owed, and FINDING-7 means they currently cannot see their pending notifications
+either.
