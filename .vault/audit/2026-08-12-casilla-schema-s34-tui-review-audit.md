@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:5254b4faed8de8d8d4370a1aa07c6f2ace64b75c8ee50a103f4564bda8d9d31b'
+body_hash: 'sha256:fdb788c10d891db3fe0e0df61b66f7f2a4d007e60766f6aefb248f5acf5c542f'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-W04-P10-S34]]"

@@ -5,6 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
+body_hash: 'sha256:4ed578852d8f48a6af55640bb77f1ef89445233365e8d9e1eb43a96d2f21702e'
 step_id: 'S32'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
