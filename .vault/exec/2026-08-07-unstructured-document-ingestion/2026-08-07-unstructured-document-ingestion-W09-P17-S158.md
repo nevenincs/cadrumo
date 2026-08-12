@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:b0f510e8cfea5b5483fc31acb61f552bba06f7a650860e123fa7e0449f35c20d'
+body_hash: 'sha256:da76d5382593b2cc31c6d7c41b03db42f68af9f39a0d66038c89a7099c299eee'
 step_id: 'S158'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S158 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Sweep the branch table asserting no branch consumes establishment where the law keys on identification, which is the inverse of the error that prompted the split and is cheap to gate while the table is being written rather than after. The intra-community goods family and the 349 population key on identification, so a branch demanding establishment there would ask for a fact the law does not turn on and refuse a resolvable operation and ## Scope
-
-- `src/cadrumo/domain/iva` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Sweep the branch table asserting no branch consumes establishment where the law keys on identification, which is the inverse of the error that prompted the split and is cheap to gate while the table is being written rather than after. The intra-community goods family and the 349 population key on identification, so a branch demanding establishment there would ask for a fact the law does not turn on and refuse a resolvable operation
 
@@ -87,8 +54,6 @@ itself.
 No change made.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 This is the dangerous row shape the plan preamble names: wrong in a way its
 executor can fully satisfy. Nothing about the sweep announces difficulty. An

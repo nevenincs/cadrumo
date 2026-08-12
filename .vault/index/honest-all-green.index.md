@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#honest-all-green'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:e97958bdf5a0f8199f0a45ccded1e51501041adc44e376cbff29a6601ea97849'
+body_hash: 'sha256:6464e6d74f506ec5e3c50c4e68377f297761f3c01e1f9e2d7529b9ba53160283'
 related:
   - '[[2026-07-14-honest-all-green-P01-S01]]'
   - '[[2026-07-14-honest-all-green-P01-S02]]'
@@ -23,7 +23,7 @@ related:
   - '[[2026-07-14-honest-all-green-P06-S13]]'
   - '[[2026-07-14-honest-all-green-P06-S14]]'
   - '[[2026-07-14-honest-all-green-adr]]'
-  - '[[2026-07-14-honest-all-green-plan]]'
+  - '[[2026-08-11-honest-all-green-p06-import-boundary-audit]]'
 ---
 
 # `honest-all-green` feature index
@@ -35,6 +35,10 @@ Auto-generated index of all documents tagged with `#honest-all-green`.
 ### adr
 
 - `2026-07-14-honest-all-green-adr` - `honest-all-green` adr: `Honest all-green burndown` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-11-honest-all-green-p06-import-boundary-audit` - `honest-all-green` audit: `P06 import-boundary review`
 
 ### exec
 
@@ -52,7 +56,3 @@ Auto-generated index of all documents tagged with `#honest-all-green`.
 - `2026-07-14-honest-all-green-P06-S11` - Run the full suite to genuinely green in parallel and sequential modes and record the closing evidence
 - `2026-07-14-honest-all-green-P06-S13` - Extend the period-gate allowlist for the landed docs sequences WorkUnit display frames per the established narrow-rule precedent
 - `2026-07-14-honest-all-green-P06-S14` - Complete the landed CLI-identity rename's locale sweep so codebase-to-locale parity and the two locale-audit tests are green
-
-### plan
-
-- `2026-07-14-honest-all-green-plan` - `honest-all-green` plan

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:ec67712ca03616994b4e165a1a7b7b3d2a3f3d0527f1edfbd2f07fdfb45d1f4e'
 related:

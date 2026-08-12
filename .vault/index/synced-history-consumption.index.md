@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#synced-history-consumption'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:4b4e2396c07d60fac83279987f818bddc7807ff60020db7fb7303a4e6d20d875'
 related:

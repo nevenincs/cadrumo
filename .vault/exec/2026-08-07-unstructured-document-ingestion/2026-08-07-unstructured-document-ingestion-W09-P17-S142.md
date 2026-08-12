@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:183c8efb6ef1b34ddf088501b6f7cd994d5d4f41632665185dbb0e128402b9b1'
+body_hash: 'sha256:b7162ba97ab5477d2b561d3afbb54f378205df381dac279d773e57e6b58c0648'
 step_id: 'S142'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S142 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Let a postal field carry role evidence, since the role-evidence flag derives from the tax-identifier form and the validator refuses a role-evidence instruction on any other form, so the two identity fields each get a key asking the model to quote the printed heading proving whose they are while the two postal fields structurally cannot and their party attribution rests on prose alone. A transposition produces a fully valid draft with both fields grounded and every gate green, and once the consumer lands both parties get a confident wrong territory. Either widen the flag to a declared per-contract axis or record in the ADR rather than only the exec record that postal party attribution is anchor-reviewed rather than evidence-anchored, and make that a stated precondition on the consumer row and ## Scope
-
-- `src/cadrumo/llm` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Let a postal field carry role evidence, since the role-evidence flag derives from the tax-identifier form and the validator refuses a role-evidence instruction on any other form, so the two identity fields each get a key asking the model to quote the printed heading proving whose they are while the two postal fields structurally cannot and their party attribution rests on prose alone. A transposition produces a fully valid draft with both fields grounded and every gate green, and once the consumer lands both parties get a confident wrong territory. Either widen the flag to a declared per-contract axis or record in the ADR rather than only the exec record that postal party attribution is anchor-reviewed rather than evidence-anchored, and make that a stated precondition on the consumer row
 
@@ -106,8 +73,6 @@ ADR-refused as well as gate-refused, and reading either surface first would
 have prevented it.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 THIS IS THE HAZARD THE PLAN PREAMBLE NAMES, and I walked into it rather than
 around it. The row is wrong in a way its executor can fully satisfy: nothing

@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6073a904ccd827031c58bc34122852aea36c326578c1ac38a8aaf325b2f72f2'
+body_hash: 'sha256:5cbc94f9707f5feba7abbb998af61fc780b79dd55abe72739e66b4f06345ee2c'
 step_id: 'S296'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S296 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Score the draft the reading ROUTER hands on rather than the extractor's raw output, since suggested_kind is derived deterministically by ground_draft_against_transcription from the filer tax id one stage AFTER ground_extracted_fields, and iva_category is decided by the single classification authority at the confirm boundary. A capture taken at the extractor stage reports both None and cannot distinguish never-produced from produced-one-stage-later, which is what motivated a proposal to route both through the LLM classifier and would have replaced two deterministic authorities with probabilistic ones and ## Scope
-
-- `dev/ingest_harness/_runner.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Score the draft the reading ROUTER hands on rather than the extractor's raw output, since suggested_kind is derived deterministically by ground_draft_against_transcription from the filer tax id one stage AFTER ground_extracted_fields, and iva_category is decided by the single classification authority at the confirm boundary. A capture taken at the extractor stage reports both None and cannot distinguish never-produced from produced-one-stage-later, which is what motivated a proposal to route both through the LLM classifier and would have replaced two deterministic authorities with probabilistic ones
 
@@ -105,8 +72,6 @@ scored at all, and this is the PIPELINE stating whether the capture point could
 have produced it. Two questions that look alike and answer differently.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 CORRECTION TO THIS RECORD'S OWN EARLIER CLOSURE. The prior pass concluded the
 runner could not carry the guard because "its row record carries counts rather

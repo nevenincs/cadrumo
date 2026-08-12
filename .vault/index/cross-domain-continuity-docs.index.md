@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-continuity-docs'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:bd7c4f3417cdcba43609055b893504a87374cd68dc356ae1f272bdc6fe983c27'
 related:

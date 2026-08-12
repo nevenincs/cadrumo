@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s52-mcpb-manifest'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:5b814a1183aebf0b17f92f8a792bc2e452b475cb4b9e8ead5f456752cd1ace14'
 related:

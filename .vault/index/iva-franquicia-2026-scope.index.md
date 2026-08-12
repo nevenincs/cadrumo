@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-franquicia-2026-scope'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:77a4a758e1e011224e7f7504c54eb6be9ec9c3fd3d1b8ea77e8285f322464dfd'
 related:

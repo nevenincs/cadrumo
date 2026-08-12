@@ -3,47 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:905a6f67dec067046b4b9850beb7d476032bf4b2b770078e67e2a32c499954a3'
+body_hash: 'sha256:060f02fe7329cbf144e619082eab9aead406542d8f181033ba0bea27b35acb2e'
 step_id: 'S109'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S109 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Close the split-declaration debt that reds tree-wide gates this campaign cannot declare complete over, taking each instance as a measured case rather than a sweep: the transaction field-role enum gained two members without its member-set fixture enumerating them, and the import-hygiene gate reports more test-only private reaches than its documented debt count admits. Establish for each whether the fixture or the count is the thing that is wrong before changing either, since a gate whose ceiling is raised to match reality detects nothing afterwards, and pin the property rather than the tally and ## Scope
-
-- `src/cadrumo/domain/transactions`
-- `src/cadrumo/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Close the split-declaration debt that reds tree-wide gates this campaign cannot declare complete over, taking each instance as a measured case rather than a sweep: the transaction field-role enum gained two members without its member-set fixture enumerating them, and the import-hygiene gate reports more test-only private reaches than its documented debt count admits. Establish for each whether the fixture or the count is the thing that is wrong before changing either, since a gate whose ceiling is raised to match reality detects nothing afterwards, and pin the property rather than the tally
 
@@ -97,8 +63,6 @@ Four stale entries deleted, on the gate own stated reasoning: an entry that no
 longer answers a live reach is a spare slot that silently widens the gate.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 Three of the four stale entries were INVISIBLE until the earlier assertions
 stopped failing, which is worth recording as a property of stacked gates

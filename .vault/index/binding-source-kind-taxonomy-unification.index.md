@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-source-kind-taxonomy-unification'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:ca78f40e39c44ce02cee3c27d39849350c5ea7f350a45500625eaa06e27538dd'
 related:

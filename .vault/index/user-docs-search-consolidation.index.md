@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#user-docs-search-consolidation'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f25322b276fa785bd36b320da4765afd29656af7f5b8c22b54f31b3a4a5098eb'
+body_hash: 'sha256:6f837d2f660789fcb89aa6cf7b07ab2d06512d78c06109488362e1fb78a3eb94'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -22,6 +22,8 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P02-S32]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S33]]'
   - '[[2026-08-01-user-docs-search-consolidation-P02-S35]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S36]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P02-S37]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S08]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S09]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S18]]'
@@ -35,6 +37,7 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P05-S16]]'
   - '[[2026-08-01-user-docs-search-consolidation-P05-S17]]'
   - '[[2026-08-01-user-docs-search-consolidation-P05-S34]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P05-S39]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S20]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S21]]'
   - '[[2026-08-01-user-docs-search-consolidation-P06-S22]]'
@@ -80,6 +83,8 @@ related:
   - '[[2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit]]'
   - '[[2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit]]'
   - '[[2026-08-07-user-docs-search-consolidation-ranking-measurement-audit]]'
+  - '[[2026-08-11-user-docs-search-consolidation-relevance-boost-band-containment-adr]]'
+  - '[[2026-08-11-user-docs-search-consolidation-rung2-retirement-close-honesty-review-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -91,6 +96,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 ### adr
 
 - `2026-08-01-user-docs-search-consolidation-adr` - `user-docs-search-consolidation` adr: `user documentation search: affirm the precompile pipeline, adjudicate rung 2, reconcile the corpus` | (**status:** `accepted`)
+- `2026-08-11-user-docs-search-consolidation-relevance-boost-band-containment-adr` - `user-docs-search-consolidation` adr: `confine a per-query relevance boost to its display-class band` | (**status:** `accepted`)
 
 ### audit
 
@@ -125,6 +131,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-07-user-docs-search-consolidation-p02-s04-matrix-artifact-review-audit` - `user-docs-search-consolidation` audit: `P02.S04 matrix artifact review`
 - `2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit` - `user-docs-search-consolidation` audit: `P02.S06 acceptance provenance gate review`
 - `2026-08-07-user-docs-search-consolidation-ranking-measurement-audit` - `user-docs-search-consolidation` audit: `Ranked-result measurement across modelo, casilla, natural-language and tax-term queries`
+- `2026-08-11-user-docs-search-consolidation-rung2-retirement-close-honesty-review-audit` - `user-docs-search-consolidation` audit: `campaign close honesty review after the Rung-2 retirement ruling`
 
 ### exec
 
@@ -164,6 +171,9 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P06-S29` - Correct the structured modelo plus casilla route to carry and match canonical casilla_id while retaining display-number and segmento fallback, and add the real-authority gate for an id that differs from its display number
 - `2026-08-01-user-docs-search-consolidation-P06-S30` - Prove the RAG sweep composition emits only authoritative injected record targets while preserving deterministic structured casilla enrollment, then refresh the manifest-admissible relevance input
 - `2026-08-01-user-docs-search-consolidation-P05-S34` - Correct the three sites that ranked a legal provision in the DOC band above the modelo and casilla cards it grounds, and gate the agreement between a record's stamped weight and the class it displays under
+- `2026-08-01-user-docs-search-consolidation-P02-S36` - Delete the three orphaned Rung-2 build-time modules
+- `2026-08-01-user-docs-search-consolidation-P02-S37` - Resolve the shipped query/alias authority
+- `2026-08-01-user-docs-search-consolidation-P05-S39` - Confine a per-query relevance boost to its own display-class band
 
 ### plan
 

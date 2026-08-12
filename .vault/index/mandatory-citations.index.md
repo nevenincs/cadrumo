@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mandatory-citations'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:c2997e56726aa1d9d51a7b03b4aa581dcf7c22d908b0882725e637e01cb1e59d'
 related:

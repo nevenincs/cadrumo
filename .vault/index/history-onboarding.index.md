@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#history-onboarding'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:4f096cc066b6590dece1ff13f2200bc66702c50d031b58658115523c427b08e9'
 related:

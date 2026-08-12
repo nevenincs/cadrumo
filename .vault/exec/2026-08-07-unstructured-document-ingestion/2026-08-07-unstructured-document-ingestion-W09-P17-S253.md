@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:0789f3bdaf079bd2e07e33e790fe862eb0d0b3da71f829b3edfb7f2542d721ef'
+body_hash: 'sha256:43325227013768b4949664132c086a3638a285d9ca3f0612d40564fe71a80675'
 step_id: 'S253'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S253 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Judge the nine remaining default-to-Spain sites, in THREE syntaxes rather than the two the earlier census assumed. Thirteen exist in production. Four are registry bindings, two detail-record, one donativo and one withholding, which an earlier census judged plausibly correct by construction since those selectors are Spain-scoped, and that reasoning needs re-testing per site rather than inheriting. Four sit in the row-set assembly as _coerce_text with an ES default AND an or-ES fallback, DOUBLE-DEFAULTED, so removing the visible half leaves the behaviour unchanged and a lane fixing it would believe it had fixed the site. Five are in bulk import, the wizard and the identity roles. The third syntax is the bare annotation default, which is neither Field(default=...) nor an or-expression and hides from a search for either. The question per site is not only whether the default is wrong but what the site does with a case it was not built from, since Spanish is the shape these instruments were built from and every other case is invisible to them rather than reported. Coordinate ownership before editing, since the row-set assembly sites may belong to an active lane and ## Scope
-
-- `src/cadrumo` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Judge the nine remaining default-to-Spain sites, in THREE syntaxes rather than the two the earlier census assumed. Thirteen exist in production. Four are registry bindings, two detail-record, one donativo and one withholding, which an earlier census judged plausibly correct by construction since those selectors are Spain-scoped, and that reasoning needs re-testing per site rather than inheriting. Four sit in the row-set assembly as _coerce_text with an ES default AND an or-ES fallback, DOUBLE-DEFAULTED, so removing the visible half leaves the behaviour unchanged and a lane fixing it would believe it had fixed the site. Five are in bulk import, the wizard and the identity roles. The third syntax is the bare annotation default, which is neither Field(default=...) nor an or-expression and hides from a search for either. The question per site is not only whether the default is wrong but what the site does with a case it was not built from, since Spanish is the shape these instruments were built from and every other case is invisible to them rather than reported. Coordinate ownership before editing, since the row-set assembly sites may belong to an active lane
 
@@ -93,8 +60,6 @@ can override, and the default is visible in the surface they are using. That is
 not the silent-data-default shape -- it is a form pre-fill.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 COORDINATION, which the row made a precondition. The row-set assembly file has
 two recent commits from a types-and-style lane rather than a behaviour lane, so

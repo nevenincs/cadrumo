@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:40070c05f0c3c934bd3f76f5094e205997d8707c636a6f9abc442af9fbd1ef15'
+body_hash: 'sha256:169b9c91d912f17f3369bd78910e7a1de001360a40889ca19b94476596b96e23'
 step_id: 'S321'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S321 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Restore the missing-required-field refusal that left the CLI layer when the confirm suite switched to a structured document, as an application-layer case over a constructed draft needing neither a model nor a document. The property is that a required field with no extraction heuristic and no operator override refuses rather than being fabricated, and it is currently proven nowhere: the CLI case that carried it could only construct the state from a text PDF, whose reading lane needs a live model, and a structured document names its parties so the state is unreachable from the bundled corpus. Do NOT rebuild it around a document - the point is the confirm service's own behaviour when the draft it is handed lacks the field, which a constructed draft states directly and ## Scope
-
-- `src/cadrumo/application/ledger/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Restore the missing-required-field refusal that left the CLI layer when the confirm suite switched to a structured document, as an application-layer case over a constructed draft needing neither a model nor a document. The property is that a required field with no extraction heuristic and no operator override refuses rather than being fabricated, and it is currently proven nowhere: the CLI case that carried it could only construct the state from a text PDF, whose reading lane needs a live model, and a structured document names its parties so the state is unreachable from the bundled corpus. Do NOT rebuild it around a document - the point is the confirm service's own behaviour when the draft it is handed lacks the field, which a constructed draft states directly
 
@@ -85,8 +52,6 @@ that refuses always -- the failure mode a refusal test cannot detect about
 itself.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 Mutation-proven by replacing the guard with an unguarded version at runtime,
 from outside the checkout so nothing under source changed: all three refusal

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#sync-control-surface'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:fa425683e29a2049ccd1bc4a5bc119ad95492b07137b3d43b62bcbae5c9f8e06'
 related:

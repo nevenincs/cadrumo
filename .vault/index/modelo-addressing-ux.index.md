@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-addressing-ux'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:5b290412761be5c863a09008db9de0c38c269a7d598b02d0e194e61ff4b5ec4d'
 related:

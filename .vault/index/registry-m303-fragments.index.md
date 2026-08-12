@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-m303-fragments'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:48772f279786c8cc84130fee02a9f55e1940cd16122b6969ed64351bec8e753e'
 related:

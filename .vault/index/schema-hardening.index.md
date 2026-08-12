@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-hardening'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:313e8fbcd04a0972419aa10fca9628bccfb2f5face65daf53c5406b1892d3663'
 related:

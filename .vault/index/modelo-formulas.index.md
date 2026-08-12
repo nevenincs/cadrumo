@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-formulas'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:33b387102fba381762d0f7689e653bfc265a3124e6af8ecb0dac47f41bec74bd'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bindings-architecture-unification'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:77ea324ae5097ce3eacbce1e9cb10c16a1cd141ca26600d2af829857474bd8ec'
 related:

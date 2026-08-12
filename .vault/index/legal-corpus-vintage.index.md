@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#legal-corpus-vintage'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:b43875d8acd377ecc24d99001abd86727d5b6045f6af59b1c059b8402e5ef043'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#renta-cuota-integra-autonomic-scale'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:c4066ed6d49f6c16ab6126d486af88e16ce9daff2c2d56c7a3b7b11dad22970e'
 related:

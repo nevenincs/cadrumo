@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#restructure-execution'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:3997b95fa0bdee30d6e1eb76b8adee83eefedccc2771ae88c60942f74e07de0d'
 related:

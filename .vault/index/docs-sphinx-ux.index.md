@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-sphinx-ux'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:64255353eb72aa91436ae9126eb5177d91e96caeffa2323f044bee6dd9f8c7f9'
 related:

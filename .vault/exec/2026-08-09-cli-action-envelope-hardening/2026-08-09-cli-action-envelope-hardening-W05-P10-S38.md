@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:14e33f17c7997c173f5604d02a90719d27df682a219a1c80ce08547b681d5ee3'
+body_hash: 'sha256:a68e6d2825d24b3da1f0bcb58e77975a96e232d5db87f06cfca034975d25b164'
 step_id: 'S38'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -49,7 +49,6 @@ related:
 - The read-only historical rehoming join remains red for the S38 target `PurchaseInvoiceEvidenceInputError` plus four unrelated Modelo error fingerprints and `LedgerStorageError`. No rehoming ledger write was made.
 - The full locale audit and scaffold checks remain red on unrelated catalogue debt, with zero findings for `ledger.evidence.reader.operation_failed`.
 - S90 and S94 were not edited.
-
 
 ## Coordinated canonical rehoming reconciliation
 

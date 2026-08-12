@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:2f850058accc76d9efe9993e3654a3da7943954943e6ee058c0039d3b4c597a0'
+body_hash: 'sha256:1e4f4dfdb1dc568c4144bdfa5e2940203abee2f24295beb955bb6af6466da246'
 step_id: 'S325'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S325 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Record the postal-attribution disposition in the ADR, the half of the role-evidence row a shipped gate cannot deliver. The decision is settled and enforced - address values are attributed deterministically in code by co-location from the document layout, and a property gate refuses any attributed address field acquiring a role-evidence key, checking the rendered prompt as well as the contract table. What is missing is a DECISION RECORD: the reasoning lives in a test docstring and an exec record, so the next author meets the refusal without meeting the argument, which is how a gate gets read as an obstacle rather than as a conclusion. Carry the context-budget reasoning that decided it, that the design target is a lowest-bound vision model and every added key costs the fields already in the prompt, and state it as a precondition on any consumer of postal-derived territory and ## Scope
-
-- `.vault/adr` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Record the postal-attribution disposition in the ADR, the half of the role-evidence row a shipped gate cannot deliver. The decision is settled and enforced - address values are attributed deterministically in code by co-location from the document layout, and a property gate refuses any attributed address field acquiring a role-evidence key, checking the rendered prompt as well as the contract table. What is missing is a DECISION RECORD: the reasoning lives in a test docstring and an exec record, so the next author meets the refusal without meeting the argument, which is how a gate gets read as an obstacle rather than as a conclusion. Carry the context-budget reasoning that decided it, that the design target is a lowest-bound vision model and every added key costs the fields already in the prompt, and state it as a precondition on any consumer of postal-derived territory
 
@@ -78,8 +45,6 @@ working mitigation.
 No change made. The row is closed as an error of mine rather than a delivery.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 THIS IS THE SAME ERROR AS THE ROW THAT SPAWNED IT, one layer along, and worth
 recording as such. On the role-evidence row I implemented a widening before

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-minimo-descendientes-engine'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:cd3c7d398c4065311c1ba70c9b872c80f92711885ebe9f59d5cfe4f8abdfd871'
 related:

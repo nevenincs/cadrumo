@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#trabajador-del-mar'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:92c2921dde6dfa19aa705e5e1a37cd5f3c49ffc47409a3698a8dc4b2c41eef58'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-vocabulary-cli-cohesion-close-honesty'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:1fec9c06d68c61d612124a132086ad9bb102947caf86e8f69d2669fde0fa9425'
 related:

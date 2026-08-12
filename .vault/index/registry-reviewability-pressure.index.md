@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-reviewability-pressure'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:d9fdb4a0fef4e2ff65e9558d26fe171a294344349b1c042fb9a5cf9118eaf553'
 related:

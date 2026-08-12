@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-config-vs-setup-namespace'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:c73618345710d29cd9b2a725d10569b0cc1cd28749b0354f9bb169ca29f1ad9b'
 related:

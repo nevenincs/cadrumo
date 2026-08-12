@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:7223dcf50524c52d0d45d1552241c64b934634e56ef55ffa4fbf858983d2962e'
+body_hash: 'sha256:7d5c23ebd0093bdb03be3e070321d3349b6201c505592fbe9127db227cb2f9e0'
 step_id: 'S126'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S126 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Make the evidence-confirm CLI suite runnable without a live local model, since all seven cases fail at the extraction stage on a local inference connection failure before reaching any confirm logic, which makes the whole file dead coverage for anyone working this surface. Six of the seven fail identically on an untouched tree so it is environmental rather than a regression. Use the deterministic structured fixture the document-identity gate uses, which needs no reader at all and is why that gate runs where this one cannot and ## Scope
-
-- `src/cadrumo/entrypoints/cli` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Make the evidence-confirm CLI suite runnable without a live local model, since all seven cases fail at the extraction stage on a local inference connection failure before reaching any confirm logic, which makes the whole file dead coverage for anyone working this surface. Six of the seven fail identically on an untouched tree so it is environmental rather than a regression. Use the deterministic structured fixture the document-identity gate uses, which needs no reader at all and is why that gate runs where this one cannot
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/entrypoints/cli`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Reproduce the reported failure and confirm the cause is the reading lane.
 - Switch the suite's document from a generated text PDF to a bundled Facturae
@@ -92,8 +57,6 @@ went from 103 failures to 68 in one change. The remaining 68 are other causes
 and other lanes.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 WHAT THIS COST, recorded so the row does not read as delivered in full. One
 property left the CLI layer. The suite used to prove that a required field

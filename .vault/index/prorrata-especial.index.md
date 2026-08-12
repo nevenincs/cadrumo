@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#prorrata-especial'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:f513a3e5c20dfdfb83fae78ee4d4c28f2514414afb97e98836acccf87cf72687'
 related:

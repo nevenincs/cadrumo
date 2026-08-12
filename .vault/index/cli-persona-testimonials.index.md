@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-persona-testimonials'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:c73695102c31df020ffa1f969c00fb978b4e7711bedb957a649894fd0eca982e'
 related:

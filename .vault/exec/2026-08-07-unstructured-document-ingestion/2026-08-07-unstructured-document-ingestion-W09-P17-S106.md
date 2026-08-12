@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:bf1d765c53b84d6d3f0a84bb3bfa9672e9af4d698414f8bbda7867d3ebf5bf2c'
+body_hash: 'sha256:d0c2d76abb29b2d101ab23e265897db04987a355f8e862478a93cfc5144e52c3'
 step_id: 'S106'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S106 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Extend the draft projection-parity gate to the nested envelope models, since it covers the top-level draft to extract-payload projection only and does not reach the field-provenance envelope to its payload counterpart, so a field added to the envelope sub-model breaks the operator confirm verb at the CLI boundary with no gate firing. That hole was walked through in practice when a provenance field gained a member its payload did not, and the payload forbids extras, so a valid command returned a refusal. Gated by the same property one level down and mutation-proven by adding a field to the envelope without its payload counterpart and ## Scope
-
-- `src/cadrumo/application/ledger/tests` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Extend the draft projection-parity gate to the nested envelope models, since it covers the top-level draft to extract-payload projection only and does not reach the field-provenance envelope to its payload counterpart, so a field added to the envelope sub-model breaks the operator confirm verb at the CLI boundary with no gate firing. That hole was walked through in practice when a provenance field gained a member its payload did not, and the payload forbids extras, so a valid command returned a refusal. Gated by the same property one level down and mutation-proven by adding a field to the envelope without its payload counterpart
 
@@ -51,8 +18,6 @@ related:
 - `src/cadrumo/application/ledger/tests`
 
 ## Description
-
-<!-- Succinct line-by-line list of steps executed. Use imperative language, mirroring git commit summary lines. -->
 
 - Enumerate every draft sub-model and its payload counterpart, rather than the
   provenance envelope alone the row names.
@@ -84,8 +49,6 @@ Mutation-proven both ways against constructed subclasses rather than by making
 a production model wrong.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The pair table is written out rather than derived by name, and the reason is a
 vacuity risk rather than taste: the naming is not mechanical, so a

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-cli-sequences'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:7d3ee715f5e6317278e3d88041d6de1581ab13ac0c540c829e61d244b469dccd'
 related:

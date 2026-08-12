@@ -5,44 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:d47a93f3d86eb4d79871624ffff6ef87e36f139d5cfa3ebf4a259e67012b9317'
+body_hash: 'sha256:ae04bdbdb478fc2e6a7db1dd7f200847dab217fb77d9ca26b181a46cda991159'
 step_id: 'S291'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S291 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The RULED AND BUILT. The ADR's ninth amendment refuses the repeating form and adopts a third shape. The repeating group would have required the anchor mirror to become repeating alongside the values, changing the anti-fabrication guarantee at its root, plus a large context addition on a lowest-bound vision target. Neither is needed: the collapse is detectable from three figures the draft ALREADY carries. Measured 2026-08-12 - a 1000-at-21%-plus-1000-at-10% invoice read as the flat triple (base 2000.00, rate 21, cuota 310.00, total 2310.00) raised ZERO findings, because the total identity holds and the per-tier check iterates an iva_breakdown only the structured reader populates. The flat triple was never checked against itself on any lane, and flat iva_rate is set ONLY by the model-read lane, so the unchecked representation was exactly the model-read one. Landed as _flat_rate_consistency_finding in the canonical closure home, enrolled in closure_findings so it reaches every reader, and skipped when the breakdown carries more than one tier, which is where the breakdown is the authority. DETECTION ONLY - recovering the lost tier from a text or vision read stays open and undecided and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # RULED AND BUILT. The ADR's ninth amendment refuses the repeating form and adopts a third shape. The repeating group would have required the anchor mirror to become repeating alongside the values, changing the anti-fabrication guarantee at its root, plus a large context addition on a lowest-bound vision target. Neither is needed: the collapse is detectable from three figures the draft ALREADY carries. Measured 2026-08-12 - a 1000-at-21%-plus-1000-at-10% invoice read as the flat triple (base 2000.00, rate 21, cuota 310.00, total 2310.00) raised ZERO findings, because the total identity holds and the per-tier check iterates an iva_breakdown only the structured reader populates. The flat triple was never checked against itself on any lane, and flat iva_rate is set ONLY by the model-read lane, so the unchecked representation was exactly the model-read one. Landed as _flat_rate_consistency_finding in the canonical closure home, enrolled in closure_findings so it reaches every reader, and skipped when the breakdown carries more than one tier, which is where the breakdown is the authority. DETECTION ONLY - recovering the lost tier from a text or vision read stays open and undecided
 
@@ -104,8 +71,6 @@ already use, and recovering a breakdown from those lanes stays open and
 undecided.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The asymmetry that makes this a defect rather than a gap was already sitting in
 the tree, and finding it is what settled the ruling's confidence: the identical

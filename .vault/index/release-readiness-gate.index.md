@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#release-readiness-gate'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:1105b463f04325c119a50cc1cf541ca1fe166be65fba596f7c783c7b1ec3db91'
 related:

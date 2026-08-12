@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#cli-action-envelope-hardening'
-date: '2026-08-11'
-modified: '2026-08-11'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:6db5e4f1f970bbd1064f144230e6df79e328e22448c36dcb458ff82ba0661bc2'
+body_hash: 'sha256:397550fc3c366b04c394cd42ef857dc16f9b8abe37cfde617bafa9649c5a7d10'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -56,6 +56,8 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S33]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S35]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S66]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S114]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S38]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S41]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S89]]'
@@ -116,6 +118,13 @@ related:
   - '[[2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s90-final-pass-audit]]'
   - '[[2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s114-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s114-final-static-recheck-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s66-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s89-reopened-full-scope-review-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s89-s66-cutover-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s90-final-pass-audit]]'
+  - '[[2026-08-12-cli-action-envelope-hardening-s94-final-producer-scope-audit]]'
 ---
 
 # `cli-action-envelope-hardening` feature index
@@ -181,6 +190,13 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-11-cli-action-envelope-hardening-s89-installed-public-console-proof-audit` - `cli-action-envelope-hardening` audit: `S89 installed public-console action-envelope proof`
 - `2026-08-11-cli-action-envelope-hardening-s90-final-pass-audit` - `cli-action-envelope-hardening` audit: `S90 final independent PASS review`
 - `2026-08-11-cli-action-envelope-hardening-s94-closure-review-audit` - `cli-action-envelope-hardening` audit: `S94 independent closure review`
+- `2026-08-12-cli-action-envelope-hardening-s114-final-pass-audit` - `cli-action-envelope-hardening` audit: `S114 final independent PASS review`
+- `2026-08-12-cli-action-envelope-hardening-s114-final-static-recheck-audit` - `cli-action-envelope-hardening` audit: `S114 final static-gate recheck`
+- `2026-08-12-cli-action-envelope-hardening-s66-final-pass-audit` - `cli-action-envelope-hardening` audit: `S66 final independent PASS review`
+- `2026-08-12-cli-action-envelope-hardening-s89-reopened-full-scope-review-audit` - `cli-action-envelope-hardening` audit: `S89 reopened full-scope independent review`
+- `2026-08-12-cli-action-envelope-hardening-s89-s66-cutover-final-pass-audit` - `cli-action-envelope-hardening` audit: `S89 S66 cutover final independent PASS review`
+- `2026-08-12-cli-action-envelope-hardening-s90-final-pass-audit` - `cli-action-envelope-hardening` audit: `S90 final independent PASS audit`
+- `2026-08-12-cli-action-envelope-hardening-s94-final-producer-scope-audit` - `cli-action-envelope-hardening` audit: `S94 final producer-scope independent review`
 
 ### exec
 
@@ -234,9 +250,11 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S35` - Create the missing end-to-end negative JSON and text locale and recovery-retry proof for overview and provisioning action or no-recovery journeys, deriving each action against the live schema and rejecting raw command prose
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S38` - Consume the S33 typed reader-availability facts at _batch_ingest.py and _llm_classification.py within the exclusive ledger area, retain no MissingOptionalExtraError prose or compatibility bridge, and preserve only explicit typed reader-availability verdicts
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S41` - W05.P10.S41 - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose
-- `2026-08-09-cli-action-envelope-hardening-W05-P10-S89` - Complete the consumer half of the atomic S33/S89 provisioning cutover by replacing config-check and provision payload and renderer free-form detail and remediation forwarding plus raw Google package prose with the exact S33 typed projection and resolved action or no-recovery rendering, never hardcoding command or English text
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S89` - Complete the config CLI consumer fixed point by removing ad hoc recovery prose, English translation fallbacks, and exception-string flattening in favor of catalogue-backed messages, typed producer errors, canonical actions, or explicit no-recovery outcomes
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct typed-error consumer migration so canonical refusals reach the shared envelope intact.
-- `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope consumers and typed failure boundaries without retaining prose recovery authority.
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S66` - Replace preflight remediation prose with locale-neutral facts and typed precondition verdicts
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope producers and failure boundaries with typed, locale-neutral outcomes.
 
 ### plan
 

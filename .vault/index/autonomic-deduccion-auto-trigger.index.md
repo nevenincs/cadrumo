@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#autonomic-deduccion-auto-trigger'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:5063d49916fc1367a8876ef9e986e6f38843f5a27d9004af93c07d022056fe07'
 related:

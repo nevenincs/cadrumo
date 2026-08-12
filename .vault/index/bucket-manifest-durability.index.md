@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#bucket-manifest-durability'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:d8dc4cc82639c3dc0df0f83a1e735b9241bcbee8981264b60b7a1006231c239e'
 related:

@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ebb00ba56003b15ef23d8ad661414dc32108821c3a0236226d7650433ab4866a'
+body_hash: 'sha256:0957b70c6d73125029bc796a1b221297e09fd1761d5d478630da20f8ebce2572'
 step_id: 'S141'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S141 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Add the contradiction fixture where a mainland registry rate is charged to a confirmed non-mainland counterparty, riding the existing finding class, since the charged rate is issuer-asserted treatment evidence that feeds the contradiction channel and never establishes territory and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Add the contradiction fixture where a mainland registry rate is charged to a confirmed non-mainland counterparty, riding the existing finding class, since the charged rate is issuer-asserted treatment evidence that feeds the contradiction channel and never establishes territory
 
@@ -116,8 +83,6 @@ the exportacion treatment is the candidate rather than the conclusion, and the
 three territories may not share one answer.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 A design question the implementing pass must answer rather than inherit: the
 ladder returns either a settled scope OR a conflict, never both. This case

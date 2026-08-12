@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#tui-interface'
-date: '2026-08-11'
-modified: '2026-08-11'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:a9688687b71807e6d1ed384f61d068da310d71493084b4ef0a12d914f88335f1'
 related:

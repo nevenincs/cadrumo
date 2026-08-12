@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-08'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ce35a7ed9f6ff2667e5dfbcaf9fe01f8e4dc20876d6dc63921a43d794cbc1de6'
+body_hash: 'sha256:de6303a1692f7bcb1898789e2dfc1f6e59844283350e61225ee69ca0ed5e4877'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'

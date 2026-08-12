@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename-s65-catalan-catalogue'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:e05b224f42261f744113f0c57aa315ab4e07ae6abbdec7b5dbc466352b25316f'
 related:

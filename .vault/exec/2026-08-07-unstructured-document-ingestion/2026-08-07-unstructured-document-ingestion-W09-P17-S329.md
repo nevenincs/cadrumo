@@ -5,44 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:a0cf95216a2d9a2c4db38e4d00f16eeffc5c660b3f158a209b3ef77317bf01db'
+body_hash: 'sha256:af4c4cf1c801c13e547be46b40b33a7a805f6a41aa02dae8e9321ab63a56fd20'
 step_id: 'S329'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S329 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Collect the FLAT iva_rate in the establishment ladder's rate walk, which reads only the line and subtotal carriers and so sees nothing on the model-read lane. MEASURED 2026-08-12 by driving a text-lane draft through the real collector: lines and iva_breakdown are populated exclusively by the STRUCTURED reader, and a flat iva_rate exclusively by the model-read one, so the walk returned an empty tuple for every text and vision document. spanish_iva_charged is derived from that list alone, so the establecimiento-permanente contradiction lost its rate signal and the rung-3 non-establishment concordance lost a corroborator, on exactly the documents a model read. The sibling authority on the same question, draft_prints_a_repercutido_line, ALREADY reads the flat rate, so two functions in one package disagreed about what a document charged. Invisible because every rate test injects charged_iva_rates directly and none drives the collector from a draft and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Collect the FLAT iva_rate in the establishment ladder's rate walk, which reads only the line and subtotal carriers and so sees nothing on the model-read lane. MEASURED 2026-08-12 by driving a text-lane draft through the real collector: lines and iva_breakdown are populated exclusively by the STRUCTURED reader, and a flat iva_rate exclusively by the model-read one, so the walk returned an empty tuple for every text and vision document. spanish_iva_charged is derived from that list alone, so the establecimiento-permanente contradiction lost its rate signal and the rung-3 non-establishment concordance lost a corroborator, on exactly the documents a model read. The sibling authority on the same question, draft_prints_a_repercutido_line, ALREADY reads the flat rate, so two functions in one package disagreed about what a document charged. Invisible because every rate test injects charged_iva_rates directly and none drives the collector from a draft
 
@@ -89,8 +56,6 @@ exactly the defect that survives it. The gate added here drives from drafts, and
 each of the three carriers is proved sufficient alone.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 FOUND WHILE MEASURING A DIFFERENT ROW, and that is the whole provenance. The
 sibling contradiction-fixture row was being re-measured to test whether it

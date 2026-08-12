@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#censo-regimen-adoption'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:86cb81ccb1b82ad3c954e9aa66cec02a718cb5adbdef5ff370de8adaf95f0bdf'
 related:

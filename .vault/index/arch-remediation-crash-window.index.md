@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-crash-window'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:16eee4169a01dc7fa0c31e2acde84a0c63b29ea4fea949da9094da53d1b65fda'
 related:

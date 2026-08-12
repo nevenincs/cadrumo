@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#justfile-redesign'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:43fcbcd28cf013aa34f5e0e960bef3c812f7694705ab92e5183fab50326adb5b'
 related:

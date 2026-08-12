@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#m303-form-vs-semantic-casilla-dual-keying'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ef46239dff77df1638403451730fedb10ed1bb6e94bb997a3e8633f933a0e29a'
+body_hash: 'sha256:3aea34ced690560b5ab260f27a00bd8edef71f034c1373e7b278b7cd0e6853b9'
 related:
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-P01-S01]]'
@@ -43,7 +43,7 @@ Auto-generated index of all documents tagged with `#m303-form-vs-semantic-casill
 
 ### adr
 
-- `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `accepted`)
+- `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
 ### exec
 
@@ -79,4 +79,4 @@ Auto-generated index of all documents tagged with `#m303-form-vs-semantic-casill
 
 ### research
 
-- `2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research` - `m303-form-vs-semantic-casilla-dual-keying` research: `retrospective research grounding`  ## Question  Which existing vault decision records need an explicit research node so schema validation, semantic search, and future developer briefings have a stable evidence path?  ## Findings  This note is a retrospective vault-curation grounding record. It does not introduce a new product behavior, architectural direction, or implementation mandate.  The linked ADR records in frontmatter are the decision sources that lacked an explicit research reference during the 2026-06-04 schema cleanup. The surrounding vault corpus for this feature already held the plan, audit, execution, or prior research trail; this document makes that grounding discoverable through the required research document edge.  The curation pass used semantic vault search and frontmatter linkage review. Body wiki-links are intentionally avoided so the body-link hygiene gate remains clean; authoritative navigation lives in frontmatter.  ## Recommendation  Keep this document as the research bridge for the linked ADR records until a deeper feature-specific research note supersedes it. Any future supersession must update the frontmatter related fields on the affected ADRs and on this document so semantic search points to the current source.
+- `2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research` - `m303-form-vs-semantic-casilla-dual-keying` research: `M303 semantic homes and fixed-slot projection grounding`

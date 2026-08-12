@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-fold-in-carry-unification'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:9d801cbe1ff21b19296260c93563c70100c43c70a23a5896d7c39c0ba52c0562'
 related:

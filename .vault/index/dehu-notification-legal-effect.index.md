@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dehu-notification-legal-effect'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:6ee7675bafbd9e791323aecc65f74f4999ab0681b2ccd64e6badefd48dc3da3f'
 related:

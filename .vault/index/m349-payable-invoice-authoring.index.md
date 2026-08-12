@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m349-payable-invoice-authoring'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:3d4bcfe45bf0f04f2ec52c2b02028cbee5834de158fc856653a8adb7bfb385a4'
 related:

@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#unstructured-document-ingestion'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:13a9fbf7da824626890967c071d57b7e319331a0485cb36fce4e4b57cdfae095'
+body_hash: 'sha256:82149019287a3290a6cd18ac81d6f4dcc98bac29f35c13c2604229671cb9049a'
 related:
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S01]]'
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S02]]'
@@ -38,6 +38,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S209]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S210]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S217]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S218]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S260]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S77]]'
   - '[[2026-08-07-unstructured-document-ingestion-W02-P05-S78]]'
@@ -65,6 +66,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S27]]'
   - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S28]]'
   - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S29]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W03-P08-S30]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P09-S31]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P09-S32]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P09-S33]]'
@@ -75,6 +77,10 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S286]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S287]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S288]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S291]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S292]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S296]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S328]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S34]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S38]]'
   - '[[2026-08-07-unstructured-document-ingestion-W04-P10-S81]]'
@@ -111,7 +117,10 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W08-P16-S63]]'
   - '[[2026-08-07-unstructured-document-ingestion-W08-P16-S64]]'
   - '[[2026-08-07-unstructured-document-ingestion-W08-P16-S65]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S106]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S109]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S110]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S111]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S115]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S116]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S117]]'
@@ -121,16 +130,20 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S121]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S123]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S124]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S126]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S127]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S128]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S129]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S130]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S131]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S132]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S133]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S135]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S137]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S138]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S139]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S141]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S142]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S143]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S144]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S147]]'
@@ -140,6 +153,8 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S154]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S155]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S156]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S157]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S158]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S162]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S164]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S165]]'
@@ -179,6 +194,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S221]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S223]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S225]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S227]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S229]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S230]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S231]]'
@@ -198,7 +214,9 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S250]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S251]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S252]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S253]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S254]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S256]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S257]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S258]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S259]]'
@@ -219,15 +237,27 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S297]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S298]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S300]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S301]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S302]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S305]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S306]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S308]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S309]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S310]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S311]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S312]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S313]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S314]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S315]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S316]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S317]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S318]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S319]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S320]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S321]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S322]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S325]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S329]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S66]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S67]]'
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S68]]'
@@ -237,6 +267,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-W09-P17-S93]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S283]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S289]]'
+  - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S294]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S71]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S72]]'
   - '[[2026-08-07-unstructured-document-ingestion-W10-P18-S73]]'
@@ -505,6 +536,37 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S319` - Establish whether the integration lane is executed by any blocking check and plan against the population rather than the known-failure count, since that count is a floor over modules that have never been executed
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S320` - Correct the overstated redaction rationale carried in the streamed-progress fix, which claims the funnel masks filesystem paths when it masks only embedded identifiers
 - `2026-08-07-unstructured-document-ingestion-W09-P17-S93` - Consolidate the loopback servers, and gate the singularity
+- `2026-08-07-unstructured-document-ingestion-W02-P05-S218` - Drive the ingestion category gate through the READER rather than a literal status, since every case in it supplies counterparty_country_status directly while production computes it from the draft field the structured reader populates. That is why the vocabulary sparing shipped proven-in-logic and unreachable-in-wiring: a literal TH spares, while a TH read from a UBL document arrives as None and refuses. The gate is green and the defect is invisible to it. Add cases that build the document, run the real reader, and assert the resolver outcome, so the wiring is pinned and not only the logic. Depends on S178 removing the collapse, and is the assertion that will prove S178 landed where it matters rather than merely emitting an envelope
+- `2026-08-07-unstructured-document-ingestion-W03-P08-S30` - Apply row-level S3 grounding to tabular rows where base, cuota and total are present, gated by a defective-row fixture surfacing a closure finding
+- `2026-08-07-unstructured-document-ingestion-W04-P10-S292` - Route category and iva_category through the existing classifier rather than the transcription prompt, since LocalTextLLMClassifier already exists and is consumed by _llm_classification while the invoice reading path produces neither field - and both are judgements rather than transcriptions (issued-versus-received needs the filer identity which the page does not carry, and the IVA regime needs tax knowledge) so asking a transcription prompt for them mixes misread and misclassified into one output with no way to tell them apart - category alone is 221 corpus slots and the whole S4 subject
+- `2026-08-07-unstructured-document-ingestion-W04-P10-S296` - Score the draft the reading ROUTER hands on rather than the extractor's raw output, since suggested_kind is derived deterministically by ground_draft_against_transcription from the filer tax id one stage AFTER ground_extracted_fields, and iva_category is decided by the single classification authority at the confirm boundary. A capture taken at the extractor stage reports both None and cannot distinguish never-produced from produced-one-stage-later, which is what motivated a proposal to route both through the LLM classifier and would have replaced two deterministic authorities with probabilistic ones
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S106` - Extend the draft projection-parity gate to the nested envelope models, since it covers the top-level draft to extract-payload projection only and does not reach the field-provenance envelope to its payload counterpart, so a field added to the envelope sub-model breaks the operator confirm verb at the CLI boundary with no gate firing. That hole was walked through in practice when a provenance field gained a member its payload did not, and the payload forbids extras, so a valid command returned a refusal. Gated by the same property one level down and mutation-proven by adding a field to the envelope without its payload counterpart
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S109` - Close the split-declaration debt that reds tree-wide gates this campaign cannot declare complete over, taking each instance as a measured case rather than a sweep: the transaction field-role enum gained two members without its member-set fixture enumerating them, and the import-hygiene gate reports more test-only private reaches than its documented debt count admits. Establish for each whether the fixture or the count is the thing that is wrong before changing either, since a gate whose ceiling is raised to match reality detects nothing afterwards, and pin the property rather than the tally
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S111` - Offer a model pre-suggestion for supply nature through the existing operator suggest, review and apply channel rather than building a second one, since that loop already exists in the ledger's LLM-assisted classification module and the assembly already names its settler as a printed statutory citation or an explicit operator assertion. Depends on the lazy-demand fix landing first: while the demand is unconditional, wiring the suggestion would fire a prompt on every document and manufacture a decision on the domestic path where the treatment does not depend on it. The suggestion must reach the deterministic classifier only after operator confirmation, entering as an operator-provenance assertion so the classifier's inputs stay facts and never model output. Gated by a test proving an unconfirmed suggestion never reaches the classifier and by a positive control proving a confirmed one does
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S126` - Make the evidence-confirm CLI suite runnable without a live local model, since all seven cases fail at the extraction stage on a local inference connection failure before reaching any confirm logic, which makes the whole file dead coverage for anyone working this surface. Six of the seven fail identically on an untouched tree so it is environmental rather than a regression. Use the deterministic structured fixture the document-identity gate uses, which needs no reader at all and is why that gate runs where this one cannot
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S133` - Report a missing rate tier as a missing classifier input, since a domestic operation lacking one refuses through the criteria model raising and the assembly reports the status and kind gaps while never naming the tier itself, so an operator sees an incomplete gap list and fixes one axis at a time. Pre-existing rather than introduced by the laziness work that surfaced it
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S141` - Add the contradiction fixture where a mainland registry rate is charged to a confirmed non-mainland counterparty, riding the existing finding class, since the charged rate is issuer-asserted treatment evidence that feeds the contradiction channel and never establishes territory
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S142` - Let a postal field carry role evidence, since the role-evidence flag derives from the tax-identifier form and the validator refuses a role-evidence instruction on any other form, so the two identity fields each get a key asking the model to quote the printed heading proving whose they are while the two postal fields structurally cannot and their party attribution rests on prose alone. A transposition produces a fully valid draft with both fields grounded and every gate green, and once the consumer lands both parties get a confident wrong territory. Either widen the flag to a declared per-contract axis or record in the ADR rather than only the exec record that postal party attribution is anchor-reviewed rather than evidence-anchored, and make that a stated precondition on the consumer row
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S157` - Gate the concordance ruling with the three proofs the amendment names: a mutation-proven assertion that a foreign prefix alone never terminates the establishment ladder, a concordance fixture carrying a German prefix with a German address and a reverse-charge legend resolving silently, and a conflict fixture carrying a German prefix with Spanish IVA at a registry rate yielding the contradiction finding and never a silent EU member
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S158` - Sweep the branch table asserting no branch consumes establishment where the law keys on identification, which is the inverse of the error that prompted the split and is cheap to gate while the table is being written rather than after. The intra-community goods family and the 349 population key on identification, so a branch demanding establishment there would ask for a fact the law does not turn on and refuse a resolvable operation
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S227` - Harden the honesty-gate extractor against a helper handed a criteria ATTRIBUTE rather than the criteria itself, a latent fragility recorded rather than changed because no shipped helper triggers it. The extractor recurses into such a helper and attributes reads to that helper's first parameter, which is the attribute VALUE and not the criteria, so a helper reading a field off the value it was handed would contribute that field name as though it were a criteria attribute and the unknown-attribute refusal would fire on a CORRECT predicate. That is the loud direction rather than the silent one, which is why it was recorded and not urgent, but it will present as a false refusal against an author who did nothing wrong
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S253` - Judge the nine remaining default-to-Spain sites, in THREE syntaxes rather than the two the earlier census assumed. Thirteen exist in production. Four are registry bindings, two detail-record, one donativo and one withholding, which an earlier census judged plausibly correct by construction since those selectors are Spain-scoped, and that reasoning needs re-testing per site rather than inheriting. Four sit in the row-set assembly as _coerce_text with an ES default AND an or-ES fallback, DOUBLE-DEFAULTED, so removing the visible half leaves the behaviour unchanged and a lane fixing it would believe it had fixed the site. Five are in bulk import, the wizard and the identity roles. The third syntax is the bare annotation default, which is neither Field(default=...) nor an or-expression and hides from a search for either. The question per site is not only whether the default is wrong but what the site does with a case it was not built from, since Spanish is the shape these instruments were built from and every other case is invisible to them rather than reported. Coordinate ownership before editing, since the row-set assembly sites may belong to an active lane
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S256` - Carry the field identity from the raise site, the half of S239 that is not delivered and cannot be delivered by the projection. The row asked for the field and the constraint, and an operator meeting the motivating case gets root and value_error with the exception class, so they still cannot tell WHICH field. That is not the projection's fault: the invoice counterparty normaliser raises from a model-level before-mode validator, so pydantic has no field location to report and the projection faithfully reports the location the raise site never provided. The fix is at the raise site, where a domain validator that knows which field it is judging should raise in a way that carries it. Opened separately rather than left inside S239, so the row does not read as fully delivered when half its deliverable is structurally out of its reach
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S301` - Observe the one link the earlier trace asserted rather than read: does the enrolled foreign-asset resolver write row_binding_values in the exact shape the evidence projection joins on. The instrument exists and is uncommitted, drives the real producer rather than hand-setting the row values, and has already earned its keep by surfacing a production crash nineteen files of sweeping and a green end-to-end suite both missed. TWO BLOCKING CONDITIONS, and neither is the shape question. FIRST, the finding model is mid-rename by another campaign, replacing free-text message with a locale key and a facts mapping, and the instrument has been converted to the NEW shape while that shape exists only in a working tree and zero times at HEAD. Committing it in that state would land a test green on one machine and red for everyone else and in CI, which is the same verified-at-the-layer-the-author-could-see failure this campaign keeps finding in other forms. SECOND, the end-to-end module it runs beside still asserts the OLD shape, so the pair cannot be coherent until the rename lands. Do not run it meanwhile: a run would measure how an uncommitted test performs against an uncommitted model, which is a question about a state nobody else has. Land it only once every symbol it asserts on exists at HEAD
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S305` - MEASURE, do not sweep, whether the sibling advisories can be grounded the way the agrario one now is. The advisory added typed legal and source refs read off the registry casilla and its binding, minting nothing, because the ruling forbade the prose form that every other advisory in this tree uses. That leaves the correct instance in the MINORITY, and an inconsistency where the right shape is outnumbered decays toward the majority. The deliverable is the measurement rather than the conversion. Count the advisories restating an article in prose, and for each establish the question that actually matters: whether its refs are RESOLVABLE from the registry at all, or were hand-written because no binding or casilla carries them. Those two populations need opposite treatments. A prose ref with a registry-resolvable equivalent is a mechanical conversion. A prose ref with NO registry-resolvable equivalent is an advisory asserting a provision the registry cannot corroborate, which is a grounding gap wearing the costume of a style inconsistency and must be escalated rather than converted. Report the split before proposing either
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S308` - Assert the FINAL URL in the BOE acquirer, because its identity check does not establish which endpoint answered. Measured on a live probe: a request to the consolidated endpoint act.php SILENTLY REDIRECTED to doc.php, the single-document view, and the identity check passed because doc.php carries the requested id in the same form input. Only the version-selector check refused the payload, and it refused for an unrelated reason, that a single-document view offers no versions. So the check that sounds like it establishes provenance verifies the REQUEST rather than the SOURCE: an identity check that reads the id back out of a response is satisfied by ANY endpoint that echoes the id. Today the version check happens to catch the treaty case. It would NOT catch a redirect landing on something version-bearing, and the acquirer is the only thing standing between this fleet and hand-fetching, so the gap matters more than its current blast radius. REMEDY: assert the final URL of the response against the endpoint that was requested, since the payload cannot say which endpoint served it and only the response can. Carry the structural fact that motivated it: BOE holds no consolidated text for bilateral tax conventions at all, and each convention excerpt's own permalink already recorded that by pointing at doc.php rather than act.php, a provenance marker sitting in plain sight and unread because nobody was looking for a SHAPE difference in a URL
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S309` - Compare the supplied and extracted counterparty identifiers with the SAME-BEARER predicate rather than the identity token, because the confirm path currently refuses a match this codebase already calls the same bearer. Measured at HEAD: the comparison uses tax_id_identity_token, whose own docstring says normalisation is trim-and-uppercase and NOTHING MORE, deliberately never merging identifiers that differ in their characters. But one side of this comparison is what an on-host extractor read off a PRINTED document, and printed invoices hyphenate and space these identifiers routinely, which this codebase established while fixing the redaction funnel. The other side is an operator flag or a stored profile value, where the compact form is normal. So an operator supplying the compact spelling against a document printing the separated one is refused with a message telling them to check the tax id printed on the invoice, when the two name the same bearer. The canonical same-bearer predicate is same_tax_identifier, which compares on the separator-stripped form precisely so that a printed hyphenated value matches a stored compact one, and its docstring states it is deliberately looser than the identity token for exactly this reason. THE SITE CHOSE THE TOKEN ON A REASONED BUT INCOMPLETE ARGUMENT: its docstring justifies the choice against a checksum gate, which is correct and settles the validity axis, and describes the alternative as a local trim-and-uppercase, which is a distinction without a difference since the token IS trim-and-uppercase. The separator axis was never considered. This is the same disagreement the redaction funnel carried, where the funnel called two spellings different while the same-bearer predicate called them one, and it is an over-refusal on the ingestion confirm path. Gate it with a printed-separator fixture on both sides, and keep the checksum reasoning intact since the fix is about separators and not validity
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S312` - Measure whether the CLI redaction rule set matches a Spanish CIF in a free-text position, and record the answer as coverage gap or deliberate false-positive avoidance rather than assuming either
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S313` - Rewrite the outbound LLM adapter facade docstring to describe what that package now is, four persistence-backed stores, and point the client surface at the sibling package that owns it, rather than describing the pre-split surface or promoting symbols back
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S314` - Re-point the two consent-gate cross-references in the evidence draft text module at the module that actually defines the gate, since the cited adapter module does not exist
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S317` - Gate docstring cross-references so a role naming a symbol its cited module does not export fails, with an anti-vacuity control proving the detector fires
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S321` - Restore the missing-required-field refusal that left the CLI layer when the confirm suite switched to a structured document, as an application-layer case over a constructed draft needing neither a model nor a document. The property is that a required field with no extraction heuristic and no operator override refuses rather than being fabricated, and it is currently proven nowhere: the CLI case that carried it could only construct the state from a text PDF, whose reading lane needs a live model, and a structured document names its parties so the state is unreachable from the bundled corpus. Do NOT rebuild it around a document - the point is the confirm service's own behaviour when the draft it is handed lacks the field, which a constructed draft states directly
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S322` - Settle the COUNTRY-PREFIX axis of the same-bearer comparison at confirm, the second axis of the over-refusal whose separator axis is already fixed. Measured at HEAD by driving the real confirm path: a document stating the seller identifier in its VAT form and an operator supplying the bare national form are refused as a mismatch, because same_tax_identifier compares on the separator-stripped form and a country prefix is not a separator. Do NOT simply strip a leading alpha-2 from both sides - that would merge bearers across States, since the same national body can exist under two different country prefixes. The comparison must be prefix-aware only where the prefix names the counterparty own country, which means the fix needs the country as an input and cannot be made inside the current two-argument predicate. Treat widening the shared predicate as the risk it is: it is consumed by the identity-role resolver and the document-direction deriver, so a looser rule silently changes who counts as the taxpayer on every document
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S325` - Record the postal-attribution disposition in the ADR, the half of the role-evidence row a shipped gate cannot deliver. The decision is settled and enforced - address values are attributed deterministically in code by co-location from the document layout, and a property gate refuses any attributed address field acquiring a role-evidence key, checking the rendered prompt as well as the contract table. What is missing is a DECISION RECORD: the reasoning lives in a test docstring and an exec record, so the next author meets the refusal without meeting the argument, which is how a gate gets read as an obstacle rather than as a conclusion. Carry the context-budget reasoning that decided it, that the design target is a lowest-bound vision model and every added key costs the fields already in the prompt, and state it as a precondition on any consumer of postal-derived territory
+- `2026-08-07-unstructured-document-ingestion-W10-P18-S294` - Retire the seven publish-workflow assertions that still encode the superseded release-asset contract, since they assert the sealed-manifest emit and verify surface that the public-repo artifact-return ADR removed and the job-permission set that predates actions read being added for gh run download - they were invisible while collection aborted and became visible when the module was restored, so they are stale expectations rather than regressions
+- `2026-08-07-unstructured-document-ingestion-W04-P10-S291` - RULED AND BUILT. The ADR's ninth amendment refuses the repeating form and adopts a third shape. The repeating group would have required the anchor mirror to become repeating alongside the values, changing the anti-fabrication guarantee at its root, plus a large context addition on a lowest-bound vision target. Neither is needed: the collapse is detectable from three figures the draft ALREADY carries. Measured 2026-08-12 - a 1000-at-21%-plus-1000-at-10% invoice read as the flat triple (base 2000.00, rate 21, cuota 310.00, total 2310.00) raised ZERO findings, because the total identity holds and the per-tier check iterates an iva_breakdown only the structured reader populates. The flat triple was never checked against itself on any lane, and flat iva_rate is set ONLY by the model-read lane, so the unchecked representation was exactly the model-read one. Landed as _flat_rate_consistency_finding in the canonical closure home, enrolled in closure_findings so it reaches every reader, and skipped when the breakdown carries more than one tier, which is where the breakdown is the authority. DETECTION ONLY - recovering the lost tier from a text or vision read stays open and undecided
+- `2026-08-07-unstructured-document-ingestion-W04-P10-S328` - WEIGHED AND REFUSED by the ninth amendment, on its own stated hazard. Scanning the transcription for a second charged IVA tier cannot reliably tell one from a recargo percentage, a retencion percentage or a discount quoted in prose - the rule-table-over-arbitrary-prose problem the ADR names - and these findings BLOCK confirmation, so a false fire trains operators to ignore the channel that exists to stop them filing a wrong figure. The adopted shape needs no transcription at all: the flat triple closes over ITSELF, base times rate equals cuota, the same accounting identity the per-tier check already applies. Same zero prompt cost and zero contract change the candidate offered, without the precision problem, because it reads no prose. Confounds answered by the field split rather than by tolerance - recargo carries its own rate and amount, suplidos sit outside the base imponible per LIVA art. 78.Tres.3, retencion has its own identity - and an exempt or reverse-charge document states no rate or no cuota, where an identity with a missing term does not run
+- `2026-08-07-unstructured-document-ingestion-W09-P17-S329` - Collect the FLAT iva_rate in the establishment ladder's rate walk, which reads only the line and subtotal carriers and so sees nothing on the model-read lane. MEASURED 2026-08-12 by driving a text-lane draft through the real collector: lines and iva_breakdown are populated exclusively by the STRUCTURED reader, and a flat iva_rate exclusively by the model-read one, so the walk returned an empty tuple for every text and vision document. spanish_iva_charged is derived from that list alone, so the establecimiento-permanente contradiction lost its rate signal and the rung-3 non-establishment concordance lost a corroborator, on exactly the documents a model read. The sibling authority on the same question, draft_prints_a_repercutido_line, ALREADY reads the flat rate, so two functions in one package disagreed about what a document charged. Invisible because every rate test injects charged_iva_rates directly and none drives the collector from a draft
 
 ### plan
 

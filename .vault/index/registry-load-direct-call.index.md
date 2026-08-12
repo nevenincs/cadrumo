@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-load-direct-call'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:f89f42f797d7166bb2ca5fbbd65dc5b38d48fbe153e6395271c6873c2f3fc105'
 related:

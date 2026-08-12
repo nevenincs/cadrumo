@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#justificante-identity-matching'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:597754b173a2721b7e0342a9b6e10725f6195cfd445905c969926ee061320ee8'
 related:

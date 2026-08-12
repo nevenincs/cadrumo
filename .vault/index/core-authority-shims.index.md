@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#core-authority-shims'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:0e66bd44dec481423e42308842a263a53885798239214d1a5f9d1808b143434e'
 related:

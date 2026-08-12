@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:7cd8fb34f9dd5ea8ff813d577874a1fd1a8b3cb4a354511ed87c142fdcee210d'
+body_hash: 'sha256:2af5fbe1c823f746c91988c9c0cf7afe4a497b6adb77d6e3a3f9b8f5ceec9b9b'
 step_id: 'S305'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S305 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The MEASURE, do not sweep, whether the sibling advisories can be grounded the way the agrario one now is. The advisory added typed legal and source refs read off the registry casilla and its binding, minting nothing, because the ruling forbade the prose form that every other advisory in this tree uses. That leaves the correct instance in the MINORITY, and an inconsistency where the right shape is outnumbered decays toward the majority. The deliverable is the measurement rather than the conversion. Count the advisories restating an article in prose, and for each establish the question that actually matters: whether its refs are RESOLVABLE from the registry at all, or were hand-written because no binding or casilla carries them. Those two populations need opposite treatments. A prose ref with a registry-resolvable equivalent is a mechanical conversion. A prose ref with NO registry-resolvable equivalent is an advisory asserting a provision the registry cannot corroborate, which is a grounding gap wearing the costume of a style inconsistency and must be escalated rather than converted. Report the split before proposing either and ## Scope
-
-- `src/cadrumo/application` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # MEASURE, do not sweep, whether the sibling advisories can be grounded the way the agrario one now is. The advisory added typed legal and source refs read off the registry casilla and its binding, minting nothing, because the ruling forbade the prose form that every other advisory in this tree uses. That leaves the correct instance in the MINORITY, and an inconsistency where the right shape is outnumbered decays toward the majority. The deliverable is the measurement rather than the conversion. Count the advisories restating an article in prose, and for each establish the question that actually matters: whether its refs are RESOLVABLE from the registry at all, or were hand-written because no binding or casilla carries them. Those two populations need opposite treatments. A prose ref with a registry-resolvable equivalent is a mechanical conversion. A prose ref with NO registry-resolvable equivalent is an advisory asserting a provision the registry cannot corroborate, which is a grounding gap wearing the costume of a style inconsistency and must be escalated rather than converted. Report the split before proposing either
 
@@ -98,8 +65,6 @@ row said must be escalated rather than converted.
 Nothing was converted. The deliverable was the measurement and the split.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 STATED METHOD, so the counts can be re-derived rather than trusted. Typed
 grounding was detected by the presence of legal_refs or source_refs in the

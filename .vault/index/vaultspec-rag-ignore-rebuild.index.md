@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#vaultspec-rag-ignore-rebuild'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:7a432533db697cabd713869a68e95807e02b278ceb4916648e411b1c5ad31a1a'
 related:

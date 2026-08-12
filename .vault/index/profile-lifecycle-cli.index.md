@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:d64b436f0a92646cfc864a6c13e083522ea0d83ee3036117362dfc2b2ab0ff00'
 related:

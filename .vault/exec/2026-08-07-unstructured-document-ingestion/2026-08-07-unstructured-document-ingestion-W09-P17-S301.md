@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f0929d87291a545ab534c73c4546d055ec43f94c35f73217a560f504a2b830d'
+body_hash: 'sha256:4cb3b0384c28f60307e3e93b5973e85833e4cb703bc7afa87df1883250e6733a'
 step_id: 'S301'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S301 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Observe the one link the earlier trace asserted rather than read: does the enrolled foreign-asset resolver write row_binding_values in the exact shape the evidence projection joins on. The instrument exists and is uncommitted, drives the real producer rather than hand-setting the row values, and has already earned its keep by surfacing a production crash nineteen files of sweeping and a green end-to-end suite both missed. TWO BLOCKING CONDITIONS, and neither is the shape question. FIRST, the finding model is mid-rename by another campaign, replacing free-text message with a locale key and a facts mapping, and the instrument has been converted to the NEW shape while that shape exists only in a working tree and zero times at HEAD. Committing it in that state would land a test green on one machine and red for everyone else and in CI, which is the same verified-at-the-layer-the-author-could-see failure this campaign keeps finding in other forms. SECOND, the end-to-end module it runs beside still asserts the OLD shape, so the pair cannot be coherent until the rename lands. Do not run it meanwhile: a run would measure how an uncommitted test performs against an uncommitted model, which is a question about a state nobody else has. Land it only once every symbol it asserts on exists at HEAD and ## Scope
-
-- `src/cadrumo/application/calculations` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Observe the one link the earlier trace asserted rather than read: does the enrolled foreign-asset resolver write row_binding_values in the exact shape the evidence projection joins on. The instrument exists and is uncommitted, drives the real producer rather than hand-setting the row values, and has already earned its keep by surfacing a production crash nineteen files of sweeping and a green end-to-end suite both missed. TWO BLOCKING CONDITIONS, and neither is the shape question. FIRST, the finding model is mid-rename by another campaign, replacing free-text message with a locale key and a facts mapping, and the instrument has been converted to the NEW shape while that shape exists only in a working tree and zero times at HEAD. Committing it in that state would land a test green on one machine and red for everyone else and in CI, which is the same verified-at-the-layer-the-author-could-see failure this campaign keeps finding in other forms. SECOND, the end-to-end module it runs beside still asserts the OLD shape, so the pair cannot be coherent until the rename lands. Do not run it meanwhile: a run would measure how an uncommitted test performs against an uncommitted model, which is a question about a state nobody else has. Land it only once every symbol it asserts on exists at HEAD
 
@@ -84,8 +51,6 @@ a state nobody else had. The state that actually needed settling was the
 PROFILE the harness builds, not the model.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 THIS IS THE THIRD SUITE THIS SESSION RED FROM ONE CAUSE, and the pattern is
 worth naming rather than fixing three times quietly. A peer lane tightened the

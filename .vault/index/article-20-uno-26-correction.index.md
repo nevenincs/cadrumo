@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#article-20-uno-26-correction'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:8b2350dd94427bab938fb6b220ef70a02ff17046b55a9fed0ac5dc195c3daeeb'
 related:

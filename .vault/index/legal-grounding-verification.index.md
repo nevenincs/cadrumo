@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#legal-grounding-verification'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:c62b04558a4890d06b88c8cfd936ff43ccab39ae1744743c7c2c5a88f100f001'
 related:

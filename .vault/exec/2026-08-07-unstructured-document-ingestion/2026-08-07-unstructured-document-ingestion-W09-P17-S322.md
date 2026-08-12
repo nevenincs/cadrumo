@@ -3,47 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:80a733f9a5055015dd14870dd299c7700a68ff2974268223a80de9a63a930403'
+body_hash: 'sha256:d1ec681c1d2144672a3528cc7b48522828fc0411abf4ef171313187032f47195'
 step_id: 'S322'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S322 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Settle the COUNTRY-PREFIX axis of the same-bearer comparison at confirm, the second axis of the over-refusal whose separator axis is already fixed. Measured at HEAD by driving the real confirm path: a document stating the seller identifier in its VAT form and an operator supplying the bare national form are refused as a mismatch, because same_tax_identifier compares on the separator-stripped form and a country prefix is not a separator. Do NOT simply strip a leading alpha-2 from both sides - that would merge bearers across States, since the same national body can exist under two different country prefixes. The comparison must be prefix-aware only where the prefix names the counterparty own country, which means the fix needs the country as an input and cannot be made inside the current two-argument predicate. Treat widening the shared predicate as the risk it is: it is consumed by the identity-role resolver and the document-direction deriver, so a looser rule silently changes who counts as the taxpayer on every document and ## Scope
-
-- `src/cadrumo/core`
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Settle the COUNTRY-PREFIX axis of the same-bearer comparison at confirm, the second axis of the over-refusal whose separator axis is already fixed. Measured at HEAD by driving the real confirm path: a document stating the seller identifier in its VAT form and an operator supplying the bare national form are refused as a mismatch, because same_tax_identifier compares on the separator-stripped form and a country prefix is not a separator. Do NOT simply strip a leading alpha-2 from both sides - that would merge bearers across States, since the same national body can exist under two different country prefixes. The comparison must be prefix-aware only where the prefix names the counterparty own country, which means the fix needs the country as an input and cannot be made inside the current two-argument predicate. Treat widening the shared predicate as the risk it is: it is consumed by the identity-role resolver and the document-direction deriver, so a looser rule silently changes who counts as the taxpayer on every document
 
@@ -92,8 +58,6 @@ population and left every other one refusing, which is the shape a
 Spanish-first codebase produces by default.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 INCIDENT, DATA LOSS: I DESTROYED EIGHT TESTS AND COMMITTED THE DESTRUCTION.
 

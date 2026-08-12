@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#counterpart-source-provider'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:92a367fbc84974dc2c878f1871d3b7ab452b9dce874614d58c819801af7b2760'
 related:

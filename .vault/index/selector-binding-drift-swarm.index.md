@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#selector-binding-drift-swarm'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:330aa115b21ef6fc15d877f0b1ffc16872e90a0dbfd410d77d1699b29c30712c'
 related:

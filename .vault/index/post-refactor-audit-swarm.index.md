@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#post-refactor-audit-swarm'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:7c173c1787ea7ce0ba2487ea811d4cc9b4d29de56f91e08d29a1972c26f6e8bc'
 related:

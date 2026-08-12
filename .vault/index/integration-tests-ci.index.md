@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#integration-tests-ci'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:01c03ed997abe9bd4f19e42befd1b56e65ec6a70190fce68b81233eb66cad985'
 related:

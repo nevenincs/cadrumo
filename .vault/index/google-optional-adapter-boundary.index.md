@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-optional-adapter-boundary'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:fbbdc7b4ff3f36b2cd7a4229d32582079365e9033f26b1fdec42d0642b13c582'
 related:

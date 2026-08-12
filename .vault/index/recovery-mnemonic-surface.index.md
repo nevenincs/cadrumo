@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#recovery-mnemonic-surface'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:388b46931396ed5eb03113f8a80aa8515841d903bbfab0a58220266d9823a0b9'
 related:

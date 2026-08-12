@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:44619a1f1ff6923546d0fec200af3ba9cf15c28fec0fb0a13c283566b6e4de94'
+body_hash: 'sha256:5061f20aa130c160c2968b69cb1efbd32077e74d0b745dec8b0306d1623a2cb9'
 step_id: 'S133'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S133 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Report a missing rate tier as a missing classifier input, since a domestic operation lacking one refuses through the criteria model raising and the assembly reports the status and kind gaps while never naming the tier itself, so an operator sees an incomplete gap list and fixes one axis at a time. Pre-existing rather than introduced by the laziness work that surfaced it and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Report a missing rate tier as a missing classifier input, since a domestic operation lacking one refuses through the criteria model raising and the assembly reports the status and kind gaps while never naming the tier itself, so an operator sees an incomplete gap list and fixes one axis at a time. Pre-existing rather than introduced by the laziness work that surfaced it
 
@@ -94,8 +61,6 @@ branch needing the tier is asked. Sparing an operation whose kind is merely
 unread would send it straight back through the raise to the wrong field.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 Mutation-proven at the demand site by monkeypatching the predicate to never
 fire, from outside the checkout so nothing under source changed: the blocker

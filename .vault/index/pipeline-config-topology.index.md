@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pipeline-config-topology'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:8f17d156673b0eca5de4c2a615ebc5af96e13c1158e4ac68d6dc06cfd7834d8e'
 related:

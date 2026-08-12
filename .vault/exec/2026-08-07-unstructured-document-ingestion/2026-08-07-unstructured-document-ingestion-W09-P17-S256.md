@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:bc97eb5519c96af6b7a605e4f990a630df85d11fd5f6f24d0684748cac8fd15d'
+body_hash: 'sha256:f2de2b56da3108c7be7e97fbe985c4f4d0fb00ba69486eb84c603b1aa79f975c'
 step_id: 'S256'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S256 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Carry the field identity from the raise site, the half of S239 that is not delivered and cannot be delivered by the projection. The row asked for the field and the constraint, and an operator meeting the motivating case gets root and value_error with the exception class, so they still cannot tell WHICH field. That is not the projection's fault: the invoice counterparty normaliser raises from a model-level before-mode validator, so pydantic has no field location to report and the projection faithfully reports the location the raise site never provided. The fix is at the raise site, where a domain validator that knows which field it is judging should raise in a way that carries it. Opened separately rather than left inside S239, so the row does not read as fully delivered when half its deliverable is structurally out of its reach and ## Scope
-
-- `src/cadrumo/domain/invoices` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Carry the field identity from the raise site, the half of S239 that is not delivered and cannot be delivered by the projection. The row asked for the field and the constraint, and an operator meeting the motivating case gets root and value_error with the exception class, so they still cannot tell WHICH field. That is not the projection's fault: the invoice counterparty normaliser raises from a model-level before-mode validator, so pydantic has no field location to report and the projection faithfully reports the location the raise site never provided. The fix is at the raise site, where a domain validator that knows which field it is judging should raise in a way that carries it. Opened separately rather than left inside S239, so the row does not read as fully delivered when half its deliverable is structurally out of its reach
 
@@ -84,8 +51,6 @@ message and leaving the type, the translation key, the context and the
 traceback untouched.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 REACH STATED rather than implied, because this row is half of another row and
 should not be read as closing more than it does. The prefix reaches whoever

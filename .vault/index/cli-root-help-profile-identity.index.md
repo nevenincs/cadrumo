@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-root-help-profile-identity'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:d4ea5c89f703bcd974d73b1ef23386f48ac0aaae79f692b5787cbda52c39f9fa'
 related:

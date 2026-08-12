@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-lifecycle-cli-supersession'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:2bfc3fb9bf0bccb45812f16d848d0e3e062477e91e04c89320f3e2c781446560'
 related:

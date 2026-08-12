@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:fd0c15a62402ffedc2888551b5d7164c35abe12a6fb899883d12cb58ed891cab'
+body_hash: 'sha256:ea072249de288a521959c1afb8d830c7bb385ae024992482faf086aa9cdcd3f1'
 step_id: 'S292'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S292 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Route category and iva_category through the existing classifier rather than the transcription prompt, since LocalTextLLMClassifier already exists and is consumed by _llm_classification while the invoice reading path produces neither field - and both are judgements rather than transcriptions (issued-versus-received needs the filer identity which the page does not carry, and the IVA regime needs tax knowledge) so asking a transcription prompt for them mixes misread and misclassified into one output with no way to tell them apart - category alone is 221 corpus slots and the whole S4 subject and ## Scope
-
-- `src/cadrumo/application/ledger/_llm_classification.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Route category and iva_category through the existing classifier rather than the transcription prompt, since LocalTextLLMClassifier already exists and is consumed by _llm_classification while the invoice reading path produces neither field - and both are judgements rather than transcriptions (issued-versus-received needs the filer identity which the page does not carry, and the IVA regime needs tax knowledge) so asking a transcription prompt for them mixes misread and misclassified into one output with no way to tell them apart - category alone is 221 corpus slots and the whole S4 subject
 
@@ -91,8 +58,6 @@ is the sibling row's subject.
 No change made.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 THIS IS THE THIRD ROW TODAY WRONG IN A WAY ITS EXECUTOR COULD FULLY SATISFY,
 after the branch-table sweep and the postal role-evidence widening. The shape

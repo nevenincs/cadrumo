@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#spanish-tax-glossary'
-date: '2026-08-10'
-modified: '2026-08-10'
+date: '2026-08-12'
+modified: '2026-08-12'
 body_schema: 'body-v1'
 body_hash: 'sha256:b0b3245bc0313a103f82006a45738e754d80eafc2b56475d6ef8045492743788'
 related:

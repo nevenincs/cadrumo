@@ -3,46 +3,13 @@ tags:
   - '#exec'
   - '#unstructured-document-ingestion'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:3808678896a7688222cf3d032812daa7c0168e94e7d626520b224c037ef32d3f'
+body_hash: 'sha256:19b15465d4cd76be763587e9e65cb817598c5eb63d20abb6e8b504ecdab79365'
 step_id: 'S111'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace unstructured-document-ingestion with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S111 and 2026-08-07-unstructured-document-ingestion-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Offer a model pre-suggestion for supply nature through the existing operator suggest, review and apply channel rather than building a second one, since that loop already exists in the ledger's LLM-assisted classification module and the assembly already names its settler as a printed statutory citation or an explicit operator assertion. Depends on the lazy-demand fix landing first: while the demand is unconditional, wiring the suggestion would fire a prompt on every document and manufacture a decision on the domestic path where the treatment does not depend on it. The suggestion must reach the deterministic classifier only after operator confirmation, entering as an operator-provenance assertion so the classifier's inputs stay facts and never model output. Gated by a test proving an unconfirmed suggestion never reaches the classifier and by a positive control proving a confirmed one does and ## Scope
-
-- `src/cadrumo/application/ledger` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Offer a model pre-suggestion for supply nature through the existing operator suggest, review and apply channel rather than building a second one, since that loop already exists in the ledger's LLM-assisted classification module and the assembly already names its settler as a printed statutory citation or an explicit operator assertion. Depends on the lazy-demand fix landing first: while the demand is unconditional, wiring the suggestion would fire a prompt on every document and manufacture a decision on the domestic path where the treatment does not depend on it. The suggestion must reach the deterministic classifier only after operator confirmation, entering as an operator-provenance assertion so the classifier's inputs stay facts and never model output. Gated by a test proving an unconfirmed suggestion never reaches the classifier and by a positive control proving a confirmed one does
 
@@ -96,8 +63,6 @@ is the optional convenience layered on the deterministic channel and must not be
 built before the path it feeds.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 The row's own stated dependency was satisfied and its real one was not. It
 waits on the lazy-demand fix, correctly, because wiring a suggestion under an
