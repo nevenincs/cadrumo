@@ -218,7 +218,10 @@ def user_profile_value_object_key(profile_id: str) -> str:
     """
     trimmed_profile = profile_id.strip()
     if not trimmed_profile:
-        raise BucketValidationError("profile_id must not be blank")
+        raise BucketValidationError(
+            translated_message="errors.integrity.integrity_storage_bucket_validation",
+            context={"field": "profile_id", "blank": True},
+        )
     return f"user-profile:{trimmed_profile}"
 
 
@@ -234,9 +237,15 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_profile:
-        raise BucketValidationError("profile_id must not be blank")
+        raise BucketValidationError(
+            translated_message="errors.integrity.integrity_storage_bucket_validation",
+            context={"field": "profile_id", "blank": True},
+        )
     if not trimmed_snapshot:
-        raise BucketValidationError("snapshot_id must not be blank")
+        raise BucketValidationError(
+            translated_message="errors.integrity.integrity_storage_bucket_validation",
+            context={"field": "snapshot_id", "blank": True},
+        )
     return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
@@ -270,9 +279,8 @@ def _require_stored_payload_schema_version(raw_payload: bytes, *, namespace: str
     if not isinstance(inner, dict) or "schema_version" in inner:
         return
     raise EnvelopeVersionError(
-        f"stored {subject} declares no schema_version; this build cannot establish "
-        "which profile schema the payload was written under",
-        context={"namespace": namespace, "subject": subject},
+        translated_message="errors.integrity.integrity_storage_envelope_version",
+        context={"namespace": namespace, "subject": subject, "schema_version_declared": False},
     )
 
 
@@ -292,7 +300,10 @@ class _BucketBoundRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
-            raise BucketValidationError("bucket_id must not be blank")
+            raise BucketValidationError(
+                translated_message="errors.integrity.integrity_storage_bucket_validation",
+                context={"field": "bucket_id", "blank": True},
+            )
         self._bucket_id = trimmed
         # Bind to THIS bucket's own database when no repository is
         # injected — cross-bucket operations must address the named
