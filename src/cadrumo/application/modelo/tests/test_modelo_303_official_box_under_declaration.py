@@ -1,6 +1,6 @@
 """Modelo 303 official Diseño-de-Registros box projection (Stage 2).
 
-The M303 2023-y-siguientes revision carries two casilla layers: the semantic
+The M303 2026-y-siguientes revision carries two casilla layers: the semantic
 aggregate cuota casillas (``iva.repercutido.general``, ``iva.soportado.interiores``,
 ...) that the ledger source mesh populates and that feed the resultado chain, and
 the official numbered Diseño-de-Registros boxes (ids "01".."77") that carry the
@@ -256,7 +256,7 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2023-y-siguientes",
+        revision_id="2026-y-siguientes",
         repository=wu_repo,
         clock=_T0,
     )
