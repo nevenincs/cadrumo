@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#legal-corpus-vintage'
 date: '2026-08-10'
-modified: '2026-08-10'
-body_hash: 'sha256:9fc9a1b3bb4e18f42cfa64311d213e05df080b1ca82967360f20e6d0a31ae99b'
+modified: '2026-08-12'
+body_hash: 'sha256:7cf82c43208f3a9198f16cd4f5e1a38495f9043b7c9531d56590ac45de4f71d3'
 tier: L2
 related:
   - '[[2026-08-10-legal-corpus-vintage-adr]]'
@@ -21,8 +21,8 @@ related:
 
 Give the gate a way to say a clause must be ABSENT, and make the failure message distinguish the two opposite defects.
 
-- [ ] `P01.S01` - Add an optional forbidden-text clause to the legal-catalogue entry schema alongside required_text, evaluated at registry build. The failure message names WHICH clause fired, because a missing required phrase and a present forbidden phrase diagnose opposite defects and one message conflates them; `src/cadrumo/_data/registry/aeat/legal/, src/cadrumo/domain/calculations/registry/`.
-- [ ] `P01.S02` - Prove the new clause bites and prove it does not over-reach in the same row. The refusal must fire on a document containing a forbidden phrase, and the CONTROL that decides closure is that every one of the 606 existing entries still loads unchanged, with the deliberately vintaged excerpts named explicitly because they legitimately contain text current law does not. Do not close on the refusal firing; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `P01.S01` - Add an optional forbidden-text clause to the legal-catalogue entry schema alongside required_text, evaluated at registry build. The failure message names WHICH clause fired, because a missing required phrase and a present forbidden phrase diagnose opposite defects and one message conflates them; `src/cadrumo/_data/registry/aeat/legal/, src/cadrumo/domain/calculations/registry/`.
+- [x] `P01.S02` - Prove the new clause bites and prove it does not over-reach in the same row. The refusal must fire on a document containing a forbidden phrase, and the CONTROL that decides closure is that every one of the 606 existing entries still loads unchanged, with the deliberately vintaged excerpts named explicitly because they legitimately contain text current law does not. Do not close on the refusal firing; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `P02` - Author the clauses that are already evidenced
 
