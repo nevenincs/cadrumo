@@ -172,6 +172,12 @@ class ProviderValidation(BaseModel):
             applicable (CSV byte decoding, OFX parser tag, etc.).
         detected_dialect: Compact provider-specific dialect / layout
             description used in operator diagnostics.
+        unavailable_optional_extra: Machine identity of the optional extra whose
+            absence made this provider unusable, carried as the canonical
+            ``extra`` / ``import_name`` / ``importable`` fact triple rather than
+            an installation instruction. Present only when a provider declined
+            because its extra is not installed; the operator-facing recovery is
+            resolved downstream from these facts, never rendered here.
     """
 
     model_config = _STRICT_FROZEN
@@ -180,6 +186,7 @@ class ProviderValidation(BaseModel):
     warnings: tuple[str, ...] = ()
     detected_encoding: str | None = None
     detected_dialect: str | None = None
+    unavailable_optional_extra: Mapping[str, str | bool] | None = None
 
 
 class FinancialProvider(ABC):

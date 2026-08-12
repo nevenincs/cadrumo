@@ -259,3 +259,33 @@ NEWFILEUID:NONE
     validation = OfxProvider().validate_source(source)
     assert not validation.is_valid
     assert validation.warnings
+
+
+def test_a_probe_miss_without_the_extra_carries_machine_identity_not_install_prose(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A source that is not OFX must decline with facts, never a rendered command.
+
+    The declining branch is the one ``--provider auto`` walks on a bare-core
+    install, so it is the branch an operator's tooling actually reads. Asserting
+    the absence of installation prose is the point: the recovery is resolved
+    downstream from the extra's identity, and a provider that renders its own
+    command re-introduces exactly the surface the envelope contract removes.
+    """
+    from ......core import OFX_EXTRA
+    from .. import _ofx
+
+    monkeypatch.setattr(_ofx, "optional_extra_available", lambda _extra: False)
+    source = tmp_path / "statement.csv"
+    source.write_text("date,amount\n2026-01-01,10.00\n", encoding="utf-8")
+
+    validation = OfxProvider().validate_source(source)
+
+    assert not validation.is_valid
+    assert validation.unavailable_optional_extra == {
+        "extra": OFX_EXTRA.extra,
+        "import_name": OFX_EXTRA.import_name,
+        "importable": False,
+    }
+    assert validation.warnings == (), "a declined probe must carry no rendered prose at all"
