@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:c216d4f52ba292dac810e053aee62dd5d55bedff4687edf6d752135fca7a39ef'
+body_hash: 'sha256:c876a6e747ef4f97b4d6ca673f2a8603b1e189c17dd9de6b9cba9938dcc0ba89'
 step_id: 'S90'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -75,6 +75,16 @@ Consent re-derivation now owns three distinct application predicates instead of 
 The conformance corpus already includes `_ledger_import_cli`; it now explicitly rejects `resolve_error_message`, `_all_files_refused`, and broad `CadrumoError` catch aggregation. A real isolated missing-CSV invocation proves `ERROR_TRANSACTION_VALIDATION` with condition `cli.ledger.transaction.valid`, typed error-kind evidence, and no generic `REFUSED_CLI_BOUNDARY`. Two real isolated consent re-derivation invocations prove the distinct missing-artefact and missing-transcription conditions and their fact-only terminal outcomes. The prior English sentence and regex assertions were replaced by structural condition/evidence/action/outcome assertions.
 
 Verification: the complete selected integration lane passes 21 tests in 72.30s. Application consent-withdrawal plus registry enforcement passes 25 tests in 27.50s. Focused BasedPyright reports zero errors, warnings, or notes; Ruff and compile checks pass.
+
+S90 remains open for final independent review.
+
+### Locale-neutral exception-propagation proof
+
+The final S90 test-integrity review found that `test_ledger_exception_propagation.py` forced English and distinguished the no-profile and corrupt-pointer branches by rendered phrases. The fixture-level language override and all message substring assertions were removed.
+
+Both cases still drive the real `ledger ratios list` Click path against real sessionless storage. The cold-start branch now asserts the shared JSON spine's `profile.active.available` condition, canonical `operator.profile.create` reference, live `config.profile.create` command key, missing `profile_name` argument, and `requires_arguments` conditionality. The corrupt-pointer branch now asserts `REFUSED_CLI_VALIDATION_BOUNDARY`, the `cli.validation.boundary_clean` condition, exact runtime-observation evidence naming `CliValidationBoundaryError`, no action, `not_applicable`, and `operator_decision`. These assertions are locale-neutral and prove the exceptions remain categorically distinct without depending on translated prose.
+
+Verification: the propagation module passes 2 tests. The combined reviewer integration selection covering propagation, consent, import, filter, ratios, and the ledger structural conformance gate passes 40 tests in 82.33s, exceeding the requested 39-case selection. Application consent-withdrawal plus registry enforcement passes 25 tests in 26.14s. Ruff check and Ruff formatting are clean after canonical formatting.
 
 S90 remains open for final independent review.
 
