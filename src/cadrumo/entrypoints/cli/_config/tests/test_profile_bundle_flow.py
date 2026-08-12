@@ -212,6 +212,8 @@ def _create_profile(label: str) -> None:
             "Subject",
             "--surnames",
             "Access",
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
         ],
     )
     assert result.exit_code == 0, result.output
