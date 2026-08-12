@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:c6ab036df4aa7cea770ce05c21a92df62c6e33a971c8febb7daf72be3f4b5f13'
+body_hash: 'sha256:09f5baeb1fb811ac80100ba671dcfc3703e78b37b83bb9a90e97a63a3fdbacb5'
 step_id: 'S26'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -16,25 +16,31 @@ related:
 ## Scope
 
 - `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`
+- `src/cadrumo/entrypoints/cli/_modelo.py`
+- `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `src/cadrumo/entrypoints/cli/tests/test_modelo_work_review_envelope.py`
+- `src/cadrumo/locales/{en,es,ca,hu}.yml`
 
 ## Description
 
 - Register `modelo.work.review` to a strict `WorkReviewResult` that wraps the facade-exported `ModeloWorkReview` without redeclaring its fields.
 - Compose a real review record from encrypted persistence repositories and the bundled registry authority.
-- Reuse `verification_report_notices` from the persisted verification report underlying that review.
+- Register the smallest read-only `aeat app modelo work review` leaf and call canonical `build_modelo_work_review` against the existing repositories.
+- Factor the existing Notice projection into `verification_findings_notices`, keep `verification_report_notices` as its report wrapper, and project the review's own findings without a second repository lookup.
 - Prove schema-registry identity, strict `SchemaEnvelope` JSON roundtrip, warning status, blocker action-axis identity, native code, and matching machine facts in `Notice.context`.
-- Run focused pytest, Ruff format and lint, BasedPyright, diff hygiene, the orphan-leaf conformance probe, and the feature-scoped Vault check.
+- Run the exact stored-review CLI path, focused pytest, Ruff format and lint, BasedPyright, diff hygiene, symmetric CLI-leaf/schema conformance, and the feature-scoped Vault check.
 
 ## Outcome
 
-`modelo.work.review` now has one strict result schema whose only domain payload is the canonical application `ModeloWorkReview`. No CLI-side casilla, progress, finding, or blocker mirror was introduced, and no new Notice projection helper was added.
+`modelo.work.review` now has one strict result schema whose only domain payload is the canonical application `ModeloWorkReview`, plus a live read-only `aeat app modelo work review` leaf. No CLI-side casilla, progress, finding, or blocker mirror was introduced.
 
-The real-storage envelope test passed. It persists a work unit, calculation revision, and blocking verification report, builds the application review through `build_modelo_work_review`, obtains notices through the existing canonical `verification_report_notices`, and round-trips the result through the parameterised `SchemaEnvelope` JSON contract. A deliberate temporary registration-key mutation made the test fail with a missing `modelo.work.review` registry key, then the canonical registration was restored and the test passed again.
+The real-storage envelope tests passed. They persist a work unit, calculation revision, and blocking verification report, build the application review through `build_modelo_work_review`, and round-trip the result through the parameterised `SchemaEnvelope` JSON contract. The exact CLI test invokes `app modelo work review` against that live stored review and proves the blocker axis/native facts and matching `Notice.context`. The command projects `review.findings` through the factored canonical helper, so there is no second verification-repository query. A deliberate temporary registration-key mutation made the contract test fail with a missing `modelo.work.review` registry key, then the canonical registration was restored and the test passed again.
 
-Focused Ruff formatting and lint passed. The new test module passed BasedPyright with zero errors, warnings, or notes. Whole-file BasedPyright over `_modelo_payloads.py` retained four pre-existing diagnostics outside the S26 changes: two around the `WorkAmendResult.amends_filing_record_id` override and two in the `ModeloAggregateResult` source-kind coercion.
+Focused Ruff formatting and lint passed. BasedPyright over the new registrar and direct test passed with zero errors, warnings, or notes. The direct review module passed with two tests, and the exact symmetric integration node `test_every_cli_leaf_has_a_registered_schema` passed. Whole-file BasedPyright over `_modelo_payloads.py` retained four pre-existing diagnostics outside the S26 changes: two around the `WorkAmendResult.amends_filing_record_id` override and two in the `ModeloAggregateResult` source-kind coercion.
 
 ## Notes
 
-No live `aeat app modelo work review` command exists in the current Typer tree, and adding one is outside S26 ownership. The exact CLI smoke is therefore not applicable. The symmetric CLI-leaf/schema-registry integration gate reports exactly one orphan key, `modelo.work.review`; later review-surface wiring owns invocation. The S26-focused contract remains green and does not invent a premature facade or shim.
+The live command uses the existing target resolver and repository-backed application producer; it adds no facade, shim, or duplicate review assembly. `cli.app.modelo.work.review_help` was added through `dev.locales` in all four locale catalogs. The locale scaffold check retained unrelated existing drift outside this key.
 
-The initial inventory found unrelated peer modifications in `_ledger_evidence_review_cli.py` and `_modelo_discovery_cli.py`. Neither path overlaps S26, and both were preserved untouched. No staging, commit, plan-state mutation, audit authoring, or unrelated cleanup was performed.
+The initial inventory found unrelated peer modifications in `_ledger_evidence_review_cli.py`, `_modelo_discovery_cli.py`, and the locale catalogs. A transient peer-owned syntax error in `_ledger_evidence_cli.py` initially blocked the conformance node; it cleared without S26 edits and the exact node then passed. All peer changes were preserved. No staging, commit, plan-state mutation, audit authoring, or unrelated cleanup was performed.
