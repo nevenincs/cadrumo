@@ -361,13 +361,18 @@ def _emit_crash(exc: Exception) -> NoReturn:
     remedy, and would report an operator-actionable condition as a program
     defect. Forward it verbatim instead, with its own exit code.
     """
-    from ...application.cli_exception_preconditions import cli_exception_envelope_view
     from ...core.logging import OPERATOR_DOCUMENT_LOG_EXTRA, get_logger
-    from ._common import cli_policy_refusal_projection
-    from ._errors import CliUnexpectedBoundaryError, _unwrap_cadrumo_error, render_error_payload, write_stderr
+    from ._common import cli_policy_refusal_projection, project_cli_policy_refusal
+    from ._errors import (
+        CliUnexpectedBoundaryError,
+        boundary_no_recovery_verdict,
+        project_cli_boundary_error,
+        render_error_payload,
+        write_stderr,
+    )
 
-    typed = _unwrap_cadrumo_error(exc)
-    if typed is None:
+    boundary = project_cli_boundary_error(exc, _emit_crash)
+    if isinstance(boundary, CliUnexpectedBoundaryError):
         # The INTERNAL envelope this path renders tells the operator to consult
         # the diagnostic logs, so the traceback has to actually be in them;
         # without this the isolated-run log carried two DEBUG lines and nothing
@@ -387,11 +392,12 @@ def _emit_crash(exc: Exception) -> NoReturn:
             exc_info=exc,
             extra={OPERATOR_DOCUMENT_LOG_EXTRA: True},
         )
-    projection = cli_policy_refusal_projection(typed) if typed is not None else None
-    boundary = cli_exception_envelope_view(typed) if typed is not None else CliUnexpectedBoundaryError(exc)
-    code = get_registered_error_code(boundary)
+    projection = cli_policy_refusal_projection(boundary)
     if projection is None:
-        projection = cli_policy_refusal_projection(boundary)
+        verdict = boundary_no_recovery_verdict(boundary)
+        if verdict is not None:
+            projection = project_cli_policy_refusal(requested_leaf=None, verdict=verdict)
+    code = get_registered_error_code(boundary)
     payload = render_error_payload(
         boundary,
         as_json=_json_requested_for(exc),

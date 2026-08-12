@@ -14,14 +14,18 @@ operator as if it were a live crash.
 
 from __future__ import annotations
 
+import json
 import logging
 
 import pytest
 import sqlalchemy.exc as sa_exc
 import typer
+from pydantic import TypeAdapter
 
 from ....adapters.persistence.storage.master_key import NoActiveBucketSessionError
 from ....core.errors import CadrumoError, build_error_envelope, render_error_text
+from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
+from ....llm import LLMRequest, PromptDefinition
 from .._errors import (
     CliUnexpectedBoundaryError,
     _unwrap_cadrumo_error,
@@ -34,6 +38,67 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # bucket session is unlocked — the exact error the boundary must
 # forward verbatim instead of mis-reporting as an internal defect.
 _ProbeRefusal = NoActiveBucketSessionError
+
+
+def test_terminal_nested_llm_validation_preserves_typed_refusal_in_every_locale(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The standalone terminal uses the callback projector for Pydantic errors."""
+    from .._terminal_errors import run_standalone_with_error_contract
+
+    for locale in SUPPORTED_OUTPUT_LANGUAGES:
+        with pytest.raises(SystemExit) as exited:
+            run_standalone_with_error_contract(
+                lambda: LLMRequest(prompt=" \t"),
+                argv=["--language", locale, "--format", "json"],
+            )
+        captured = capsys.readouterr()
+        document = json.loads(captured.err)
+        error = document["error"]
+        assert error["code"] == "REFUSED_CLI_VALIDATION_BOUNDARY"
+        assert error["category"] == "REFUSED"
+        assert error["action"]["failed_condition_id"] == "llm.request.prompt_nonempty"
+        assert error["action"]["evidence"][0]["values"] == {"request_prompt_nonempty": False}
+        assert error["action"]["action"] is None
+        assert error["action"]["conditionality"] == "not_applicable"
+        assert error["action"]["no_recovery_outcome"] == "operator_decision"
+        assert exited.value.code == 2
+
+        with pytest.raises(SystemExit):
+            run_standalone_with_error_contract(
+                lambda: LLMRequest(prompt=" \t"),
+                argv=["--language", locale],
+            )
+        text = capsys.readouterr().err
+        assert 'action.failed_condition_id: "llm.request.prompt_nonempty"' in text
+        assert "action.action: null" in text
+
+
+@pytest.mark.parametrize(
+    "dispatch",
+    [
+        lambda: LLMRequest(prompt="valid", max_tokens=0),
+        lambda: TypeAdapter(tuple[LLMRequest, PromptDefinition]).validate_python(
+            (
+                {"prompt": " \t"},
+                {"id": "Not canonical", "version": 1, "template": "{{ value }}", "description": "x"},
+            ),
+        ),
+    ],
+)
+def test_terminal_validation_fails_closed_without_one_typed_candidate(
+    dispatch: object,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Non-typed and ambiguous nested validation retain the generic outcome."""
+    from .._terminal_errors import run_standalone_with_error_contract
+
+    with pytest.raises(SystemExit):
+        run_standalone_with_error_contract(dispatch, argv=["--format", "json"])  # type: ignore[arg-type]
+    action = json.loads(capsys.readouterr().err)["error"]["action"]
+    assert action["failed_condition_id"] == "cli.validation.boundary_clean"
+    assert action["action"] is None
+    assert action["no_recovery_outcome"] == "operator_decision"
 
 
 def test_unwrap_finds_cadrumo_error_through_sqlalchemy_orig() -> None:

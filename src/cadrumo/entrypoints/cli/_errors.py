@@ -786,6 +786,11 @@ def _boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | 
     )
 
 
+def boundary_no_recovery_verdict(error: CadrumoError) -> PreconditionVerdict | None:
+    """Return the canonical generic boundary outcome for terminal transport."""
+    return _boundary_no_recovery_verdict(error)
+
+
 def _emit_error_and_exit(error: CadrumoError) -> Never:
     """Render ``error`` to stderr and terminate with its registered exit code.
 
@@ -1083,14 +1088,25 @@ def _project_boundary_error(error: Exception, callback: Callable[..., object]) -
     return _project_unexpected(error, callback)
 
 
+def project_cli_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Project an escaped exception without duplicating terminal crash logging."""
+    for exc_type, project in _ERROR_PROJECTIONS:
+        if isinstance(error, exc_type):
+            return project(error, callback)
+    wrapped = _unwrap_cadrumo_error(error)
+    return wrapped if wrapped is not None else CliUnexpectedBoundaryError(error)
+
+
 __all__ = [
     "CliCommandGroupUnavailableError",
     "CliOutboundPayloadBoundaryError",
     "CliRefusedBoundaryError",
     "CliStoredDataValidationBoundaryError",
     "CliValidationBoundaryError",
+    "boundary_no_recovery_verdict",
     "decorate_typer_app",
     "error_boundary_under_test",
     "internal_record_fault_context",
+    "project_cli_boundary_error",
     "write_stderr",
 ]
