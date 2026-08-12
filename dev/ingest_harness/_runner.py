@@ -22,6 +22,7 @@ from decimal import Decimal
 from typing import Any
 
 from ._caveats import TWIN_LINK_IS_PROSE
+from ._field_mapping import slots_unavailable_at
 from ._key import CorpusKey
 from ._result import FLOAT_SANITY_PROBE, EmittedOnly, HarnessRefusalError, ModelTier, ResultRow, Scored
 
@@ -48,15 +49,33 @@ class HarnessReport:
         """Accept one row, refusing it if it cannot be honestly quoted.
 
         Raises:
-            HarnessRefusalError: When the row was scored against a different key, or
-                names a document this key does not contain.
+            HarnessRefusalError: When the row was scored against a different key,
+                names a document this key does not contain, or scores a slot its
+                declared stage structurally cannot produce.
         """
         if row.key_sha256 != self._key.sha256:
             raise HarnessRefusalError(
                 f"{row.doc_id}: row was scored against key {row.key_sha256[:12]} but this report is "
                 f"pinned to {self._key.sha256[:12]}; figures from two keys must never share a report",
             )
-        self._key.document(row.doc_id)
+        document = self._key.document(row.doc_id)
+        # The capture POINT is a property of the measurement, and until this
+        # refusal existed the report could not tell a reader that failed to
+        # produce a field from a capture taken before the field exists. Both
+        # read as a miss, and the residual reads as a product gap -- which on
+        # record nearly bought a probabilistic replacement for two
+        # deterministic authorities. Refused rather than silently dropped from
+        # the denominator: the caller must move the capture, which is the fix.
+        if isinstance(row.outcome, Scored):
+            unavailable = slots_unavailable_at(document, row.stage)
+            if unavailable:
+                raise HarnessRefusalError(
+                    f"{row.doc_id}: refused a row measured at {row.stage.value} that scores "
+                    f"{', '.join(unavailable)}, which no output of that stage can carry. Scoring "
+                    "them books a guaranteed miss against the reader and reports a product gap "
+                    "that is an artefact of where the capture was taken. Drive the pipeline to "
+                    "the stage that produces them and score the draft it hands on.",
+                )
         self._rows.append(row)
 
     def extend(self, rows: Iterable[ResultRow]) -> None:

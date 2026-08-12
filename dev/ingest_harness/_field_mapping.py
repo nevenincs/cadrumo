@@ -66,6 +66,7 @@ from typing import Any, Final, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._key import CorpusDocument, CorpusKey
+from ._result import PipelineStage
 
 __all__ = [
     "COMPOSITE_LEAF_SEPARATOR",
@@ -75,6 +76,7 @@ __all__ = [
     "MappingValidationError",
     "expand_document_slots",
     "project_emission",
+    "slots_unavailable_at",
     "unmapped_slot_census",
     "validate_mapping_targets",
 ]
@@ -165,6 +167,17 @@ class FieldMapping(BaseModel):
         rationale: Required on the non-scored kinds only, where it states
             what the absence means. An unmapped field with no stated reason is
             indistinguishable from one nobody has looked at yet.
+        available_from: The earliest pipeline stage whose output can carry this
+            field at all. Defaults to extraction, which is where the reading
+            contract's own fields appear.
+
+            Declared because two of these fields are produced STAGES LATER than
+            the rest, and the map could not say so: a capture taken at the
+            extraction seam reads them as ``None`` for every document, which is
+            indistinguishable from a reader that never produces them. That
+            residual is on record as having motivated a proposal to route both
+            through the LLM classifier -- replacing two deterministic
+            authorities with probabilistic ones, to fix a measurement artefact.
     """
 
     model_config = _STRICT
@@ -176,6 +189,7 @@ class FieldMapping(BaseModel):
     leaves: Mapping[str, str] = Field(default_factory=dict)
     superseded_by: str | None = None
     rationale: str = ""
+    available_from: PipelineStage = PipelineStage.S2_EXTRACTION
 
     @model_validator(mode="after")
     def _shape_matches_kind(self) -> Self:
@@ -243,7 +257,13 @@ KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
         "iva_rate": _direct("iva_rate"),
         "recargo_amount": _direct("recargo_amount"),
         "lines": _direct("lines"),
-        "iva_category": _direct("iva_category"),
+        # Decided by the single classification authority at the CONFIRM
+        # boundary, not by any reader. Nothing earlier can carry it.
+        "iva_category": FieldMapping(
+            kind=MappingKind.DIRECT,
+            draft_field="iva_category",
+            available_from=PipelineStage.S4_CLASSIFICATION,
+        ),
         # ── Same concept, different spelling. Each verified against the corpus.
         "issue_date": _direct("invoice_date"),
         "iva_total": _direct("iva_amount"),
@@ -253,7 +273,14 @@ KEY_FIELD_MAPPINGS: Final[Mapping[str, FieldMapping]] = MappingProxyType(
         "suplido_amount": _direct("suplidos_amount"),
         "series": _direct("invoice_series"),
         "tax_breakdown": _direct("iva_breakdown"),
-        "category": _direct("suggested_kind"),
+        # Derived deterministically by the grounding pass from the filer's own
+        # tax identity, one stage after the reader returns. A reader is not
+        # asked for it and cannot be scored on it.
+        "category": FieldMapping(
+            kind=MappingKind.DIRECT,
+            draft_field="suggested_kind",
+            available_from=PipelineStage.S3_GROUNDING,
+        ),
         # ── Resolved by the document's own counterparty_role.
         "counterparty_name": FieldMapping(
             kind=MappingKind.ROLE_DEPENDENT,
@@ -428,6 +455,48 @@ def expand_document_slots(document: CorpusDocument) -> CorpusDocument:
             continue
         slots[key_field] = truth
     return document.model_copy(update={"ground_truth": slots})
+
+
+#: Stages in pipeline order, so "can this stage reach that one" is a comparison
+#: rather than a hand-maintained set of pairs. The two lane stages are absent
+#: deliberately: ``TABULAR_MAPPING`` is its own lane rather than a point on this
+#: line, and ``END_TO_END`` runs the whole pipeline, so both can carry every
+#: field and neither is ordered against the seams.
+_STAGE_ORDER: Final[tuple[PipelineStage, ...]] = (
+    PipelineStage.S1_TRANSCRIPTION,
+    PipelineStage.S2_EXTRACTION,
+    PipelineStage.S3_GROUNDING,
+    PipelineStage.S4_CLASSIFICATION,
+)
+
+
+def slots_unavailable_at(document: CorpusDocument, stage: PipelineStage) -> tuple[str, ...]:
+    """Return the document's scorable slots that *stage* structurally cannot carry.
+
+    A slot the stage cannot produce is not a failed read. Scoring it books a
+    guaranteed miss against the reader and inflates the denominator with a
+    question the capture point never asked, and the resulting residual reads
+    exactly like a reader that never produces the field. Two fields on the
+    pinned key are produced after extraction -- one by the grounding pass, one
+    by the classification authority at confirm -- so a capture at the extraction
+    seam mismeasures both, on every document that authors them.
+
+    Returns the slot names in key order, empty when the stage can carry every
+    slot the document authors. A stage outside the seam ordering
+    (``TABULAR_MAPPING``, ``END_TO_END``) reaches everything and yields nothing.
+    """
+    if stage not in _STAGE_ORDER:
+        return ()
+    reached = _STAGE_ORDER.index(stage)
+    unavailable: list[str] = []
+    for slot in expand_document_slots(document).scorable_fields:
+        key_field = slot.split(COMPOSITE_LEAF_SEPARATOR, 1)[0]
+        mapping = KEY_FIELD_MAPPINGS.get(key_field)
+        if mapping is None or mapping.available_from not in _STAGE_ORDER:
+            continue
+        if _STAGE_ORDER.index(mapping.available_from) > reached:
+            unavailable.append(slot)
+    return tuple(unavailable)
 
 
 def project_emission(document: CorpusDocument, draft_payload: Mapping[str, Any]) -> dict[str, Any]:
