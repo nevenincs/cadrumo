@@ -22,7 +22,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: canonical identifier rather than rebuilding one inline -- an inline rebuild is
 #: how the four divergent formats arose in the first place.
 _EMITTING_SURFACES: Final[tuple[str, ...]] = (
-    "src/cadrumo/application/verification/_verify.py",
     "src/cadrumo/domain/calculations/registry/tests/_scenarios.py",
     "dev/registry/_workbook_parity.py",
     "src/cadrumo/adapters/outbound/aeat/sede/_declarations.py",

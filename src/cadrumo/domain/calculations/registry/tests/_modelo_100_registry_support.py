@@ -150,7 +150,6 @@ _SOURCE_FOUNDATION_APPLICATION_LINKS: frozenset[str] = frozenset(
         "modelo-100-export",
         "modelo-100-filed-declarations-observation",
         "modelo-100-calculation",
-        "modelo-100-verification",
         "modelo-100-review",
         "modelo-100-approval",
         "modelo-100-reconciliation",
