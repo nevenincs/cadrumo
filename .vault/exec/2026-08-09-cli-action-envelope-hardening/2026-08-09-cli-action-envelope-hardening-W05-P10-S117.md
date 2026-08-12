@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:32c0a2ac55b874f3844bef4862cb9202dc074f1ff4d3faa5dbfd8a93c5a24be7'
+body_hash: 'sha256:bd910f9c3d1fe16f20a121163a55300c42726e075521342ba35d9de3ca1081bb'
 step_id: 'S117'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
