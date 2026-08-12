@@ -25,6 +25,7 @@ from .. import (
     _ledger_import_cli,
     _ledger_lifecycle_cli,
     _ledger_llm_cli,
+    _ledger_payloads,
     _ledger_ratios_cli,
     _ledger_read_cli,
     _ledger_review_cli,
@@ -143,6 +144,55 @@ def test_ledger_notices_do_not_redeclare_actions_or_english_fallbacks() -> None:
                 and not (isinstance(action, ast.Name) and action.id == "action")
             ):
                 failures.append(f"{location}: action bypasses a canonical resolver")
+    assert failures == []
+
+
+def test_ledger_payloads_do_not_redeclare_notice_or_recovery_prose() -> None:
+    """Advisories have one typed envelope home, never bespoke payload strings."""
+    failures: list[str] = []
+    payload_directory = Path(inspect.getfile(_ledger_payloads)).parent
+    forbidden_suffixes = ("_notice", "_hint", "_suggestion", "_recovery")
+    for path in sorted(payload_directory.glob("_ledger*payload*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+                if node.target.id.endswith(forbidden_suffixes):
+                    failures.append(f"{path.name}:{node.lineno}:{node.target.id}")
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs):
+                    if argument.arg.endswith(forbidden_suffixes):
+                        failures.append(f"{path.name}:{argument.lineno}:{argument.arg}")
+    assert failures == []
+
+
+def test_ledger_import_ux_has_no_rendered_message_or_forced_locale_assertions() -> None:
+    """Import behavior tests bind machine contracts, not one rendered catalogue."""
+    path = Path(inspect.getfile(_ledger_import_cli)).parent / "tests" / "test_ledger_import_ux.py"
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    failures: list[str] = []
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr in {"lower", "casefold"}
+        ):
+            failures.append(f"{path.name}:{node.lineno}: case-folded presentation assertion")
+        if isinstance(node, ast.Compare):
+            expressions = (node.left, *node.comparators)
+            has_output = any(
+                isinstance(expression, ast.Attribute) and expression.attr == "output" for expression in expressions
+            )
+            has_literal = any(
+                isinstance(candidate, ast.Constant) and isinstance(candidate.value, str)
+                for expression in expressions
+                for candidate in ast.walk(expression)
+            )
+            if has_output and has_literal:
+                failures.append(f"{path.name}:{node.lineno}: rendered literal assertion")
+        if isinstance(node, (ast.List, ast.Tuple)):
+            values = [item.value for item in node.elts if isinstance(item, ast.Constant)]
+            if "--language" in values and "en" in values:
+                failures.append(f"{path.name}:{node.lineno}: forced English locale")
     assert failures == []
 
 
