@@ -11,6 +11,16 @@ Covers:
   law-mapping has been corrected after unit creation (simulated by constructing a
   ``WorkUnit`` whose ``revision_id`` does not match the current law-determined
   revision) and refuses with an instructive message directing re-creation.
+
+- Door reconfirmation: ``create_work_unit`` itself -- not just the
+  ``resolve_registry_revision_for_work_target`` wrapper the one production
+  caller (``ensure_modelo_work_unit_for_active_target``) routes through --
+  refuses a syntactically valid, period-declared ``revision_id`` that is not
+  the law-determined revision for its ``(modelo, filing_year, period)``. This
+  closes the residual gap: a caller that reaches the persistence door directly
+  (any of the ~90 direct callers found across the tree, nearly all tests)
+  bypassing the one production wrapper could otherwise persist a work unit
+  under the wrong year's norms with no signal.
 """
 
 from __future__ import annotations
@@ -29,12 +39,15 @@ from ....domain.modelos import (
     derive_work_unit_id,
     upsert_work_unit,
 )
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
+from ...user_profile import UserProfileLifecycleRepository
 from .._action_errors import WorkUnitRevisionDivergenceError
 from .._work_addressing import (
     ModeloWorkRegistryYearMismatchError,
     resolve_registry_revision_for_work_target,
 )
+from .._work_lifecycle import create_work_unit
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -392,3 +405,128 @@ class TestS02RevisionForWorkUnitAssertion:
 
         revision = _revision_for_work_unit(work_unit_id)
         assert revision.id == correct_revision_id
+
+
+# ===========================================================================
+# Door reconfirmation: create_work_unit itself, called directly
+# ===========================================================================
+
+_M303_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
+    UserProfileFact(path="identity.tax_id", value="00000000T"),
+    UserProfileFact(path="identity.name", value="Test"),
+    UserProfileFact(path="identity.surnames", value="Operator"),
+    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+    UserProfileFact(path="activities.description", value="economic activity"),
+    UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+)
+
+
+_DOOR_BUCKET_ID = "d1230300-0000-4000-8000-000000000399"
+
+
+@pytest.fixture
+def door_reconfirmation_repo(tmp_path: Path) -> Iterator[tuple[str, WorkUnitCatalogueRepository]]:
+    """Yield an isolated bucket and work-unit repository, UUID-shaped for profile persistence."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_DOOR_BUCKET_ID) as profile:
+        yield profile.bucket_id, WorkUnitCatalogueRepository(objects=profile.repository)
+
+
+def _seed_m303_ready_profile(bucket_id: str) -> None:
+    UserProfileLifecycleRepository(bucket_id=bucket_id).save(
+        UserProfileRecord(
+            profile_id=bucket_id,
+            display_name="Test Operator",
+            facts=_M303_READY_PROFILE_FACTS,
+            created_at=_T0,
+            updated_at=_T0,
+        ),
+    )
+
+
+class TestS03CreateWorkUnitDoorReconfirmation:
+    """``create_work_unit`` re-confirms the law-determined revision itself.
+
+    ``resolve_registry_revision_for_work_target`` (S01 above) only guards
+    callers that route through it. The population census for this gap found
+    exactly one production caller doing so (``ensure_modelo_work_unit_for_active_target``)
+    against roughly ninety direct ``create_work_unit`` call sites -- nearly all
+    of them tests. A static gate confined to production call sites would be
+    close to vacuous against that population; re-confirming inside
+    ``create_work_unit`` itself protects every caller, present and future,
+    regardless of how it reached the door.
+    """
+
+    def test_create_work_unit_refuses_a_revision_that_diverges_from_law_determined(
+        self,
+        door_reconfirmation_repo: tuple[str, WorkUnitCatalogueRepository],
+    ) -> None:
+        """A real, period-declared, but year-wrong revision id is refused at creation.
+
+        Mirrors the S01 scenario one level down: ``2009-y-siguientes`` is a
+        real M303 revision declaring the ``1T`` period token, but it covers
+        2009-2022, not 2026. Calling ``create_work_unit`` directly -- the shape
+        every one of the ~90 direct callers uses -- must refuse exactly as
+        ``resolve_registry_revision_for_work_target`` would, not silently
+        build a 2026 work unit under 2009-2022 norms.
+        """
+        bucket_id, repo = door_reconfirmation_repo
+        _seed_m303_ready_profile(bucket_id)
+
+        with pytest.raises(ModeloWorkRegistryYearMismatchError) as exc_info:
+            create_work_unit(
+                bucket_id=bucket_id,
+                modelo="303",
+                filing_year=2026,
+                period=Period.from_year_and_code(2026, "1T"),
+                revision_id="2009-y-siguientes",
+                repository=repo,
+                clock=_T0,
+            )
+        msg = str(exc_info.value)
+        assert "2009-y-siguientes" in msg
+        assert "2026-y-siguientes" in msg
+
+        # No work unit was persisted for the refused key.
+        stray_id = derive_work_unit_id(
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2009-y-siguientes",
+        )
+        assert repo.load().get(stray_id) is None
+
+    def test_create_work_unit_accepts_the_law_determined_revision(
+        self,
+        door_reconfirmation_repo: tuple[str, WorkUnitCatalogueRepository],
+    ) -> None:
+        """The correctly-resolved revision id still creates a work unit.
+
+        Proves the door reconfirmation is not over-broad: the exact revision
+        ``resolve_registry_revision_for_work_target`` would itself return for
+        this ``(modelo, filing_year, period)`` triple must pass unchanged.
+        """
+        bucket_id, repo = door_reconfirmation_repo
+        _seed_m303_ready_profile(bucket_id)
+
+        unit = create_work_unit(
+            bucket_id=bucket_id,
+            modelo="303",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision_id="2026-y-siguientes",
+            repository=repo,
+            clock=_T0,
+        )
+        assert unit.revision_id == "2026-y-siguientes"
+        assert repo.load().get(unit.work_unit_id) is not None
