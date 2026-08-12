@@ -78,6 +78,14 @@ A broader 39-case boundary, LLM-model, and registry selection produced 36 passes
 
 S114 remains open for independent review and ledger reconciliation.
 
+## Static typing closure
+
+The final S114 `ty` audit found three test/projection typing ambiguities without runtime failures. Envelope-safe context now materialises an explicitly typed dictionary before assignment. Terminal fail-closed cases accept an actual zero-argument callable. Callback ambiguity cases parameterise the validation callable itself, separating `BaseModel.model_validate` from `TypeAdapter.validate_python` rather than using a model/adapter object union.
+
+The exact six-file S114 `ty check` reports all checks passed with no ignores, broad `Any`, or compatibility shim. Terminal integration remains 12/12 and callback/LLM/registry verification remains 33/33. Ruff and formatting pass.
+
+S114 remains open for independent review and ledger reconciliation.
+
 ## Terminal nested-validation parity
 
 The standalone terminal previously attempted only direct `CadrumoError` unwrapping. An escaped Pydantic `ValidationError` therefore became `CliUnexpectedBoundaryError` even when its structural context contained one registered LLM refusal. The terminal now calls the same ordered boundary projector as callbacks, then applies the same generic no-recovery fallback when no unique typed candidate exists.
