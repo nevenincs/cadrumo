@@ -9,12 +9,16 @@ from typing import Protocol
 
 from pydantic import BaseModel, Field
 
-from ....core import STRICT_FROZEN_CONFIG, CasillaId, IvaDeductionFactKind, ProrrataRegisterRegime
+from ....core import (
+    STRICT_FROZEN_CONFIG,
+    IvaDeductionFactKind,
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
+    ProrrataRegisterRegime,
+)
 from ...bienes_inversion import RegistroRegularizacionResult
 from ...prorrata_register import ProrrataRegister
 from ._errors import RegistryValidationError
-from ._schema import CasillaDefinition, ModeloRevision
-from ._schema_input_kind import InputKind
 
 _KINDS = (
     IvaDeductionFactKind.DOMESTIC_CURRENT,
@@ -26,25 +30,7 @@ _KINDS = (
     IvaDeductionFactKind.REAGP_COMPENSATION,
     IvaDeductionFactKind.RECTIFICATION,
 )
-_FIELDS = (
-    *(
-        field
-        for family in (
-            "domestic-current",
-            "domestic-investment",
-            "import-current",
-            "import-investment",
-            "intra-eu-current",
-            "intra-eu-investment",
-            "reagp",
-            "rectification",
-        )
-        for field in (f"{family}-base", f"{family}-cuota")
-    ),
-    "investment-regularisation",
-    "total",
-)
-_PREFIX = ("iva", "deducciones", "sectores-diferenciados")
+_FIELDS = tuple(M303DifferentiatedDeductionProjectionField)
 
 
 class IvaDifferentiatedDeductionContributionProtocol(Protocol):
@@ -57,7 +43,7 @@ class IvaDifferentiatedDeductionContributionProtocol(Protocol):
 
 class M303DifferentiatedDeductionEndpointValue(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
-    casilla_id: CasillaId
+    projection_ref: M303DifferentiatedDeductionProjectionRef
     value: Decimal
 
 
@@ -71,15 +57,15 @@ class M303DifferentiatedDeductionRowProjection(BaseModel):
 
 
 def project_m303_differentiated_deduction_rows(
-    revision: ModeloRevision,
     *,
+    projection_refs: tuple[M303DifferentiatedDeductionProjectionRef, ...],
     register: ProrrataRegister,
     ejercicio: int,
     contributions: Iterable[IvaDifferentiatedDeductionContributionProtocol],
     regularisation_result: RegistroRegularizacionResult | None = None,
 ) -> tuple[M303DifferentiatedDeductionRowProjection, ...]:
     """Project the two canonical sector rows, refusing every incomplete authority."""
-    endpoints = _endpoint_matrix(revision)
+    endpoints = _endpoint_matrix(projection_refs)
     definitions = register.sector_definitions
     if not definitions:
         return ()
@@ -87,10 +73,7 @@ def project_m303_differentiated_deduction_rows(
         raise RegistryValidationError("modelo 303 differentiated deductions require exactly two sectors")
     sector_ids = tuple(item.sector_id for item in definitions)
     apportioned = tuple(contributions)
-    if any(
-        item.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION
-        for item in apportioned
-    ):
+    if any(item.deduction_fact_kind is IvaDeductionFactKind.INVESTMENT_GOODS_REGULARISATION for item in apportioned):
         raise RegistryValidationError(
             "investment-goods regularisation cannot enter the ordinary deduction contribution channel"
         )
@@ -155,8 +138,7 @@ def project_m303_differentiated_deduction_rows(
         total = Decimal("0")
         for kind in _KINDS:
             selected = tuple(
-                item for item in apportioned
-                if item.sector_id == sector_id and item.deduction_fact_kind is kind
+                item for item in apportioned if item.sector_id == sector_id and item.deduction_fact_kind is kind
             )
             if len(selected) != 1:
                 raise RegistryValidationError(
@@ -185,37 +167,36 @@ def project_m303_differentiated_deduction_rows(
     return tuple(projected)
 
 
-def _endpoint_matrix(revision: ModeloRevision) -> dict[int, dict[str, CasillaDefinition]]:
-    resolved: dict[int, dict[str, CasillaDefinition]] = {}
-    for casilla in revision.casillas:
-        section = tuple(casilla.section)
-        if section[:3] != _PREFIX:
-            continue
-        if len(section) != 5 or section[3] not in {"sector_1", "sector_2"} or section[4] not in _FIELDS:
-            raise RegistryValidationError(f"invalid differentiated deduction endpoint section {section!r}")
-        if (
-            casilla.input_kind is not InputKind.PROJECTION_ONLY
-            or casilla.formula
-            or casilla.binding
-            or casilla.alternate_bindings
-        ):
+def _endpoint_matrix(
+    refs: tuple[M303DifferentiatedDeductionProjectionRef, ...],
+) -> dict[
+    int,
+    dict[M303DifferentiatedDeductionProjectionField, M303DifferentiatedDeductionProjectionRef],
+]:
+    resolved: dict[
+        int,
+        dict[M303DifferentiatedDeductionProjectionField, M303DifferentiatedDeductionProjectionRef],
+    ] = {}
+    casilla_ids = tuple(ref.casilla_id for ref in refs)
+    if len(set(casilla_ids)) != len(casilla_ids):
+        raise RegistryValidationError("differentiated deduction references duplicate endpoint casillas")
+    for ref in refs:
+        if ref.field in resolved.setdefault(ref.slot, {}):
             raise RegistryValidationError(
-                f"differentiated deduction endpoint {casilla.id!r} has an independent producer"
+                f"duplicate differentiated deduction projection reference {ref.slot}/{ref.field.value}",
             )
-        slot = int(section[3][-1])
-        if section[4] in resolved.setdefault(slot, {}):
-            raise RegistryValidationError(f"duplicate differentiated deduction endpoint {slot}/{section[4]}")
-        resolved[slot][section[4]] = casilla
+        resolved[ref.slot][ref.field] = ref
     expected = {1: set(_FIELDS), 2: set(_FIELDS)}
     if {slot: set(fields) for slot, fields in resolved.items()} != expected:
         raise RegistryValidationError("modelo 303 differentiated deduction endpoint matrix is incomplete or malformed")
     return resolved
 
 
-def _endpoint_value(casilla: CasillaDefinition, value: Decimal) -> M303DifferentiatedDeductionEndpointValue:
-    if casilla.constraints is not None and (reason := casilla.constraints.violates(value)) is not None:
-        raise RegistryValidationError(f"differentiated deduction endpoint {casilla.id!r} rejects value: {reason}")
-    return M303DifferentiatedDeductionEndpointValue(casilla_id=casilla.id, value=value)
+def _endpoint_value(
+    ref: M303DifferentiatedDeductionProjectionRef,
+    value: Decimal,
+) -> M303DifferentiatedDeductionEndpointValue:
+    return M303DifferentiatedDeductionEndpointValue(projection_ref=ref, value=value)
 
 
 __all__ = [

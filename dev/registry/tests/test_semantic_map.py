@@ -5,7 +5,12 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core import (
+    FilingProducerKey,
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    validated_casilla_id,
+)
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
     ExportComputedKey,
@@ -38,14 +43,34 @@ def _entry_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
     }
 
 
+def _projection_ref() -> M303ProrrataActivityProjectionRef:
+    return M303ProrrataActivityProjectionRef(
+        projection_kind="m303_prorrata_activity",
+        slot=1,
+        field=M303ProrrataActivityProjectionField.CNAE,
+        casilla_id=validated_casilla_id("500", surface="test"),
+    )
+
+
 @pytest.mark.parametrize(
     ("kind", "semantic_payload", "expected_name", "expected_value"),
     [
         ("casilla", {"casilla_id": "casilla.03"}, "casilla_id", "casilla.03"),
         ("binding", {"binding": "declarante.nif"}, "binding", "declarante.nif"),
         ("literal", {"literal": "T"}, "literal", "T"),
-        ("header", {"producer_key": FilingProducerKey.PRESENTER_TAX_ID}, "producer_key", FilingProducerKey.PRESENTER_TAX_ID),
-        ("draft", {"draft_attribute": ExportDraftAttribute.FILING_YEAR}, "draft_attribute", ExportDraftAttribute.FILING_YEAR),
+        (
+            "header",
+            {"producer_key": FilingProducerKey.PRESENTER_TAX_ID},
+            "producer_key",
+            FilingProducerKey.PRESENTER_TAX_ID,
+        ),
+        ("projection", {"projection_ref": _projection_ref()}, "projection_ref", _projection_ref()),
+        (
+            "draft",
+            {"draft_attribute": ExportDraftAttribute.FILING_YEAR},
+            "draft_attribute",
+            ExportDraftAttribute.FILING_YEAR,
+        ),
         (
             "computed",
             {"computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG},
@@ -73,6 +98,7 @@ def test_semantic_entry_accepts_only_the_registry_meaning_for_each_field_kind(
         assert entry.binding is None
         assert entry.literal is None
         assert entry.producer_key is None
+        assert entry.projection_ref is None
         assert entry.draft_attribute is None
         assert entry.computed_key is None
 
@@ -128,6 +154,8 @@ def test_semantic_map_supports_exact_pdf_anchors_without_a_workbook_cell() -> No
     [
         ("casilla", {}, "only casilla_id; declared none"),
         ("binding", {"binding": "declarante.nif", "casilla_id": "casilla.03"}, "only binding"),
+        ("projection", {}, "only projection_ref; declared none"),
+        ("projection", {"projection_ref": _projection_ref(), "casilla_id": "casilla.03"}, "only projection_ref"),
         ("filler", {"literal": " "}, "must not declare semantic payloads"),
         ("checksum", {"computed_key": ExportComputedKey.ENVELOPE_CLOSING_TAG}, "must not declare semantic payloads"),
     ],
@@ -150,6 +178,48 @@ def test_semantic_map_rejects_parser_coordinates_and_renderer_shape() -> None:
                 "casilla",
                 casilla_id="casilla.03",
                 offset=17,
+            ),
+        )
+
+
+def test_semantic_map_refuses_raw_projection_refs_outside_the_toml_loader() -> None:
+    """A semantic map accepts the core union only after its canonical hydration."""
+    with pytest.raises(ValidationError, match="typed FilingProjectionRef hydrated by load_semantic_map"):
+        SemanticMapEntry.model_validate(
+            _entry_payload(
+                "projection",
+                projection_ref={
+                    "projection_kind": "m303_prorrata_activity",
+                    "slot": 1,
+                    "field": "cnae",
+                    "casilla_id": "500",
+                },
+            ),
+        )
+
+
+@pytest.mark.parametrize(
+    ("legacy_inference_axis", "value"),
+    (
+        ("label", "Actividad principal"),
+        ("description", "Actividad prorrata"),
+        ("offset", 17),
+        ("section", "prorrata"),
+        ("numeric", 500),
+        ("neighbour", "next-field"),
+    ),
+)
+def test_semantic_map_refuses_legacy_projection_inference_axes(
+    legacy_inference_axis: str,
+    value: object,
+) -> None:
+    """Official geometry remains evidence; it cannot select projection meaning."""
+    with pytest.raises(ValidationError, match="extra_forbidden"):
+        SemanticMapEntry.model_validate(
+            _entry_payload(
+                "projection",
+                projection_ref=_projection_ref(),
+                **{legacy_inference_axis: value},
             ),
         )
 

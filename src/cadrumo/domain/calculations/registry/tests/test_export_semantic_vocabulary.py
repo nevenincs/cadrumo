@@ -103,5 +103,6 @@ def test_payload_axis_table_is_total_over_every_field_kind() -> None:
         CasillaFieldKind.DRAFT: ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE,
         CasillaFieldKind.FILLER: None,
         CasillaFieldKind.HEADER: ExportSemanticPayloadAxis.PRODUCER_KEY,
+        CasillaFieldKind.PROJECTION: ExportSemanticPayloadAxis.PROJECTION_REF,
         CasillaFieldKind.CHECKSUM: None,
     }

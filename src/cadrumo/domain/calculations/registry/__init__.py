@@ -46,7 +46,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....core import FilingProducerKey
+from ....core import FilingProducerKey, FilingProjectionRef
 from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
@@ -363,7 +363,6 @@ from ._m303_prorrata_activity_projection import (
 from ._m303_regimen_simplificado_projection import (
     M303RegimenSimplificadoFieldProjection,
     M303RegimenSimplificadoRecordProjection,
-    m303_regimen_simplificado_nonnumbered_fields,
     project_m303_regimen_simplificado_rows,
 )
 from ._legal import (
@@ -855,6 +854,7 @@ __all__ = [
     "ExtractionProfileId",
     "ExtractionTargetDefinition",
     "FilingProducerKey",
+    "FilingProjectionRef",
     "FormulaDefinition",
     "FormulaExpression",
     "FormulaId",
@@ -1147,7 +1147,6 @@ __all__ = [
     "load_registry_tree",
     "m303_annual_orden_activity_anchor",
     "m303_annual_orden_table_text",
-    "m303_regimen_simplificado_nonnumbered_fields",
     "materialize_relation_binding_values",
     "modelo_202_modality_from_inputs",
     "modelo_locale_key",

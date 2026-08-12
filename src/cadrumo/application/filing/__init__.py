@@ -207,7 +207,6 @@ from ._export import (
     assert_export_artifact_matches_receipt,
     export_draft,
     export_layout_renderability_reason,
-    render_layout,
     verify_export,
 )
 from ._export_parity import did_page_required, required_applicable_casilla_ids
@@ -239,6 +238,7 @@ from ._producer_snapshot import (
     build_filing_producer_snapshot,
     resolve_m303_filing_facts,
 )
+from ._projection import FilingProjectionValue, FilingRecordRenderContext
 from ._review import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
@@ -984,6 +984,8 @@ __all__ = [
     "FilingModelProfileFacts",
     "FilingProducerSnapshot",
     "FilingProducerSnapshotError",
+    "FilingProjectionValue",
+    "FilingRecordRenderContext",
     "GeneralFilingProfileFacts",
     "JustificanteImportResult",
     "M202UnsupportedProducerId",
@@ -1027,7 +1029,6 @@ __all__ = [
     "load_default_filing_profile",
     "project_m303_exonerado_390_value_arrival",
     "refresh_review_status",
-    "render_layout",
     "required_applicable_casilla_ids",
     "resolve_m303_filing_facts",
     "summarise_calculation",

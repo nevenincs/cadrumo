@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import dev.registry as registry_facade
+from cadrumo.core import M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
 from cadrumo.domain.calculations.registry import RegistryValidationError
 from dev.registry import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
 
@@ -30,6 +31,27 @@ kind = "header"
 producer_key = "presenter.tax_id"
 legal_refs = ["orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2026"]
+
+[entries.anchor]
+sheet = "Registro tipo 1"
+source_row = 14
+source_cell = "A14"
+ordinal = 1
+record_identity = "registro-tipo-1"
+"""
+
+_PROJECTION_ENTRY = """
+[[entries]]
+export_field_id = "registro-tipo-1.prorrata-cnae"
+kind = "projection"
+legal_refs = ["orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2026"]
+
+[entries.projection_ref]
+projection_kind = "m303_prorrata_activity"
+slot = 1
+field = "cnae"
+casilla_id = "500"
 
 [entries.anchor]
 sheet = "Registro tipo 1"
@@ -107,6 +129,78 @@ def test_entry_order_uses_the_canonical_cell_before_ordinal_anchor_key(tmp_path:
     semantic_map = load_semantic_map(root)
 
     assert tuple(entry.anchor.source_cell for entry in semantic_map.entries) == ("A20", "B20")
+
+
+def test_loader_is_the_sole_projection_ref_hydration_boundary(tmp_path: Path) -> None:
+    """A persisted projection table compiles to the strict core discriminated union."""
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0001-authority.toml", _fragment(fragment_id="authority", body=_RECORD + _PROJECTION_ENTRY))
+
+    semantic_map = load_semantic_map(root)
+
+    projection_ref = semantic_map.entries[0].projection_ref
+    assert isinstance(projection_ref, M303ProrrataActivityProjectionRef)
+    assert projection_ref.projection_kind == "m303_prorrata_activity"
+    assert projection_ref.slot == 1
+    assert projection_ref.field is M303ProrrataActivityProjectionField.CNAE
+
+
+def test_loader_preserves_projection_record_occurrence_authority(tmp_path: Path) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    projection_record = _RECORD.replace(
+        'record_type = "declaracion"',
+        'record_type = "declaracion"\nrequired = false\nrepeat = "projection_rows"',
+    )
+    _write(root / "0001-record.toml", _fragment(fragment_id="record", body=projection_record + _ENTRY))
+
+    semantic_map = load_semantic_map(root)
+
+    assert semantic_map.records[0].repeat == "projection_rows"
+    assert semantic_map.records[0].required is False
+
+
+@pytest.mark.parametrize("slot_literal", ['"1"', "1.0", "true"])
+def test_loader_refuses_projection_slot_coercion(tmp_path: Path, slot_literal: str) -> None:
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    authored = (_RECORD + _PROJECTION_ENTRY).replace("slot = 1", f"slot = {slot_literal}")
+    _write(root / "0001-authority.toml", _fragment(fragment_id="authority", body=authored))
+
+    with pytest.raises(RegistryValidationError, match="projection_ref is not canonical"):
+        load_semantic_map(root)
+
+
+@pytest.mark.parametrize(
+    ("target", "replacement", "message"),
+    (
+        (
+            'projection_kind = "m303_prorrata_activity"',
+            'projection_kind = "m303_inferred_projection"',
+            "projection_ref is not canonical",
+        ),
+        (
+            "[entries.projection_ref]",
+            'projection_ref = "prorrata.slot.1.cnae"',
+            "projection_ref is not canonical",
+        ),
+    ),
+)
+def test_loader_refuses_invalid_projection_discriminants_and_string_keys(
+    tmp_path: Path,
+    target: str,
+    replacement: str,
+    message: str,
+) -> None:
+    """Projection identity is a closed typed union, never a string-key fallback."""
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    authored = (_RECORD + _PROJECTION_ENTRY).replace(target, replacement)
+    _write(root / "0001-authority.toml", _fragment(fragment_id="authority", body=authored))
+
+    with pytest.raises(RegistryValidationError, match=message):
+        load_semantic_map(root)
 
 
 def test_lexical_filename_order_determines_the_first_fragment_failure(tmp_path: Path) -> None:
@@ -291,10 +385,20 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
     imported_names_by_module = {
         node.module: {alias.name for alias in node.names}
         for node in import_from_nodes
-        if node.module in {"cadrumo.core", "cadrumo.domain.calculations.registry", "_semantic_map"}
+        if node.module
+        in {
+            "cadrumo.core",
+            "cadrumo.domain.calculations.registry",
+            "_semantic_map",
+        }
     }
     assert imported_names_by_module == {
-        "cadrumo.core": {"FilingProducerKey", "freeze_toml", "read_toml"},
+        "cadrumo.core": {
+            "FilingProducerKey",
+            "compile_filing_projection_ref",
+            "freeze_toml",
+            "read_toml",
+        },
         "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
         "_semantic_map": {"SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
@@ -313,6 +417,21 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
         "load_semantic_map",
     ]
     assert registry_facade.load_semantic_map is load_semantic_map
+    assert called_targets & {"cadrumo.core.compile_filing_projection_ref"} == {
+        "cadrumo.core.compile_filing_projection_ref",
+    }
+
+
+def test_projection_ref_hydration_cannot_spread_beyond_the_loader() -> None:
+    """Raw TOML-to-union conversion has one dev-registry caller."""
+    for module_path in (
+        Path("dev/registry/_semantic_map.py"),
+        Path("dev/registry/_semantic_map_validation.py"),
+        Path("dev/registry/_semantic_map_join.py"),
+        Path("dev/registry/_export_tree.py"),
+        Path("dev/registry/_provenance_manifest.py"),
+    ):
+        assert "compile_filing_projection_ref" not in module_path.read_text(encoding="utf-8")
 
 
 def _resolved_call_target(node: ast.expr, imported_aliases: dict[str, str]) -> str:

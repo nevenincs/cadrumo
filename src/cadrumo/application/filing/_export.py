@@ -44,6 +44,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
@@ -58,6 +59,7 @@ from ...core import (
     CasillaId,
     ExportLayoutFormat,
     FilingProducerKey,
+    FilingProjectionRef,
     Period,
     PriorDomiciliationElection,
     ProrrataEspecialTransitionKind,
@@ -75,6 +77,8 @@ from ...domain.calculations.registry import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
+    RecordId,
+    RegistrySnapshot,
     RegistryValidationError,
     export_fields_overlap,
     parse_export_payload,
@@ -108,6 +112,12 @@ from ._producer_snapshot import (
     M303InsolvencyFilingSubtype,
     Modelo111ProfileFacts,
     RefundAccountSelection,
+)
+from ._projection import (
+    FilingProjectionPlan,
+    FilingProjectionValue,
+    FilingRecordRenderContext,
+    build_m303_filing_projection_plan,
 )
 from .runtime import RegistrySchemaAccessor, build_runtime_schema_provider
 
@@ -509,19 +519,21 @@ def export_draft(
     """
     provider = schema_provider or build_runtime_schema_provider(modelos=(draft.modelo,))
     subview = provider.get_subview(draft.modelo)
+    registry_snapshot = provider.get_snapshot(draft.modelo)
     if draft.schema_version != subview.schema_version:
         raise FilingExportError("declaration export requires a draft built from the active registry snapshot")
     if draft.status is not ModeloDraftStatus.APROBADO:
         raise FilingExportError("declaration export requires an approved draft")
+    if not subview.export_layout_ids:
+        raise FilingExportError(_missing_export_layout_message(draft.modelo))
+    layout = sorted(registry_snapshot.revision.export_layouts, key=lambda item: item.id)[0]
     if draft.modelo == "303":
         validate_m303_export_applicability(
             period=draft.period,
-            schema_provider=provider,
+            registry_snapshot=registry_snapshot,
+            layout=layout,
             producer_snapshot=producer_snapshot,
         )
-    if not subview.export_layout_ids:
-        raise FilingExportError(_missing_export_layout_message(draft.modelo))
-    layout = subview.export_layouts[0]
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
     if producer_snapshot.modelo.value != draft.modelo:
         raise FilingExportValidationError("filing producer snapshot modelo does not match draft")
@@ -534,6 +546,7 @@ def export_draft(
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prior_domiciliation_election,
         schema_provider=provider,
+        registry_snapshot=registry_snapshot,
     )
     if not payload:
         raise FilingExportError(f"modelo {draft.modelo!r} export layout {layout.id!r} rendered an empty payload")
@@ -796,6 +809,7 @@ def _render_export_layout(
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     schema_provider: RegistrySchemaAccessor,
+    registry_snapshot: RegistrySnapshot,
 ) -> bytes:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         return render_xml_dictionary_layout(
@@ -807,6 +821,7 @@ def _render_export_layout(
         )
     return _render_layout(
         layout,
+        registry_snapshot=registry_snapshot,
         draft=draft,
         headers=headers,
         producer_snapshot=producer_snapshot,
@@ -817,11 +832,24 @@ def _render_export_layout(
 def _render_layout(
     layout: ExportLayoutDefinition,
     *,
+    registry_snapshot: RegistrySnapshot,
     draft: ModeloDraft,
     headers: Mapping[FilingProducerKey, object],
     producer_snapshot: FilingProducerSnapshot,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
 ) -> bytes:
+    if not any(candidate is layout for candidate in registry_snapshot.revision.export_layouts):
+        raise FilingExportValidationError("filing renderer layout is not owned by the selected registry snapshot")
+    projection_plan = (
+        build_m303_filing_projection_plan(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            producer_snapshot=producer_snapshot,
+        )
+        if draft.modelo == "303"
+        else FilingProjectionPlan(contexts=(), values=())
+    )
+    projection_values = _preflight_projection_plan(projection_plan)
     chunks: list[bytes] = []
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     binding_values: dict[tuple[BindingId, int | None], object] = {
@@ -835,7 +863,26 @@ def _render_layout(
             prior_domiciliation_election=prior_domiciliation_election,
         ):
             continue
-        for row in _record_render_rows(record, binding_values):
+        if record.repeat == "projection_rows":
+            render_rows = tuple(
+                (_RecordRenderRow(row_index=None, active_binding_ids=frozenset()), context)
+                for context in projection_plan.contexts
+                if context.record is record
+            )
+        else:
+            render_rows = tuple(
+                (
+                    row,
+                    FilingRecordRenderContext(
+                        registry_snapshot=registry_snapshot,
+                        layout=layout,
+                        record=record,
+                        occurrence=occurrence,
+                    ),
+                )
+                for occurrence, row in enumerate(_record_render_rows(record, binding_values), 1)
+            )
+        for row, context in render_rows:
             _guard_record_export(record, casilla_values=casilla_values)
             text = _render_record(
                 record,
@@ -845,6 +892,8 @@ def _render_layout(
                 casilla_values=casilla_values,
                 binding_values=binding_values,
                 row=row,
+                render_context=context,
+                projection_values=projection_values,
             )
             if record.line_ending == "crlf":
                 text += "\r\n"
@@ -852,23 +901,6 @@ def _render_layout(
                 text += "\n"
             chunks.append(text.encode(record.encoding))
     return b"".join(chunks)
-
-
-def render_layout(
-    layout: ExportLayoutDefinition,
-    *,
-    draft: ModeloDraft,
-    producer_snapshot: FilingProducerSnapshot,
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
-) -> bytes:
-    """Render a layout from one complete typed filing-producer snapshot."""
-    return _render_layout(
-        layout,
-        draft=draft,
-        headers=_filing_producer_values(producer_snapshot),
-        producer_snapshot=producer_snapshot,
-        prior_domiciliation_election=prior_domiciliation_election,
-    )
 
 
 def _record_render_rows(
@@ -904,6 +936,48 @@ def _record_render_rows(
                 ),
             )
     return tuple(rows)
+
+
+type _ProjectionAddress = tuple[RecordId, int, FilingProjectionRef]
+
+
+def _preflight_projection_plan(plan: FilingProjectionPlan) -> dict[_ProjectionAddress, object]:
+    """Prove an exact admitted/produced projection bijection before any bytes."""
+    context_addresses = tuple((context.record.id, context.occurrence) for context in plan.contexts)
+    duplicate_contexts = tuple(address for address, count in Counter(context_addresses).items() if count > 1)
+    if duplicate_contexts:
+        raise FilingExportValidationError(
+            f"filing projection plan contains duplicate record occurrences: {duplicate_contexts!r}",
+        )
+    expected_fields: dict[_ProjectionAddress, ExportFieldDefinition] = {}
+    for context in plan.contexts:
+        for field in context.record.fields:
+            if field.kind is not CasillaFieldKind.PROJECTION or field.projection_ref is None:
+                continue
+            address = (context.record.id, context.occurrence, field.projection_ref)
+            if address in expected_fields:
+                raise FilingExportValidationError(f"filing layout admits duplicate projection address {address!r}")
+            expected_fields[address] = field
+    produced_addresses = tuple((value.record_id, value.occurrence, value.projection_ref) for value in plan.values)
+    duplicate_values = tuple(address for address, count in Counter(produced_addresses).items() if count > 1)
+    if duplicate_values:
+        raise FilingExportValidationError(
+            f"filing projectors produced duplicate projection addresses: {duplicate_values!r}",
+        )
+    expected = frozenset(expected_fields)
+    actual = frozenset(produced_addresses)
+    if actual != expected:
+        missing = tuple(sorted(repr(address) for address in expected - actual))
+        extraneous = tuple(sorted(repr(address) for address in actual - expected))
+        raise FilingExportValidationError(
+            f"filing projection plan is not an exact layout bijection; missing={missing!r}, extraneous={extraneous!r}",
+        )
+    values: dict[_ProjectionAddress, object] = {
+        address: value.value for address, value in zip(produced_addresses, plan.values, strict=True)
+    }
+    for address, field in expected_fields.items():
+        _format_field(field, values[address])
+    return values
 
 
 def _record_binding_fields(record: ExportRecordDefinition) -> tuple[ExportFieldDefinition, ...]:
@@ -960,6 +1034,8 @@ def _render_record(
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row: _RecordRenderRow,
+    render_context: FilingRecordRenderContext,
+    projection_values: Mapping[_ProjectionAddress, object],
 ) -> str:
     positioned = all(field.offset is not None for field in record.fields)
     if not positioned:
@@ -972,6 +1048,8 @@ def _render_record(
                 casilla_values=casilla_values,
                 binding_values=binding_values,
                 row_index=row.row_index,
+                render_context=render_context,
+                projection_values=projection_values,
             )
             for field in record.fields
             if _field_is_active_for_row(field, row)
@@ -991,6 +1069,8 @@ def _render_record(
             casilla_values=casilla_values,
             binding_values=binding_values,
             row_index=row.row_index,
+            render_context=render_context,
+            projection_values=projection_values,
         )
         start = field.offset - 1
         end = start + len(rendered)
@@ -1017,6 +1097,8 @@ def _render_field(
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
+    render_context: FilingRecordRenderContext,
+    projection_values: Mapping[_ProjectionAddress, object],
 ) -> str:
     if field.length is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare length")
@@ -1028,6 +1110,8 @@ def _render_field(
         casilla_values=casilla_values,
         binding_values=binding_values,
         row_index=row_index,
+        render_context=render_context,
+        projection_values=projection_values,
     )
     return _format_field(field, raw)
 
@@ -1041,6 +1125,8 @@ def _field_value(
     casilla_values: dict[CasillaId, object],
     binding_values: dict[tuple[BindingId, int | None], object],
     row_index: int | None,
+    render_context: FilingRecordRenderContext,
+    projection_values: Mapping[_ProjectionAddress, object],
 ) -> object:
     match field.kind:
         case CasillaFieldKind.LITERAL:
@@ -1053,6 +1139,8 @@ def _field_value(
             return _binding_field_value(field, binding_values, row_index)
         case CasillaFieldKind.HEADER:
             return _header_field_value(field, headers)
+        case CasillaFieldKind.PROJECTION:
+            return _projection_field_value(field, render_context, projection_values)
         case CasillaFieldKind.DRAFT:
             return _draft_value(field, draft)
         case CasillaFieldKind.COMPUTED:
@@ -1075,6 +1163,20 @@ def _binding_field_value(
     if field.binding is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
     return binding_values.get((field.binding, row_index))
+
+
+def _projection_field_value(
+    field: ExportFieldDefinition,
+    context: FilingRecordRenderContext,
+    values: Mapping[_ProjectionAddress, object],
+) -> object:
+    if field.projection_ref is None:
+        raise FilingExportValidationError(f"export field {field.id!r} must declare projection_ref")
+    address = (context.record.id, context.occurrence, field.projection_ref)
+    try:
+        return values[address]
+    except KeyError as exc:
+        raise FilingExportValidationError(f"export projection address {address!r} has no preflighted value") from exc
 
 
 def _header_field_value(field: ExportFieldDefinition, headers: Mapping[FilingProducerKey, object]) -> object:
@@ -1273,8 +1375,9 @@ __all__ = [
     "DeclaracionExportResult",
     "DeclaracionVerifyResult",
     "DeclaracionVerifyVerdict",
+    "FilingProjectionValue",
+    "FilingRecordRenderContext",
     "assert_export_artifact_matches_receipt",
     "export_draft",
-    "render_layout",
     "verify_export",
 ]

@@ -15,6 +15,8 @@ from .....application.aggregation._iva_ledger import IvaLedgerProrrataApportionm
 from .....core import (
     IvaDeductionEvidenceAuthority,
     IvaDeductionFactKind,
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
@@ -61,6 +63,19 @@ _DESIGNS = (
 def _revision():
     modelo, catalogues = _committed_modelo("303")
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="4T").revision
+
+
+def _projection_refs() -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:
+    return tuple(
+        M303DifferentiatedDeductionProjectionRef(
+            projection_kind="m303_differentiated_deduction",
+            slot=slot,
+            field=field,
+            casilla_id=str(700 + (slot - 1) * 18 + field_index),
+        )
+        for slot in range(1, 3)
+        for field_index, field in enumerate(M303DifferentiatedDeductionProjectionField)
+    )
 
 
 def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
@@ -197,7 +212,7 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
         ),
     )
     projection = project_m303_differentiated_deduction_rows(
-        _revision(),
+        projection_refs=_projection_refs(),
         register=_register(),
         ejercicio=2025,
         contributions=_contributions(),
@@ -207,7 +222,7 @@ def test_apportioned_contributions_and_regularisation_project_once() -> None:
         (1, "a", Decimal("80")),
         (2, "b", Decimal("60")),
     )
-    assert tuple(str(item.casilla_id) for row in projection for item in row.endpoints) == tuple(
+    assert tuple(str(item.projection_ref.casilla_id) for row in projection for item in row.endpoints) == tuple(
         str(number) for number in range(700, 736)
     )
     assert projection[0].endpoints[-2].value == Decimal("5")
@@ -220,11 +235,14 @@ def test_projection_refuses_incomplete_or_double_consumed_sources() -> None:
     contributions = _contributions()
     with pytest.raises(RegistryValidationError, match="incomplete apportioned source"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=contributions[:-1]
+            projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions[:-1]
         )
     with pytest.raises(RegistryValidationError, match="double-consumed"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=(*contributions, contributions[0])
+            projection_refs=_projection_refs(),
+            register=_register(),
+            ejercicio=2025,
+            contributions=(*contributions, contributions[0]),
         )
 
 
@@ -309,7 +327,7 @@ def test_projector_refuses_reused_source_ledger_across_kinds() -> None:
     contributions[1] = contributions[1].model_copy(update={"source_ledger_ids": contributions[0].source_ledger_ids})
     with pytest.raises(RegistryValidationError, match="source ledgers are double-consumed"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=contributions
+            projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions
         )
 
 
@@ -320,7 +338,7 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
     )
     with pytest.raises(RegistryValidationError, match="cannot enter the ordinary deduction contribution channel"):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=_register(), ejercicio=2025, contributions=contributions
+            projection_refs=_projection_refs(), register=_register(), ejercicio=2025, contributions=contributions
         )
 
 
@@ -347,7 +365,7 @@ def test_projector_refuses_inactive_or_percentage_less_active_sector(
     register = _register().model_copy(update={"entries": (entry, _register().entry_for(2025, sector_id="b"))})
     with pytest.raises(RegistryValidationError, match=message):
         project_m303_differentiated_deduction_rows(
-            _revision(), register=register, ejercicio=2025, contributions=_contributions()
+            projection_refs=_projection_refs(), register=register, ejercicio=2025, contributions=_contributions()
         )
 
 
@@ -371,7 +389,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
     )
     with pytest.raises(RegistryValidationError, match="no canonical asset row"):
         project_m303_differentiated_deduction_rows(
-            _revision(),
+            projection_refs=_projection_refs(),
             register=_register(),
             ejercicio=2025,
             contributions=_contributions(),
@@ -390,7 +408,7 @@ def test_projector_refuses_unlinked_and_duplicate_regularisation_assets() -> Non
     )
     with pytest.raises(RegistryValidationError, match="double-consumed"):
         project_m303_differentiated_deduction_rows(
-            _revision(),
+            projection_refs=_projection_refs(),
             register=_register(),
             ejercicio=2025,
             contributions=_contributions(),
@@ -419,7 +437,7 @@ def test_projector_refuses_regularisation_asset_sector_mismatch() -> None:
     )
     with pytest.raises(RegistryValidationError, match="asset and contribution sectors differ"):
         project_m303_differentiated_deduction_rows(
-            _revision(),
+            projection_refs=_projection_refs(),
             register=_register(),
             ejercicio=2025,
             contributions=_contributions(),

@@ -28,6 +28,7 @@ class CasillaFieldKind(StrEnum):
         DRAFT: Field is drawn from a draft attribute via ``draft_attribute``.
         FILLER: Field is a fixed-width pad with no semantic value.
         HEADER: Field emits a filing fact selected by canonical ``producer_key``.
+        PROJECTION: Field resolves one typed repeated-row ``projection_ref``.
         CHECKSUM: Field carries a record-level checksum.
     """
 
@@ -38,6 +39,7 @@ class CasillaFieldKind(StrEnum):
     DRAFT = "draft"
     FILLER = "filler"
     HEADER = "header"
+    PROJECTION = "projection"
     CHECKSUM = "checksum"
 
 

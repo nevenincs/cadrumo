@@ -7,13 +7,19 @@ import inspect
 from dataclasses import replace
 from pathlib import Path
 from shutil import copy2
+from typing import TypedDict
 
 import pytest
 
-from cadrumo.core import FilingProducerKey
+from cadrumo.core import FilingProducerKey, M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
+    CasillaFieldKind,
     ExportEncoding,
+    ExportFieldDefinition,
+    ExportLayoutDefinition,
+    ExportRecordDefinition,
+    ExportValuePolicy,
     RegistryError,
     RegistryValidationError,
     bundled_authority,
@@ -263,7 +269,7 @@ def _blank_integer_profile() -> RenderProfile:
                     anchor=anchor,
                     aeat_type="Num",
                     semantic_kind="integer",
-                    value_policy="unsigned-integer",
+                    value_policy=ExportValuePolicy.UNSIGNED_INTEGER,
                     integer_digits=4,
                     decimal_digits=0,
                     sign_policy="unsigned",
@@ -795,6 +801,84 @@ def test_renderer_writes_stable_complete_tree_that_real_directory_loader_merges(
     assert layout == first.layout
 
 
+@pytest.mark.parametrize("required", [False, True])
+def test_renderer_carries_semantic_projection_occurrence_authority_into_generated_record(
+    _m200_snapshot,
+    tmp_path,
+    required: bool,
+) -> None:
+    semantic_map = _semantic_map()
+    projection_entry = semantic_map.entries[-1].model_copy(
+        update={
+            "kind": CasillaFieldKind.PROJECTION,
+            "producer_key": None,
+            "projection_ref": M303ProrrataActivityProjectionRef(
+                projection_kind="m303_prorrata_activity",
+                slot=1,
+                field=M303ProrrataActivityProjectionField.CNAE,
+                casilla_id="500",
+            ),
+        },
+    )
+    records = tuple(
+        record.model_copy(update={"repeat": "projection_rows", "required": required}) if index == 1 else record
+        for index, record in enumerate(semantic_map.records)
+    )
+    semantic_map = semantic_map.model_copy(
+        update={"records": records, "entries": (*semantic_map.entries[:-1], projection_entry)},
+    )
+    admission_layout = ExportLayoutDefinition(
+        id="projection-admission-probe",
+        format="fixed_width",
+        records=(
+            ExportRecordDefinition(
+                id="projection-admission-record",
+                record_type="detalle",
+                order=1,
+                encoding="latin-1",
+                line_ending="none",
+                repeat="projection_rows",
+                fields=(
+                    ExportFieldDefinition(
+                        id="projection-admission-field",
+                        offset=1,
+                        length=4,
+                        kind=CasillaFieldKind.PROJECTION,
+                        projection_ref=projection_entry.projection_ref,
+                        data_type="text",
+                        required=True,
+                        padding="right_space",
+                        justification="left",
+                        signed=False,
+                        legal_refs=("ley-27-2014:art-40",),
+                        source_refs=("aeat-dr-200-2025",),
+                    ),
+                ),
+            ),
+        ),
+        legal_refs=("ley-27-2014:art-40",),
+        source_refs=("aeat-dr-200-2025",),
+    )
+    revision = _m200_snapshot.revision.model_copy(
+        update={"export_layouts": (*_m200_snapshot.revision.export_layouts, admission_layout)},
+    )
+    snapshot = _m200_snapshot.model_copy(update={"revision": revision})
+    joined = join_record_design_semantics(semantic_map, _intermediate(), snapshot)
+
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id="2025",
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=_profile(),
+        render_profile=_wire_profile(),
+        render_profile_source_evidence=_wire_evidence(),
+    )
+
+    assert rendered.layout.records[1].repeat == "projection_rows"
+    assert rendered.layout.records[1].required is required
+
+
 def test_renderer_manifest_refuses_file_tampering_derivation_drift_and_partial_field_evidence(
     _m200_snapshot,
     tmp_path,
@@ -1025,6 +1109,13 @@ def test_renderer_resolves_one_blank_numeric_field_only_through_its_exact_profil
     assert rendered.provenance_manifest.render_profile_sha256 != "0" * 64
 
 
+class _IntermediateKwargs(TypedDict, total=False):
+    first_record_declared_total: int | None
+    first_field_offset: int
+    second_field_offset: int
+    numeric_content: str | None
+
+
 @pytest.mark.parametrize(
     ("intermediate_kwargs", "error"),
     (
@@ -1038,7 +1129,7 @@ def test_renderer_resolves_one_blank_numeric_field_only_through_its_exact_profil
 def test_renderer_refuses_missing_or_noncontiguous_official_record_geometry(
     _m200_snapshot,
     tmp_path,
-    intermediate_kwargs: dict[str, int | None],
+    intermediate_kwargs: _IntermediateKwargs,
     error: str,
 ) -> None:
     """No inferred total, first position, gap, overlap, or terminal extent may be emitted."""

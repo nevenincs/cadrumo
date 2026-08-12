@@ -45,6 +45,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field
@@ -72,6 +73,7 @@ from ...domain.calculations.registry import (
     RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
+    RevisionId,
     SourceReference,
     SourceRefId,
     ValidatedRegistryAuthority,
@@ -86,7 +88,6 @@ from ...domain.calculations.registry import (
     clear_fingerprint_cache as _clear_loader_fingerprint_cache,
 )
 from ...domain.filing import CasillaCollection, CasillaSchema, ModeloBuilderError, registry_schema_version
-from ...domain.calculations.registry import RevisionId
 
 
 def _empty_source_references() -> dict[SourceRefId, SourceReference]:
@@ -300,10 +301,44 @@ class RegistrySchemaAccessor:
     port.
     """
 
-    collections: dict[str, RegistryCasillaCollection]
-    subviews: dict[str, RegistryModeloSubview]
+    collections: Mapping[str, RegistryCasillaCollection]
+    subviews: Mapping[str, RegistryModeloSubview]
+    snapshots: Mapping[str, RegistrySnapshot]
     source_root: Path | None = None
     sources: Mapping[SourceRefId, SourceReference] = field(default_factory=_empty_source_references)
+
+    def __post_init__(self) -> None:
+        """Retain one immutable, internally consistent snapshot selection."""
+        snapshot_ids = frozenset(self.snapshots)
+        if not snapshot_ids:
+            raise ModeloBuilderError(
+                "runtime registry accessor requires at least one exact registry snapshot",
+                translated_message="application.filing.runtime.errors.registry_empty",
+                context={"reason": "snapshot-free-accessor"},
+            )
+        if frozenset(self.collections) != snapshot_ids or frozenset(self.subviews) != snapshot_ids:
+            raise ModeloBuilderError(
+                "runtime registry accessor collections, subviews, and snapshots must address the same modelos",
+                translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
+                context={"modelos": ", ".join(sorted(snapshot_ids))},
+            )
+        for modelo_id, snapshot in self.snapshots.items():
+            subview = self.subviews[modelo_id]
+            collection = self.collections[modelo_id]
+            if (
+                snapshot.modelo.id != modelo_id
+                or snapshot.revision.id != subview.revision_id
+                or collection.schema_version != subview.schema_version
+            ):
+                raise ModeloBuilderError(
+                    f"runtime registry accessor has inconsistent snapshot authority for modelo {modelo_id!r}",
+                    translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
+                    context={"modelo": modelo_id},
+                )
+        object.__setattr__(self, "collections", MappingProxyType(dict(self.collections)))
+        object.__setattr__(self, "subviews", MappingProxyType(dict(self.subviews)))
+        object.__setattr__(self, "snapshots", MappingProxyType(dict(self.snapshots)))
+        object.__setattr__(self, "sources", MappingProxyType(dict(self.sources)))
 
     def get_collection(self, modelo: str) -> CasillaCollection:
         """Return the casilla collection for ``modelo``.
@@ -328,6 +363,17 @@ class RegistrySchemaAccessor:
         except KeyError as exc:
             raise ModeloBuilderError(
                 f"modelo {modelo!r} is not present in the calculation registry",
+                translated_message="application.filing.runtime.errors.modelo_not_in_registry",
+                context={"modelo": modelo},
+            ) from exc
+
+    def get_snapshot(self, modelo: str) -> RegistrySnapshot:
+        """Return the exact immutable registry snapshot selected for ``modelo``."""
+        try:
+            return self.snapshots[modelo]
+        except KeyError as exc:
+            raise ModeloBuilderError(
+                f"modelo {modelo!r} has no retained registry snapshot",
                 translated_message="application.filing.runtime.errors.modelo_not_in_registry",
                 context={"modelo": modelo},
             ) from exc
@@ -500,6 +546,7 @@ def _build_runtime_schema_provider_cached(
     return RegistrySchemaAccessor(
         collections={modelo_id: collection_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
         subviews={modelo_id: _subview_from_snapshot(snapshot) for modelo_id, snapshot in snapshots.items()},
+        snapshots=snapshots,
         source_root=resolved_source_root,
         sources=dict(authority.catalogues.sources),
     )

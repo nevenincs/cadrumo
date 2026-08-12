@@ -63,16 +63,16 @@ __all__ = [
 ]
 
 
-EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 2
+EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 3
 """Current wire schema for the internal non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 3
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 4
 """Current generator contract recorded by every provenance manifest."""
 
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 3
+_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 4
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
@@ -81,7 +81,7 @@ _LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.jso
 
 _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "records", "entries"})
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
-    {"sheet", "record_identity", "export_record_id", "record_type"},
+    {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat"},
 )
 _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
     {
@@ -92,6 +92,7 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "binding",
         "literal",
         "producer_key",
+        "projection_ref",
         "draft_attribute",
         "computed_key",
         "legal_refs",
@@ -140,6 +141,7 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "binding",
         "literal",
         "producer_key",
+        "projection_ref",
         "draft_attribute",
         "computed_key",
         "data_type",
@@ -255,6 +257,7 @@ class ExportFieldDerivation(_StrictModel):
             "binding",
             "literal",
             "producer_key",
+            "projection_ref",
             "draft_attribute",
             "computed_key",
             "legal_refs",
@@ -771,6 +774,7 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         "binding": payload["binding"],
         "literal": payload["literal"],
         "producer_key": payload["producer_key"],
+        "projection_ref": payload["projection_ref"],
         "draft_attribute": payload["draft_attribute"],
         "computed_key": payload["computed_key"],
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="semantic-map legal_refs"),
@@ -804,15 +808,18 @@ def _normalise_semantic_map_record(payload: Mapping[str, object]) -> dict[str, o
             subject="semantic-map record export_record_id",
         ),
         "record_type": _as_string(payload["record_type"], subject="semantic-map record record_type"),
+        "required": _as_bool(payload["required"], subject="semantic-map record required"),
+        "repeat": _as_optional_string(payload["repeat"], subject="semantic-map record repeat"),
     }
 
 
-def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str]:
+def _semantic_record_sort_key(payload: Mapping[str, object]) -> tuple[str, str, str, str, str]:
     return (
         _as_string(payload["sheet"], subject="semantic-map record sheet"),
         _as_string(payload["record_identity"], subject="semantic-map record record_identity"),
         _as_string(payload["export_record_id"], subject="semantic-map record export_record_id"),
         _as_string(payload["record_type"], subject="semantic-map record record_type"),
+        _as_optional_string(payload["repeat"], subject="semantic-map record repeat") or "",
     )
 
 
@@ -860,6 +867,7 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
         "binding": payload["binding"],
         "literal": payload["literal"],
         "producer_key": payload["producer_key"],
+        "projection_ref": payload["projection_ref"],
         "draft_attribute": payload["draft_attribute"],
         "computed_key": payload["computed_key"],
         "data_type": payload["data_type"],
@@ -941,6 +949,18 @@ def _sorted_strings(value: object, *, subject: str) -> list[str]:
 def _as_string(value: object, *, subject: str) -> str:
     if not isinstance(value, str):
         raise RegistryValidationError(f"{subject} schema drift: expected string")
+    return value
+
+
+def _as_optional_string(value: object, *, subject: str) -> str | None:
+    if value is None:
+        return None
+    return _as_string(value, subject=subject)
+
+
+def _as_bool(value: object, *, subject: str) -> bool:
+    if type(value) is not bool:
+        raise RegistryValidationError(f"{subject} schema drift: expected boolean")
     return value
 
 

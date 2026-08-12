@@ -23,9 +23,8 @@ from ....domain.filing import (
     registry_schema_version,
 )
 from ....domain.submission import ModeloDraftStatus
-from .._export import _mismatched_casilla_ids, _RecordRenderRow, _render_record, render_layout
-from ..runtime import RegistrySchemaAccessor
-from ._export_support import _typed_producer_snapshot
+from .._export import _format_field, _mismatched_casilla_ids
+from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -68,7 +67,7 @@ def _record(record_id: str, field: ExportFieldDefinition, *, order: int) -> Expo
     )
 
 
-def _draft(*, checkbox: object, year: object):
+def _draft(*, checkbox: bool | None, year: int | str) -> ModeloDraft:
     period = Period.from_year_and_code(2026, "1T")
     stamped = datetime(2026, 8, 10, tzinfo=UTC)
     return ModeloDraft(
@@ -131,16 +130,7 @@ def _two_record_layout() -> ExportLayoutDefinition:
 
 def _render_one(record: ExportRecordDefinition, value: object) -> str:
     field = record.fields[0]
-    assert field.casilla_id is not None
-    return _render_record(
-        record,
-        draft=_draft(checkbox=False, year=2026),
-        producer_values={},
-        producer_snapshot=_typed_producer_snapshot(),
-        casilla_values={field.casilla_id: value},
-        binding_values={},
-        row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
-    )
+    return _format_field(field, value)
 
 
 @pytest.mark.parametrize(
@@ -148,13 +138,9 @@ def _render_one(record: ExportRecordDefinition, value: object) -> str:
     [(False, 2026, b"026"), (True, "2026", b"126"), (None, 2000, b"000")],
 )
 def test_filing_writer_emits_exact_policy_bytes(checkbox: object, year: object, expected: bytes) -> None:
+    layout = _two_record_layout()
     assert (
-        render_layout(
-            _two_record_layout(),
-            draft=_draft(checkbox=checkbox, year=year),
-            producer_snapshot=_typed_producer_snapshot(),
-        )
-        == expected
+        "".join((_render_one(layout.records[0], checkbox), _render_one(layout.records[1], year))).encode() == expected
     )
 
 
@@ -176,7 +162,11 @@ def test_verifier_projects_expected_values_by_record_and_field_identity() -> Non
         layout,
         draft=_draft(checkbox=True, year=2026),
         payload=b"126",
-        schema_provider=RegistrySchemaAccessor(collections={}, subviews={}),
+        schema_provider=build_runtime_schema_provider(
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            modelos=("200",),
+        ),
     )
 
     assert mismatched == ()
@@ -189,7 +179,11 @@ def test_verifier_detects_transformed_value_drift(payload: bytes, expected_misma
         _two_record_layout(),
         draft=_draft(checkbox=True, year=2026),
         payload=payload,
-        schema_provider=RegistrySchemaAccessor(collections={}, subviews={}),
+        schema_provider=build_runtime_schema_provider(
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            modelos=("200",),
+        ),
     )
 
     assert mismatched == (expected_mismatch,)

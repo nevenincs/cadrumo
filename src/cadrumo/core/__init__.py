@@ -144,6 +144,24 @@ from ._field_origin import FieldOrigin
 from ._field_role import FieldRole
 from ._filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ._filing_producer_key import FilingProducerKey
+from ._filing_projection_ref import (
+    FilingProjectionRef,
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    M303RegimenSimplificadoActivityField,
+    M303RegimenSimplificadoActivityProjectionRef,
+    M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFactProjectionRef,
+    M303RegimenSimplificadoModuleProjectionRef,
+    M303RegimenSimplificadoModuleValue,
+    compile_filing_projection_ref,
+    filing_projection_ref_casilla_id,
+)
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
 from ._hardware import (
@@ -511,6 +529,7 @@ __all__: list[str] = [
     "FiledHistoryDiscoverySignal",
     "FilingPeriodCode",
     "FilingProducerKey",
+    "FilingProjectionRef",
     "FindingResolutionAction",
     "FingerprintParticipation",
     "ForeignAssetObligationGroup",
@@ -532,6 +551,19 @@ __all__: list[str] = [
     "LinkInconsistencyDirection",
     "M210GrossIncomeSourceMode",
     "M210PayerMode",
+    "M303DifferentiatedDeductionProjectionField",
+    "M303DifferentiatedDeductionProjectionRef",
+    "M303Exonerado390ActivityField",
+    "M303Exonerado390ActivityProjectionRef",
+    "M303Exonerado390OperacionesTercerosProjectionRef",
+    "M303ProrrataActivityProjectionField",
+    "M303ProrrataActivityProjectionRef",
+    "M303RegimenSimplificadoActivityField",
+    "M303RegimenSimplificadoActivityProjectionRef",
+    "M303RegimenSimplificadoCohort",
+    "M303RegimenSimplificadoFactProjectionRef",
+    "M303RegimenSimplificadoModuleProjectionRef",
+    "M303RegimenSimplificadoModuleValue",
     "ManualCorpusTextSidecar",
     "MetodoValoracion",
     "MissingOptionalExtraError",
@@ -611,6 +643,7 @@ __all__: list[str] = [
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
     "clear_pointer",
+    "compile_filing_projection_ref",
     "default_model_runtime_id",
     "derive_result_disposition",
     "detect_image_media_type",
@@ -619,6 +652,7 @@ __all__: list[str] = [
     "exclusive_file_lock",
     "expected_floor",
     "extract_orden_anual_iva_tables",
+    "filing_projection_ref_casilla_id",
     "fold_diacritics",
     "fold_printed_phrase",
     "foreign_asset_obligation_group",
