@@ -108,3 +108,59 @@ def test_advisory_fires_once_per_divergent_administrador_row() -> None:
     assert len(diagnostics) == 2
     flagged = {d.message.split("perceptor ")[1].split(" ")[0].strip("'") for d in diagnostics}
     assert flagged == {"11111111H", "33333333P"}
+
+
+# -- the grounding the advisory asserts must come from the registry ---------
+#
+# These advisories name statutory provisions -- LIRPF art. 101.2, RIRPF arts. 80
+# and 95 -- and named them only in prose. The diagnostic's own legal_refs field
+# states the contract they were breaking: populated by READING the grounding off
+# the registry definitions the advisory already resolved, never by restating an
+# article in this layer.
+#
+# The distinction is not stylistic. Retencion rates ARE registry data resolved
+# per filing year, so an advisory stating those provisions from a Python literal
+# asserts law the registry cannot confirm it still says -- and prose in a message
+# is not a field a machine consumer can route on.
+
+
+def test_the_art95_grounding_is_read_from_the_registry_parameters() -> None:
+    """The refs come from the parameters the rate set is loaded from."""
+    from .._retencion_rate_advisory import _art95_refs
+
+    assert _art95_refs() == ("rd-439-2007:art-95",)
+
+
+def test_the_administrador_grounding_is_read_from_its_treatment() -> None:
+    """Both provisions the message names arrive as refs, not just as prose."""
+    from ....core.aggregation import RetencionScheme, work_income_retencion_treatment
+
+    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
+
+    assert treatment is not None
+    assert set(treatment.legal_refs) == {"ley-35-2006:art-101", "rd-439-2007:art-80"}
+
+
+def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
+    """The claim is only worth carrying if the registry can corroborate it.
+
+    An advisory citing a reference the catalogue does not define would assert a
+    provision nothing can confirm -- which is the failure this row exists to
+    close, one indirection further along.
+    """
+    from ....core.aggregation import RetencionScheme, work_income_retencion_treatment
+    from ....core.resources import bundled_path
+    from .._retencion_rate_advisory import _art95_refs
+
+    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
+    assert treatment is not None
+
+    # Through the shipped resolver rather than a hand-counted relative path,
+    # which is off by one the moment this file moves.
+    legal_root = bundled_path("registry", "aeat") / "legal"
+    declared = "".join(path.read_text(encoding="utf-8") for path in legal_root.glob("*.toml"))
+
+    for reference in (*_art95_refs(), *treatment.legal_refs):
+        assert f'[legal."{reference}"]' in declared, (
+            f"{reference} is cited by an advisory but not defined in the legal catalogue"
+        )

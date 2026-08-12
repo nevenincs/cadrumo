@@ -90,6 +90,40 @@ _GANADERA_ENGORDE_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-gan
 _FORESTAL_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-forestales"
 _ESTIMACION_OBJETIVA_PARAM_ID: Final[str] = "rirpf-art-95:retencion-actividades-estimacion-objetiva"
 
+#: Every art. 95 parameter this module resolves, in apartado order.
+#:
+#: Declared once so the rate loader and the grounding lookup below cannot drift:
+#: a parameter added to one and not the other would produce a rate set whose
+#: refs do not cover it.
+_ART95_PARAMETER_IDS: Final[tuple[str, ...]] = (
+    _GENERAL_PARAM_ID,
+    _INICIO_PARAM_ID,
+    _AGRICOLA_GANADERA_PARAM_ID,
+    _GANADERA_ENGORDE_PARAM_ID,
+    _FORESTAL_PARAM_ID,
+    _ESTIMACION_OBJETIVA_PARAM_ID,
+)
+
+
+def _legal_refs_of(parameter_id: str) -> tuple[str, ...]:
+    """Return one registry parameter's declared legal references.
+
+    Deferred import for the reason the rate loader states: the registry import
+    path reaches back into the domain packages this module belongs to.
+    """
+    from ..calculations.registry import RegistryError, load_legal_parameters_only
+
+    try:
+        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
+    except RegistryError:
+        # The grounding is a disclosure rather than a calculation input, so a
+        # registry that cannot load costs the refs and not the advisory: an
+        # operator told nothing at all about a suspect retencion is worse off
+        # than one told without the article.
+        return ()
+    parameter = parameters.get(parameter_id)
+    return tuple(getattr(parameter, "legal_refs", ()) or ())
+
 
 @lru_cache(maxsize=1)
 def load_retencion_actividades_rates() -> RirpfArt95RetencionRates:
@@ -122,6 +156,26 @@ def load_retencion_actividades_rates() -> RirpfArt95RetencionRates:
         forestal_rate=_decimal_parameter(parameters, _FORESTAL_PARAM_ID),
         estimacion_objetiva_rate=_decimal_parameter(parameters, _ESTIMACION_OBJETIVA_PARAM_ID),
     )
+
+
+def rirpf_art95_retencion_legal_refs() -> tuple[str, ...]:
+    """Return the registry legal references grounding the art. 95 rate set.
+
+    Read off the parameters this module already resolves rather than restated
+    here, which is the whole point: an advisory that names an article from a
+    Python literal asserts law the registry cannot confirm it still says, while
+    one carrying the parameter's own refs moves with the registry.
+
+    Returns:
+        The distinct reference ids, in first-seen order so the sequence is
+        stable for an operator comparing two runs.
+    """
+    seen: list[str] = []
+    for parameter_id in _ART95_PARAMETER_IDS:
+        for reference in _legal_refs_of(parameter_id):
+            if reference not in seen:
+                seen.append(reference)
+    return tuple(seen)
 
 
 def statutory_activity_retencion_rates() -> frozenset[Decimal]:

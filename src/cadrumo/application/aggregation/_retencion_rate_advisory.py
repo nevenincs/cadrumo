@@ -118,6 +118,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from decimal import Decimal
 from enum import Enum, auto
+from functools import cache
 from typing import Final
 
 from ...core.aggregation import (
@@ -126,8 +127,10 @@ from ...core.aggregation import (
     work_income_retencion_treatment,
 )
 from ...core.money import CENT
+from ...domain.calculations.registry import LegalRefId
 from ...domain.transactions import (
     professional_activity_retencion_rates,
+    rirpf_art95_retencion_legal_refs,
     statutory_activity_retencion_rates,
 )
 from ._renta_income_ledger import RentaIncomeObservation
@@ -195,6 +198,18 @@ def _conforms_to_fixed_rate(base: Decimal, amount: Decimal, rate: Decimal) -> bo
     return abs(amount - expected) <= CENT
 
 
+
+@cache
+def _art95_refs() -> tuple[LegalRefId, ...]:
+    """Return the art. 95 grounding, resolved once per process.
+
+    Cached because every diagnostic in this module cites the same set, and the
+    grounding is read from the registry: re-resolving it per observation would
+    make a disclosure cost a registry load on a path that runs per row.
+    """
+    return tuple(rirpf_art95_retencion_legal_refs())
+
+
 def administrador_retencion_rate_advisory_observations(
     observations: Iterable[RetencionObservation],
 ) -> tuple[CalculationSourceDiagnostic, ...]:
@@ -245,6 +260,12 @@ def administrador_retencion_rate_advisory_observations(
                     f"rate of {general_rate} nor the reduced {reduced_rate} for entities with net "
                     f"turnover below 100.000 EUR; confirm the applied withholding rate before filing."
                 ),
+                # Read off the treatment this advisory already resolved rather
+                # than restated here. The message names the article for a human;
+                # this is the field a machine consumer routes on, and it moves
+                # with the registry instead of asserting what the law says from
+                # a literal in this layer.
+                legal_refs=tuple(treatment.legal_refs),
             ),
         )
     return tuple(diagnostics)
@@ -447,6 +468,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
                         matched=", ".join(str(rate) for rate in sorted(matched)),
                         sectoral_hint=sectoral_hint,
                     ),
+                    legal_refs=_art95_refs(),
                     remedy=(
                         "Confirm with the payer whether this was retención or a fee, then record "
                         "the true figure with 'aeat app ledger classify <transaction-id>'."
@@ -466,6 +488,7 @@ def inferred_actividad_retencion_rate_advisory_observations(
                     f"shortfall may be a bank fee, a discount, or a disputed amount rather than tax "
                     f"withheld on your behalf."
                 ),
+                legal_refs=_art95_refs(),
                 remedy=(
                     "Claiming a pago a cuenta nobody withheld over-declares it. Confirm the shortfall "
                     "with the payer, then record the true figure with 'aeat app ledger classify "
