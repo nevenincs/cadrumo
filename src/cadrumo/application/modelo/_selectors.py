@@ -314,7 +314,10 @@ def resolve_modelo_work_bucket(request: ModeloWorkSelectorRequest) -> str:
         return request.bucket_id
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
-        raise ModeloWorkNoActiveBucketError("modelo work selector requires an active profile bucket")
+        raise ModeloWorkNoActiveBucketError(
+            translated_message="errors.refused.modelo_work_selector_no_active_bucket",
+            context={"active_bucket_present": False},
+        )
     return active_bucket_id
 
 
@@ -333,7 +336,10 @@ def natural_target_work_units(
     guarded mutations must reach their canonical terminal verdict.
     """
     if not request.has_visible_target:
-        raise ModeloWorkSelectorContradictionError("modelo, filing_year, and period are required for natural lookup")
+        raise ModeloWorkSelectorContradictionError(
+            translated_message="errors.refused.modelo_work_selector_contradiction",
+            context={"has_visible_target": False},
+        )
     bucket_id = resolve_modelo_work_bucket(request)
     catalogue = (repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)).load()
     modelo = request.modelo
@@ -521,7 +527,10 @@ def select_modelo_calculation_revision(
     revisions = _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
     if selector is ModeloCalculationRevisionSelector.EXPLICIT:
         if calculation_revision_id is None:
-            raise ModeloCalculationRevisionSelectorNotFoundError("explicit revision selection requires an id")
+            raise ModeloCalculationRevisionSelectorNotFoundError(
+                translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+                context={"selection": "explicit", "calculation_revision_id_present": False},
+            )
         revision = _explicit_revision_for_work_unit(
             work_unit=work_unit,
             calculation_revision_id=calculation_revision_id,
@@ -686,7 +695,10 @@ def select_exportable_revision(
         raise ModeloCalculationRevisionSelectorAmbiguousError(
             tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
         )
-    raise ModeloCalculationRevisionSelectorNotFoundError("no exportable verified or filed revision exists")
+    raise ModeloCalculationRevisionSelectorNotFoundError(
+        translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+        context={"selection": "exportable", "exportable_revision_present": False},
+    )
 
 
 def _revisions_for_work_unit(
