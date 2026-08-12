@@ -5,14 +5,11 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f4e1694a0bac398cc9417edfbcbac3f5be5fee0a5f7b5d112dc0395a07145f93'
+body_hash: 'sha256:31343c8b19fc65b92522a66557907656519765d9ed669361d5159971bc2d25af'
 step_id: 'S30'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
 ---
-
-
-
 
 # delete the application verification package, its tests and the registry application-links consumer rows in one commit, absorbing any missing semantics into reconcile first
 
@@ -33,7 +30,7 @@ related:
 
 - The standalone application verification package is absent and cannot be imported. Its seven source/test files, four generated API stubs, 83 consumer rows, and 85 construct references are deleted.
 - `aeat app registry verify` succeeds against all 73 modelos and 94 revisions. The resulting 565 application links expose no `verification` application surface while all 82 verification expectations remain validated registry facts.
-- The structural deletion gate passes three tests; the directly affected registry selection passes 162 tests and the surviving reconciliation selection passes 53 tests.
+- The structural deletion gate passes three tests; the directly affected registry selection passes 162 tests, the surviving reconciliation selection passes 53 tests, and the final deletion/import baseline selection passes 14 tests.
 - Path-scoped Ruff format/check and BasedPyright complete with zero diagnostics on the changed Python surface.
 - No missing S29 semantic was copied into reconciliation: the S29 disposition established that the living persisted-revision flow already owns the relevant comparison semantics and that retaining fresh standalone recalculation would duplicate authority.
 
@@ -41,6 +38,7 @@ related:
 
 - A first guarded directory removal stopped before deleting package files because 16 generated `__pycache__` artifacts accompanied the seven tracked files. They were inventoried and explicitly removed as generated artifacts; no unknown source was deleted.
 - The first exact registry verifier exposed one construct record stored under `records/constructs.part-002b.toml`, outside the ordinary `constructs/` directory convention. Its single dangling ownership reference was removed and the verifier then passed.
-- An initial 270-test registry selection reported 259 passes and 11 failures. Two S30-owned stale baselines were corrected. The remaining nine failures are outside S30: five current Modelo 200 export-fixture gaps and four current Modelo 303 explicit-scope / IVA-deduction-fact gaps. The narrowed S30-owned selection passed in full.
+- An initial 270-test registry selection reported 259 passes and 11 failures. Two S30-owned stale baselines were corrected and committed in `94be71c0ff`. The remaining nine failures were outside S30: five current Modelo 200/export-fixture cases and four current Modelo 303 explicit-scope or IVA-deduction-fact cases. The narrowed S30-owned selections passed in full.
 - A required API scaffold run also discovered unrelated pre-existing missing stubs. Those unrelated generated changes were removed; only the four dead package stubs and the dead application index entry belong to this Step.
-- A concurrent coordinator commit, `2cb136c892`, landed the main deletion payload while verification was running. This execution record does not claim to have staged or committed that race result; the two stale test-baseline corrections discovered afterward remain explicit follow-up working-tree changes for the coordinator.
+- Commit `2cb136c892` landed the main package, registry, documentation, and structural-gate deletion payload. Commit `94be71c0ff` landed the two stale registry-test baseline corrections discovered by the first focused run.
+- Reviewer closeout removed the final live `.importlinter` edge, the two dead complexity-baseline entries, and the exact orphan locale leaf from `en`, `es`, `ca`, and `hu` through `dev.locales`; the two reviewer-named Python files were formatted directly.

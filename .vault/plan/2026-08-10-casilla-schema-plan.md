@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:da5376b6c09c5d02bab803d5e4f72ce8eac38a9bb6393e42836862a6825930bb'
+body_hash: 'sha256:8542a715214db410270d2440883a84320f1f82dd25736b868d4ce59b191a606d'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -125,7 +125,7 @@ Retire the dead surfaces, wire the export self-check, and render the TUI review 
 Three deletions and one wiring, each per the dead-surface ADR.
 
 - [x] `W04.P09.S29` - adjudicate verify_declaracion against the live reconcile flow and record the overlap outcome in the exec record; `src/cadrumo/application/verification/`.
-- [ ] `W04.P09.S30` - delete the application verification package, its tests and the registry application-links consumer rows in one commit, absorbing any missing semantics into reconcile first; `src/cadrumo/application/verification/`.
+- [x] `W04.P09.S30` - delete the application verification package, its tests and the registry application-links consumer rows in one commit, absorbing any missing semantics into reconcile first; `src/cadrumo/application/verification/`.
 - [ ] `W04.P09.S31` - delete the strict resolve_bound_inputs_by_casilla_id and both of its facade exports; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W04.P09.S32` - wire verify_export into export_draft as a post-write self-check requiring a MATCH verdict; `src/cadrumo/application/filing/_export.py`.
 - [ ] `W04.P09.S33` - delete the entrypoints binding-source readiness dict and derive the readiness wording from a total, import-asserted mapping over BindingSourceKind in the application layer, localised through the locale catalogues; `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`.
