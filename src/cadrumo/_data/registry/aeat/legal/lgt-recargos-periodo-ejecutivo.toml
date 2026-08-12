@@ -1,0 +1,49 @@
+# Recargos del periodo ejecutivo per Ley 58/2003 art-28 (Ley General
+# Tributaria). Distinct from the art-27 recargos por declaracion extemporanea
+# already catalogued in lgt-autoliquidacion.toml: art-27 surcharges a LATE but
+# voluntary self-assessment, art-28 surcharges a debt that entered the
+# enforcement period unpaid. AEAT reports the latter as an objeto tributario on
+# its debts consulta.
+#
+# corpus_ref targets the bundled CONSOLIDATED Ley 58/2003 rather than a
+# per-article excerpt: no per-article extraction exists for art-28, and the
+# standing rule prefers pointing at the bundled authoritative file over
+# hand-authoring a duplicate.
+#
+# REVIEW PROVENANCE. Every numeric clause in this file was cross-checked against
+# the live BOE consolidated text as well as the bundled corpus, per the standing
+# rule that distrusts bundled text on a number: 45 numeric clauses across the
+# four subjects, zero disagreements, every article complete rather than
+# truncated. The live side was read from the BOE Open Data consolidated API
+# taking the LAST version of each article, because that endpoint returns every
+# historical version oldest-first and taking the first would bundle repealed
+# law.
+#
+# ONE LIMITATION, stated rather than buried. Only art-28 was confirmed through
+# two independent live channels (the BOE API and AEAT's own published surcharge
+# table). Every other article rests on a single live channel. That is weaker
+# corroboration, and a second channel is owed before any consumer computes a
+# figure from these entries rather than merely citing them.
+
+[legal."ley-58-2003:art-28"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a28"
+document_id = "BOE-A-2003-23186"
+article = "28"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a28"
+published_at = 2003-12-18
+# NOT 2004-07-01. The last consolidated version of this article takes effect
+# 2012-01-01, when RDL 20/2011 (BOE-A-2011-20638) added apartado 6 exempting
+# mutual-assistance debts of other States from these surcharges.
+effective_from = 2012-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Recargos del periodo ejecutivo. Three mutually incompatible surcharge types, each computed on the whole of the debt left unpaid in periodo voluntario: recargo ejecutivo at cinco por ciento when the debt is settled in full before the providencia de apremio is notified; recargo de apremio reducido at 10 por ciento when the debt and the surcharge itself are settled before the art-62.5 deadline for apremiadas debts expires; recargo de apremio ordinario at 20 por ciento in every other case. Only the ordinario is compatible with intereses de demora; where the ejecutivo or the reducido is exigible, intereses accrued since the start of the periodo ejecutivo are not demanded. The article states NO deadline of its own: the reducido window is a cross-reference to art-62.5, so a deadline quoted here would be grounded in art-62 and not in this article."
+required_text = [
+    "El recargo ejecutivo será del cinco por ciento",
+    "El recargo de apremio reducido será del 10 por ciento",
+    "El recargo de apremio ordinario será del 20 por ciento",
+]

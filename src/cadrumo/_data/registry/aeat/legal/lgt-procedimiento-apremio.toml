@@ -1,0 +1,187 @@
+# Procedimiento de apremio: Ley 58/2003 art-163 (character of the procedure),
+# arts. 167-173 (initiation, providencia, garantias, embargo and termination).
+# These are the provisions behind the procedural situacion labels AEAT prints
+# on its debts consulta.
+#
+# EIGHT ENTRIES, NOT ONE. A corpus_ref resolves exactly one anchored unit, so
+# the range is anchored article by article.
+#
+# ONLY TWO FIGURES EXIST IN THE WHOLE RANGE: the six-month realisability
+# boundary in art-169.3 and the 75 per cent adjudication ceiling in art-172.2.
+# Every other article here is purely procedural. In particular the payment
+# window that follows a notified providencia is a cross-reference to art-62.5
+# and is NOT established by art-167, so a deadline stated against these
+# entries would be grounded on the wrong article. The salary-seizure limits
+# art-171.3 defers to are fixed by the Ley de Enjuiciamiento Civil, outside
+# this law entirely.
+#
+# REVIEW PROVENANCE. Every numeric clause in this file was cross-checked against
+# the live BOE consolidated text as well as the bundled corpus, per the standing
+# rule that distrusts bundled text on a number: 45 numeric clauses across the
+# four subjects, zero disagreements, every article complete rather than
+# truncated. The live side was read from the BOE Open Data consolidated API
+# taking the LAST version of each article, because that endpoint returns every
+# historical version oldest-first and taking the first would bundle repealed
+# law.
+#
+# ONE LIMITATION, stated rather than buried. Only art-28 was confirmed through
+# two independent live channels (the BOE API and AEAT's own published surcharge
+# table). Every other article rests on a single live channel. That is weaker
+# corroboration, and a second channel is owed before any consumer computes a
+# figure from these entries rather than merely citing them.
+
+[legal."ley-58-2003:art-163"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a163"
+document_id = "BOE-A-2003-23186"
+article = "163"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a163"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Caracter del procedimiento de apremio. Exclusively administrative, driven ex officio through all its steps, and not cumulative with judicial or other execution procedures. Conflicts of jurisdiction with judges and courts are resolved under Ley Organica 2/1987 de Conflictos Jurisdiccionales. The framing article for the whole enforcement chapter."
+required_text = [
+    "no será acumulable a los judiciales ni a otros procedimientos de ejecución",
+    "se iniciará e impulsará de oficio en todos sus trámites",
+]
+
+[legal."ley-58-2003:art-167"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a167"
+document_id = "BOE-A-2003-23186"
+article = "167"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a167"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Iniciacion del procedimiento de apremio: providencia de apremio. The providencia identifies the debt, demands payment, states that the periodo ejecutivo surcharge has accrued, and carries the same executive force as a judicial sentence for enforcing the taxpayer's assets. Apartado 3 closes the grounds of opposition to a numbered list (extincion or prescripcion, request for aplazamiento, lack of notification of the liquidacion, annulment, and error or omission in the providencia preventing identification of the debtor or the debt). Where payment is not made within the applicable deadline the taxpayer's assets are seized, and the providencia must warn of this. The deadline itself is art-62.5, not this article."
+required_text = [
+    "tendrá la misma fuerza ejecutiva que la sentencia judicial",
+    "Contra la providencia de apremio sólo serán admisibles los siguientes motivos de oposición",
+]
+
+[legal."ley-58-2003:art-168"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a168"
+document_id = "BOE-A-2003-23186"
+article = "168"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a168"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Ejecucion de garantias. Where the debt is secured, the garantia is executed first through the apremio procedure. The Administracion may instead seize and sell other assets beforehand where the garantia is disproportionate to the secured debt or where the obligado so requests and points to sufficient assets; in that case the garantia lapses to the extent covered by the seizures."
+required_text = [
+    "la garantía prestada quedará sin efecto en la parte asegurada por los embargos",
+]
+
+[legal."ley-58-2003:art-169"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a169"
+document_id = "BOE-A-2003-23186"
+article = "169"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a169"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Practica del embargo de bienes y derechos. Enough is seized to cover the debt, the periodo ejecutivo surcharge, interest and the costs of the procedure. Order of seizure follows any agreement with the obligado, otherwise ease of realisation and least onerousness, running from cash and bank balances through short-term realisable credits and securities to real property and, last, assets requiring entry into the debtor's home. An asset is short-term realisable when it can be realised within six months -- the one deadline this article establishes. Assets declared unseizable by law are excluded."
+required_text = [
+    "teniendo en cuenta la mayor facilidad de su enajenación y la menor onerosidad",
+    "en un plazo no superior a seis meses",
+    "No se embargarán los bienes o derechos declarados inembargables por las leyes",
+]
+
+[legal."ley-58-2003:art-170"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a170"
+document_id = "BOE-A-2003-23186"
+article = "170"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a170"
+published_at = 2003-12-18
+# Last consolidated version effective 2012-10-31 per Ley 7/2012
+# (BOE-A-2012-13416), which added the apartado 6 prohibicion de disponer.
+effective_from = 2012-10-31
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Diligencia de embargo y anotacion preventiva. Each seizure is documented in its own diligencia, notified to the obligado, and where the asset is registrable the Administracion is entitled to a preventive annotation of the seizure in the corresponding register. Apartado 3 closes the grounds of opposition to the diligencia (extincion or prescripcion, lack of notification of the providencia, breach of the seizure rules, and suspension of the procedure). Apartado 6 allows a prohibicion de disponer over the real property of a company whose shares have been seized from a controlling shareholder."
+required_text = [
+    "Contra la diligencia de embargo sólo serán admisibles los siguientes motivos de oposición",
+    "prohibición de disponer sobre los bienes inmuebles de una sociedad",
+]
+
+[legal."ley-58-2003:art-171"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a171"
+document_id = "BOE-A-2003-23186"
+article = "171"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a171"
+published_at = 2003-12-18
+# Last consolidated version effective 2012-10-31 per Ley 7/2012
+# (BOE-A-2012-13416).
+effective_from = 2012-10-31
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Embargo de bienes o derechos en entidades de credito o de deposito. The seizure may extend beyond the office where it was notified, within the amount due. Where the seized balance derives from a transfer of salary, pension or wage, the limits protecting those sums apply as though the balance were the payment itself. On a jointly held account only the obligado's share is seized, and where the shares are not evidenced the balance is presumed divided equally unless a different material ownership is proved. The protective limits themselves are set by the Ley de Enjuiciamiento Civil, not here."
+required_text = [
+    "sólo se embargará la parte correspondiente al obligado tributario",
+    "el saldo se presumirá dividido en partes iguales, salvo que se pruebe una titularidad material diferente",
+]
+
+[legal."ley-58-2003:art-172"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a172"
+document_id = "BOE-A-2003-23186"
+article = "172"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a172"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Enajenacion de los bienes embargados. Sale proceeds by public auction, competition or direct award. Where the assets are not sold the procedure may end with their adjudication to the Hacienda Publica: that adjudication is agreed for the amount of the debt pursued and may never exceed 75 por ciento of the initial price set in the sale procedure -- the one percentage this article establishes. Assets may not be sold until the liquidacion being enforced is firm, save for force majeure, perishable goods, or the obligado's express request. The obligado may release the seized assets at any point before adjudication by extinguishing the debt and the costs."
+required_text = [
+    "podrá concluir con la adjudicación de bienes a la Hacienda Pública",
+    "sin que, en ningún caso, pueda rebasar el 75 por ciento del tipo inicial fijado en el procedimiento de enajenación",
+]
+
+[legal."ley-58-2003:art-173"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a173"
+document_id = "BOE-A-2003-23186"
+article = "173"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a173"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Terminacion del procedimiento de apremio. The procedure ends on payment of the debt, on a ruling that the debt is uncollectible once every obligado has been declared fallido, or on agreement that the debt has been extinguished on any other ground. A credit declared uncollectible is not necessarily final: the procedure is resumed within the prescription period if the solvency of an obligado becomes known."
+required_text = [
+    "una vez declarados fallidos todos los obligados al pago",
+    "el procedimiento de apremio se reanudará, dentro del plazo de prescripción",
+]

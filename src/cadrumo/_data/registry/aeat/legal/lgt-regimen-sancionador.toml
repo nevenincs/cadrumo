@@ -1,0 +1,171 @@
+# Regimen sancionador: the pecuniaria proporcional bands of Ley 58/2003
+# arts. 191-197. AEAT reports a sancion as an objeto tributario on its debts
+# consulta, so these are the provisions a consumer would reach for when it
+# stops displaying AEAT's reported figure and starts interpreting it.
+#
+# SEVEN ENTRIES, NOT ONE. A corpus_ref resolves exactly one anchored unit, so
+# "arts. 191-197" is not representable as a single catalogue entry. Each
+# article is anchored on its own.
+#
+# THE BANDS HERE ARE NOMINAL, NOT WHAT IS PAID. Two further articles move every
+# figure below and neither is catalogued here:
+#
+#   * art-187 graduacion -- comision repetida and perjuicio economico add
+#     percentage points to the base band. Arts. 191-193 delegate to it
+#     expressly and state no increment themselves.
+#   * art-188 reducciones -- 65 per cent for actas con acuerdo, 30 per cent for
+#     conformidad, and a further 40 per cent for pronto pago, in the redaction
+#     given by Ley 11/2021 (BOE-A-2021-11473) in force from 2021-07-11. The
+#     bundled corpus was checked against the superseded figures and carries
+#     none of them.
+#
+# A consumer stating an EFFECTIVE sanction percentage without citing arts. 187
+# and 188 alongside these is ungrounded: it would be quoting a nominal band as
+# though it were the amount demanded.
+#
+# REVIEW PROVENANCE. Every numeric clause in this file was cross-checked against
+# the live BOE consolidated text as well as the bundled corpus, per the standing
+# rule that distrusts bundled text on a number: 45 numeric clauses across the
+# four subjects, zero disagreements, every article complete rather than
+# truncated. The live side was read from the BOE Open Data consolidated API
+# taking the LAST version of each article, because that endpoint returns every
+# historical version oldest-first and taking the first would bundle repealed
+# law.
+#
+# ONE LIMITATION, stated rather than buried. Only art-28 was confirmed through
+# two independent live channels (the BOE API and AEAT's own published surcharge
+# table). Every other article rests on a single live channel. That is weaker
+# corroboration, and a second channel is owed before any consumer computes a
+# figure from these entries rather than merely citing them.
+
+[legal."ley-58-2003:art-191"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a191"
+document_id = "BOE-A-2003-23186"
+article = "191"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a191"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por dejar de ingresar la deuda tributaria resultante de una autoliquidacion. The severity axis: leve where the base is 3.000 euros or less, or greater without ocultacion; grave where the base exceeds 3.000 euros and there is ocultacion; muy grave where medios fraudulentos were used. Incorrect books or registers push the infraction off leve above a 10 per cent incidence and make it grave between 10 and 50 per cent. Unremitted retenciones make it grave at 50 per cent or less of the base and muy grave above. Nominal bands: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, each graduated under art-187 and reduced under art-188."
+required_text = [
+    "La sanción por infracción leve consistirá en multa pecuniaria proporcional del 50 por ciento",
+    "La sanción por infracción grave consistirá en multa pecuniaria proporcional del 50 al 100 por ciento",
+    "La sanción por infracción muy grave consistirá en multa pecuniaria proporcional del 100 al 150 por ciento",
+]
+
+[legal."ley-58-2003:art-192"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a192"
+document_id = "BOE-A-2003-23186"
+article = "192"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a192"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por incumplir la obligacion de presentar de forma completa y correcta las declaraciones o documentos necesarios para practicar liquidaciones. Same severity axis and same nominal bands as art-191, applied to the declaration-based rather than the self-assessment-based case: leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento, with the same 10 per cent and 50 per cent books-and-registers thresholds."
+required_text = [
+    "La sanción por infracción leve consistirá en multa pecuniaria proporcional del 50 por ciento",
+    "represente un porcentaje superior al 10 por ciento de la base de la sanción",
+]
+
+[legal."ley-58-2003:art-193"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a193"
+document_id = "BOE-A-2003-23186"
+article = "193"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a193"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por obtener indebidamente devoluciones. Same severity axis and nominal bands as arts. 191 and 192 -- leve 50 por ciento, grave 50 al 100 por ciento, muy grave 100 al 150 por ciento -- applied to a refund wrongly obtained rather than to tax left unpaid."
+required_text = [
+    "La sanción por infracción leve consistirá en multa pecuniaria proporcional del 50 por ciento",
+    "represente un porcentaje superior al 10 por ciento de la base de la sanción",
+]
+
+[legal."ley-58-2003:art-194"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a194"
+document_id = "BOE-A-2003-23186"
+article = "194"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a194"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por solicitar indebidamente devoluciones, beneficios o incentivos fiscales. Always grave. Two distinct sanctions: a multa pecuniaria proporcional del 15 por ciento where a refund is wrongly solicited by omitting or falsifying data without the refund having been obtained, and a multa pecuniaria fija de 300 euros where the wrongly solicited item is a beneficio or incentivo fiscal. This is the one article in the range carrying a FIXED euro amount rather than a proportional band."
+required_text = [
+    "La sanción consistirá en multa pecuniaria proporcional del 15 por ciento",
+    "multa pecuniaria fija de 300 euros",
+]
+
+[legal."ley-58-2003:art-195"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a195"
+document_id = "BOE-A-2003-23186"
+article = "195"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a195"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por determinar o acreditar improcedentemente partidas positivas o negativas o creditos tributarios aparentes. Always grave. The band depends on where the wrongly accredited item sits: 15 por ciento for partidas to be offset or deducted in the base imponible, and 50 por ciento for partidas in the cuota or for apparent tax credits. The sanction is deducted from any later sanction arising when the same amounts are actually offset."
+required_text = [
+    "La sanción consistirá en multa pecuniaria proporcional del 15 por ciento si se trata de partidas a compensar o deducir en la base imponible",
+    "o del 50 por ciento si se trata de partidas a deducir en la cuota o de créditos tributarios aparentes",
+]
+
+[legal."ley-58-2003:art-196"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a196"
+document_id = "BOE-A-2003-23186"
+article = "196"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a196"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por imputar incorrectamente o no imputar bases imponibles, rentas o resultados por las entidades sometidas a un regimen de imputacion de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 40 por ciento of the amounts wrongly imputed or not imputed, graduated under art-187 and reduced under art-188."
+required_text = [
+    "La sanción consistirá en multa pecuniaria proporcional del 40 por ciento",
+]
+
+[legal."ley-58-2003:art-197"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-58-2003.html#a197"
+document_id = "BOE-A-2003-23186"
+article = "197"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-23186#a197"
+published_at = 2003-12-18
+effective_from = 2004-07-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "operator"
+notes = "Infraccion por imputar incorrectamente deducciones, bonificaciones y pagos a cuenta por las entidades sometidas a un regimen de imputacion de rentas. Always grave. Nominal band: multa pecuniaria proporcional del 75 por ciento of the amounts wrongly imputed, the highest proportional band in the range, graduated under art-187 and reduced under art-188."
+required_text = [
+    "La sanción consistirá en multa pecuniaria proporcional del 75 por ciento",
+]
