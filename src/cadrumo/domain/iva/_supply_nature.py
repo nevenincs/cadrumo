@@ -103,7 +103,11 @@ class StatutoryCitation(BaseModel):
             whitespace-tolerantly, never as a bare substring.
         heading: The article's own rubric, quoted from the bundled consolidated
             text, so the row can be checked against the corpus by reading it.
-        corpus_ref: The bundled file the heading was quoted from.
+        corpus_ref: The bundled file the heading was quoted from, optionally
+            with the ``#anchor`` of one article within it. An anchor is what
+            lets a row cite a consolidated document: without it the check reads
+            the whole file, and a law carrying both limbs makes every row citing
+            it look mixed.
         establishes: The nature citing this article fixes, or ``None`` when the
             article governs goods and services alike. ``None`` is a finding about
             the statute, not a gap in the table.
