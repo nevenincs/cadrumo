@@ -91,11 +91,14 @@ from ...domain.iva import (
     InvoiceKind,
     IvaCategory,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     derive_flow_for_classification,
+    is_deducible_flow,
     recargo_rate_for_applied_rate,
 )
 from ...domain.modelos import Modelo210AgrupacionRentaRow
+from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.renta import (
     RENTA_130_RETENCIONES_BINDING_ID,
     RENTA_130_RETENCIONES_OUTPUT_CASILLA,
@@ -245,11 +248,13 @@ class LedgerIvaAggregationSourceResolver:
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
         invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
     ) -> None:
         self._transaction_repository = transaction_repository
         self._invoice_repository = invoice_repository
+        self._prorrata_register_repository = prorrata_register_repository
         self._investment_asset_register = investment_asset_register
         self._investment_asset_profile_id = investment_asset_profile_id
 
@@ -266,6 +271,7 @@ class LedgerIvaAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
                 transaction_repository=self._transaction_repository,
+                prorrata_register_repository=self._prorrata_register_repository,
                 investment_asset_register=self._investment_asset_register,
                 investment_asset_profile_id=self._investment_asset_profile_id,
             )
@@ -340,6 +346,10 @@ class LedgerIvaAggregationSourceResolver:
             )
             + _reverse_charge_underivable_diagnostics(
                 silence_report.reverse_charge_underivable,
+                resolver_id=self.resolver_id,
+            )
+            + _missing_invoice_deduction_authority_diagnostics(
+                silence_report.deduction_authority_missing,
                 resolver_id=self.resolver_id,
             )
             + _category_counterparty_mismatch_diagnostics(
@@ -450,9 +460,11 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
         invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+        prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     ) -> None:
         self._transaction_repository = transaction_repository
         self._invoice_repository = invoice_repository
+        self._prorrata_register_repository = prorrata_register_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
@@ -470,6 +482,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 profile_year=context.filing_year,
                 usage_ratios=load_usage_ratios(bucket_id=context.bucket_id).ratios,
                 modelo=context.modelo,
+                prorrata_register_repository=self._prorrata_register_repository,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -1151,8 +1164,14 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
     resolver_id = "ledger_renta_gastos_pago_fraccionado_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+        prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    ) -> None:
         self._transaction_repository = transaction_repository
+        self._prorrata_register_repository = prorrata_register_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not _revision_has_binding_source(context.revision, "ledger_renta_gastos_pago_fraccionado_aggregation"):
@@ -1167,6 +1186,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 bucket_id=context.bucket_id,
                 period=aggregation_period,
                 transaction_repository=self._transaction_repository,
+                prorrata_register_repository=self._prorrata_register_repository,
             )
         except _STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -1231,6 +1251,46 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         )
 
 
+def _uncovered_withheld_invoice_cuota(
+    invoices: Sequence[Invoice],
+    *,
+    screened_bindings: tuple[BindingId, ...],
+    transaction_binding_values: Mapping[BindingId, Decimal],
+) -> Decimal:
+    """Return the withheld invoices' cuota that the transaction ledger does not carry.
+
+    These invoices were withheld because no linked frozen ledger observation
+    supplies their deduction identity, so they contribute no
+    :class:`IvaLedgerObservation` and cannot be compared binding-by-binding the
+    way a projected invoice is. Their cuota is therefore weighed against the
+    transaction-ledger total across the screened cuota bindings.
+
+    That total is the right comparator rather than a per-binding one: the
+    withheld invoice has no resolved binding to be compared against, and the
+    question being asked is the coarse one -- is this cuota already somewhere in
+    the ledger the filing is about to use, or is it absent from it entirely? A
+    positive result means the ledger is genuinely short by at least this much and
+    the filing would under-declare; zero means the operation is already recorded
+    and the invoice merely is not linked to it.
+    """
+    if not invoices:
+        return Decimal("0")
+    evidence = sum(
+        (
+            line.iva_amount
+            for invoice in invoices
+            for line in invoice.lines
+            if _line_contributes_to_the_iva_screen(line.subtotal, line.iva_amount)
+        ),
+        Decimal("0"),
+    )
+    ledger_total = sum(
+        (transaction_binding_values.get(binding_id, Decimal("0")) for binding_id in screened_bindings),
+        Decimal("0"),
+    )
+    return max(evidence - ledger_total, Decimal("0"))
+
+
 def _raise_if_invoice_iva_would_be_silent(
     *,
     context: CalculationSourceContext,
@@ -1287,7 +1347,20 @@ def _raise_if_invoice_iva_would_be_silent(
         ledger_observations=ledger_observations,
         invoice_repository=invoice_repository,
     )
-    if screened.deduction_authority_missing:
+    # Withholding an unauthorised input row is unconditional; REFUSING the whole
+    # filing over it is not. This guard's criterion, stated in its own docstring,
+    # is invoice IVA that would EXCEED the transaction-ledger cuota -- that is the
+    # under-declaration. An unlinked purchase invoice whose cuota the ledger
+    # already carries is corroborating evidence of an operation that IS declared,
+    # so refusing there blocks a filing whose totals are correct. It stays
+    # withheld (no invented deduction family reaches a casilla) and the operator
+    # is told through the diagnostic channel instead.
+    uncovered_authority_evidence = _uncovered_withheld_invoice_cuota(
+        screened.deduction_authority_missing,
+        screened_bindings=screened_bindings,
+        transaction_binding_values=transaction_binding_values,
+    )
+    if uncovered_authority_evidence > Decimal("0"):
         missing_invoice_ids = tuple(sorted(invoice.invoice_id for invoice in screened.deduction_authority_missing))
         raise AggregationValidationError(
             t("errors.error.error_modelo_aggregation_binding"),
@@ -1299,6 +1372,7 @@ def _raise_if_invoice_iva_would_be_silent(
                 "source_kind": "ledger_iva_aggregation",
                 "invoice_ids": missing_invoice_ids[:_M303_INVOICE_EVIDENCE_SAMPLE_LIMIT],
                 "invoice_count": str(len(missing_invoice_ids)),
+                "invoice_cuota_exceeding_ledger": str(uncovered_authority_evidence),
             },
             precondition_verdict=aggregation_no_recovery_verdict(
                 AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
@@ -1316,6 +1390,7 @@ def _raise_if_invoice_iva_would_be_silent(
         return _InvoiceIvaSilenceReport(
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
+            deduction_authority_missing=screened.deduction_authority_missing,
             recargo_rate_divergences=screened.recargo_rate_divergences,
             storage_degraded=screened.storage_degraded,
         )
@@ -1335,7 +1410,9 @@ def _raise_if_invoice_iva_would_be_silent(
             compared=screened.compared,
             category_counterparty_mismatches=screened.category_counterparty_mismatches,
             reverse_charge_underivable=screened.reverse_charge_underivable,
+            deduction_authority_missing=screened.deduction_authority_missing,
             recargo_rate_divergences=screened.recargo_rate_divergences,
+            storage_degraded=screened.storage_degraded,
         )
     raise AggregationValidationError(
         t("errors.error.error_modelo_aggregation_binding"),
@@ -1535,6 +1612,8 @@ def _declared_category_base_only_observation(
         iva_rate=line.iva_rate,
         base_amount=line.subtotal,
         iva_amount=line.iva_amount,
+        deduction_fact_kind=None,
+        deduction_provenance=None,
         recargo_amount=recargo_amount,
     )
     return IvaLedgerObservation(
@@ -1547,6 +1626,9 @@ def _declared_category_base_only_observation(
         base_amount=line.subtotal,
         iva_amount=Decimal("0"),
         recargo_amount=recargo_amount,
+        deduction_fact_kind=None,
+        deduction_provenance=None,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -1560,6 +1642,15 @@ def _invoice_line_iva_observation(
     deduction_authority: IvaLedgerObservation | None = None,
 ) -> IvaLedgerObservation | None:
     """Project one invoice line into the observation the screen declares from.
+
+    Received invoice evidence never supplies its own deduction identity. Both
+    SOPORTADO and INVERSION_SUJETO_PASIVO observations require the exact
+    statutory deduction family and immutable classification provenance, and an
+    invoice aggregate owns neither. They arrive as ``deduction_authority`` --
+    the frozen transaction-ledger observation the invoice is linked to -- and
+    are copied across unchanged. When no such authority is linked, or the
+    linked ones disagree, the enclosing screen withholds the invoice entirely
+    rather than invite an invented domestic-current default.
 
     A line carrying a cuota takes the standard-case classification, which
     derives the domestic category from the line's rate slot.
@@ -1579,7 +1670,7 @@ def _invoice_line_iva_observation(
 
     Returns ``None`` when the line has no cuota and its category is not one a
     base-only casilla selects, or when the counterparty contradicts that
-    category. Both cases are unrouted rather than mis-routed.
+    category. Both cases are withheld rather than mis-routed.
 
     Args:
         invoice: The invoice the line belongs to, read for its declared
@@ -1687,6 +1778,9 @@ def _invoice_line_iva_observation(
         base_amount=line.subtotal,
         iva_amount=Decimal("0"),
         recargo_amount=recargo_amount,
+        deduction_fact_kind=None,
+        deduction_provenance=None,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -1724,15 +1818,34 @@ def _declared_category_unrouted_observation(
     recargo_amount: Decimal,
     category: IvaCategory,
     deduction_authority: IvaLedgerObservation | None,
-) -> IvaLedgerObservation:
-    """Retain a declared non-base-only category without inventing a rate."""
+) -> IvaLedgerObservation | None:
+    """Retain a declared non-base-only category without inventing a rate.
+
+    Returns ``None`` for an INPUT-side flow carrying no linked ledger authority.
+    The observation model refuses such a row outright -- an input fact must name
+    its exact deduction family and evidence provenance -- so building one here
+    would surface as a validation crash rather than the withholding the enclosing
+    contract promises. The screen already classifies this invoice as
+    ``deduction_authority_missing`` and the silence guard refuses on it, so the
+    honest local answer is that the line routes nowhere.
+    """
+    flow_direction = derive_flow_for_classification(category=category, invoice_direction=invoice.kind)
+    # Mirrors the observation model's own admission rule exactly, via the
+    # canonical settlement-side predicate rather than a re-listed flow set:
+    # recargo de equivalencia is borne, not deducted, so it is an output fact
+    # and must NOT carry deduction authority (LIVA art. 161).
+    requires_deduction_authority = (
+        is_deducible_flow(flow_direction) and category is not IvaCategory.RECARGO_EQUIVALENCIA
+    )
+    if requires_deduction_authority and deduction_authority is None:
+        return None
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=devengo_date,
         category=category,
         rate_kind=_rate_kind_for_slot(line.iva_rate),
         applied_rate=None,
-        flow_direction=derive_flow_for_classification(category=category, invoice_direction=invoice.kind),
+        flow_direction=flow_direction,
         base_amount=line.subtotal,
         iva_amount=line.iva_amount,
         recargo_amount=recargo_amount,
@@ -1740,6 +1853,10 @@ def _declared_category_unrouted_observation(
         deduction_provenance=(deduction_authority.deduction_provenance if deduction_authority is not None else None),
         investment_asset_id=(deduction_authority.investment_asset_id if deduction_authority is not None else None),
         rectifies_ledger_id=(deduction_authority.rectifies_ledger_id if deduction_authority is not None else None),
+        # A monetary projection, so the settlement role. The informational role
+        # is reserved for the criterio-de-caja art. 75 operation rows, which
+        # this producer never emits.
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -1892,6 +2009,45 @@ def _reverse_charge_underivable_diagnostics(
     )
 
 
+def _missing_invoice_deduction_authority_diagnostics(
+    invoices: Sequence[Invoice],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report received invoice evidence that reached no IVA input row.
+
+    An invoice has an amount and a direction, but not the statutory deduction
+    fact family nor the immutable evidence provenance that distinguishes a
+    domestic current expense from an investment, import, acquisition, or
+    rectification. Treating every received invoice as domestic-current would
+    invent that authority, so the invoice is withheld instead.
+
+    Non-blocking by the time it reaches here: the enclosing guard has already
+    established that the transaction ledger carries this cuota, so the filing's
+    totals are correct and only the invoice-to-transaction link is absent. Where
+    the ledger does NOT carry it the guard refuses outright and this diagnostic
+    is never reached.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_iva_aggregation",
+            resolver_id=resolver_id,
+            source_ref=f"invoice:{invoice.invoice_id}",
+            message=(
+                f"received invoice {invoice.invoice_number!r} carries IVA input evidence but no exact "
+                "deduction fact kind or immutable evidence provenance, so it is declared from the "
+                "transaction ledger rather than from the invoice"
+            ),
+            remedy=(
+                "Link this invoice to its classified ledger transaction, so its deduction family and "
+                "evidence provenance are recorded against the operation"
+            ),
+        )
+        for invoice in invoices
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _RecargoRateDivergence:
     """One invoice whose recorded recargo departs from the published rate.
@@ -2000,12 +2156,12 @@ def _recargo_rate_mismatch_diagnostics(
 class _ScreenedInvoiceIva:
     """What the invoice IVA screen found, named rather than positional.
 
-    Three of these five fields are ``tuple[Invoice, ...]`` and one more is a
-    tuple of ids, so as a positional return they were mutually substitutable
-    and a type checker could not tell a mis-ordering from correct code. That is
-    not hypothetical: the tuple was widened from three slots to four and then to
-    five as findings landed, the annotation fell out of step with the returns on
-    the way, and every widening broke unpack sites in unrelated test modules.
+    Several fields are ``tuple[Invoice, ...]`` and one more is a tuple of ids,
+    so as a positional return they would be mutually substitutable and a type
+    checker could not tell a mis-ordering from correct code. That is not
+    hypothetical: the tuple was widened repeatedly as findings landed, the
+    annotation fell out of step with the returns on the way, and every widening
+    broke unpack sites in unrelated test modules.
 
     Fields:
         observations: the IVA observations the screen built.
@@ -2017,6 +2173,11 @@ class _ScreenedInvoiceIva:
         reverse_charge_underivable: invoices declaring a reverse charge whose
             line carries no rate slot, so no cuota can be derived without
             inventing one.
+        deduction_authority_missing: received invoices whose lines contribute
+            IVA evidence but which are linked to no frozen transaction-ledger
+            observation carrying the exact deduction family and immutable
+            evidence provenance an input row requires, or whose linked
+            observations disagree about it.
         recargo_rate_divergences: invoices whose recorded recargo departs from
             the rate art. 161 publishes for that slot. Unlike the two above,
             these are NOT withheld -- the figure is declared exactly as
@@ -2050,6 +2211,11 @@ class _InvoiceIvaSilenceReport:
     compared: tuple[Invoice, ...] = ()
     category_counterparty_mismatches: tuple[Invoice, ...] = ()
     reverse_charge_underivable: tuple[Invoice, ...] = ()
+    #: Received invoices withheld for want of a linked ledger deduction
+    #: authority, whose cuota the transaction ledger nonetheless already carries.
+    #: Not a refusal -- the filing's totals are right -- but the operator still
+    #: needs telling, or the unlinked invoice looks reconciled when it is not.
+    deduction_authority_missing: tuple[Invoice, ...] = ()
     #: Carried on every return path, including the two early ones. A divergence
     #: is a fact about the recorded figure, not about whether the screen went on
     #: to build an observation, so dropping it when the screen returns early

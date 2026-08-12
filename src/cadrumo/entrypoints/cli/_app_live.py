@@ -454,7 +454,7 @@ def _iva_wallet_history_lines(report: IvaCompensationHistoryReport) -> tuple[str
     return tuple(lines)
 
 
-_IVA_WALLET_DECISION_REASON_TRANSLATION_KEYS: Final[dict[IvaCompensationDecisionReason, str]] = {
+_IVA_WALLET_DECISION_REASON_LOCALE_KEYS: Final[dict[IvaCompensationDecisionReason, str]] = {
     IvaCompensationDecisionReason.TAXPAYER_OVERRIDE: "application.iva_wallet.decision_reason.taxpayer_override",
     IvaCompensationDecisionReason.FIRST_PERIOD_ZERO_AEAT_WALLET: (
         "application.iva_wallet.decision_reason.first_period_zero_aeat_wallet"
@@ -499,7 +499,7 @@ _IVA_WALLET_DECISION_REASON_TRANSLATION_KEYS: Final[dict[IvaCompensationDecision
 def _iva_wallet_decision_reason_text(reason: IvaCompensationDecisionReason) -> str:
     """Localize one closed decision-reason identity for operator output."""
     try:
-        translation_key = _IVA_WALLET_DECISION_REASON_TRANSLATION_KEYS[reason]
+        translation_key = _IVA_WALLET_DECISION_REASON_LOCALE_KEYS[reason]
     except KeyError as exc:
         raise AssertionError(f"unhandled IVA wallet decision reason {reason!r}") from exc
     return tr(translation_key)

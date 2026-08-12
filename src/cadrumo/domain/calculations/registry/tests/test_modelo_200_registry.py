@@ -14,7 +14,6 @@ from .. import (
     RegistryValidator,
     build_snapshot,
     calculate_registry_snapshot,
-    resolve_export_layout,
 )
 from .._errors import RegistryValidationError
 from .._legal import verify_legal_catalogue
@@ -227,46 +226,8 @@ def test_modelo_200_liquidacion_cuota_chain_casillas_resolve_under_their_segment
         assert casilla.source_refs, f"casilla {casilla_id!r} must carry source_refs grounding"
 
 
-def test_modelo_200_page_014_export_binding_resolves_00562_to_liquidacion() -> None:
-    """The page-014 export binding resolves casilla 00562 to the Liquidación occurrence.
-
-    Modelo 200 reuses the five-digit number `00562` across record
-    segments: it is the Liquidación III cuota íntegra in segment
-    `DP200014` and a distribución-de-dividendos field in the ECPN
-    segment. The page-014 fichero-BOE export field for `00562` must bind
-    the Liquidación cuota íntegra, not the ECPN occurrence. This resolves
-    the export layout on the built snapshot and asserts the
-    `modelo-200-page-014-casilla-00562` field's bound casilla is the
-    Liquidación `DP200014:00562` identity.
-    """
-    modelo, catalogues = _load_modelo_200()
-    snapshot = build_snapshot(
-        modelo,
-        catalogues,
-        source_root=bundled_path(),
-        filing_year=2025,
-        period="0A",
-    )
-
-    layout = resolve_export_layout(snapshot, "modelo-200-fichero-boe")
-    page_014_field = layout.fields_by_id.get("modelo-200-page-014-casilla-00562")
-
-    assert page_014_field is not None, (
-        "the Modelo 200 fichero-BOE layout must carry the page-014 export field for casilla 00562"
-    )
-    assert page_014_field.casilla_id == _M200_CUOTA_INTEGRA_CASILLA, (
-        "the page-014 export binding for 00562 must resolve to the Liquidación "
-        f"DP200014 occurrence, not the ECPN one; got {page_014_field.casilla_id!r}"
-    )
-
-    liquidacion_casilla = next((c for c in snapshot.revision.casillas if c.id == page_014_field.casilla_id), None)
-    assert liquidacion_casilla is not None
-    assert liquidacion_casilla.segmento == "DP200014"
-    assert liquidacion_casilla.number == "00562"
-
-
-def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identities() -> None:
-    """Liquidación III/IV formulas and BOE fields cannot bind reused bare ECPN numbers."""
+def test_modelo_200_liquidacion_014_014b_formulas_use_segment_identities() -> None:
+    """Liquidación III/IV formulas cannot bind reused bare ECPN numbers."""
     modelo, catalogues = _load_modelo_200()
     snapshot = build_snapshot(
         modelo,
@@ -348,33 +309,13 @@ def test_modelo_200_liquidacion_014_014b_formulas_and_exports_use_segment_identi
         & liquida_refs
     )
 
-    layout = resolve_export_layout(snapshot, "modelo-200-fichero-boe")
-    expected_exports: dict[str, CasillaId] = {
-        "modelo-200-page-014-casilla-00567": _m200_casilla("DP200014:00567"),
-        "modelo-200-page-014-casilla-00568": _m200_casilla("DP200014:00568"),
-        "modelo-200-page-014-casilla-00563": _m200_casilla("DP200014:00563"),
-        "modelo-200-page-014-casilla-00566": _m200_casilla("DP200014:00566"),
-        "modelo-200-page-014-casilla-00576": _m200_casilla("DP200014:00576"),
-        "modelo-200-page-014-casilla-00569": _m200_casilla("DP200014:00569"),
-        "modelo-200-page-014-casilla-00570": _m200_casilla("DP200014:00570"),
-        "modelo-200-page-014-casilla-00572": _m200_casilla("DP200014:00572"),
-        "modelo-200-page-014-casilla-00571": _m200_casilla("DP200014:00571"),
-        "modelo-200-page-014-casilla-00575": _m200_casilla("DP200014:00575"),
-        "modelo-200-page-014-casilla-00577": _m200_casilla("DP200014:00577"),
-        "modelo-200-page-014-casilla-00581": _m200_casilla("DP200014:00581"),
-        "modelo-200-page-014-casilla-00582": _M200_CUOTA_LIQUIDA_PREVIA_CASILLA,
-        "modelo-200-page-014b-casilla-00583": _m200_casilla("DP200014B:00583"),
-        "modelo-200-page-014b-casilla-00585": _m200_casilla("DP200014B:00585"),
-        "modelo-200-page-014b-casilla-00584": _m200_casilla("DP200014B:00584"),
-        "modelo-200-page-014b-casilla-00588": _m200_casilla("DP200014B:00588"),
-        "modelo-200-page-014b-casilla-00565": _m200_casilla("DP200014B:00565"),
-        "modelo-200-page-014b-casilla-00590": _m200_casilla("DP200014B:00590"),
-        "modelo-200-page-014b-casilla-00399": _m200_casilla("DP200014B:00399"),
-        "modelo-200-page-014b-casilla-00082": _m200_casilla("DP200014B:00082"),
-        "modelo-200-page-014b-casilla-00619": _M200_CUOTA_LIQUIDA_RESTA_AJUSTES_CASILLA,
-    }
-    actual_exports = {field_id: layout.fields_by_id[field_id].casilla_id for field_id in expected_exports}
-    assert actual_exports == expected_exports
+    # The fichero-BOE half of this assertion is deliberately absent. The
+    # `modelo-200-fichero-boe` layout was withdrawn from filing grade because its
+    # official record design carries producer fields with no canonical typed
+    # producer authority, and a partial layout would permit silent
+    # under-declaration. That withdrawal is asserted in
+    # `test_withdrawn_export_layouts.py`, which owns it for every withdrawn
+    # modelo; the segment-identity contract above stands on its own.
 
 
 def test_modelo_200_page_14_cuota_chain_matches_aeat_manual_worked_example() -> None:

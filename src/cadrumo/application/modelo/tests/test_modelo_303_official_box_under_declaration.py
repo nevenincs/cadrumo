@@ -48,6 +48,7 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import RegistryValidationError
 from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import ModeloVerificationFindingKind
 from ....domain.transactions import (
@@ -172,6 +173,11 @@ def _store_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -579,6 +585,10 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
             "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
         },
         date_context={"filing_period": _date(2026, 3, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+        m303_annual_orden=None,
     )
     relay_boxes = {box: relay.values[box] for box in _BOX_SOURCE_MAP}
 

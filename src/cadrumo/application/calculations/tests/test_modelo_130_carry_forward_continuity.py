@@ -48,7 +48,7 @@ from ....domain.calculations.registry import (
     BindingId,
     RegistryModeloObservation,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
+from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
 from ....domain.modelos import CalculationRevision, ExternalEvidenceKind, ModeloVerificationFindingKind
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
@@ -142,6 +142,7 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
     UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.oss_enrolled", value=False),
     UserProfileFact(path="iva.redeme_enrolled", value=False),
     UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
     UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
@@ -192,6 +193,14 @@ def _workflow_profile() -> TaxpayerProfile:
         pays_rent_with_retencion=False,
         does_intracomunitario=False,
         bienes_extranjero_above_threshold=False,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 

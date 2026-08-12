@@ -79,6 +79,7 @@ from dev.ci.perf_measurement import wall_advisory_message
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TX_BUCKET_NAMESPACE, TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....application.calculations import CalculationObservationRepository
@@ -333,6 +334,11 @@ def _seed_taxpayer_profile() -> None:
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -467,6 +473,7 @@ def test_annual_renta_aggregation_reports_full_scan_latency(scale_bucket: Secure
             # year (see module docstring) -- profile_year is intentionally
             # decoupled per the function's own documented contract.
             profile_year=_CATEGORY_PROFILE_YEAR,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         )
         samples.append(time.perf_counter() - started)
         # Real accumulator output, not a mock stand-in: the filtered result carries
@@ -638,6 +645,7 @@ def quarterly_iva_samples(scale_bucket: SecureObjectRepository) -> _QuarterlyIva
                 bucket_id=_BUCKET_ID,
                 period=period,
                 transaction_repository=tx_repo,
+                prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
             )
             partitioned_cpu_duration = time.process_time() - cpu_started
             partitioned_wall_duration = time.perf_counter() - wall_started

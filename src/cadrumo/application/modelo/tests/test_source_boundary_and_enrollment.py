@@ -31,6 +31,7 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
@@ -64,6 +65,11 @@ _READY_PROFILE_FACTS = (
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value="false"),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -76,6 +82,11 @@ _ATTRIBUTION_PROFILE_FACTS = (
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value="false"),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value="false"),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value="false"),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value="false"),
     UserProfileFact(path="taxpayer_type.entity_type", value="attribution_entity"),
     UserProfileFact(path="attribution_entity.legal_form", value="comunidad_bienes"),
     UserProfileFact(path="attribution_entity_socios.0.nif", value="22222222B"),
@@ -379,10 +390,14 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
 
     source_resolution = merge_source_resolutions(
         [
-            LedgerIvaAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
-            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(transaction_repository=tx_repo).resolve(
-                context
-            ),
+            LedgerIvaAggregationSourceResolver(
+                transaction_repository=tx_repo,
+                prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            ).resolve(context),
+            LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+                transaction_repository=tx_repo,
+                prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            ).resolve(context),
             LedgerRentaIncomeAggregationSourceResolver(transaction_repository=tx_repo).resolve(context),
             OssIossLedgerSourceResolver(candidates=()).resolve(context),
             InvoiceCatalogueSourceResolver(invoice_repository=invoice_repo).resolve(context),

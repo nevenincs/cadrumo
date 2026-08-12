@@ -80,17 +80,21 @@ CENSAL_WRITE_SURFACE_PATH_CANARIES = (
 )
 # The debts-consulta landing shapes the deudas read guard must refuse.
 #
-# UNLIKE the censal canaries above, these are SHAPED, not observed: no specimen
-# of AEAT's "Consultar deudas" surface exists in this tree, so each stands for a
-# KIND of landing rather than a path anyone has captured. They are declared here
-# so the guard's proof can name the landings that would cost a taxpayer money
-# without any test module owning an AEAT route literal of its own.
+# These are SHAPED, not observed: each stands for a KIND of landing rather than
+# a path anyone captured. They are declared here so the guard's proof can name
+# the landings that would cost a taxpayer money without any test module owning
+# an AEAT route literal of its own.
 #
-# The payment shapes are the reason the guard's allow-list ships empty. The
-# canonical write-verb token scan catches literal "pagar", so the first two
-# would be refused by policy alone -- but "PagoParcial",
+# They keep their job now that the real consulta HAS been observed (see the
+# ``*_OBSERVED_PATH_FIXTURE`` values below). The allow-list carries exactly one
+# endpoint, so every shape here is a route the guard must still refuse, and the
+# read-shaped pair is the sharper case: a plausible consulta path that is not
+# THE consulta path must not be admitted by a loose prefix match.
+#
+# The canonical write-verb token scan catches literal "pagar", so the first two
+# payment shapes would be refused by policy alone -- but "PagoParcial",
 # "SolicitarAplazamiento" and "AplazamientoFraccionamiento" carry no token the
-# scan knows, and the empty allow-list is the only thing that refuses them.
+# scan knows, and the allow-list is the only thing that refuses them.
 DEUDAS_CONSULTA_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/ConsultarDeudas"
 DEUDAS_DETALLE_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/DetalleDeuda"
 DEUDAS_PAGAR_TODAS_PATH_SHAPE_CANARY = "/wlpl/DEUD-DEUD/PagarTodasDeudas"
@@ -110,6 +114,23 @@ DEUDAS_READ_SURFACE_PATH_SHAPE_CANARIES = (
     DEUDAS_DETALLE_PATH_SHAPE_CANARY,
 )
 DEUDAS_OFF_HOST_LANDING_CANARY = "https://deudas-lookalike.example.com/ConsultarDeudas"
+#: The consulta endpoint OBSERVED on the live sede under an authenticated
+#: session, as distinct from the invented ``*_SHAPE_CANARY`` paths above, which
+#: stay plausible-but-wrong routes the guard must keep refusing.
+DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE = "/wlpl/SRVO-JDIT/ConsultaDdas"
+#: *Pagar todas mis deudas*, observed on the SAME ``/wlpl/SRVO-JDIT/``
+#: application as the consulta. The single most important refusal case on this
+#: surface: an allow-list written against the shared application prefix rather
+#: than the consulta endpoint would admit it.
+DEUDAS_PAGAR_TODAS_OBSERVED_PATH_FIXTURE = "/wlpl/SRVO-JDIT/PagarTodas"
+#: Payment and aplazamiento launchers observed beside the consulta. AEAT serves
+#: these from three different numbered hosts; the paths are what the guard sees.
+DEUDAS_OBSERVED_PAYMENT_SURFACE_PATH_FIXTURES = (
+    DEUDAS_PAGAR_TODAS_OBSERVED_PATH_FIXTURE,
+    "/wlpl/OVPP-PAGO/LiquidacionesTPV",
+    "/wlpl/OVPP-PAGO/LiquidacionesCuenta",
+    "/wlpl/OVCT-CXEW/DialogoRepresentacion",
+)
 ACCESO_DR_DETAIL_PATH_FIXTURE = "/wlpl/DASR-CORE/AccesoDR2023RVlt"
 KATA_COTEJO_ID_PATH_FIXTURE = "/wlpl/KATA-APLI/cotejo/CotejoIdSv"
 KATA_COTEJO_DOC_ID_PATH_FIXTURE = "/wlpl/KATA-APLI/cotejo/CotejoDocIdSv"
@@ -271,11 +292,14 @@ __all__ = [
     "CITATION_SEDE_LOOKALIKE_HOST_URL_CANARY",
     "CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED",
     "DEUDAS_APLAZAMIENTO_PATH_SHAPE_CANARY",
+    "DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE",
     "DEUDAS_CONSULTA_PATH_SHAPE_CANARY",
     "DEUDAS_DETALLE_PATH_SHAPE_CANARY",
     "DEUDAS_FRACCIONAMIENTO_PATH_SHAPE_CANARY",
+    "DEUDAS_OBSERVED_PAYMENT_SURFACE_PATH_FIXTURES",
     "DEUDAS_OFF_HOST_LANDING_CANARY",
     "DEUDAS_PAGAR_ALGUNAS_PATH_SHAPE_CANARY",
+    "DEUDAS_PAGAR_TODAS_OBSERVED_PATH_FIXTURE",
     "DEUDAS_PAGAR_TODAS_PATH_SHAPE_CANARY",
     "DEUDAS_PAGO_PARCIAL_PATH_SHAPE_CANARY",
     "DEUDAS_PAYMENT_SURFACE_PATH_SHAPE_CANARIES",

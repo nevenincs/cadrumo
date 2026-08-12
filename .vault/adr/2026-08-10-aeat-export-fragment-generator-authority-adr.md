@@ -12,9 +12,9 @@ related:
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
 supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
-modified: '2026-08-10'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:9585791d0d6aa8f65ac8c93a42360b0d59a787ecc2cccc4a59de11ed10dfec59'
+body_hash: 'sha256:05ffe61ac2974f38de47b42e69ec6d53d3678040037b2fb53376f4bd5edc53e0'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
@@ -49,6 +49,9 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - Profiles distinguish unsigned `Num` handling from signed `N` handling and define the sign representation explicitly. No numeric, decimal, date, flag, identifier, digit-string, or literal default is implicit.
 - Missing anchors, uncovered fields, duplicate or overlapping rules, conflicts with official content, inapplicable design identity, or source-hash drift refuse the whole design before output.
 - `DP200000` is a typed variable envelope and composition wrapper outside fixed-width record generation. It is never truncated to its fixed prefix, assigned an inferred fixed total, or emitted as a fixed record; its envelope and composition behavior must be modeled separately and proven before any generation for that design.
+- `DP30300` is likewise a typed variable envelope, not a fixed record and not part of the fixed-record semantic-map entry set. Its thirteen prefix anchors, Variable body, relative eighteen-byte closer, and derived total form one source-hash-bound composition contract shared across the five explicit Modelo 303 epochs.
+- The four-byte AEAT program identifier and nine-byte software-developer tax identifier are one typed product/software identity authority. They are not filing producers, presenter or taxpayer identities, generic headers, guessed literals, or defaults. Generation refuses until explicit product authority supplies both values.
+- The envelope definition declares exact prefix-anchor semantics, ordered body record identities, closer reuse of modelo, discriminant, year, period, and record-type semantics, and total-length derivation. Provenance carries the envelope schema and digest, source hash, prefix derivations, ordered member digests, product-authority evidence, closer derivation, and total.
 - Neighbouring fragment trees are neither inputs nor correctness oracles. Legacy trees are explicitly unverified bootstrap evidence and may not supply profile rules or defaults.
 - Generated replacements are a hard cutover: superseded manual fragment trees, single-file/direct-revision compatibility loaders, derivative record-design fallbacks, and print-only unmeasured paths are deleted. No legacy fallback, migration support, or silent green result remains.
 - Typed, hash-pinned exceptions may describe parser or source anomalies but may never supply coordinates, bypass mapping bijection, override official content, or substitute for exhaustive render-profile coverage.
@@ -64,6 +67,8 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 Build the development-only generator under `dev/registry/`. It parses the selected official binary into an intermediate representation retaining source reference and hash, workbook format, sheet, source row or cell anchor, ordinal, record identity, offset, length, AEAT type, normalized description, validation/content metadata, declared total, and typed record kind.
 
 Normalize official `Total:` integers without synthesizing absent values. Represent variable envelopes separately from fixed-width records, and block target generation until their composition contract has passed dedicated structural and byte-level proof.
+
+For Modelo 303, render the typed DP30300 envelope as exact prefix fields, followed by the ordered rendered body records, followed by the derived relative closer. Derive and prove the Variable total from emitted bytes. Refuse malformed, incomplete, reordered, duplicate, source-drifted, or product-authority-incomplete envelopes before any target mutation; remove the blanket renderer refusal only when those structural and byte-level proofs pass.
 
 Join fixed-width source fields to the reviewed semantic map, then resolve only absent wire facts through the exhaustive render profile for the exact design and source hash. Validate source applicability, complete semantic bijection, exact-anchor profile coverage, rule consistency, explicit `Num` and signed-`N` behavior, and agreement with every present official content value before rendering.
 

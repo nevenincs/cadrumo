@@ -62,6 +62,7 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     materialize_relation_binding_values,
 )
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
@@ -214,6 +215,10 @@ def _calculate_303(
         binding_values=binding_values,
         relation_values=dict(relation_values),
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+        m303_annual_orden=None,
     )
     return result, len(result.values)
 

@@ -96,8 +96,7 @@ def project_m303_regimen_simplificado_rows(
 def _validate_refs(refs: tuple[_RegimenSimplificadoProjectionRef, ...]) -> None:
     if not refs:
         raise RegistryValidationError("DP30302 requires typed regimen-simplificado projection references")
-    identities = tuple(ref.model_dump_json() for ref in refs)
-    if len(set(identities)) != len(identities):
+    if len(set(refs)) != len(refs):
         raise RegistryValidationError("DP30302 contains duplicate regimen-simplificado projection references")
 
 
@@ -137,9 +136,11 @@ def _project_activity_ref(
         if not isinstance(row, ActividadAgricolaSimplificado):
             raise RegistryValidationError("agricultural activity-code reference resolved a non-agricultural row")
         return row.activity_code
-    if not isinstance(row, ActividadNoAgricolaSimplificado):
-        raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
-    return row.iae_epigrafe
+    if ref.field is M303RegimenSimplificadoActivityField.IAE_EPIGRAFE:
+        if not isinstance(row, ActividadNoAgricolaSimplificado):
+            raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
+        return row.iae_epigrafe
+    raise RegistryValidationError(f"unsupported regimen-simplificado activity field {ref.field!r}")
 
 
 def _project_fact_ref(
@@ -167,11 +168,11 @@ def _project_module_ref(
     if ref.module_order > len(row.modulos):
         return None
     entry = row.modulos[ref.module_order - 1]
-    return (
-        entry.declared_quantity
-        if ref.value is M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY
-        else entry.off_form_result
-    )
+    if ref.value is M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY:
+        return entry.declared_quantity
+    if ref.value is M303RegimenSimplificadoModuleValue.OFF_FORM_RESULT:
+        return entry.off_form_result
+    raise RegistryValidationError(f"unsupported regimen-simplificado module value {ref.value!r}")
 
 
 __all__ = [

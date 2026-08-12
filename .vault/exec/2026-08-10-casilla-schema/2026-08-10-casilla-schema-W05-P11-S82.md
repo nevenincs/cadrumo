@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:c612ca0b450220bc1516eeeedfbe5929cbe90873fee2bcf45ed88ed0ff7202e1'
+body_hash: 'sha256:861969fdb5f4ffb11f16697eea4015c48e275a5ed5c0de38459224ea1661e200'
 step_id: 'S82'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -23,7 +23,9 @@ related:
 - Rename the registry classifier and private helpers to the `clasificar_casillas_oficiales` and casilla-stem family.
 - Replace the review-row field with `estado_casilla_oficial` and retarget the modelo producer, TUI filters, locale registrations, and four locale catalogues.
 - Preserve the serialized status values `addressed`, `represented_via_binding`, and `undefined` while deleting every retired Python identity, module, facade export, field, and filter key.
-- Add sole-owner, zero-retired-reference, real registry, TUI, and serialized-envelope proofs.
+- Add sole-owner, real registry, TUI, and serialized-envelope proofs.
+- Ratchet the complete retired family across every existing text-bearing file under `src/` and `dev/`, covering Python, registry/configuration, locale, markup, script, query, and sequence suffixes plus retired path names.
+- Prove the ratchet bites by planting `official_status` in a temporary non-Python `dev/locales/*.yml` surface and requiring the production-free structural scanner to report it exactly.
 
 Modified and renamed surfaces:
 
@@ -46,10 +48,11 @@ Modified and renamed surfaces:
 ## Outcome
 
 - Passed 16 focused core, registry, review-model, schema-envelope, and TUI tests in 56.82 seconds.
-- Passed the strengthened sole-owner and zero-retired-reference proof independently: 2 tests in 20.23 seconds.
+- Passed the strengthened sole-owner, complete zero-retired-reference, and planted non-Python bite proofs independently: 3 tests in 31.78 seconds.
 - Passed targeted BasedPyright with zero errors, warnings, or notes.
 - Passed path-scoped Ruff and formatting checks.
 - Passed direct imports of the core and registry facades, asserted the new review model field, and proved both retired facade attributes absent.
+- Proved zero occurrences across `src/` and `dev/` of the retired enum, field, classifier, owner/classifier filenames, private channel helper, generic filter axis, concrete TUI filter id, and locale path tokens.
 - Preserved the three external enum values and proved the serialized envelope emits only `estado_casilla_oficial`.
 
 ## Notes

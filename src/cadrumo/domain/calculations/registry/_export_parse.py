@@ -261,6 +261,19 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
 
 
 def _parse_dictionary_casilla_id(value: str, *, allow_letter_id: bool = False) -> CasillaId | None:
+    """Return the exact official casilla identifier a dictionary row declares.
+
+    Official dictionaries print decimal box numbers, and Modelo 100's 2024 and
+    2025 dictionaries additionally print one-uppercase-letter annex boxes.
+    ``###`` and ``*`` rows are explicit non-casilla placeholders. The letter
+    form is admitted only for a source whose ``applies_from`` year is grounded
+    in a bundled dictionary that publishes it, so an older source cannot smuggle
+    an unevidenced identifier in.
+
+    The parser preserves the published spelling: it does not fold case,
+    normalize arbitrary alphanumeric labels, or manufacture an identifier from a
+    source-row placeholder.
+    """
     text = value.strip()
     if not text or text.startswith("*"):
         return None

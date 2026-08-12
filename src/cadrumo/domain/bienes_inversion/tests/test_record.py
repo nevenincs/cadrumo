@@ -14,6 +14,7 @@ from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .. import (
@@ -337,6 +338,7 @@ def _investment_observation(
             evidence_digest="a" * 64,
         ),
         investment_asset_id=asset_id,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

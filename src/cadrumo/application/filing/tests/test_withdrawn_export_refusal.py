@@ -40,6 +40,7 @@ def test_withdrawn_layout_refuses_before_writing_output(tmp_path: Path) -> None:
         amendment_evidence=None,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=None,
     )
     output = tmp_path / "withdrawn-modelo-111.txt"
 

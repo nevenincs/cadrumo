@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:b097c602f47491f342f106e98e3ab94cef64d5ce01104d0284f30a629c6ac673'
+body_hash: 'sha256:4453af0d9a91660b8d4cbd5e013ac2c193670e2508b9ef7f524b3be26ae2f04c'
 step_id: 'S03'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -30,4 +30,6 @@ The parser preserves numeric behavior before 2024 and surfaces the official 2024
 
 ## Notes
 
-No compatibility alias, broad alphanumeric grammar, or source-byte mutation was introduced. The surfaced letter identities remain visible as conformance extras rather than being silently discarded.
+No compatibility alias, broad alphanumeric grammar, or source-byte mutation was introduced. The surfaced letter identities remain visible as conformance extras rather than being silently discarded. No compatibility reader, normalization rule, fake source, mock, stub, patch, skip, or xfail was introduced.
+
+This step was executed twice in parallel on diverged history. Both executions reached the same digits-or-one-uppercase-letter grammar and the same refusal set, and both proved it against the real bundled Modelo 100 2024 and 2025 dictionary rows; the second additionally framed the grammar as an outright replacement of the digits-only parser rather than a widening. Reconciling the two, this lane's implementation is canonical and no behaviour from the parallel execution was lost.

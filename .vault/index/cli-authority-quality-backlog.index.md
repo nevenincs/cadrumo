@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:09e643675a16dd6b117306da39bcf2e0125350545899f7cdaa9f6656484b6468'
+body_hash: 'sha256:9b53e275484edaddfde794f057f6fc9b4d60ab8a1665be778fb448edd3eb0fbf'
 related:
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S01]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S02]]'
@@ -33,6 +33,7 @@ related:
   - '[[2026-07-17-cli-authority-quality-backlog-P08-S22]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P09-S23]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P09-S24]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P09-S28]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P10-S25]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P11-S26]]'
   - '[[2026-07-17-cli-authority-quality-backlog-adr]]'
@@ -86,6 +87,7 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 - `2026-07-17-cli-authority-quality-backlog-P06-S19` - GATED (blocked until the mcp-call-latency plan completes): add a per-verb CLI-versus-MCP schema-parity diff proving every operator verb exposes the same request and response schema across both surfaces
 - `2026-07-17-cli-authority-quality-backlog-P10-S25` - Triage the two low-severity entrypoints structural duplications the duplication-authority audit surfaced (repeated iterator shapes and thin synchronous wrappers): confirm each on the current tree by exact declaration, caller, and writer-path inspection, then either record a disposition note classifying it as intentionally distinct incidental similarity or consolidate it behind one shared abstraction proven substitutable against every consumer contract, so no duplicated policy, state ownership, or persistence behavior survives unclassified
 - `2026-07-17-cli-authority-quality-backlog-P03-S09` - DEFERRED pending (a) protected-browser S08 closure and (b) resolution of the namespace-authority-split adjudication in P03.S27: remove duplicate namespace and custody declarations from Clave, LLM cache and usage, bundle, attachment, and secure-storage consumers without conflating certificate custody with master-key keyring custody. The auth zone is the S08 quiescence surface and in active auth-cert churn, so editing clave and certificate lifecycle now risks colliding with or reopening behavioral work
+- `2026-07-17-cli-authority-quality-backlog-P09-S28` - Measure the legitimate population of direct create_work_unit callers and then close the filing-year gap that the select_revision caller audit structurally could not see, because create_work_unit is not itself a select_revision caller and so fell outside that audit's denominator entirely. It validates a supplied revision_id only for existence and for period-token membership, never against the filing year, so create_work_unit for modelo 303 filing_year 2026 carrying revision_id 2023-y-siguientes succeeds silently and builds a 2026 work unit under the 2023 revision's norms even though that revision's compiled period selector is capped at year_to 2025 and the authority resolves those coordinates to 2026-y-siguientes. Production is safe today only because every production caller resolves through resolve_registry_revision_for_work_target first, so the exposure is a FUTURE caller that does not, and the starting hypothesis to DISPROVE is a static gate constraining production call sites rather than a runtime refusal at the shared door, because whether a revision_id was law-resolved or hand-supplied is not visible in the arguments at all and a runtime predicate therefore cannot discriminate a fixture seeding a work unit from a production path that resolved correctly. Roughly ninety modules call create_work_unit directly, so the population must be measured before the mechanism is chosen
 
 ### plan
 

@@ -37,6 +37,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -241,6 +243,11 @@ def _seed_first_year_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
@@ -269,6 +276,11 @@ def _seed_existing_303_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
         ),
@@ -294,6 +306,11 @@ def _seed_first_303_activity_profile(repos_: _Repos) -> None:
             UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
             UserProfileFact(path="activities.description", value="economic activity"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="provenance.source", value="manual_cli"),
             UserProfileFact(path="censo.activity_start_date", value="2025-01-01"),
         ),
@@ -637,6 +654,9 @@ def test_existing_activity_m303_1t_missing_prior_filing_blocks_wallet_zero(repos
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
             clock=_T1,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-local-cross-period-carry"
+            ),
         )
 
 
@@ -660,6 +680,9 @@ def test_first_iva_period_m303_1t_uses_wallet_first_period_zero(repos: _Repos) -
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
         clock=_T1,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period, reference="test:m303-local-cross-period-carry"
+        ),
     )
     revision = result.revision
     assert Decimal(revision.binding_overrides[MODELO_303_IVA_COMPENSATION_BINDING_ID]) == Decimal("0")
@@ -726,6 +749,9 @@ def test_unreadable_prior_303_observation_cannot_prove_a_first_period_zero(repos
             calculation_repository=cr_repo,
             bucket_event_repository=bv_repo,
             clock=_T1,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-local-cross-period-carry"
+            ),
         )
 
     surfaced_key = blocked.value.translated_message

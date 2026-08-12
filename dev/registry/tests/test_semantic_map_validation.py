@@ -8,7 +8,12 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority, resolve_export_layout
+from cadrumo.core import (
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    validated_casilla_id,
+)
+from cadrumo.domain.calculations.registry import RegistryValidationError, bundled_authority
 
 from .. import _semantic_map_validation
 from .._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
@@ -100,6 +105,15 @@ def _entry(*, row: int, ordinal: int, field_id: str, kind: str = "literal", **pa
 
 def _real_source_sha256(snapshot) -> str:
     return snapshot.sources["aeat-dr-200-2025"].sha256
+
+
+def _projection_ref() -> M303ProrrataActivityProjectionRef:
+    return M303ProrrataActivityProjectionRef(
+        projection_kind="m303_prorrata_activity",
+        slot=1,
+        field=M303ProrrataActivityProjectionField.CNAE,
+        casilla_id=validated_casilla_id("500", surface="test"),
+    )
 
 
 def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m200_snapshot) -> None:
@@ -242,6 +256,59 @@ def test_validation_refuses_duplicate_export_id_without_consulting_legacy_layout
         validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
 
 
+def test_validation_refuses_duplicate_projection_refs_before_any_snapshot_inference(_m200_snapshot) -> None:
+    """An exact typed ref may appear at most once, independent of its source anchor."""
+    source_sha256 = _real_source_sha256(_m200_snapshot)
+    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
+    projection_ref = _projection_ref()
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(
+                    row=14,
+                    ordinal=1,
+                    field_id="generated.projection.one",
+                    kind="projection",
+                    projection_ref=projection_ref,
+                ),
+                _entry(
+                    row=15,
+                    ordinal=2,
+                    field_id="generated.projection.two",
+                    kind="projection",
+                    projection_ref=projection_ref,
+                ),
+            ),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="duplicate projection references"):
+        validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
+
+
+def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot(_m200_snapshot) -> None:
+    """A source anchor cannot admit a typed row owner absent from the revision."""
+    source_sha256 = _real_source_sha256(_m200_snapshot)
+    intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            entries=(
+                _entry(
+                    row=14,
+                    ordinal=1,
+                    field_id="generated.projection.one",
+                    kind="projection",
+                    projection_ref=_projection_ref(),
+                ),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match="not admitted by the target revision"):
+        validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
+
+
 def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(_m200_snapshot) -> None:
     """Anomalies name only a source condition and retain the full bijection gate."""
     source_sha256 = _real_source_sha256(_m200_snapshot)
@@ -291,10 +358,6 @@ def test_validation_uses_no_legacy_export_layout_membership_or_identifier_infere
             ),
         ),
     )
-    legacy_fields = resolve_export_layout(_m200_snapshot, "modelo-200-fichero-boe").fields_by_id
-
-    assert "generated.s05.literal.one" not in legacy_fields
-    assert "generated.s05.literal.two" not in legacy_fields
     validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
 
 

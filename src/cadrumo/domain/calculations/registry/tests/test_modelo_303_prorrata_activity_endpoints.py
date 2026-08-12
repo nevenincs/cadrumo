@@ -52,6 +52,7 @@ _CASILLA_TAG = re.compile(r"\[(5\d{2})\]")
 def _projection_refs() -> tuple[M303ProrrataActivityProjectionRef, ...]:
     return tuple(
         M303ProrrataActivityProjectionRef(
+            projection_kind="m303_prorrata_activity",
             slot=slot,
             field=field,
             casilla_id=str(500 + (slot - 1) * 5 + field_index),
@@ -89,10 +90,10 @@ def test_real_dp30305_binary_and_registry_define_exact_five_by_five_projection_e
         for field in sheet.fields
         if (match := _CASILLA_TAG.search(field.description)) is not None and match.group(1) in _ENDPOINTS
     )
-    source_casilla_ids = tuple(
+    source_casillas = tuple(
         match.group(1) for field in source_fields if (match := _CASILLA_TAG.search(field.description)) is not None
     )
-    assert source_casilla_ids == tuple(str(number) for number in range(500, 525))
+    assert source_casillas == tuple(str(number) for number in range(500, 525))
     assert tuple(field.type_code for field in source_fields) == _OFFICIAL_TYPE_CODES * 5
     assert tuple(field.length for field in source_fields) == (cnae_width, 17, 17, 1, 5) * 5
     expected_offsets = (
@@ -222,7 +223,9 @@ def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -
         for slot in (5, 3, 1, 4, 2)
     )
     register = ProrrataRegister(
-        entries=(ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.GENERAL),),
+        entries=(
+            ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+        ),
         activity_rows=rows,
     )
 

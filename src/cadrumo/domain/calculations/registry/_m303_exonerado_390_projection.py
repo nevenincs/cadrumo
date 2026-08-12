@@ -47,6 +47,8 @@ def project_m303_exonerado_390_activity_rows(
     refs = _validate_projection_refs(projection_refs)
     if not evidence.applicable:
         return None
+    if evidence.operaciones_terceros_declarables is None or evidence.operaciones_terceros_reference is None:
+        raise RegistryValidationError("applicable exonerado-390 projection requires an evidenced Modelo 347 decision")
     rows_by_slot = {row.slot: row for row in evidence.activity_rows}
     projected: list[M303Exonerado390FieldProjection] = []
     for ref in projection_refs:
@@ -58,28 +60,37 @@ def project_m303_exonerado_390_activity_rows(
                 value = None
             elif ref.field is M303Exonerado390ActivityField.ACTIVITY_CODE:
                 value = row.codigo_actividad
-            else:
+            elif ref.field is M303Exonerado390ActivityField.IAE_EPIGRAFE:
                 value = row.epigrafe_iae
+            else:
+                raise RegistryValidationError(f"unsupported exonerado-390 activity field {ref.field!r}")
         projected.append(M303Exonerado390FieldProjection(projection_ref=ref, value=value))
-    if len(projected) != len(refs):
+    projected_refs = tuple(field.projection_ref for field in projected)
+    if len(projected_refs) != len(refs) or any(ref not in refs for ref in projected_refs):
         raise RegistryValidationError("DP30304 projection reference population changed during projection")
     return M303Exonerado390RecordProjection(fields=tuple(projected))
 
 
-def _validate_projection_refs(refs: tuple[_ExoneradoProjectionRef, ...]) -> frozenset[str]:
-    identities = tuple(ref.model_dump_json() for ref in refs)
-    if len(set(identities)) != len(identities):
+def _validate_projection_refs(refs: tuple[_ExoneradoProjectionRef, ...]) -> tuple[FilingProjectionRef, ...]:
+    if any(refs.count(ref) > 1 for ref in refs):
         raise RegistryValidationError("DP30304 contains duplicate exonerado-390 projection references")
-    expected = {
-        M303Exonerado390ActivityProjectionRef(slot=slot, field=field).model_dump_json()
-        for slot in range(1, 7)
-        for field in M303Exonerado390ActivityField
-    }
-    expected.add(M303Exonerado390OperacionesTercerosProjectionRef().model_dump_json())
-    actual = set(identities)
-    if actual != expected:
+    expected: tuple[FilingProjectionRef, ...] = (
+        *(
+            M303Exonerado390ActivityProjectionRef(
+                projection_kind="m303_exonerado_390_activity",
+                slot=slot,
+                field=field,
+            )
+            for slot in range(1, 7)
+            for field in M303Exonerado390ActivityField
+        ),
+        M303Exonerado390OperacionesTercerosProjectionRef(
+            projection_kind="m303_exonerado_390_operaciones_terceros",
+        ),
+    )
+    if len(refs) != len(expected) or any(ref not in expected for ref in refs):
         raise RegistryValidationError("DP30304 requires six activity-code/IAE pairs and one Modelo 347 marker")
-    return frozenset(actual)
+    return refs
 
 
 __all__ = [

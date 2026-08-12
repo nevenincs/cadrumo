@@ -1208,6 +1208,11 @@ def compute_from_pull(
         binding_values=binding_values,
         enum_binding_values=enum_binding_values,
         relation_values=relation_values,
+        # The worksheet pull carries operator cell edits, not filing-instance
+        # evidence, so it states the absence of M303 filing facts rather than
+        # inheriting it from a default.
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
 
 

@@ -52,6 +52,7 @@ from ...storage.sql._secure_object_crypto import derive_revision_id
 from ...storage.sql.engine import get_engine
 from ...storage.sql.session import session_scope
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
+from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -232,7 +233,7 @@ def _stored_row_state(engine: Engine, namespace: str) -> tuple[tuple[bytes, int,
                     bytes(row.object_key),
                     row.schema_version,
                     row.revision_id or "",
-                    row.payload_hash,
+                    row.payload_hash or "",
                 )
             )
         return tuple(sorted(states))
@@ -377,6 +378,7 @@ def test_authoritative_v1_rows_upgrade_and_roundtrip_through_real_secure_reposit
         aggregation = aggregate_iva_ledger_observations_from_repositories(
             bucket_id="s54-v1-success",
             period=Period.from_year_and_code(2026, "2T"),
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="s54-v1-success"),
         )
         loaded_transactions = transaction_repository.load()
         loaded_register = bienes_repository.load()

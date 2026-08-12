@@ -251,8 +251,6 @@ def test_coverage_validator_passes_when_no_gap() -> None:
 # 3. R8-M200-1 regression: DP200014:00562 classification (R8-M200-1)
 # ---------------------------------------------------------------------------
 
-_DISPATCH_BINDING = "modelo-200-2024-profile-legal-entity-form"
-
 
 def test_cuota_integra_casilla_is_classified_computed_not_manual() -> None:
     """DP200014:00562 must be classified as computed=true, required=false in the registry.

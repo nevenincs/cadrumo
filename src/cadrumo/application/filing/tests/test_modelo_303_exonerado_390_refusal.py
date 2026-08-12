@@ -12,6 +12,7 @@ from ....core import (
     PaymentElection,
     Period,
     PriorDomiciliationElection,
+    ProrrataRegisterRegime,
     RefundElection,
     ResultDisposition,
     validated_casilla_id,
@@ -32,11 +33,12 @@ from ....domain.modelos import (
     M303Exonerado390FilingEvidence,
     M303RegimenSimplificadoFilingEvidence,
 )
-from ....domain.prorrata_register import ProrrataRegister
+from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.submission import ModeloDraftStatus
 from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from .. import (
     FilingElectionFacts,
+    FilingProducerSnapshotError,
     M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
@@ -145,7 +147,19 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         schema_provider=provider,
         m303_regimen_simplificado_scope=_general_m303_scope(),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-    register = ProrrataRegister()
+    # A final period must state the year's prorrata regime explicitly: the
+    # register must not turn an absent declaration into "no transition". This
+    # taxpayer performs only deduction-granting operations, so NINGUNA (the LIVA
+    # art. 94 full-deduction default) is the truthful whole-entity declaration.
+    register = ProrrataRegister(
+        entries=(
+            ProrrataRegisterEntry(
+                ejercicio=period.filing_year,
+                regime=ProrrataRegisterRegime.NINGUNA,
+                especial_transition=None,
+            ),
+        ),
+    )
     bienes_register = BienesInversionIvaRegister()
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo.M303,
@@ -189,8 +203,13 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
             supplier_regime=M303SupplierRegimeArrival(
                 period=period,
                 recipient_of_cash_accounting_operations=False,
+                source_ledger_ids=(),
             ),
-            prorrata_transition=M303ProrrataTransitionArrival(period=period),
+            prorrata_transition=M303ProrrataTransitionArrival(
+                period=period,
+                transition=None,
+                register_evidence=(),
+            ),
             prorrata_register=register,
             differentiated_contributions=(),
             bienes_register=bienes_register,
@@ -212,3 +231,49 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
         )
 
     assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".tmp").exists()
+
+
+def test_exonerado_numeric_payload_refuses_before_target_while_atomic_unit_is_incomplete(tmp_path: Path) -> None:
+    """An incomplete M303 producer snapshot fails before an artifact can be emitted."""
+    output = tmp_path / "modelo-303-exonerado.txt"
+
+    with pytest.raises(FilingProducerSnapshotError, match="modelo 303 requires complete M303FilingFacts"):
+        build_filing_producer_snapshot(
+            modelo=Modelo.M303,
+            taxpayer_tax_id="12345678Z",
+            taxpayer_identity=TaxpayerIdentityFacts(
+                legal_name=None,
+                given_name="Ana",
+                surnames="Prueba",
+                full_name="Ana Prueba",
+            ),
+            presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
+            model_profile=ModeloIVAProfile(
+                tax_territory=M303TaxTerritory.COMMON_REGIME,
+                regime_composition=M303RegimeComposition.GENERAL,
+                roi_enrolled=False,
+                oss_enrolled=False,
+                group_member_enrolled=False,
+                group_dominant_entity_enrolled=False,
+                intracommunity_operations_exceed_50000_eur=False,
+                sii_enrolled=False,
+                redeme_enrolled=False,
+                cash_accounting_regime_enrolled=False,
+                voluntary_sii_enrolled=False,
+                hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+            ),
+            elections=FilingElectionFacts(
+                result_disposition=ResultDisposition.NEGATIVA,
+                payment=PaymentElection.INGRESO,
+                refund=RefundElection.COMPENSAR,
+                prior_domiciliation=PriorDomiciliationElection.KEEP,
+            ),
+            amendment_evidence=None,
+            refund_account=None,
+            charge_account=None,
+            m303_filing_facts=None,
+        )
+
+    assert not output.exists()
+    assert not output.with_suffix(output.suffix + ".tmp").exists()

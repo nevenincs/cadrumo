@@ -59,15 +59,6 @@ class OptionalExtra(BaseModel):
     import_name: str = Field(min_length=1)
     feature: str = Field(min_length=1)
 
-    @property
-    def install_hint(self) -> str:
-        """Return the exact package-install command for this extra.
-
-        This is a dependency remediation hint, not a runtime provisioning command
-        such as ``playwright install chromium``.
-        """
-        return f"pip install cadrumo[{self.extra}]"
-
 
 # The capability-mapped optional extras declared in
 # ``[project.optional-dependencies]``. Each adapter family guards its own entry
@@ -110,18 +101,21 @@ class MissingOptionalExtraError(CoreError, ImportError):
     :class:`application.provisioning.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.
 
+    Carries the extra's machine identity and nothing else. The operator-facing
+    text is the registered error code's own translation key, so this refusal
+    renders through the same catalogue every other registered error does, and
+    the recovery is resolved downstream from the facts rather than rendered
+    here as an install command.
+
     Attributes:
         extra: Optional-extra registry record that failed the spec-only probe.
-        install_hint: Exact ``pip install cadrumo[<extra>]`` remediation command.
     """
 
     def __init__(self, extra: OptionalExtra) -> None:
         self.extra = extra
-        self.install_hint = extra.install_hint
-        message = f"{extra.feature} requires the optional '{extra.extra}' extra. Install it with: {extra.install_hint}"
         super().__init__(
-            message,
-            context={"extra": extra.extra, "import_name": extra.import_name, "feature": extra.feature},
+            translated_message=type(self).code.message_key,
+            context={"extra": extra.extra, "import_name": extra.import_name, "importable": False},
         )
         self.name = extra.import_name
         self.path = None

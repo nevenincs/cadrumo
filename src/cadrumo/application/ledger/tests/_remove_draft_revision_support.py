@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
@@ -58,12 +60,14 @@ def _seed_revision_citing_transaction(
         period=period,
         revision_id="2009-y-siguientes",
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:remove-draft-revision")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(transaction_id,),
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -107,6 +111,7 @@ def _seed_revision_citing_transaction(
         verified_by=verified_by,
         discarded_at=discarded_at,
         discarded_by=discarded_by,
+        filing_instance_evidence=filing_instance_evidence,
     )
     WorkUnitCatalogueRepository(objects=objects).save(WorkUnitCatalogue.from_work_units((work_unit,)))
     catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()

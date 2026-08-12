@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:2fbcb78125372bae73ac6e43ce62ae885d71c66689a1e31d38360c2725410466'
+body_hash: 'sha256:028f9607a79729bdfd8dbf1dc98f16d847eb18c217b0f0fba5e86c70925a1b74'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -47,7 +47,10 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S51]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S53]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S54]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S55]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S56]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S57]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S58]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S59]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -96,13 +99,18 @@ related:
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s51-export-applicability-review-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-review-audit]]'
+  - '[[2026-08-11-aeat-export-fragment-generator-authority-s55-dp30301-scalar-authority-closure-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s55-dp30301-scalar-owners-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s56-exonerado-activity-rows-audit]]'
+  - '[[2026-08-11-aeat-export-fragment-generator-authority-s56-exonerado-activity-rows-candidate-resolution-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s57-filing-projection-ref-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s58-filing-evidence-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s59-annual-orden-authority-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s60-producer-projection-address-review-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -157,12 +165,17 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-11-aeat-export-fragment-generator-authority-s50-simplified-activity-review-audit` - `aeat-export-fragment-generator-authority` audit: `s50 simplified activity review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s51-export-applicability-review-audit` - `aeat-export-fragment-generator-authority` audit: `s51 export applicability review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-review-audit` - `aeat-export-fragment-generator-authority` audit: `s54 sector source taxonomy review`
+- `2026-08-11-aeat-export-fragment-generator-authority-s55-dp30301-scalar-authority-closure-audit` - `aeat-export-fragment-generator-authority` audit: `S55 DP30301 scalar authority closure review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s55-dp30301-scalar-owners-audit` - `aeat-export-fragment-generator-authority` audit: `S55 DP30301 scalar-owner review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s56-exonerado-activity-rows-audit` - `aeat-export-fragment-generator-authority` audit: `S56 exonerado-390 activity-row authority`
+- `2026-08-11-aeat-export-fragment-generator-authority-s56-exonerado-activity-rows-candidate-resolution-audit` - `aeat-export-fragment-generator-authority` audit: `S56 exonerado-390 activity-row authority closure review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s57-filing-projection-ref-audit` - `aeat-export-fragment-generator-authority` audit: `S57 typed FilingProjectionRef integration review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s58-filing-evidence-audit` - `aeat-export-fragment-generator-authority` audit: `S58 immutable M303 filing evidence review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s59-annual-orden-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S59 annual Orden authority formal review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s60-producer-projection-address-review-audit` - `aeat-export-fragment-generator-authority` audit: `S60 producer and projection address formal review`
+- `2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `parallel campaign merge reconciliation`
+- `2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S57 Typed Filing Projection Authority Audit`
+- `2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit` - `aeat-export-fragment-generator-authority` audit: `S60 Producer and Projection Address Closure Audit`
 
 ### exec
 
@@ -201,13 +214,16 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S47` - Author the M303 exonerado-390 annual-summary official numbered casillas and their exact legal/source/applicability metadata for every applicable explicit revision, preserving the annual-summary values as canonical casilla projection endpoints and refusing the exonerado population until every required endpoint and producer is present
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S48` - Author the M303 per-activity prorrata canonical row substrate and official casilla 500-524 projection endpoints exactly as S44 decides, including five-row identity, typed values, legal/source refs, fixed-slot projection, and no duplication of the existing global-prorrata authority. Delete any parallel scalar/selector implementation and refuse applicable filings with incomplete rows
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S53` - Define and prove one parser-owned typed composite relative-closing contract for Modelo 220's exact six-row *** sequence after the Variable body and before the explicit Variable total, preserving every source row, ordinal, length, and content without concatenation, name selection, or extent inference, threading the typed composition through the intermediate representation and fixed-generation refusal boundary, and proving every pinned Modelo 220 binary plus malformed, incomplete, reordered, duplicate, and ambiguous variants
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S56` - Add one typed ordered evidence-bearing Modelo 303 exonerado-390 activity-row owner for all six activity-code and IAE pairs, reuse S58's nominal filing-evidence references, thread it through value arrival and projection, and delete raw marker, producer-reference, scalar-slot, and placeholder authority
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S49` - Author the M303 two-sector differentiated-deduction canonical row substrate and official casilla 700-735 projection endpoints exactly as S44 decides, including sector identity, typed values, totals, legal/source refs, fixed-slot projection, and no duplicate deduction aggregation path. Refuse applicable filings with incomplete sector data
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S50` - Complete the M303 simplified-activity/module row authority for every nonnumbered official page-2 field, extending the existing single formula mechanism and shared annual Orden/IAE substrate without a second resolver, per-slot scalar redeclarations, or silent zero. Retain manual official casilla 48 plus blocking/advisory behavior until the accepted coverage threshold is actually met
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S51` - Enforce M303 export applicability before rendering: optional canonical values may emit blank only when law/profile says not applicable, while exonerado, prorrata, differentiated-sector, simplified-regime, amendment, payment, and account populations with missing required authority refuse the whole export. Prove unsupported fields cannot be reclassified as filler, header defaults, or legacy lookups
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S54` - Ground and implement the canonical M303 differentiated-sector source taxonomy before projection by researching and approving the source authorities for current-versus-investment, REAGP, rectification, and bienes-inversion regularisation, preserving the chosen closed classification into frozen IVA observations, defining transaction and asset linkage, adjustment ownership, migration and backfill boundaries, and fail-closed behavior, then landing the canonical observation and resolver changes with real ledger, asset, and refusal proofs and no scalar, mapping, label, or slot inference
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S55` - W04.P07.S55 DP30301 scalar authority closure
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S57` - Integrate the strict core-owned discriminated FilingProjectionRef union atomically through CasillaFieldKind.PROJECTION, projection_ref payload semantics, semantic-map and registry schemas and loaders, provenance, generator, renderer dispatch, and the S47-S50 projectors, deleting description-regex, section, slot, offset, numeric, neighbouring-field, string-key, and legacy inference
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S58` - W04.P07.S58 Step Record
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S59` - Establish the single annual Orden registry authority by authoring ActividadOrdenAnualId, the immutable year/revision-scoped Orden projection, and ActividadOrdenAnualRef with Orden id, ejercicio, registry revision, and canonical source/content digest, exposing one snapshot resolver for Orden and active record-design epoch, and deleting test-only rows, parallel selectors, parameter-table redeclarations, and runtime inference. Own only the required closed calculation-scope input whose not-claimed value is neutral and whose evidence-required value refuses pending S58. Do not derive secure-profile composition or own any regime-composition enum, positive censo applicability, or filing-evidence owner because S55 owns profile mapping and S58 owns evidence-bearing applicability
-- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60` - S60 producer and projection address remediation
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader
 
 ### plan
 

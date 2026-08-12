@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:de83c0da56801165c62c927dedfb984524cf1cb9cb33bef50807fb92f9a56438'
+body_hash: 'sha256:c1a369a22baa489b728608980a9f3b759b6bc417cbed2b9dbd22cdfc262d312a'
 related:
   - '[[2026-08-10-casilla-schema-W01-P01-S01]]'
   - '[[2026-08-10-casilla-schema-W01-P01-S02]]'
@@ -79,6 +79,9 @@ related:
   - '[[2026-08-11-casilla-schema-s24-finding-attribution-audit]]'
   - '[[2026-08-11-casilla-schema-s25-progress-counts-audit]]'
   - '[[2026-08-11-casilla-schema-s80-manifest-worklist-adjudication-audit]]'
+  - '[[2026-08-12-casilla-schema-s03-xml-casilla-id-parser-audit]]'
+  - '[[2026-08-12-casilla-schema-s14-official-box-status-audit]]'
+  - '[[2026-08-12-casilla-schema-s15-official-box-classifier-audit]]'
   - '[[2026-08-12-casilla-schema-s26-review-audit]]'
   - '[[2026-08-12-casilla-schema-s27-requires-review-audit]]'
   - '[[2026-08-12-casilla-schema-s28-pipeline-health-audit]]'
@@ -94,6 +97,7 @@ related:
   - '[[2026-08-12-casilla-schema-s37-export-exemption-docstring-review-audit]]'
   - '[[2026-08-12-casilla-schema-s38-dormant-enum-adjudication-review-audit]]'
   - '[[2026-08-12-casilla-schema-s41-full-tree-collection-gate-review-audit]]'
+  - '[[2026-08-12-casilla-schema-s82-spanish-casilla-family-review-audit]]'
 ---
 
 # `casilla-schema` feature index
@@ -135,6 +139,9 @@ Auto-generated index of all documents tagged with `#casilla-schema`.
 - `2026-08-11-casilla-schema-s24-finding-attribution-audit` - `casilla-schema` audit: `S24 finding-to-casilla attribution`
 - `2026-08-11-casilla-schema-s25-progress-counts-audit` - `casilla-schema` audit: `S25 progress counts final review`
 - `2026-08-11-casilla-schema-s80-manifest-worklist-adjudication-audit` - `casilla-schema` audit: `S80 manifest worklist adjudication`
+- `2026-08-12-casilla-schema-s03-xml-casilla-id-parser-audit` - `casilla-schema` audit: `S03 XML Casilla Identifier Parser Audit`
+- `2026-08-12-casilla-schema-s14-official-box-status-audit` - `casilla-schema` audit: `S14 Official Box Status Audit`
+- `2026-08-12-casilla-schema-s15-official-box-classifier-audit` - `casilla-schema` audit: `S15 Official Box Classifier Audit`
 - `2026-08-12-casilla-schema-s26-review-audit` - `casilla-schema` audit: `W03.P07.S26 modelo work review envelope`
 - `2026-08-12-casilla-schema-s27-requires-review-audit` - `casilla-schema` audit: `S27 modelo.requires classifier review`
 - `2026-08-12-casilla-schema-s28-pipeline-health-audit` - `casilla-schema` audit: `S28 pipeline-health persisted-readiness review`
@@ -150,6 +157,7 @@ Auto-generated index of all documents tagged with `#casilla-schema`.
 - `2026-08-12-casilla-schema-s37-export-exemption-docstring-review-audit` - `casilla-schema` audit: `W05.P11.S37 export exemption docstring review`
 - `2026-08-12-casilla-schema-s38-dormant-enum-adjudication-review-audit` - `casilla-schema` audit: `W05.P11.S38 dormant enum adjudication review`
 - `2026-08-12-casilla-schema-s41-full-tree-collection-gate-review-audit` - `casilla-schema` audit: `W05.P11.S41 full-tree collection gate review`
+- `2026-08-12-casilla-schema-s82-spanish-casilla-family-review-audit` - `casilla-schema` audit: `S82 Spanish casilla-family rename review`
 
 ### exec
 

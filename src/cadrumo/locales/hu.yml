@@ -767,6 +767,44 @@ application:
       errors:
         build_failed: 'a számlavarázsló elutasította: %{detail}'
         field_errors: 'a számlavarázsló %{field_count} mezőt utasított el: %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: A legutóbbi érvényes AEAT tárcamegfigyelés lett
+        kiválasztva; nem állt rendelkezésre helyi ismétlődés az összevetéshez.
+      aeat_wallet_validated: A legutóbbi érvényes AEAT tárcamegfigyelés egyezik a
+        helyi ismétlődéssel a korábbi Modelo 303 compensación tekintetében.
+      caller_zero_matches_local_authority: A hívó által megadott nulla egyezik a tárolt
+        helyi nulla-hatósággal.
+      filed_history_requires_override: Nincs AEAT tárcabizonyíték; a benyújtási előzmények
+        ismétlődéséhez az adózó kifejezett felülbírálata szükséges az automatikus
+        eredmény előállítása előtt.
+      filed_history_zero: A Modelo 303 rögzített benyújtási előzmény-bizonyítéka nulla
+        továbbvihető compensación összeget állapít meg.
+      first_period_zero_activity_start_uncontrasted: 'NEM ÖSSZEVETVE: Az első időszaki
+        nulla az üzemeltető által bejelentett tevékenységkezdési dátumon alapul; a
+        Cadrumo nem tudja ellenőrizni ezt a dátumot az AEAT aktuális censal adataival.'
+      first_period_zero_aeat_wallet: Az AEAT tárca megerősíti, hogy a korábbi compensación
+        nulla az első rögzített IVA időszakban.
+      first_period_zero_local_recurrence: Egy kezdeti helyi nulla megállapítja, hogy
+        nincs korábbi compensación az első rögzített IVA időszakban.
+      local_evidence_unreadable: Létezik korábbi Modelo 303 rekord, de nem olvasható
+        korábbi compensación bizonyítékaként, és nem áll rendelkezésre AEAT tárcamegfigyelés.
+      local_recurrence_requires_override: Az AEAT tárca nem érhető el; a helyi ismétlődéshez
+        az adózó kifejezett felülbírálata szükséges az automatikus eredmény előállítása
+        előtt.
+      local_recurrence_zero: A helyi Modelo 303 ismétlődés nulla továbbvihető compensación
+        összeget állapít meg.
+      no_usable_authority: Nincs sem AEAT tárcamegfigyelés, sem használható helyi
+        ismétlődés a korábbi Modelo 303 compensación összeghez.
+      stale_wallet_local_recurrence_requires_override: Az AEAT tárcamegfigyelés elavult;
+        a helyi ismétlődéshez az adózó kifejezett felülbírálata szükséges az automatikus
+        eredmény előállítása előtt.
+      stale_wallet_no_local_recurrence: Az AEAT tárcamegfigyelés elavult, és nem áll
+        rendelkezésre alternatív helyi ismétlődés.
+      taxpayer_override: Az adózó kifejezett felülbírálata lett kiválasztva; a külön
+        rögzített üzemeltetői magyarázat adja meg a bizonyítási alapját.
+      wallet_local_recurrence_divergence: Az AEAT tárca és a helyi ismétlődés eltér;
+        felülvizsgálat szükséges az automatikus eredmény előállítása előtt.
   ledger:
     errors:
       evidence_attachment_requires_ids: A főkönyvi bizonylat csatolásához vásárlási
@@ -991,6 +1029,9 @@ application:
         és a(z) %{period} időszakkal.
       external_import_justificante_missing: A(z) %{evidence_reference_id} (%{evidence_kind})
         külső bevallásimport-bizonyíték nincs tartós igazolási artefaktumként regisztrálva.
+      external_import_m303_filing_evidence_required: A Modelo 303 külső importjához
+        teljes, típusos bevallási bizonyíték szükséges; ez nem következtethető ki
+        a mezőértékekből.
       external_import_registry_root_missing: A(z) %{registry_root} registry gyökér
         hiányzik; az importált casilla-azonosítók nem érvényesíthetők.
       external_import_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
@@ -1348,16 +1389,6 @@ application:
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
-  verification:
-    errors:
-      missing_binding_values: A registry-ellenőrzéshez külső kötési értékek szükségesek.
-      period_mapping_failed: A bevallási időszak nem képezhető le registry-időszakra.
-      registry_policy_invalid: A registry ellenőrzési házirendje nem tölthető be.
-      registry_snapshot_invalid: A bevallás ellenőrzéséhez szükséges registry-pillanatkép
-        nem tölthető be.
-      registry_snapshot_ref_mismatch: 'A(z) %{modelo} %{period} modell registry-pillanatképe
-        nem egyezik a nyilatkozaton rögzített hivatkozással: megfigyelt %{observed_ref},
-        feloldott %{resolved_ref}.'
   wizard:
     errors:
       command_input_invalid: 'A profiladatok érvényesítése sikertelen: %{details}'
@@ -2053,6 +2084,9 @@ cli:
           ezt a szektort.
         list_help: Listáz minden nyilvántartási bejegyzést és minden bejelentett megkülönböztetett
           szektort az aktív profilon.
+        optional_evidence_reference_help: Az üzemeltetőnél lévő bizonyíték az ebben
+          az ejercicio-ban gyakorolt választásról; hagyd el a már hatályos rezsim
+          kifejezett folytatásának rögzítéséhez.
         percentage_help: Közös használatú levonási százalék 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
         provenance_help: Az ideiglenes százalék forrása a LIVA art. 105 szerint.
@@ -4650,8 +4684,6 @@ cli:
       command_input_invalid: 'Elutasítva. A tranzakció érvénytelen: {details}'
       command_input_invalid_fallback: Egy vagy több mező érvényesítése sikertelen.
       confirm_required: Adja meg a --yes kapcsolót e romboló főkönyvi művelet megerősítéséhez.
-      filter_parse_error: 'A főkönyvi szűrő elemzése sikertelen %{token} közelében:
-        %{reason}.'
       invalid_category: 'Ismeretlen költségkategória: ''{category}''. Ismert kategóriák:
         {known}.'
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}. Használjon
@@ -4660,9 +4692,6 @@ cli:
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
         között).
-      period_year_pairing: A főkönyvi időszakszűrőkhöz időszak és év együtt szükséges.
-        Teljes évhez használja a --period 0A --year %{year} kapcsolókat, vagy a --filter
-        period=0A --filter year=%{year} párost.
       unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
         adjon meg, például {example!r}, ne kategóriacsalád-előtaggal ellátott vagy
         összetett kulcsot.'
@@ -71547,6 +71576,12 @@ profile:
           label: Családi helyzet
         unidad_familiar_otros_miembros_base:
           label: A családi egység többi tagjának adóalapja (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Bevallás típusa
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          label: Bérbeadási kedvezmény sávja (art. 23.2)
       renta_spouse:
         birth_date:
           label: Házastárs születési dátuma
@@ -71681,6 +71716,10 @@ profile:
         title: Eredet és érvényesség
       renta_family:
         title: Család (Renta)
+      renta_filing:
+        title: Bevallási környezet (Renta)
+      renta_rental:
+        title: Bérbeadási környezet (Renta)
       renta_spouse:
         title: Házastárs (Renta)
       renta_taxpayer:
@@ -72215,12 +72254,11 @@ wizard:
       iva-group-member-enrolled:
         help: IVA-csoport tag szervezetekent bejelentkezett
       iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
-        help: A szénhidrogén-adóraktári rendszer előlegeinek levonására való jogosultság
-          megadása.
+        help: Nyilatkozzon a szénhidrogén-adóraktári előlegek levonására való jogosultságról.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-m303-regime-composition:
-        help: 'A Modelo 303 rendszerösszetétele: általános, egyszerűsített vagy vegyes.'
+        help: 'Modelo 303 rendszerösszetétel: általános, egyszerűsített vagy vegyes.'
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
       iva-redeme-enrolled:
@@ -72232,7 +72270,8 @@ wizard:
       iva-sii-enrolled:
         help: Az adózó be van-e jegyezve az SII-be
       iva-voluntary-sii-enrolled:
-        help: Az önkéntes SII-tagság megadása, elkülönítve a kötelező bekerülési okoktól.
+        help: Nyilatkozzon az önkéntes SII-bejelentkezésről, elkülönítve a kötelező
+          okoktól.
       legal-entity-form:
         help: Elismert jogi forma, ha az entitástípus jogi személy
       legal-name:
@@ -72345,7 +72384,7 @@ wizard:
       tax-residence-ccaa:
         help: 'Adóügyi illetőség szerinti autonóm közösség. Az alábbiak egyike: %{choices}.'
       tax-residence-jurisdiction-scope:
-        help: 'Bejelentett területi rendszer: közös terület vagy a még nem támogatott
+        help: 'Nyilatkozott területi rendszer: közös terület vagy még nem támogatott
           forális terület.'
       taxation-type:
         help: 'Jövedelemadó-bevallás típusa: 1 = egyéni, 2 = közös (családi egység).'
@@ -72387,13 +72426,13 @@ wizard:
       a következővel: .'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: Bejelentkezett az IVA pénzforgalmi különös szabályozásába?
+        prompt: Be van jelentkezve az IVA pénzforgalmi különleges rendszerébe?
       iva-group-dominant-entity-enrolled:
         prompt: IVA-csoport dominans szervezetekent bejelentkezett
       iva-group-member-enrolled:
         prompt: IVA-csoport tag szervezetekent bejelentkezett
       iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
-        prompt: Jogosult levonni a szénhidrogén-adóraktári rendszer előlegeit?
+        prompt: Jogosult a szénhidrogén-adóraktári előlegek levonására?
       iva-intracommunity-operations-exceed-50000-eur:
         prompt: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-oss-enrolled:
@@ -72407,16 +72446,16 @@ wizard:
       iva-sii-enrolled:
         prompt: SII-be bejelentkezett (azonnali információszolgáltatás)
       iva-voluntary-sii-enrolled:
-        prompt: Önkéntesen csatlakozott az SII-hez?
+        prompt: Önkéntesen bejelentkezett az SII-be?
       m303-regime-composition:
         choices:
           general:
             label: Csak általános rendszer
           mixed:
-            label: Vegyes rendszer
+            label: Vegyes rendszerek
           simplified:
             label: Csak egyszerűsített rendszer
-        prompt: Milyen rendszerösszetételt jelent be a Modelo 303?
+        prompt: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
       title: IVA
     notes:
       notes:
@@ -72629,10 +72668,10 @@ wizard:
       tax-residence-jurisdiction-scope:
         choices:
           common_regime:
-            label: Közös adóterület
+            label: Közös terület
           foral_unsupported:
             label: Forális terület (még nem támogatott)
-        prompt: Melyik területi adórendszer vonatkozik erre a profilra?
+        prompt: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
       title: Adóügyi illetőség
     review:
       registered-non-official-suffix: ' (censal tanúsítványból - az AEAT által nem

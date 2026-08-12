@@ -167,6 +167,7 @@ def _calculated_revision(
             binding_overrides=binding_overrides,
             casilla_values=raw_casilla_values,
             detail_rows=detail_rows,
+            filing_instance_evidence=None,
         ),
         work_unit_id=work_unit.work_unit_id,
         state=CalculationRevisionState.BORRADOR,
@@ -200,6 +201,7 @@ def _calculated_revision(
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
         detail_rows=detail_rows,
+        filing_instance_evidence=None,
     )
     return (
         snapshot,

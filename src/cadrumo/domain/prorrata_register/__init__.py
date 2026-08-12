@@ -75,7 +75,7 @@ class ProrrataRegisterValidationError(ProrrataRegisterError, ValueError):
     """Raised when a prorrata-register model fails Pydantic validation."""
 
 
-PRORRATA_REGISTER_SCHEMA_VERSION = "1"
+PRORRATA_REGISTER_SCHEMA_VERSION = "2"
 """Forward-compatible schema version stamped onto every record in this module."""
 
 _HUNDRED = Decimal("100")
@@ -115,6 +115,10 @@ class ProrrataEspecialTransitionEvidence(BaseModel):
     not inferred descriptions of a register regime.  A single discriminated
     transition keeps their mutual exclusion structural while its reference
     retains the operator evidence that supports the filing projection.
+
+    The enclosing :class:`ProrrataRegisterEntry` owns the ejercicio and sector,
+    so this child deliberately carries only the closed legal transition and its
+    durable operator-held reference.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
@@ -220,6 +224,11 @@ class ProrrataRegisterEntry(BaseModel):
     Attributes:
         ejercicio: Filing year the entry covers.
         regime: :class:`~core.ProrrataRegisterRegime` in force for the ejercicio.
+        especial_transition: The :class:`ProrrataEspecialTransitionEvidence` for
+            an art. 103.Dos option or its revocation evidenced *in this*
+            ejercicio, or ``None`` when the regime merely continues. Required
+            rather than defaulted: a regime is durable state, so an absent
+            transition must be an explicit declaration and never an omission.
         sector_id: Sector identifier for a sectores-diferenciados register, or
             ``None`` for the whole-entity register. Present from birth so
             sectores land without migration; the per-sector compute is deferred.
@@ -254,13 +263,14 @@ class ProrrataRegisterEntry(BaseModel):
             ``carried_prior_definitiva`` entry was seeded from, so the register
             stays cross-checkable against the prior filing. Permitted only for the
             carried provenance.
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Forward-compatible schema version. ``"2"``.
     """
 
     model_config = _STRICT_FROZEN_CONFIG
 
     ejercicio: int = Field(ge=_MIN_EJERCICIO, le=_MAX_EJERCICIO)
     regime: _ProrrataRegisterRegime
+    especial_transition: ProrrataEspecialTransitionEvidence | None
     sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     interrupted: bool = False
     provisional_percentage: Decimal | None = Field(default=None, ge=Decimal("0"), le=_HUNDRED)
@@ -270,7 +280,6 @@ class ProrrataRegisterEntry(BaseModel):
     definitive_volume_con_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     definitive_volume_sin_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_observation_ref: str | None = Field(default=None, min_length=1)
-    especial_transition: ProrrataEspecialTransitionEvidence | None = None
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
 
     @field_validator("schema_version")
@@ -363,8 +372,9 @@ def _validate_especial_transition_regime(entry: ProrrataRegisterEntry) -> None:
         else _ProrrataRegisterRegime.GENERAL
     )
     if entry.regime is not required_regime:
+        verb = "option" if transition.kind is _ProrrataEspecialTransitionKind.OPCION else "revocation"
         raise ProrrataRegisterValidationError(
-            f"prorrata especial transition {transition.kind!r} requires regime {required_regime.value!r}"
+            f"prorrata especial {verb} requires current {required_regime.value} regime"
         )
 
 
@@ -471,7 +481,7 @@ class ProrrataRegister(BaseModel):
     without a schema migration (no-legacy-compatibility).
 
     Attributes:
-        schema_version: Forward-compatible schema version. ``"1"``.
+        schema_version: Forward-compatible schema version. ``"2"``.
         entries: Tuple of :class:`ProrrataRegisterEntry` rows.
         sector_definitions: The operator-declared differentiated-sector partition
             (LIVA arts. 9.1.c / 101). Empty for a whole-entity register — the
@@ -527,11 +537,12 @@ class ProrrataRegister(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _especial_transitions_are_mutually_exclusive(self) -> ProrrataRegister:
-        """Keep an option and revocation from claiming the same ejercicio."""
+    def _transitions_are_continuous_and_unambiguous(self) -> ProrrataRegister:
+        """Require transition evidence to agree with its prior same-sector state."""
         kinds_by_ejercicio, references_by_ejercicio = _especial_transition_evidence(self.entries)
         _validate_one_transition_kind_per_ejercicio(kinds_by_ejercicio)
         _validate_one_transition_reference_per_ejercicio(references_by_ejercicio)
+        _validate_option_follows_no_prior_especial_state(self)
         _validate_revocation_prior_especial_state(self)
         return self
 
@@ -559,6 +570,20 @@ class ProrrataRegister(BaseModel):
     def entries_for_ejercicio(self, ejercicio: int) -> tuple[ProrrataRegisterEntry, ...]:
         """Return every entry recorded for ``ejercicio`` across all sectors."""
         return tuple(entry for entry in self.entries if entry.ejercicio == ejercicio)
+
+    def has_complete_current_entry_coverage(self, ejercicio: int) -> bool:
+        """Whether every declared prorrata scope has an explicit current entry.
+
+        A whole-entity register has exactly one ``None`` sector scope. Once
+        sectors are declared, the common whole-entity scope remains required
+        alongside every differentiated sector: a filing-wide Modelo 303
+        reduction is valid only when the current ejercicio has exactly one
+        entry for that complete set. It must not turn an absent declaration
+        into ``NO``.
+        """
+        current_sector_ids = {entry.sector_id for entry in self.entries_for_ejercicio(ejercicio)}
+        expected_sector_ids = {None, *self.sector_ids()} if self.is_sectorized else {None}
+        return current_sector_ids == expected_sector_ids
 
     def activity_rows_for_ejercicio(self, ejercicio: int) -> tuple[ProrrataActivityRow, ...]:
         """Return the year's canonical activity rows in official fixed-slot order."""
@@ -689,6 +714,26 @@ def _validate_one_transition_reference_per_ejercicio(
             "register carries conflicting prorrata especial transition evidence references for "
             f"ejercicio(s) {conflicting_reference_ejercicios}"
         )
+
+
+def _validate_option_follows_no_prior_especial_state(register: ProrrataRegister) -> None:
+    """Reject an option declared over a same-sector especial regime already in force.
+
+    The art. 103.Dos option is an election, not a restatement: once it is in
+    force the regime simply continues into the next ejercicio.  Recording a
+    fresh option on top of an immediately prior especial year would let durable
+    state masquerade as current-period evidence.
+    """
+    for entry in register.entries:
+        transition = entry.especial_transition
+        if transition is None or transition.kind is not _ProrrataEspecialTransitionKind.OPCION:
+            continue
+        prior_entry = register.entry_for(entry.ejercicio - 1, sector_id=entry.sector_id)
+        if prior_entry is not None and prior_entry.regime is _ProrrataRegisterRegime.ESPECIAL:
+            raise ProrrataRegisterValidationError(
+                "prorrata especial option cannot repeat an immediately prior especial regime for "
+                f"sector {entry.sector_id!r}"
+            )
 
 
 def _validate_revocation_prior_especial_state(register: ProrrataRegister) -> None:

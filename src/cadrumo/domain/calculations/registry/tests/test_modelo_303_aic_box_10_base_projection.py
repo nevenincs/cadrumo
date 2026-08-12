@@ -32,7 +32,13 @@ from pathlib import Path
 import pytest
 
 from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from ....iva import IvaCategory, IvaDeductionClassificationProvenance, IvaFlowDirection, IvaRateKind
+from ....iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from .._ledger_bindings import iva_ledger_selector
 from .._loader import load_registry_tree
@@ -103,6 +109,7 @@ def test_aic_row_feeds_box_10_base_and_box_11_cuota_from_the_same_row() -> None:
             source_locator="test-ledger:aic-goods-1",
             evidence_digest="a" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
@@ -134,6 +141,7 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
             source_locator="test-ledger:aic-goods-zero",
             evidence_digest="a" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
@@ -208,6 +216,7 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
             source_locator="test-ledger:aic-goods-zero-mutant",
             evidence_digest="a" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
     mutated_resolved = dict(resolve_ledger_iva_aggregation_binding_values(_m303_revision(scratch_root), (aic_row,)))
 

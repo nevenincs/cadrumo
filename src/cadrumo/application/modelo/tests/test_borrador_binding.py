@@ -298,6 +298,11 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -607,6 +612,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
         casilla_values={_BORRADOR_IDENTITY_CASILLA: Decimal("125.50")},
         borrador_snapshot_id="borrador-one",
         bindings_sourced_from_borrador=(_DECIMAL_BINDING,),
+        filing_instance_evidence=None,
     )
     second = derive_calculation_revision_id(
         work_unit_id="1" * 64,
@@ -615,6 +621,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
         casilla_values={_BORRADOR_IDENTITY_CASILLA: Decimal("125.50")},
         borrador_snapshot_id="borrador-two",
         bindings_sourced_from_borrador=(_DECIMAL_BINDING,),
+        filing_instance_evidence=None,
     )
 
     assert first != second

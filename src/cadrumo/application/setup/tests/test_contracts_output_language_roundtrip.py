@@ -25,6 +25,12 @@ def test_initialize_workspace_command_output_language_accepts_enum_members() -> 
             tax_id="12345678Z",
             activity="design",
             iva_regime=IVARegime.GENERAL,
+            tax_residence_jurisdiction_scope="common_regime",
+            iva_m303_regime_composition="general",
+            iva_redeme_enrolled=False,
+            iva_cash_accounting_regime_enrolled=False,
+            iva_voluntary_sii_enrolled=False,
+            iva_hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             output_language=lang,
         )
         assert cmd.output_language == lang
@@ -36,6 +42,12 @@ def test_initialize_workspace_command_output_language_accepts_none() -> None:
         tax_id="12345678Z",
         activity="design",
         iva_regime=IVARegime.GENERAL,
+        tax_residence_jurisdiction_scope="common_regime",
+        iva_m303_regime_composition="general",
+        iva_redeme_enrolled=False,
+        iva_cash_accounting_regime_enrolled=False,
+        iva_voluntary_sii_enrolled=False,
+        iva_hydrocarbon_deposit_advance_payment_deduction_entitled=False,
         output_language=None,
     )
     assert cmd.output_language is None
@@ -47,6 +59,12 @@ def test_initialize_workspace_command_output_language_defaults_to_none() -> None
         tax_id="12345678Z",
         activity="design",
         iva_regime=IVARegime.GENERAL,
+        tax_residence_jurisdiction_scope="common_regime",
+        iva_m303_regime_composition="general",
+        iva_redeme_enrolled=False,
+        iva_cash_accounting_regime_enrolled=False,
+        iva_voluntary_sii_enrolled=False,
+        iva_hydrocarbon_deposit_advance_payment_deduction_entitled=False,
     )
     assert cmd.output_language is None
 
@@ -57,6 +75,12 @@ def test_initialize_workspace_command_output_language_rejects_invalid_string() -
         "tax_id": "12345678Z",
         "activity": "design",
         "iva_regime": IVARegime.GENERAL,
+        "tax_residence_jurisdiction_scope": "common_regime",
+        "iva_m303_regime_composition": "general",
+        "iva_redeme_enrolled": False,
+        "iva_cash_accounting_regime_enrolled": False,
+        "iva_voluntary_sii_enrolled": False,
+        "iva_hydrocarbon_deposit_advance_payment_deduction_entitled": False,
         "output_language": "invalid_language",
     }
     with pytest.raises(ValidationError) as exc_info:

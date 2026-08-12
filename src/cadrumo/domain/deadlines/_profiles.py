@@ -288,11 +288,11 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
     return _parse_bool(raw)
 
 
-def _resolve_m303_tax_territory(raw: str | None) -> M303TaxTerritory:
-    if raw is None or not raw.strip():
+def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
+    if not raw.strip():
         raise ProfileError("tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA")
     try:
-        return M303TaxTerritory(raw.strip())
+        return M303TaxTerritory(raw)
     except ValueError as exc:
         raise ProfileError(f"unsupported tax_residence.jurisdiction_scope {raw!r}") from exc
 
@@ -315,49 +315,47 @@ _MODELO_IVA_PROFILE_PATHS = frozenset(
 )
 
 
+def _required_iva_bool(value: object, *, path: str) -> bool:
+    if not isinstance(value, bool):
+        raise ProfileError(f"{path} must be an explicit boolean")
+    return value
+
+
 def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
     """Build an IVA block only when a block-owned fact is explicitly present."""
     if not any(canonical.get(path, "").strip() for path in _MODELO_IVA_PROFILE_PATHS):
         return None
-    composition_raw = canonical.get("iva.m303_regime_composition")
-    if not composition_raw:
+    if not typed.iva_m303_regime_composition:
         raise ProfileError("iva.m303_regime_composition must be explicitly declared for Modelo IVA")
-    required_bool_paths = (
-        "iva.redeme_enrolled",
-        "iva.cash_accounting_regime_enrolled",
-        "iva.voluntary_sii_enrolled",
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
-    )
-    missing = tuple(path for path in required_bool_paths if path not in canonical)
-    if missing:
-        raise ProfileError(f"Modelo IVA profile is incomplete; missing {', '.join(missing)}")
-    # project_setup_answers owns the established IVA booleans.  The three new
-    # DP30301 facts are read from their exact canonical selectors until that
-    # projection surface grows typed attributes for them.
+    try:
+        composition = M303RegimeComposition(typed.iva_m303_regime_composition)
+    except ValueError as exc:
+        raise ProfileError(
+            f"unsupported iva.m303_regime_composition {typed.iva_m303_regime_composition!r}",
+        ) from exc
     return ModeloIVAProfile(
-        tax_territory=_resolve_m303_tax_territory(canonical.get("tax_residence.jurisdiction_scope")),
-        regime_composition=M303RegimeComposition(composition_raw),
+        tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
+        regime_composition=composition,
         roi_enrolled=typed.iva_roi_enrolled is True,
         oss_enrolled=typed.iva_oss_enrolled is True,
         group_member_enrolled=typed.iva_group_member_enrolled is True,
         group_dominant_entity_enrolled=typed.iva_group_dominant_entity_enrolled is True,
         sii_enrolled=typed.iva_sii_enrolled is True,
-        redeme_enrolled=_parse_required_bool(canonical, required_bool_paths[0]),
+        redeme_enrolled=_required_iva_bool(typed.iva_redeme_enrolled, path="iva.redeme_enrolled"),
         intracommunity_operations_exceed_50000_eur=(typed.iva_intracommunity_operations_exceed_50000_eur is True),
-        cash_accounting_regime_enrolled=_parse_required_bool(canonical, required_bool_paths[1]),
-        voluntary_sii_enrolled=_parse_required_bool(canonical, required_bool_paths[2]),
-        hydrocarbon_deposit_advance_payment_deduction_entitled=_parse_required_bool(
-            canonical,
-            required_bool_paths[3],
+        cash_accounting_regime_enrolled=_required_iva_bool(
+            typed.iva_cash_accounting_regime_enrolled,
+            path="iva.cash_accounting_regime_enrolled",
+        ),
+        voluntary_sii_enrolled=_required_iva_bool(
+            typed.iva_voluntary_sii_enrolled,
+            path="iva.voluntary_sii_enrolled",
+        ),
+        hydrocarbon_deposit_advance_payment_deduction_entitled=_required_iva_bool(
+            typed.iva_hydrocarbon_deposit_advance_payment_deduction_entitled,
+            path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
         ),
     )
-
-
-def _parse_required_bool(canonical: Mapping[str, str], path: str) -> bool:
-    value = _parse_bool(canonical[path])
-    if value is None:
-        raise ProfileError(f"{path} must be an explicit boolean")
-    return value
 
 
 def _parse_date(raw: str | None) -> date | None:

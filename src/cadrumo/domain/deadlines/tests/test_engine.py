@@ -167,11 +167,11 @@ class TestCompute:
                 iva=ModeloIVAProfile(
                     tax_territory=M303TaxTerritory.COMMON_REGIME,
                     regime_composition=M303RegimeComposition.GENERAL,
+                    intracommunity_operations_exceed_50000_eur=True,
                     redeme_enrolled=False,
                     cash_accounting_regime_enrolled=False,
                     voluntary_sii_enrolled=False,
                     hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-                    intracommunity_operations_exceed_50000_eur=True,
                 ),
             ),
             2026,

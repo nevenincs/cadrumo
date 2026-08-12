@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:397550fc3c366b04c394cd42ef857dc16f9b8abe37cfde617bafa9649c5a7d10'
+body_hash: 'sha256:f1b4577fbf262d8e990d136912cc605bddae19d96158bcceb8602444f5a1d7bc'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -53,11 +53,13 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S57]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S63]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S64]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S65]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S33]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S35]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S66]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S114]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S117]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S38]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S41]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S89]]'
@@ -252,8 +254,10 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S41` - W05.P10.S41 - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S89` - Complete the config CLI consumer fixed point by removing ad hoc recovery prose, English translation fallbacks, and exception-string flattening in favor of catalogue-backed messages, typed producer errors, canonical actions, or explicit no-recovery outcomes
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S90` - Migrate ledger CLI action producers and co-located renderers without independently authored command prose, including direct typed-error consumer migration so canonical refusals reach the shared envelope intact.
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S65` - After the atomic S33/S89 producer-consumer cutover and every S41, S38, S94, S114, and S117 consumer is proven removed, normalize ancillary core optional-extra and external-constants failures to locale keys and machine facts then delete raw install and repair prose plus install_hint with no application import or compatibility alias
 - `2026-08-09-cli-action-envelope-hardening-W05-P09-S66` - Replace preflight remediation prose with locale-neutral facts and typed precondition verdicts
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S114` - Unify shared CLI callback and terminal emitters around one typed projection mapping MissingOptionalExtraError and malformed aeat.pre303 CoreValidationError to exact machine-fact no-recovery outcomes through the CLI exception-precondition owner with no raw message matching or terminal bypass
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S117` - Replace financial OFX optional-extra forwarding and notice consumers with typed machine facts and explicit no-recovery outcomes preserving capability classification without raw installation prose or wrapper compatibility
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope producers and failure boundaries with typed, locale-neutral outcomes.
 
 ### plan

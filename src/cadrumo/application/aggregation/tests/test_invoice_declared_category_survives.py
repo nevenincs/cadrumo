@@ -42,12 +42,15 @@ from ....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .._iva_ledger import resolve_iva_ledger_binding_values
 from .._modelo_bindings import (
     _invoice_line_iva_observation,
     _reverse_charge_cuota_not_derivable,
+    _screened_invoice_iva_result,
+    _uncovered_withheld_invoice_cuota,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -119,6 +122,7 @@ def _received_reverse_charge_deduction_authority() -> IvaLedgerObservation:
             source_locator="invoice:received-reverse-charge",
             evidence_digest="a" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -183,3 +187,89 @@ def test_a_rated_reverse_charge_line_is_not_reported() -> None:
     rated = _received_reverse_charge(slot=IvaRate.RATE_21, cuota="420.00")
 
     assert _reverse_charge_cuota_not_derivable(rated) is False
+
+
+def test_a_cuota_bearing_received_invoice_is_withheld_when_no_ledger_authority_is_linked() -> None:
+    """An invoice never manufactures the deduction authority an input row needs.
+
+    An invoice carries an amount and a direction. It does not carry the exact
+    statutory deduction family, nor the immutable evidence provenance that
+    separates a domestic current expense from an investment, an import, an
+    acquisition or a rectification. That authority lives on the frozen
+    transaction-ledger observation the invoice is linked to.
+
+    So the screen withholds the invoice rather than defaulting it to
+    domestic-current, and says so on ``deduction_authority_missing`` -- which the
+    silence guard turns into a refusal naming the transaction ledger as the
+    producer that must supply the missing facts. Defaulting instead would invent
+    a statutory fact, and the invented value would be indistinguishable from a
+    recorded one everywhere downstream.
+    """
+    rated = _received_reverse_charge(slot=IvaRate.RATE_21, cuota="420.00")
+
+    screened = _screened_invoice_iva_result(rated, ledger_observations=())
+
+    assert screened.deduction_authority_missing is True
+    assert screened.observations == ()
+
+
+def test_a_linked_ledger_authority_is_copied_onto_the_projection_not_reinvented() -> None:
+    """The complement: with the authority linked, the row projects and carries it.
+
+    The point of withholding is not that received invoices are unroutable -- it
+    is that their deduction identity must come from the ledger. Once the link
+    exists, the exact family and provenance are copied across UNCHANGED. Asserted
+    against the authority object itself rather than against literals, because a
+    literal would still pass if the projection substituted its own default.
+    """
+    authority = _received_reverse_charge_deduction_authority()
+    linked = _received_reverse_charge(slot=IvaRate.RATE_21, cuota="420.00").model_copy(
+        update={"linked_transaction_ids": (authority.ledger_id,)},
+    )
+
+    screened = _screened_invoice_iva_result(linked, ledger_observations=(authority,))
+
+    assert screened.deduction_authority_missing is False
+    (observation,) = screened.observations
+    assert observation.deduction_fact_kind is authority.deduction_fact_kind
+    assert observation.deduction_provenance == authority.deduction_provenance
+
+
+def test_a_withheld_invoice_the_ledger_already_carries_is_not_counted_as_uncovered() -> None:
+    """Withholding the row is unconditional; refusing the whole filing is not.
+
+    An unlinked purchase invoice whose cuota the transaction ledger ALREADY
+    carries is corroborating evidence of an operation that is declared. The
+    totals are right, so there is nothing silent to refuse over -- the operator
+    is told through the diagnostic channel instead. Refusing here would block a
+    correct filing purely because an invoice-to-transaction link is absent.
+    """
+    rated = _received_reverse_charge(slot=IvaRate.RATE_21, cuota="420.00")
+
+    uncovered = _uncovered_withheld_invoice_cuota(
+        (rated,),
+        screened_bindings=("modelo-303-iva-soportado-interiores-cuota",),
+        transaction_binding_values={"modelo-303-iva-soportado-interiores-cuota": Decimal("420.00")},
+    )
+
+    assert uncovered == Decimal("0")
+
+
+def test_a_withheld_invoice_absent_from_the_ledger_is_counted_as_uncovered() -> None:
+    """The other half, and the reason the refusal still exists.
+
+    With no matching ledger cuota the invoice's input IVA reaches no casilla at
+    all. That is the genuine gap this guard was built for, so it is reported as
+    an excess and the caller refuses rather than quietly filing short. Asserted
+    on the exact shortfall, not merely on being positive, because a guard that
+    fires with the wrong magnitude tells the operator to look in the wrong place.
+    """
+    rated = _received_reverse_charge(slot=IvaRate.RATE_21, cuota="420.00")
+
+    uncovered = _uncovered_withheld_invoice_cuota(
+        (rated,),
+        screened_bindings=("modelo-303-iva-soportado-interiores-cuota",),
+        transaction_binding_values={"modelo-303-iva-soportado-interiores-cuota": Decimal("100.00")},
+    )
+
+    assert uncovered == Decimal("320.00")

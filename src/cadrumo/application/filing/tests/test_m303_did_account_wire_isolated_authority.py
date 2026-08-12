@@ -3,29 +3,50 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
 from ....core import Modelo, PaymentElection, Period, PriorDomiciliationElection, RefundElection, ResultDisposition
 from ....core.resources import bundled_path
+from ....domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
 from ....domain.calculations.registry import (
+    RegistrySnapshot,
     RegistrySnapshotRef,
     bundled_authority,
     extract_record_design,
     load_modelo_directory,
+    resolve_m303_regimen_simplificado_snapshot,
 )
-from ....domain.deadlines import ChargeAccount, IVARegime, RefundAccount, TaxpayerProfile
+from ....domain.deadlines import (
+    ChargeAccount,
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    RefundAccount,
+    TaxpayerProfile,
+)
 from ....domain.filing import ModeloDraft
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ....domain.modelos import M303Exonerado390FilingEvidence, M303RegimenSimplificadoFilingEvidence
+from ....domain.prorrata_register import ProrrataRegister
 from ....domain.submission import ModeloDraftStatus
+from ...aggregation import M303ProrrataTransitionArrival, M303SupplierRegimeArrival
 from .. import (
     FilingElectionFacts,
     FilingProducerSnapshotError,
+    M303FilingFacts,
     PresenterIdentity,
     TaxpayerIdentityFacts,
     build_filing_producer_snapshot,
-    render_layout,
 )
+from .._export import _filing_producer_values, _render_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -114,7 +135,7 @@ required = true
 '''
 
 
-def _load_isolated_did_layout(tmp_path: Path):
+def _load_isolated_did_layout(tmp_path: Path) -> tuple[RegistrySnapshot, object]:
     source = bundled_authority().catalogues.sources[_SOURCE_REF]
     assert source.sha256 == _SOURCE_SHA256
     parsed = extract_record_design(bundled_path() / source.corpus_path)
@@ -157,14 +178,18 @@ source_refs = ["{_SOURCE_REF}"]
     (export_dir / "0001-did.toml").write_text(_did_layout_toml(), encoding="utf-8", newline="\n")
 
     modelo = load_modelo_directory(modelo_dir)
-    layout = modelo.revisions[_REVISION_ID].export_layouts[0]
+    revision = modelo.revisions[_REVISION_ID]
+    layout = revision.export_layouts[0]
     record = layout.records[0]
     assert record.encoding == "latin-1"
     assert record.line_ending == "none"
     assert tuple((field.offset, field.length) for field in record.fields) == tuple(
         (offset, length) for _ordinal, offset, length, _type_code, _content in _OFFICIAL_DID_ROWS
     )
-    return layout
+    # The S57 renderer refuses a layout the selected snapshot does not own, so the
+    # isolated revision is grafted onto the real bundled 303 snapshot by identity.
+    snapshot = bundled_authority().snapshot("303", filing_year=2026, period="1T")
+    return snapshot.model_copy(update={"revision": revision}), layout
 
 
 def _taxpayer_profile() -> TaxpayerProfile:
@@ -172,6 +197,12 @@ def _taxpayer_profile() -> TaxpayerProfile:
         tax_id=_TAXPAYER_TAX_ID,
         iva_regime=IVARegime.GENERAL,
         iva={
+            "tax_territory": M303TaxTerritory.COMMON_REGIME,
+            "regime_composition": M303RegimeComposition.GENERAL,
+            "redeme_enrolled": False,
+            "cash_accounting_regime_enrolled": False,
+            "voluntary_sii_enrolled": False,
+            "hydrocarbon_deposit_advance_payment_deduction_entitled": False,
             "refund_account": {
                 "iban": _REFUND_IBAN,
                 "swift_bic": "DEUTDEFF",
@@ -182,6 +213,61 @@ def _taxpayer_profile() -> TaxpayerProfile:
             },
             "charge_account": {"iban": _CHARGE_IBAN},
         },
+    )
+
+
+def _m303_filing_facts(period: Period) -> M303FilingFacts:
+    """Minimal-but-real M303 facts; the DID page declares no projection record."""
+    reference = FilingEvidenceReference(reference="test:did-wire:m303-facts")
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+    )
+    bienes_register = BienesInversionIvaRegister()
+    return M303FilingFacts(
+        joint_return_elected=False,
+        insolvency=None,
+        period=period,
+        exonerado_390=M303Exonerado390FilingEvidence(
+            applicable=False,
+            applicability_reference=reference,
+            endpoints=(),
+            activity_rows=(),
+            operaciones_terceros_declarables=None,
+            operaciones_terceros_reference=None,
+        ),
+        regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            scope_decision=scope,
+            rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
+            regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
+                registry_snapshot=bundled_authority().snapshot(
+                    "303",
+                    filing_year=period.filing_year,
+                    period=period.code,
+                ),
+                scope_decision=scope,
+            ),
+        ),
+        supplier_regime=M303SupplierRegimeArrival(
+            period=period,
+            recipient_of_cash_accounting_operations=False,
+            source_ledger_ids=(),
+        ),
+        prorrata_transition=M303ProrrataTransitionArrival(
+            period=period,
+            transition=None,
+            register_evidence=(),
+        ),
+        prorrata_register=ProrrataRegister(),
+        differentiated_contributions=(),
+        bienes_register=bienes_register,
+        regularisation_result=RegistroRegularizacionResult(
+            regularizacion_year=period.filing_year,
+            rows=(),
+            proposed_casilla_43=Decimal("0"),
+            computed_count=0,
+            pending_percentage_count=0,
+            sector_contributions=(),
+        ),
     )
 
 
@@ -233,7 +319,8 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
     unselected_iban: str,
     expected_refund_detail: bytes,
 ) -> None:
-    layout = _load_isolated_did_layout(tmp_path)
+    registry_snapshot, layout = _load_isolated_did_layout(tmp_path)
+    period = Period.from_year_and_code(2026, "1T")
     taxpayer = _taxpayer_profile()
     iva_profile = taxpayer.iva
     assert iva_profile is not None
@@ -252,9 +339,16 @@ def test_isolated_m303_did_wire_uses_only_the_snapshot_selected_account(
         amendment_evidence=None,
         refund_account=iva_profile.refund_account,
         charge_account=iva_profile.charge_account,
+        m303_filing_facts=_m303_filing_facts(period),
     )
 
-    wire = render_layout(layout, draft=_draft(), producer_snapshot=snapshot)
+    wire = _render_layout(
+        layout,
+        registry_snapshot=registry_snapshot,
+        draft=_draft(),
+        headers=_filing_producer_values(snapshot),
+        producer_snapshot=snapshot,
+    )
 
     assert len(wire) == 823
     assert wire[:11] == b"<T303DID00>"
@@ -297,6 +391,7 @@ def test_m303_account_bearing_dispositions_refuse_without_their_selected_account
             amendment_evidence=None,
             refund_account=refund_account,
             charge_account=charge_account,
+            m303_filing_facts=_m303_filing_facts(Period.from_year_and_code(2026, "1T")),
         )
 
 

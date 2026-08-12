@@ -47,7 +47,7 @@ from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import CasillaId, Period
+from ...core import CasillaId, Modelo, Period
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import BindingId, RelationId
@@ -167,6 +167,11 @@ def import_external_filing_evidence[CasillaKey](
         evidence_reference_id=evidence_reference_id,
         work_unit_repository=wu_repo,
     )
+    if work_unit.modelo == Modelo.M303.value:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
+            context={"work_unit_id": work_unit.work_unit_id},
+        )
     _require_bound_justificante_artifact(
         evidence_kind=evidence_kind,
         evidence_reference_id=cleaned_reference,
@@ -190,6 +195,7 @@ def import_external_filing_evidence[CasillaKey](
         binding_overrides=binding_overrides,
         relation_overrides=relation_overrides,
         casilla_values=outputs,
+        filing_instance_evidence=None,
     )
     revisions = cr_repo.load()
     if revision_id in revisions:
@@ -213,6 +219,7 @@ def import_external_filing_evidence[CasillaKey](
         filed_at=now,
         filed_by=actor.strip(),
         observations=observations,
+        filing_instance_evidence=None,
     )
     revisions = upsert_calculation_revision(revisions, revision)
 

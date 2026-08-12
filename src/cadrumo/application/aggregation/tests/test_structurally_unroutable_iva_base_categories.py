@@ -30,9 +30,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import bundled_path, resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import (
     ModeloRevision,
     load_registry_tree,
@@ -193,7 +195,12 @@ def test_the_advisory_fires_live_for_a_present_unroutable_category(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((_domestic_zero_sale(),)))
-        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+        resolution = LedgerIvaAggregationSourceResolver(
+            transaction_repository=repository,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id=_BUCKET_ID,
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",
@@ -225,7 +232,12 @@ def test_the_advisory_stays_silent_when_the_category_never_appears(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((_domestic_general_sale(),)))
-        resolution = LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+        resolution = LedgerIvaAggregationSourceResolver(
+            transaction_repository=repository,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id=_BUCKET_ID,
+        ).resolve(
             CalculationSourceContext(
                 bucket_id=_BUCKET_ID,
                 modelo="303",

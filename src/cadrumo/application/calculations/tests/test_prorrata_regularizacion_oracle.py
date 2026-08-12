@@ -49,6 +49,8 @@ from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import ManualWorkedExamplePayload, calculate_registry_snapshot
 from ....domain.iva import (
     InputClassification,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
     ProrrataInputs,
     ProrrataKind,
     RegularizacionProrrataDireccion,
@@ -184,6 +186,9 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedEx
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(payload.filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
     return result.values[_PORCENTAJE_ID]
 

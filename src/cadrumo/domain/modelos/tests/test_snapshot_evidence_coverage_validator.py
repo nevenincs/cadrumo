@@ -81,6 +81,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=snapshot_ids,
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -131,6 +132,7 @@ def test_non_ledger_revision_passes_trivially() -> None:
         binding_overrides={},
         casilla_values={},
         source_transaction_ids=(),
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,

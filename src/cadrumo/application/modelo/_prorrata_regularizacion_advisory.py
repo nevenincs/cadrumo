@@ -309,6 +309,7 @@ def _especial_mandatory_diagnostics(
         bucket_id=bucket_id,
         ejercicio=filing_year,
         revision=revision,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id),
     )
     if totals is None:
         return ()

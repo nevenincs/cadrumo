@@ -37,6 +37,7 @@ def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
@@ -142,6 +143,7 @@ def test_sector_seed_does_not_read_whole_entity_definitive() -> None:
         ProrrataRegisterEntry(
             ejercicio=2025,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             source_observation_ref="303:2024:4T",

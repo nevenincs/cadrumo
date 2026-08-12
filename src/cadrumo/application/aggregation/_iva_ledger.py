@@ -46,7 +46,6 @@ from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
@@ -80,6 +79,7 @@ from ...domain.iva import (
     IvaExemptionArticle,
     IvaFlowDirection,
     IvaKindApplicability,
+    IvaLedgerObservationRole,
     IvaRateKind,
     IvaTerritorialScope,
     ProrrataInputError,
@@ -381,6 +381,7 @@ class IvaLedgerCandidate(BaseModel):
     rectifies_ledger_id: str | None = Field(default=None, min_length=1, max_length=128)
     prorrata_reference_id: _LedgerId | None = None
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
+    observation_role: IvaLedgerObservationRole
     input_classification: InputClassification | None = None
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
 
@@ -505,8 +506,8 @@ def aggregate_iva_ledger_observations_from_repositories(
     *,
     bucket_id: str,
     period: Period,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
     investment_asset_register: BienesInversionIvaRegister | None = None,
     investment_asset_profile_id: str | None = None,
 ) -> IvaLedgerAggregation:
@@ -514,11 +515,28 @@ def aggregate_iva_ledger_observations_from_repositories(
 
     Returns an :class:`IvaLedgerAggregation`.
 
-    See Also:
-        :class:`~adapters.persistence.profile.prorrata_register.ProrrataRegisterRepository`
-            Repository consulted for the active general-prorrata provisional
-            percentage when no explicit repository is supplied.
+    Args:
+        bucket_id: The profile bucket every supplied repository must be scoped
+            to; a divergent repository bucket is refused, not silently used.
+        period: The filing period whose transactions are projected.
+        prorrata_register_repository: The canonical register repository read for
+            the active general-prorrata provisional percentage. Required, so no
+            caller can fall back to an implicitly constructed register whose
+            bucket nobody checked.
+        transaction_repository: Catalogue repository; defaults to the bucket's
+            own, which also supplies the bienes-inversion authority.
+        investment_asset_register: Bienes-inversion authority, mandatory
+            whenever ``transaction_repository`` is injected.
+        investment_asset_profile_id: Profile owning that register.
     """
+    if prorrata_register_repository.bucket_id != bucket_id:
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.bucket_mismatch"),
+            context={
+                "bucket_id": bucket_id,
+                "repository_bucket_id": prorrata_register_repository.bucket_id,
+            },
+        )
     if transaction_repository is None:
         concrete_repository = TransactionCatalogueRepository(bucket_id=bucket_id)
         investment_asset_register = concrete_repository.migrate_iva_deduction_authority(asset_profile_id=bucket_id)
@@ -641,6 +659,7 @@ def validate_iva_ledger_observation(candidate: IvaLedgerCandidate) -> IvaLedgerO
         iva_amount=candidate.iva_amount,
         prorrata_reference_id=candidate.prorrata_reference_id,
         cash_accounting_treatment=candidate.cash_accounting_treatment,
+        observation_role=candidate.observation_role,
         input_classification=candidate.input_classification,
         prorrata_sector_id=candidate.prorrata_sector_id,
         deduction_fact_kind=candidate.deduction_fact_kind,
@@ -1208,7 +1227,7 @@ def _active_prorrata_apportionment(
     *,
     bucket_id: str,
     ejercicio: int,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
 ) -> IvaLedgerProrrataApportionment | None:
     """Resolve the regime-aware prorrata apportionment for the ejercicio.
 
@@ -1228,8 +1247,7 @@ def _active_prorrata_apportionment(
     inputs (absent it, no apportionment applies, exactly as for any register
     with no whole-entity entry).
     """
-    repository = prorrata_register_repository or ProrrataRegisterRepository(bucket_id=bucket_id)
-    register = repository.load()
+    register = prorrata_register_repository.load()
     base = _sector_scoped_apportionment(register, ejercicio, sector_id=None)
     if base is None:
         return None
@@ -1334,8 +1352,8 @@ def compute_annual_deducible_totals_by_regime(
     bucket_id: str,
     ejercicio: int,
     revision: ModeloRevision,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
 ) -> AnnualDeducibleTotalsByRegime | None:
     """Compute the ejercicio's deducible IVA cuota under both prorrata regimes.
 
@@ -1367,8 +1385,8 @@ def compute_annual_deducible_totals_by_regime(
             bindings are summed.
         transaction_repository: Optional catalogue repository (defaults to the
             active bucket's).
-        prorrata_register_repository: Optional register repository (defaults to
-            the active bucket's).
+        prorrata_register_repository: Canonical register repository for the
+            same bucket as the transaction catalogue.
 
     See Also:
         :class:`AnnualDeducibleTotalsByRegime`
@@ -1919,6 +1937,7 @@ def _project_iva_transaction(
         iva_amount=amounts.iva_amount,
         recargo_amount=amounts.recargo_amount,
         prorrata_reference_id=linked_prorrata_id,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
         input_classification=transaction.input_classification,
         prorrata_sector_id=transaction.prorrata_sector_id,
         # The rate the operator declared on the row, kept beside the tier it
@@ -1952,6 +1971,7 @@ def _iva_observation(
     recargo_amount: Decimal = Decimal("0"),
     prorrata_reference_id: str | None = None,
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE,
+    observation_role: IvaLedgerObservationRole,
     input_classification: InputClassification | None = None,
     prorrata_sector_id: str | None = None,
     applied_rate: Decimal | None = None,
@@ -1973,6 +1993,7 @@ def _iva_observation(
         recargo_amount=recargo_amount,
         prorrata_reference_id=prorrata_reference_id,
         cash_accounting_treatment=cash_accounting_treatment,
+        observation_role=observation_role,
         input_classification=input_classification,
         prorrata_sector_id=prorrata_sector_id,
         deduction_fact_kind=deduction_fact_kind,
@@ -2021,6 +2042,8 @@ def _cash_accounting_observations(
                 iva_amount=iva_amount * proportionality,
                 recargo_amount=recargo_amount * proportionality,
                 prorrata_reference_id=linked_prorrata_id,
+                cash_accounting_treatment=transaction.cash_accounting_treatment,
+                observation_role=IvaLedgerObservationRole.SETTLEMENT,
                 input_classification=transaction.input_classification,
                 prorrata_sector_id=transaction.prorrata_sector_id,
                 applied_rate=applied_rate,
@@ -2042,6 +2065,7 @@ def _cash_accounting_observations(
                 base_amount=full_base_amount,
                 iva_amount=full_iva_amount,
                 cash_accounting_treatment=transaction.cash_accounting_treatment,
+                observation_role=IvaLedgerObservationRole.OPERATION_INFORMATIONAL,
                 input_classification=transaction.input_classification,
                 prorrata_sector_id=transaction.prorrata_sector_id,
                 applied_rate=applied_rate,

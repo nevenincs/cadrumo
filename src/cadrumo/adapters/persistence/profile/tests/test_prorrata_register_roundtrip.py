@@ -43,14 +43,16 @@ from .....core import (
 )
 from .....core.external_constants import UTF_8_ENCODING
 from .....domain.prorrata_register import (
+    PRORRATA_REGISTER_SCHEMA_VERSION,
     ProrrataActivityRow,
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
+    ProrrataRegisterError,
     SectorDefinition,
 )
 from .....tests.secure_sql import isolated_runtime_profile
-from ....persistence.storage.errors import SecureObjectRevisionConflictError
+from ....persistence.storage.errors import SecureObjectRevisionConflictError, StorageValidationError
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
 
@@ -61,6 +63,7 @@ def _populated_register() -> ProrrataRegister:
     carried_settled = ProrrataRegisterEntry(
         ejercicio=2024,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2023:4T",
@@ -83,6 +86,7 @@ def _populated_register() -> ProrrataRegister:
     interrupted = ProrrataRegisterEntry(
         ejercicio=2023,
         regime=ProrrataRegisterRegime.NINGUNA,
+        especial_transition=None,
         interrupted=True,
     )
     sector_definition = SectorDefinition(
@@ -149,6 +153,80 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert interrupted.definitive_percentage is None
 
 
+def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) -> None:
+    """A real save binds the SQL row and bare document to the same v2 contract."""
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE, SECURE_OBJECT_SCHEMA_VERSION_V2
+    from ...storage.crypto import decrypt_secure_object_payload, secure_object_payload_aad
+    from ...storage.sql import SecureObjectRow
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-outer-v2") as profile:
+        engine = get_engine(profile.settings)
+        ProrrataRegisterRepository().save(_populated_register())
+
+        with session_scope(engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                    SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+                ),
+            ).scalar_one()
+            assert PROFILE_PRORRATA_REGISTER_NAMESPACE.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
+            assert row.schema_version == SECURE_OBJECT_SCHEMA_VERSION_V2
+            plaintext = decrypt_secure_object_payload(
+                bytes(row.payload),
+                associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
+            )
+
+        document = _json.loads(plaintext.decode(UTF_8_ENCODING))
+        assert document["schema_version"] == PRORRATA_REGISTER_SCHEMA_VERSION == "2"
+
+
+def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -> None:
+    """A re-encrypted v1 SQL row is refused; no upgrader or implicit restamp exists."""
+    from sqlalchemy import select
+
+    from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.crypto import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
+    from ...storage.sql import SecureObjectRow
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-outer-v1-refusal") as profile:
+        engine = get_engine(profile.settings)
+        repo = ProrrataRegisterRepository()
+        repo.save(_populated_register())
+
+        with session_scope(engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                    SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+                ),
+            ).scalar_one()
+            plaintext = decrypt_secure_object_payload(
+                bytes(row.payload),
+                associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
+            )
+            row.schema_version = 1
+            row.payload = encrypt_secure_object_payload(
+                plaintext,
+                associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
+            )
+
+        with pytest.raises(ProrrataRegisterError, match="unable to load prorrata register") as exc_info:
+            repo.load()
+        assert isinstance(exc_info.value.__cause__, StorageValidationError)
+        assert "requires explicit schema migration before read" in str(exc_info.value.__cause__)
+
+
 def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
     """Declaring an entry for an existing (ejercicio, sector) key replaces it in place."""
     from ..prorrata_register import declare_prorrata_entry
@@ -157,6 +235,7 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
         first = ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         )
@@ -183,6 +262,7 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
             ProrrataRegisterEntry(
                 ejercicio=2024,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
             ),
         )
         repo.upsert_sector_definition(
@@ -304,4 +384,42 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
             )
 
         with pytest.raises(pydantic.ValidationError, match="regime"):
+            repo.load()
+
+
+def test_register_v1_document_refuses_at_encrypted_load(tmp_path: Path) -> None:
+    """A v1 durable document is not upgraded or silently re-persisted as v2."""
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ....persistence.storage.sql.session import session_scope
+    from ...storage import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.crypto import (
+        decrypt_secure_object_payload,
+        encrypt_secure_object_payload,
+        secure_object_payload_aad,
+    )
+    from ...storage.sql import SecureObjectRow
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="prorrata-rt-v1-refusal") as profile:
+        engine = get_engine(profile.settings)
+        repo = ProrrataRegisterRepository()
+        repo.save(_populated_register())
+
+        with session_scope(engine) as session:
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+                SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+            )
+            row = session.execute(stmt).scalar_one()
+            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
+            document = _json.loads(plain.decode(UTF_8_ENCODING))
+            document["schema_version"] = "1"
+            row.payload = encrypt_secure_object_payload(
+                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=aad
+            )
+
+        with pytest.raises(pydantic.ValidationError, match="unsupported ProrrataRegister schema_version '1'"):
             repo.load()

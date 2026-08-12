@@ -1103,6 +1103,9 @@ application:
         no coincide con el modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}.
       external_import_justificante_missing: La evidencia de importación externa %{evidence_reference_id}
         (%{evidence_kind}) no está registrada como artefacto de justificante persistido.
+      external_import_m303_filing_evidence_required: La importación externa del modelo
+        303 requiere evidencia tipada completa de la instancia de declaración y no
+        puede inferirla de los valores de casillas.
       external_import_registry_root_missing: Falta la raíz del registro {registry_root};
         no se pueden validar los ids de casilla importados.
       external_import_registry_snapshot_unresolved: No se pudo resolver el snapshot
@@ -1473,18 +1476,6 @@ application:
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'
-  verification:
-    errors:
-      missing_binding_values: La verificación del registro requiere valores de vinculación
-        externos.
-      period_mapping_failed: El periodo de la declaración no se pudo asignar a un
-        periodo del registro.
-      registry_policy_invalid: No se pudo cargar la política de verificación del registro.
-      registry_snapshot_invalid: No se pudo cargar el snapshot del registro para verificar
-        la declaración.
-      registry_snapshot_ref_mismatch: 'La instantánea de registro para el modelo %{modelo}
-        %{period} no coincide con la referencia estampada en la declaración: observada
-        %{observed_ref}, resuelta %{resolved_ref}.'
   wizard:
     errors:
       command_input_invalid: 'Los datos del perfil no superaron la validación: %{details}'
@@ -2175,6 +2166,9 @@ cli:
           este sector.
         list_help: Lista cada entrada del registro y cada sector diferenciado declarado
           en el perfil activo.
+        optional_evidence_reference_help: Evidencia en poder del operador de una opción
+          ejercida en este ejercicio; omítela para registrar una continuación expresa
+          del régimen ya vigente.
         percentage_help: Porcentaje de deducción de uso comun 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
         provenance_help: Origen del porcentaje provisional según LIVA art. 105.
@@ -4810,8 +4804,6 @@ cli:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
       command_input_invalid_fallback: uno o más campos no superaron la validación
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro.
-      filter_parse_error: 'Falló al analizar el filtro del libro cerca de %{token}:
-        %{reason}.'
       invalid_category: 'Categoría de gasto desconocida ''{category}''. Categorías
         conocidas: {known}.'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
@@ -4819,9 +4811,6 @@ cli:
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
-      period_year_pairing: Los filtros de periodo del libro requieren periodo y ejercicio
-        juntos. Para un año completo use --period 0A --year %{year}, o --filter period=0A
-        --filter year=%{year}.
       unknown_category: --category-id {category!r} no reconocido. Indica un identificador
         de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
         prefijo de familia.
@@ -73935,6 +73924,12 @@ profile:
           label: Situación familiar
         unidad_familiar_otros_miembros_base:
           label: Base imponible de otros miembros de la unidad familiar (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Tipo de declaración
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          label: Tramo de reducción por alquiler (art. 23.2)
       renta_spouse:
         birth_date:
           label: Fecha de nacimiento del cónyuge
@@ -74069,6 +74064,10 @@ profile:
         title: Origen y vigencia
       renta_family:
         title: Familia (Renta)
+      renta_filing:
+        title: Contexto de presentación (Renta)
+      renta_rental:
+        title: Contexto de alquiler (Renta)
       renta_spouse:
         title: Cónyuge (Renta)
       renta_taxpayer:
@@ -74787,10 +74786,10 @@ wizard:
           general:
             label: Solo régimen general
           mixed:
-            label: Régimen mixto
+            label: Regímenes mixtos
           simplified:
             label: Solo régimen simplificado
-        prompt: ¿Qué composición de regímenes declara el Modelo 303?
+        prompt: ¿Qué composición de regímenes se aplica al Modelo 303?
       title: IVA
     notes:
       notes:
@@ -75002,7 +75001,7 @@ wizard:
             label: Territorio común
           foral_unsupported:
             label: Territorio foral (todavía no compatible)
-        prompt: ¿Qué régimen territorial se aplica a este perfil?
+        prompt: ¿Qué territorio tributario se aplica a este Modelo 303?
       title: Residencia fiscal
     review:
       registered-non-official-suffix: ' (del certificado censal - no verificado por

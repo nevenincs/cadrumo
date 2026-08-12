@@ -49,6 +49,7 @@ def _field_payload(kind: str, **semantic_payload: object) -> dict[str, object]:
             "projection",
             {
                 "projection_ref": M303ProrrataActivityProjectionRef(
+                    projection_kind="m303_prorrata_activity",
                     slot=1,
                     field=M303ProrrataActivityProjectionField.CNAE,
                     casilla_id="c500",

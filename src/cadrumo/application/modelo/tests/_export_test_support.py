@@ -15,25 +15,18 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.identity import nif_check_letter
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    RegistrySnapshotRef,
-    resolve_m303_regimen_simplificado_snapshot,
-)
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
+from ....domain.calculations.registry import BindingId, RegistrySnapshotRef
+from ....domain.deadlines import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
 )
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    M303Exonerado390FilingEvidence,
-    M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
@@ -41,6 +34,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -61,6 +55,11 @@ _M200_REFUND_RESULT_CASILLA: CasillaId = validated_casilla_id(
 _SEEDED_REVISION_AT = datetime(2026, 6, 3, 16, 0, tzinfo=UTC)
 
 
+def _general_m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
+    """Delegate to the one shared typed-evidence fixture builder."""
+    return general_m303_filing_evidence(period, reference="test:export:exonerado-not-applicable")
+
+
 def _casilla_id_from_payload(value: object) -> CasillaId:
     return validated_casilla_id(value, surface="test casilla id")
 
@@ -78,6 +77,14 @@ def _profile() -> TaxpayerProfile:
     return TaxpayerProfile(
         tax_id="12345678Z",
         iva_regime=IVARegime.GENERAL,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 
@@ -137,36 +144,6 @@ def _seed_profile(*, tax_id: str | None = None, profile_overrides: dict[str, str
     return bucket_id
 
 
-def _m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
-    scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-    )
-    snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot(
-            "303",
-            filing_year=period.filing_year,
-            period=period.code,
-        ),
-        scope_decision=scope,
-    )
-    return FilingInstanceEvidence(
-        m303=M303FilingInstanceEvidence(
-            period=period,
-            joint_return_elected=False,
-            insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(reference="test:export:exonerado-390"),
-            ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
-                scope_decision=scope,
-                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
-                regimen_snapshot=snapshot,
-            ),
-        ),
-    )
-
-
 def _seed_revision(
     *,
     bucket_id: str,
@@ -177,6 +154,7 @@ def _seed_revision(
     input_values_by_casilla_id: dict[CasillaId, str] | None = None,
     binding_overrides: dict[BindingId, str] | None = None,
     casilla_values: dict[CasillaId, Decimal] | None = None,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> tuple[str, str]:
     input_values_by_casilla_id = dict(input_values_by_casilla_id or {})
     binding_overrides = dict(binding_overrides or {})
@@ -188,7 +166,6 @@ def _seed_revision(
         period=typed_period.registry_token,
     )
     revision_id = snapshot.revision.id
-    filing_instance_evidence = _m303_filing_evidence(typed_period) if modelo == "303" else None
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,

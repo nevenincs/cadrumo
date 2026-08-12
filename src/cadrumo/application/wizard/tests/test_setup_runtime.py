@@ -282,7 +282,7 @@ def test_scripted_walk_visits_joint_taxation_spouse_questions() -> None:
 
 
 def test_iva_regime_has_no_implicit_runtime_default() -> None:
-    """Smoke check that SELECT defaults survive the flow."""
+    """A profile must declare its IVA regime explicitly."""
 
     iva_question = next(q for section in SETUP_FLOW.sections for q in section.questions if q.id == "iva-regime")
     assert iva_question.widget is WizardWidget.SELECT

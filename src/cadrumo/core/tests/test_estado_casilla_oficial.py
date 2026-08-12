@@ -13,6 +13,83 @@ from .. import _estado_casilla_oficial as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_TEXT_BEARING_SUFFIXES = frozenset(
+    {
+        ".bat",
+        ".cfg",
+        ".cmd",
+        ".conf",
+        ".css",
+        ".csv",
+        ".gql",
+        ".graphql",
+        ".htm",
+        ".html",
+        ".ini",
+        ".j2",
+        ".jinja",
+        ".jinja2",
+        ".js",
+        ".json",
+        ".jsonl",
+        ".jsx",
+        ".md",
+        ".ps1",
+        ".py",
+        ".pyi",
+        ".rst",
+        ".scss",
+        ".seq",
+        ".sh",
+        ".sql",
+        ".toml",
+        ".ts",
+        ".tsv",
+        ".tsx",
+        ".txt",
+        ".xml",
+        ".xsd",
+        ".yaml",
+        ".yml",
+    },
+)
+
+
+def _retired_family() -> frozenset[str]:
+    return frozenset(
+        {
+            "Official" + "BoxStatus",
+            "official_box_" + "status",
+            "official_box_" + "classification",
+            "classify_official_" + "boxes",
+            "_official_box_" + "status.py",
+            "_official_box_representation_" + "channels",
+            "official_" + "status",
+            "modelo-review-filter-official-" + "status",
+            "flows.modelo_review.filter.official_" + "status",
+            "option.official_" + "status",
+        },
+    )
+
+
+def _retired_family_occurrences(*roots: Path) -> set[tuple[str, str]]:
+    repository_root = Path(__file__).parents[4]
+    candidates = {
+        path
+        for root in roots
+        for path in root.rglob("*")
+        if path.is_file() and path.suffix.lower() in _TEXT_BEARING_SUFFIXES
+    }
+    retired = _retired_family()
+    occurrences: set[tuple[str, str]] = set()
+    for path in candidates:
+        reported_path = (
+            path.relative_to(repository_root).as_posix() if path.is_relative_to(repository_root) else path.as_posix()
+        )
+        content = path.read_text(encoding="utf-8", errors="surrogateescape")
+        occurrences.update((reported_path, token) for token in retired if token in reported_path or token in content)
+    return occurrences
+
 
 def test_estado_casilla_oficial_is_the_single_public_core_identity() -> None:
     assert core.EstadoCasillaOficial is owner.EstadoCasillaOficial
@@ -45,27 +122,16 @@ def test_estado_casilla_oficial_is_the_single_public_core_identity() -> None:
 
 
 def test_retired_english_family_is_absent_from_code_and_locale_surfaces() -> None:
-    retired = {
-        "Official" + "BoxStatus",
-        "official_box_" + "status",
-        "classify_official_" + "boxes",
-    }
     repository_root = Path(__file__).parents[4]
-    scanned_files = (
-        *repository_root.joinpath("src", "cadrumo").rglob("*.py"),
-        *repository_root.joinpath("src", "cadrumo", "locales").rglob("*.yml"),
-        *repository_root.joinpath("dev", "locales").rglob("*.py"),
-    )
-    occurrences = {
-        (path.relative_to(repository_root).as_posix(), token)
-        for path in scanned_files
-        for token in retired
-        if token in path.read_text(encoding="utf-8")
+    assert _retired_family_occurrences(repository_root / "src", repository_root / "dev") == set()
+
+
+def test_retired_family_scan_bites_on_a_non_python_dev_surface(tmp_path: Path) -> None:
+    planted = tmp_path / "dev" / "locales" / "planted.yml"
+    planted.parent.mkdir(parents=True)
+    retired_token = "official_" + "status"
+    planted.write_text(f"filter:\n  {retired_token}: retired\n", encoding="utf-8")
+
+    assert _retired_family_occurrences(tmp_path / "dev") == {
+        (planted.as_posix(), retired_token),
     }
-    retired_paths = {
-        path.relative_to(repository_root).as_posix()
-        for path in scanned_files
-        if any(token in path.name for token in ("official_box_" + "status", "official_box_" + "classification"))
-    }
-    assert occurrences == set()
-    assert retired_paths == set()

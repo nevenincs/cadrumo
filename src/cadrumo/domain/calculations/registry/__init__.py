@@ -46,7 +46,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ....core import FilingProducerKey
+from ....core import FilingProducerKey, FilingProjectionRef
 from ._aeat_hosts import REMOTE_READ_SCHEME, canonical_remote_hostname
 from ._export_value_policy import (
     ExportValuePolicy,
@@ -288,7 +288,6 @@ from ._coverage import (
 from ._cross_revision_divergence import CrossRevisionCasillaDivergence
 from ._errors import (
     AmbiguousRevisionSelectionError,
-    M303RegimenSimplificadoEvidenceRequiredError,
     NoRevisionForPeriodError,
     RegistryError,
     RegistryLoadError,
@@ -331,6 +330,11 @@ from ._m303_differentiated_deduction_projection import (
     M303DifferentiatedDeductionRowProjection,
     project_m303_differentiated_deduction_rows,
 )
+from ._m303_exonerado_390_projection import (
+    M303Exonerado390FieldProjection,
+    M303Exonerado390RecordProjection,
+    project_m303_exonerado_390_activity_rows,
+)
 from ._m303_orden_anual import (
     ActividadOrdenAnualRef,
     M303AnnualOrdenAuthority,
@@ -360,11 +364,6 @@ from ._m303_regimen_simplificado_projection import (
     M303RegimenSimplificadoFieldProjection,
     M303RegimenSimplificadoRecordProjection,
     project_m303_regimen_simplificado_rows,
-)
-from ._m303_exonerado_390_projection import (
-    M303Exonerado390FieldProjection,
-    M303Exonerado390RecordProjection,
-    project_m303_exonerado_390_activity_rows,
 )
 from ._legal import (
     legal_reference_quotes_corpus,
@@ -862,6 +861,7 @@ __all__ = [
     "ExtractionProfileId",
     "ExtractionTargetDefinition",
     "FilingProducerKey",
+    "FilingProjectionRef",
     "FormulaDefinition",
     "FormulaExpression",
     "FormulaId",
@@ -894,7 +894,6 @@ __all__ = [
     "M303Exonerado390RecordProjection",
     "M303ProrrataActivityEndpointValue",
     "M303ProrrataActivityRowProjection",
-    "M303RegimenSimplificadoEvidenceRequiredError",
     "M303RegimenSimplificadoFieldProjection",
     "M303RegimenSimplificadoRecordProjection",
     "M303RegimenSimplificadoSnapshot",

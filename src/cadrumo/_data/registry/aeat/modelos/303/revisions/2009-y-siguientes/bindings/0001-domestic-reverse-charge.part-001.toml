@@ -24,6 +24,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -43,5 +45,7 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"

@@ -80,6 +80,7 @@ def _result_disposition_revision(
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -130,10 +131,10 @@ def _result_disposition_profile(kind: str) -> TaxpayerProfile:
             iva=ModeloIVAProfile(
                 tax_territory=M303TaxTerritory.COMMON_REGIME,
                 regime_composition=M303RegimeComposition.GENERAL,
+                redeme_enrolled=True,
                 cash_accounting_regime_enrolled=False,
                 voluntary_sii_enrolled=False,
                 hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-                redeme_enrolled=True,
             ),
         )
     if kind == "ordinary":

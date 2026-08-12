@@ -10,6 +10,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from .....core import CasillaId, Period, validated_casilla_id
 from .....domain.calculations.registry import CasillaObservation
 from .....domain.modelos import (
@@ -107,12 +109,14 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         period=Period.from_year_and_code(2026, "1T"),
         revision_id="2009-y-siguientes",
     )
+    filing_instance_evidence = general_m303_filing_evidence(Period.from_year_and_code(2026, "1T"), reference="test:ledger-filing-evidence-roundtrip")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_EVIDENCE_CASILLA: "140000.00"},
         binding_overrides={},
         casilla_values={_EVIDENCE_CASILLA: Decimal("140000.00")},
         source_transaction_ids=(_TX_ID,),
+        filing_instance_evidence=filing_instance_evidence,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -134,6 +138,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
         updated_at=_NOW,
         verified_at=_NOW,
         verified_by="operator",
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 

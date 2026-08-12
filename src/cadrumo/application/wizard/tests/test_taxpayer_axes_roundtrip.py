@@ -105,8 +105,8 @@ class TestWizardPersistenceRoundTrip:
         assert canonical["iva.sii_enrolled"] == "true"
         assert canonical["iva.redeme_enrolled"] == "true"
 
-    def test_dropped_enrolment_key_re_defaults_on_reprojection(self) -> None:
-        """Anti-tautology: removing iva.sii_enrolled re-defaults the field.
+    def test_dropped_enrolment_key_stays_undeclared_on_reprojection(self) -> None:
+        """Anti-tautology: removing iva.sii_enrolled preserves its undeclared state.
 
         If the roundtrip were tautological, the dropped key would not
         change the reprojected answers and a save-drops-field
@@ -118,7 +118,7 @@ class TestWizardPersistenceRoundTrip:
         del canonical["iva.sii_enrolled"]
         rebuilt = project_answers(SETUP_FLOW, canonical)
         assert isinstance(rebuilt, SetupAnswers)
-        assert rebuilt.iva_sii_enrolled is False
+        assert rebuilt.iva_sii_enrolled == ""
         assert rebuilt != original
 
 
@@ -362,6 +362,13 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
             "activity": "Software development",
             "entity-type": "legal_entity",
             "legal-entity-form": "sl",
+            "tax-residence-jurisdiction-scope": "common_regime",
+            "iva-regime": "GENERAL",
+            "iva-m303-regime-composition": "general",
+            "iva-redeme-enrolled": "false",
+            "iva-cash-accounting-regime-enrolled": "false",
+            "iva-voluntary-sii-enrolled": "false",
+            "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": "false",
         }
         answers = _run_scripted_walk(
             SETUP_FLOW,
@@ -386,7 +393,7 @@ class TestNewEntityFirstTwoProfitPeriodsRoundTrip:
         persisted = {
             key: value
             for key, value in serialised.items()
-            if value and not (key.startswith("iva.") and value == "false")
+            if value and not key.startswith("iva.")
         }
         assert "taxpayer_type.new_entity_first_two_profit_periods" not in persisted
         profile = taxpayer_profile_from_mapping(
@@ -452,7 +459,7 @@ class TestLey49SpecialRegimeRoundTrip:
         persisted = {
             key: value
             for key, value in canonical.items()
-            if value and not (key.startswith("iva.") and value == "false")
+            if value and not key.startswith("iva.")
         }
         profile = taxpayer_profile_from_mapping(persisted, tax_id_default="00000000T")
         assert profile.ley_49_2002_special_regime_option_declared is None

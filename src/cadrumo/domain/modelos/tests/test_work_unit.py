@@ -70,6 +70,11 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     UserProfileFact(path="iva.regime", value="GENERAL"),
+    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    UserProfileFact(path="iva.redeme_enrolled", value=False),
+    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -111,7 +116,7 @@ def test_derive_work_unit_id_is_64_char_lowercase_hex() -> None:
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2009-y-siguientes",
+        revision_id="2026-y-siguientes",
     )
     assert len(wid) == 64
     assert all(ch in "0123456789abcdef" for ch in wid)
@@ -125,7 +130,7 @@ def test_derive_work_unit_id_is_deterministic() -> None:
         "modelo": "303",
         "filing_year": 2026,
         "period": Period.from_year_and_code(2026, "1T"),
-        "revision_id": "2009-y-siguientes",
+        "revision_id": "2026-y-siguientes",
     }
     assert derive_work_unit_id(**args) == derive_work_unit_id(**args)
 
@@ -139,7 +144,7 @@ def test_derive_work_unit_id_distinguishes_buckets() -> None:
         "modelo": "303",
         "filing_year": 2026,
         "period": Period.from_year_and_code(2026, "1T"),
-        "revision_id": "2009-y-siguientes",
+        "revision_id": "2026-y-siguientes",
     }
     a = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_A_ID, **base)
     b = derive_work_unit_id(bucket_id=_WORK_UNIT_BUCKET_B_ID, **base)
@@ -156,14 +161,14 @@ def test_derive_work_unit_id_normalises_case_on_modelo_and_period() -> None:
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1T"),
-        revision_id="2009-y-siguientes",
+        revision_id="2026-y-siguientes",
     )
     lower_period = derive_work_unit_id(
         bucket_id=_DERIVATION_BUCKET_ID,
         modelo="303",
         filing_year=2026,
         period=Period.from_year_and_code(2026, "1t"),
-        revision_id="2009-y-siguientes",
+        revision_id="2026-y-siguientes",
     )
     assert canonical == lower_period
 
@@ -178,7 +183,7 @@ def _build_unit(**overrides: Any) -> WorkUnit:
     modelo = overrides.pop("modelo", "303")
     filing_year = overrides.pop("filing_year", 2026)
     period = overrides.pop("period", Period.from_year_and_code(filing_year, "1T"))
-    revision_id = overrides.pop("revision_id", "2009-y-siguientes")
+    revision_id = overrides.pop("revision_id", "2026-y-siguientes")
     wid = overrides.pop(
         "work_unit_id",
         derive_work_unit_id(
@@ -213,7 +218,7 @@ def _create_action_work_unit(
     *,
     modelo: str = "303",
     period: Period = _P_2026_1T,
-    revision_id: str = "2009-y-siguientes",
+    revision_id: str = "2026-y-siguientes",
     name: str | None = None,
     causante_ccaa: Any | None = None,
     clock: datetime = _T0,
@@ -249,7 +254,7 @@ def test_work_unit_is_strict_frozen_and_rejects_extras() -> None:
                 "modelo": "303",
                 "filing_year": 2026,
                 "period": Period.from_year_and_code(2026, "1T"),
-                "revision_id": "2009-y-siguientes",
+                "revision_id": "2026-y-siguientes",
                 "name": "303-2026-1T",
                 "created_at": _T0,
                 "updated_at": _T0,
@@ -361,8 +366,8 @@ def test_list_work_units_sorts_by_bucket_year_modelo_period(repo: WorkUnitCatalo
                     revision_id=revision_id,
                 )
                 for bucket, modelo, year, period, revision_id in (
-                    (_WORK_UNIT_BUCKET_B_ID, "303", 2026, "1T", "2009-y-siguientes"),
-                    (_WORK_UNIT_BUCKET_A_ID, "303", 2026, "2T", "2009-y-siguientes"),
+                    (_WORK_UNIT_BUCKET_B_ID, "303", 2026, "1T", "2026-y-siguientes"),
+                    (_WORK_UNIT_BUCKET_A_ID, "303", 2026, "2T", "2026-y-siguientes"),
                     (_WORK_UNIT_BUCKET_A_ID, "130", 2026, "1T", "2019-y-siguientes"),
                 )
             ),
@@ -386,14 +391,14 @@ def test_list_work_units_filters_by_bucket_id(repo: WorkUnitCatalogueRepository)
                     modelo="303",
                     filing_year=2026,
                     period=_P_2026_1T,
-                    revision_id="2009-y-siguientes",
+                    revision_id="2026-y-siguientes",
                 ),
                 _build_unit(
                     bucket_id=_WORK_UNIT_BUCKET_B_ID,
                     modelo="303",
                     filing_year=2026,
                     period=_P_2026_2T,
-                    revision_id="2009-y-siguientes",
+                    revision_id="2026-y-siguientes",
                 ),
             ),
         ),
@@ -644,7 +649,7 @@ def test_rename_work_unit_emits_renamed_bucket_event_with_actor_and_names(
             modelo="303",
             filing_year=2026,
             period=_P_2026_1T,
-            revision_id="2009-y-siguientes",
+            revision_id="2026-y-siguientes",
             repository=wu_repo,
             clock=_T0,
         )

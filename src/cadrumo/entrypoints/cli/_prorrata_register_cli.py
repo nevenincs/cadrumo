@@ -123,6 +123,19 @@ _EvidenceReferenceOpt = Annotated[
         ),
     ),
 ]
+_OptionalEvidenceReferenceOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--evidence-reference",
+        help=tr(
+            "cli.app.ledger.prorrata.optional_evidence_reference_help",
+            default=(
+                "Operator-held evidence for an option exercised in this ejercicio; "
+                "omit to record an explicit continuation of the regime already in force."
+            ),
+        ),
+    ),
+]
 
 
 def register_prorrata_register_commands(app: typer.Typer) -> None:
@@ -222,11 +235,11 @@ def _elect(
         entry = ProrrataRegisterEntry(
             ejercicio=ejercicio,
             regime=regime,
+            especial_transition=especial_transition,
             sector_id=sector_id,
             provisional_percentage=percentage,
             provisional_provenance=resolved_provenance,
             authorisation_reference=resolved_reference,
-            especial_transition=especial_transition,
         )
     except (ProrrataRegisterValidationError, ValidationError) as exc:
         raise _bad(str(exc)) from exc
@@ -273,7 +286,6 @@ def _elect(
 def prorrata_elect_especial(
     ctx: typer.Context,
     ejercicio: _EjercicioOpt,
-    evidence_reference: _EvidenceReferenceOpt,
     percentage: str = typer.Option(
         ...,
         "--percentage",
@@ -282,6 +294,7 @@ def prorrata_elect_especial(
             default="Common-use deduction percentage 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).",
         ),
     ),
+    evidence_reference: _OptionalEvidenceReferenceOpt = None,
     provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
     reference: _ReferenceOpt = None,
     sector: _SectorOpt = None,
@@ -295,9 +308,13 @@ def prorrata_elect_especial(
         provenance=provenance,
         reference=reference,
         sector_id=sector,
-        especial_transition=ProrrataEspecialTransitionEvidence(
-            kind=ProrrataEspecialTransitionKind.OPCION,
-            evidence_reference=evidence_reference,
+        especial_transition=(
+            ProrrataEspecialTransitionEvidence(
+                kind=ProrrataEspecialTransitionKind.OPCION,
+                evidence_reference=evidence_reference,
+            )
+            if evidence_reference is not None
+            else None
         ),
         result_class=ProrrataElectEspecialResult,
         command="ledger.prorrata.elect_especial",
@@ -329,7 +346,12 @@ def prorrata_elect_general(
     reference: _ReferenceOpt = None,
     sector: _SectorOpt = None,
 ) -> None:
-    """Persist a ``GENERAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
+    """Persist a ``GENERAL`` :class:`ProrrataRegisterEntry` for the ejercicio.
+
+    A move *away* from an especial regime is the separate ``revoke-especial``
+    verb, which requires the revocation evidence: this verb records a plain
+    general election and never manufactures a transition.
+    """
     _elect(
         ctx,
         regime=ProrrataRegisterRegime.GENERAL,

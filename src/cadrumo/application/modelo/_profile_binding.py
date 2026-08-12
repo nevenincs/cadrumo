@@ -1115,9 +1115,9 @@ def _inject_derived_state_attribution_facts(
     consumes it through the existing Decimal-channel resolver without a
     new enum→Decimal transform op.
 
-    The canonical derived key is overwritten even if a legacy stored scalar
-    reached the in-memory index. Missing or unknown territory authority refuses;
-    this function never treats the scalar or supported population as authority.
+    The canonical derived key overwrites any legacy stored scalar. Missing or
+    unknown territory authority refuses; this function never treats the scalar
+    or supported population as authority.
     """
     synthetic_key = "tax_residence.state_attribution_ratio"
     scope = fact_index.get("tax_residence.jurisdiction_scope")

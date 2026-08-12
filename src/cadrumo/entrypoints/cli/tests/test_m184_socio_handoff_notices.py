@@ -39,6 +39,7 @@ def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
         binding_overrides={},
         casilla_values={},
         detail_rows=tuple(detail_rows),
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,

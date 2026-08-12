@@ -153,6 +153,7 @@ def _baseline_revision(
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     moment = datetime(2026, 1, 1, tzinfo=UTC)
     return CalculationRevision(

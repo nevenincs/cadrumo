@@ -48,6 +48,7 @@ from ...domain.calculations.registry import (
 )
 from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
+from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ..aggregation import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -55,7 +56,11 @@ from ..aggregation import (
     collect_unhandled_source_diagnostics,
     merge_source_resolutions,
 )
-from ..calculations import BienesInversionRegularizacionSourceResolver, ProrrataRegularizacionSourceResolver
+from ..calculations import (
+    BienesInversionRegularizacionSourceResolver,
+    CalculationObservationRepository,
+    ProrrataRegularizacionSourceResolver,
+)
 from ._calculation_modelo_adjustments import m131_objective_estimation_data_base_inputs
 from ._calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 
@@ -128,6 +133,8 @@ def resolve_prorrata_regularizacion_sources(
     filing_period_date: date | None,
     m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
     m303_annual_orden: M303AnnualOrdenSnapshot | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    observation_repository: CalculationObservationRepository,
 ) -> CalculationSourceResolution:
     """Resolve prorrata and dependent capital-goods staged mesh sources.
 
@@ -156,8 +163,12 @@ def resolve_prorrata_regularizacion_sources(
             resolution.
         m303_regimen_simplificado_scope: Closed profile-derived scope passed to
             any staged Modelo 303 registry calculation.
-        m303_annual_orden: Immutable S58 annual-Orden snapshot passed to the
+        m303_annual_orden: Immutable annual-Orden snapshot passed to the
             staged Modelo 303 registry calculation.
+        prorrata_register_repository: Canonical repository for the work unit's
+            prorrata register.
+        observation_repository: Canonical repository for the work unit's
+            persisted calculation observations.
 
     Returns:
         The source resolution unchanged when the revision declares no
@@ -190,12 +201,15 @@ def resolve_prorrata_regularizacion_sources(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
+        prorrata_register_repository=prorrata_register_repository,
+        observation_repository=observation_repository,
         registry_snapshot=registry_snapshot,
     ).resolve(context)
     bienes_resolution = BienesInversionRegularizacionSourceResolver(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
+        observation_repository=observation_repository,
     ).resolve(context)
     return merge_source_resolutions((source_resolution, prorrata_resolution, bienes_resolution))
 
@@ -306,8 +320,8 @@ def materialise_registry_values_for_source_resolution(
     unresolved_binding_ids: tuple[BindingId, ...] = (),
     staging_binding_defaults: Mapping[BindingId, Decimal] | None = None,
     filing_period_date: date | None = None,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
-    m303_annual_orden: M303AnnualOrdenSnapshot | None = None,
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
+    m303_annual_orden: M303AnnualOrdenSnapshot | None,
 ) -> SourceResolutionRegistryValues:
     """Run the registry engine without persistence so staged resolvers can read current values.
 

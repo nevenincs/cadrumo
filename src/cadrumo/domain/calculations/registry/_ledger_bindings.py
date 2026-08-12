@@ -47,6 +47,7 @@ from ...iva import (
     IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     OssIossRegime,
     TransactionKind,
@@ -429,12 +430,14 @@ class IvaLedgerObservation(BaseModel):
     a manual join against the parallel ``prorrata_references`` tuple.
     """
     cash_accounting_treatment: IvaCashAccountingTreatment = IvaCashAccountingTreatment.NONE
-    """Independent criterio-de-caja axis.
+    """Independent criterio-de-caja affiliation for this projection."""
+    observation_role: IvaLedgerObservationRole
+    """Whether this is a monetary settlement or an art. 75 information projection.
 
-    Settlement observations use ``NONE`` and therefore flow through the normal
-    Modelo 303 base/cuota bindings. Informational observations for boxes
-    62/63/74/75 carry the actual cash-accounting treatment so ordinary
-    domestic rows cannot be confused with art. 75 projections.
+    Cash-accounting operation and payment observations retain the same typed
+    treatment affiliation.  Registry bindings select this orthogonal role so
+    informational boxes cannot consume monetary settlements, and ordinary IVA
+    boxes cannot consume the operation-date information projection.
     """
     input_classification: InputClassification | None = None
     """Operator-declared LIVA art. 106 prorrata-especial per-input use class.
@@ -516,7 +519,8 @@ class _IvaLedgerSelector(BaseModel):
     exemption_articles: tuple[IvaExemptionArticle, ...] | None = Field(default=None, min_length=1)
     rate_kinds: tuple[IvaRateKind, ...] = Field(min_length=1)
     flow_direction: IvaFlowDirection
-    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment.NONE,)
+    observation_roles: tuple[IvaLedgerObservationRole, ...] = Field(min_length=1)
+    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = Field(min_length=1)
     applied_rates: tuple[Decimal, ...] | None = Field(default=None, min_length=1)
     """Numeric rates this binding accepts, when the box is rate-specific.
 
@@ -557,6 +561,16 @@ class _IvaLedgerSelector(BaseModel):
     ) -> tuple[IvaCashAccountingTreatment, ...]:
         if len(set(value)) != len(value):
             raise RegistryValidationError("cash_accounting_treatments entries must be unique")
+        return value
+
+    @field_validator("observation_roles", mode="after")
+    @classmethod
+    def _observation_roles_unique(
+        cls,
+        value: tuple[IvaLedgerObservationRole, ...],
+    ) -> tuple[IvaLedgerObservationRole, ...]:
+        if len(set(value)) != len(value):
+            raise RegistryValidationError("observation_roles entries must be unique")
         return value
 
     @field_validator("exemption_articles", mode="after")
@@ -625,7 +639,7 @@ def validate_ledger_iva_aggregation_binding_definition(
 
 
 class IvaSelectorAxesProtocol(Protocol):
-    """The five axes the IVA selector matcher reads off an observation.
+    """The six axes the IVA selector matcher reads off an observation.
 
     Declared so the matcher can state the shape it actually needs instead of
     naming the full :class:`IvaLedgerObservation` record. Both that record and
@@ -651,6 +665,9 @@ class IvaSelectorAxesProtocol(Protocol):
     def cash_accounting_treatment(self) -> IvaCashAccountingTreatment: ...
 
     @property
+    def observation_role(self) -> IvaLedgerObservationRole: ...
+
+    @property
     def exemption_article(self) -> IvaExemptionArticle | None: ...
 
     @property
@@ -658,7 +675,7 @@ class IvaSelectorAxesProtocol(Protocol):
 
 
 class _IvaReachabilityProbeObservation(NamedTuple):
-    """Minimal shape carrying only the five axes the IVA matcher reads.
+    """Minimal shape carrying only the six axes the IVA matcher reads.
 
     Stands in for :class:`IvaLedgerObservation` so the probe never needs the
     full record's unrelated required fields (ledger id, dates, amounts). The
@@ -670,6 +687,7 @@ class _IvaReachabilityProbeObservation(NamedTuple):
     rate_kind: IvaRateKind
     flow_direction: IvaFlowDirection
     cash_accounting_treatment: IvaCashAccountingTreatment
+    observation_role: IvaLedgerObservationRole
     exemption_article: IvaExemptionArticle | None
     # The probe asks whether a binding is REACHABLE by some observation, so it
     # supplies the rate the binding under test names rather than a fixed value:
@@ -688,16 +706,13 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
     forever, indistinguishable from a taxpayer with no IVA of that kind.
 
     This family is where a selector-derived probe genuinely bites, and the
-    reason is worth stating because it is not true of every family. Four of the
-    five selector axes are constrained so they cannot be empty --
-    ``categories``, ``rate_kinds`` and ``exemption_articles`` each carry a
-    ``MinLen(1)``, and ``flow_direction`` is a single enum. But
-    ``cash_accounting_treatments`` carries **no minimum length**, so
-    ``cash_accounting_treatments = []`` is constructible today, and the matcher
-    tests ``observation.cash_accounting_treatment in set(...)`` against it. An
-    empty set rejects every treatment the enum defines, so such a binding
-    compiles clean, validates clean, and silently resolves to zero for every
-    taxpayer, forever.
+    reason is worth stating because it is not true of every family. Every
+    multi-value axis is non-empty -- ``categories``, ``rate_kinds``,
+    ``observation_roles`` and ``cash_accounting_treatments`` carry
+    ``MinLen(1)``, while ``exemption_articles`` is either absent or non-empty
+    and ``flow_direction`` is a single enum. The probe therefore confirms the
+    declared combination itself can reach the matcher without inventing an
+    implicit observation role or cash-accounting policy.
 
     What this cannot catch, stated so no reader over-trusts it:
 
@@ -714,16 +729,11 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
         category=selector.categories[0],
         rate_kind=selector.rate_kinds[0],
         flow_direction=selector.flow_direction,
-        # An absent treatment tuple is the only axis that can be empty. Index 0
-        # when populated; when empty there is no value to offer, and NONE is the
-        # treatment an ordinary non-cash-accounting row carries -- so the probe
-        # asks the fairest possible question of an empty selector and still
-        # gets a refusal.
-        cash_accounting_treatment=(
-            selector.cash_accounting_treatments[0]
-            if selector.cash_accounting_treatments
-            else IvaCashAccountingTreatment.NONE
-        ),
+        # Both role and treatment policies are deliberately explicit and
+        # non-empty; reachability may therefore exercise their first declared
+        # members without introducing an implicit default.
+        cash_accounting_treatment=selector.cash_accounting_treatments[0],
+        observation_role=selector.observation_roles[0],
         exemption_article=(selector.exemption_articles[0] if selector.exemption_articles else None),
         # Offer the first rate the selector names, so a rate-specific binding is
         # asked whether ANY line can reach it rather than whether a rate-less one
@@ -734,8 +744,7 @@ def _iva_reachability_probe(selector: _IvaLedgerSelector) -> None:
     if not matcher(probe):
         raise RegistryValidationError(
             "ledger_iva_aggregation selector matches no constructible observation shape -- "
-            "the binding can never resolve a value from any ledger data. The usual cause is an "
-            "empty cash_accounting_treatments tuple, which rejects every treatment the enum defines",
+            "the binding can never resolve a value from any ledger data",
         )
 
 
@@ -753,6 +762,8 @@ def _iva_ledger_observation_matches_selector(
     if observation.flow_direction is not selector.flow_direction:
         return False
     if observation.cash_accounting_treatment not in set(selector.cash_accounting_treatments):
+        return False
+    if observation.observation_role not in set(selector.observation_roles):
         return False
     if selector.applied_rates is not None and observation.applied_rate not in set(selector.applied_rates):
         return False
@@ -1058,6 +1069,7 @@ def structurally_unroutable_iva_base_categories(
                 rate_kind=selector.rate_kinds[0],
                 flow_direction=selector.flow_direction,
                 cash_accounting_treatment=selector.cash_accounting_treatments[0],
+                observation_role=selector.observation_roles[0],
                 exemption_article=selector.exemption_articles[0] if selector.exemption_articles else None,
                 applied_rate=selector.applied_rates[0] if selector.applied_rates else None,
             )

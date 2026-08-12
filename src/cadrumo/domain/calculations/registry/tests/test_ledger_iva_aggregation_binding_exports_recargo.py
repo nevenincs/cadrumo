@@ -12,12 +12,14 @@ from pydantic import ValidationError
 
 from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from .....core.resources import resources
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
     IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
 )
 from .. import (
     IvaLedgerObservation,
@@ -138,8 +140,11 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     inputs, not a re-run of the registry formula), so a regression to the manual
     no-binding state (base -> 0) fails this test loudly.
     """
+    # The transaction dates sit inside the declared 2024 2T filing period, so the
+    # date-axis parameter lookup resolves against the same revision the snapshot does.
     repercutido = _observation(
         applied_rate=Decimal("0.21"),
+        txn_date=date(2024, 5, 15),
         category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.REPERCUTIDO,
@@ -148,11 +153,14 @@ def test_modelo_303_2024_domestic_base_aggregates_from_ledger() -> None:
     )
     soportado = _observation(
         applied_rate=Decimal("0.21"),
+        txn_date=date(2024, 5, 15),
         category=IvaCategory.DOMESTIC_GENERAL,
         rate_kind=IvaRateKind.GENERAL,
         flow=IvaFlowDirection.SOPORTADO,
         base=Decimal("300"),
         iva=Decimal("63"),
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+        deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
     )
     result = _calculate_303_from_observations(
         filing_year=2024,
@@ -204,6 +212,8 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("300"),
             iva=Decimal("63"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
         ),
     )
     values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations)
@@ -387,6 +397,9 @@ def _calculate_303_2009_from_observations(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": observations[-1].transaction_date},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
 

@@ -292,6 +292,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
         borrador_snapshot_id=revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
         detail_rows=revision.detail_rows,
+        filing_instance_evidence=None,
     )
     invalid_revision = CalculationRevision(
         calculation_revision_id=invalid_revision_id,

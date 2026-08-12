@@ -16,23 +16,11 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.errors import resolve_error_message
-from ....core.resources import resources
 from ....domain.buckets import BucketEventType
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
-from ....domain.deadlines import M303RegimeComposition
-from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
 from ....domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
     FilingInstanceEvidence,
-    M303Exonerado390FilingEvidence,
-    M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
 )
 from ....domain.transactions import (
     BusinessClassification,
@@ -44,6 +32,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -107,34 +96,7 @@ def _repositories(objects: SecureObjectRepository):
 
 
 def _m303_filing_evidence(period: Period) -> FilingInstanceEvidence:
-    scope = M303RegimenSimplificadoScopeDecision(
-        regime_composition=M303RegimeComposition.GENERAL,
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-    )
-    snapshot = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=resources().modelos.authority.snapshot(
-            "303",
-            filing_year=period.filing_year,
-            period=period.code,
-        ),
-        scope_decision=scope,
-    )
-    return FilingInstanceEvidence(
-        m303=M303FilingInstanceEvidence(
-            period=period,
-            joint_return_elected=False,
-            insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(reference="test:bucket-flow:exonerado-390"),
-            ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
-                scope_decision=scope,
-                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
-                regimen_snapshot=snapshot,
-            ),
-        ),
-    )
+    return general_m303_filing_evidence(period, reference="test:bucket-flow:exonerado-390")
 
 
 def _raw_transaction(

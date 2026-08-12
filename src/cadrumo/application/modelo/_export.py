@@ -46,11 +46,13 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
+from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ActionEvidenceProvenance,
@@ -102,7 +104,6 @@ from ..aggregation import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
-from ..bienes_inversion import BienesInversionRegisterService
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
@@ -133,7 +134,6 @@ from ..filing import (
     resolve_m303_filing_facts,
 )
 from ..filing.runtime import RegistrySchemaAccessor
-from ..prorrata_register import ProrrataRegisterService
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -143,6 +143,7 @@ from ._action_errors import (
 )
 from ._iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
+from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
 from ._profile_export_binding import resolve_profile_export_values
@@ -630,16 +631,16 @@ def _approve_export_draft(
 
 def _resolve_m303_export_arrivals(
     *,
-    work_unit: WorkUnit,
     period: Period,
     prorrata_register: ProrrataRegister,
     iva_aggregation: IvaLedgerAggregation,
+    bienes_register: BienesInversionIvaRegister,
 ) -> tuple[
     tuple[IvaDifferentiatedDeductionContribution, ...],
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
 ]:
-    """Assemble current canonical register arrivals without caller overrides."""
+    """Assemble current canonical register arrivals from the work-unit-bound register."""
     snapshot = resources().modelos.authority.snapshot(
         Modelo.M303.value,
         filing_year=period.filing_year,
@@ -658,8 +659,6 @@ def _resolve_m303_export_arrivals(
         )
     else:
         contributions = ()
-
-    bienes_register = BienesInversionRegisterService().list_all()
     definitive_by_identifier: dict[str, Decimal] = {}
     for record in bienes_register.in_window_records(period.filing_year):
         entry = prorrata_register.entry_for(
@@ -678,6 +677,19 @@ def _resolve_m303_export_arrivals(
             "modelo 303 Bienes de inversión regularisation requires definitive prorrata evidence",
         )
     return contributions, bienes_register, regularisation_result
+
+
+def _require_m303_regimen_simplificado_scope_matches_profile(
+    *,
+    filing_facts: M303FilingFacts,
+    workflow_profile: TaxpayerProfile,
+) -> None:
+    """Require persisted M303 evidence to agree with the canonical profile scope."""
+    expected_scope = m303_regimen_simplificado_scope_for_profile(workflow_profile)
+    if filing_facts.regimen_simplificado.scope_decision != expected_scope:
+        raise FilingProducerSnapshotError(
+            "modelo 303 simplified-regime filing evidence disagrees with the canonical IVA profile composition",
+        )
 
 
 def _build_export_producer_snapshot(
@@ -770,6 +782,7 @@ def _resolve_export_model_profile(
         return iva_profile, _resolve_m303_filing_facts_for_export(
             work_unit=work_unit,
             revision=revision,
+            workflow_profile=workflow_profile,
         )
     if modelo is Modelo.M202:
         return Modelo202ProducerProfile(taxpayer_profile=workflow_profile, activities=()), None
@@ -782,24 +795,27 @@ def _resolve_m303_filing_facts_for_export(
     *,
     work_unit: WorkUnit,
     revision: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
 ) -> M303FilingFacts:
     filing_instance_evidence = require_filing_instance_evidence_for_work_unit(
         work_unit=work_unit,
         revision=revision,
     )
     assert filing_instance_evidence is not None
-    prorrata_register = ProrrataRegisterService().list_all()
+    prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
+    prorrata_register = prorrata_register_repository.load()
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=work_unit.bucket_id,
         period=work_unit.period,
+        prorrata_register_repository=prorrata_register_repository,
     )
     differentiated_contributions, bienes_register, regularisation_result = _resolve_m303_export_arrivals(
-        work_unit=work_unit,
         period=filing_instance_evidence.m303.period,
         prorrata_register=prorrata_register,
         iva_aggregation=iva_aggregation,
+        bienes_register=BienesInversionIvaRegisterRepository(bucket_id=work_unit.bucket_id).load(),
     )
-    return resolve_m303_filing_facts(
+    filing_facts = resolve_m303_filing_facts(
         evidence=filing_instance_evidence,
         supplier_regime=resolve_m303_supplier_regime_arrival(
             period=work_unit.period,
@@ -814,6 +830,11 @@ def _resolve_m303_filing_facts_for_export(
         bienes_register=bienes_register,
         regularisation_result=regularisation_result,
     )
+    _require_m303_regimen_simplificado_scope_matches_profile(
+        filing_facts=filing_facts,
+        workflow_profile=workflow_profile,
+    )
+    return filing_facts
 
 
 def _persist_exported_draft(
@@ -1203,7 +1224,13 @@ def export_modelo_revision(
             translated_message="application.modelo.errors.work_unit_not_found",
             context={"work_unit_id": revision.work_unit_id},
         )
-    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
+    try:
+        require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=revision)
+    except ModeloError as exc:
+        raise ModeloExportError(
+            translated_message="application.modelo.errors.export_draft_write_failed",
+            context={"calculation_revision_id": command.calculation_revision_id, "cause": str(exc)},
+        ) from exc
     if work_unit.bucket_id != active_bucket_id:
         raise ModeloExportCrossBucketRefusedError(
             translated_message="application.modelo.errors.export_cross_bucket_refused",

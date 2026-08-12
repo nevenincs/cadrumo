@@ -122,6 +122,10 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(reference="test:validation:exonerado-390"),
+                endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,
@@ -135,7 +139,7 @@ def _evidence(period: Period) -> FilingInstanceEvidence:
     )
 
 
-def _store_profile(composition: M303RegimeComposition) -> None:
+def _store_profile(*, composition: M303RegimeComposition = M303RegimeComposition.GENERAL) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
@@ -157,6 +161,29 @@ def _store_profile(composition: M303RegimeComposition) -> None:
     )
 
 
+def _activity_rows(reference: FilingEvidenceReference) -> tuple[M303Exonerado390ActivityRowEvidence, ...]:
+    return (
+        M303Exonerado390ActivityRowEvidence(
+            slot=1, codigo_actividad="A01", epigrafe_iae="4101", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=2, codigo_actividad="A02", epigrafe_iae="4102", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=3, codigo_actividad="A03", epigrafe_iae="4103", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=4, codigo_actividad="A04", epigrafe_iae="4104", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=5, codigo_actividad="A05", epigrafe_iae="4105", evidence_reference=reference
+        ),
+        M303Exonerado390ActivityRowEvidence(
+            slot=6, codigo_actividad="A06", epigrafe_iae="4106", evidence_reference=reference
+        ),
+    )
+
+
 def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "1T")
     work_unit = _work_unit(period)
@@ -164,7 +191,7 @@ def test_complete_evidence_matches_work_unit_registry_and_active_censo(tmp_path:
     registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _store_profile(M303RegimeComposition.GENERAL)
+        _store_profile()
         validated = validate_m303_filing_instance_evidence_for_revision(
             work_unit=work_unit,
             registry_snapshot=registry_snapshot,
@@ -214,11 +241,18 @@ def test_m303_evidence_is_required_before_profile_lookup() -> None:
         )
 
 
-def test_evidence_scope_disagreeing_with_active_censo_refuses(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "composition",
+    (M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED),
+)
+def test_evidence_scope_disagreeing_with_active_censo_refuses(
+    tmp_path: Path,
+    composition: M303RegimeComposition,
+) -> None:
     period = Period.from_year_and_code(2026, "1T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _store_profile(M303RegimeComposition.SIMPLIFIED)
+        _store_profile(composition=composition)
         with pytest.raises(ModeloError, match="disagrees with the active censo profile"):
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
@@ -234,7 +268,7 @@ def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: P
     evidence_period = Period.from_year_and_code(2026, "2T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _store_profile(M303RegimeComposition.GENERAL)
+        _store_profile()
         with pytest.raises(ModeloError, match="period must match its work unit"):
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(work_period),
@@ -271,7 +305,7 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
                         )
                         for casilla_id, value in values.items()
                     ),
-                    activity_rows=_exonerado_activity_rows(reference),
+                    activity_rows=_activity_rows(reference),
                     operaciones_terceros_declarables=False,
                     operaciones_terceros_reference=reference,
                 ),
@@ -286,7 +320,7 @@ def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observati
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _store_profile(M303RegimeComposition.GENERAL)
+        _store_profile()
         validated = validate_m303_filing_instance_evidence_for_revision(
             work_unit=work_unit,
             registry_snapshot=registry_snapshot,
@@ -330,7 +364,7 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
-        _store_profile(M303RegimeComposition.GENERAL)
+        _store_profile()
         with pytest.raises(ModeloError, match="cover every canonical A28 endpoint"):
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),

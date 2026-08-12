@@ -61,7 +61,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "39039039-0390-4390-8390-390390390390"
 _CLOCK = datetime(2026, 6, 5, 11, 0, 0, tzinfo=UTC)
-_M303_REVISION = "2023-y-siguientes"
 _M303_SOURCE_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_M303_SOURCE_CASILLA_01")
 
 
@@ -85,6 +84,11 @@ def _store_ready_profile_record(*, activity_start_date: str | None = None) -> No
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value=IVARegime.GENERAL.value),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 *(
                     (UserProfileFact(path="censo.activity_start_date", value=activity_start_date),)
                     if activity_start_date is not None
@@ -130,6 +134,7 @@ def _persist_390_draft(
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -271,6 +276,7 @@ def _seed_source_filing_record_without_import_flow(
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     revisions = calculation_repository.load()
     calculation_repository.save(

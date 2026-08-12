@@ -14,6 +14,8 @@ from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla
 from ....core import (
     CasillaId,
     IvaCompensationStateProvenance,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
     Period,
     derive_result_disposition,
     result_disposition_casilla_ids,
@@ -30,7 +32,15 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....domain.iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from ....domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
@@ -119,6 +129,18 @@ def _observation(
     flow: IvaFlowDirection = IvaFlowDirection.REPERCUTIDO,
     iva: Decimal,
 ) -> IvaLedgerObservation:
+    deduction = (
+        {
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="d" * 64,
+            ),
+        }
+        if flow is IvaFlowDirection.SOPORTADO
+        else {}
+    )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -127,6 +149,8 @@ def _observation(
         flow_direction=flow,
         base_amount=Decimal("100.00"),
         iva_amount=iva,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        **deduction,
     )
 
 
@@ -153,6 +177,10 @@ def _calculate_303_from_observations(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": observations[-1].transaction_date},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+        m303_annual_orden=None,
     )
 
 
@@ -292,6 +320,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         # annual snapshot has every declared binding fact.
         bienes_resolution = BienesInversionRegularizacionSourceResolver(
             register_repository=BienesInversionIvaRegisterRepository(objects=profile.repository),
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
         ).resolve(
             CalculationSourceContext(
                 bucket_id=profile.bucket_id,
@@ -317,6 +346,8 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
             inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             binding_values=binding_values,
             date_context={"filing_period": date(2025, 12, 31)},
+            m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
 
         assert (

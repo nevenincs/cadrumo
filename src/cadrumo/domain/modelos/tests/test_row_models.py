@@ -306,10 +306,11 @@ class TestRevisionIdWithDetailRows:
             "binding_overrides": {},
             "casilla_values": {},
         }
-        id_no_rows = derive_calculation_revision_id(**base_kwargs)
+        id_no_rows = derive_calculation_revision_id(**base_kwargs, filing_instance_evidence=None)
         id_one_row = derive_calculation_revision_id(
             **base_kwargs,
             detail_rows=(Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("100"), importe=Decimal("10000")),),
+            filing_instance_evidence=None,
         )
         id_two_rows = derive_calculation_revision_id(
             **base_kwargs,
@@ -317,6 +318,7 @@ class TestRevisionIdWithDetailRows:
                 Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal("6000")),
                 Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal("4000")),
             ),
+            filing_instance_evidence=None,
         )
         # All three must differ
         assert id_no_rows != id_one_row
@@ -335,6 +337,7 @@ class TestRevisionIdWithDetailRows:
             binding_overrides={},
             casilla_values={},
             detail_rows=rows,
+            filing_instance_evidence=None,
         )
         second = derive_calculation_revision_id(
             work_unit_id="b" * 64,
@@ -342,6 +345,7 @@ class TestRevisionIdWithDetailRows:
             binding_overrides={},
             casilla_values={},
             detail_rows=rows,
+            filing_instance_evidence=None,
         )
         assert first == second
 
@@ -355,6 +359,7 @@ class TestRevisionIdWithDetailRows:
             binding_overrides={},
             casilla_values={},
             detail_rows=(row_a, row_b),
+            filing_instance_evidence=None,
         )
         id_ba = derive_calculation_revision_id(
             work_unit_id="c" * 64,
@@ -362,6 +367,7 @@ class TestRevisionIdWithDetailRows:
             binding_overrides={},
             casilla_values={},
             detail_rows=(row_b, row_a),
+            filing_instance_evidence=None,
         )
         assert id_ab == id_ba
 
@@ -378,6 +384,7 @@ class TestRevisionIdWithDetailRows:
                     Modelo184MemberRow(nif="11111111A", porcentaje=Decimal("60"), importe=Decimal(importe_1)),
                     Modelo184MemberRow(nif="22222222B", porcentaje=Decimal("40"), importe=Decimal(importe_2)),
                 ),
+                filing_instance_evidence=None,
             )
 
         base = _id("6000", "4000")

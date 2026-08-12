@@ -74,7 +74,8 @@ def run_doctor(*, channel: str | None = None, headless: bool = True) -> int:
         asyncio.run(_probe_channel(resolved_channel, headless=headless))
     except MissingOptionalExtraError as exc:
         print(
-            f"playwright-doctor: the 'browser' optional extra is not installed — {exc.install_hint}",
+            f"playwright-doctor: optional extra {exc.extra.extra!r} is not installed "
+            f"(import name {exc.extra.import_name!r})",
             file=sys.stderr,
         )
         return 1

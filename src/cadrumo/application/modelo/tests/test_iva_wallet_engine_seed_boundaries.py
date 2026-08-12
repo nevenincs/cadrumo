@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....domain.iva_compensation import IvaCompensationDecisionReason
 from ...calculations import (
     CalculationObservationRepository,
@@ -58,6 +60,9 @@ def test_no_seed_no_override_303_calculate_blocks_missing_in_scope_prior_history
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
+                ),
             )
         assert not hasattr(exc_info.value, "suggestion")
         assert exc_info.value.precondition_failure.scenario_id == "modelo.work.calculate.iva_wallet.no_usable_authority"
@@ -99,6 +104,9 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: P
                     calculation_repository=calc_repo,
                     bucket_event_repository=event_repo,
                     clock=_DECIDED_AT,
+                    filing_instance_evidence=general_m303_filing_evidence(
+                        work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
+                    ),
                 )
 
 
@@ -200,6 +208,9 @@ def test_explicit_zero_binding_matches_prior_zero_seed_and_feeds_real_modelo_303
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
+            ),
         )
 
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
@@ -247,6 +258,9 @@ def test_explicit_nonzero_binding_conflicts_with_prior_zero_seed(tmp_path: Path)
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-seed-boundaries"
+                ),
             )
 
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_caller_binding_conflict"

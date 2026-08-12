@@ -15,7 +15,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from .....domain.iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     DataBindingDefinition,
     IvaLedgerObservation,
@@ -73,6 +73,7 @@ def _row(ledger_id: str, *, applied_rate: Decimal | None, base: str) -> IvaLedge
         base_amount=Decimal(base),
         iva_amount=Decimal("0.00"),
         applied_rate=applied_rate,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

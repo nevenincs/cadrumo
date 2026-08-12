@@ -260,7 +260,7 @@ def _endpoint_matrix(
     expected = {1: set(_FIELDS), 2: set(_FIELDS)}
     if {slot: set(fields) for slot, fields in resolved.items()} != expected:
         raise RegistryValidationError(
-            "modelo 303 differentiated deduction projection reference matrix is incomplete or malformed",
+            "modelo 303 differentiated deduction endpoint matrix is incomplete or malformed",
         )
     return resolved
 

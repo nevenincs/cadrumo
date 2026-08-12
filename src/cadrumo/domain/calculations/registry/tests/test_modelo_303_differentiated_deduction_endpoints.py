@@ -33,6 +33,7 @@ from .....domain.iva import (
     IvaCategory,
     IvaDeductionClassificationProvenance,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
@@ -67,11 +68,12 @@ def _revision():
 def _projection_refs() -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:
     return tuple(
         M303DifferentiatedDeductionProjectionRef(
+            projection_kind="m303_differentiated_deduction",
             slot=slot,
             field=field,
             casilla_id=str(700 + (slot - 1) * 18 + field_index),
         )
-        for slot in (1, 2)
+        for slot in range(1, 3)
         for field_index, field in enumerate(M303DifferentiatedDeductionProjectionField)
     )
 
@@ -86,6 +88,7 @@ def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
             ejercicio=2025,
             sector_id=sector_id,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=percentage,
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         )
@@ -138,6 +141,7 @@ def _observation(
             source_locator=f"invoice:{ledger_id}",
             evidence_digest="a" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -261,6 +265,7 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
             prorrata_sector_id="a",
             deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
             deduction_provenance=provenance,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
         for index, classification in enumerate(
             (InputClassification.EXCLUSIVELY_DEDUCTIBLE, InputClassification.COMMON), 1
@@ -341,11 +346,15 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
     ("entry", "message"),
     (
         (
-            ProrrataRegisterEntry(ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.NINGUNA),
+            ProrrataRegisterEntry(
+                ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None
+            ),
             "no applicable regime",
         ),
         (
-            ProrrataRegisterEntry(ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.GENERAL),
+            ProrrataRegisterEntry(
+                ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+            ),
             "no resolved percentage",
         ),
     ),

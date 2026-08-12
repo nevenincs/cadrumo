@@ -63,6 +63,7 @@ def test_record_aeat_autorizada_persists_authorised_override(tmp_path: Path) -> 
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
@@ -116,6 +117,7 @@ def test_record_inicio_actividad_persists_proposed_override(tmp_path: Path) -> N
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
@@ -169,6 +171,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(tmp_path: Path
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
@@ -177,6 +180,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(tmp_path: Path
         authorised = ProrrataRegisterEntry(
             ejercicio=2026,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("63"),
             provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
             authorisation_reference="AEAT-AUTH-2026-0009",
@@ -197,6 +201,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(tmp_path: Path) ->
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
@@ -205,6 +210,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(tmp_path: Path) ->
         inicio = ProrrataRegisterEntry(
             ejercicio=2026,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("55"),
             provisional_provenance=ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
             authorisation_reference="INICIO-036-2026-0005",
@@ -225,6 +231,7 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(tmp_path: Pa
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
                 sector_id="comercio",
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
@@ -234,6 +241,7 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(tmp_path: Pa
         other_sector = ProrrataRegisterEntry(
             ejercicio=2026,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             sector_id="arrendamiento",
             provisional_percentage=Decimal("63"),
             provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,

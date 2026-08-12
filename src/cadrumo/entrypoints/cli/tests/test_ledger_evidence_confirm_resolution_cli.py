@@ -38,9 +38,14 @@ from pathlib import Path
 from typing import Final
 
 import pytest
+from click.testing import Result
 
+from ....application.ledger import FILER_POSTCODE_FACT_PATH
+from ....application.user_profile import set_active_fields
+from ....application.workflow import workflow_state_repository
 from ....core import IvaCategoryOutcome
 from ....domain.iva import IvaCategory
+from ....domain.user_profile import UserProfileFact
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -122,20 +127,36 @@ what the document declared, which is exactly the axis under test.
 """
 
 
+def _undeclare_the_filers_postcode() -> None:
+    """Blank the filer's fiscal-address postcode for the current session.
+
+    A blank is undeclared rather than unreadable, which is the state under test:
+    nothing was stated, so the operator's action is to supply the fact rather
+    than to correct it, and the two refusals send them different places.
+    """
+    workflow_state_repository().update(
+        lambda state: set_active_fields(state, (UserProfileFact(path=FILER_POSTCODE_FACT_PATH, value=""),)),
+    )
+
+
 @pytest.fixture(autouse=True)
 def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
     with _open_ledger_ux_session(tmp_path):
         yield
 
 
-def _confirmed(tmp_path: Path, document: str, *, name: str) -> dict[str, object]:
-    """Add one structured document as evidence and confirm it, returning the envelope."""
+def _confirm_raw(tmp_path: Path, document: str, *, name: str) -> Result:
+    """Add one structured document as evidence and confirm it, returning the result.
+
+    Kept apart from :func:`_confirmed` so a case about a REFUSAL does not have
+    to route around an assertion that the confirm succeeded.
+    """
     path = tmp_path / f"{name}.xml"
     path.write_text(document, encoding="utf-8")
     added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(path), "--supplier", _SUPPLIER_NAME])
     assert added.exit_code == 0, added.output
     evidence_id = json.loads(added.output)["result"]["evidence_id"]
-    confirmed = _invoke(
+    return _invoke(
         [
             "--format", "json", "app", "ledger", "evidence", "confirm",
             "--country-code", "ES",
@@ -144,6 +165,11 @@ def _confirmed(tmp_path: Path, document: str, *, name: str) -> dict[str, object]
             "--counterparty-name", _SUPPLIER_NAME,
         ],
     )  # fmt: skip
+
+
+def _confirmed(tmp_path: Path, document: str, *, name: str) -> dict[str, object]:
+    """Add one structured document as evidence and confirm it, returning the envelope."""
+    confirmed = _confirm_raw(tmp_path, document, name=name)
     assert confirmed.exit_code == 0, confirmed.output
     payload = json.loads(confirmed.output)
     assert isinstance(payload, dict)
@@ -285,20 +311,36 @@ def test_the_unread_establishment_question_reaches_the_operator_naming_the_party
 
 
 def test_the_filer_s_own_profile_gap_reaches_the_operator_as_a_separate_question(tmp_path: Path) -> None:
-    """The second carried item, and it is not about the document at all.
+    """The filer's own setup gap, and it is not about the document at all.
 
     The taxpayer's own IVA territory is a profile fact that separates the
-    peninsula from Canarias and from Ceuta y Melilla, and an incomplete profile
-    silently disables the rule table for EVERY document. It was carried on the
-    same unread field as the counterparty's, so an operator re-reading invoices
-    would never find the setup gap that was actually stopping them.
-    """
-    envelope = _confirmed(tmp_path, _INTRA_COMMUNITY, name="intracom")
+    peninsula from Canarias and from Ceuta y Melilla, and it is never read off
+    an invoice. An operator re-reading documents would never find the setup gap
+    that was actually stopping them, so it must arrive naming the profile fact.
 
-    context = _by_field(envelope, _ESTABLISHMENT_NOTICE, "contact.postcode")["context"]
-    assert isinstance(context, dict)
-    assert context["reason"] == "undetermined_establishment"
-    assert "contact.postcode" in str(context["detail"])
+    THE GAP IS CONSTRUCTED HERE, and re-pointed at the state a real operator
+    reaches. It used to arrive for free from a shared harness that declared no
+    postcode -- so every other case in every ledger CLI suite also ran against
+    an incomplete profile, and this one case was the sole beneficiary. Once the
+    harness registers a complete profile, blanking the fact exposes what was
+    two different states wearing one name: with NO resolvable profile the
+    confirm carries a review notice, and with a profile that simply does not
+    declare the postcode it REFUSES, typed, before any review. The second is
+    the reachable one -- an operator who set up a profile has one -- and it is
+    the stronger answer: a typed refusal carrying the failed condition and its
+    evidence, rather than an advisory beside a completed confirm.
+    """
+    _undeclare_the_filers_postcode()
+    refused = _confirm_raw(tmp_path, _INTRA_COMMUNITY, name="intracom")
+
+    assert refused.exit_code != 0, refused.output
+    error = json.loads(refused.output)["error"]
+    assert FILER_POSTCODE_FACT_PATH in str(error["message"])
+    assert error["action"]["failed_condition_id"] == "ledger.filer.postcode_valid"
+    # The evidence distinguishes an UNDECLARED fact from an unreadable one. An
+    # operator told a malformed value is "missing" re-supplies the same value.
+    evidence = error["action"]["evidence"][0]["values"]
+    assert evidence["filer_postcode_present"] is False
 
 
 def test_a_document_that_places_its_counterparty_raises_neither_question(tmp_path: Path) -> None:
@@ -306,10 +348,13 @@ def test_a_document_that_places_its_counterparty_raises_neither_question(tmp_pat
 
     The bundled Facturae specimen carries a full address block, so the ladder
     settles the counterparty's territory and neither the withheld-relief notice
-    nor the counterparty establishment question fires. The FILER's own profile
-    question is deliberately not asserted absent here: this session's profile
-    declares no fiscal-address postcode, so that item is genuinely open and
-    suppressing it would be the wrong assertion.
+    nor the counterparty establishment question fires.
+
+    The FILER's own question is now asserted absent too, which it could not be
+    while the harness left the postcode undeclared -- that item was genuinely
+    open then, so suppressing it would have been the wrong assertion. With a
+    complete profile the control is the stronger one it was always meant to be:
+    NEITHER question fires on a document that places its counterparty.
     """
     corpus = Path(__file__).resolve().parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
     document = (corpus / "facturae_32_series_and_parties_invoice.xml").read_text(encoding="utf-8")
@@ -333,6 +378,11 @@ def test_a_document_that_places_its_counterparty_raises_neither_question(tmp_pat
     assert _RELIEF_NOTICE not in _codes(envelope)
     raised_about = {str(_context(notice).get("field")) for notice in _notices(envelope, _ESTABLISHMENT_NOTICE)}
     assert "supplier_tax_id" not in raised_about
+    # The filer's own question, now that the harness declares a complete
+    # profile. Asserting it absent is what makes this a control rather than a
+    # partial one: an item that fires on every document proves nothing about
+    # the document.
+    assert FILER_POSTCODE_FACT_PATH not in raised_about
 
 
 def test_the_text_surface_carries_the_same_resolution_as_the_json_one(tmp_path: Path) -> None:

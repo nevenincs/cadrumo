@@ -152,9 +152,22 @@ import pytest
 
 from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import (
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    validated_casilla_id,
+)
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from .. import (
     IvaLedgerObservation,
     RegistryCalculationResult,
@@ -216,7 +229,20 @@ def _op(
     iva: Decimal,
     recargo: Decimal = Decimal("0"),
     rate_kind: IvaRateKind = IvaRateKind.GENERAL,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
+    deduction_authority: IvaDeductionEvidenceAuthority | None = None,
 ) -> IvaLedgerObservation:
+    if (deduction_fact_kind is None) is not (deduction_authority is None):
+        raise AssertionError("deduction fact kind and evidence authority must be stated together")
+    deduction_provenance = (
+        IvaDeductionClassificationProvenance(
+            authority=deduction_authority,
+            source_locator=f"test-ledger:{ledger_id}",
+            evidence_digest="a" * 64,
+        )
+        if deduction_authority is not None
+        else None
+    )
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=date(2024, 1, day if day <= 28 else 28),
@@ -226,6 +252,9 @@ def _op(
         base_amount=base,
         iva_amount=iva,
         recargo_amount=recargo,
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=deduction_provenance,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -244,6 +273,8 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("36000.00"),
             iva=Decimal("7560.00"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
         ),
         _op(
             "op2-compra-chapa-intracomunitaria",
@@ -252,6 +283,8 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base=Decimal("18000.00"),
             iva=Decimal("3780.00"),
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
         ),
         _op(
             "op3-servicios-abogado",
@@ -260,6 +293,8 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("6000.00"),
             iva=Decimal("1260.00"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
         ),
         _op(
             "op4-transporte-intracomunitario",
@@ -268,6 +303,8 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base=Decimal("3000.00"),
             iva=Decimal("630.00"),
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
         ),
         _op(
             "op5-alquiler-local",
@@ -276,6 +313,8 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("5000.00"),
             iva=Decimal("1050.00"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
         ),
         _op(
             "op6-importacion-marruecos",
@@ -284,6 +323,8 @@ def _quarter_observations(*, include_recargo: bool) -> tuple[IvaLedgerObservatio
             flow=IvaFlowDirection.SOPORTADO,
             base=Decimal("12000.00"),
             iva=Decimal("2520.00"),
+            deduction_fact_kind=IvaDeductionFactKind.IMPORT_CURRENT,
+            deduction_authority=IvaDeductionEvidenceAuthority.CUSTOMS_DECLARATION,
         ),
         _op(
             "op7-ventas-mayorista",
@@ -331,6 +372,9 @@ def _calculate(*, include_recargo: bool) -> RegistryCalculationResult:
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2024, 3, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
 

@@ -19,10 +19,16 @@ if TYPE_CHECKING:  # pragma: no cover - typing-only boundary DTO (lives in core,
 class ProrrataRegisterRepositoryProtocol(Protocol):
     """Narrow domain-facing repository contract for the prorrata register.
 
-    Any object that provides ``load`` and ``to_secure_object_write`` over the
-    singleton :class:`ProrrataRegister` satisfies this protocol. The concrete
+    Any object that provides its readable bucket identity together with
+    ``load`` and ``to_secure_object_write`` over the singleton
+    :class:`ProrrataRegister` satisfies this protocol. The concrete
     secure-object-backed implementation is :class:`ProrrataRegisterRepository`.
     """
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the profile bucket id when the repository is explicitly bound to one."""
+        ...
 
     def load(self) -> ProrrataRegister:
         """Return the persisted register or an empty register if absent.

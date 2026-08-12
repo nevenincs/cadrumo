@@ -30,7 +30,6 @@ from pydantic import TypeAdapter, ValidationError
 
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import BindingId
-from ....domain.deadlines import M303RegimeComposition
 from ....domain.filing import ModeloInputs
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.submission import ModeloDraftStatus
@@ -43,7 +42,6 @@ _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
 def _general_m303_scope() -> M303RegimenSimplificadoScopeDecision:
     return M303RegimenSimplificadoScopeDecision(
-        regime_composition=M303RegimeComposition.GENERAL,
         scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
     )
 

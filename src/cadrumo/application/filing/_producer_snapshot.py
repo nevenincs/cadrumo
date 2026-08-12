@@ -24,7 +24,11 @@ from ...core import (
     result_disposition_is_refund,
 )
 from ...core.identity import SubjectTaxId
-from ...domain.bienes_inversion import BienesInversionIvaRegister, RegistroRegularizacionResult
+from ...domain.bienes_inversion import (
+    BienesInversionIvaRegister,
+    RegistroRegularizacionResult,
+    compute_registro_regularizacion,
+)
 from ...domain.deadlines import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.modelos import (
     CalculationRevisionAmendmentKind,
@@ -71,6 +75,31 @@ class FilingProducerSnapshotError(ValueError):
     """Raised when filing facts cannot form a complete producer snapshot."""
 
     __bare_base_rationale__: ClassVar[str] = "internal-filing-producer-snapshot-validation-carrier"
+
+
+def assert_m303_regularisation_result_matches_bienes_register(
+    *,
+    bienes_register: BienesInversionIvaRegister,
+    regularisation_result: RegistroRegularizacionResult,
+) -> None:
+    """Refuse a result that is not the register's exact annual projection.
+
+    The result rows carry the definitive prorrata facts used to produce them,
+    so replay the canonical domain projection from those facts and compare the
+    complete immutable result.  This admits no result-row omission, foreign
+    register, substituted contribution, or invented pending state.
+    """
+    canonical = compute_registro_regularizacion(
+        bienes_register,
+        regularizacion_year=regularisation_result.regularizacion_year,
+        prorrata_definitiva_by_identifier={
+            row.identifier: row.prorrata_anio_pct
+            for row in regularisation_result.rows
+            if row.prorrata_anio_pct is not None
+        },
+    )
+    if regularisation_result != canonical:
+        raise ValueError("M303 regularisation result must be the canonical projection of the supplied Bienes register")
 
 
 def _require_m303_official_filing_period(period: Period) -> None:
@@ -201,6 +230,19 @@ class M303FilingFacts(BaseModel):
         _require_m303_official_filing_period(self.period)
         if self.period != self.supplier_regime.period or self.period != self.prorrata_transition.period:
             raise ValueError("M303 filing facts and arrivals must share one filing period")
+        if self.regularisation_result.regularizacion_year != self.period.filing_year:
+            raise ValueError("M303 regularisation result must use the filing year")
+        assert_m303_regularisation_result_matches_bienes_register(
+            bienes_register=self.bienes_register,
+            regularisation_result=self.regularisation_result,
+        )
+        if self.prorrata_transition.is_applicable and not self.prorrata_register.has_complete_current_entry_coverage(
+            self.period.filing_year
+        ):
+            raise ValueError("M303 final-period filing facts require complete current-year prorrata register coverage")
+        for entry in self.prorrata_transition.register_evidence:
+            if self.prorrata_register.entry_for(entry.ejercicio, sector_id=entry.sector_id) != entry:
+                raise ValueError("M303 prorrata transition arrival evidence must belong to the supplied register")
         return self
 
 
@@ -291,7 +333,7 @@ class FilingProducerSnapshot(BaseModel):
     elections: FilingElectionFacts
     amendment_evidence: AmendmentEvidence | None
     selected_account: SelectedFilingAccount | None
-    m303_filing_facts: M303FilingFacts | None = None
+    m303_filing_facts: M303FilingFacts | None
 
     @model_validator(mode="after")
     def _validate_model_profile(self) -> FilingProducerSnapshot:
@@ -302,6 +344,8 @@ class FilingProducerSnapshot(BaseModel):
 
 
 def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
+    if snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None:
+        raise ValueError("M303FilingFacts are valid only for modelo 303")
     if snapshot.modelo is Modelo.M111:
         _validate_modelo_111_snapshot(snapshot)
         return
@@ -338,8 +382,6 @@ def _validate_modelo_303_snapshot(snapshot: FilingProducerSnapshot) -> None:
 def _validate_general_modelo_snapshot(snapshot: FilingProducerSnapshot) -> None:
     if not isinstance(snapshot.model_profile, GeneralFilingProfileFacts):
         raise ValueError(f"modelo {snapshot.modelo.value} requires GeneralFilingProfileFacts")
-    if snapshot.m303_filing_facts is not None:
-        raise ValueError("M303FilingFacts are valid only for modelo 303")
 
 
 def _validate_snapshot_account_selection(snapshot: FilingProducerSnapshot) -> None:
@@ -383,7 +425,7 @@ def build_filing_producer_snapshot(
     amendment_evidence: AmendmentEvidence | None,
     refund_account: RefundAccount | None,
     charge_account: ChargeAccount | None,
-    m303_filing_facts: M303FilingFacts | None = None,
+    m303_filing_facts: M303FilingFacts | None,
 ) -> FilingProducerSnapshot:
     """Build a snapshot retaining only the account selected by disposition."""
     safe_model_profile = _without_embedded_accounts(model_profile)
@@ -448,6 +490,7 @@ __all__ = [
     "RefundAccountSelection",
     "SelectedFilingAccount",
     "TaxpayerIdentityFacts",
+    "assert_m303_regularisation_result_matches_bienes_register",
     "build_filing_producer_snapshot",
     "resolve_m303_filing_facts",
 ]

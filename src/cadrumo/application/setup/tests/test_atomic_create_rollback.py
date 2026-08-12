@@ -48,6 +48,11 @@ _VALID_FACTS: Mapping[str, str] = {
     "tax_residence.ccaa": "madrid",
     "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     "provenance.source": "manual_cli",
 }
 # An incomplete fact set (a required field dropped) makes the schema

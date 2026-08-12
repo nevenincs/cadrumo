@@ -32,6 +32,7 @@ from ....iva import (
     IvaDeductionClassificationProvenance,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
@@ -207,6 +208,7 @@ def _observation(
         applied_rate=applied_rate,
         deduction_fact_kind=deduction_fact_kind,
         deduction_provenance=deduction_provenance,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

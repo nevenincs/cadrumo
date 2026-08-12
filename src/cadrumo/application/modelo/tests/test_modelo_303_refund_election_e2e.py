@@ -47,8 +47,15 @@ from ....core import AuthProviderKind, CasillaId, Period, RefundElection, Result
 from ....core.config import Settings
 from ....core.resources import resources
 from ....domain.calculations.registry import RelationId
-from ....domain.deadlines import IVARegime, M303RegimeComposition, M303TaxTerritory, ModeloIVAProfile, TaxpayerProfile
+from ....domain.deadlines import (
+    IVARegime,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import (
     CalculationObservationRepository,
@@ -130,6 +137,11 @@ def _store_operator_profile(*, created_at: datetime, period_token: str) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -174,10 +186,10 @@ def _workflow_profile(*, redeme_enrolled: bool, activity_start_date: date) -> Ta
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.COMMON_REGIME,
             regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=redeme_enrolled,
             cash_accounting_regime_enrolled=False,
             voluntary_sii_enrolled=False,
             hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-            redeme_enrolled=redeme_enrolled,
         ),
     )
 
@@ -257,6 +269,10 @@ def _calculate_negative_period(
         binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
         backend_binding_values=_NEGATIVE_CREDIT_ENGINE_INPUTS,
         iva_compensation_decision=report.decision,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period,
+            reference="test:m303-refund-election",
+        ),
         filing_period_date=_period_end(period_token),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,

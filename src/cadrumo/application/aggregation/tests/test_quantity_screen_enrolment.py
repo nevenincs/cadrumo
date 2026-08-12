@@ -26,9 +26,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import Period
 from ....core.resources import resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import ModeloRevision, screened_quantity_families
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
@@ -132,7 +134,12 @@ def _iva_sale() -> Transaction:
 
 def _resolve_iva(repository: TransactionCatalogueRepository) -> CalculationSourceResolution:
     repository.save(TransactionCatalogue.from_transactions((_iva_sale(),)))
-    return LedgerIvaAggregationSourceResolver(transaction_repository=repository).resolve(
+    return LedgerIvaAggregationSourceResolver(
+        transaction_repository=repository,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id=_BUCKET_ID,
+    ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
             modelo="303",

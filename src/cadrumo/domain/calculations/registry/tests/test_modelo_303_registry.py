@@ -9,11 +9,22 @@ import pytest
 
 from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
 
-from .....core import CasillaId, validated_casilla_id
+from .....core import (
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    validated_casilla_id,
+)
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
+from ....iva import (
+    IvaDeductionClassificationProvenance,
+    IvaLedgerObservationRole,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from .. import (
     InputKind,
     ModeloDefinition,
@@ -463,6 +474,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("1000"),
             iva_amount=Decimal("210"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="rep-reducido-1",
@@ -472,6 +484,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("200"),
             iva_amount=Decimal("20"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="rep-super-1",
@@ -481,6 +494,7 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.REPERCUTIDO,
             base_amount=Decimal("100"),
             iva_amount=Decimal("4"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="sop-interior-1",
@@ -490,6 +504,13 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("300"),
             iva_amount=Decimal("63"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_provenance=IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator="test-ledger:sop-interior-1",
+                evidence_digest="a" * 64,
+            ),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="auto-ica-1",
@@ -499,6 +520,13 @@ def test_modelo_303_iva_bindings_resolve_end_to_end_with_substrate_observations(
             flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("400"),
             iva_amount=Decimal("84"),
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_provenance=IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INTRA_EU_SELF_ASSESSMENT,
+                source_locator="test-ledger:auto-ica-1",
+                evidence_digest="a" * 64,
+            ),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     ]
 
@@ -826,6 +854,9 @@ def test_modelo_303_compensation_calculation_applies_available_balance_and_carri
         inputs=bound_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 6, 30)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
     # Structural wiring: all compensation casillas must be present in the result.
@@ -1034,6 +1065,9 @@ def test_modelo_303_autoconsumo_promotor_art9_oracle_1400k_base_yields_294k_cuot
         inputs=bound_inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(2025, 3, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
 
     # Art. 90 LISIVA tipo general 21%: 1,400,000 x 0.21 = 294,000.00
@@ -1115,6 +1149,9 @@ def test_modelo_303_autoconsumo_promotor_cuota_proportional_to_base() -> None:
             inputs=bound,
             binding_values=bv,
             date_context={"filing_period": date(2025, 3, 31)},
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
         )
         return r.values[_M303_AUTOCONSUMO_PROMOTOR_CUOTA_CASILLA]
 

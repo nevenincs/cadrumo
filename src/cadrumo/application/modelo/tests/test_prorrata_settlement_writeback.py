@@ -23,13 +23,22 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-from ....core import CasillaId, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime, validated_casilla_id
+from ....core import (
+    CasillaId,
+    Period,
+    ProrrataActivityRowType,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaObservation
 from ....domain.modelos import (
@@ -42,7 +51,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
-from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from .._revision_persistence import persist_filed_revision
 
@@ -93,11 +102,13 @@ def _seed_verified_m303_revision(
         period=period,
         revision_id=revision_id,
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:prorrata-settlement-writeback")
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     verified_at = _T0 + timedelta(hours=1)
     revision = CalculationRevision(
@@ -112,6 +123,7 @@ def _seed_verified_m303_revision(
         updated_at=verified_at,
         verified_at=verified_at,
         verified_by="aeat.test.modelo.verify",
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -193,6 +205,7 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
     existing = ProrrataRegisterEntry(
         ejercicio=2026,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2025:4T",
@@ -200,6 +213,7 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
     sector_entry = ProrrataRegisterEntry(
         ejercicio=2026,
         regime=ProrrataRegisterRegime.ESPECIAL,
+        especial_transition=None,
         sector_id="arrendamiento",
         provisional_percentage=Decimal("60"),
         provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
@@ -239,6 +253,52 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
     assert carried.definitive_volume_con_derecho == Decimal("150000.00")
     assert carried.definitive_volume_sin_derecho == Decimal("50000.00")
     assert retained_sector == sector_entry
+
+
+def test_m303_settlement_preserves_existing_activity_rows(tmp_path: Path) -> None:
+    """Filing 4T cannot erase the canonical DP30305 activity evidence."""
+    general_entry = ProrrataRegisterEntry(
+        ejercicio=2026,
+        regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
+    )
+    activity_row = ProrrataActivityRow(
+        ejercicio=2026,
+        activity_id="retail-general",
+        slot=1,
+        cnae_code="471",
+        operaciones_total=Decimal("200000.00"),
+        operaciones_con_derecho=Decimal("150000.00"),
+        prorrata_type=ProrrataActivityRowType.GENERAL,
+        percentage=Decimal("75"),
+        evidence_reference="evidence:dp30305:retail-general:2026",
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        calculation_repository = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        filing_repository = ModeloRecordCatalogueRepository(bucket_id=_BUCKET_ID)
+        work_unit_repository = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID)
+        prorrata_repository = ProrrataRegisterRepository(bucket_id=_BUCKET_ID)
+        prorrata_repository.save(ProrrataRegister(entries=(general_entry,), activity_rows=(activity_row,)))
+        revision, work_unit = _seed_verified_m303_revision(
+            calculation_repository=calculation_repository,
+            work_unit_repository=work_unit_repository,
+        )
+
+        _file_verified_revision(
+            calculation_repository=calculation_repository,
+            filing_repository=filing_repository,
+            work_unit_repository=work_unit_repository,
+            prorrata_repository=prorrata_repository,
+            revision=revision,
+            work_unit=work_unit,
+        )
+
+        persisted = prorrata_repository.load()
+
+    assert persisted.activity_rows == (activity_row,)
+    settled_entry = persisted.entry_for(2026)
+    assert settled_entry is not None
+    assert settled_entry.definitive_percentage == Decimal("75")
 
 
 @pytest.mark.parametrize("period_code", ("1T", "2T", "3T"))

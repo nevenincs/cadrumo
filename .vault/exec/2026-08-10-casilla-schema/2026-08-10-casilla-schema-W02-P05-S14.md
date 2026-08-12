@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f55426f0915872f259322ad70897ddb11032ac734138e300ca0b4d8c69fa6639'
+body_hash: 'sha256:0852c5336e620b8f4a74f84adc3f702e6542e4ed8fdc52d7a24c53f784efb08e'
 step_id: 'S14'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -33,3 +33,5 @@ related:
 ## Notes
 
 - Registry classification remains deliberately deferred to S15; this step introduces vocabulary only.
+- The type reports declaration status only; it does not own producer selection, value arrival, applicability, or completeness.
+- This step was executed twice in parallel on diverged history. The second execution declared the same three-state vocabulary and proved the same properties, reaching the identical member set. Reconciling the two, the enum declared here is canonical and was subsequently renamed to `EstadoCasillaOficial` (`src/cadrumo/core/_estado_casilla_oficial.py`) under the Spanish-stem naming rule; the parallel English-named module and its test were deleted as duplicates after confirming member-for-member equivalence and that this lane's test is a strict superset, carrying the retired-family absence scan the duplicate lacked.

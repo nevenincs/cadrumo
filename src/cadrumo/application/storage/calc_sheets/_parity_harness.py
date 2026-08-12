@@ -375,6 +375,11 @@ def _compute_local(
         binding_values=binding_defaults,
         enum_binding_values=dict(scenario.enum_bindings),
         relation_values=relation_defaults,
+        # The parity harness drives a scenario's operator inputs, not a filing
+        # instance, so it states the absence of M303 filing facts rather than
+        # inheriting it from a default.
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result.values
 

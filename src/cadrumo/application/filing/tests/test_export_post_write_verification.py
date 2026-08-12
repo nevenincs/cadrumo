@@ -41,6 +41,7 @@ def _modelo_131_snapshot() -> FilingProducerSnapshot:
         amendment_evidence=base.amendment_evidence,
         refund_account=None,
         charge_account=None,
+        m303_filing_facts=None,
     )
 
 
@@ -137,6 +138,18 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
     incompatible_layout = original_layout.model_copy(
         update={"id": "post-write-incompatible-layout", "records": (incompatible_record,)},
     )
+    # export_draft selects its layout from the SNAPSHOT and _render_layout
+    # asserts snapshot ownership by identity, so the doctored layout has to be
+    # the very object the snapshot's revision carries -- doctoring the subview
+    # alone would no longer reach the renderer at all.
+    base_snapshot = base.get_snapshot("131")
+    incompatible_snapshot = base_snapshot.model_copy(
+        update={
+            "revision": base_snapshot.revision.model_copy(
+                update={"export_layouts": (incompatible_layout,)},
+            ),
+        },
+    )
     provider = RegistrySchemaAccessor(
         collections=base.collections,
         subviews={
@@ -148,6 +161,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
                 completeness_manifest=None,
             ),
         },
+        snapshots={**base.snapshots, "131": incompatible_snapshot},
     )
     output_path = tmp_path / "incompatible-modelo-131.txt"
 

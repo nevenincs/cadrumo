@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:edda0045c0a17429d92029a69c066fd5dc55d799d42bb93217a66aa36e7a8d6e'
+body_hash: 'sha256:7bc8226c9aabbfdb27333706fb3d594a4c547ac2a1693932ff9d1449d40c054e'
 step_id: 'S15'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -35,3 +35,4 @@ related:
 
 - The classifier answers official slot declaration only. It does not decide producer ownership, value arrival, applicability, or completeness.
 - The bite proof temporarily replaced the classifier's derived-layout iteration with raw layouts, observed the M720 state degrade from `REPRESENTED_VIA_BINDING` to `UNDEFINED`, and restored the exact production call in the same session.
+- This step was executed twice in parallel on diverged history. The second execution reached the same derivation and additionally proved fail-closed behaviour when required XML dictionary evidence cannot be resolved or parsed, and exercised Modelo 100 2025 alongside 2024. Reconciling the two, this lane's implementation is canonical and carries the Spanish-stem name `clasificar_casillas_oficiales`; the parallel English-named `classify_official_boxes` and its duplicate test were deleted after confirming equivalent coverage. Plan rows `W04.P07.S52` and `W04.P07.S62` in the export-fragment plan were repointed to the Spanish name, which they must import rather than re-union export mechanisms.

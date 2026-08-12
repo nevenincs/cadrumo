@@ -9,6 +9,8 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -20,23 +22,13 @@ from ....domain.calculations.registry import (
     BindingId,
     RegistryModeloObservation,
     RegistrySnapshot,
-    resolve_m303_regimen_simplificado_snapshot,
 )
-from ....domain.deadlines import IVARegime, M303RegimeComposition, TaxpayerProfile
-from ....domain.filing_evidence import FilingEvidenceReference
-from ....domain.iva import (
-    M303RegimenSimplificadoScope,
-    M303RegimenSimplificadoScopeDecision,
-    RegimenSimplificadoFilingRows,
-)
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
     FilingInstanceEvidence,
-    M303Exonerado390FilingEvidence,
-    M303FilingInstanceEvidence,
-    M303RegimenSimplificadoFilingEvidence,
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
@@ -80,29 +72,8 @@ _TARGET_PERIOD_VALUE = _period(_TARGET_YEAR, _TARGET_PERIOD)
 
 
 def _filing_instance_evidence(period: Period) -> FilingInstanceEvidence:
-    scope = M303RegimenSimplificadoScopeDecision(
-        regime_composition=M303RegimeComposition.GENERAL,
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-    )
-    return FilingInstanceEvidence(
-        m303=M303FilingInstanceEvidence(
-            period=period,
-            joint_return_elected=False,
-            insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(reference="test:iva-wallet:exonerado-390"),
-            ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
-                scope_decision=scope,
-                rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
-                regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
-                    registry_snapshot=_snapshot_303(filing_year=period.filing_year, period=period.code),
-                    scope_decision=scope,
-                ),
-            ),
-        ),
-    )
+    """Delegate to the one shared typed-evidence fixture builder."""
+    return general_m303_filing_evidence(period, reference="test:iva-wallet:exonerado-390")
 
 
 @cache
@@ -265,6 +236,7 @@ def _store_operator_profile_with_tax_id(tax_id: str) -> None:
                 UserProfileFact(path="activities.description", value="economic activity"),
                 UserProfileFact(path="iva.regime", value=IVARegime.GENERAL),
                 UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
                 UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
                 UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
                 UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
@@ -325,11 +297,13 @@ def _work_unit_and_revision_for_wallet_gate(
     casilla_values: dict[CasillaId, Decimal] = {
         _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: compensation_amount,
     }
+    filing_instance_evidence = general_m303_filing_evidence(target_period, reference="test:iva-wallet-engine")
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -357,6 +331,7 @@ def _work_unit_and_revision_for_wallet_gate(
         ),
         created_at=_DECIDED_AT,
         updated_at=_DECIDED_AT,
+        filing_instance_evidence=filing_instance_evidence,
     )
     return work_unit, revision
 

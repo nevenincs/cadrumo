@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....tests.env_scope import ready_clave_settings
 from ...calculations import (
@@ -75,6 +77,9 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-engine-lifecycle-gate"
+            ),
         )
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("0")
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0.00")
@@ -165,6 +170,9 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-engine-lifecycle-gate"
+            ),
         )
 
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")

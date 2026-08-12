@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:3e5e5dd574f121b796b8d8175ccc35ee64b7227fffbd0b47ef5b61d52d5252e8'
+body_hash: 'sha256:3b6471fe7e62776930cde8222d8b5b4ba87ea939f8d3d6ad3273c17ac814f5f8'
 step_id: 'S57'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
@@ -41,3 +41,20 @@ Formal re-review approved the implementation after all three original HIGH findi
 ## Notes
 
 The first review correctly found permissive Pydantic coercion, blanket blank pre-seeding, and lost DP30302 occurrence identity. The second review found that repeat mode alone was insufficient because generated records still defaulted to required. Each defect was corrected at its canonical authority rather than patched at a consumer. No compatibility alias, tolerant reader, or parallel projector was retained.
+
+### Reconciliation of the parallel execution
+
+This step was executed twice in parallel on diverged history, and the two executions were reconciled into one canonical result rather than one side being taken wholesale.
+
+Carried over from the second execution, because it is stricter or was genuinely absent here:
+
+- **Identity strings are refused, not normalized.** The second execution remediated a review finding that persisted string identities were being silently normalized; this lane had reached the same surface through a `strip_whitespace` model setting, which coerces instead of refusing. The refusing contract is canonical, per "refuse, do not tolerate", and `projection_kind` is now a required discriminator with no default rather than a defaulted field. Every construction site across the tree was swept to pass it explicitly.
+- `filing_projection_ref_casilla_id`, which returns the numbered official endpoint carried by a reference; this lane had no equivalent.
+- The slotless operaciones-terceros declarability marker, and the typed dispatch replacing the remaining inference-based Modelo 303 projector identities.
+- `application/filing/_projection.py` as the typed filing-projection plan owner. `application/filing/_m303_regimen_simplificado.py` was deleted in the same change, proven subsumed: the surviving module calls `project_m303_regimen_simplificado_rows` directly and re-homes the source-ownership check into `_require_regimen_snapshot_matches_registry`. One canonical home, no bridge.
+
+Deliberately not carried over:
+
+- The second execution deleted the DID-isolated compatibility test. That test is the **only** proof in the tree that a DEVOLUCION draft never leaks the charge IBAN and vice versa, so deleting it would have lost real coverage. It was instead retargeted onto the real bundled 303 snapshot by identity, supplied with the `M303FilingFacts` the renderer now demands, and pointed at `_render_layout` and `_filing_producer_values`. It also still carries the official DP303DID thirteen-row corpus-parity assertion against `aeat-dr-303-2026`'s sha256.
+
+The second execution's note that repository-wide static analysis reported "duplicate imports in untouched registry modules" is now closed: those were merge artifacts of the same class this reconciliation had to sweep, where a clean auto-merge kept both sides' identical additions. A tree-wide `ruff check --select F` sweep reports zero redefinitions and zero duplicate parameters or keywords.
