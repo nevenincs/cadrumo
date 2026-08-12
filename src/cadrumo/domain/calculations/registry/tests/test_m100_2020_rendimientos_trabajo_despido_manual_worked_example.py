@@ -334,8 +334,8 @@ def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     ``corpus/manual_oracles/modelo-100-2020-rendimientos-trabajo-despido-improcedente.json``
     evidence. This test proves the OTHER end of the wire: that the
     declaration actually reaches the live, VALIDATED
-    :class:`RegistryVerificationPolicy` fold (the exact projection
-    ``verify_declaracion`` consumes), so 0025 (and its manually-cross-checked
+    :class:`RegistryVerificationPolicy` fold consumed by the living reconcile
+    flow, so 0025 (and its manually-cross-checked
     upstream totals 0012/0017/0022) raise ``independently_grounded_fraction``
     above the estimación-directa-only baseline rather than sitting inert in
     TOML. Not tautological: the grounded set and the fraction are read from

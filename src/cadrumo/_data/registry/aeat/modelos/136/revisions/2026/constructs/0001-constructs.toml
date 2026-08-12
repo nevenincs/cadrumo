@@ -21,7 +21,6 @@ application_links = [
     "modelo-136-calculation",
     "modelo-136-deadline",
     "modelo-136-filing",
-    "modelo-136-2026-verification",
     "modelo-136-review",
     "modelo-136-approval",
     "modelo-136-reconciliation",

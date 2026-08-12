@@ -3,7 +3,7 @@ id = "modelo-186-informative"
 legal_refs = ["orden-hac-539-2003:art-1", "orden-hac-539-2003:art-4", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-186-procedure", "enrolled-modelo-186-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-186-filing", "modelo-186-verification", "modelo-186-deadline"]
+application_links = ["modelo-186-filing", "modelo-186-deadline"]
 workbook_parity_refs = ["modelo-186-orden-static-layout"]
 deadline_windows = [
     "modelo-186-2025-01",

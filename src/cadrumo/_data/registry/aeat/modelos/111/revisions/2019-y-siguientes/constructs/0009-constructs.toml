@@ -14,7 +14,6 @@ application_links = [
     "modelo-111-calculation",
     "modelo-111-filing",
     "modelo-111-export",
-    "modelo-111-verification",
     "modelo-111-review",
     "modelo-111-approval",
     "modelo-111-reconciliation",

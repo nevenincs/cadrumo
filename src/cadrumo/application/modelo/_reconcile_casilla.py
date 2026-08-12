@@ -13,10 +13,8 @@ declaration omitted it), and ``extra_in_filed`` (the filed declaration prints a
 casilla the computed revision never resolved a value for). The comparison is
 scoped to the registry's own reconciliation policy
 (:meth:`~domain.calculations.registry.RegistrySnapshot.verification_policy`)
-so the compared set is declared registry data, never an ad hoc casilla list —
-the same scoping :func:`~application.verification.verify_declaracion` already
-applies to printed-vs-computed comparisons before a filing, kept here for the
-after-filing reconcile use.
+so the compared set is declared registry data, never an ad hoc casilla list.
+The canonical after-filing reconcile flow owns this comparison.
 
 This module is intentionally free of any PDF-parsing, work-unit, or
 bucket-event dependency: it is a pure function over two ``{casilla_id: Decimal}``

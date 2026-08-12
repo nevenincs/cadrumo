@@ -23,14 +23,6 @@ legal_refs = ["ley-19-1991:art-28"]
 source_refs = ["aeat-modelo-714-procedure", "boe-modelo-714-layout"]
 
 [[revisions."2021-y-siguientes".application_links]]
-id = "modelo-714-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["ley-19-1991:art-28"]
-source_refs = ["aeat-modelo-714-procedure"]
-
-[[revisions."2021-y-siguientes".application_links]]
 id = "modelo-714-deadline"
 surface = "deadline"
 consumer = "cadrumo.domain.deadlines"

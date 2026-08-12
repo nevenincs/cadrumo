@@ -147,7 +147,7 @@ def test_committed_modelo_840_construct_includes_revision_members() -> None:
         assert construct.workbook_parity_refs == tuple(w.id for w in revision.workbook_parity_refs)
         assert construct.filing_schedules == tuple(s.id for s in revision.filing_schedules)
         link_surfaces = {link.surface for link in revision.application_links}
-        assert {"portal", "filing", "extractor", "verification"} <= link_surfaces, revision.id
+        assert {"portal", "filing", "extractor"} <= link_surfaces, revision.id
 
 
 def test_committed_modelo_840_declaration_pdf_profile_legal_refs_match_target_casillas() -> None:

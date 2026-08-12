@@ -19,7 +19,6 @@ formulas = [
 application_links = [
     "modelo-151-calculation",
     "modelo-151-filing",
-    "modelo-151-verification",
     "modelo-151-review",
     "modelo-151-approval",
     "modelo-151-reconciliation",

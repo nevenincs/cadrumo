@@ -406,14 +406,13 @@ def test_modelo_303_live_cross_references_forbid_writes() -> None:
     }.issubset(forbidden)
 
 
-def test_modelo_303_construct_links_filing_extractor_verification() -> None:
+def test_modelo_303_construct_links_living_filing_and_extractor_surfaces() -> None:
     modelo, _ = _load_modelo_303()
     revision = modelo.revisions["2009-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-303-iva-autoliquidacion")
 
     assert "modelo-303-filing" in construct.application_links
     assert "modelo-303-extractor" in construct.application_links
-    assert "modelo-303-verification" in construct.application_links
     assert "modelo-303-deadline" in construct.application_links
     assert construct.filing_schedules == ("modelo-303-trimestral",)
     assert "modelo-303-dr-2025" in construct.workbook_parity_refs

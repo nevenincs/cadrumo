@@ -20,7 +20,6 @@ application_links = [
     "modelo-115-calculation",
     "modelo-115-filing",
     "modelo-115-export",
-    "modelo-115-verification",
     "modelo-115-review",
     "modelo-115-approval",
     "modelo-115-reconciliation",

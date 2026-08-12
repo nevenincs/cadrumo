@@ -70,7 +70,6 @@ formulas = [
 ]
 application_links = [
     "modelo-100-2020-calculation",
-    "modelo-100-2020-verification",
     "modelo-100-2020-review",
     "modelo-100-2020-approval",
     "modelo-100-2020-reconciliation",

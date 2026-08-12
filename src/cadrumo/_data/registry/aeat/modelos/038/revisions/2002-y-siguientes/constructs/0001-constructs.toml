@@ -3,7 +3,7 @@ id = "modelo-038-informative"
 legal_refs = ["orden-hac-66-2002:art-1", "orden-hac-66-2002:art-6", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-038-procedure", "enrolled-modelo-038-layout"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-038-filing", "modelo-038-verification", "modelo-038-deadline"]
+application_links = ["modelo-038-filing", "modelo-038-deadline"]
 workbook_parity_refs = ["modelo-038-orden-static-layout"]
 deadline_windows = [
     "modelo-038-2025-01",

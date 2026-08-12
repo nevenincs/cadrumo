@@ -221,7 +221,6 @@ application_links = [
     "modelo-390-portal",
     "modelo-390-filing",
     "modelo-390-extractor",
-    "modelo-390-verification",
     "modelo-390-review",
     "modelo-390-approval",
     "modelo-390-reconciliation",

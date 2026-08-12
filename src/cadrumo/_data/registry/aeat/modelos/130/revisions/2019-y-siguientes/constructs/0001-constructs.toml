@@ -35,7 +35,6 @@ application_links = [
     "modelo-130-calculation",
     "modelo-130-filing",
     "modelo-130-export",
-    "modelo-130-verification",
     "modelo-130-review",
     "modelo-130-approval",
     "modelo-130-reconciliation",

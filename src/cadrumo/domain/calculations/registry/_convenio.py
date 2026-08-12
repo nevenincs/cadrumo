@@ -140,7 +140,7 @@ class ConvenioOverride(RegistryModel):
 
     A flat projection of the matched :class:`ConvenioOverrideRow` bound to its
     treaty's ``country_code`` and ``document_id`` — the shape the IRNR rate op and
-    the application verification sweep branch on. ``rate`` is populated only for
+    the modelo verification sweep branch on. ``rate`` is populated only for
     the rate-bearing kinds (``flat`` / ``ceiling``).
     """
 

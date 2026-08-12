@@ -68,7 +68,6 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         "calculation",
         "filing",
         "review",
-        "verification",
         "approval",
         "reconciliation",
         "extractor",

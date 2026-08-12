@@ -264,7 +264,6 @@ def test_production_registry_runtime_caller_census_keeps_m303_scope_explicit() -
         "application/modelo/_taxation_comparison.py",
         "application/registry/__init__.py",
         "application/storage/calc_sheets/_parity_harness.py",
-        "application/verification/_verify.py",
         "adapters/outbound/google/_calc_sheets_pull.py",
     }
     assert "m303_regimen_simplificado_scope=" in (source_root / "application/filing/__init__.py").read_text(

@@ -180,7 +180,6 @@ _RECONCILED_APPLICATION_TO_ADAPTERS_SOURCES = frozenset(
         "cadrumo.application.user_profile._orchestration",
         "cadrumo.application.user_profile._profile_repository",
         "cadrumo.application.user_profile._repository",
-        "cadrumo.application.verification._verify",
         "cadrumo.application.workflow._adapters",
         "cadrumo.application.workflow._events",
         "cadrumo.application.workflow._models",

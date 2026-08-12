@@ -35,7 +35,6 @@ application_links = [
     "modelo-721-portal",
     "modelo-721-filing",
     "modelo-721-extractor",
-    "modelo-721-verification",
     "modelo-721-deadline",
 ]
 filing_schedules = ["modelo-721-anual"]

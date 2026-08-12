@@ -39,7 +39,6 @@ application_links = [
     "modelo-131-2019-2023-filing",
     "modelo-131-2019-2023-export",
     "modelo-131-2019-2023-extractor",
-    "modelo-131-2019-2023-verification",
     "modelo-131-2019-2023-review",
     "modelo-131-2019-2023-approval",
     "modelo-131-2019-2023-reconciliation",

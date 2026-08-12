@@ -36,7 +36,6 @@ def test_modelo_115_validated_snapshot_owns_workflow_surfaces() -> None:
         "calculation",
         "filing",
         "export",
-        "verification",
         "review",
         "approval",
         "reconciliation",

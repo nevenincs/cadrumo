@@ -30,7 +30,6 @@ application_links = [
     "modelo-369-exterior-portal",
     "modelo-369-exterior-filing",
     "modelo-369-exterior-extractor",
-    "modelo-369-exterior-verification",
     "modelo-369-exterior-deadline",
     "modelo-369-exterior-calculation",
     "modelo-369-exterior-review",

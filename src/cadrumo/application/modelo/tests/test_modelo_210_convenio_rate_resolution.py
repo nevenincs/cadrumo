@@ -220,7 +220,7 @@ def test_dividend_baseline_resolves_unconditional_art_25_1_f_rate(
 
     Before the ``dividend`` tipo_renta category was added to the registry
     baseline table, this lookup returned ``(None, [])`` (deferred baseline
-    coverage), and the application verification layer converted a matching
+    coverage), and the modelo verification workflow converted a matching
     unresolved outcome into a BLOCKING finding rather than a rate. This
     proves the resolver now returns the unconditional 19% Art 25.1.f rate
     directly, with no findings.

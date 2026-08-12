@@ -31,7 +31,6 @@ application_links = [
     "modelo-369-importacion-portal",
     "modelo-369-importacion-filing",
     "modelo-369-importacion-extractor",
-    "modelo-369-importacion-verification",
     "modelo-369-importacion-deadline",
     "modelo-369-importacion-calculation",
     "modelo-369-importacion-review",

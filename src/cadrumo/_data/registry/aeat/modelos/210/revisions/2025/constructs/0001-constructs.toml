@@ -27,7 +27,6 @@ formulas = [
 application_links = [
     "modelo-210-2025-calculation",
     "modelo-210-2025-filing",
-    "modelo-210-2025-verification",
     "modelo-210-2025-review",
     "modelo-210-2025-approval",
     "modelo-210-2025-reconciliation",

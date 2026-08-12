@@ -20,7 +20,6 @@ verification_expectations = ["modelo-036-censo-foundation-verification"]
 application_links = [
     "modelo-036-workflow",
     "modelo-036-filing",
-    "modelo-036-verification",
     "modelo-036-extractor",
 ]
 filing_schedules = ["modelo-036-event-triggered"]

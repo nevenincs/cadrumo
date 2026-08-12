@@ -246,7 +246,6 @@ application_links = [
     "modelo-232-2016-portal",
     "modelo-232-2016-filing",
     "modelo-232-2016-extractor",
-    "modelo-232-2016-verification",
     "modelo-232-2016-deadline",
     "modelo-232-2016-export",
     "modelo-232-2016-review",

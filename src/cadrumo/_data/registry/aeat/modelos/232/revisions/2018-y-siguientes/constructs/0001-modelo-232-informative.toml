@@ -252,7 +252,6 @@ application_links = [
     "modelo-232-portal",
     "modelo-232-filing",
     "modelo-232-extractor",
-    "modelo-232-verification",
     "modelo-232-deadline",
     "modelo-232-export",
     "modelo-232-review",

@@ -33,11 +33,6 @@ _SIMPLE_APPLICATION_LINK_RULES: tuple[tuple[str, str, str], ...] = (
     ("formulas", "calculation", "formulas require a calculation application link"),
     ("extraction_profiles", "extractor", "extraction profiles require an extractor application link"),
     ("export_layouts", "export", "export layouts require an export application link"),
-    (
-        "verification_expectations",
-        "verification",
-        "verification expectations require a verification application link",
-    ),
     ("live_cross_references", "portal", "live/static cross-references require a portal application link"),
     ("deadline_windows", "deadline", "deadline windows require a deadline application link"),
 )

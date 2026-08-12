@@ -109,8 +109,8 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
     * ``exempt`` drives the source-state rate to zero.
 
     A declared treaty country with no override row yields a typed unresolved
-    outcome (``no-silent-under-declaration``); the application verification
-    layer converts it into a finding post-engine.
+    outcome (``no-silent-under-declaration``); the modelo verification workflow
+    converts it into a finding post-engine.
     """
     args = _irnr_resolve_tipo_gravamen_args(expression)
     tipo_renta = ctx.text_values.get(args.tipo_casilla_id, "")

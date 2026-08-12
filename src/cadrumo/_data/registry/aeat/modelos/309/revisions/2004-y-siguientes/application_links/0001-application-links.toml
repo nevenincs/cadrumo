@@ -23,14 +23,6 @@ legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
 source_refs = ["aeat-dr-309-2023"]
 
 [[revisions."2004-y-siguientes".application_links]]
-id = "modelo-309-verification"
-surface = "verification"
-consumer = "cadrumo.application.verification"
-requires_snapshot = true
-legal_refs = ["rd-1624-1992:art-71", "orden-hac-3625-2003:apartado-1"]
-source_refs = ["aeat-modelo-309-procedure"]
-
-[[revisions."2004-y-siguientes".application_links]]
 id = "modelo-309-review"
 surface = "review"
 consumer = "cadrumo.application.filing.review"

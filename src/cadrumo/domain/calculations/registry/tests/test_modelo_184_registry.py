@@ -129,14 +129,13 @@ def test_modelo_184_live_cross_references_are_read_only() -> None:
     }.issubset(forbidden)
 
 
-def test_modelo_184_construct_links_filing_extractor_and_verification() -> None:
+def test_modelo_184_construct_links_living_filing_and_extractor_surfaces() -> None:
     modelo, _ = _load_modelo_184()
     revision = modelo.revisions["2015-y-siguientes"]
     construct = next(c for c in revision.constructs if c.id == "modelo-184-informative")
 
     assert "modelo-184-filing" in construct.application_links
     assert "modelo-184-extractor" in construct.application_links
-    assert "modelo-184-verification" in construct.application_links
     assert "modelo-184-deadline" in construct.application_links
     assert "modelo-184-portal" in construct.application_links
     assert construct.filing_schedules == ("modelo-184-anual",)

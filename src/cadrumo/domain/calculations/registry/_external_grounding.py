@@ -31,10 +31,8 @@ registry-wide counterpart measure COVERAGE OF INDEPENDENT CHECKING. A low value
 means most of a revision's reconciliation is engine-only — the application
 agreeing with itself — not that the revision is wrong; a high value means more
 of it is cross-checked against AEAT's own figures, not that it is correct. The
-numerator mirrors the per-verdict computation in
-:class:`~cadrumo.application.verification.VerificationVerdict` exactly
-(declared grounding intersected with the reconciled set), so the registry-wide
-signal and the per-filing signal are the same quantity at different scopes.
+numerator is the declared grounding intersected with the reconciled set, so the
+registry-wide signal is computed directly from canonical registry facts.
 
 Reading the corpora
 -------------------
@@ -443,9 +441,7 @@ class RevisionExternalGroundingRow(ExternalGroundingModel):
     def independently_checked_casilla_ids(self) -> tuple[CasillaId, ...]:
         """Reconciled casillas this revision declares externally grounded.
 
-        Mirrors the per-verdict intersection in
-        :class:`~cadrumo.application.verification.VerificationVerdict`; the
-        registry schema already constrains each expectation's declaration to
+        The registry schema already constrains each expectation's declaration to
         its own reconciled set, so the intersection is defensive rather than
         narrowing in a well-formed tree.
         """

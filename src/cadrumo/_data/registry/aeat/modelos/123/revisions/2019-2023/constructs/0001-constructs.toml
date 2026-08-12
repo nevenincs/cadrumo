@@ -19,7 +19,6 @@ application_links = [
     "modelo-123-2019-calculation",
     "modelo-123-2019-filing",
     "modelo-123-2019-export",
-    "modelo-123-2019-verification",
     "modelo-123-2019-review",
     "modelo-123-2019-approval",
     "modelo-123-2019-reconciliation",

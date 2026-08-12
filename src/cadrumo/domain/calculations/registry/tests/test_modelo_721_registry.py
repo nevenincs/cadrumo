@@ -130,7 +130,6 @@ def test_modelo_721_threshold_continuity_has_registry_parameters_without_calcula
         "portal": "modelo-721-portal",
         "filing": "modelo-721-filing",
         "extractor": "modelo-721-extractor",
-        "verification": "modelo-721-verification",
         "deadline": "modelo-721-deadline",
     }
 

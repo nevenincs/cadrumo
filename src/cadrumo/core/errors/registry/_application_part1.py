@@ -448,16 +448,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.verification._errors.VerificationError",
-        ErrorCode(
-            code="INTEGRITY_VERIFICATION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_verification",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.workflow._errors.BootstrapAlreadyCompleteError",
         ErrorCode(
             code="REFUSED_BOOTSTRAP_ALREADY_COMPLETE",

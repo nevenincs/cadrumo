@@ -326,8 +326,8 @@ def test_0154_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     ``corpus/manual_oracles/modelo-100-2024-capital-inmobiliario-arrendamiento-vivienda-tensionada.json``
     evidence. This test proves the OTHER end of the wire: that the
     declaration actually reaches the live, VALIDATED
-    :class:`RegistryVerificationPolicy` fold (the exact projection
-    ``verify_declaracion`` consumes), so 0149/0150/0154 raise
+    :class:`RegistryVerificationPolicy` fold consumed by the living reconcile
+    flow, so 0149/0150/0154 raise
     ``independently_grounded_fraction`` above the pre-existing baseline
     rather than sitting inert in TOML. Not tautological: the grounded set and
     the fraction are read from the registry's own declared+validated data,

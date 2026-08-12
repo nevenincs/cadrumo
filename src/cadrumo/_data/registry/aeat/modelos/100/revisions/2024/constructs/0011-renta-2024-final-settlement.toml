@@ -40,6 +40,5 @@ formulas = [
 ]
 application_links = [
     "modelo-100-2024-calculation",
-    "modelo-100-2024-verification",
     "modelo-100-2024-workflow",
 ]

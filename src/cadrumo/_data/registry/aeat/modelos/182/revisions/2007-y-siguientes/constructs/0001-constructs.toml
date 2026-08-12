@@ -22,7 +22,6 @@ verification_expectations = ["modelo-182-informative-summary-verification"]
 workbook_parity_refs = ["modelo-182-orden-static-layout"]
 application_links = [
     "modelo-182-filing",
-    "modelo-182-verification",
     "modelo-182-deadline",
 ]
 filing_schedules = ["modelo-182-anual"]

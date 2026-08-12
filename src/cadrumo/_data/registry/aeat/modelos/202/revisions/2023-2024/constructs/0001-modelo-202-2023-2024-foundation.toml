@@ -38,7 +38,6 @@ application_links = [
     "modelo-202-2023-2024-portal",
     "modelo-202-2023-2024-calculation",
     "modelo-202-2023-2024-filing",
-    "modelo-202-2023-2024-verification",
     "modelo-202-2023-2024-review",
     "modelo-202-2023-2024-approval",
     "modelo-202-2023-2024-reconciliation",

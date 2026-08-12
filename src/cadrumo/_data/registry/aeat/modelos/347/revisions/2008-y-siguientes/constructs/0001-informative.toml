@@ -39,7 +39,6 @@ live_cross_references = [
 application_links = [
     "modelo-347-portal",
     "modelo-347-filing",
-    "modelo-347-verification",
     "modelo-347-deadline",
     "modelo-347-extractor",
 ]

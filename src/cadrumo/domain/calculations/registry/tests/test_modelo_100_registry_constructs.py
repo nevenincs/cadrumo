@@ -446,7 +446,6 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
         "calculation",
         "export",
         "filing",
-        "verification",
         "review",
         "approval",
         "reconciliation",
@@ -459,7 +458,7 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
     )
     assert links_by_surface["export"].consumer == "cadrumo.application.filing.export_draft"
     assert links_by_surface["filing"].consumer == "cadrumo.application.filing"
-    assert links_by_surface["verification"].consumer == "cadrumo.application.verification"
+    assert "verification" not in links_by_surface
     assert links_by_surface["review"].consumer == "cadrumo.application.filing.review"
     assert links_by_surface["approval"].consumer == "cadrumo.application.filing.approval"
     assert links_by_surface["reconciliation"].consumer == "cadrumo.application.modelo.modelo_reconcile"
