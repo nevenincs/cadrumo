@@ -38,6 +38,7 @@ _BOOLEAN_DICTIONARY_TYPES = frozenset({"LGC", "S_N"})
 _DICTIONARY_LINE_RE = re.compile(
     r"^(?P<field>[^=#]+)=\[(?P<path>[^\]]*)\]\[(?P<type>[^\]]*)\]\[(?P<casilla>[^\]]*)\]\[(?P<label>.*)\]$",
 )
+_DICTIONARY_CASILLA_ID_RE = re.compile(r"(?:\d+|[A-Z])\Z")
 
 
 class ParsedExportFieldValue(RegistryModel):
@@ -253,10 +254,18 @@ def _read_dictionary_text_cached(path: str, byte_count: int, modified_ns: int) -
 
 
 def _parse_dictionary_casilla_id(value: str) -> CasillaId | None:
+    """Return the exact official casilla identifier a dictionary row declares.
+
+    Modelo 100's 2024 and 2025 official dictionaries use decimal printed box
+    numbers and one-uppercase-letter annex boxes. ``###`` and ``*`` entries are
+    explicitly non-casilla placeholders. The parser preserves the published
+    spelling: it does not fold case, normalize arbitrary alphanumeric labels,
+    or manufacture an identifier from a source-row placeholder.
+    """
     text = value.strip()
     if not text or text.startswith("*"):
         return None
-    if not text.isdigit():
+    if _DICTIONARY_CASILLA_ID_RE.fullmatch(text) is None:
         return None
     return validated_casilla_id(text, surface="XML dictionary casilla id")
 

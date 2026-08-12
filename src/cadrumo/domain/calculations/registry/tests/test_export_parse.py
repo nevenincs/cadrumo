@@ -18,7 +18,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import ExportFieldDefinition, parse_fixed_width_export_field
+from .....core import validated_casilla_id
+from .. import ExportFieldDefinition, bundled_authority, parse_fixed_width_export_field
 from .._errors import RegistryValidationError
 from .._export_parse import (
     _local_name,
@@ -26,6 +27,7 @@ from .._export_parse import (
     _parse_xml_boolean,
     _parse_xml_decimal,
     _parse_xml_dictionary_value,
+    xml_dictionary_entries,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -36,11 +38,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 # ---------------------------------------------------------------------------
 
 
-def test_parse_dictionary_casilla_id_returns_digit_string_unchanged() -> None:
+def test_parse_dictionary_casilla_id_preserves_the_exact_supported_grammar() -> None:
     cases = {
         "01": "01",
         "1234": "1234",
         "  01  ": "01",
+        " A ": "A",
     }
 
     for raw, expected in cases.items():
@@ -49,10 +52,29 @@ def test_parse_dictionary_casilla_id_returns_digit_string_unchanged() -> None:
 
 def test_parse_dictionary_casilla_id_rejects_non_casilla_rows() -> None:
     """AEAT dictionaries use `*` to mark non-casilla rows (notes, separators)."""
-    cases = ("", "   ", "*not-a-casilla", "*01", "abc", "01a", "01.5")
+    cases = ("", "   ", "*not-a-casilla", "*01", "###", "abc", "a", "AA", "01a", "01.5")
 
     for raw in cases:
         assert _parse_dictionary_casilla_id(raw) is None, raw
+
+
+@pytest.mark.parametrize("filing_year", (2024, 2025))
+def test_m100_bundled_dictionary_rows_preserve_numeric_and_annex_box_identities(filing_year: int) -> None:
+    """Both source dictionaries carry numeric boxes and published one-letter annex boxes."""
+    authority = bundled_authority()
+    revision = authority.snapshot("100", filing_year=filing_year, period="0A").revision
+    (layout,) = revision.export_layouts
+
+    entries = xml_dictionary_entries(
+        layout,
+        source_root=authority.source_root,
+        sources=authority.catalogues.sources,
+    )
+
+    tita = next(entry for entry in entries if entry.field_id == "TITA")
+    vhadq = next(entry for entry in entries if entry.field_id == "VHADQ")
+    assert tita.casilla_id == validated_casilla_id("0001", surface="M100 numeric dictionary row")
+    assert vhadq.casilla_id == validated_casilla_id("A", surface="M100 annex dictionary row")
 
 
 # ---------------------------------------------------------------------------
