@@ -77,3 +77,15 @@ Focused public boundary verification passes 15 tests, including ca/en/es/hu nest
 A broader 39-case boundary, LLM-model, and registry selection produced 36 passes and three unrelated fixture failures before the exercised boundary: `test_errors_boundary.py` constructs `UserProfileRecord` with retired schema version 1 while the canonical version is 5. The failure is recorded without weakening validation or modifying that separately owned fixture.
 
 S114 remains open for independent review and ledger reconciliation.
+
+## Envelope-safe registered producer views
+
+Final boundary review found that attaching the correct action was insufficient: rendering the original registered producer still allowed `feature`, `install_hint`, raw producer text, and full Pydantic validation detail to enter the envelope. The application owner now creates a narrow envelope view only for the two S114 families. It preserves the original registered class and therefore its canonical code, category, message key, retryability, and runbook identity, while replacing message resolution with the registry locale key and constraining context to declared machine facts.
+
+Missing optional extras expose only `extra`, `import_name`, and `importable`; the live extra object, feature prose, install command, import exception fields, and raw message are removed. Malformed Pre303 configuration exposes only `section` and stable `validation_error_type`; the full validation rendering is removed. Callback projection computes the verdict from the original error before creating the safe view. Terminal projection likewise resolves from the original typed error and renders the same safe view, so neither path loses action identity or bypasses sanitisation.
+
+The public callback tests use actual `MissingOptionalExtraError`, malformed Pre303 `CoreValidationError`, and real nested `LLMRequest` validation. They derive locale coverage from `SUPPORTED_OUTPUT_LANGUAGES`, assert exact code/category/action evidence, and assert prohibited context and producer tokens are absent. Zero-candidate and ambiguous multi-candidate Pydantic validation still fail closed to the generic validation condition.
+
+Focused boundary, LLM-model, and registry verification passes 33 tests. Ruff and focused BasedPyright remain clean. A broader JSON-schema selection passes 359 tests; one separately owned profile-creation fixture fails before its schema assertion because it omits the newly required `tax-residence-jurisdiction-scope` input.
+
+S114 remains open for independent review and ledger reconciliation.
