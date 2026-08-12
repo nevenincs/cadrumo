@@ -57,6 +57,15 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
 _PACKAGE_ROOT = Path(inspect.getfile(_ledger)).parents[2]
 _LOCALES_DIR = _PACKAGE_ROOT / "locales"
+_REGISTERED_LEDGER_LOCALE_KEYS = {"cli.ledger.errors.period_year_pairing"}
+_TYPED_LEDGER_ERROR_NAMES = {
+    "ConfirmationBlockedError",
+    "InvoiceValidationError",
+    "LLMConsentError",
+    "PurchaseInvoiceEvidenceNotFoundError",
+    "TransactionIdPrefixError",
+    "TransactionValidationError",
+}
 
 
 def _message_expressions(tree: ast.Module, expression: ast.expr) -> Iterator[ast.expr]:
@@ -211,10 +220,62 @@ def test_s90_helpers_do_not_reintroduce_presentation_defaults() -> None:
     assert failures == []
 
 
+def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
+    """Typed exception identity and its verdict must reach the shared boundary."""
+    failures: list[str] = []
+    for module in _LEDGER_NOTICE_MODULES:
+        tree = ast.parse(inspect.getsource(module))
+        for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
+            caught = {
+                name.id
+                for name in ast.walk(handler.type)
+                if handler.type is not None and isinstance(name, ast.Name)
+            }
+            if not caught.intersection(_TYPED_LEDGER_ERROR_NAMES):
+                continue
+            for call in (node for node in ast.walk(handler) if isinstance(node, ast.Call)):
+                if isinstance(call.func, ast.Name) and call.func.id == "_bad":
+                    failures.append(f"{module.__name__}:{call.lineno}: typed error converted to BadParameter")
+                if (
+                    handler.name is not None
+                    and isinstance(call.func, ast.Name)
+                    and call.func.id == "str"
+                    and call.args
+                    and isinstance(call.args[0], ast.Name)
+                    and call.args[0].id == handler.name
+                ):
+                    failures.append(f"{module.__name__}:{call.lineno}: typed error converted to text")
+    assert failures == []
+
+
+def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
+    """Raw exception prose cannot become a CLI error message or context field."""
+    failures: list[str] = []
+    for module in _LEDGER_NOTICE_MODULES:
+        tree = ast.parse(inspect.getsource(module))
+        for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
+            if handler.name is None:
+                continue
+            for call in (node for node in ast.walk(handler) if isinstance(node, ast.Call)):
+                if not isinstance(call.func, ast.Name) or call.func.id != "_bad":
+                    continue
+                if any(
+                    isinstance(child, ast.Call)
+                    and isinstance(child.func, ast.Name)
+                    and child.func.id == "str"
+                    and child.args
+                    and isinstance(child.args[0], ast.Name)
+                    and child.args[0].id == handler.name
+                    for child in ast.walk(call)
+                ):
+                    failures.append(f"{module.__name__}:{call.lineno}")
+    assert failures == []
+
+
 def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
     """Ledger catalogue leaves are complete, symmetric, and consumed by source."""
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
-    source_keys: set[str] = set()
+    source_keys: set[str] = set(_REGISTERED_LEDGER_LOCALE_KEYS)
     for path in sorted(_PACKAGE_ROOT.rglob("*.py")):
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         source_keys.update(

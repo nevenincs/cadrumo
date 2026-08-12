@@ -203,6 +203,51 @@ def _extract(evidence_id: str) -> dict[str, Any]:
     return body
 
 
+def test_off_host_extract_preserves_the_consent_precondition_envelope(tmp_path: Path) -> None:
+    """A real extract refusal keeps the LLM-owned verdict through the CLI boundary."""
+    evidence_id = _add_structured_evidence(tmp_path)
+
+    refused = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "evidence",
+            "extract",
+            "--evidence-id",
+            evidence_id,
+            "--off-host-provider",
+            "OPENAI",
+            "--acknowledge-off-host",
+        ],
+        env={"CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED": "false"},
+    )
+
+    assert refused.exit_code != 0, refused.output
+    document = json.loads(next(line for line in refused.output.splitlines() if line.startswith("{")))
+    error = document["error"]
+    assert error["code"] != "REFUSED_CLI_BOUNDARY", refused.output
+    action = error["action"]
+    assert action["failed_condition_id"] == "llm.evidence.off_host_dispatch_permitted"
+    assert action["action"] is None
+    assert action["conditionality"] == "not_applicable"
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["evidence"] == [
+        {
+            "condition_id": "llm.evidence.off_host_dispatch_permitted",
+            "evidence_id": "llm.evidence.off_host_dispatch_permitted.observation",
+            "provenance": "application_state",
+            "values": {
+                "acknowledged": True,
+                "deployment_permitted": False,
+                "gestor_mode": False,
+                "profile_eligible": False,
+            },
+        }
+    ]
+
+
 def test_the_coherent_document_extracts_with_no_discrepancies(tmp_path: Path) -> None:
     """The positive control, and it is what makes the two cases below mean anything.
 

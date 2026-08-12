@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#cli-action-envelope-hardening'
 date: '2026-08-11'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:73b434a0fe967d871b02b16d6e82c0114dbe8f9e8004dbbf11179a6c7f86cd2a'
+body_hash: 'sha256:6f27ef850ade5d26c812766f48d8cf4173dbfee2e7809ce90a57017f594045d3'
 step_id: 'S89'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -19,28 +19,30 @@ related:
 
 ## Description
 
-- Census every production config module for translation fallbacks, raw command guidance, raw notice messages, and flattened typed exceptions.
-- Preserve application and adapter `CadrumoError` instances through the shared terminal boundary instead of reconstructing message-only CLI refusals.
-- Remove certificate, profile-readiness, and sandbox command prose where no canonical executable action exists.
+- Census every production config module for translation fallbacks, raw command guidance, raw notice messages, and exception text copied into messages, contexts, or result fields.
+- Replace `config check` preflight `detail` and `remediation` prose with locale-neutral facts and invariant-checked typed action or no-recovery projections.
+- Preserve typed application and adapter errors through the shared terminal boundary, or expose only stable error type/code facts when a result schema must record a failure.
 - Resolve every emitted config translation key in Catalan, English, Spanish, and Hungarian through the locale authority.
-- Keep shared terminal rendering and locale catalogue ownership boundaries intact.
+- Keep shared S114 terminal rendering and S41 locale ownership boundaries intact.
 
 ## Outcome
 
-- All 46 production config modules are covered by a fixed-point AST conformance test.
-- Translation calls carry no source-language `default` fallback, notices carry no raw literal message, and config refusal wrappers carry no `str(exc)` or `resolve_error_message(exc)` positional flattening.
-- Profile preflight no longer publishes a hand-built modelo command, certificate output no longer publishes hand-built next actions, and sandbox merge refusals are catalogue-backed without command prose.
-- Typed auth, certificate, custody, apoderado, and profile-bundle errors now propagate to the shared terminal boundary with their canonical error metadata intact.
-- New config messages resolve in `ca`, `en`, `es`, and `hu` through locale-authority writes.
+- Exact discovered production-module paths, rather than a numeric floor, define the complete config conformance scope.
+- Translation calls carry no source-language fallback, notices carry no raw literal message, and config outputs carry no exception string, validation message, or remediation prose copied from producers.
+- `CheckPreflightPayload` carries `facts`, `precondition_action`, and `no_recovery_outcome`; unhealthy rows must carry exactly one action or closed outcome and healthy rows carry neither.
+- `config check` intentionally drops the current S66 producer's `detail` and `remediation` strings and emits `operator_decision` until S66 supplies a typed precondition verdict and machine facts.
+- Profile preflight, certificate, sandbox, bundle, Google, descendant, repair, readiness, and config-boundary paths now use catalogue messages, typed propagation, or stable error-type facts without raw exception text.
+- Google failure projection delegates to the central exception registry rather than maintaining a config-local class-name map.
 - S89 remains open for independent review.
 
 ## Verification
 
-- `test_s89_action_conformance.py`: 3 passed.
-- Ruff check and format plus Python compilation pass for the complete config package.
-- The broader certificate and sandbox real-CLI lane is currently red before the affected operations: its shared profile fixture omits the newly required `--tax-residence-jurisdiction-scope` precondition. Eight tests which do not depend on that stale fixture pass; 57 stop at profile creation. This is an external fixture drift, not a green claim for the affected operations.
+- Exact-scope conformance and real isolated multilingual `config check` JSON/text tests: 12 passed.
+- Ruff check and formatting plus Python compilation pass for the complete config package.
+- Locale-authority writes completed for `ca`, `en`, `es`, and `hu`; the global locale audit remains red only on unrelated concurrent Renta, IVA-wallet, modelo-work, and ledger catalogue drift.
+- The broader certificate and sandbox real-CLI lane remains blocked before affected operations because its shared profile fixture omits the newly required `--tax-residence-jurisdiction-scope`; eight tests not dependent on that stale fixture pass and 57 stop at profile creation.
 
 ## Notes
 
-- Tests use production AST parsing and production locale loading; no fake, mock, stub, patch, monkeypatch, skip, xfail, or mirrored business logic was introduced.
-- Shared S114 terminal rendering and S41 locale ownership were not reimplemented.
+- S66 must replace `PreflightCheck.detail` and `PreflightCheck.remediation` with typed machine facts and precondition verdicts. S89 does not infer actions from those strings and does not forward them.
+- Tests use production source parsing, locale loading, CLI registration, and isolated storage; no fake, mock, stub, patch, monkeypatch, skip, xfail, or mirrored business logic was introduced.
