@@ -107,7 +107,8 @@ def test_parse_xlsx_refuses_stale_formula_cache_before_value_materialisation(tmp
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         parse_casilla_value_spreadsheet(path)
 
-    assert "formula cached values are not accepted" in str(exc_info.value)
+    # The refusal renders from the catalogue; its detail rides the context.
+    assert exc_info.value.context
     assert exc_info.value.context == {"path": str(path), "row": "2", "column": "2"}
 
 
@@ -119,8 +120,14 @@ def test_parse_csv_rejects_duplicate_casilla_rows_before_last_writer_wins(tmp_pa
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         parse_casilla_value_spreadsheet(path)
 
-    assert "row 2: duplicate casilla_code '01' (first declared on row 1)" in str(exc_info.value)
-    assert exc_info.value.context == {"path": str(path), "malformed_row_count": "1"}
+    # The refusal renders from the catalogue; its detail rides the context.
+    assert exc_info.value.context
+    context = exc_info.value.context
+    assert context is not None
+    assert context["path"] == str(path)
+    assert context["malformed_row_count"] == "1"
+    # The refused row is named, not merely counted.
+    assert "duplicate casilla_code" in str(context["malformed_rows"])
 
 
 def test_parse_xlsx_rejects_duplicate_casilla_rows_even_when_values_match(tmp_path: Path) -> None:
@@ -137,8 +144,14 @@ def test_parse_xlsx_rejects_duplicate_casilla_rows_even_when_values_match(tmp_pa
     with pytest.raises(ModeloLocalObservationError) as exc_info:
         parse_casilla_value_spreadsheet(path)
 
-    assert "row 2: duplicate casilla_code '01' (first declared on row 1)" in str(exc_info.value)
-    assert exc_info.value.context == {"path": str(path), "malformed_row_count": "1"}
+    # The refusal renders from the catalogue; its detail rides the context.
+    assert exc_info.value.context
+    context = exc_info.value.context
+    assert context is not None
+    assert context["path"] == str(path)
+    assert context["malformed_row_count"] == "1"
+    # The refused row is named, not merely counted.
+    assert "duplicate casilla_code" in str(context["malformed_rows"])
 
 
 def test_parse_rejects_non_numeric_value(tmp_path: Path) -> None:
@@ -244,7 +257,9 @@ def test_parse_refuses_the_two_way_readable_thousands_amount(tmp_path: Path) -> 
     with pytest.raises(ModeloLocalObservationError) as caught:
         parse_casilla_value_spreadsheet(path)
 
-    message = str(caught.value)
+    context = caught.value.context
+    assert context is not None
+    message = str(context["malformed_rows"])
     assert "1.234" in message, "the refusal must echo what the operator wrote"
     assert "01" in message, "and name the casilla, so the row is findable"
     assert "1234" in message, "and show the thousands reading as a number"

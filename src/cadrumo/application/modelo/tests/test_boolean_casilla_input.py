@@ -95,12 +95,13 @@ def test_boolean_casilla_outside_zero_or_one_is_refused_instructively() -> None:
     with pytest.raises(RegistryValidationError) as exc_info:
         validate_casilla_input_ids(_snapshot().revision, {_REDUCCION_FLAG: Decimal("2")})
 
-    message = str(exc_info.value)
-    assert "must be 0 (no) or 1 (yes)" in message
-    assert _REDUCCION_FLAG in message
+    # The accepted domain and the offending casilla are machine facts; the
+    # sentence that used to carry them is catalogue-rendered now.
     context = exc_info.value.context
     assert context is not None
     assert context["accepted"] == "0,1"
+    assert _REDUCCION_FLAG in str(context["casilla_ids"])
+    assert context["values"] == "2"
 
 
 def test_python_bool_stays_refused_on_the_casilla_channel() -> None:
