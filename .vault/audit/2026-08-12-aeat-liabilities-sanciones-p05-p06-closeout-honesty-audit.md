@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:1c90cdffd9d39cbef830dd4a0fa63b5f28cd7404ada8ed55b4040414c74233f9'
+body_hash: 'sha256:b33daf443eaea8cea7c32b468b61ac317c5829be4d377c2dc7ea6f096b32f1c2'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
@@ -307,6 +307,54 @@ cannot distinguish "empty inbox" from "parse found nothing" should refuse rather
 than return zero. **Not fixed here:** it is outside this plan's scope, and the
 campaign rule against opportunistically editing another campaign's surface
 applies.
+
+### FINDING-7, CORRECTED AND FIXED
+
+The finding above blamed the summary parser and a "two tables where AEAT now
+renders three" layout drift. **That diagnosis was wrong.** Driving the real
+parser against the live summary returns three rows, correctly classified across
+all three headings. Nothing is wrong with the summary parse or its table count.
+
+The defect was real but in a different place. `notifications pull` does not read
+the summary at all — it reads the QUERY surface through
+`fetch_notifications_query`. There, AEAT labels the date columns without the
+article: "Fecha emisión" and "Fecha notificación", where the summary says
+"Fecha de emisión". The column indexer matched only the "de" spelling.
+
+What made it silent rather than merely lossy: `_row_from_cells` treats an
+unresolvable `fecha_emision` as an unclassifiable row and returns `None`. So an
+unindexed column did not empty a field, it dropped every row. The verb returned
+a clean zero with no error, no warning and no partial row.
+
+The bundled query fixture still carries the "de" spelling and a `Leída` column
+the live surface no longer serves. That is why the suite stayed green while
+production returned nothing — the fixture had drifted from the sede, and the
+tests were measuring the fixture.
+
+**Fixed.** The indexer now keys on the article-free stems so both spellings
+resolve; `modo` keeps its column because it is matched ahead of the date branch,
+and that ordering is now pinned by a test, since "Modo notificación" shares the
+stem the date branch keys on. Verified live: the same account returns 1 row
+after the change and returned 0 before it. The regression pins the labels
+directly rather than through the drifted fixture, and an anti-tautology case
+proves a genuinely unindexable header still drops the row, so the new cases
+cannot pass with the indexer removed. Mutation-proved from outside the repo:
+narrowing the matcher back reds the regression.
+
+**Still open, and smaller than it looks.** The summary lists three unread items
+— one notification pending notificación, one already notificada, one
+comunicación — while the query surface's default search returns one. So the
+captured snapshot is complete for what the query surface serves but is not the
+whole unread inbox. Whether the query default is date-bounded or state-bounded
+was not established. That is a coverage question on the notifications feature,
+not a silent-zero, and it is left to that feature's owner with this note as the
+handoff.
+
+**Method note.** This entry was wrong once before being right. The first
+diagnosis was inferred from a table count without ever driving the parser; the
+second drove the real parser against both live surfaces and isolated the column.
+Inference about why a parser returned nothing is worth very little next to
+running it.
 
 ## Verdict
 
