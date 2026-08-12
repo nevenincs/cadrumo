@@ -7366,10 +7366,8 @@ flows:
           advisory: Avís
           blocking_rule: Regla bloquejant
           cross_period_dependency_unclean: Dependència anterior no neta
-          invalid_waiver: Exempció no vàlida
           missing_required_casilla: Falta una casella obligatòria
           reconciliation_mismatch: Discrepància de conciliació
-          unresolved_binding: Vincle sense resoldre
         finding_severity:
           blocking: Bloquejant
           warning: Advertiment

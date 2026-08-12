@@ -114,7 +114,6 @@ class RelationHandoffRecord(BaseModel):
     relation_id: RelationId
     relation_kind: Literal["previous_period", "annual_summary", "cross_model_output"]
     dependency_role: Literal[
-        "profile_schedule",
         "periodic_to_annual_summary",
         "instalment_to_final_settlement",
         "direct_calculation",

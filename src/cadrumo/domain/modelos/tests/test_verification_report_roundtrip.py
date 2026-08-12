@@ -114,7 +114,7 @@ def _populated_report(revision_id: str) -> VerificationReport:
             legal_refs=_TEST_FINDING_LEGAL_REFS,
         ),
         ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.UNRESOLVED_BINDING,
+            kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
             severity=ModeloVerificationFindingSeverity.WARNING,
             casilla_id=None,
             expectation_id="iva-source-required",
@@ -174,7 +174,7 @@ def test_verification_report_catalogue_survives_encrypted_storage(
     assert f0.severity is ModeloVerificationFindingSeverity.BLOCKING
     assert f0.casilla_id == _IVA_DEVENGADO_CASILLA
     f1 = loaded_report.findings[1]
-    assert f1.kind is ModeloVerificationFindingKind.UNRESOLVED_BINDING
+    assert f1.kind is ModeloVerificationFindingKind.RECONCILIATION_MISMATCH
     assert f1.severity is ModeloVerificationFindingSeverity.WARNING
     assert f1.expectation_id == "iva-source-required"
     # Resolved + missing casilla-id tuples preserve order and content.

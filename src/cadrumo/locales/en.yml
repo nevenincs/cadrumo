@@ -6914,10 +6914,8 @@ flows:
           advisory: Advisory
           blocking_rule: Blocking rule
           cross_period_dependency_unclean: Prior-period dependency not clean
-          invalid_waiver: Invalid waiver
           missing_required_casilla: Missing required casilla
           reconciliation_mismatch: Reconciliation mismatch
-          unresolved_binding: Unresolved binding
         finding_severity:
           blocking: Blocking
           warning: Warning

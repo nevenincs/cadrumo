@@ -7224,10 +7224,8 @@ flows:
           advisory: Tájékoztatás
           blocking_rule: Blokkoló szabály
           cross_period_dependency_unclean: Előző időszaki függőség rendezetlen
-          invalid_waiver: Érvénytelen felmentés
           missing_required_casilla: Kötelező mező hiányzik
           reconciliation_mismatch: Egyeztetési eltérés
-          unresolved_binding: Feloldatlan kötés
         finding_severity:
           blocking: Blokkoló
           warning: Figyelmeztetés

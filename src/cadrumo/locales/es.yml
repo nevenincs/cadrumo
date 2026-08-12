@@ -7455,10 +7455,8 @@ flows:
           advisory: Aviso
           blocking_rule: Regla bloqueante
           cross_period_dependency_unclean: Dependencia anterior no limpia
-          invalid_waiver: Exención no válida
           missing_required_casilla: Falta una casilla obligatoria
           reconciliation_mismatch: Discrepancia de conciliación
-          unresolved_binding: Vínculo sin resolver
         finding_severity:
           blocking: Bloqueante
           warning: Advertencia
