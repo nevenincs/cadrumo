@@ -52,6 +52,14 @@ Verification: the strengthened integration module passes 5 tests; a separate fix
 
 S90 remains open for final independent review.
 
+## Final typed period-year refusal proof
+
+The last reviewer-superset failure was a stale list-filter test that required the canonical `ledger-period-year-pairing` reason to be absent and instead matched reconstructed command guidance. The proof now invokes the real JSON CLI under ca/en/es/hu and asserts `REFUSED_REVIEW_FILTER_PARSE`, category `REFUSED`, condition `cli.ledger.filter.valid`, runtime-observation evidence with `ledger_filter_valid=false` and the canonical pairing reason, null action, `not_applicable` conditionality, and `operator_decision`. Both raw and safe input tokens are asserted redacted; no message or command prose is inspected.
+
+Verification: the exact four-locale proof passes. The six-module reviewer selection collects exactly 73 tests and passes 73/73 in 197.58 seconds. The previously recorded import/conformance lane remains 35/35 and the application consent-withdrawal plus registry lane remains 25/25. Ruff, formatting, and Vault execution mapping remain clean for this scope, subject only to external historical Vault warnings.
+
+S90 remains open for final independent review.
+
 ## Import UX test-integrity fixed point
 
 The complete `test_ledger_import_ux.py` module was audited rather than retaining a notice-only subset. Every assertion coupled to rendered CSV-row, currency-column, invalid-date, validation, configuration-repair, expected-format, unsupported-format, or no-data prose was removed. Import behavior now binds the real JSON result DTO or the shared refusal envelope: error code and category, failed condition, exact evidence identity and provenance, typed runtime fact, null action, `not_applicable` conditionality, and `operator_decision` outcome. The invalid-date path proves the same machine contract under ca/en/es/hu without inspecting translated text. Provider choices are derived from `LedgerProviderID`, not redeclared as a test-owned accepted set.
