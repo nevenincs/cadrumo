@@ -11,7 +11,7 @@ import pytest
 from .....core import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
-    OfficialBoxStatus,
+    EstadoCasillaOficial,
     ProrrataActivityRowType,
     ProrrataRegisterRegime,
 )
@@ -22,7 +22,7 @@ from .. import (
     RegistryValidationError,
     RegistryValidator,
     build_snapshot,
-    classify_official_boxes,
+    clasificar_casillas_oficiales,
     extract_record_design,
     initial_value_casilla_ids,
     load_catalogue_file,
@@ -269,8 +269,8 @@ def test_real_m303_revision_owns_the_complete_grounded_projection_declaration_ma
         is InputKind.PROJECTION_ONLY
         for casilla_id in numbered
     )
-    statuses = classify_official_boxes(revision)
-    assert all(statuses[casilla_id] is OfficialBoxStatus.ADDRESSED for casilla_id in numbered)
+    statuses = clasificar_casillas_oficiales(revision)
+    assert all(statuses[casilla_id] is EstadoCasillaOficial.ADDRESSED for casilla_id in numbered)
 
 
 def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_source() -> None:
