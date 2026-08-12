@@ -38,4 +38,3 @@ The validator documentation now states that M720's raw fixed-width records carry
 ## Notes
 
 The broader export-exemption module produced eight passes and one existing failure because no bundled casilla currently declares `FEEDS_ADDRESSED_CASILLA`. Dormant exemption members are explicitly owned by the next plan step S38, so this S37 documentation correction does not pre-empt that adjudication.
-
