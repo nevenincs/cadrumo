@@ -24,6 +24,8 @@ consulta, so every refusal is attributable to the allow-list and nothing else.
 
 from __future__ import annotations
 
+from urllib.parse import urlsplit
+
 import pytest
 
 from ......tests.aeat_literal_fixtures import (
@@ -74,6 +76,67 @@ def test_the_observed_consulta_landing_is_admitted() -> None:
     pass the entire rest of this module.
     """
     assert_deudas_landing(_CONSULTA_OBSERVED)
+
+
+@pytest.mark.parametrize("origin", ["sede", "www1", "www2", "www3", "www6", "www12"])
+def test_the_consulta_is_admitted_on_whichever_numbered_host_answers(origin: str) -> None:
+    """``www{n}`` is a per-SESSION variable, so no single number may be required.
+
+    AEAT load-balances the authenticated surface across its numbered pool and
+    assigns the host per session. The capture that grounded this guard happened
+    to land on one of them; a guard that admitted only that number would work in
+    the session it was written in and refuse a legitimate dispatch afterwards --
+    a failure that reproduces only on someone else's session, which is the worst
+    shape a guard bug can take.
+
+    The refusals elsewhere in this module are all path-driven, so widening the
+    host axis here costs nothing: an off-apex host is still refused by
+    :func:`test_an_off_host_landing_is_refused`, and every payment path is still
+    refused on EVERY one of these origins.
+    """
+    assert_deudas_landing(aeat_url(origin, DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE))
+
+    with pytest.raises(SedeNavigationError):
+        assert_deudas_landing(aeat_url(origin, DEUDAS_PAGAR_TODAS_OBSERVED_PATH_FIXTURE))
+
+
+def test_the_host_suffix_is_what_carries_the_numbered_dispatch() -> None:
+    """Which FIELD survives the session, proved by removing it.
+
+    The test above passes whether the policy names an exact numbered host or the
+    unnumbered origin, because ``allowed_host_suffixes`` admits the whole AEAT
+    apex either way. That makes it a statement of intent rather than evidence,
+    so this pins the mechanism: rebuild the policy with the suffix dropped and a
+    single numbered host named, and a SIBLING number is refused.
+
+    So the suffix is load-bearing and the exact host is not, which is why the
+    module builds ``_SEDE_HOST`` on the unnumbered origin. Anyone who later
+    tightens the suffix away to "lock down the host" reintroduces exactly the
+    refusal this proves, in a session that is not theirs.
+    """
+    numbered_only = _READ_GUARD_POLICY.model_copy(
+        update={
+            "allowed_hosts": (urlsplit(aeat_url("www6", "/")).netloc,),
+            "allowed_host_suffixes": (),
+        },
+    )
+
+    # The named number still resolves...
+    assert_read_landing(
+        aeat_url("www6", DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE),
+        surface="deudas suffix mechanism proof",
+        policy=numbered_only,
+        allowed_path_prefixes=(DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE,),
+    )
+
+    # ...and a sibling the load balancer could equally have assigned does not.
+    with pytest.raises(SedeNavigationError):
+        assert_read_landing(
+            aeat_url("www2", DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE),
+            surface="deudas suffix mechanism proof",
+            policy=numbered_only,
+            allowed_path_prefixes=(DEUDAS_CONSULTA_OBSERVED_PATH_FIXTURE,),
+        )
 
 
 def test_the_payment_launcher_sharing_the_consulta_application_is_refused() -> None:
