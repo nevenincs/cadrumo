@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:947333787c3824b310e86d7cba2a9855a4a70fdb4f6a839d019ea67781348571'
+body_hash: 'sha256:40501d48f2f3a939300b45bdc6a7e7f39c177c80a4d3afb5645acef625e21541'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -87,6 +87,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -114,7 +115,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [x] `W04.P07.S56` - Add one typed ordered evidence-bearing Modelo 303 exonerado-390 activity-row owner for all six activity-code and IAE pairs, reuse S58's nominal filing-evidence references, thread it through value arrival and projection, and delete raw marker, producer-reference, scalar-slot, and placeholder authority; `src/cadrumo/application/filing/; src/cadrumo/domain/calculations/registry/`.
 - [x] `W04.P07.S55` - Close every Modelo 303 DP30301 scalar owner from A16 through A30 through explicit typed profile, filing, observation, prorrata, insolvency, applicability, and derived-volume authorities, consuming S58, S56, and durable register owners through the immutable FilingProducerSnapshot and closed FilingProducerKey, and delete every default, raw key, placeholder, duplicate producer, and fallback representation; `src/cadrumo/core/; src/cadrumo/domain/deadlines/; src/cadrumo/domain/prorrata_register/; src/cadrumo/application/filing/; src/cadrumo/application/modelo/; src/cadrumo/application/calculations/`.
 - [x] `W04.P07.S57` - Integrate the strict core-owned discriminated FilingProjectionRef union atomically through CasillaFieldKind.PROJECTION, projection_ref payload semantics, semantic-map and registry schemas and loaders, provenance, generator, renderer dispatch, and the S47-S50 projectors, deleting description-regex, section, slot, offset, numeric, neighbouring-field, string-key, and legacy inference; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/; src/cadrumo/application/filing/; dev/registry/`.
-- [ ] `W04.P07.S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader; `src/cadrumo/core/; src/cadrumo/application/filing/; src/cadrumo/domain/calculations/registry/`.
+- [x] `W04.P07.S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader; `src/cadrumo/core/; src/cadrumo/application/filing/; src/cadrumo/domain/calculations/registry/`.
 - [ ] `W04.P07.S61` - Define and implement one typed DP30300 variable-envelope semantic and composition authority for all thirteen prefix fields, the Variable body, relative closer, and derived total across the five Modelo 303 epochs, resolving program identifier and developer tax identity from explicit product authority, carrying the contract through semantic-map provenance and generation, and deleting the blanket generator refusal without literals, aliases, defaults, or inferred producer identities; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/; dev/registry/; dev/registry/tests/`.
 - [ ] `W04.P07.S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with classify_official_boxes, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback; `src/cadrumo/domain/calculations/registry/; src/cadrumo/_data/registry/aeat/modelos/303/revisions/; dev/registry/`.
 - [ ] `W04.P07.S19` - Author and review semantic maps and source-bound render profiles for the five required Modelo 303 design epochs after S60, S61, and S62 land, exact-bijecting every fixed-record and DP30300 prefix anchor to its one canonical typed authority, producing the reviewed five-epoch artifacts consumed by S52, and depending additionally on casilla-schema S14 and S15 before S52; `dev/registry/mappings/modelo_303/; dev/registry/render_profiles/modelo_303/`.

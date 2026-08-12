@@ -711,3 +711,23 @@ def test_amendment_flags_are_derived_from_one_typed_kind() -> None:
     assert values[FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA] is True
     assert values[FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA] is False
     assert values[FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT] == "1234567890123"
+
+
+def test_taxpayer_tax_id_is_a_distinct_producer_without_presenter_fallback() -> None:
+    snapshot = build_filing_producer_snapshot(
+        modelo=Modelo.M111,
+        taxpayer_tax_id=_TAXPAYER_TAX_ID,
+        taxpayer_identity=_taxpayer_identity(),
+        presenter=_presenter(),
+        model_profile=Modelo111ProfileFacts(colegio_concertado=False),
+        elections=_elections(ResultDisposition.NEGATIVA),
+        amendment_evidence=None,
+        refund_account=None,
+        charge_account=None,
+        m303_filing_facts=None,
+    )
+
+    values = _filing_producer_values(snapshot)
+
+    assert values[FilingProducerKey.TAXPAYER_TAX_ID] == _TAXPAYER_TAX_ID
+    assert values[FilingProducerKey.PRESENTER_TAX_ID] == _PRESENTER_TAX_ID
