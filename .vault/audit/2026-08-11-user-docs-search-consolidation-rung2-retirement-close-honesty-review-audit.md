@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:563ee251eca0439b431fc1af1740142a891eb5e98690523273bb36e1c3708b69'
+body_hash: 'sha256:91ff089665453ec58f592b646d45d56d2b0dee54694d5727db3ce0b5e3006c4d'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -103,6 +103,22 @@ The alias-authority module argued in its docstring that its schema id must be ke
 - Re-run the built-site multilingual recall gate, the Diseño fail-closed gate and the relevance re-sweep once CLOSE-005 clears, in that order, and close P03.S08, P06.S27 and CLOSE-006 on their results.
 - Re-authenticate and publish to close P04.S12 and P04.S13; preserve the current 404 evidence until real live checks replace it.
 - Do not soften the casilla projection's refusal on a missing source-locale label. It is the only thing currently making the violation visible.
+
+## 2026-08-12 third revision: the plan's own Verification list, checked item by item
+
+Checkbox counts are not completeness. This pass tested the plan's Verification section directly, because that is what the campaign actually promised.
+
+**Proven at HEAD.** The per-root deployment parity gate passes 26 tests, covering concept and casilla recall on each of the four language roots through the real browser path. The target-resolvability sweep passes, so the dead-target count at HEAD is zero, which is the numeric claim the legal record kind's row makes. The wheel-content claim holds through my own rename: 383 packaging tests pass, and no packaging module references either the old or the new terminology data path, so moving that file off the retired tier name cost the distribution nothing. The fresh-context honesty review exists and is this document.
+
+**Not satisfied, deferred by operator decision.** Every live check. The roots were re-probed this session and the default root answers 200 while all four language roots and the casilla page answer 404.
+
+**Not satisfied, one row, judged.** The relevance vocabulary gate fails on `prorrata:aranyositas` alone. Reasoning recorded in the revision above; it belongs with a re-measurement.
+
+**Not satisfied, peer-owned.** Nine docs-gate failures, each attributed: 23 modules without API stubs and the full-scope nitpicky build that fails downstream of them, an em-dash ratchet on a file last touched by a WIP commit, and six localization coverage failures reflecting the long-recorded translation gap.
+
+**Two packaging failures, also peer-owned, and one of them is instructive.** The distribution-identity digest has drifted because CLI verbs landed after it was last pinned in early August. It cannot be re-pinned now and this campaign must not try: the gate's own instruction is to re-pin only from a tree whose description sources are clean against HEAD, and those sources currently carry live peer WIP in the ledger import CLI and in all four locale catalogues. Re-pinning here would bake another agent's uncommitted work into a committed gate, which is the exact failure the instruction names. The second failure is an undeclared `pydantic_core` import in a peer LLM test.
+
+**One environmental fact worth recording.** The RAG index reports new job identifiers on every check, so it is continuously re-indexing under the tree's ongoing commit traffic. Any procedure that waits for a settled index may wait indefinitely in a shared worktree this active. That is a constraint on the re-sweep, not a transient to sit out.
 
 ## 2026-08-12 second revision: a stale-call-site pattern, and why the re-sweep is not being forced
 
