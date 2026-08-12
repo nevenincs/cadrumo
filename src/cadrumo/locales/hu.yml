@@ -7162,10 +7162,12 @@ flows:
       code: Kód
       concrete: Konkrét eredet
       declared: Deklarált eredet
+      expectation_id: Elvárásazonosító
       facts: Tények
       grounding: Megalapozás
       kind: Típus
       label: Címke
+      message: Üzenet
       official: Hivatalos megjelenítés
       realised: Materializált érték
       schema: Séma

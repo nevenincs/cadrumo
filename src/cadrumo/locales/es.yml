@@ -7393,10 +7393,12 @@ flows:
       code: Código
       concrete: Origen concreto
       declared: Origen declarado
+      expectation_id: ID de expectativa
       facts: Hechos
       grounding: Fundamentación
       kind: Tipo
       label: Etiqueta
+      message: Mensaje
       official: Representación oficial
       realised: Valor materializado
       schema: Esquema

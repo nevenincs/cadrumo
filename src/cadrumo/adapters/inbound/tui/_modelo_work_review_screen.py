@@ -205,6 +205,8 @@ class ModeloWorkReviewScreen(Screen[None]):
             tr("flows.modelo_review.column.severity"),
             tr("flows.modelo_review.column.kind"),
             tr("flows.modelo_review.column.casilla_id"),
+            tr("flows.modelo_review.column.expectation_id"),
+            tr("flows.modelo_review.column.message"),
             tr("flows.modelo_review.column.facts"),
             tr("flows.modelo_review.column.grounding"),
         )
@@ -213,10 +215,11 @@ class ModeloWorkReviewScreen(Screen[None]):
                 finding.severity.value,
                 finding.kind.value,
                 "" if finding.casilla_id is None else str(finding.casilla_id),
+                "" if finding.expectation_id is None else str(finding.expectation_id),
+                tr(finding.message_locale_key, **finding.message_facts),
                 _json(dict(finding.message_facts)),
                 _json(
                     {
-                        "message_locale_key": finding.message_locale_key,
                         "legal_refs": finding.legal_refs,
                         "source_refs": finding.source_refs,
                     },

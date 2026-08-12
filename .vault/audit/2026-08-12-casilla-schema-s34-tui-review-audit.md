@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:a5d86bbbe813535cb414a8c1a18d1f989a93dda057fa6d6d7eed941d6d3cfecb'
+body_hash: 'sha256:5254b4faed8de8d8d4370a1aa07c6f2ace64b75c8ee50a103f4564bda8d9d31b'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-W04-P10-S34]]"
@@ -13,6 +13,7 @@ related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
 ---
+
 # `casilla-schema` audit: `W04.P10.S34 TUI review`
 
 ## Scope
@@ -40,6 +41,37 @@ Focused evidence: the seven integration pilots passed in 37.81 seconds; focused 
 ### s35-control-regression | low | The no-filter assertion excludes only one control type
 
 - [ ] `src/cadrumo/adapters/inbound/tui/tests/test_modelo_work_review_screen.py:175` rejects only Textual `Input`. A premature S35 filter built with `Select`, `SelectionList`, `Checkbox`, `RadioSet`, `Button`, or another interactive control would pass this gate. Current whole-file inspection found no such filtering or write control, so this is a regression-proof gap rather than a present behavior defect.
+
+
+### transitional-placement-curation | resolved | Placement is a sanctioned transitional receipt
+
+The follow-up `2026-08-12-casilla-schema-s34-tui-architecture-curation-audit` establishes the accepted dependency sequence: casilla-schema delivers and closes this surface in the legacy owner, then the blocked TUI architecture campaign performs the consumer-complete migration and legacy deletion. This re-review accepts that curation and does not reopen the historical placement finding.
+
+### lossy-finding-rendering | resolved | Localized message and expectation identity are preserved
+
+The repaired `ModeloWorkReviewScreen._mount_findings` now gives `expectation_id` and the resolved `tr(message_locale_key, **message_facts)` result their own columns while retaining structured facts and grounding. The blocked real-storage pilot supplies a non-null validated expectation id, resolves a Spanish fixture message with the canonical fact interpolation, asserts both values reach the table, and asserts the internal dotted key does not.
+
+### responsive-proof | resolved | Real pilots prove usable narrow, normal and wide geometry
+
+The repaired pilots exercise M100 2024 at `80x24`, `120x36`, and `160x48`, checking compositor geometry, header and table visibility, focus, horizontal travel, outer vertical scrolling, last-column cursor, and access to the final canonical row. A separate M720 pilot covers all four supported locales across narrow and wide widths and proves a compositor-observed dark-to-light theme change. The named M720, M200 2024, M100 2024/2025, and M349 coverage remains intact.
+
+### s35-control-regression | resolved | Likely filter and mutation control families are absent
+
+The blocked pilot now rejects `Input`, `Select`, `SelectionList`, `Checkbox`, `RadioSet`, and `Button`. Whole-file inspection confirms S34 still carries no filtering state, mutation action, repository access, or policy derivation.
+
+### execution-receipt-history | medium | The repaired execution record misstates the initial commit boundary and one gate result
+
+The current S34 execution record says commit `0c5fb5253d` landed the initial screen, tests, facade exports, locale leaves, **and execution record**. Git proves `0c5fb5253d` contains only the seven code/test/locale files; the execution record and initial audit landed later in `4e7de18d4b`. Its repaired atomicity note acknowledges later review and uncommitted repairs but does not correct that explicit false attribution. It also claims focused Ruff format passed, while the exact focused `ruff format --check` reports that `src/cadrumo/adapters/inbound/tui/__init__.py` would be reformatted. Ruff lint and strict BasedPyright do pass. Because the delegated review may not edit the execution record, this remains the only open finding and keeps the verdict at CHANGES REQUESTED until the receipt is corrected through the VaultSpec CLI and the claimed format gate is made truthful or rerun green.
+
+Re-review verification: nine real encrypted-storage/Textual pilots passed in 55.00 seconds; focused Ruff lint passed; focused BasedPyright reported zero errors, warnings, or notes; 25 literal screen keys resolve in Catalan, English, Spanish, and Hungarian; scoped diff-check passed; feature-scoped VaultSpec checks carry only the known stale feature-index and old S02 body warnings. No fake, mock, stub, patch, monkeypatch, skip, xfail, mirrored business logic, staging, commit, or unrelated edit was introduced by the review.
+
+
+### execution-receipt-history | resolved | Commit boundaries and focused gate evidence are now truthful
+
+The corrected execution record distinguishes `0c5fb5253d` as the code, test, facade, and locale commit; `4e7de18d4b` as the initial execution-record and review-audit commit; and `bcc1c6bca0` as the architecture-curation audit commit. Its atomicity note explicitly records the pending repair/closure commit and the one-Step/one-atomic-commit violation without rewriting shared history. The exact receipt-only recheck reports all three touched Python files already formatted, Ruff lint clean, and scoped `git diff --check` clean. The prior receipt-honesty finding is closed.
+
+Final verdict: **PASS**. No open S34 findings remain. The accepted curation owns the transitional placement; localized finding identity and text, responsive real-pilot proof, and S35-control exclusion are verified; and the execution receipt now matches Git history and the reproducible focused gates. This PASS authorizes normal S34 lifecycle closure while preserving the recorded non-atomic history and later consumer-complete migration obligation.
+
 
 ## Recommendations
 

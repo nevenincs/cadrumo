@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:50d71c59ca5981fe0af38d20b1e412591dab5e4e615882efed3f61a061d49c02'
+body_hash: 'sha256:099a85a4039a11ebb2bdaaaf43979e1fa2a62a10da4cf1420be85e67257eb30f'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -134,7 +134,7 @@ Three deletions and one wiring, each per the dead-surface ADR.
 
 The review screen renders the record; filtering rides the closed axes; the campaign closes with a fresh-context honesty review.
 
-- [ ] `W04.P10.S34` - build the TUI review screen consuming the review record through the application modelo facade; `src/cadrumo/adapters/inbound/tui/`.
+- [x] `W04.P10.S34` - build the TUI review screen consuming the review record through the application modelo facade; `src/cadrumo/adapters/inbound/tui/`.
 - [ ] `W04.P10.S35` - add faceted filtering over the record's closed axes; `src/cadrumo/adapters/inbound/tui/`.
 
 ## Wave `W05` - rolling intake and campaign close

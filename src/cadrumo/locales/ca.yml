@@ -7304,10 +7304,12 @@ flows:
       code: Codi
       concrete: Origen concret
       declared: Origen declarat
+      expectation_id: ID d'expectativa
       facts: Fets
       grounding: Fonamentació
       kind: Tipus
       label: Etiqueta
+      message: Missatge
       official: Representació oficial
       realised: Valor materialitzat
       schema: Esquema

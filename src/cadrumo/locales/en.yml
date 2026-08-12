@@ -6852,10 +6852,12 @@ flows:
       code: Code
       concrete: Concrete origin
       declared: Declared origin
+      expectation_id: Expectation ID
       facts: Facts
       grounding: Grounding
       kind: Kind
       label: Label
+      message: Message
       official: Official representation
       realised: Realised value
       schema: Schema
