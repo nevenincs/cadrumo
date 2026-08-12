@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:dabce9a264af2de458120ff98b11950089cc74acad11b4562326ab21e47193d4'
+body_hash: 'sha256:9e1ffd997fe898cdaf7982456b8b2bc87f8c562cbe5645abf2026a911607c72b'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-W04-P10-S35]]"
@@ -59,6 +59,7 @@ Use a real persisted report with findings that vary kind independently from seve
 - Static ownership and prohibited-construct census: no private application import, repository access, record/write mutation, fake, mock, stub, patch, monkeypatch, skip, or xfail in the owned screen and test.
 
 Verdict: **CHANGES REQUESTED / FAIL**. The current implementation is read-only, facade-correct, grain-local, stable, and mechanically green in the bounded lanes, and the deliberate single-record omissions are justified. S35 cannot close while two repeatable closed casilla axes are absent, interactive choice labels remain machine tokens with no opened narrow locale proof, and the pilots do not independently bite every matcher and AND/reset contract.
+
 ## Re-review 2026-08-12
 
 ### closed-axis-totality-resolution | high | RESOLVED - canonical relation channels and both missing facets are wired
@@ -95,3 +96,21 @@ The encrypted-repository M130 fixture persists two findings whose kind and sever
 
 Final verdict: **CHANGES REQUESTED / FAIL**. The closed-axis, localization, dynamic-prefix, narrow-panel, independent-finding, and reset findings are resolved. One medium acceptance gap remains: the casilla conjunction regression is redundant and does not bite both predicates. S35 should remain open until a real strict-against-both intersection replaces it and the focused pilot reruns green.
 
+## Final bounded re-review 2026-08-12
+
+### casilla-and-gate-resolution | medium | RESOLVED - both predicates independently bite the exact canonical projection
+
+The repaired M100 pilot derives all three expected ordered row tuples directly from the frozen canonical `ModeloWorkReview`: MANUAL rows from `declared_input_kind`, ADDRESSED rows from `official_box_status`, and their conjunction from both facts on the same casilla grain. It asserts every tuple is non-empty and the intersection is a proper subset of both individual sets.
+
+The interaction then proves the exact displayed identities in sequence: MANUAL alone, MANUAL plus ADDRESSED, and ADDRESSED alone after clearing MANUAL. Removing or ignoring either production predicate now changes one of these exact projections and reds the pilot. Canonical row order, reset, and record immutability remain asserted in the same real encrypted-storage/Textual run.
+
+Final bounded verification:
+
+- Exact M100 facet pilot: 1 passed in 51.40 seconds.
+- Focused Ruff format: one file already formatted.
+- Focused Ruff lint: passed.
+- Focused strict BasedPyright: zero errors, warnings, or notes.
+- Scoped `git diff --check`: passed.
+- Mandatory semantic discovery was rerun before exact source inspection.
+
+Final verdict: **PASS**. The sole remaining conjunction-proof finding is resolved. Together with the preceding re-review resolutions, no open S35 finding remains: every honest repeatable closed axis is canonically typed and faceted; visible options are localized with scanner/registry coverage; narrow opened-panel behavior is proven across all locales; finding axes and casilla conjunction independently bite; reset restores every selector and exact row identity; and filtering remains read-only over the frozen canonical record.
