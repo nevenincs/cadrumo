@@ -85,10 +85,6 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
         "_missing_oss_evidence_finding",
     ): "missing OSS evidence spans the revision's OSS bindings rather than one target",
     (
-        "src/cadrumo/application/modelo/_verification_actions.py",
-        "_collect_revision_verification_findings",
-    ): "snapshot resolution failed before a registry casilla could be named",
-    (
         "src/cadrumo/application/modelo/_verification_cross_period.py",
         "_modelo_202_incomplete_modality_finding",
     ): "Modelo 202 modality is a profile-derived filing-level decision",
@@ -164,7 +160,6 @@ _RETIRED_VERIFICATION_GROUPS = {
     ("_m210_rate.py", "resolve_m210_rate"),
     ("_m303_m349_reconcile.py", "m303_m349_intracom_reconcile_findings"),
     ("_objective_estimation_advisory.py", "_objective_estimation_exclusion_advisory_findings"),
-    ("_verification_actions.py", "_collect_revision_verification_findings"),
     ("_verification_actions.py", "_cuota_less_without_base_findings"),
     ("_verification_actions.py", "_iva_wallet_error_verification_finding"),
     ("_verification_actions.py", "_missing_evidence_findings"),
