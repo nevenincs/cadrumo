@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:cc96e08cb2edf9993a3823d0eddcc0dfb711ba301902199545d3e4d901833a94'
+body_hash: 'sha256:fde4dcbf6970dcda4e3fa360410ea6cac438d60336c59ee8fbbcaf9b6ff82951'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -166,7 +166,7 @@ Completeness-manifest authoring is grounded tax work (legal refs and identity ch
 
 ## Verification
 
-Global gates, holding for every step: the tree imports and `uv run --no-sync pytest --collect-only -q` is clean before and after every relocation commit; a canonical landing leaves zero non-test references to its retired duplicates, with the grep proof cited in the exec record; every new gate is proven to bite once (break the production code deliberately, preferably by a runtime patch from outside the repo, observe the red, restore); no mocks, stubs, skips, xfail or tautological assertions anywhere; registry values stay in TOML, never inlined; and a step closes only through the plan verbs with a matching exec record or a recorded deferral.
+Global gates, holding for every step: the tree imports and the full serial collection `uv run --no-sync pytest --collect-only -q -n 0 --override-ini=addopts=` is clean before and after every relocation commit (the empty `addopts` override is load-bearing because the project default selects only the unit lane); a canonical landing leaves zero non-test references to its retired duplicates, with the grep proof cited in the exec record; every new gate is proven to bite once (break the production code deliberately, preferably by a runtime patch from outside the repo, observe the red, restore); no mocks, stubs, skips, xfail or tautological assertions anywhere; registry values stay in TOML, never inlined; and a step closes only through the plan verbs with a matching exec record or a recorded deferral.
 
 Per-phase exit gates:
 
