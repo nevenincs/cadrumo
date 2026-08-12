@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:92605b1fbd3fdcbcf6d231a6e6baf77750f0dc3e62730002ab8697f360977df3'
+body_hash: 'sha256:69cdf35d5ec1dfa9d43f593dac4338c181f9ed1e711d6cd82bf7e9f2bac4633d'
 step_id: 'S83'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -25,9 +25,11 @@ related:
 
 ## Outcome
 
-All four real encrypted-SQLite end-to-end scenarios pass. The suite exercises both 2024 split revisions (`2024-hasta-08-y-2t` and `2024-desde-09-y-3t`) and the 2025 revision through production law selection. Verification, local filing, observation persistence, M390 annual fold-in, and typed withdrawn-export refusals remain live-behaviour assertions.
+The implementation-time exact run passed all four real encrypted-SQLite end-to-end scenarios in 32.70 seconds. The suite exercises both 2024 split revisions (`2024-hasta-08-y-2t` and `2024-desde-09-y-3t`) and the 2025 revision through production law selection. Verification, local filing, observation persistence, M390 annual fold-in, and typed withdrawn-export refusals remain live-behaviour assertions.
 
-`ruff format --check` and `ruff check` pass for the target. `basedpyright` reports zero errors, warnings, or notes. The exact module reports four passing tests. The target contains no retired revision token.
+At formal review time, the same exact module was blocked before reaching an S83 assertion because concurrent untracked legal-source catalogues still declared draft review status and strict registry loading refused them. This is a current shared-worktree verification boundary, not a passing rerun and not an S83 target defect. S83 does not tolerate or modify those peer-owned drafts.
+
+The implementation-time `ruff format --check` and `ruff check` runs passed for the target, and `basedpyright` reported zero errors, warnings, or notes. The target contains no retired revision token.
 
 ## Notes
 
