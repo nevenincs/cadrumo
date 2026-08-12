@@ -142,18 +142,25 @@ def reject_incomplete_amendment_casillas(
     required_optional = required_input_casilla_ids_for_revision(modelo=modelo, filing_year=filing_year, period=period)
     if required_optional is None:
         raise AmendmentVerificationRefusedError(
-            f"registry has no snapshot for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period.registry_token!r}; cannot verify amendment completeness",
             translated_message="application.modelo.errors.amendment_verification_refused_no_snapshot",
+            context={
+                "modelo": str(modelo),
+                "filing_year": str(filing_year),
+                "period": period.registry_token,
+                "snapshot_present": False,
+            },
         )
     required, _ = required_optional
     missing = sorted(casilla_id for casilla_id in required if casilla_id not in casilla_values)
     if missing:
         raise AmendmentVerificationRefusedError(
-            f"amendment is incomplete: required casilla id(s) {missing!r} are not present "
-            f"in the corrected map for modelo={modelo!r} filing_year={filing_year} "
-            f"period={period.registry_token!r}",
             translated_message="application.modelo.errors.amendment_verification_refused_missing_casillas",
+            context={
+                "modelo": str(modelo),
+                "filing_year": str(filing_year),
+                "period": period.registry_token,
+                "missing_casilla_ids": ", ".join(str(casilla_id) for casilla_id in missing),
+            },
         )
 
 
@@ -208,8 +215,7 @@ def _reject_malformed_casilla_input_keys(revision: ModeloRevision, malformed: li
     """Refuse malformed keys before examining declared membership or values."""
     if malformed:
         raise RegistryValidationError(
-            f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
-            f"malformed keys: {sorted(malformed)!r}",
+            translated_message="errors.error.error_calculations_registry_validation",
             context={"casilla_ids": ",".join(sorted(malformed)), "revision_id": revision.id},
         )
 
@@ -228,13 +234,15 @@ def _reject_unknown_casilla_input_ids(
                 for casilla_id, targets in sorted(noncanonical.items())
             )
             raise RegistryValidationError(
-                f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
-                f"non-canonical reference tokens are not accepted: {details}",
-                context={"casilla_ids": ",".join(sorted(noncanonical)), "revision_id": revision.id},
+                translated_message="errors.error.error_calculations_registry_validation",
+                context={
+                    "casilla_ids": ",".join(sorted(noncanonical)),
+                    "revision_id": revision.id,
+                    "noncanonical_reference_targets": details,
+                },
             )
         raise RegistryValidationError(
-            f"casilla input keys must be canonical casilla.id values for revision {revision.id!r}; "
-            f"unknown casilla.id values: {unknown_only!r}",
+            translated_message="errors.error.error_calculations_registry_validation",
             context={"casilla_ids": ",".join(unknown_only), "revision_id": revision.id},
         )
 
@@ -251,8 +259,7 @@ def _validated_decimal_casilla_inputs[CasillaValue](
     )
     if non_decimal:
         raise RegistryValidationError(
-            f"casilla input values must be Decimal instances for revision {revision.id!r}; "
-            f"non-Decimal casillas: {non_decimal!r}",
+            translated_message="errors.error.error_calculations_registry_validation",
             context={
                 "casilla_ids": ",".join(non_decimal),
                 "revision_id": revision.id,
@@ -281,8 +288,9 @@ def _reject_non_numeric_casilla_inputs(
             for casilla_id in non_numeric
         )
         raise RegistryValidationError(
-            f"casilla inputs must target numeric casillas for revision {revision.id!r}; {details}",
+            translated_message="errors.error.error_calculations_registry_validation",
             context={
+                "noncanonical_reference_targets": details,
                 "casilla_ids": ",".join(non_numeric),
                 "revision_id": revision.id,
                 "data_types": ",".join(revision_casillas_by_id[casilla_id].data_type for casilla_id in non_numeric),
@@ -312,8 +320,9 @@ def _reject_boolean_casilla_inputs_outside_domain(
             for casilla_id in out_of_domain
         )
         raise RegistryValidationError(
-            f"boolean casilla inputs must be 0 (no) or 1 (yes) for revision {revision.id!r}; {details}",
+            translated_message="errors.error.error_calculations_registry_validation",
             context={
+                "noncanonical_reference_targets": details,
                 "casilla_ids": ",".join(out_of_domain),
                 "revision_id": revision.id,
                 "accepted": "0,1",
@@ -395,6 +404,7 @@ def reject_unknown_override_casillas[CasillaKey](
                 f"non-canonical reference tokens are not accepted: {details}",
                 translated_message="application.modelo.errors.amendment_unknown_casillas",
                 context={
+                    "noncanonical_reference_targets": details,
                     "modelo": modelo,
                     "filing_year": filing_year,
                     "period": period.registry_token,
@@ -471,6 +481,7 @@ def reject_unknown_import_casillas[CasillaKey](
                 f"non-canonical reference tokens are not accepted: {details}",
                 translated_message="application.modelo.errors.external_import_unknown_casillas",
                 context={
+                    "noncanonical_reference_targets": details,
                     "modelo": modelo,
                     "filing_year": filing_year,
                     "period": period.registry_token,
