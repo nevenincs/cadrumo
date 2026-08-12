@@ -529,8 +529,12 @@ def serialize_carried_objects(
             resolver = _fixed_resolver(definition.default_object_key)
         if resolver is None:
             raise ProfileExportError(
-                "carried secure-object namespace has no natural-key resolver",
-                context={"namespace": definition.namespace, "custody_profile": profile.value},
+                translated_message="errors.fail.profile_export",
+                context={
+                    "namespace": definition.namespace,
+                    "custody_profile": profile.value,
+                    "natural_key_resolver_present": False,
+                },
             )
         for record in repository.list_records(
             definition.namespace,

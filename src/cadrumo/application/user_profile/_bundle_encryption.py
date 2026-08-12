@@ -152,8 +152,11 @@ def decrypt_profile_bundle_with_passphrase(
     # apart.
     if envelope.kdf_version != ARGON2_VERSION:
         raise EncryptedProfileBundleError(
-            f"encrypted profile-bundle envelope declares KDF version {envelope.kdf_version}; "
-            f"this application derives under {ARGON2_VERSION}",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={
+                "envelope_kdf_version": str(envelope.kdf_version),
+                "supported_kdf_version": str(ARGON2_VERSION),
+            },
         )
     try:
         salt = base64.b64decode(envelope.salt_b64.encode("ascii"), validate=True)

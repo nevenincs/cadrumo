@@ -153,7 +153,10 @@ def validate_bundle_payload(
 
     payload = json.loads(raw_json)
     if not isinstance(payload, dict):
-        raise UnsupportedBundleSchemaVersionError("bundle payload is not a JSON object")
+        raise UnsupportedBundleSchemaVersionError(
+            translated_message="errors.refused.refused_application_registry_input",
+            context={"payload_is_json_object": False},
+        )
     payload = STR_KEYED_MAPPING_ADAPTER.validate_python(payload)
     written_version = _stamped_bundle_version(payload, expected_written_version=expected_written_version)
     _refuse_unreadable_bundle_version(written_version)
@@ -359,8 +362,11 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
     """
     if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
         raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {bundle.bundle_schema_version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
+            translated_message="errors.refused.refused_application_registry_input",
+            context={
+                "bundle_schema_version": str(bundle.bundle_schema_version),
+                "supported_versions": ", ".join(str(v) for v in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)),
+            },
         )
 
     # The five typed financial-history categories restore through their typed
