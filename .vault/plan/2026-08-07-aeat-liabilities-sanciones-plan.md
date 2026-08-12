@@ -4,7 +4,7 @@ tags:
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
 modified: '2026-08-12'
-body_hash: 'sha256:a5fc0f4d772d9308c4081ee49fbe044098015d5068969b863b86bd8974e68ed3'
+body_hash: 'sha256:ae65ec26122a9cbac97e3f9dd4a2e9453c91d9c5d2bbb64332431830935260e5'
 tier: L2
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
@@ -191,12 +191,12 @@ Expose aeat app live deudas list/view/latest over persisted snapshots, matching 
 
 Wire the live AEAT fetch once an operator authorises a specimen capture: the DOM-to-Deuda parse function, the guard real allowed_path_prefixes, the pull CLI verb, its PROFILE_BOUND_WRITE_VERB_PATHS entry, and the operator-orientation harness sweep. Every row here is blocked until the specimen exists and is not startable before then.
 
-- [ ] `P05.S13` - BLOCKED on an operator-authorised live specimen capture of Consultar deudas: observe the real situacion label vocabulary and confirm the str Field length bound is adequate, per the Declaracion.estado precedent, with no type change since situacion stays str; `no type change, situacion stays str; `src/cadrumo/core, src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
-- [ ] `P05.S14` - BLOCKED on the same specimen: write walk_deudas_consulta mapping the real DOM to Deuda rows, verified by a parse test against the captured fixture with sensitive fields never committed to the repo; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [x] `P05.S13` - BLOCKED on an operator-authorised live specimen capture of Consultar deudas: observe the real situacion label vocabulary and confirm the str Field length bound is adequate, per the Declaracion.estado precedent, with no type change since situacion stays str; `no type change, situacion stays str; `src/cadrumo/core, src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
+- [x] `P05.S14` - BLOCKED on the same specimen: write walk_deudas_consulta mapping the real DOM to Deuda rows, verified by a parse test against the captured fixture with sensitive fields never committed to the repo; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
 - [x] `P05.S15` - BLOCKED on the same specimen: populate the guard real allowed_path_prefixes from the captured consulta path, verified by the guard test refusing every known payment and aplazamiento path observed in the specimen; `src/cadrumo/adapters/outbound/aeat/sede/_deudas.py`.
-- [ ] `P05.S16` - BLOCKED on the same specimen: wire aeat app live deudas pull calling the walker and DeudasService capture, named pull never capture or refresh or fetch or sync per the CLI contract; `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py`.
-- [ ] `P05.S17` - Enroll app live deudas pull in PROFILE_BOUND_WRITE_VERB_PATHS with a comment stating it persists a captured snapshot to bucket storage, verified by test_root_fallback_guard_predicate_covers_profile_bound_mutations extended with the new entry; `src/cadrumo/application/storage_write_policy.py`.
-- [ ] `P05.S18` - Add deudas pull to the operator-orientation agent-harness document alongside expedientes pull and notifications pull in the same commit as the verb, verified by test_documented_command_conformance; `src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md`.
+- [x] `P05.S16` - BLOCKED on the same specimen: wire aeat app live deudas pull calling the walker and DeudasService capture, named pull never capture or refresh or fetch or sync per the CLI contract; `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py`.
+- [x] `P05.S17` - Enroll app live deudas pull in PROFILE_BOUND_WRITE_VERB_PATHS with a comment stating it persists a captured snapshot to bucket storage, verified by test_root_fallback_guard_predicate_covers_profile_bound_mutations extended with the new entry; `src/cadrumo/application/storage_write_policy.py`.
+- [x] `P05.S18` - Add deudas pull to the operator-orientation agent-harness document alongside expedientes pull and notifications pull in the same commit as the verb, verified by test_documented_command_conformance; `src/cadrumo/_data/agent/rules/cadrumo-operator-orientation-routing.md`.
 
 ### Phase `P06` - Human-grounding-blocked: LGT legal-catalogue rows
 
@@ -276,3 +276,35 @@ Cross-cutting: at no point in P01-P05 does a persisted `Deuda` value reach a
 `BindingSourceKind` after P05 lands and confirm no new member references a
 post-filing enforcement concept, the same structural check the research used
 to establish the current gap.
+
+**Closed 2026-08-12 at 23/23, and five of those checkboxes are NOT deliveries.**
+
+This plan's completion clause admits either every Step closed or a closeout
+audit recording why a Step is a deferred carry-forward. Both now hold, and the
+campaign-close mandate's condition is met: no Step is checked without a matching
+execution record.
+
+`P05.S13`, `S14`, `S16`, `S17` and `S18` are closed as **deferred
+carry-forward**. Each carries an execution record whose Outcome opens by saying
+so and states what was not built. Read as a set:
+
+- no `walk_deudas_consulta` exists,
+- no `deudas pull` verb exists,
+- no write-policy enrollment exists,
+- the operator harness names no deudas verb,
+- and `situacion`'s bound is retained UNCONFIRMED rather than confirmed.
+
+The blocker is that AEAT's recaudación register holds no rows for this taxpayer,
+established with a same-session positive control rather than asserted: the
+notifications summary rendered three populated tables while the deudas consulta,
+queried immediately after, rendered none. The taxpayer's liabilities are real
+and sit at notification stage, in a different register at a different procedural
+stage from the one this surface reads.
+
+**What the standing goal still asks for that this close excludes.** The goal is
+that an operator can see, inside the application, what AEAT currently reports as
+owed. They cannot. What shipped is the register's shape, its guard and its legal
+grounding — P05.S15 moved the guard from refusing every landing to refusing every
+landing except one endpoint nothing navigates to, and P06 grounded provisions
+nothing yet consumes. A future campaign that reopens this work should treat the
+five rows above as its backlog, not as prior art.
