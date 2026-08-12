@@ -106,10 +106,11 @@ def _resolve_roles_semantically(table: NormalizedTable) -> ColumnRoleMapping | N
     :class:`ImportError`, so the broad guards below would otherwise swallow it
     and report the operator's FILE as unreadable when what is actually absent is
     a capability of their INSTALL -- pointing them at a CSV they cannot fix
-    instead of the one command that resolves it. It is re-raised so the lane
-    surfaces the install hint, which is what the governing decision requires of
-    the tabular split: a known fixed-layout file imports with no extra, and an
-    unknown header vocabulary refuses here, naming ``pip install cadrumo[llm]``.
+    instead of the capability that resolves it. It is re-raised so the lane
+    surfaces the extra's typed machine identity, which is what the governing
+    decision requires of the tabular split: a known fixed-layout file imports
+    with no extra, and an unknown header vocabulary refuses here, carrying the
+    ``llm`` extra's identity rather than a rendered installation command.
     """
     try:
         from .....llm import SemanticColumnRoleMapper

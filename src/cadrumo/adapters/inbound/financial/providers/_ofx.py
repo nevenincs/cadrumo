@@ -24,8 +24,8 @@ transaction keeps the absolute magnitude plus OFX-native raw fields.
 ``ofxtools`` is GPL-3.0-only and therefore capability-gated behind the
 ``ofx`` optional extra: the import is lazy, guarded by
 :func:`~core.require_optional_extra`, so a bare-core install keeps the rest
-of the ledger import surface and refuses OFX sources with the
-``pip install cadrumo[ofx]`` hint.
+of the ledger import surface and refuses OFX sources with the extra's typed
+machine identity rather than a rendered installation command.
 """
 
 from __future__ import annotations
@@ -173,11 +173,12 @@ class OfxProvider(FinancialProvider):
 
         Without the ``ofx`` optional extra installed this degrades along the
         detection contract: a source that does not look like OFX is reported
-        as a plain probe miss (so ``--provider auto`` detection of other
-        formats keeps working), while a source that clearly IS OFX raises the
-        instructive :class:`~core.MissingOptionalExtraError` naming the
-        ``pip install cadrumo[ofx]`` remediation — never a silent
-        "no provider matched".
+        as a plain probe miss carrying the extra's machine identity (so
+        ``--provider auto`` detection of other formats keeps working), while a
+        source that clearly IS OFX raises the typed
+        :class:`~core.MissingOptionalExtraError` — never a silent
+        "no provider matched". Neither branch renders an installation command;
+        the recovery is resolved downstream from the extra's typed identity.
 
         Returns:
             A :class:`ProviderValidation` with the validation outcome.
@@ -191,7 +192,11 @@ class OfxProvider(FinancialProvider):
                 raise MissingOptionalExtraError(OFX_EXTRA)
             return ProviderValidation(
                 is_valid=False,
-                warnings=(f"OFX provider unavailable: {OFX_EXTRA.install_hint}",),
+                unavailable_optional_extra={
+                    "extra": OFX_EXTRA.extra,
+                    "import_name": OFX_EXTRA.import_name,
+                    "importable": False,
+                },
             )
         try:
             statements = self._load_statements(path)
