@@ -135,6 +135,16 @@ class LegalReference(RegistryModel):
     reviewed_by: str = Field(min_length=1)
     notes: str | None = None
     required_text: tuple[str, ...] = Field(min_length=1)
+    forbidden_text: tuple[str, ...] = ()
+    """Phrases the cited corpus document must NOT contain.
+
+    ``required_text`` alone cannot express "this repealed clause must be
+    absent" — no set of must-be-present phrases states a negative. This is
+    the entry's optional negative clause: a corpus excerpt grounding current
+    law names the repealed text it must not carry, and a deliberately
+    historical excerpt names the later text that must not have crept in,
+    which pins its vintage forward as well as backward.
+    """
 
     @model_validator(mode="after")
     def _validate_legal_reference(self) -> LegalReference:
@@ -144,6 +154,14 @@ class LegalReference(RegistryModel):
             raise RegistryValidationError("legal reference required_text entries must be non-empty")
         if len(set(self.required_text)) != len(self.required_text):
             raise RegistryValidationError("legal reference required_text entries must be unique")
+        if any(not item.strip() for item in self.forbidden_text):
+            raise RegistryValidationError("legal reference forbidden_text entries must be non-empty")
+        if len(set(self.forbidden_text)) != len(self.forbidden_text):
+            raise RegistryValidationError("legal reference forbidden_text entries must be unique")
+        if overlap := set(self.required_text) & set(self.forbidden_text):
+            raise RegistryValidationError(
+                f"legal reference {self.id!r} required_text and forbidden_text must not overlap: {sorted(overlap)!r}",
+            )
         if "#" not in self.corpus_ref:
             raise RegistryValidationError(
                 f"legal reference {self.id!r} corpus_ref must be of the form 'path#anchor' (got {self.corpus_ref!r})",
