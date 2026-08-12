@@ -1114,7 +1114,10 @@ def _repair_verified_revision_current_pointer(
     work_units = work_unit_repository.load()
     latest = work_units.get(work_unit.work_unit_id)
     if latest is None:
-        raise WorkUnitNotFoundError(f"work unit {work_unit.work_unit_id!r} disappeared during verification")
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit.work_unit_id, "phase": "verification"},
+        )
     if latest.current_calculation_revision_id == calculation_revision_id:
         return
     if latest.current_calculation_revision_id is not None:
