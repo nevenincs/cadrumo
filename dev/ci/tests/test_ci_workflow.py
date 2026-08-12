@@ -12,6 +12,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci.yml"
 _JUSTFILE = Path(__file__).resolve().parents[3] / "justfile"
+#: The one tool-dependent module the unit lane must not collect. Named here so
+#: the lane's exclusion is asserted against the module's real marker rather
+#: than against whichever mechanism happens to exclude it today.
+_WORKBOOK_PARITY = Path(__file__).resolve().parents[3] / "dev" / "registry" / "tests" / "test_workbook_parity.py"
 _PROHIBITED_AEAT_PRODUCT_FORMS = (
     (
         "python-import",
@@ -118,17 +122,28 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
     assert recipe is not None, "no justfile recipe line named test-unit; the delegated lane has no home"
 
     body = next(
-        (
-            line
-            for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
-            if "--dist=loadfile" in line and "workbook_parity" in line
-        ),
+        (line for line in _JUSTFILE.read_text(encoding="utf-8").splitlines() if "--dist=loadfile" in line),
         None,
     )
     assert body is not None, "no justfile line carries the test-unit body; the delegated lane has no home"
     assert "-m 'unit and not external_tool and not os_keychain'" in body
-    assert "--ignore=dev/registry/tests/test_workbook_parity.py" in body
     assert "--durations=" in body, "the durations override the CI step passes must reach the underlying pytest call"
+
+    # The workbook-parity module is held out of this lane by its OWN marker,
+    # not by a path ignore. This gate used to pin the ignore directive, which
+    # made it red the moment that redundant directive was correctly deleted:
+    # a marker states its reason where a path ignore states nothing, so the
+    # directive's removal was the improvement and the pin was the defect.
+    # Re-pinning on the mechanism would have meant undoing the improvement to
+    # make its own gate pass. What the lane actually needs is that the module
+    # carries the marker the expression above excludes, so that is what is
+    # asserted -- otherwise a marker dropped from that module would silently
+    # pull a tool-dependent test into the offline unit lane.
+    parity_markers = _WORKBOOK_PARITY.read_text(encoding="utf-8")
+    assert "pytest.mark.external_tool" in parity_markers, (
+        "test_workbook_parity.py no longer carries external_tool, so nothing holds it out of the "
+        "unit lane; either restore the marker or give the lane an explicit exclusion"
+    )
 
 
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
