@@ -1263,6 +1263,84 @@ application:
         per marcar com a presentat quan la finestra d''obligació sigui oberta.'
       workflow_input_mismatch: La sol·licitud d'entrada del flux de treball no coincideix
         amb la revisió de càlcul.
+    findings:
+      art20_reduccion_possible: El rendiment net %{rnt_id} de %{rnt_value} EUR pot
+        optar a la reducció de l'article 20 %{reduccion_id}.
+      art52_reduccion_individual_sublimit_possible: La reducció %{reduccion_id} de
+        %{reduccion_value} EUR pot superar el subllímit individual de %{sublimit}
+        EUR.
+      attribution_received_uncaptured: La casella %{casilla_id} de %{filing_year}
+        conté %{casilla_value} EUR de renda atribuïda sense registrar.
+      attribution_received_unfolded: La renda atribuïda de %{filing_year} per %{total_base}
+        EUR no s'integra a la casella %{casilla_id}.
+      cross_casilla_invariant_violated: S'incompleix un invariant entre caselles declarat
+        pel registre en aquesta revisió.
+      cross_period_activity_start_missing: El model %{target_modelo} %{target_filing_year}
+        %{target_period} necessita una data d'inici d'activitat declarada.
+      cross_period_dependency_unclean: 'El model origen %{source_modelo} %{source_filing_year}
+        %{source_period} no és net: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'El model %{source_modelo} %{source_filing_year}
+        %{source_period} queda fora d''abast: l''activitat va començar el %{activity_start_date}.'
+      cross_period_m111_no_retenciones: El model %{source_modelo} %{source_filing_year}
+        %{source_period} no declara retencions per a %{target_modelo} %{target_filing_year}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} model(s) origen no són aplicables a aquest
+          contribuent: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: El model %{source_modelo} %{source_filing_year} %{source_period}
+          es basa en una cadena local (%{origin_code}), no en evidència oficial de
+          l'AEAT.
+      cross_period_operator_declared_suppression: El model %{source_modelo} %{source_filing_year}
+        %{source_period} queda suprimit per declaració de l'operador (%{origin_code}).
+      cross_period_zero_value_previous_filing: El model %{source_modelo} %{source_filing_year}
+        %{source_period} trasllada un valor zero a %{target_modelo} %{target_filing_year}.
+      cuota_less_ledger_row_base_missing: La transacció %{transaction_id} de la categoria
+        d'IVA %{iva_category_code} no té base declarable.
+      dt12a_reduccion_antiquity_possible: La reducció %{reduccion_id} de %{reduccion_value}
+        EUR es pot acollir a la regla d'antiguitat de la disposició transitòria 12a.
+      dt12a_reduccion_possible: L'ingrés %{ingreso_id} de %{ingreso_value} EUR pot
+        optar a la reducció %{reduccion_id}.
+      foreign_asset_redeclaration: 'Model %{modelo_code} %{filing_year}: el bé a l''estranger
+        %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
+        a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
+        del llindar de redeclaració de %{redeclaration_increase_threshold_eur} EUR.'
+      iva_wallet_precondition_failed: No es compleix la condició prèvia de la cartera
+        de compensació d'IVA per a aquesta revisió.
+      ledger_snapshot_drift: 'El model %{modelo} %{filing_year} %{period} s''ha desviat
+        de la seva instantània de llibre ancorada: %{changed_count} modificades, %{removed_count}
+        eliminades.'
+      m210_agrupacion_renta_invalid: El model %{modelo_id} període %{period_code}
+        té una agrupació de rendes no vàlida (%{error_type}).
+      m210_convenio_lob_advisory: El país %{country_code} i el tipus de renda %{tipo_renta_code}
+        poden estar subjectes a una clàusula de limitació de beneficis (%{document_id}).
+      m210_rate_unavailable: No s'ha pogut resoldre cap tipus del model 210 (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'Els models 303 i 349 discrepen
+        en %{period_code} %{filing_year}: %{m303_total} EUR davant %{m349_total} EUR,
+        una diferència de %{gap} EUR.'
+      madrid_nacimiento_adopcion_eligibility_advisory: La casella %{casilla_id} amb
+        recompte ponderat %{weighted_count} pot optar a la deducció madrilenya per
+        naixement o adopció.
+      missing_required_casilla: La casella obligatòria %{casilla_id} no té valor.
+      modelo_202_modality_incomplete: 'La modalitat del model 202 és incompleta: falta
+        la dada de perfil %{profile_fact_id}.'
+      objective_estimation_exclusion_threshold_exceeded: 'Model %{modelo_id} %{filing_year}:
+        %{profile_field_id} declarat %{declared} supera el llindar %{parameter_id}
+        de %{threshold}.'
+      oss_evidence_missing: Aquesta revisió declara activitat de finestreta única
+        però no conserva evidència de l'OSS.
+      oss_source_unrouted: Una font de finestreta única no està encaminada a cap casella
+        declarable.
+      pulled_filing_casilla_mismatch: La casella %{casilla_number} de %{period_code}
+        %{filing_year} va calcular %{computed_value} davant el declarat %{filed_value}
+        (%{mismatch_kind}).
+      registry_advisory_predicate_fired: S'ha activat un predicat consultiu del registre
+        per a aquesta revisió.
+      registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
+        per a aquest objectiu de treball.
+      transaction_evidence_missing_deductible: Una transacció deduïble no té evidència
+        justificativa.
+      transaction_evidence_missing_output: Una transacció repercutida no té evidència
+        justificativa.
     iva_wallet:
       correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
         Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu

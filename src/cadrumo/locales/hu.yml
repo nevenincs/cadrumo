@@ -1190,6 +1190,85 @@ application:
         benyújtottnak, amikor a kötelezettségi ablak nyitva van.'
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
+    findings:
+      art20_reduccion_possible: A(z) %{rnt_id} nettó jövedelem %{rnt_value} EUR összege
+        jogosult lehet a 20. cikk szerinti %{reduccion_id} kedvezményre.
+      art52_reduccion_individual_sublimit_possible: A(z) %{reduccion_id} kedvezmény
+        %{reduccion_value} EUR összege meghaladhatja a(z) %{sublimit} EUR egyéni alhatárt.
+      attribution_received_uncaptured: A(z) %{filing_year} évi %{casilla_id} rovat
+        %{casilla_value} EUR rögzítetlen hozzárendelt jövedelmet tartalmaz.
+      attribution_received_unfolded: A(z) %{filing_year} évi %{total_base} EUR hozzárendelt
+        jövedelem nem épül be a(z) %{casilla_id} rovatba.
+      cross_casilla_invariant_violated: A nyilvántartás által deklarált rovatközi
+        invariáns sérül ebben a revízióban.
+      cross_period_activity_start_missing: A(z) %{target_modelo} %{target_filing_year}
+        %{target_period} modelóhoz bejelentett tevékenységkezdési dátum szükséges.
+      cross_period_dependency_unclean: 'A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} forrásmodelo nem tiszta: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo hatókörön kívül esik: a tevékenység %{activity_start_date}
+        napon kezdődött.'
+      cross_period_m111_no_retenciones: A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo nem jelent be levonásokat a(z) %{target_modelo} %{target_filing_year}
+        részére.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} forrásmodelo nem alkalmazható erre az adózóra:
+          %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: A(z) %{source_modelo} %{source_filing_year} %{source_period} modelo
+          helyi láncon alapul (%{origin_code}), nem hivatalos AEAT bizonyítékon.
+      cross_period_operator_declared_suppression: A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelót kezelői nyilatkozat nyomja el (%{origin_code}).
+      cross_period_zero_value_previous_filing: A(z) %{source_modelo} %{source_filing_year}
+        %{source_period} modelo nulla értéket visz át a(z) %{target_modelo} %{target_filing_year}
+        felé.
+      cuota_less_ledger_row_base_missing: A(z) %{transaction_id} tranzakciónak a(z)
+        %{iva_category_code} áfakategóriában nincs bevallható alapja.
+      dt12a_reduccion_antiquity_possible: A(z) %{reduccion_id} kedvezmény %{reduccion_value}
+        EUR összege a 12a átmeneti rendelkezés időtartamszabálya alapján jogosult
+        lehet.
+      dt12a_reduccion_possible: A(z) %{ingreso_id} bevétel %{ingreso_value} EUR összege
+        jogosult lehet a(z) %{reduccion_id} kedvezményre.
+      foreign_asset_redeclaration: '%{modelo_code} modelo %{filing_year}: a(z) %{group_code}
+        csoportba tartozó %{position_key} külföldi vagyonelem értéke %{prior_value_eur}
+        EUR összegről %{current_value_eur} EUR összegre nőtt, ami %{delta_value_eur}
+        EUR növekedés a(z) %{redeclaration_increase_threshold_eur} EUR újrabevallási
+        küszöb felett.'
+      iva_wallet_precondition_failed: Az áfa-kompenzációs tárca előfeltétele nem teljesült
+        ehhez a revízióhoz.
+      ledger_snapshot_drift: 'A(z) %{modelo} %{filing_year} %{period} modelo eltért
+        a rögzített főkönyvi pillanatképétől: %{changed_count} módosult, %{removed_count}
+        törlődött.'
+      m210_agrupacion_renta_invalid: A(z) %{modelo_id} modelo %{period_code} időszakában
+        érvénytelen jövedelemcsoportosítás szerepel (%{error_type}).
+      m210_convenio_lob_advisory: A(z) %{country_code} ország %{tipo_renta_code} jövedelemtípusára
+        kedvezménykorlátozó záradék vonatkozhat (%{document_id}).
+      m210_rate_unavailable: Nem sikerült feloldani a 210-es modelo adókulcsát (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'A 303-as és a 349-es modelo eltér
+        a(z) %{period_code} %{filing_year} időszakban: %{m303_total} EUR a %{m349_total}
+        EUR ellenében, %{gap} EUR eltéréssel.'
+      madrid_nacimiento_adopcion_eligibility_advisory: A(z) %{casilla_id} rovat %{weighted_count}
+        súlyozott számmal jogosult lehet a madridi születési vagy örökbefogadási kedvezményre.
+      missing_required_casilla: A kötelező %{casilla_id} rovat nem tartalmaz értéket.
+      modelo_202_modality_incomplete: 'A 202-es modelo módozata hiányos: hiányzik
+        a(z) %{profile_fact_id} profiladat.'
+      objective_estimation_exclusion_threshold_exceeded: '%{modelo_id} modelo %{filing_year}:
+        a bevallott %{profile_field_id} értéke %{declared} meghaladja a(z) %{parameter_id}
+        %{threshold} küszöböt.'
+      oss_evidence_missing: Ez a revízió egyablakos tevékenységet jelent be, de nem
+        őriz meg OSS bizonyítékot.
+      oss_source_unrouted: Egy egyablakos forrás nincs bevallható rovathoz irányítva.
+      pulled_filing_casilla_mismatch: A(z) %{period_code} %{filing_year} %{casilla_number}
+        rovat számított értéke %{computed_value} a bevallott %{filed_value} ellenében
+        (%{mismatch_kind}).
+      registry_advisory_predicate_fired: A nyilvántartás tanácsadó predikátuma aktiválódott
+        ehhez a revízióhoz.
+      registry_snapshot_unresolved: Nem sikerült feloldani a nyilvántartási pillanatképet
+        ehhez a munkacélhoz.
+      transaction_evidence_missing_deductible: Egy levonható tranzakcióhoz nincs alátámasztó
+        bizonyíték.
+      transaction_evidence_missing_output: Egy fizetendő tranzakcióhoz nincs alátámasztó
+        bizonyíték.
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás

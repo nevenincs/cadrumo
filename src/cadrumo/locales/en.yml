@@ -1144,6 +1144,81 @@ application:
         window is open.'
       workflow_input_mismatch: Workflow input request does not match the calculation
         revision.
+    findings:
+      art20_reduccion_possible: Net earnings %{rnt_id} of %{rnt_value} EUR may qualify
+        for the article 20 reduction %{reduccion_id}.
+      art52_reduccion_individual_sublimit_possible: Reduction %{reduccion_id} of %{reduccion_value}
+        EUR may exceed the individual sublimit of %{sublimit} EUR.
+      attribution_received_uncaptured: Casilla %{casilla_id} for %{filing_year} carries
+        %{casilla_value} EUR of attributed income that is not captured.
+      attribution_received_unfolded: Attributed income for %{filing_year} totalling
+        %{total_base} EUR is not folded into casilla %{casilla_id}.
+      cross_casilla_invariant_violated: A cross-casilla invariant declared by the
+        registry is violated in this revision.
+      cross_period_activity_start_missing: Modelo %{target_modelo} %{target_filing_year}
+        %{target_period} needs a declared activity start date.
+      cross_period_dependency_unclean: 'Source modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is not clean: %{blocker_codes}.'
+      cross_period_first_year_fractional_suppression: 'Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is scoped out: activity started %{activity_start_date}.'
+      cross_period_m111_no_retenciones: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} declares no retenciones for %{target_modelo} %{target_filing_year}.
+      cross_period_modelo_not_applicable:
+        message: '%{source_modelo_count} source modelo(s) are not applicable to this
+          taxpayer: %{source_modelos}.'
+      cross_period_non_official_local_chain:
+        message: Modelo %{source_modelo} %{source_filing_year} %{source_period} rests
+          on a local chain (%{origin_code}), not official AEAT evidence.
+      cross_period_operator_declared_suppression: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} is suppressed by operator declaration (%{origin_code}).
+      cross_period_zero_value_previous_filing: Modelo %{source_modelo} %{source_filing_year}
+        %{source_period} carries a zero value into %{target_modelo} %{target_filing_year}.
+      cuota_less_ledger_row_base_missing: Transaction %{transaction_id} in IVA category
+        %{iva_category_code} has no declarable base.
+      dt12a_reduccion_antiquity_possible: Reduction %{reduccion_id} of %{reduccion_value}
+        EUR may qualify under the transitional disposition 12a antiquity rule.
+      dt12a_reduccion_possible: Income %{ingreso_id} of %{ingreso_value} EUR may qualify
+        for reduction %{reduccion_id}.
+      foreign_asset_redeclaration: 'Modelo %{modelo_code} %{filing_year}: foreign
+        asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
+        EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
+        the %{redeclaration_increase_threshold_eur} EUR redeclaration threshold.'
+      iva_wallet_precondition_failed: The IVA compensation wallet precondition failed
+        for this revision.
+      ledger_snapshot_drift: 'Modelo %{modelo} %{filing_year} %{period} drifted from
+        its anchored ledger snapshot: %{changed_count} changed, %{removed_count} removed.'
+      m210_agrupacion_renta_invalid: Modelo %{modelo_id} period %{period_code} has
+        an invalid income grouping (%{error_type}).
+      m210_convenio_lob_advisory: Country %{country_code} income type %{tipo_renta_code}
+        may be subject to a limitation-on-benefits clause (%{document_id}).
+      m210_rate_unavailable: No Modelo 210 rate could be resolved (%{reason_code}).
+      m303_m349_intracom_reconciliation_mismatch: 'Modelo 303 and 349 disagree for
+        %{period_code} %{filing_year}: %{m303_total} EUR against %{m349_total} EUR,
+        a gap of %{gap} EUR.'
+      madrid_nacimiento_adopcion_eligibility_advisory: Casilla %{casilla_id} with
+        weighted count %{weighted_count} may qualify for the Madrid birth or adoption
+        deduction.
+      missing_required_casilla: Required casilla %{casilla_id} carries no value.
+      modelo_202_modality_incomplete: 'The Modelo 202 modality is incomplete: profile
+        fact %{profile_fact_id} is missing.'
+      objective_estimation_exclusion_threshold_exceeded: 'Modelo %{modelo_id} %{filing_year}:
+        %{profile_field_id} declared %{declared} exceeds the %{parameter_id} threshold
+        of %{threshold}.'
+      oss_evidence_missing: This revision declares one-stop-shop activity but carries
+        no persisted OSS evidence.
+      oss_source_unrouted: A one-stop-shop source is not routed to any declarable
+        casilla.
+      pulled_filing_casilla_mismatch: Casilla %{casilla_number} for %{period_code}
+        %{filing_year} computed %{computed_value} against the filed %{filed_value}
+        (%{mismatch_kind}).
+      registry_advisory_predicate_fired: A registry advisory predicate fired for this
+        revision.
+      registry_snapshot_unresolved: The registry snapshot for this work target could
+        not be resolved.
+      transaction_evidence_missing_deductible: A deductible transaction has no supporting
+        evidence.
+      transaction_evidence_missing_output: An output transaction has no supporting
+        evidence.
     iva_wallet:
       correct_no_record: No seeded compensation record exists for %{filing_year}/%{period}.
         Run 'aeat app modelo iva-wallet seed' first; correction overwrites an existing
