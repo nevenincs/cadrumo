@@ -1100,6 +1100,8 @@ application:
       m210_official_tipo_renta_selection_mismatch: 'Az M210-es modell %{official_tipo_renta_code}
         hivatalos tipo-renta kódjához a %{expected_tipo_renta} képletérték szükséges;
         kapott érték: %{tipo_renta}.'
+      m303_filing_evidence_invalid: A 303-as modelo bevallási példányának bizonyítéka
+        nem felelt meg az ellenőrzésnek.
       novel_source_kind_rejected: 'Ismeretlen számítási forrástípus(ok) %{novel_source_kinds}
         a(z) %{revision_id} revízióban: a regiszter olyan kötési forrást deklarál,
         amelyet egyetlen számítási feloldó sem kezel. Regisztráljon egy feloldót,

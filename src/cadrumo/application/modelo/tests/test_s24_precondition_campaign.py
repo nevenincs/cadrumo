@@ -194,6 +194,56 @@ _IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
 
 _EXPECTED_PROFILE_IDENTITIES = {
     (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoint_coverage_incomplete",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoints_on_non_applicable",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_not_final_period",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_observation_value_divergence",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_revision_value_divergence",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.missing",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.period_mismatch",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.regimen_scope_profile_divergence",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.regimen_snapshot_mismatch",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.unsupported_modelo",
+    ),
+    (
         "modelo.filing_record.import",
         "modelo.filing_record.import.lifecycle.active",
         "modelo.filing_record.import.lifecycle.discarded",

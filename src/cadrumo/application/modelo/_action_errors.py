@@ -239,6 +239,15 @@ class ModeloProfileReadinessError(ModeloError):
     """Raised when filing-grade modelo work starts with missing active-profile facts."""
 
 
+class M303FilingEvidenceError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when Modelo 303 filing-instance evidence fails its revision-time validation.
+
+    Carries the declared precondition failure rather than a rendered
+    explanation, so the operator surface resolves the recovery from the
+    scenario identity and its machine facts.
+    """
+
+
 class CasillaProvenanceMissingError(ModeloError):
     """Raised when an engine-result casilla has no registry definition."""
 

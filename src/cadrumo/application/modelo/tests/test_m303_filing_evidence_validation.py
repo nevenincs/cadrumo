@@ -25,7 +25,6 @@ from ....domain.modelos import (
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoFilingEvidence,
-    ModeloError,
     WorkUnit,
     derive_work_unit_id,
 )
@@ -33,6 +32,7 @@ from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
+from .._action_errors import M303FilingEvidenceError
 from .._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -218,7 +218,7 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None
         is None
     )
 
-    with pytest.raises(ModeloError, match="currently valid only for modelo 303"):
+    with pytest.raises(M303FilingEvidenceError) as raised_unsupported_modelo:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=work_unit,
             registry_snapshot=registry_snapshot,
@@ -228,10 +228,15 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None
         )
 
 
+    failure = raised_unsupported_modelo.value.precondition_failure
+    assert failure is not None, "the refusal must carry its declared precondition failure"
+    assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
+    assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.unsupported_modelo"
+
 def test_m303_evidence_is_required_before_profile_lookup() -> None:
     period = Period.from_year_and_code(2026, "1T")
 
-    with pytest.raises(ModeloError, match="filing-instance evidence is required"):
+    with pytest.raises(M303FilingEvidenceError) as raised_missing:
         validate_m303_filing_instance_evidence_for_revision(
             work_unit=_work_unit(period),
             registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
@@ -240,6 +245,11 @@ def test_m303_evidence_is_required_before_profile_lookup() -> None:
             observations=(),
         )
 
+
+    failure = raised_missing.value.precondition_failure
+    assert failure is not None, "the refusal must carry its declared precondition failure"
+    assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
+    assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.missing"
 
 @pytest.mark.parametrize(
     "composition",
@@ -253,7 +263,7 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile(composition=composition)
-        with pytest.raises(ModeloError, match="disagrees with the active censo profile"):
+        with pytest.raises(M303FilingEvidenceError) as raised_regimen_scope_profile_divergence:
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
                 registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
@@ -263,13 +273,18 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
             )
 
 
+        failure = raised_regimen_scope_profile_divergence.value.precondition_failure
+        assert failure is not None, "the refusal must carry its declared precondition failure"
+        assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
+        assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.regimen_scope_profile_divergence"
+
 def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: Path) -> None:
     work_period = Period.from_year_and_code(2026, "1T")
     evidence_period = Period.from_year_and_code(2026, "2T")
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile()
-        with pytest.raises(ModeloError, match="period must match its work unit"):
+        with pytest.raises(M303FilingEvidenceError) as raised_period_mismatch:
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(work_period),
                 registry_snapshot=resources().modelos.authority.snapshot("303", filing_year=2026, period="1T"),
@@ -278,6 +293,11 @@ def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: P
                 observations=(),
             )
 
+
+        failure = raised_period_mismatch.value.precondition_failure
+        assert failure is not None, "the refusal must carry its declared precondition failure"
+        assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
+        assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.period_mismatch"
 
 def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "4T")
@@ -365,7 +385,7 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile()
-        with pytest.raises(ModeloError, match="cover every canonical A28 endpoint"):
+        with pytest.raises(M303FilingEvidenceError) as raised_exonerado_390_endpoint_coverage_incomplete:
             validate_m303_filing_instance_evidence_for_revision(
                 work_unit=_work_unit(period),
                 registry_snapshot=registry_snapshot,
@@ -378,3 +398,8 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
                     casilla_values={endpoint.id: Decimal("0")},
                 ),
             )
+
+        failure = raised_exonerado_390_endpoint_coverage_incomplete.value.precondition_failure
+        assert failure is not None, "the refusal must carry its declared precondition failure"
+        assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
+        assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoint_coverage_incomplete"

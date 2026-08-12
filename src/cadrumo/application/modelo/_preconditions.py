@@ -237,6 +237,46 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.unsupported_modelo",
+        no_recovery_outcome=NoRecoveryOutcome.TERMINAL,
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.missing",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.period_mismatch",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.regimen_snapshot_mismatch",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.regimen_scope_profile_divergence",
+    ),
+    *(
+        _profile(
+            "modelo.work.calculate",
+            "modelo.work.calculate.m303_filing_evidence.valid",
+            f"modelo.work.calculate.m303_filing_evidence.{scenario_code}",
+        )
+        for scenario_code in (
+            "exonerado_390_endpoint_coverage_incomplete",
+            "exonerado_390_endpoints_on_non_applicable",
+            "exonerado_390_not_final_period",
+            "exonerado_390_observation_value_divergence",
+            "exonerado_390_revision_value_divergence",
+        )
+    ),
+    _profile(
+        "modelo.work.calculate",
         "modelo.work.calculate.m200.accounting_result.present",
         "modelo.work.calculate.m200.accounting_result.ledger_rows_without_accounting_result",
     ),

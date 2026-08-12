@@ -1173,6 +1173,8 @@ application:
       m210_official_tipo_renta_selection_mismatch: El codi oficial de tipus de renda
         %{official_tipo_renta_code} del Model 210 requereix el valor de fórmula %{expected_tipo_renta};
         s'ha rebut %{tipo_renta}.
+      m303_filing_evidence_invalid: L'evidència de la instància de declaració del
+        model 303 no ha superat la validació.
       novel_source_kind_rejected: 'Tipus d''origen de càlcul no reconegut(s) %{novel_source_kinds}
         a la revisió %{revision_id}: el registre declara un origen de vinculació que
         cap resolutor de càlcul gestiona. Registreu un resolutor o marqueu-lo com

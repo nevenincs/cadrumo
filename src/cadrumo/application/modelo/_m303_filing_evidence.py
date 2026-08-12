@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
-from ...core import CasillaId, Modelo
+from ...core import ActionEvidenceProvenance, CasillaId, Modelo
 from ...domain.calculations.registry import (
     CasillaObservation,
     RegistrySnapshot,
@@ -13,11 +13,34 @@ from ...domain.calculations.registry import (
 )
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.iva import is_last_filing_period_of_year, validate_regimen_simplificado_rows
-from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence, ModeloError, WorkUnit
+from ...domain.modelos import FilingInstanceEvidence, M303FilingInstanceEvidence, WorkUnit
 from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
 from ..user_profile import UserProfileLifecycleRepository, projection_for_taxpayer
-from ._action_errors import ModeloProfileReadinessError
+from ._action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
 from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
+from ._preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
+
+_EVIDENCE_SUBJECT_LEAF_KEY = "modelo.work.calculate"
+_EVIDENCE_SCENARIO_PREFIX = "modelo.work.calculate.m303_filing_evidence"
+
+
+def _evidence_failure(
+    scenario_code: str,
+    evidence_values: Mapping[str, str | int | bool | Decimal],
+) -> ModeloPreconditionFailure:
+    """Return the declared failure for one Modelo 303 filing-evidence scenario.
+
+    The scenario identity resolves its own condition and recovery from the
+    declared catalogue, so this producer supplies only the observed facts and
+    never an action or a rendered explanation of its own.
+    """
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key=_EVIDENCE_SUBJECT_LEAF_KEY,
+        scenario_id=f"{_EVIDENCE_SCENARIO_PREFIX}.{scenario_code}",
+        evidence_id=f"{_EVIDENCE_SCENARIO_PREFIX}.{scenario_code}.observation",
+        evidence_values=evidence_values,
+        provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+    )
 
 
 def validate_m303_filing_instance_evidence_for_revision(
@@ -31,13 +54,32 @@ def validate_m303_filing_instance_evidence_for_revision(
     """Validate the complete revision evidence against every canonical owner."""
     if work_unit.modelo != Modelo.M303:
         if evidence is not None:
-            raise ModeloError("filing-instance evidence is currently valid only for modelo 303 revisions")
+            raise M303FilingEvidenceError(
+                precondition_failure=_evidence_failure(
+                    "unsupported_modelo",
+                    {"modelo": str(work_unit.modelo), "evidence_present": True},
+                ),
+            )
         return None
     if evidence is None:
-        raise ModeloError("modelo 303 filing-instance evidence is required before calculation revision creation")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "missing",
+                {"modelo": str(work_unit.modelo), "evidence_present": False},
+            ),
+        )
     m303 = evidence.m303
     if m303.period != work_unit.period:
-        raise ModeloError("modelo 303 filing-instance evidence period must match its work unit")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "period_mismatch",
+                {
+                    "work_unit_period": work_unit.period.registry_token,
+                    "evidence_period": m303.period.registry_token,
+                    "periods_match": False,
+                },
+            ),
+        )
 
     _validate_m303_simplified_filing_evidence(
         work_unit=work_unit,
@@ -68,10 +110,20 @@ def _validate_m303_simplified_filing_evidence(
         scope_decision=regimen.scope_decision,
     )
     if regimen.regimen_snapshot != expected_snapshot:
-        raise ModeloError("modelo 303 simplified-regime evidence does not match the selected registry snapshot")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "regimen_snapshot_mismatch",
+                {"snapshot_matches_scope_decision": False},
+            ),
+        )
     profile = _active_taxpayer_profile(work_unit)
     if regimen.scope_decision != m303_regimen_simplificado_scope_for_profile(profile):
-        raise ModeloError("modelo 303 simplified-regime evidence disagrees with the active censo profile")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "regimen_scope_profile_divergence",
+                {"scope_decision_matches_censo_profile": False},
+            ),
+        )
     censo_iae_epigraphs: frozenset[str] = frozenset({profile.iae_epigraph}) if profile.iae_epigraph else frozenset()
     validate_regimen_simplificado_rows(
         regimen.rows,
@@ -93,7 +145,12 @@ def _validate_m303_exonerado_filing_evidence(
     exonerado = evidence.exonerado_390
 
     if exonerado.applicable and not is_last_filing_period_of_year(work_unit.period):
-        raise ModeloError("modelo 303 exonerado-390 evidence is applicable only in the final filing period")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "exonerado_390_not_final_period",
+                {"applicable": True, "is_last_filing_period": False},
+            ),
+        )
     expected_ids = {
         casilla.id
         for casilla in registry_snapshot.revision.casillas
@@ -108,7 +165,12 @@ def _validate_m303_exonerado_filing_evidence(
             observations=observations,
         )
     elif actual_values:
-        raise ModeloError("non-applicable modelo 303 exonerado-390 evidence must not carry endpoint facts")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "exonerado_390_endpoints_on_non_applicable",
+                {"applicable": False, "endpoint_count": len(actual_values)},
+            ),
+        )
 
 
 def _validate_m303_exonerado_applicable_values(
@@ -120,17 +182,32 @@ def _validate_m303_exonerado_applicable_values(
 ) -> None:
     """Require complete A28 endpoints and agreement with revision/observations."""
     if set(actual_values) != expected_ids:
-        raise ModeloError("modelo 303 exonerado-390 evidence must cover every canonical A28 endpoint exactly once")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "exonerado_390_endpoint_coverage_incomplete",
+                {"expected_endpoint_count": len(expected_ids), "declared_endpoint_count": len(actual_values)},
+            ),
+        )
     revision_values = {casilla_id: casilla_values.get(casilla_id) for casilla_id in expected_ids}
     if revision_values != actual_values:
-        raise ModeloError("modelo 303 exonerado-390 evidence values disagree with the calculated revision")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "exonerado_390_revision_value_divergence",
+                {"values_match_revision": False, "endpoint_count": len(actual_values)},
+            ),
+        )
     observation_values = {
         observation.casilla_id: observation.value
         for observation in observations
         if observation.casilla_id in expected_ids
     }
     if observation_values != actual_values:
-        raise ModeloError("modelo 303 exonerado-390 evidence values disagree with typed observations")
+        raise M303FilingEvidenceError(
+            precondition_failure=_evidence_failure(
+                "exonerado_390_observation_value_divergence",
+                {"values_match_observations": False, "endpoint_count": len(actual_values)},
+            ),
+        )
 
 
 def _active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:

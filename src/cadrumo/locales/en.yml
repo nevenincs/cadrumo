@@ -1065,6 +1065,7 @@ application:
       m210_official_tipo_renta_selection_mismatch: Modelo 210 official tipo-renta
         code %{official_tipo_renta_code} requires formula token %{expected_tipo_renta};
         received %{tipo_renta}.
+      m303_filing_evidence_invalid: Modelo 303 filing-instance evidence failed validation.
       novel_source_kind_rejected: 'Unrecognized calculation source kind(s) %{novel_source_kinds}
         on revision %{revision_id}: the registry declares a binding source no enrolled
         calculation resolver handles. Enroll a resolver or register it as deferred
