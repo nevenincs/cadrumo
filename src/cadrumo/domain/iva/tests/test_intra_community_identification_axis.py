@@ -57,6 +57,8 @@ from .. import (
     PartyFact,
     TransactionKind,
     classify_iva,
+    country_code_for_printed_tax_identifier,
+    identification_state_for_printed_tax_identifier,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -270,3 +272,102 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
         without = dict(overrides)
         without[identification_field] = None
         assert classify_iva(_criteria(**without)).matched_rule_id != rule_id
+
+
+# -- ES joins the IDENTIFICATION vocabulary, and only that one --------------
+#
+# The axis was one-sided: an intra-community sale had the counterparty's
+# identification established from the paper while the filer's own was merely
+# assertable. The reason was structural rather than legal. Every sibling prefix
+# is recognised by matching the number's BODY against the structure its prefix
+# claims, and Spanish identifiers are checksum identifiers rather than
+# structural ones -- so ES could not join the way its siblings did.
+#
+# RGAT art. 25 is what makes the printed form readable: for a party in the
+# Registro de operadores intracomunitarios the identifier is the ordinary one
+# "al que se antepondra el prefijo ES, conforme al estandar internacional
+# codigo ISO-3166 alfa 2". The prefix is regulated, not conventional.
+#
+# The safety is STRUCTURAL, not careful: identification and establishment are
+# different questions, the establishment resolver returns nothing for Spain by
+# design because registration is not establishment, and this is reached only
+# where that resolver already declined.
+
+_SPANISH_CIF = "B12345674"
+_SPANISH_IVA = "ESB12345674"
+
+
+def test_a_spanish_iva_number_now_states_its_identification() -> None:
+    """The measured gap: the filer's own side was only ever assertable."""
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+
+
+@pytest.mark.parametrize(
+    "printed",
+    ["ES B12345674", "ES B-1234567-4", "esb12345674", "  ESB12345674  "],
+    ids=["spaced", "punctuated", "lowercase", "padded"],
+)
+def test_the_printed_spelling_does_not_change_the_identification(printed: str) -> None:
+    """An issuer prints the same number several ways; it is one identification."""
+    assert identification_state_for_printed_tax_identifier(printed) is EUMemberState.ES
+
+
+def test_stating_an_identification_states_no_establishment() -> None:
+    """The load-bearing separation, asserted rather than trusted.
+
+    Registration is not establishment: the non-resident N leader, the L and M
+    identifiers and the X/Y/Z series all belong to parties registered in Spain
+    and established elsewhere. So a Spanish prefix must reach the identification
+    axis without opening the postal rung behind it.
+    """
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+    assert country_code_for_printed_tax_identifier(_SPANISH_IVA) is None
+
+
+def test_a_bare_spanish_identifier_still_states_nothing() -> None:
+    """Absence must not become a Spanish identification.
+
+    A document printing a bare CIF prints no prefix at all, so reading it as a
+    Spanish identification would manufacture the fact from its own silence --
+    and that silence is the ordinary shape of a domestic invoice.
+    """
+    assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
+
+
+@pytest.mark.parametrize(
+    "printed",
+    ["ESB99999999", "ESFRANCISCO", "ES", "ES12345678A1"],
+    ids=["wrong-control-letter", "prose-in-the-field", "prefix-alone", "malformed-body"],
+)
+def test_an_es_prefix_over_a_body_that_fails_the_checksum_states_nothing(printed: str) -> None:
+    """The precision half, and the reason this is a checksum rather than a pattern.
+
+    The prefix alone establishes nothing: a party name lands in an identifier
+    field routinely, and FRANCISCO would otherwise be read as a Spanish
+    identification. The AEAT control letter is what makes the reading answer
+    only where a real number was printed.
+    """
+    assert identification_state_for_printed_tax_identifier(printed) is None
+
+
+def test_the_sibling_prefixes_are_unaffected() -> None:
+    """Adding ES must not disturb the vocabulary it could not join."""
+    assert identification_state_for_printed_tax_identifier("DE811234567") is EUMemberState.DE
+    assert country_code_for_printed_tax_identifier("DE811234567") == "DE"
+
+
+def test_the_checksum_is_what_admits_the_spanish_number() -> None:
+    """Mutation proof: without it an ES prefix over anything would identify Spain.
+
+    Re-runs the naive rule -- take the prefix, believe it -- and shows it reads
+    a party name as a Spanish identification. That is what the control letter
+    exists to refuse, and a suite asserting only that valid numbers pass would
+    not distinguish the two.
+    """
+
+    def _prefix_alone(printed: str) -> bool:
+        return printed.upper().startswith("ES")
+
+    assert _prefix_alone("ESFRANCISCO")
+    assert identification_state_for_printed_tax_identifier("ESFRANCISCO") is None
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES

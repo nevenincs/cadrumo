@@ -49,6 +49,9 @@ See Also:
 
 from __future__ import annotations
 
+from typing import Final
+
+from ...core.identity import IdentityError, validate_spanish_tax_id
 from ._establishment import country_code_for_printed_tax_identifier
 from ._schema import EUMemberState
 
@@ -82,7 +85,7 @@ def identification_state_for_printed_tax_identifier(
     """
     code = country_code_for_printed_tax_identifier(printed_identifier)
     if code is None:
-        return None
+        return _spanish_identification(printed_identifier)
     try:
         return EUMemberState(code.lower())
     except ValueError:
@@ -90,3 +93,51 @@ def identification_state_for_printed_tax_identifier(
         # registration this fact's closed type cannot carry. Unestablished is
         # the honest answer; inventing a member would be worse than silence.
         return None
+
+
+_SPANISH_IVA_PREFIX: Final[str] = "ES"
+"""The prefix RGAT art. 25 puts in front of a Spanish NIF-IVA.
+
+Declared here rather than borrowed from the establishment vocabulary, because
+that vocabulary deliberately does not carry it and must not start to.
+"""
+
+
+def _spanish_identification(printed_identifier: str | None) -> EUMemberState | None:
+    """Return Spain when the printed number is an ES-prefixed Spanish identifier.
+
+    The other half of an axis that was one-sided. Every sibling prefix is
+    recognised by matching the number's BODY against the structure its prefix
+    claims, and Spanish identifiers are checksum identifiers rather than
+    structural ones -- so ``ES`` could not join the vocabulary the way its
+    siblings did, and the filer's own identification stayed merely assertable
+    while a counterparty's was established from the paper.
+
+    RGAT art. 25 is what makes the printed form readable: for a party in the
+    Registro de operadores intracomunitarios the identifier is the ordinary one
+    "al que se antepondrá el prefijo ES, conforme al estándar internacional
+    código ISO-3166 alfa 2". So the prefix is regulated rather than conventional,
+    and the body is validated by the shipped AEAT control-letter algorithm
+    instead of by a structural pattern.
+
+    **This cannot leak a Spanish ESTABLISHMENT, and that is structural rather
+    than careful.** It is reached only where the establishment resolver already
+    returned nothing, it returns an IDENTIFICATION state, and the establishment
+    ladder reads the country code -- which stays empty for Spain by design,
+    because registration is not establishment. A bare Spanish CIF with no prefix
+    is likewise untouched: it prints no prefix, so it states no identification,
+    and reading absence as a Spanish one would manufacture the fact from silence.
+    """
+    if printed_identifier is None:
+        return None
+    compact = "".join(printed_identifier.split()).replace("-", "").replace(".", "").upper()
+    if not compact.startswith(_SPANISH_IVA_PREFIX):
+        return None
+    try:
+        validate_spanish_tax_id(compact[len(_SPANISH_IVA_PREFIX) :])
+    except IdentityError:
+        # An ES prefix over a body that fails the control letter is not a
+        # Spanish identification; it is a misread or a different country's
+        # number wearing the wrong prefix. Silence is the honest answer.
+        return None
+    return EUMemberState.ES
