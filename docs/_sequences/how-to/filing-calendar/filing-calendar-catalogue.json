@@ -504,7 +504,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 2,
+              "revision_count": 6,
               "tax_domain": "iva",
               "title": "IVA. Autoliquidación (trimestral)"
             },
@@ -1227,7 +1227,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 2,
+              "revision_count": 6,
               "tax_domain": "iva",
               "title": "IVA. Autoliquidación (trimestral)"
             },

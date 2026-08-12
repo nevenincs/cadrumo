@@ -8,6 +8,8 @@
         "create",
         "caps-demo",
         "--quiet",
+        "--tax-residence-jurisdiction-scope",
+        "common_regime",
         "--entity-type",
         "natural_person",
         "--tax-id",

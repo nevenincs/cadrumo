@@ -24,7 +24,7 @@
           "formula_count": 30,
           "operation": "modelo.formulas",
           "period": "1T",
-          "revision": "2023-y-siguientes",
+          "revision": "2026-y-siguientes",
           "rows": [
             {
               "expression": {
@@ -246,7 +246,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -404,7 +404,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -460,7 +460,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -597,7 +597,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -679,7 +679,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -738,7 +738,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -805,11 +805,10 @@
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
                 "ley-37-1992:art-124",
-                "rd-1624-1992:art-71",
-                "orden-hac-819-2024:art-1"
+                "rd-1624-1992:art-71"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -882,11 +881,10 @@
               "input_parameters": [],
               "input_relations": [],
               "legal_refs": [
-                "rd-1624-1992:art-71",
-                "orden-hac-819-2024:art-1"
+                "rd-1624-1992:art-71"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -989,11 +987,10 @@
                 "ley-37-1992:art-116",
                 "rd-1624-1992:art-71",
                 "rd-1624-1992:art-29",
-                "rd-1624-1992:art-30",
-                "orden-hac-819-2024:art-1"
+                "rd-1624-1992:art-30"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -1005,20 +1002,43 @@
                   {
                     "args": [
                       {
-                        "args": [],
+                        "args": [
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "iva.resultado",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null,
+                            "relation": null
+                          },
+                          {
+                            "args": [],
+                            "binding": null,
+                            "casilla_id": "70",
+                            "date_binding": null,
+                            "dispatch_table": null,
+                            "literal": null,
+                            "op": null,
+                            "parameter": null,
+                            "relation": null
+                          }
+                        ],
                         "binding": null,
-                        "casilla_id": "iva.resultado",
+                        "casilla_id": null,
                         "date_binding": null,
                         "dispatch_table": null,
                         "literal": null,
-                        "op": null,
+                        "op": "subtract",
                         "parameter": null,
                         "relation": null
                       },
                       {
                         "args": [],
                         "binding": null,
-                        "casilla_id": "70",
+                        "casilla_id": "109",
                         "date_binding": null,
                         "dispatch_table": null,
                         "literal": null,
@@ -1032,14 +1052,14 @@
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
-                    "op": "subtract",
+                    "op": "add",
                     "parameter": null,
                     "relation": null
                   },
                   {
                     "args": [],
                     "binding": null,
-                    "casilla_id": "109",
+                    "casilla_id": "112",
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
@@ -1053,7 +1073,7 @@
                 "date_binding": null,
                 "dispatch_table": null,
                 "literal": null,
-                "op": "add",
+                "op": "subtract",
                 "parameter": null,
                 "relation": null
               },
@@ -1062,7 +1082,8 @@
               "input_casilla_ids": [
                 "iva.resultado",
                 "70",
-                "109"
+                "109",
+                "112"
               ],
               "input_parameters": [],
               "input_relations": [],
@@ -1072,11 +1093,10 @@
                 "ley-37-1992:art-116",
                 "rd-1624-1992:art-71",
                 "rd-1624-1992:art-29",
-                "rd-1624-1992:art-30",
-                "orden-hac-819-2024:art-1"
+                "rd-1624-1992:art-30"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -1135,7 +1155,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1205,7 +1225,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1238,7 +1258,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1271,7 +1291,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1304,7 +1324,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1333,12 +1353,11 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
-                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1367,12 +1386,11 @@
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
                 "ley-37-1992:art-91",
-                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1407,7 +1425,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1440,7 +1458,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1473,7 +1491,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1506,7 +1524,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1539,7 +1557,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1572,7 +1590,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1605,7 +1623,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1638,7 +1656,7 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1650,7 +1668,7 @@
                   {
                     "args": [],
                     "binding": null,
-                    "casilla_id": "modulos-iva-epigrafe",
+                    "casilla_id": "modulos-iva-orden-id",
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
@@ -1694,12 +1712,45 @@
                   {
                     "args": [],
                     "binding": null,
-                    "casilla_id": null,
+                    "casilla_id": "modulos-iva-4-unidades",
                     "date_binding": null,
                     "dispatch_table": null,
                     "literal": null,
                     "op": null,
-                    "parameter": "m303-modulos-iva-coeficientes-2025",
+                    "parameter": null,
+                    "relation": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "modulos-iva-5-unidades",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "relation": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "modulos-iva-6-unidades",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
+                    "relation": null
+                  },
+                  {
+                    "args": [],
+                    "binding": null,
+                    "casilla_id": "modulos-iva-7-unidades",
+                    "date_binding": null,
+                    "dispatch_table": null,
+                    "literal": null,
+                    "op": null,
+                    "parameter": null,
                     "relation": null
                   }
                 ],
@@ -1712,24 +1763,25 @@
                 "parameter": null,
                 "relation": null
               },
-              "formula_id": "modelo-303-2023-modulos-iva-cuota-devengada",
+              "formula_id": "modelo-303-2026-modulos-iva-cuota-devengada",
               "input_bindings": [],
               "input_casilla_ids": [
-                "modulos-iva-epigrafe",
+                "modulos-iva-orden-id",
                 "modulos-iva-1-unidades",
                 "modulos-iva-2-unidades",
-                "modulos-iva-3-unidades"
+                "modulos-iva-3-unidades",
+                "modulos-iva-4-unidades",
+                "modulos-iva-5-unidades",
+                "modulos-iva-6-unidades",
+                "modulos-iva-7-unidades"
               ],
-              "input_parameters": [
-                "m303-modulos-iva-coeficientes-2025"
-              ],
+              "input_parameters": [],
               "input_relations": [],
               "legal_refs": [
-                "ley-37-1992:art-123",
-                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+                "ley-37-1992:art-123"
               ],
               "source_refs": [
-                "boe-orden-hac-1347-2024-iva-authority"
+                "boe-orden-hac-1425-2025-iva-authority"
               ],
               "target_casilla_id": "modulos-iva-cuota-devengada"
             },
@@ -1811,23 +1863,12 @@
                           {
                             "args": [],
                             "binding": null,
-                            "casilla_id": "modulos-iva-epigrafe",
+                            "casilla_id": "modulos-iva-orden-id",
                             "date_binding": null,
                             "dispatch_table": null,
                             "literal": null,
                             "op": null,
                             "parameter": null,
-                            "relation": null
-                          },
-                          {
-                            "args": [],
-                            "binding": null,
-                            "casilla_id": null,
-                            "date_binding": null,
-                            "dispatch_table": null,
-                            "literal": null,
-                            "op": null,
-                            "parameter": "m303-modulos-iva-cuota-minima-pct-2025",
                             "relation": null
                           }
                         ],
@@ -1860,23 +1901,21 @@
                 "parameter": null,
                 "relation": null
               },
-              "formula_id": "modelo-303-2023-modulos-iva-cuota-derivada",
+              "formula_id": "modelo-303-2026-modulos-iva-cuota-derivada",
               "input_bindings": [],
               "input_casilla_ids": [
                 "modulos-iva-cuota-devengada",
-                "modulos-iva-epigrafe"
+                "modulos-iva-orden-id"
               ],
               "input_parameters": [
-                "m303-modulos-iva-dificil-justificacion-forfait",
-                "m303-modulos-iva-cuota-minima-pct-2025"
+                "m303-modulos-iva-dificil-justificacion-forfait"
               ],
               "input_relations": [],
               "legal_refs": [
-                "ley-37-1992:art-123",
-                "orden-hac-1347-2024:anexo-i-iva-instrucciones"
+                "ley-37-1992:art-123"
               ],
               "source_refs": [
-                "boe-orden-hac-1347-2024-iva-authority"
+                "boe-orden-hac-1425-2025-iva-authority"
               ],
               "target_casilla_id": "modulos-iva-cuota-derivada"
             },
@@ -1902,13 +1941,11 @@
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-91",
-                "real-decreto-ley-20-2022:art-72",
-                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure"
               ],
               "target_casilla_id": "154"
@@ -1935,13 +1972,11 @@
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-91",
-                "real-decreto-ley-20-2022:art-72",
-                "real-decreto-ley-4-2024:art-1",
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
               ],
               "source_refs": [
-                "aeat-dr-303-2025",
+                "aeat-dr-303-2026",
                 "aeat-modelo-303-procedure"
               ],
               "target_casilla_id": "166"

@@ -66,7 +66,8 @@
             "code": "4T",
             "filing_year": 2024
           },
-          "status": "seeded",
+          "provenance": "operator_seed",
+          "register_status": null,
           "taxpayer_nif": "sha256:1c9f9632"
         },
         "schema_version": "2",
@@ -111,8 +112,9 @@
             "filing_year": 2024
           },
           "previous_amount": "0",
+          "provenance": "operator_correction",
           "reason": "typo in opening balance",
-          "status": "seeded",
+          "register_status": null,
           "taxpayer_nif": "sha256:1c9f9632"
         },
         "schema_version": "2",

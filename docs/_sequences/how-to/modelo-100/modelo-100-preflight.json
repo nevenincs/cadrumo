@@ -19,14 +19,14 @@
         "command": "ledger.preflight",
         "notices": [
           {
+            "action": null,
             "code": "ledger.preflight.empty_period",
             "context": {
               "period": "0A",
               "year": "2025"
             },
-            "message": "No active ledger transactions were checked for this period. If activity occurred, add or import ledger rows before calculating; if there was genuinely no activity, the empty ledger can support a zero-activity local filing.",
-            "severity": "warning",
-            "suggestion": "aeat app ledger add --help; aeat app ledger import --help"
+            "message": "No active ledger transactions were checked for this period.",
+            "severity": "warning"
           }
         ],
         "result": {

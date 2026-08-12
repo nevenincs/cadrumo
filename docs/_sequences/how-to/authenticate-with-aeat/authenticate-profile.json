@@ -10,6 +10,8 @@
         "create",
         "me",
         "--quiet",
+        "--tax-residence-jurisdiction-scope",
+        "common_regime",
         "--entity-type",
         "natural_person",
         "--tax-id",
@@ -25,20 +27,13 @@
         "command": "config.profile.create",
         "notices": [
           {
-            "code": "config.profile.create.next_step",
-            "context": null,
-            "message": "Next",
-            "severity": "info",
-            "suggestion": "aeat app modelo work create"
-          },
-          {
+            "action": null,
             "code": "config.profile.create.ccaa_defaulted",
             "context": {
               "assumed_ccaa": "madrid"
             },
             "message": "No comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.",
-            "severity": "warning",
-            "suggestion": null
+            "severity": "warning"
           }
         ],
         "result": {

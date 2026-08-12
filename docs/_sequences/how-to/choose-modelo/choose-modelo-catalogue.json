@@ -504,7 +504,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 2,
+              "revision_count": 6,
               "tax_domain": "iva",
               "title": "IVA. Autoliquidación (trimestral)"
             },
@@ -1227,7 +1227,7 @@
               "local_work_guidance": null,
               "local_work_status": "supported-model-level",
               "local_work_supported": true,
-              "revision_count": 2,
+              "revision_count": 6,
               "tax_domain": "iva",
               "title": "IVA. Autoliquidación (trimestral)"
             },
@@ -1483,7 +1483,7 @@
           "binding_count": 35,
           "bound_casilla_count": 33,
           "cadence": "quarterly",
-          "casilla_count": 129,
+          "casilla_count": 218,
           "code": "303",
           "computed_casilla_count": 30,
           "filing_period": null,
@@ -1495,7 +1495,7 @@
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 64,
+          "manual_casilla_count": 92,
           "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
           "operation": "modelo.describe",
           "period": null,
@@ -1517,23 +1517,24 @@
             "11",
             "12"
           ],
-          "revision": "2023-y-siguientes",
+          "revision": "2026-y-siguientes",
           "revision_ids": [
             "2009-y-siguientes",
-            "2023-y-siguientes"
+            "2023",
+            "2024-desde-09-y-3t",
+            "2024-hasta-08-y-2t",
+            "2025",
+            "2026-y-siguientes"
           ],
           "source_refs": [
-            "aeat-dr-303-2023",
-            "aeat-dr-303-2024-early",
-            "aeat-dr-303-2024-late",
-            "aeat-dr-303-2025",
             "aeat-dr-303-2026",
             "aeat-modelo-303-procedure",
+            "boe-orden-hac-1425-2025-iva-authority",
             "boe-modelo-303-2008-form"
           ],
           "tax_domain": "iva",
           "title": "IVA. Autoliquidación (trimestral)",
-          "valid_from": "2023-01-01",
+          "valid_from": "2026-01-01",
           "valid_to": null
         },
         "schema_version": "2",

@@ -17,15 +17,7 @@
       "envelope": {
         "active_profile": null,
         "command": "config.profile.edit",
-        "notices": [
-          {
-            "code": "config.profile.edit.next_step",
-            "context": null,
-            "message": "Next",
-            "severity": "info",
-            "suggestion": "aeat app modelo work create"
-          }
-        ],
+        "notices": [],
         "result": {
           "profile_name": "docs-sequence-sandbox",
           "status": "updated"

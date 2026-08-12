@@ -15,7 +15,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "provider\tcertificate\nfile\t\nstatus\tincomplete\nactive_profile\t<profile-id>\nincomplete_reason\tThe certificate provider requires a certificate file. Run `aeat config auth configure --provider certificate --file PATH` with the path to your PKCS#12 (.p12/.pfx) bundle.\nnext_action\taeat config auth configure --provider certificate --file PATH\n"
+      "text": "provider\tcertificate\nfile\t\nstatus\tincomplete\nincomplete_reason\tThe certificate provider requires a certificate file. Run `aeat config auth configure --provider certificate --file PATH` with the path to your PKCS#12 (.p12/.pfx) bundle.\nprecondition_action.failed_condition_id\t\"auth.certificate.file_ready\"\nprecondition_action.evidence\t[{\"condition_id\":\"auth.certificate.file_ready\",\"evidence_id\":\"auth.configure.certificate.file_readiness\",\"provenance\":\"application_state\",\"values\":{\"certificate_file_provided\":false,\"certificate_file_resolves\":false,\"provider\":\"certificate\"}}]\nprecondition_action.action\tnull\nprecondition_action.argument_bindings\t[]\nprecondition_action.missing_argument_names\t[]\nprecondition_action.conditionality\t\"not_applicable\"\nprecondition_action.no_recovery_outcome\t\"operator_decision\"\n"
     },
     {
       "argv": [

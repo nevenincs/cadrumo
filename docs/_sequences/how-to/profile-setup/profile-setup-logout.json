@@ -12,7 +12,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "logged_out_profile\t<profile-id>\n"
+      "text": "logged_out_profile\tdocs-sequence-sandbox\n"
     },
     {
       "argv": [
@@ -33,7 +33,43 @@
           "activity_present": null,
           "configured": false,
           "iva_regime": null,
-          "next_action": null,
+          "precondition_action": {
+            "action": {
+              "action_id": "operator.profile.login",
+              "cli_path": [
+                "config",
+                "login"
+              ],
+              "target_command_key": "config.login"
+            },
+            "argument_bindings": [
+              {
+                "argument_name": "name",
+                "source": null,
+                "source_evidence_id": null,
+                "source_key": null,
+                "status": "missing",
+                "value": null
+              }
+            ],
+            "conditionality": "requires_arguments",
+            "evidence": [
+              {
+                "condition_id": "profile.active.available",
+                "evidence_id": "profile.active.state",
+                "provenance": "application_state",
+                "values": {
+                  "active_profile_present": false,
+                  "registered_profile_count": 1
+                }
+              }
+            ],
+            "failed_condition_id": "profile.active.available",
+            "missing_argument_names": [
+              "name"
+            ],
+            "no_recovery_outcome": null
+          },
           "profile_id": null,
           "profile_record_error": null,
           "profile_record_present": null,

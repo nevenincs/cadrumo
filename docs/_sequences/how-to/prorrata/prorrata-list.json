@@ -18,7 +18,7 @@
       "exit_code": 0,
       "kind": "setup",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\nejercicio\t2026\nregime\tgeneral\nsector_id\t\nprovisional_percentage\t80\nprovisional_provenance\tcarried_prior_definitiva\ncount\t1\n"
+      "text": "bucket\t<profile-id>\nejercicio\t2026\nregime\tgeneral\nsector_id\t\nprovisional_percentage\t80\nprovisional_provenance\tcarried_prior_definitiva\nespecial_transition\t\nevidence_reference\t\ncount\t1\n"
     },
     {
       "argv": [
@@ -67,6 +67,7 @@
               "definitive_volume_con_derecho": null,
               "definitive_volume_sin_derecho": null,
               "ejercicio": 2026,
+              "especial_transition": null,
               "interrupted": false,
               "provisional_percentage": "80",
               "provisional_provenance": "carried_prior_definitiva",
