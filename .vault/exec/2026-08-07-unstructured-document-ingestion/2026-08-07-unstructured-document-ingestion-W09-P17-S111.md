@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:fba9d04795dfe75caf2a374b935d7d66e575609261d4f573a1bfe2fd3fed8987'
+body_hash: 'sha256:d3c66ec7fdff785152a9103fa17e928227cd4223493d0f017bd86e960ff02094'
 step_id: 'S111'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -68,8 +68,6 @@ the column mapper's, because a line description is what a taxpayer's supplier
 wrote rather than a file's own schema.
 
 ## Notes
-
-<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
 I NEARLY REFUSED THIS ROW AS UNSANCTIONED and drafted the refusal before reading
 the amendment that permits it. The supply-nature module says a prose rule table
