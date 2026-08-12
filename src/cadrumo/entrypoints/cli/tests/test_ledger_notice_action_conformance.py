@@ -227,9 +227,7 @@ def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
         tree = ast.parse(inspect.getsource(module))
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
             caught = {
-                name.id
-                for name in ast.walk(handler.type)
-                if handler.type is not None and isinstance(name, ast.Name)
+                name.id for name in ast.walk(handler.type) if handler.type is not None and isinstance(name, ast.Name)
             }
             if not caught.intersection(_TYPED_LEDGER_ERROR_NAMES):
                 continue
