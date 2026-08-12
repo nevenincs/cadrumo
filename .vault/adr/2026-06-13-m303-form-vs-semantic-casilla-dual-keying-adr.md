@@ -17,7 +17,7 @@ related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
 modified: '2026-08-12'
-body_hash: 'sha256:1e7f23fdfd00902c4905815316256bbb23eadf5d4226fb60710b5e7e74cd570b'
+body_hash: 'sha256:5098a240e899da4f6163b47bbcab0fa95dff4cf87211285ba1194d9a54cdf5e3'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -58,6 +58,10 @@ Nonnumbered producer fields require the same single-home discipline. A raw expor
 - Repeated official blocks preserve typed row identity and deterministic ordinal projection. They are never flattened into per-slot scalars, parallel selector lists, or export-specific stores.
 - Applicability is typed and fail-closed. Blank output is permitted only when the canonical applicability decision says the field is not applicable; an applicable missing or conflicting value refuses the complete export before bytes.
 - `classify_official_boxes` is the sole declaration classifier. It answers whether an official box is addressed, represented through a binding, or undefined; it does not decide producer ownership, value arrival, applicability, or completeness.
+- Pre-generation projection admission is owned by one revision-level typed `projection_endpoints` declaration section. Each entry contains exactly one canonical `FilingProjectionRef` plus legal and source evidence; it never contains an export field id, wire coordinate, value, applicability override, or legacy layout key.
+- A numbered projection declaration must resolve exactly once to the embedded `projection_only` casilla. Nonnumbered simplified and exonerado declarations remain typed endpoints without inventing shadow casillas. Duplicate, ungrounded, cross-revision, or mismatched declarations refuse snapshot construction.
+- Semantic-map validation admits `projection_ref` only from the selected revision's declaration index. It never consults an existing or seed export layout. Generated-layout validation then requires an exact bijection between declarations and generated projection fields, with no missing, duplicate, or undeclared projection field.
+- The typed declaration replaces projection admission through duplicated string `casilla.export_refs`. `classify_official_boxes` treats a numbered declared projection as addressed while remaining declaration-only; it does not become a producer or value-arrival authority.
 - Source-declared literals, reserves, and transport checks remain source/codec facts and never become taxpayer or calculation semantics.
 - No compatibility alias, alternate resolver, export recomputation, header default, plaintext account path, unsupported-as-filler classification, or legacy read tolerance is permitted.
 - The closed producer identity is a public core `StrEnum`. Registry and semantic-map models carry enum members; only canonical TOML loading converts the exact string value. Generic `BeforeValidator` coercion, case folding, normalization, and runtime string hydration are forbidden.
@@ -78,6 +82,8 @@ Nonnumbered producer fields require the same single-home discipline. A raw expor
 ### Projection architecture
 
 The architecture has three stages:
+
+Before those stages, the selected revision supplies the complete typed projection declaration index. This is semantic admission only: the reviewed map may reference it before any layout exists, while the later generated layout must realize it bijectively. A seed layout, a semantic-map-owned declaration, and duplicated casilla export-field strings are forbidden because each would recreate the S19/S20 bootstrap cycle or fork authority.
 
 1. A canonical typed domain or application owner produces each fact.
 2. The reviewed semantic map classifies each exact official source anchor against that producer, an official-only canonical endpoint, or an exact source literal/transport policy.
