@@ -20,6 +20,7 @@ from ...application.ledger import (
 from ...core import resolve_active_bucket_id
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
+from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions import TransactionValidationError
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
 from ._ledger_support import _ledger_transaction_validation_no_recovery
@@ -72,12 +73,10 @@ class _ImportBucketContext:
 
 @dataclass(frozen=True, slots=True)
 class _ImportReport:
-    """The operator-facing text lines plus the notice strings the payload echoes."""
+    """The text projection and canonical non-blocking notices."""
 
     lines: list[str]
-    dry_run_notice: str | None
-    empty_import_notice: str | None
-    likely_duplicate_notice: str | None
+    notices: list[Notice]
 
 
 def _import_bucket_context(*, dry_run: bool) -> _ImportBucketContext:
@@ -140,28 +139,39 @@ def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: b
         f"{tr('cli.ledger.labels.imported')}\t{result.imported}",
         f"{tr('cli.ledger.labels.skipped')}\t{result.skipped}",
     ]
-    dry_run_notice: str | None = None
-    likely_duplicate_notice: str | None = None
+    notices: list[Notice] = []
     if result.dry_run:
         lines.append(f"{tr('cli.ledger.labels.dry_run')}\t{tr('cli.ledger.labels.yes')}")
-        dry_run_notice = f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.dry_run_preview')}"
-        lines.append(dry_run_notice)
-    empty_import_notice = _empty_import_notice(result)
-    if empty_import_notice is not None:
-        lines.append(empty_import_notice)
-    if result.likely_duplicates > 0:
-        likely_duplicate_notice = (
-            f"{tr('cli.ledger.labels.warning')}\t"
-            f"{tr('cli.ledger.import.likely_duplicates', count=result.likely_duplicates)}"
+        message = tr("cli.ledger.import.dry_run_preview")
+        lines.append(f"{tr('cli.ledger.labels.notice')}\t{message}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.import.dry_run_preview",
+                message=message,
+                context={"dry_run": "true", "would_import": str(result.imported), "would_skip": str(result.skipped)},
+            ),
         )
-        lines.append(likely_duplicate_notice)
+    empty_import = _empty_import_notice(result)
+    if empty_import is not None:
+        lines.append(empty_import[0])
+        notices.append(empty_import[1])
+    if result.likely_duplicates > 0:
+        message = tr("cli.ledger.import.likely_duplicates", count=result.likely_duplicates)
+        lines.append(f"{tr('cli.ledger.labels.warning')}\t{message}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="ledger.import.likely_duplicates",
+                message=message,
+                context={"likely_duplicate_count": str(result.likely_duplicates)},
+            ),
+        )
     if verbose or verify:
         lines.extend(_validation_lines(result.validation, result.source))
     return _ImportReport(
         lines=lines,
-        dry_run_notice=dry_run_notice,
-        empty_import_notice=empty_import_notice,
-        likely_duplicate_notice=likely_duplicate_notice,
+        notices=notices,
     )
 
 
@@ -225,13 +235,9 @@ def register_import_commands(app: typer.Typer) -> None:
         _emit_envelope(
             ctx,
             command="ledger.import",
-            result=LedgerImportPayload.from_result(
-                result,
-                dry_run_notice=report.dry_run_notice,
-                empty_import_notice=report.empty_import_notice,
-                likely_duplicate_notice=report.likely_duplicate_notice,
-            ),
+            result=LedgerImportPayload.from_result(result),
             lines=report.lines,
+            notices=report.notices,
         )
 
 
@@ -284,13 +290,31 @@ def _aggregate_import_results(results: list[LedgerSourceImportResult]) -> Ledger
     )
 
 
-def _empty_import_notice(result: LedgerSourceImportResult) -> str | None:
+def _empty_import_notice(result: LedgerSourceImportResult) -> tuple[str, Notice] | None:
     """Return an explanatory line when a parsed import yields zero rows."""
     if result.dry_run or result.imported > 0:
         return None
     if result.skipped > 0:
-        return f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.all_rows_skipped', skipped=result.skipped)}"
-    return f"{tr('cli.ledger.labels.notice')}\t{tr('cli.ledger.import.no_rows_imported')}"
+        message = tr("cli.ledger.import.all_rows_skipped", skipped=result.skipped)
+        return (
+            f"{tr('cli.ledger.labels.notice')}\t{message}",
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.import.all_rows_skipped",
+                message=message,
+                context={"imported": "0", "skipped": str(result.skipped)},
+            ),
+        )
+    message = tr("cli.ledger.import.no_rows_imported")
+    return (
+        f"{tr('cli.ledger.labels.notice')}\t{message}",
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.import.no_rows_imported",
+            message=message,
+            context={"imported": "0", "skipped": "0"},
+        ),
+    )
 
 
 def _validation_lines(

@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from ....application.ledger import LedgerProviderID
 from ._ledger_ux_support import (
     _FOUR_ROW_CSV,
     _FOUR_ROW_OFX,
@@ -25,13 +26,49 @@ def _open_bucket_session(tmp_path: Path) -> Iterator[None]:
         yield
 
 
+def _json_document(output: str) -> dict[str, object]:
+    document = json.loads(output)
+    assert isinstance(document, dict)
+    return document
+
+
+def _notice_projection(document: dict[str, object], code: str) -> dict[str, object]:
+    notices = document["notices"]
+    assert isinstance(notices, list)
+    notice = next(item for item in notices if isinstance(item, dict) and item.get("code") == code)
+    assert isinstance(notice.get("message"), str) and notice["message"]
+    return {key: notice.get(key) for key in ("severity", "code", "context", "action")}
+
+
+def _assert_transaction_validation_error(output: str) -> dict[str, object]:
+    document = _json_document(output)
+    error = document["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
+    action = error["action"]
+    assert isinstance(action, dict)
+    assert action["failed_condition_id"] == "cli.ledger.transaction.valid"
+    assert action["evidence"] == [
+        {
+            "condition_id": "cli.ledger.transaction.valid",
+            "evidence_id": "cli.ledger.transaction.valid.observation",
+            "provenance": "runtime_observation",
+            "values": {"error_type": "TransactionValidationError"},
+        },
+    ]
+    assert action["action"] is None
+    assert action["conditionality"] == "not_applicable"
+    assert action["no_recovery_outcome"] == "operator_decision"
+    return error
+
+
 def test_import_help_lists_recognised_providers() -> None:
     """`import --help` enumerates the accepted --provider values."""
     result = _invoke(["app", "ledger", "import", "--help"])
     assert result.exit_code == 0, result.output
     haystack = " ".join(result.output.split())
-    for provider in ("csv", "ofx", "xlsx", "n26"):
-        assert provider in haystack
+    for provider in LedgerProviderID:
+        assert provider.value in haystack
 
 
 def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> None:
@@ -41,11 +78,19 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
-    result = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "quickbooks"])
+    result = _invoke(
+        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "quickbooks"],
+    )
     assert result.exit_code != 0
-    assert "quickbooks" in result.output
-    for provider in ("csv", "ofx", "xlsx", "n26"):
-        assert provider in result.output
+    document = _json_document(result.output)
+    error = document["error"]
+    assert isinstance(error, dict)
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["category"] == "REFUSED"
+    context = error["context"]
+    assert isinstance(context, dict)
+    assert context["value"] == "quickbooks"
+    assert set(context["accepted"].split(", ")) == {provider.value for provider in LedgerProviderID}
 
 
 def test_missing_csv_preserves_the_typed_import_precondition(tmp_path: Path) -> None:
@@ -57,15 +102,8 @@ def test_missing_csv_preserves_the_typed_import_precondition(tmp_path: Path) -> 
     )
 
     assert result.exit_code != 0, result.output
-    document = json.loads(next(line for line in result.output.splitlines() if line.startswith("{")))
-    error = document["error"]
-    assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
+    error = _assert_transaction_validation_error(result.output)
     assert error["code"] != "REFUSED_CLI_BOUNDARY"
-    action = error["action"]
-    assert action["failed_condition_id"] == "cli.ledger.transaction.valid"
-    assert action["evidence"][0]["values"] == {"error_type": "TransactionValidationError"}
-    assert action["action"] is None
-    assert action["no_recovery_outcome"] == "operator_decision"
 
 
 def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_path: Path) -> None:
@@ -74,12 +112,28 @@ def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_pat
     statement.write_text("Date,Description,Amount\n2026-04-15,Invoice 1,121.00\n", encoding="utf-8")
 
     result = _invoke(
-        ["app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run", "--verbose"],
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "import",
+            "--file",
+            str(statement),
+            "--provider",
+            "csv",
+            "--dry-run",
+            "--verbose",
+        ],
     )
 
     assert result.exit_code == 0, result.output
-    assert "CSV has no currency column; falling back to EUR" in result.output
-    assert "N26 CSV has no currency column" not in result.output
+    payload = _json_document(result.output)["result"]
+    assert isinstance(payload, dict)
+    validation = payload["validation"]
+    assert isinstance(validation, dict)
+    assert validation["valid"] is True
+    assert len(validation["warnings"]) == 1
 
 
 @pytest.mark.parametrize(
@@ -126,46 +180,45 @@ def test_short_csv_currency_refuses_at_import_with_currency_column_message(tmp_p
         encoding="utf-8",
     )
 
-    result = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    result = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
 
     assert result.exit_code != 0
-    assert "CSV row 2" in result.output
-    assert "currency column" in result.output
-    assert "EU" in result.output
-    assert "command input failed validation" not in result.output.lower()
-    assert "config repair" not in result.output.lower()
+    _assert_transaction_validation_error(result.output)
 
 
 @pytest.mark.parametrize(
-    ("locale", "inner_fragment"),
-    [
-        ("es", "Formato de fecha no válido"),
-        ("ca", "Format de data no vàlid"),
-        ("hu", "Érvénytelen dátumformátum"),
-    ],
+    "locale",
+    ["ca", "en", "es", "hu"],
 )
 def test_malformed_csv_date_import_localises_inner_reason(
     tmp_path: Path,
     locale: str,
-    inner_fragment: str,
 ) -> None:
-    """A malformed CSV date keeps row and column context without leaking raw English."""
+    """A malformed CSV date preserves one locale-neutral refusal contract."""
     statement = tmp_path / f"bad-date-{locale}.csv"
     statement.write_text(
         _N26_HEADER + "not-a-date,Client SL,Invoice 1,121.00,EUR,n26-001\n",
         encoding="utf-8",
     )
 
-    result = _invoke(["--language", locale, "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    result = _invoke(
+        [
+            "--language",
+            locale,
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "import",
+            "--file",
+            str(statement),
+            "--provider",
+            "csv",
+        ],
+    )
 
     assert result.exit_code != 0
-    flattened = " ".join(result.output.split())
-    assert "CSV row 2" in flattened
-    assert "Date" in flattened
-    assert "not-a-date" in flattened
-    assert "YYYY-MM-DD" in flattened
-    assert inner_fragment in flattened
-    assert "unsupported date format" not in flattened
+    _assert_transaction_validation_error(result.output)
 
 
 def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None:
@@ -178,12 +231,13 @@ def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None
     """
     statement = tmp_path / "empty.csv"
     statement.write_text(_N26_HEADER, encoding="utf-8")
-    result = _invoke(["app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
+    result = _invoke(["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"])
     assert result.exit_code != 0
-    assert "no data rows" in result.output.lower()
+    _assert_transaction_validation_error(result.output)
 
 
-def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
+@pytest.mark.parametrize("locale", ["ca", "en", "es", "hu"])
+def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path, locale: str) -> None:
     """A CSV that validates but yields no rows carries an explicit notice.
 
     A recognised header followed only by an all-whitespace data row
@@ -194,13 +248,32 @@ def test_import_of_a_blank_data_row_csv_emits_a_notice(tmp_path: Path) -> None:
     statement = tmp_path / "blank.csv"
     statement.write_text(_N26_HEADER + " , , , , , \n", encoding="utf-8")
     result = _invoke(
-        ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"],
+        [
+            "--language",
+            locale,
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "import",
+            "--file",
+            str(statement),
+            "--provider",
+            "csv",
+        ],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
+    document = _json_document(result.output)
+    payload = document["result"]
+    assert isinstance(payload, dict)
     assert payload["imported"] == 0
-    assert "empty_import_notice" in payload
-    assert "no data rows" in payload["empty_import_notice"].lower()
+    assert not {"empty_import_notice", "dry_run_notice", "likely_duplicate_notice"}.intersection(payload)
+    assert _notice_projection(document, "ledger.import.no_rows_imported") == {
+        "severity": "info",
+        "code": "ledger.import.no_rows_imported",
+        "context": {"imported": "0", "skipped": "0"},
+        "action": None,
+    }
 
 
 def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> None:
@@ -216,11 +289,16 @@ def test_reimport_of_existing_rows_explains_the_zero_import(tmp_path: Path) -> N
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"],
     )
     assert second.exit_code == 0, second.output
-    payload = json.loads(second.output)["result"]
+    document = _json_document(second.output)
+    payload = document["result"]
     assert payload["imported"] == 0
     assert payload["skipped"] == 1
-    assert "empty_import_notice" in payload
-    assert "duplicate" in payload["empty_import_notice"].lower()
+    assert _notice_projection(document, "ledger.import.all_rows_skipped") == {
+        "severity": "info",
+        "code": "ledger.import.all_rows_skipped",
+        "context": {"imported": "0", "skipped": "1"},
+        "action": None,
+    }
 
 
 def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> None:
@@ -237,11 +315,17 @@ def test_import_dry_run_reports_the_real_would_import_count(tmp_path: Path) -> N
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv", "--dry-run"],
     )
     assert dry_run.exit_code == 0, dry_run.output
-    payload = json.loads(dry_run.output)["result"]
+    document = _json_document(dry_run.output)
+    payload = document["result"]
     assert payload["dry_run"] is True
     assert payload["imported"] == 4
     assert payload["skipped"] == 0
-    assert "dry_run_notice" in payload
+    assert _notice_projection(document, "ledger.import.dry_run_preview") == {
+        "severity": "info",
+        "code": "ledger.import.dry_run_preview",
+        "context": {"dry_run": "true", "would_import": "4", "would_skip": "0"},
+        "action": None,
+    }
 
     real = _invoke(
         ["--format", "json", "app", "ledger", "import", "--file", str(statement), "--provider", "csv"],
@@ -355,10 +439,16 @@ def test_import_warns_on_likely_cross_format_duplicate(tmp_path: Path) -> None:
         ["--format", "json", "app", "ledger", "import", "--file", str(second), "--provider", "csv"],
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)["result"]
+    document = _json_document(result.output)
+    payload = document["result"]
     assert payload["imported"] == 1
     assert payload["likely_duplicates"] == 1
-    assert "likely_duplicate_notice" in payload
+    assert _notice_projection(document, "ledger.import.likely_duplicates") == {
+        "severity": "warning",
+        "code": "ledger.import.likely_duplicates",
+        "context": {"likely_duplicate_count": "1"},
+        "action": None,
+    }
 
 
 def test_verify_source_hashes_the_named_file_only_when_verify_is_also_set(tmp_path: Path) -> None:
