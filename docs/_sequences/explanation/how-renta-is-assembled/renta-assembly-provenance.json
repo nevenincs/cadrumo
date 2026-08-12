@@ -118,15 +118,16 @@
         "command": "modelo.work.calculate",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
               "reason": "source_issue",
+              "remedy": "Declare each descendant on the active profile, with its date of birth, before filing.",
               "source_kind": "minimo_descendientes_undeclared"
             },
             "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero because the active profile declares no renta_family.descendiente facts. If you have children or other eligible descendants, the Art. 58 LIRPF allowance is being silently omitted",
-            "severity": "warning",
-            "suggestion": "Declare them with `aeat config profile descendiente add --descendiente NACIMIENTO=YYYY-MM-DD[,...]` before filing."
+            "severity": "warning"
           }
         ],
         "result": {
