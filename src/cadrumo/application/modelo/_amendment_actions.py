@@ -107,33 +107,46 @@ def _load_amendment_baseline[CasillaKey](
         )
     if baseline.external_evidence is None:
         raise AmendmentEvidenceMissingError(
-            f"filing record {from_filing_record_id!r} has no external_evidence; the "
-            f"modelo amend path requires an imported AEAT-attested baseline. Use the "
-            f"standard re-file path (calculate → verify → file) for locally-filed returns.",
+            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            context={
+                "filing_record_id": from_filing_record_id,
+                "external_evidence_present": False,
+            },
         )
     if baseline.status is not ModeloRecordStatus.VIGENTE:
         raise AmendmentTargetStateError(
-            f"filing record {from_filing_record_id!r} is in status {baseline.status.value!r}; "
-            f"only CURRENT filings can be amended",
+            translated_message="errors.error.error_modelo_amendment_target_state",
+            context={
+                "filing_record_id": from_filing_record_id,
+                "record_status": baseline.status.value,
+            },
         )
 
     work_units = work_unit_repository.load()
     work_unit = work_units.get(baseline.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(
-            f"filing record {from_filing_record_id!r} references missing work_unit_id={baseline.work_unit_id!r}",
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={
+                "filing_record_id": from_filing_record_id,
+                "work_unit_id": baseline.work_unit_id,
+            },
         )
 
     revisions = calculation_repository.load()
     baseline_revision = revisions.get(baseline.calculation_revision_id)
     if baseline_revision is None:
         raise CalculationRevisionNotFoundError(
-            f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue",
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": baseline.calculation_revision_id},
         )
     if work_unit.modelo == Modelo.M303.value and baseline_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
-            f"filing record {from_filing_record_id!r} references an evidence-less Modelo 303 revision; "
-            "amendment requires the baseline's complete immutable filing-instance evidence",
+            translated_message="errors.error.error_modelo_amendment_evidence_missing",
+            context={
+                "filing_record_id": from_filing_record_id,
+                "filing_instance_evidence_present": False,
+            },
         )
 
     canonical_overrides = _reject_unknown_override_casillas(

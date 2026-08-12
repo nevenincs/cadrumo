@@ -291,7 +291,7 @@ def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
     """An addressed work unit that is not in the active bucket's
     catalogue surfaces as ``WorkUnitNotFoundError``."""
 
-    with pytest.raises(WorkUnitNotFoundError, match=r"not found"):
+    with pytest.raises(WorkUnitNotFoundError):
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id="0" * 64,
