@@ -100,3 +100,143 @@ def test_no_assertion_leaves_the_axis_unstated_rather_than_defaulted(kind: Invoi
     )
 
     assert declared.supply_nature is None, "an unanswered axis must stay unanswered, never default"
+
+
+# -- the OTHER sanctioned source, which nothing read ------------------------
+#
+# The governing ADR names two sources for this axis and the suite above covered
+# one. The citation axis was fully built, exported on the domain facade and
+# covered by its own suite -- and had NO production caller, so the gap message
+# telling an operator that a printed statutory citation settles this named a
+# route that could not fire. A document printing an art. 21 exemption asked
+# them anyway.
+#
+# The provenance is again the contract. A citation is established by the PAGE,
+# so it is stamped DOCUMENT_EVIDENCE: an auditor asking why this record says
+# goods is sent to the printed article, not to a person. A wiring that reused
+# the operator stamp would pass every value check while telling the auditor to
+# go and ask someone about a fact the document states.
+
+#: Prints an article the table reads, and it establishes GOODS by the law's own
+#: definition -- art. 21 exempts "las entregas de bienes expedidos o
+#: transportados fuera de la Comunidad".
+_GOODS_CITATION = "Exencion art. 21 LIVA"
+
+
+def test_a_printed_citation_now_settles_the_nature() -> None:
+    """The measured gap: this route existed and could not fire."""
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        printed_citation=_GOODS_CITATION,
+    )
+
+    assert declared.supply_nature is not None, "the printed citation did not reach the criteria"
+    assert declared.supply_nature.value is SupplyNature.GOODS
+
+
+def test_a_citation_derived_nature_is_backed_by_the_page_not_by_a_person() -> None:
+    """The provenance contract, and the reason a value-only check is insufficient.
+
+    An auditor asking why this record says goods must be sent to the printed
+    article. Reusing the operator stamp would make the document's own statement
+    indistinguishable from somebody vouching for it.
+    """
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        printed_citation=_GOODS_CITATION,
+    )
+
+    assert declared.supply_nature is not None
+    assert declared.supply_nature.source is ClassifierInputSource.DOCUMENT_EVIDENCE
+
+
+@pytest.mark.parametrize("kind", [InvoiceKind.ISSUED, InvoiceKind.RECEIVED])
+def test_the_citation_is_direction_independent_like_the_assertion(kind: InvoiceKind) -> None:
+    """The supply's own property still does not swap sides when the filer does."""
+    declared = _declared_facts(
+        kind=kind,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        printed_citation=_GOODS_CITATION,
+    )
+
+    assert declared.supply_nature is not None, f"the citation did not reach the criteria on {kind}"
+    assert declared.supply_nature.value is SupplyNature.GOODS
+
+
+def test_the_operators_own_answer_beats_the_printed_citation() -> None:
+    """They hold the document and can see a mention the reader mis-transcribed.
+
+    So an assertion is a CORRECTION rather than a duplicate, and it must win --
+    including its provenance, because the record should say a person vouched
+    for this rather than that the page did.
+    """
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        supply_nature=SupplyNature.SERVICES,
+        printed_citation=_GOODS_CITATION,
+    )
+
+    assert declared.supply_nature is not None
+    assert declared.supply_nature.value is SupplyNature.SERVICES
+    assert declared.supply_nature.source is ClassifierInputSource.OPERATOR_ASSERTION
+
+
+@pytest.mark.parametrize(
+    "printed",
+    [None, "", "Factura sujeta al regimen general", "Inversion del sujeto pasivo, art. 84 LIVA"],
+    ids=["no-legend", "empty-legend", "no-article-cited", "article-establishing-nothing"],
+)
+def test_a_document_establishing_nothing_still_leaves_the_axis_open(printed: str | None) -> None:
+    """The precision half, and the ordinary outcome for the domestic majority.
+
+    A domestic invoice is obliged to cite no article at all, and art. 84's
+    sub-rules reach goods and services alike -- the table records it as
+    establishing nothing rather than omitting it, so a caller can see it was
+    read. Neither may be turned into a nature.
+    """
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        printed_citation=printed,
+    )
+
+    assert declared.supply_nature is None
+
+
+def test_reading_the_citation_is_what_settles_it() -> None:
+    """Mutation proof: without the derivation the citing document asks again.
+
+    Re-runs the pre-change builder, which consulted only the operator's answer.
+    It leaves the axis open on a document that plainly cites art. 21 -- which is
+    the dormant route this closes. Without this the suite would prove a nature
+    ARRIVES, not that reading the citation is what produced it.
+    """
+    without_citation = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+    )
+    with_citation = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        printed_citation=_GOODS_CITATION,
+    )
+
+    assert without_citation.supply_nature is None
+    assert with_citation.supply_nature is not None

@@ -74,6 +74,8 @@ from ...domain.iva import (
     IvaRateKind,
     IvaTerritorialScope,
     SupplyNature,
+    SupplyNatureDerivationOutcome,
+    derive_supply_nature_from_citation,
     record_country_code_status,
 )
 from ._classification_assembly import (
@@ -222,6 +224,7 @@ def _declared_facts(
     filer_scope: IvaTerritorialScope | None,
     stated_category: DeclaredFact[IvaCategory] | None,
     supply_nature: SupplyNature | None = None,
+    printed_citation: str | None = None,
 ) -> DeclaredFacts:
     """Place each resolved fact on the party it belongs to, by direction.
 
@@ -258,6 +261,33 @@ def _declared_facts(
         if supply_nature is None
         else DeclaredFact(value=supply_nature, source=ClassifierInputSource.OPERATOR_ASSERTION)
     )
+    # The OTHER sanctioned source, read here because nothing read it before. The
+    # citation axis was built, exported and covered, and had no production
+    # caller -- so the gap message telling an operator that a printed statutory
+    # citation settles this named a route that could not fire, and a document
+    # printing an art. 25 mention asked them anyway.
+    #
+    # Stamped DOCUMENT_EVIDENCE rather than OPERATOR_ASSERTION because the
+    # backing genuinely is the page: an auditor asking why this record says
+    # goods is sent to the printed article, not to a person. That is the
+    # distinction the source enum exists to keep.
+    #
+    # The operator's own answer WINS, and is checked first. They hold the
+    # document and can see a mention the reader mis-transcribed, so an
+    # assertion is a correction rather than a duplicate.
+    derived_nature = asserted_nature
+    if derived_nature is None:
+        derivation = derive_supply_nature_from_citation(printed_citation=printed_citation)
+        # Only DERIVED yields a value. CONTRADICTED deliberately carries no
+        # nature -- the record refuses to hold one side of a disagreement -- and
+        # ABSENT is the ordinary outcome for the domestic majority, which is
+        # obliged to cite no article at all.
+        if derivation.outcome is SupplyNatureDerivationOutcome.DERIVED and derivation.nature is not None:
+            derived_nature = DeclaredFact(
+                value=derivation.nature,
+                source=ClassifierInputSource.DOCUMENT_EVIDENCE,
+            )
+    asserted_nature = derived_nature
     if kind is InvoiceKind.RECEIVED:
         return DeclaredFacts(
             issuer_scope=counterparty_scope,
@@ -390,6 +420,11 @@ def resolve_confirmed_establishment(
         # authority working from weaker evidence than the rule table.
         stated_category=declared_category_from_document_record(draft.iva_category),
         supply_nature=supply_nature,
+        # The mention the reader already recovers, handed to the citation axis.
+        # Both readers carry it -- the structured path reads it exactly from the
+        # record, the model path transcribes it -- so wiring it here reaches
+        # every lane rather than the one it was written for.
+        printed_citation=draft.regime_legend,
     )
     assembly = assemble_classification_criteria(
         # The operator's override layers over the printed date, parsed through
