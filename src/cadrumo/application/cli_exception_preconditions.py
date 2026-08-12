@@ -99,7 +99,7 @@ def cli_exception_envelope_view(error: BaseException) -> BaseException:
     from ..core.errors import CadrumoError, CoreValidationError, get_registered_error_code
 
     if isinstance(error, MissingOptionalExtraError):
-        context: dict[str, object] = {
+        safe_context: Mapping[str, object] = {
             "extra": error.extra.extra,
             "import_name": error.extra.import_name,
             "importable": False,
@@ -109,7 +109,7 @@ def cli_exception_envelope_view(error: BaseException) -> BaseException:
         and error.context is not None
         and error.context.get("section") == "aeat.pre303"
     ):
-        context = {
+        safe_context = {
             "section": "aeat.pre303",
             "validation_error_type": (
                 type(error.__cause__).__name__ if error.__cause__ is not None else "ValidationError"
@@ -126,7 +126,7 @@ def cli_exception_envelope_view(error: BaseException) -> BaseException:
         view.__dict__.pop(attribute, None)
     view.args = (code.message_key,)
     view.translated_message = code.message_key
-    view.context = context
+    view.context = dict(safe_context)
     return view
 
 

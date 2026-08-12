@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Callable
 
 import pytest
 import sqlalchemy.exc as sa_exc
@@ -87,14 +88,14 @@ def test_terminal_nested_llm_validation_preserves_typed_refusal_in_every_locale(
     ],
 )
 def test_terminal_validation_fails_closed_without_one_typed_candidate(
-    dispatch: object,
+    dispatch: Callable[[], object],
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     """Non-typed and ambiguous nested validation retain the generic outcome."""
     from .._terminal_errors import run_standalone_with_error_contract
 
     with pytest.raises(SystemExit):
-        run_standalone_with_error_contract(dispatch, argv=["--format", "json"])  # type: ignore[arg-type]
+        run_standalone_with_error_contract(dispatch, argv=["--format", "json"])
     action = json.loads(capsys.readouterr().err)["error"]["action"]
     assert action["failed_condition_id"] == "cli.validation.boundary_clean"
     assert action["action"] is None

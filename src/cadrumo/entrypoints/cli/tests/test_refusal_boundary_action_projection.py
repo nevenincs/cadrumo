@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
@@ -146,11 +147,10 @@ def test_nested_llm_request_validation_projects_its_terminal_verdict(locale: str
 
 
 @pytest.mark.parametrize(
-    "validation_input",
+    "validate",
     [
-        (LLMRequest, {"prompt": "valid", "max_tokens": 0}),
-        (
-            TypeAdapter(tuple[LLMRequest, PromptDefinition]),
+        lambda: LLMRequest.model_validate({"prompt": "valid", "max_tokens": 0}),
+        lambda: TypeAdapter(tuple[LLMRequest, PromptDefinition]).validate_python(
             (
                 {"prompt": " \t"},
                 {"id": "Not canonical", "version": 1, "template": "{{ value }}", "description": "x"},
@@ -158,19 +158,15 @@ def test_nested_llm_request_validation_projects_its_terminal_verdict(locale: str
         ),
     ],
 )
-def test_nested_validation_fails_closed_without_one_typed_verdict(validation_input: tuple[object, object]) -> None:
+def test_nested_validation_fails_closed_without_one_typed_verdict(validate: Callable[[], object]) -> None:
     """No typed candidate and multiple typed candidates retain the generic outcome."""
-    validator, value = validation_input
     validation_app = typer.Typer()
 
     @validation_app.command()
     @command_error_boundary
     def validate_request(json_out: bool = typer.Option(False, "--json")) -> None:
         del json_out
-        if isinstance(validator, TypeAdapter):
-            validator.validate_python(value)
-        else:
-            validator.model_validate(value)  # type: ignore[union-attr]
+        validate()
 
     result = invoke_typer_app(validation_app, ["--json"], catch_exceptions=False)
 
