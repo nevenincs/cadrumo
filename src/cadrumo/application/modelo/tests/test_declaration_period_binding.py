@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -71,6 +73,11 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="tax_residence.ccaa", value="madrid"),
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
             UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -153,6 +160,9 @@ def _calculate_303(*, filing_year: int, period: str, period_date: date, tmp_path
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_CLOCK,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-declaration-period-binding"
+            ),
         )
 
 

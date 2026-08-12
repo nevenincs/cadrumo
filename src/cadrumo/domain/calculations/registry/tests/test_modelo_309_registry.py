@@ -7,6 +7,7 @@ from datetime import date
 import pytest
 
 from .....core.resources import bundled_path
+from ....iva import IvaLedgerObservationRole
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
 from ._registry_schema_support import _committed_modelo
 
@@ -114,6 +115,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
             flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("25000"),
             iva_amount=Decimal("5250"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(
             ledger_id="recargo-devolucion",
@@ -123,6 +125,7 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("100"),
             iva_amount=Decimal("21"),
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)

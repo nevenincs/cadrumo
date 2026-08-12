@@ -243,6 +243,7 @@ def _seed_from_source(
     entry = ProrrataRegisterEntry(
         ejercicio=ejercicio,
         regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=source.percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,

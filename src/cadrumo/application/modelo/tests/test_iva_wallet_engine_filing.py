@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....core import AuthProviderKind
 from ....core.config import Settings
@@ -81,6 +83,9 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-engine-filing"
+            ),
         )
         seed_clean_cross_period_sources(
             work_unit,
@@ -181,6 +186,9 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=decided_1t_at,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit_1t.period, reference="test:iva-wallet-engine-filing"
+            ),
         )
         assert revision_1t.casilla_values[_M303_RESULTADO_CASILLA] < Decimal("0")
         generated_carry = revision_1t.casilla_values[_M303_DISPONIBLE_CASILLA]
@@ -242,6 +250,9 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit_2t.period, reference="test:iva-wallet-engine-filing"
+                ),
             )
 
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"

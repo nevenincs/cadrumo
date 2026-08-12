@@ -117,6 +117,26 @@ class IvaCashAccountingTreatment(StrEnum):
     SUPPLIER_REGIME = "supplier_regime"
 
 
+class IvaLedgerObservationRole(StrEnum):
+    """The reporting role of an IVA ledger observation.
+
+    This is deliberately independent from
+    :class:`IvaCashAccountingTreatment`.  A cash-accounting operation creates
+    an informational art. 75 projection at its operation date and monetary
+    settlement projections at each payment (or the statutory fallback) date.
+    Both carry the same treatment affiliation, while their role tells registry
+    bindings which projection they are permitted to consume.
+
+    Ordinary IVA observations are monetary projections too, so they use
+    :attr:`SETTLEMENT`.  That keeps normal IVA bindings on one role while
+    reserving :attr:`OPERATION_INFORMATIONAL` for Modelo 303 boxes 62, 63, 74,
+    and 75.
+    """
+
+    OPERATION_INFORMATIONAL = "operation_informational"
+    SETTLEMENT = "settlement"
+
+
 class IvaCashAccountingPaymentEvidence(BaseModel):
     """Collection/payment evidence for an operation affected by criterio de caja.
 

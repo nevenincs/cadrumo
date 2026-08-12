@@ -21,7 +21,15 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core import Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistryModeloObservation
-from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
+from ....domain.deadlines import (
+    EntityType,
+    IVARegime,
+    LegalEntityForm,
+    M303RegimeComposition,
+    M303TaxTerritory,
+    ModeloIVAProfile,
+    TaxpayerProfile,
+)
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -82,6 +90,14 @@ def _workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
         activity_start_date=date(2020, 1, 1),
         incn_prior_12_months=incn,
         new_entity_first_two_profit_periods=False,
+        iva=ModeloIVAProfile(
+            tax_territory=M303TaxTerritory.COMMON_REGIME,
+            regime_composition=M303RegimeComposition.GENERAL,
+            redeme_enrolled=False,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
+        ),
     )
 
 
@@ -93,7 +109,10 @@ def _seed_profile(*, bucket_id: str, incn: Decimal | None) -> None:
         UserProfileFact(path="identity.legal_name", value="Taller Sol Sociedad Limitada"),
         UserProfileFact(path="activities.description", value="taller mecanico"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.oss_enrolled", value=False),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
         UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
         UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
         UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
@@ -232,6 +251,7 @@ def _seed_legacy_zero_m202_revision(
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=_ZERO_M202_CASILLA_VALUES,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -384,12 +404,12 @@ def test_m202_legacy_zero_revision_cannot_verify_file_or_export(tmp_path: Path) 
             )
         export_context = export_error.value.context
         assert export_context is not None
-        modelo = export_context["modelo"]
-        assert isinstance(modelo, str)
-        assert modelo == "202"
-        reason = export_context["reason"]
-        assert isinstance(reason, str)
-        assert "no complete export_layouts definition" in reason
+        export_modelo = export_context["modelo"]
+        assert isinstance(export_modelo, str)
+        assert export_modelo == "202"
+        export_reason = export_context["reason"]
+        assert isinstance(export_reason, str)
+        assert "no complete export_layouts definition" in export_reason
         assert export_path.exists() is False
 
 
@@ -401,7 +421,10 @@ def test_m202_wrong_state_still_refuses_file_before_required_binding_gate(tmp_pa
             bucket_id=_BUCKET_ID,
         )
 
-        with pytest.raises(CalculationRevisionStateError) as state_error:
+        with pytest.raises(
+            CalculationRevisionStateError,
+            match="error_modelo_calculation_revision_state",
+        ) as state_error:
             file_modelo_revision(
                 revision.calculation_revision_id,
                 actor="operator-test",

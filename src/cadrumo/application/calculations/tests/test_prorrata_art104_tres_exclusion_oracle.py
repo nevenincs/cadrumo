@@ -36,6 +36,7 @@ from ....domain.iva import (
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     ProrrataInputs,
     compute_prorrata_definitiva_anual,
@@ -83,6 +84,7 @@ def _con_derecho_locales(con_derecho_volume: Decimal) -> IvaLedgerObservation:
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=con_derecho_volume,
         iva_amount=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -96,6 +98,7 @@ def _sin_derecho_viviendas(sin_derecho_volume: Decimal) -> IvaLedgerObservation:
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=sin_derecho_volume,
         iva_amount=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -108,6 +111,7 @@ def _excluded_non_habitual_inmueble() -> IvaLedgerObservation:
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=_EXCLUDED_NON_HABITUAL_INMUEBLE_SALE,
         iva_amount=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

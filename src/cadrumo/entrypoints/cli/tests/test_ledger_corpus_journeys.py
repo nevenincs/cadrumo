@@ -7,6 +7,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....tests.registry_observations import registry_grounded_observations
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,
@@ -300,12 +302,14 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
         period=period,
         revision_id="2009-y-siguientes",
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-corpus-journey")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx,),
+        filing_instance_evidence=filing_instance_evidence,
     )
     now = datetime(2026, 5, 2, 9, 0, tzinfo=UTC)
     WorkUnitCatalogueRepository().save(
@@ -347,6 +351,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
                     updated_at=now,
                     verified_at=now,
                     verified_by="operator",
+                    filing_instance_evidence=filing_instance_evidence,
                 ),
             },
         ),

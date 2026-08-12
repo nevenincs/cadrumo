@@ -95,7 +95,7 @@ from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
 from ._result_disposition_resolution import resolve_modelo_result_disposition
-from ._revision_persistence import persist_filed_revision
+from ._revision_persistence import persist_filed_revision, require_filing_instance_evidence_for_work_unit
 from ._verification_actions import (
     cross_period_expected_member_sets_from_profile,
     require_cross_period_clean_state,
@@ -314,6 +314,7 @@ def file_modelo_revision(
         raise WorkUnitNotFoundError(
             f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
         )
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=target)
     require_revision_parent_active(
         work_unit=work_unit,
         calculation_revision_id=calculation_revision_id,

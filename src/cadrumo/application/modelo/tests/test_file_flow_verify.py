@@ -469,6 +469,7 @@ def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
         input_values_by_casilla_id=inputs,
         binding_overrides=overrides_map,
         casilla_values=casillas,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=rid,

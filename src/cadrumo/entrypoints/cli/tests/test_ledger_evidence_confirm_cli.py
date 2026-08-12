@@ -371,3 +371,105 @@ def test_confirm_never_writes_a_file_to_disk(tmp_path_factory: pytest.TempPathFa
     )  # fmt: skip
     assert confirmed.exit_code == 0, confirmed.output
     assert list(empty_dir.iterdir()) == []
+
+
+# -- the supply-nature answer channel, at the operator's end ----------------
+#
+# The application half already accepts this answer, stamps it
+# OPERATOR_ASSERTION and places it direction-independently, because
+# goods-or-services is a property of the SUPPLY rather than of a party. What
+# these cases gate is the half an operator can reach: an answer with no way to
+# type it is not an answer channel, and the axis stayed unstated on every real
+# confirm until the option existed.
+
+
+def test_confirm_accepts_the_operators_supply_nature_answer(tmp_path: Path) -> None:
+    """The channel exists and a stated answer does not disturb the confirm."""
+    evidence_id = _add_evidence(tmp_path)
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+            "--supply-nature", "goods",
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code == 0, confirmed.output
+    assert json.loads(confirmed.output)["result"]["created"] is True
+
+
+@pytest.mark.parametrize("answer", ["goods", "services"])
+def test_both_answers_are_reachable(tmp_path: Path, answer: str) -> None:
+    """Two members and no third, so both must be typeable.
+
+    A channel accepting one of the two would silently make the other
+    unanswerable, which is indistinguishable from never asking.
+    """
+    evidence_id = _add_evidence(tmp_path, filename=f"factura-{answer}.xml")
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+            "--supply-nature", answer,
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code == 0, confirmed.output
+
+
+def test_an_answer_outside_the_closed_set_is_refused_and_names_what_is_accepted(
+    tmp_path: Path,
+) -> None:
+    """Declaring the enum as the option type is what makes the set discoverable.
+
+    A late string-compare refusal would be a bare "value invalid" the operator
+    cannot act on. Typed at the boundary, click renders the accepted members on
+    the parse failure itself.
+    """
+    evidence_id = _add_evidence(tmp_path)
+
+    refused = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+            "--supply-nature", "livestock",
+        ],
+    )  # fmt: skip
+
+    assert refused.exit_code != 0
+    assert "goods" in refused.output
+    assert "services" in refused.output
+
+
+def test_not_answering_leaves_the_confirm_exactly_as_it_was(tmp_path: Path) -> None:
+    """The precision half: the answer is optional and absence states nothing.
+
+    An absent answer must leave the axis unstated so the assembly can still
+    report the gap -- rather than defaulting to a nature, which would be a
+    guess wearing an operator's provenance.
+    """
+    evidence_id = _add_evidence(tmp_path)
+
+    confirmed = _invoke(
+        [
+            "--format", "json", "app", "ledger", "evidence", "confirm",
+            "--country-code", "ES",
+            "--evidence-id", evidence_id,
+            "--kind", "received",
+            "--counterparty-name", "Acme Suministros SL",
+        ],
+    )  # fmt: skip
+
+    assert confirmed.exit_code == 0, confirmed.output
+    assert json.loads(confirmed.output)["result"]["created"] is True

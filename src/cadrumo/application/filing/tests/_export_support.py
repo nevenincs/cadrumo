@@ -26,6 +26,7 @@ from .. import (
     AmendmentEvidence,
     FilingElectionFacts,
     FilingProducerSnapshot,
+    GeneralFilingProfileFacts,
     Modelo111ProfileFacts,
     ModeloOperatorProfile,
     PresenterIdentity,
@@ -71,6 +72,32 @@ def _typed_producer_snapshot(*, complementaria: bool = False) -> FilingProducerS
             prior_domiciliation=PriorDomiciliationElection.KEEP,
         ),
         amendment_evidence=amendment,
+        m303_filing_facts=None,
+        refund_account=None,
+        charge_account=None,
+    )
+
+
+def _typed_modelo_131_producer_snapshot() -> FilingProducerSnapshot:
+    return build_filing_producer_snapshot(
+        modelo=Modelo.M131,
+        taxpayer_tax_id="12345678Z",
+        taxpayer_identity=TaxpayerIdentityFacts(
+            legal_name=None,
+            given_name="Ana",
+            surnames="Prueba",
+            full_name="Ana Prueba",
+        ),
+        presenter=PresenterIdentity(tax_id="00000000T", full_name="Gestoría Prueba"),
+        model_profile=GeneralFilingProfileFacts(),
+        elections=FilingElectionFacts(
+            result_disposition=ResultDisposition.INGRESO,
+            payment=PaymentElection.INGRESO,
+            refund=RefundElection.COMPENSAR,
+            prior_domiciliation=PriorDomiciliationElection.KEEP,
+        ),
+        amendment_evidence=None,
+        m303_filing_facts=None,
         refund_account=None,
         charge_account=None,
     )
@@ -191,6 +218,7 @@ def _provider_without_export_layout(provider: RegistrySchemaAccessor, modelo: st
     subview = provider.get_subview(modelo)
     return RegistrySchemaAccessor(
         collections=provider.collections,
+        snapshots=provider.snapshots,
         subviews={
             **provider.subviews,
             modelo: replace(subview, export_layout_ids=(), export_layouts=()),
@@ -206,6 +234,7 @@ def _provider_with_export_layouts(
     subview = provider.get_subview(modelo)
     return RegistrySchemaAccessor(
         collections=provider.collections,
+        snapshots=provider.snapshots,
         subviews={
             **provider.subviews,
             modelo: replace(

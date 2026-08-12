@@ -263,6 +263,11 @@ def compare_taxation_modes(
             enum_binding_values=enum_binding_values,
             relation_values=resolved_relations,
             date_binding_values=resolved_dates or None,
+            # The individual/joint cuota differential is an IRPF comparison, so
+            # it states the absence of M303 filing facts rather than inheriting
+            # it from a default.
+            m303_regimen_simplificado_scope=None,
+            m303_annual_orden=None,
         )
         return result.values
 

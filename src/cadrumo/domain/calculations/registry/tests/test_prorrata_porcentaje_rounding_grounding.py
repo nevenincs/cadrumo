@@ -48,7 +48,13 @@ from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla
 
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
-from ....iva import ProrrataInputs, ProrrataKind, compute_prorrata_general
+from ....iva import (
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    ProrrataInputs,
+    ProrrataKind,
+    compute_prorrata_general,
+)
 from .. import RegistryRoundingCode, calculate_registry_snapshot, resolve_ledger_iva_aggregation_binding_values
 from .._formula_runtime_ops import apply_rounding
 
@@ -130,6 +136,9 @@ def _registry_percentage(filing_year: int, con_derecho: Decimal, total: Decimal)
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
     )
     return result.values[_PORCENTAJE_ID]
 

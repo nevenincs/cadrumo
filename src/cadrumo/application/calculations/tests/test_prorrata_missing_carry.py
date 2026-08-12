@@ -61,7 +61,9 @@ def test_missing_provisional_advisory_names_prior_definitive_follow_up() -> None
 
 def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() -> None:
     applicability = derive_prorrata_applicability(
-        register_entries=(ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.GENERAL),),
+        register_entries=(
+            ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+        ),
     )
 
     diagnostic = build_prorrata_missing_provisional_advisory(
@@ -77,7 +79,9 @@ def test_missing_provisional_advisory_names_inicio_action_for_first_ejercicio() 
 
 def test_missing_provisional_advisory_is_silent_when_prorrata_does_not_apply() -> None:
     applicability = derive_prorrata_applicability(
-        register_entries=(ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.NINGUNA),),
+        register_entries=(
+            ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
+        ),
         declared_volume_total=Decimal("100000.00"),
         declared_volume_con_derecho=Decimal("100000.00"),
     )

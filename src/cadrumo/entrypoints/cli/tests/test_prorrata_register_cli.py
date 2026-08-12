@@ -105,6 +105,92 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     }
 
 
+def test_evidence_reference_persists_the_explicit_option_and_revocation() -> None:
+    """The option and its revocation each reach the register through one verb."""
+    option = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--percentage",
+            "60",
+            "--evidence-reference",
+            "operator-option-2025",
+        ]
+    )
+    assert option.exit_code == 0, option.output
+    assert _json(option)["entry"]["especial_transition"] == {
+        "kind": ProrrataEspecialTransitionKind.OPCION.value,
+        "evidence_reference": "operator-option-2025",
+    }
+
+    revocation = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "revoke-especial",
+            "--ejercicio",
+            "2026",
+            "--percentage",
+            "60",
+            "--evidence-reference",
+            "operator-revocation-2026",
+        ]
+    )
+    assert revocation.exit_code == 0, revocation.output
+    entries = _prorrata_entries()
+    assert entries[-1]["especial_transition"] == {
+        "kind": ProrrataEspecialTransitionKind.REVOCACION.value,
+        "evidence_reference": "operator-revocation-2026",
+    }
+
+
+def test_elect_especial_without_evidence_records_an_explicit_continuation() -> None:
+    """An especial regime already in force continues without manufacturing an option."""
+    first = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2025",
+            "--percentage",
+            "60",
+            "--evidence-reference",
+            "operator-option-2025",
+        ]
+    )
+    assert first.exit_code == 0, first.output
+
+    continuation = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "ledger",
+            "prorrata",
+            "elect-especial",
+            "--ejercicio",
+            "2026",
+            "--percentage",
+            "60",
+        ]
+    )
+    assert continuation.exit_code == 0, continuation.output
+    assert _json(continuation)["entry"]["especial_transition"] is None
+
+
 def test_elect_general_persists_general_register_entry() -> None:
     result = _invoke(
         [
@@ -341,7 +427,11 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
         )
         repository.save(
             ProrrataRegister(
-                entries=(ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL),),
+                entries=(
+                    ProrrataRegisterEntry(
+                        ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+                    ),
+                ),
                 sector_definitions=(definition,),
             )
         )
@@ -350,6 +440,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
             ProrrataRegisterEntry(
                 ejercicio=2025,
                 regime=ProrrataRegisterRegime.ESPECIAL,
+                especial_transition=None,
                 provisional_percentage=Decimal("60"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             )
@@ -414,6 +505,7 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
         entry = ProrrataRegisterEntry(
             ejercicio=2025,
             regime=ProrrataRegisterRegime.ESPECIAL,
+            especial_transition=None,
             provisional_percentage=Decimal("60"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         )

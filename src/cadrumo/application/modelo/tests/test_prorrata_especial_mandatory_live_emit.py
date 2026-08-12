@@ -41,13 +41,15 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import (
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
     Modelo,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
 from ....core.resources import resources
-from ....domain.iva import InputClassification
+from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegisterEntry, SectorDefinition
 from ....domain.transactions import (
     BusinessClassification,
@@ -121,6 +123,12 @@ def _purchase(
             "iva_amount": cuota,
             "input_classification": classification,
             "prorrata_sector_id": sector_id,
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{provider_id}",
+                evidence_digest="6" * 64,
+            ),
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -141,6 +149,7 @@ def _declare(regime: ProrrataRegisterRegime, *, percentage: Decimal, sector_id: 
         ProrrataRegisterEntry(
             ejercicio=_EJERCICIO,
             regime=regime,
+            especial_transition=None,
             sector_id=sector_id,
             provisional_percentage=percentage,
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
@@ -350,6 +359,7 @@ def test_silent_for_sectorized_register(tmp_path: Path) -> None:
                 ProrrataRegisterEntry(
                     ejercicio=_EJERCICIO,
                     regime=ProrrataRegisterRegime.GENERAL,
+                    especial_transition=None,
                     sector_id=sector_id,
                     provisional_percentage=_GENERAL_PCT,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,

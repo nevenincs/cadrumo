@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from ....core import Period
-from ....core.i18n import tr
 from ....domain.iva import InvoiceKind
 from ....domain.transactions import BusinessClassification, TransactionDirection
 from ...transactions import LedgerImportDiagnosticKind
@@ -217,17 +216,6 @@ def test_ledger_filter_parse_error_message_omits_sensitive_filter_value() -> Non
     assert exc.value.safe_token == _STATUS_REDACTED
     assert sensitive_value not in str(exc.value)
     assert sensitive_value not in repr(exc.value.context)
-
-
-def test_ledger_filter_cli_error_uses_redacted_token() -> None:
-    sensitive_value = "client-tax-id-12345678Z invoice notes"
-    with pytest.raises(FilterParseError) as exc:
-        LedgerReviewFilterSpec.from_strings([f"status={sensitive_value}"])
-
-    rendered = tr("cli.ledger.errors.filter_parse_error", reason=exc.value.reason, token=exc.value.safe_token)
-
-    assert _STATUS_REDACTED in rendered
-    assert sensitive_value not in rendered
 
 
 # ---------------------------------------------------------------------

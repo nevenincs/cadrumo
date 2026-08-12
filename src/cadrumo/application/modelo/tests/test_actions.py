@@ -326,6 +326,7 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -951,6 +952,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         binding_overrides=binding_overrides,
         relation_overrides=relation_overrides,
         casilla_values=result.values,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,

@@ -44,7 +44,11 @@ from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import calculate_registry_snapshot
-from ....domain.iva import IvaCategory
+from ....domain.iva import (
+    IvaCategory,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -151,6 +155,10 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
+            m303_annual_orden=None,
         )
 
     # The intracom cuota self-assesses as output IVA (devengada leg, art. 84)...
@@ -184,6 +192,10 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
             inputs=inputs,
             binding_values=binding_values,
             date_context={"filing_period": date(_YEAR, 12, 31)},
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
+            m303_annual_orden=None,
         )
     assert result.values[_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA] > Decimal("0"), (
         "intracom autorepercutido cuota was dropped from the deducible total — "

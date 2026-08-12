@@ -5277,17 +5277,6 @@ role = "producer"
 reason = "src/cadrumo/application/workflow/_profile_health.py:385 assess_active_profile_health_with_session: dictionary supplies 'next_action' as the current action or no-recovery value (restore access to the active profile secret store, then retry) for its consumer."
 
 [[disposition]]
-path = "src/cadrumo/core/_optional_extras.py"
-enclosing_symbol = "MissingOptionalExtraError.__init__"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "extra.install_hint"
-role = "producer"
-reason = "src/cadrumo/core/_optional_extras.py:122 MissingOptionalExtraError.__init__: super supplies 'suggestion' as the current action or no-recovery value (extra.install_hint) for its consumer."
-migration_step = "S65"
-exception_observations = ["selector|super_init|suggestion|extra.install_hint|1"]
-
-[[disposition]]
 path = "src/cadrumo/core/errors/__init__.py"
 enclosing_symbol = "ActiveProfilePointerError.__init__"
 candidate_role = "command_literal"
@@ -5322,17 +5311,6 @@ alias = "<command-literal>"
 action_identity = "aeat config repair --help"
 role = "producer"
 reason = "src/cadrumo/core/external_constants.py:375 AeatSection.pre303: the concrete command is the 'suggestion' payload supplied to CoreValidationError; it currently creates executable recovery or continuation guidance."
-
-[[disposition]]
-path = "src/cadrumo/core/external_constants.py"
-enclosing_symbol = "AeatSection.pre303"
-candidate_role = "producer"
-alias = "suggestion"
-action_identity = "aeat config repair --help"
-role = "producer"
-reason = "src/cadrumo/core/external_constants.py:365 AeatSection.pre303: CoreValidationError supplies 'suggestion' as the current action or no-recovery value (aeat config repair --help) for its consumer."
-migration_step = "S65"
-exception_observations = ["selector|constructor_keyword|suggestion|'aeat config repair --help'|1"]
 
 [[disposition]]
 path = "src/cadrumo/domain/auth/apoderamientos/_catalogue.py"

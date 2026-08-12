@@ -182,6 +182,10 @@ def _write_m303_filing_evidence(path: Path) -> None:
                 applicability_reference=FilingEvidenceReference(
                     reference="test:quickfile:exonerado-390:not-applicable",
                 ),
+                endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,
@@ -363,7 +367,7 @@ def test_quickfile_m115_reaches_granted_verify_before_withdrawn_export(
     assert "Traceback" not in result.output
     payload = _payload(result.output)
     assert payload["completed"] is False, result.output
-    assert payload["stopped_at_stage"] == "export"
+    assert payload["stopped_at_stage"] == "export", json.dumps(payload, sort_keys=True)
     assert payload["granted_verificado_completo"] is True
     assert payload["work_unit_id"]
     assert payload["calculation_revision_id"]
@@ -409,7 +413,7 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withd
     assert "Traceback" not in result.output
     payload = _payload(result.output)
     assert payload["completed"] is False, result.output
-    assert payload["stopped_at_stage"] == "export"
+    assert payload["stopped_at_stage"] == "export", json.dumps(payload, sort_keys=True)
     assert payload["granted_verificado_completo"] is True
 
     statuses = _stage_status(payload)

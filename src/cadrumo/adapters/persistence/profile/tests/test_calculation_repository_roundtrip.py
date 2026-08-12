@@ -102,6 +102,10 @@ def _filing_instance_evidence() -> FilingInstanceEvidence:
             exonerado_390=M303Exonerado390FilingEvidence(
                 applicable=False,
                 applicability_reference=FilingEvidenceReference(reference="test:persistence:exonerado-390"),
+                endpoints=(),
+                activity_rows=(),
+                operaciones_terceros_declarables=None,
+                operaciones_terceros_reference=None,
             ),
             regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
                 scope_decision=scope,
@@ -381,7 +385,7 @@ def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
             payload=_json.dumps(envelope).encode("utf-8"),
         )
 
-        with pytest.raises(ValidationError, match="does not match the derived id"):
+        with pytest.raises(ValidationError, match="filing_instance_evidence"):
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
@@ -468,6 +472,7 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
         binding_overrides=original.binding_overrides,
         casilla_values=original.casilla_values,
         source_transaction_ids=original.source_transaction_ids,
+        filing_instance_evidence=None,
     )
     legacy_revision = original.model_copy(
         update={

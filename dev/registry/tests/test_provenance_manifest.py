@@ -8,6 +8,11 @@ import inspect
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core import (
+    M303ProrrataActivityProjectionField,
+    M303ProrrataActivityProjectionRef,
+    validated_casilla_id,
+)
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.domain.calculations.registry import (
     ExportFieldDefinition,
@@ -29,6 +34,7 @@ from .._provenance_manifest import (
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     loader_semantic_digest,
+    semantic_map_digest,
 )
 from .._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
@@ -110,6 +116,69 @@ def _semantic_map() -> SemanticMap:
                     "source_refs": ("aeat-dr-200-2025",),
                 },
             ),
+        },
+    )
+
+
+def _projection_ref(
+    field: M303ProrrataActivityProjectionField = M303ProrrataActivityProjectionField.CNAE,
+) -> M303ProrrataActivityProjectionRef:
+    return M303ProrrataActivityProjectionRef(
+        projection_kind="m303_prorrata_activity",
+        slot=1,
+        field=field,
+        casilla_id=validated_casilla_id("500", surface="test"),
+    )
+
+
+def _projection_semantic_map(reference: M303ProrrataActivityProjectionRef) -> SemanticMap:
+    return SemanticMap.model_validate(
+        {
+            "modelo": "200",
+            "design_epoch": "2025",
+            "records": (
+                {
+                    "sheet": "Registro tipo 1",
+                    "record_identity": "registro-tipo-1",
+                    "export_record_id": "registro-tipo-1",
+                    "record_type": "declaracion",
+                },
+            ),
+            "entries": (
+                {
+                    "anchor": {
+                        "sheet": "Registro tipo 1",
+                        "source_row": 14,
+                        "source_cell": "A14",
+                        "ordinal": 1,
+                        "record_identity": "registro-tipo-1",
+                    },
+                    "export_field_id": "registro-tipo-1.prorrata-cnae",
+                    "kind": "projection",
+                    "projection_ref": reference,
+                    "legal_refs": ("ley-27-2014:art-40",),
+                    "source_refs": ("aeat-dr-200-2025",),
+                },
+            ),
+        },
+    )
+
+
+def _projection_field(reference: M303ProrrataActivityProjectionRef) -> ExportFieldDefinition:
+    return ExportFieldDefinition.model_validate(
+        {
+            "id": "registro-tipo-1.prorrata-cnae",
+            "offset": 1,
+            "length": 1,
+            "kind": "projection",
+            "projection_ref": reference,
+            "data_type": "text",
+            "required": True,
+            "padding": "none",
+            "justification": "none",
+            "signed": False,
+            "legal_refs": ("ley-27-2014:art-40",),
+            "source_refs": ("aeat-dr-200-2025",),
         },
     )
 
@@ -225,7 +294,7 @@ def _field_derivation() -> ExportFieldDerivation:
 
 def _render_profile() -> RenderProfile:
     return RenderProfile(
-        schema_version=RENDER_PROFILE_SCHEMA_VERSION,
+        schema_version=1,
         design_identity=RenderProfileDesignIdentity(
             modelo="200",
             design_epoch="2025",
@@ -398,6 +467,36 @@ def test_loader_semantic_digest_detects_allowed_values_change() -> None:
 
     assert loader_semantic_digest(constrained_layout) == loader_semantic_digest(reordered_layout)
     assert loader_semantic_digest(constrained_layout) != loader_semantic_digest(changed_layout)
+
+
+def test_provenance_digests_and_derivation_equality_include_the_typed_projection_ref() -> None:
+    """A changed repeated-row owner cannot retain semantic or loader provenance."""
+    initial_ref = _projection_ref()
+    changed_ref = _projection_ref(M303ProrrataActivityProjectionField.OPERACIONES_TOTAL)
+    initial_map = _projection_semantic_map(initial_ref)
+    changed_map = _projection_semantic_map(changed_ref)
+    initial_field = _projection_field(initial_ref)
+    changed_field = _projection_field(changed_ref)
+    base_layout = _one_field_layout()
+    initial_layout = base_layout.model_copy(
+        update={"records": (base_layout.records[0].model_copy(update={"fields": (initial_field,)}),)},
+    )
+    changed_layout = base_layout.model_copy(
+        update={"records": (base_layout.records[0].model_copy(update={"fields": (changed_field,)}),)},
+    )
+
+    assert semantic_map_digest(initial_map) != semantic_map_digest(changed_map)
+    assert loader_semantic_digest(initial_layout) != loader_semantic_digest(changed_layout)
+
+    with pytest.raises(ValidationError, match="emitted projection_ref does not match semantic-map entry"):
+        ExportFieldDerivation(
+            export_record_id="registro-tipo-1",
+            parser_field=_intermediate().sheets[0].fields[0],
+            semantic_entry=initial_map.entries[0],
+            field=changed_field,
+            normalization_schema_version=EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
+            derivation_code="text-an-v1",
+        )
 
 
 def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsafe_paths() -> None:

@@ -122,7 +122,7 @@ def cli_exception_envelope_view(error: BaseException) -> BaseException:
     view = BaseException.__new__(type(error))
     assert isinstance(view, CadrumoError)
     view.__dict__.update(error.__dict__)
-    for attribute in ("extra", "install_hint", "name", "path"):
+    for attribute in ("extra", "name", "path"):
         view.__dict__.pop(attribute, None)
     view.args = (code.message_key,)
     view.translated_message = code.message_key

@@ -413,6 +413,7 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
     # Q1 window excludes the May row; expected = the two Q1 input bases.
     assert result_q1.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == sum(
@@ -432,6 +433,7 @@ def test_repository_backed_aggregation_emits_casilla_02_sum(
         bucket_id="test",
         period=_Q2_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
     # Q2 cumulative window includes all three input bases.
     expected_q2 = sum((q1_a_base, q1_b_base, q2_base), Decimal("0"))
@@ -464,6 +466,7 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert {o.transaction_id for o in result.observations} == {in_window.transaction_id}
@@ -500,6 +503,7 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
     full_scan = aggregate_renta_gasto_ledger(catalogue, bucket_id="test", period=_Q1_2024)
 
@@ -662,15 +666,12 @@ def test_unmarked_unclassified_row_still_reports_the_generic_state() -> None:
 # ---------------------------------------------------------------------------
 
 
-def _profile_with_iva_regime(regime_value: str | None) -> UserProfileRecord:
-    """A user profile carrying an optional ``iva.regime`` fact."""
-    facts = (UserProfileFact(path="identity.tax_id", value="X1234567L"),)
-    if regime_value is not None:
-        facts = (*facts, UserProfileFact(path="iva.regime", value=regime_value))
+def _profile_with_iva_regime(*iva_facts: UserProfileFact) -> UserProfileRecord:
+    """Build a user-profile record from explicitly supplied IVA facts."""
     return UserProfileRecord(
         profile_id="44444444-4444-4444-8444-444444444444",
         display_name="M130 IVA Regime Tester",
-        facts=facts,
+        facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *iva_facts),
     )
 
 
@@ -706,16 +707,27 @@ def test_repository_wrapper_exento_iva_regime_joins_the_full_iva_to_the_quarterl
             period=_Q1_2024,
             transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
             profile_record=profile_record,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
         )
         assert result.issues == ()
         return result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA]
 
-    exento_total = _run(_profile_with_iva_regime("EXENTO"))
+    exento_total = _run(
+        _profile_with_iva_regime(
+            UserProfileFact(path="iva.regime", value="EXENTO"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        ),
+    )
     assert exento_total == Decimal("9600.00")
 
     # Without the EXENTO fact the historic base-only behaviour stands: only the
     # net-of-IVA base is deductible, proving the ratio is the actual selector.
-    general_total = _run(_profile_with_iva_regime(None))
+    general_total = _run(_profile_with_iva_regime())
     assert general_total == Decimal("8000.00")
 
 
@@ -747,6 +759,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         ),
@@ -756,6 +769,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert result.issues == ()
@@ -783,13 +797,14 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         TransactionCatalogue.from_transactions((row,)),
     )
     ProrrataRegisterRepository(bucket_id="test", objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA),
+        ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
     )
 
     result = aggregate_renta_gasto_ledger_from_repositories(
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
 
     assert result.issues == ()
@@ -822,6 +837,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
         ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         ),
@@ -831,6 +847,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
         bucket_id="test",
         period=_Q1_2024,
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
     assert m130_result.issues == ()
     assert m130_result.casilla_aggregation.casilla_values[_M130_GASTOS_CASILLA] == Decimal("1063.00")
@@ -841,6 +858,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
         transaction_repository=TransactionCatalogueRepository(bucket_id="test", objects=secure_objects),
         invoice_repository=InvoiceCatalogueRepository(bucket_id="test", objects=secure_objects),
         profile_year=2024,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id="test", objects=secure_objects),
     )
     assert m100_result.issues == ()
     assert m100_result.observations[0].deductible_amount == Decimal("1063.00")

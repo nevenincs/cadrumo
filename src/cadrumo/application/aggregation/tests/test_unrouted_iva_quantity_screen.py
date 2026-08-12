@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.resources import resources
@@ -39,6 +40,7 @@ from ....domain.iva import (
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaDeductionClassificationProvenance,
+    IvaLedgerObservationRole,
     IvaRateKind,
     derive_flow_for_classification,
 )
@@ -70,6 +72,9 @@ class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
     def __init__(self, *, transaction_repository: TransactionCatalogueRepository | None = None) -> None:
         super().__init__(
             transaction_repository=transaction_repository,
+            prorrata_register_repository=ProrrataRegisterRepository(
+                bucket_id=(transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID),
+            ),
             investment_asset_register=BienesInversionIvaRegister(),
             investment_asset_profile_id=(
                 transaction_repository.bucket_id if transaction_repository is not None else _BUCKET_ID
@@ -135,6 +140,7 @@ def _row(category: IvaCategory) -> IvaLedgerObservation:
             source_locator=f"fixture:{category.value}",
             evidence_digest="d" * 64,
         ),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

@@ -48,6 +48,8 @@ from typing import Literal
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -245,6 +247,11 @@ def _store_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -286,6 +293,9 @@ def _calculate_m303_quarter(secure_objects: SecureObjectRepository, *, period: s
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
         clock=_FILE_AT,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period, reference="test:m303-recargo-cross-period"
+        ),
     )
 
 

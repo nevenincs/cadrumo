@@ -145,6 +145,12 @@ def _seed_profile(
         "identity.name": name,
         "activities.description": activity,
         "iva.regime": iva_regime,
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
     if extra_values:
         values.update(extra_values)

@@ -16,7 +16,13 @@ from ....core import (
     FilingProducerKey,
     FilingProjectionRef,
     M303DifferentiatedDeductionProjectionRef,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
     M303ProrrataActivityProjectionRef,
+    M303RegimenSimplificadoActivityProjectionRef,
+    M303RegimenSimplificadoFactProjectionRef,
+    M303RegimenSimplificadoModuleProjectionRef,
+    filing_projection_ref_casilla_id,
 )
 from ....core.aggregation import RelationAggregation
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -777,9 +783,9 @@ class ExportFieldDefinition(RegistryModel):
     binding: BindingId | None = None
     literal: str | None = None
     producer_key: FilingProducerKey | None = None
+    projection_ref: FilingProjectionRef | None = None
     draft_attribute: ExportDraftAttribute | None = None
     computed_key: ExportComputedKey | None = None
-    projection_ref: FilingProjectionRef | None = None
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"]
     required: bool
     padding: ExportPaddingValue
@@ -797,17 +803,33 @@ class ExportFieldDefinition(RegistryModel):
         """Return the exact numbered endpoint carried by this field, if any."""
         if self.casilla_id is not None:
             return self.casilla_id
-        if isinstance(
-            self.projection_ref,
-            M303ProrrataActivityProjectionRef | M303DifferentiatedDeductionProjectionRef,
-        ):
-            return self.projection_ref.casilla_id
-        return None
+        if self.projection_ref is None:
+            return None
+        return filing_projection_ref_casilla_id(self.projection_ref)
 
     @field_validator("allowed_values")
     @classmethod
     def _canonicalise_allowed_values(cls, value: tuple[str, ...] | None) -> tuple[str, ...] | None:
         return None if value is None else tuple(sorted(value))
+
+    @field_validator("projection_ref", mode="before")
+    @classmethod
+    def _require_loader_hydrated_projection_ref(cls, value: object) -> object:
+        """Refuse raw projection identities outside the canonical TOML loader."""
+        if value is None or isinstance(
+            value,
+            M303ProrrataActivityProjectionRef
+            | M303DifferentiatedDeductionProjectionRef
+            | M303RegimenSimplificadoActivityProjectionRef
+            | M303RegimenSimplificadoFactProjectionRef
+            | M303RegimenSimplificadoModuleProjectionRef
+            | M303Exonerado390ActivityProjectionRef
+            | M303Exonerado390OperacionesTercerosProjectionRef,
+        ):
+            return value
+        raise RegistryValidationError(
+            "projection_ref must be a loader-hydrated FilingProjectionRef; raw mappings and strings are forbidden",
+        )
 
     @model_validator(mode="after")
     def _validate_field_kind(self) -> ExportFieldDefinition:
@@ -816,9 +838,9 @@ class ExportFieldDefinition(RegistryModel):
             ExportSemanticPayloadAxis.BINDING: self.binding,
             ExportSemanticPayloadAxis.LITERAL: self.literal,
             ExportSemanticPayloadAxis.PRODUCER_KEY: self.producer_key,
+            ExportSemanticPayloadAxis.PROJECTION_REF: self.projection_ref,
             ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
             ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
-            ExportSemanticPayloadAxis.PROJECTION_REF: self.projection_ref,
         }
         required = export_semantic_payload_axis(self.kind)
         declared = tuple(axis for axis, value in payloads.items() if value is not None)
@@ -965,6 +987,37 @@ class ExportRecordDefinition(RegistryModel):
         if value is not None and not value.strip():
             raise RegistryValidationError("export record binding_record must be non-empty")
         return value
+
+    def repeat_field_family_failure(self, *, allow_unresolved_binding_record: bool = True) -> str | None:
+        """Return the exact repeat/payload-family contradiction, if any."""
+        has_binding = any(field.kind == CasillaFieldKind.BINDING for field in self.fields)
+        has_projection = any(field.kind == CasillaFieldKind.PROJECTION for field in self.fields)
+        claims_binding = has_binding or self.binding_record is not None
+        if claims_binding and has_projection:
+            return "export record cannot mix binding and projection fields"
+        if self.repeat == "projection_rows":
+            if claims_binding:
+                return "projection-row export record cannot contain binding fields"
+            if not has_projection:
+                return "export record repeats projection rows but has no projection fields"
+            return None
+        if self.repeat == "binding_rows":
+            if has_projection:
+                return "binding-row export record cannot contain projection fields"
+            if not has_binding and self.binding_record is None:
+                return "export record repeats binding rows but has no binding fields"
+            if not allow_unresolved_binding_record and not has_binding:
+                return "binding-row export record did not materialize binding fields"
+            return None
+        if not allow_unresolved_binding_record and self.binding_record is not None and not has_binding:
+            return "fixed binding export record did not materialize binding fields"
+        return None
+
+    @model_validator(mode="after")
+    def _repeat_matches_field_family(self) -> ExportRecordDefinition:
+        if failure := self.repeat_field_family_failure():
+            raise RegistryValidationError(failure)
+        return self
 
 
 def _coerce_export_layout_format(value: object) -> object:

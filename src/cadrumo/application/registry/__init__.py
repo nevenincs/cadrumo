@@ -412,6 +412,11 @@ def verify_filed_state(
         date_context={"filing_period": _calculation_filing_date(filed_observation.period)},
         binding_values=binding_values,
         relation_values=relation_values,
+        # Recomputation reconciles a filed observation's own values, carrying no
+        # filing-instance evidence, so it states the absence of M303 filing facts
+        # rather than inheriting it from a default.
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     casilla_ids = requested_required_casilla_ids or tuple(
         casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED

@@ -1,4 +1,11 @@
-"""Typed projection from canonical M303 prorrata rows to official endpoints."""
+"""Projection from canonical M303 prorrata rows to official endpoints.
+
+The five ``DP30305`` activity rows are durable children of the encrypted
+``ProrrataRegister``. This registry-side module reads the revision's reviewed
+endpoint declarations and projects those row facts into their five fixed
+official slots. It neither introduces an independent scalar input channel nor
+renders a withdrawn export layout.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +25,7 @@ _FIELDS = frozenset(M303ProrrataActivityProjectionField)
 
 
 class M303ProrrataActivityEndpointValue(BaseModel):
-    """One exact typed reference paired with its canonical row value."""
+    """One official endpoint paired with the value projected from its row child."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -27,7 +34,7 @@ class M303ProrrataActivityEndpointValue(BaseModel):
 
 
 class M303ProrrataActivityRowProjection(BaseModel):
-    """The five official endpoint values for one persisted row slot."""
+    """The five reviewed official endpoint values for one persisted row slot."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -35,7 +42,7 @@ class M303ProrrataActivityRowProjection(BaseModel):
     endpoints: tuple[M303ProrrataActivityEndpointValue, ...] = Field(min_length=5, max_length=5)
 
     def endpoint_values(self) -> tuple[M303ProrrataActivityEndpointValue, ...]:
-        """Return endpoint values in the reference-declared field order."""
+        """Return the row's endpoint values in the official field order."""
         return self.endpoints
 
 
@@ -45,7 +52,13 @@ def project_m303_prorrata_activity_rows(
     register: ProrrataRegister,
     ejercicio: int,
 ) -> tuple[M303ProrrataActivityRowProjection, ...]:
-    """Project five canonical rows through an exact typed endpoint matrix."""
+    """Project an applicable register's five row children into a revision's endpoints.
+
+    The registry determines which official box belongs to which fixed row slot;
+    the register determines the values. An inactive prorrata year has no row
+    projection. An active year whose canonical collection is incomplete fails
+    rather than yielding blank or zero endpoint values.
+    """
     if not register.requires_activity_rows_for(ejercicio):
         if projection_refs:
             _validate_projection_refs(projection_refs)
@@ -72,11 +85,11 @@ def _validate_projection_refs(
                 f"m303 prorrata projection has duplicate reference for slot {ref.slot} field {ref.field.value!r}",
             )
         by_field[ref.field] = ref
-    expected = {slot: _FIELDS for slot in range(1, 6)}
-    actual = {slot: frozenset(by_field) for slot, by_field in resolved.items()}
+    expected = {slot: set(_FIELDS) for slot in range(1, 6)}
+    actual = {slot: set(by_field) for slot, by_field in resolved.items()}
     if actual != expected:
         raise RegistryValidationError(
-            "m303 prorrata projection reference matrix is incomplete or malformed: "
+            "m303 prorrata projection endpoint matrix is incomplete or malformed: "
             f"expected {expected!r}, got {actual!r}",
         )
     return resolved
@@ -87,6 +100,7 @@ def _project_row(
     *,
     refs: dict[M303ProrrataActivityProjectionField, M303ProrrataActivityProjectionRef],
 ) -> M303ProrrataActivityRowProjection:
+    """Pair one canonical row's typed values with its revision-selected endpoints."""
     values: dict[M303ProrrataActivityProjectionField, str | Decimal] = {
         M303ProrrataActivityProjectionField.CNAE: row.cnae_code,
         M303ProrrataActivityProjectionField.OPERACIONES_TOTAL: row.operaciones_total,

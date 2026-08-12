@@ -18,6 +18,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
@@ -161,12 +163,14 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         period=period,
         revision_id="2009-y-siguientes",
     )
+    filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-filing-evidence")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
         casilla_values={_REVISION_CASILLA: Decimal("1")},
         source_transaction_ids=(tx_id,),
+        filing_instance_evidence=filing_instance_evidence,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -187,6 +191,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
         verified_at=_NOW,
         verified_by="operator",
         ledger_filing_evidence=evidence,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 

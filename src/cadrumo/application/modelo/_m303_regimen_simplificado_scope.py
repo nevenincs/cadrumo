@@ -33,7 +33,13 @@ def m303_regimen_simplificado_scope_for_profile(
     iva_profile = profile.iva
     if iva_profile is None:
         raise ModeloProfileReadinessError("Modelo 303 requires a complete IVA profile composition")
-    composition = iva_profile.regime_composition
+    return m303_regimen_simplificado_scope_for_composition(iva_profile.regime_composition)
+
+
+def m303_regimen_simplificado_scope_for_composition(
+    composition: M303RegimeComposition,
+) -> M303RegimenSimplificadoScopeDecision:
+    """Map one canonical IVA composition to its closed Modelo 303 scope."""
     if composition is M303RegimeComposition.GENERAL:
         scope = M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED
     elif composition in {M303RegimeComposition.SIMPLIFIED, M303RegimeComposition.MIXED}:
@@ -46,6 +52,7 @@ def m303_regimen_simplificado_scope_for_profile(
 
 
 __all__ = [
+    "m303_regimen_simplificado_scope_for_composition",
     "m303_regimen_simplificado_scope_for_profile",
     "resolve_m303_regimen_simplificado_scope",
 ]

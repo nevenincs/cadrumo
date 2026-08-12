@@ -73,6 +73,7 @@ def seed_sector_carried_definitive_from_register(
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
         regime=regime,
+        especial_transition=None,
         sector_id=sector_id,
         provisional_percentage=prior.definitive_percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,

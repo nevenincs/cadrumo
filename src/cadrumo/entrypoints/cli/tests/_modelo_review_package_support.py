@@ -73,6 +73,7 @@ def seed_exportable_modelo_revision(
         input_values_by_casilla_id=inputs,
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,

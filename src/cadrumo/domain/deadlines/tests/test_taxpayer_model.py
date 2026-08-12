@@ -64,9 +64,6 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.COMMON_REGIME,
             regime_composition=M303RegimeComposition.GENERAL,
-            cash_accounting_regime_enrolled=False,
-            voluntary_sii_enrolled=False,
-            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
             roi_enrolled=True,
             oss_enrolled=True,
             group_member_enrolled=True,
@@ -74,6 +71,9 @@ def _fully_populated_taxpayer() -> TaxpayerProfile:
             sii_enrolled=True,
             redeme_enrolled=True,
             intracommunity_operations_exceed_50000_eur=True,
+            cash_accounting_regime_enrolled=False,
+            voluntary_sii_enrolled=False,
+            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
         ),
         cross_period_group_member_rosters=(
             CrossPeriodGroupMemberRoster(

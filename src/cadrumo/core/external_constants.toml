@@ -40,6 +40,8 @@ irpf_expediente_detail_year_suffix = "RVlt"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 censal_datos = "/wlpl/BUGC-JDIT/MdcAcceso"
+deudas_consulta = "/wlpl/SRVO-JDIT/ConsultaDdas"
+deudas_pagar_todas = "/wlpl/SRVO-JDIT/PagarTodas"
 
 [aeat.clave_permanente]
 # Cl@ve Permanente reuses AEAT's auth-method selector page (the same

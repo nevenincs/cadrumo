@@ -9,6 +9,7 @@ from typing import TypedDict
 
 import pytest
 
+from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind, Period
 from ....core.resources import resources
@@ -18,6 +19,7 @@ from ....domain.iva import (
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaDeductionClassificationProvenance,
+    IvaLedgerObservationRole,
 )
 from ....domain.transactions import (
     BusinessClassification,
@@ -29,13 +31,19 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import aggregate_iva_ledger_observations_from_repositories
+from .. import (
+    IvaLedgerAggregation,
+    aggregate_iva_ledger_observations_from_repositories,
+    resolve_m303_supplier_regime_arrival,
+)
 from ._iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _Q1_2026 = Period.from_year_and_code(2026, "1T")
 _Q2_2026 = Period.from_year_and_code(2026, "2T")
+_Q3_2026 = Period.from_year_and_code(2026, "3T")
+_Q4_2027 = Period.from_year_and_code(2027, "4T")
 _PARITY_BUCKET_ID = "5c5c5c5c-5c5c-4c5c-8c5c-5c5c5c5c5c5c"
 
 
@@ -106,12 +114,16 @@ def _transaction(
 
 
 def _binding_values(*transactions: Transaction, period: Period) -> dict[str, Decimal]:
-    aggregation = aggregate_iva_ledger_observations(
+    aggregation = _aggregation(*transactions, period=period)
+    assert aggregation.issues == ()
+    return resolve_ledger_iva_aggregation_binding_values(_revision_303(), aggregation.observations)
+
+
+def _aggregation(*transactions: Transaction, period: Period) -> IvaLedgerAggregation:
+    return aggregate_iva_ledger_observations(
         TransactionCatalogue.from_transactions(transactions),
         period=period,
     )
-    assert aggregation.issues == ()
-    return resolve_ledger_iva_aggregation_binding_values(_revision_303(), aggregation.observations)
 
 
 class _CommonTransactionFields(TypedDict):
@@ -198,6 +210,181 @@ def test_cash_accounting_purchase_reports_acquisition_information_without_admitt
     assert q2_values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("63.00")
 
 
+def test_supplier_regime_arrival_spans_operation_and_partial_settlements_without_duplicate_evidence() -> None:
+    """The SI fact is period evidence, whereas cash boxes and money use separate roles.
+
+    One received cash-accounting operation deliberately has two same-quarter
+    partial settlements and a later settlement.  The operation information
+    projection and every monetary projection retain the supplier affiliation;
+    the immutable arrival deduplicates the one ledger identity only after that
+    affiliation has established the fact for each relevant filing period.
+    """
+    cash_purchase = _transaction(
+        "supplier-regime-partial",
+        direction=TransactionDirection.OUTGOING,
+        booked_date=date(2026, 4, 10),
+        taxable_base=Decimal("300.00"),
+        iva_amount=Decimal("63.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        operation_date=date(2026, 3, 12),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 14),
+                taxable_base=Decimal("50.00"),
+                iva_amount=Decimal("10.50"),
+            ),
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 28),
+                taxable_base=Decimal("100.00"),
+                iva_amount=Decimal("21.00"),
+            ),
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 4, 10),
+                taxable_base=Decimal("150.00"),
+                iva_amount=Decimal("31.50"),
+            ),
+        ),
+    )
+
+    q1 = _aggregation(cash_purchase, period=_Q1_2026)
+    assert q1.issues == ()
+    assert {observation.observation_role for observation in q1.observations} == {
+        IvaLedgerObservationRole.OPERATION_INFORMATIONAL,
+        IvaLedgerObservationRole.SETTLEMENT,
+    }
+    assert all(
+        observation.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+        for observation in q1.observations
+    )
+    assert sum(
+        (
+            observation.base_amount
+            for observation in q1.observations
+            if observation.observation_role is IvaLedgerObservationRole.SETTLEMENT
+        ),
+        Decimal("0"),
+    ) == Decimal("150.00")
+    assert sum(
+        (
+            observation.base_amount
+            for observation in q1.observations
+            if observation.observation_role is IvaLedgerObservationRole.OPERATION_INFORMATIONAL
+        ),
+        Decimal("0"),
+    ) == Decimal("300.00")
+    assert (
+        tuple(type(observation).model_validate_json(observation.model_dump_json()) for observation in q1.observations)
+        == q1.observations
+    )
+
+    q1_arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=q1)
+    assert q1_arrival.recipient_of_cash_accounting_operations is True
+    assert q1_arrival.source_ledger_ids == (cash_purchase.transaction_id,)
+
+    q2 = _aggregation(cash_purchase, period=_Q2_2026)
+    assert q2.issues == ()
+    assert len(q2.observations) == 1
+    assert q2.observations[0].observation_role is IvaLedgerObservationRole.SETTLEMENT
+    assert q2.observations[0].cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+    assert q2.observations[0].base_amount == Decimal("150.00")
+    assert resolve_m303_supplier_regime_arrival(period=_Q2_2026, iva_aggregation=q2).source_ledger_ids == (
+        cash_purchase.transaction_id,
+    )
+
+
+def test_supplier_regime_arrival_covers_the_statutory_fallback_and_leaves_empty_periods_blank() -> None:
+    """A partial payment leaves a lawful fallback settlement; unrelated periods create no SI artifact."""
+    partially_unpaid_purchase = _transaction(
+        "supplier-regime-fallback",
+        direction=TransactionDirection.OUTGOING,
+        booked_date=date(2026, 3, 12),
+        taxable_base=Decimal("300.00"),
+        iva_amount=Decimal("63.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        operation_date=date(2026, 3, 12),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 20),
+                taxable_base=Decimal("100.00"),
+                iva_amount=Decimal("21.00"),
+            ),
+        ),
+    )
+
+    q1 = _aggregation(partially_unpaid_purchase, period=_Q1_2026)
+    assert q1.issues == ()
+    assert resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=q1).source_ledger_ids == (
+        partially_unpaid_purchase.transaction_id,
+    )
+
+    empty_q3 = _aggregation(partially_unpaid_purchase, period=_Q3_2026)
+    assert empty_q3.observations == ()
+    assert tuple(issue.reason.value for issue in empty_q3.issues) == ("outside_period",)
+    empty_arrival = resolve_m303_supplier_regime_arrival(period=_Q3_2026, iva_aggregation=empty_q3)
+    assert empty_arrival.recipient_of_cash_accounting_operations is False
+    assert empty_arrival.source_ledger_ids == ()
+
+    fallback = _aggregation(partially_unpaid_purchase, period=_Q4_2027)
+    assert fallback.issues == ()
+    assert len(fallback.observations) == 1
+    assert fallback.observations[0].transaction_date == date(2027, 12, 31)
+    assert fallback.observations[0].observation_role is IvaLedgerObservationRole.SETTLEMENT
+    assert fallback.observations[0].base_amount == Decimal("200.00")
+    assert resolve_m303_supplier_regime_arrival(period=_Q4_2027, iva_aggregation=fallback).source_ledger_ids == (
+        partially_unpaid_purchase.transaction_id,
+    )
+
+
+def test_supplier_regime_arrival_excludes_taxpayer_regime_and_keeps_only_supplier_evidence_in_a_mixed_period() -> None:
+    """Taxpayer-regime cash timing is never evidence that the taxpayer received a supplier-regime operation."""
+    taxpayer_cash_sale = _transaction(
+        "taxpayer-regime-sale",
+        direction=TransactionDirection.INCOMING,
+        booked_date=date(2026, 3, 20),
+        taxable_base=Decimal("200.00"),
+        iva_amount=Decimal("42.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.TAXPAYER_REGIME,
+        operation_date=date(2026, 3, 12),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 20),
+                taxable_base=Decimal("200.00"),
+                iva_amount=Decimal("42.00"),
+            ),
+        ),
+    )
+    supplier_cash_purchase = _transaction(
+        "supplier-regime-mixed",
+        direction=TransactionDirection.OUTGOING,
+        booked_date=date(2026, 3, 24),
+        taxable_base=Decimal("100.00"),
+        iva_amount=Decimal("21.00"),
+        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        operation_date=date(2026, 3, 14),
+        cash_accounting_payment_evidence=(
+            IvaCashAccountingPaymentEvidence(
+                payment_date=date(2026, 3, 24),
+                taxable_base=Decimal("100.00"),
+                iva_amount=Decimal("21.00"),
+            ),
+        ),
+    )
+
+    taxpayer_only = _aggregation(taxpayer_cash_sale, period=_Q1_2026)
+    assert (
+        resolve_m303_supplier_regime_arrival(
+            period=_Q1_2026,
+            iva_aggregation=taxpayer_only,
+        ).recipient_of_cash_accounting_operations
+        is False
+    )
+
+    mixed = _aggregation(taxpayer_cash_sale, supplier_cash_purchase, period=_Q1_2026)
+    mixed_arrival = resolve_m303_supplier_regime_arrival(period=_Q1_2026, iva_aggregation=mixed)
+    assert mixed_arrival.recipient_of_cash_accounting_operations is True
+    assert mixed_arrival.source_ledger_ids == (supplier_cash_purchase.transaction_id,)
+
+
 def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_quarter_devengo(
     tmp_path: Path,
 ) -> None:
@@ -235,6 +422,7 @@ def test_repository_backed_projection_matches_the_pure_projection_for_a_cross_qu
         repository_backed = aggregate_iva_ledger_observations_from_repositories(
             bucket_id=profile.bucket_id,
             period=_Q1_2026,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=profile.bucket_id),
         )
 
     assert pure.observations != ()

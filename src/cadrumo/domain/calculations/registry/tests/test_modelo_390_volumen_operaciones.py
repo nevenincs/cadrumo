@@ -44,7 +44,7 @@ import pytest
 from openpyxl import load_workbook
 
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     IvaLedgerObservation,
     ModeloRevision,
@@ -134,6 +134,7 @@ def _observation(
         iva_amount=Decimal("0"),
         recargo_amount=Decimal("0"),
         applied_rate=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

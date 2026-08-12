@@ -52,6 +52,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -196,6 +198,11 @@ def _seed_taxpayer_profile(secure_objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -378,6 +385,9 @@ def _calculate_and_file_m303_quarter(secure_objects: SecureObjectRepository, *, 
         transaction_repository=tx_repo,
         invoice_repository=invoice_repo,
         clock=_FILE_AT,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period, reference="test:invoice-accumulative-cross-modelo"
+        ),
     )
     persist_filed_revision_observation(
         revision=revision,

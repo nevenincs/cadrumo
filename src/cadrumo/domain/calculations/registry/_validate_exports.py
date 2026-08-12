@@ -33,7 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ....core import CasillaId
+from ....core import CasillaId, FilingProjectionRef, filing_projection_ref_casilla_id
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -53,6 +53,7 @@ from ._schema import (
     ModeloRevision,
     SourceReference,
 )
+from ._schema_input_kind import InputKind
 from ._validate_evidence import EvidenceValidator
 from ._validate_export_field_widths import validate_draft_field_slot_width
 from ._validate_helpers import missing_refs as _missing_refs
@@ -97,6 +98,52 @@ def validate_export_layout_section(
                 source_refs=source_refs,
                 evidence=evidence,
             )
+    _validate_projection_endpoint_index(
+        failures,
+        prefix=prefix,
+        revision=revision,
+        casillas=casillas,
+        casilla_by_id=casilla_by_id,
+    )
+
+
+def _validate_projection_endpoint_index(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> None:
+    """Require each typed projection reference and numbered endpoint exactly once."""
+    references_by_casilla: dict[CasillaId, list[FilingProjectionRef]] = {}
+    for reference, fields in revision.projection_endpoint_index().items():
+        if len(fields) != 1:
+            failures.append(
+                f"{prefix}: projection_ref {reference!r} is admitted by {len(fields)} export fields; "
+                "expected exactly one",
+            )
+        casilla_id = filing_projection_ref_casilla_id(reference)
+        if casilla_id is None:
+            continue
+        references_by_casilla.setdefault(casilla_id, []).append(reference)
+        if casilla_id not in casillas:
+            failures.append(f"{prefix}: projection_ref {reference!r} references unknown casilla {casilla_id!r}")
+            continue
+        casilla = casilla_by_id[casilla_id]
+        if casilla.input_kind is not InputKind.PROJECTION_ONLY:
+            failures.append(
+                f"{prefix}: projection_ref {reference!r} references casilla {casilla_id!r} that is not projection_only",
+            )
+        if any(field.id not in casilla.export_refs for field in fields):
+            failures.append(
+                f"{prefix}: projection_ref {reference!r} is not declared by casilla {casilla_id!r}",
+            )
+    for casilla_id, references in references_by_casilla.items():
+        if len(references) != 1:
+            failures.append(
+                f"{prefix}: projection endpoint casilla {casilla_id!r} is addressed by multiple projection_refs",
+            )
 
 
 def _validate_export_record(
@@ -124,12 +171,8 @@ def _validate_export_record(
     """
     if record.binding_record is not None:
         _validate_export_record_binding_link(failures, prefix=prefix, revision=revision, record=record)
-    if (
-        record.repeat == "binding_rows"
-        and not any(field.kind == CasillaFieldKind.BINDING for field in record.fields)
-        and record.binding_record is None
-    ):
-        failures.append(f"{prefix}: export record {record.id!r} repeats binding rows but has no binding fields")
+    if repeat_failure := record.repeat_field_family_failure():
+        failures.append(f"{prefix}: export record {record.id!r}: {repeat_failure}")
     if record.requires_positive_casilla_id is not None and record.requires_positive_casilla_id not in casillas:
         failures.append(
             f"{prefix}: export record {record.id!r} requires unknown positive casilla "

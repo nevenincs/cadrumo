@@ -165,7 +165,7 @@ def render_complete_export_tree(
                 ),
             ),
             "legal_refs": _sorted_refs(legal for field in derivations for legal in field.field.legal_refs),
-            "records": tuple(record.model_dump(mode="python", exclude_none=True) for record in records),
+            "records": records,
         },
     )
     _require_semantic_map_attestation(joined, semantic_map)
@@ -268,9 +268,7 @@ def _render_records(
                     "order": order,
                     "encoding": transport_profile.encoding,
                     "line_ending": transport_profile.line_ending,
-                    "fields": tuple(
-                        item.field.model_dump(mode="python", exclude_none=True) for item in record_derivations
-                    ),
+                    "fields": tuple(item.field for item in record_derivations),
                 },
             ),
         )
@@ -623,9 +621,9 @@ def _schema_field(
                 "binding": semantic_entry.binding,
                 "literal": semantic_entry.literal,
                 "producer_key": semantic_entry.producer_key,
+                "projection_ref": semantic_entry.projection_ref,
                 "draft_attribute": semantic_entry.draft_attribute,
                 "computed_key": semantic_entry.computed_key,
-                "projection_ref": semantic_entry.projection_ref,
                 "data_type": data_type,
                 "required": required,
                 "padding": padding,

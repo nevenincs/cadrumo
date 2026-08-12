@@ -23,7 +23,16 @@ from pydantic import (
     model_validator,
 )
 
-from ....core import CasillaId, Period, PeriodKind, RevisionReviewStatus, TaxDomain, registry_period_kind
+from ....core import (
+    CasillaId,
+    FilingProjectionRef,
+    Period,
+    PeriodKind,
+    RevisionReviewStatus,
+    TaxDomain,
+    filing_projection_ref_casilla_id,
+    registry_period_kind,
+)
 from ....core.aggregation import BindingAggregation, BindingSourceKind, BindingTypedEnumKind
 from ....core.classification import SensitivityClass
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
@@ -1294,6 +1303,25 @@ class ModeloRevision(RegistryModel):
     def label(self) -> str | None:
         """Return the optional official-Spanish revision label."""
         return self.get_label("es")
+
+    def projection_endpoint_index(self) -> Mapping[FilingProjectionRef, tuple[ExportFieldDefinition, ...]]:
+        """Index typed projection endpoints without concealing duplicate declarations."""
+        fields_by_ref: dict[FilingProjectionRef, list[ExportFieldDefinition]] = {}
+        for layout in self.export_layouts:
+            for record in layout.records:
+                for field in record.fields:
+                    if field.projection_ref is not None:
+                        fields_by_ref.setdefault(field.projection_ref, []).append(field)
+        return _frozen_index(fields_by_ref)
+
+    def projection_fields_for_casilla(self, casilla_id: CasillaId) -> tuple[ExportFieldDefinition, ...]:
+        """Return projection fields whose typed reference addresses ``casilla_id``."""
+        return tuple(
+            field
+            for reference, fields in self.projection_endpoint_index().items()
+            if filing_projection_ref_casilla_id(reference) == casilla_id
+            for field in fields
+        )
 
     def producer_inventory(self) -> CasillaProducerInventory:
         """Return the typed producer/declaration inventory for this revision.

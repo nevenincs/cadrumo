@@ -439,6 +439,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
+            filing_instance_evidence=None,
         ),
         work_unit_id=_WORK_UNIT_ID,
         state=CalculationRevisionState.BORRADOR,

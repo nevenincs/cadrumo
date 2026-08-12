@@ -13,7 +13,13 @@ def test_taxpayer_profile_projects_objective_estimation_exclusion_volumes() -> N
     profile = taxpayer_profile_from_mapping(
         {
             "identity.tax_id": "X1234567L",
+            "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "irpf.estimation_regime": "objetiva",
             "irpf.objective_estimation_prior_year_gross_income_eur": "250000.01",
             "irpf.objective_estimation_prior_year_invoice_gross_income_eur": "125000.01",
@@ -36,7 +42,13 @@ def test_taxpayer_profile_projects_objective_estimation_modulos_annual_facts() -
     profile = taxpayer_profile_from_mapping(
         {
             "identity.tax_id": "X1234567L",
+            "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "GENERAL",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
             "irpf.estimation_regime": "objetiva",
             "irpf.objective_estimation_modulos_iae_epigraph": "972.1",
             "irpf.objective_estimation_modulos_module_1_units": "2.50",

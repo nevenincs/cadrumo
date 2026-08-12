@@ -107,6 +107,7 @@ def _seed_work_unit_with_draft_revision() -> tuple[str, str]:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -152,6 +153,7 @@ def _seed_verified_revision_without_inputs(*, modelo: str, filing_year: int, per
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -219,6 +221,12 @@ def _set_emilio_legal_entity_export_profile() -> None:
                 UserProfileFact(path="identity.legal_name", value="Emilio Consulting Sociedad Limitada"),
                 UserProfileFact(path="activities.description", value="Consulting"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="withholding.has_employees", value=True),
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
@@ -273,6 +281,7 @@ def _seed_modelo_111_revisions(
             input_values_by_casilla_id=inputs,
             binding_overrides={},
             casilla_values={},
+            filing_instance_evidence=None,
         )
         revision_ids.append(calculation_revision_id)
         revisions.append(
@@ -341,6 +350,7 @@ def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
         input_values_by_casilla_id=inputs,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     now = datetime.now(UTC)
     work_unit = WorkUnit(
@@ -648,12 +658,12 @@ def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(tmp_path: P
     assert payload["error"]["category"] == "REFUSED"
     assert payload["error"]["context"]["modelo"] == "121"
     assert "export_layouts" in payload["error"]["message"]
-    assert payload["error"]["suggestion"] == "aeat app modelo describe 121"
+    assert "suggestion" not in payload["error"]
     assert not out.exists()
     assert "Traceback" not in result.output
 
 
-def test_export_modelo_303_cli_refuses_without_typed_applicability(tmp_path: Path) -> None:
+def test_export_modelo_303_cli_refuses_revision_without_filing_evidence(tmp_path: Path) -> None:
     work_unit_id, _ = _seed_verified_revision_without_inputs(modelo="303", filing_year=2026, period="1T")
     out = tmp_path / "modelo-303.txt"
 
@@ -673,7 +683,10 @@ def test_export_modelo_303_cli_refuses_without_typed_applicability(tmp_path: Pat
     assert result.exit_code == 5, result.output
     payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"]["context"]["cause"] == ("modelo 303 export requires an explicit applicability envelope")
+    assert payload["error"]["code"] == "FAIL_MODELO_EXPORT"
+    assert payload["error"]["context"]["cause"] == (
+        "modelo 303 filing-instance evidence is required before verification or export"
+    )
     assert not out.exists()
     assert not out.with_name(out.name + ".tmp").exists()
     assert "Traceback" not in result.output

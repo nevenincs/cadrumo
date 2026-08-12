@@ -170,7 +170,7 @@ def test_anti_rot_gate_detects_a_pattern_that_matches_nothing() -> None:
 
 
 def test_derived_patterns_cover_exactly_the_engine_owned_selectors() -> None:
-    """The patterns own the 22 derived selectors and neither operator input.
+    """The patterns own the 23 derived selectors and neither operator input.
 
     ``cotizaciones_ss_madre`` and ``rental_reduccion_art_23_2_tier`` are
     genuine taxpayer input that keep their declarations, so a pattern

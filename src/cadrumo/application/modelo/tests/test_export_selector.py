@@ -53,12 +53,14 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
         input_values_by_casilla_id={_M130_INPUT_CASILLA: "10"},
         binding_overrides={},
         casilla_values={_M130_INPUT_CASILLA: Decimal("10")},
+        filing_instance_evidence=None,
     )
     draft_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={_M130_INPUT_CASILLA: "20"},
         binding_overrides={},
         casilla_values={_M130_INPUT_CASILLA: Decimal("20")},
+        filing_instance_evidence=None,
     )
     verified = CalculationRevision(
         calculation_revision_id=verified_id,

@@ -14,7 +14,6 @@ from ._models import STRICT_FROZEN_CONFIG
 _Identity = Annotated[
     str,
     StringConstraints(
-        strip_whitespace=True,
         min_length=1,
         max_length=160,
         pattern=r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$",
@@ -88,7 +87,7 @@ class M303ProrrataActivityProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_prorrata_activity"] = "m303_prorrata_activity"
+    projection_kind: Literal["m303_prorrata_activity"]
     slot: int = Field(ge=1, le=5)
     field: M303ProrrataActivityProjectionField
     casilla_id: CasillaId
@@ -99,7 +98,7 @@ class M303DifferentiatedDeductionProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_differentiated_deduction"] = "m303_differentiated_deduction"
+    projection_kind: Literal["m303_differentiated_deduction"]
     slot: int = Field(ge=1, le=2)
     field: M303DifferentiatedDeductionProjectionField
     casilla_id: CasillaId
@@ -110,7 +109,7 @@ class M303RegimenSimplificadoActivityProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_regimen_simplificado_activity"] = "m303_regimen_simplificado_activity"
+    projection_kind: Literal["m303_regimen_simplificado_activity"]
     cohort: M303RegimenSimplificadoCohort
     slot: int = Field(ge=1, le=2)
     field: M303RegimenSimplificadoActivityField
@@ -132,7 +131,7 @@ class M303RegimenSimplificadoFactProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_regimen_simplificado_fact"] = "m303_regimen_simplificado_fact"
+    projection_kind: Literal["m303_regimen_simplificado_fact"]
     cohort: M303RegimenSimplificadoCohort
     slot: int = Field(ge=1, le=2)
     fact_identity: _Identity
@@ -143,8 +142,8 @@ class M303RegimenSimplificadoModuleProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_regimen_simplificado_module"] = "m303_regimen_simplificado_module"
-    cohort: Literal[M303RegimenSimplificadoCohort.NO_AGRICOLA] = M303RegimenSimplificadoCohort.NO_AGRICOLA
+    projection_kind: Literal["m303_regimen_simplificado_module"]
+    cohort: Literal[M303RegimenSimplificadoCohort.NO_AGRICOLA]
     slot: int = Field(ge=1, le=2)
     module_order: int = Field(ge=1, le=7)
     value: M303RegimenSimplificadoModuleValue
@@ -155,7 +154,7 @@ class M303Exonerado390ActivityProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_exonerado_390_activity"] = "m303_exonerado_390_activity"
+    projection_kind: Literal["m303_exonerado_390_activity"]
     slot: int = Field(ge=1, le=6)
     field: M303Exonerado390ActivityField
 
@@ -165,7 +164,7 @@ class M303Exonerado390OperacionesTercerosProjectionRef(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    projection_kind: Literal["m303_exonerado_390_operaciones_terceros"] = "m303_exonerado_390_operaciones_terceros"
+    projection_kind: Literal["m303_exonerado_390_operaciones_terceros"]
 
 
 FilingProjectionRef = Annotated[
@@ -206,10 +205,20 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
     for field_name in _STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
             raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
+        string_value = cast(str, payload[field_name])
+        if string_value != string_value.strip():
+            raise ValueError(f"filing projection reference {field_name!r} must not contain surrounding whitespace")
     for integer_field in ("slot", "module_order"):
         if integer_field in payload and type(payload[integer_field]) is not int:
             raise ValueError(f"filing projection reference {integer_field!r} must be an exact integer")
     return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
+
+
+def filing_projection_ref_casilla_id(reference: FilingProjectionRef) -> CasillaId | None:
+    """Return the numbered official endpoint carried by ``reference``, if any."""
+    if isinstance(reference, M303ProrrataActivityProjectionRef | M303DifferentiatedDeductionProjectionRef):
+        return reference.casilla_id
+    return None
 
 
 __all__ = [
@@ -228,4 +237,5 @@ __all__ = [
     "M303RegimenSimplificadoModuleProjectionRef",
     "M303RegimenSimplificadoModuleValue",
     "compile_filing_projection_ref",
+    "filing_projection_ref_casilla_id",
 ]

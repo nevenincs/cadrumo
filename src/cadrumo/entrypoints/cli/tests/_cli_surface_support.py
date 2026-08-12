@@ -50,6 +50,16 @@ def create_cli_surface_profile(label: str = "operator") -> None:
             "Example",
             "--activity",
             "Test",
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
+            "--iva-regime",
+            "GENERAL",
+            "--iva-m303-regime-composition",
+            "general",
+            "--no-iva-redeme-enrolled",
+            "--no-iva-cash-accounting-regime-enrolled",
+            "--no-iva-voluntary-sii-enrolled",
+            "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
         ],
     )
     assert result.exit_code == 0, result.output

@@ -56,10 +56,18 @@ def test_parse_dictionary_casilla_id_accepts_grounded_letter_identities_only_whe
 
 def test_parse_dictionary_casilla_id_rejects_non_casilla_rows() -> None:
     """AEAT dictionaries use `*` to mark non-casilla rows (notes, separators)."""
-    cases = ("", "   ", "*not-a-casilla", "*01", "###", "a", "abc", "01a", "01.5")
+    cases = ("", "   ", "*not-a-casilla", "*01", "###", "a", "AA", "abc", "01a", "01.5")
 
     for raw in cases:
         assert _parse_dictionary_casilla_id(raw) is None, raw
+
+
+def test_parse_dictionary_casilla_id_letter_grammar_stays_one_uppercase_letter() -> None:
+    """Enabling the annex form widens the grammar by exactly one uppercase letter."""
+    cases = ("", "   ", "*A", "###", "a", "m", "AA", "A1", "1A", "abc", "01a", "01.5")
+
+    for raw in cases:
+        assert _parse_dictionary_casilla_id(raw, allow_letter_id=True) is None, raw
 
 
 @pytest.mark.parametrize(
@@ -85,6 +93,22 @@ def test_m100_dictionary_preserves_published_letter_casilla_identities(
     entry = next(item for item in entries if item.field_id == field_id)
 
     assert entry.casilla_id == expected_casilla_id
+
+
+@pytest.mark.parametrize("filing_year", (2024, 2025))
+def test_m100_dictionary_preserves_published_numeric_casilla_identities(filing_year: int) -> None:
+    """Widening the grammar for annex boxes leaves the numeric rows spelled exactly as published."""
+    modelos_by_id, catalogues = _loaded_registry()
+    layout = modelos_by_id["100"].revisions[str(filing_year)].export_layouts[0]
+
+    entries = xml_dictionary_entries(
+        layout,
+        source_root=_source_root(),
+        sources=catalogues.sources,
+    )
+    entry = next(item for item in entries if item.field_id == "TITA")
+
+    assert entry.casilla_id == "0001"
 
 
 # ---------------------------------------------------------------------------

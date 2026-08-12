@@ -36,6 +36,7 @@ class ProrrataEntryPayload(OutputSchema):
 
     ejercicio: int
     regime: str
+    especial_transition: ProrrataEspecialTransitionPayload | None
     sector_id: str | None = None
     interrupted: bool
     provisional_percentage: str | None = None
@@ -45,7 +46,6 @@ class ProrrataEntryPayload(OutputSchema):
     definitive_volume_con_derecho: str | None = None
     definitive_volume_sin_derecho: str | None = None
     source_observation_ref: str | None = None
-    especial_transition: ProrrataEspecialTransitionPayload | None = None
     schema_version: str
 
 

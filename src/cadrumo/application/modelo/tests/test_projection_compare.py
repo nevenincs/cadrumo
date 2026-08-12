@@ -84,6 +84,7 @@ def _seed_revision(
         input_values_by_casilla_id={_M130_INGRESOS_CASILLA: str(value)},
         binding_overrides={},
         casilla_values=values,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -123,6 +124,11 @@ def test_compare_uses_revision_observation_rows_from_registry_snapshot(tmp_path:
                     UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                     UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                     UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                     UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                     UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                     UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),

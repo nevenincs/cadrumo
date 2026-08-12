@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -113,6 +115,11 @@ def _store_profile(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -268,6 +275,9 @@ def _calculate_irene_revision(
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
         clock=_CALCULATED_AT,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period, reference="test:m303-deductible-evidence-gate"
+        ),
     )
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
@@ -704,6 +714,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
     )
     tx_repo.save(TransactionCatalogue.from_transactions((sale,)))
     work_unit = _work_unit()
+    filing_instance_evidence = general_m303_filing_evidence(work_unit.period, reference="test:m303-deductible-evidence")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
@@ -711,6 +722,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         relation_overrides={},
         casilla_values={},
         source_transaction_ids=(sale.transaction_id,),
+        filing_instance_evidence=filing_instance_evidence,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -719,6 +731,7 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
         source_transaction_ids=(sale.transaction_id,),
         created_at=_T0,
         updated_at=_T0,
+        filing_instance_evidence=filing_instance_evidence,
     )
 
     findings = _missing_evidence_findings(

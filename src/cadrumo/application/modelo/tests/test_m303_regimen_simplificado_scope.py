@@ -8,14 +8,18 @@ from pathlib import Path
 import pytest
 
 from ....core import Period
-from ....domain.deadlines import M303RegimeComposition
+from ....domain.deadlines import IVARegime, M303RegimeComposition, TaxpayerProfile
 from ....domain.iva import M303RegimenSimplificadoScope
 from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...user_profile import UserProfileLifecycleRepository
 from .._action_errors import ModeloProfileReadinessError
-from .._m303_regimen_simplificado_scope import resolve_m303_regimen_simplificado_scope
+from .._m303_regimen_simplificado_scope import (
+    m303_regimen_simplificado_scope_for_composition,
+    m303_regimen_simplificado_scope_for_profile,
+    resolve_m303_regimen_simplificado_scope,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -49,7 +53,9 @@ def _store_profile(*, composition: M303RegimeComposition | None) -> None:
     if composition is not None:
         facts = (
             UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
             UserProfileFact(path="iva.m303_regime_composition", value=composition.value),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
             UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
@@ -87,6 +93,8 @@ def test_secure_profile_composition_derives_the_closed_m303_scope(
     composition: M303RegimeComposition,
     expected_scope: M303RegimenSimplificadoScope,
 ) -> None:
+    assert m303_regimen_simplificado_scope_for_composition(composition).scope is expected_scope
+
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile(composition=composition)
 
@@ -102,3 +110,17 @@ def test_secure_profile_without_iva_composition_blocks_m303_scope_resolution(tmp
 
         with pytest.raises(ModeloProfileReadinessError, match="complete IVA profile composition"):
             resolve_m303_regimen_simplificado_scope(_work_unit())
+
+
+def test_raw_unknown_composition_is_refused() -> None:
+    raw_composition: object = "unrecognised"
+
+    with pytest.raises(ModeloProfileReadinessError, match="composition is unknown"):
+        m303_regimen_simplificado_scope_for_composition(raw_composition)  # type: ignore[arg-type]
+
+
+def test_profile_without_iva_is_refused_by_the_profile_mapper() -> None:
+    profile = TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime.GENERAL)
+
+    with pytest.raises(ModeloProfileReadinessError, match="complete IVA profile composition"):
+        m303_regimen_simplificado_scope_for_profile(profile)

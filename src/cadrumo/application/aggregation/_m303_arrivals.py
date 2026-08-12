@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Final
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
 from ...core import (
     STRICT_FROZEN_CONFIG,
@@ -47,7 +47,7 @@ class M303SupplierRegimeArrival(BaseModel):
 
     period: Period
     recipient_of_cash_accounting_operations: bool
-    source_ledger_ids: tuple[str, ...] = Field(default_factory=tuple)
+    source_ledger_ids: tuple[str, ...]
 
     @field_validator("source_ledger_ids")
     @classmethod
@@ -79,8 +79,8 @@ class M303ProrrataTransitionArrival(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     period: Period
-    transition: ProrrataEspecialTransitionKind | None = None
-    register_evidence: tuple[ProrrataRegisterEntry, ...] = Field(default_factory=tuple)
+    transition: ProrrataEspecialTransitionKind | None
+    register_evidence: tuple[ProrrataRegisterEntry, ...]
 
     @property
     def is_applicable(self) -> bool:
@@ -122,7 +122,14 @@ def resolve_m303_supplier_regime_arrival(
     period: Period,
     iva_aggregation: IvaLedgerAggregation,
 ) -> M303SupplierRegimeArrival:
-    """Derive the recipient fact solely from the canonical IVA observation set."""
+    """Derive the recipient fact solely from the canonical IVA observation set.
+
+    This fact records supplier-regime participation in the filing period, not a
+    monetary box contribution.  It therefore deliberately spans both the
+    operation-information and settlement projection roles, while retaining a
+    stable one-ledger-id evidence set when one operation has several partial
+    settlements in the same period.
+    """
     if iva_aggregation.period != period:
         raise AggregationValidationError(t("supplier-regime IVA observations do not match the requested filing period"))
     observations: Sequence[IvaLedgerObservation] = iva_aggregation.observations
@@ -137,9 +144,11 @@ def resolve_m303_supplier_regime_arrival(
             )
         )
     source_ledger_ids = tuple(
-        observation.ledger_id
-        for observation in observations
-        if observation.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+        dict.fromkeys(
+            observation.ledger_id
+            for observation in observations
+            if observation.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
+        )
     )
     return M303SupplierRegimeArrival(
         period=period,
@@ -201,7 +210,11 @@ def resolve_m303_prorrata_transition_arrival(
     false ``NO`` answer from the absence of evidence.
     """
     if period.standard_code not in _M303_PRORRATA_TRANSITION_FINAL_PERIODS:
-        return M303ProrrataTransitionArrival(period=period)
+        return M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
+    if not prorrata_register.has_complete_current_entry_coverage(period.filing_year):
+        raise AggregationValidationError(
+            t("prorrata register lacks a complete explicit current-year declaration for Modelo 303")
+        )
     evidence = _m303_prorrata_transition_evidence(period=period, prorrata_register=prorrata_register)
     transition = _m303_prorrata_transition_kind(evidence)
     if transition is ProrrataEspecialTransitionKind.REVOCACION:

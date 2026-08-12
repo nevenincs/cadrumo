@@ -35,15 +35,18 @@ from ....core import (
     Period,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
+    ResultDisposition,
     validated_casilla_id,
 )
 from ....core.resources import bundled_path, resources
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.iva_compensation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
+from ...calculations._observations_repository import ResultDispositionProjection
 from .._calculation_actions import _resolve_bucket_source_mesh
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -130,6 +133,7 @@ def _register_with_carried_prior() -> ProrrataRegister:
             ProrrataRegisterEntry(
                 ejercicio=_FILING_YEAR,
                 regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
                 provisional_percentage=_MANUAL_PROVISIONAL_PERCENTAGE,
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref=f"303:{_PRIOR_YEAR}:4T",
@@ -151,17 +155,24 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
     }
     for period, casilla_values in source_values_by_period.items():
         snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period=period)
+        filing_values = {**casilla_values, M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0.00")}
         repository.save(
             repository.prepare_observation_envelope(
                 registry_grounded_modelo_observation(
                     modelo="303",
                     filing_year=_FILING_YEAR,
                     period=period,
-                    casilla_values=casilla_values,
+                    casilla_values=filing_values,
                 ),
                 source_kind="app_filing",
                 captured_at=_CREATED_AT,
                 stamped_revision_id=snapshot.revision.id,
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.NEGATIVA,
+                    provenance_kind="app_filing",
+                    provenance_locator=f"test-local-filing:{_FILING_YEAR}:{period}",
+                ),
+                normalize_m303_carry=True,
             )
         )
 

@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ...calculations import (
@@ -53,6 +55,9 @@ def _assert_blocked_wallet_decision_refuses_real_modelo_303_calculation(
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-blocked-decision"
+            ),
         )
     assert len(calc_repo.load()) == 0
 
@@ -120,6 +125,9 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-blocked-decision"
+                ),
             )
         assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_not_seeded"
         assert not hasattr(exc_info.value, "suggestion")
@@ -202,5 +210,8 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-blocked-decision"
+                ),
             )
         assert len(calc_repo.load()) == 0

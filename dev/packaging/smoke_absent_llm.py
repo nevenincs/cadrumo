@@ -63,7 +63,7 @@ from .python_cohort import (
 
 _UTF_8: Final[str] = "utf-8"
 _EXTRA: Final[str] = "llm"
-_EXPECTED_HINT: Final[str] = "pip install cadrumo[llm]"
+_EXPECTED_EXTRA: Final[str] = "llm"
 
 # Proof-ledger claims. Plain constants, deliberately: the contract gate reads
 # them statically, so an f-string here declares a claim no assertion can be seen
@@ -328,7 +328,7 @@ def _assert_uninstall_restores_the_refusal(
     driven = {entry["name"] for entry in outcomes}
     if driven != set(reachable):
         raise SystemExit(f"the driver did not reach every guarded surface: missing {sorted(reachable - driven)!r}")
-    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry["hint"] != _EXPECTED_HINT]
+    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry.get("extra") != _EXPECTED_EXTRA]
     if wrong:
         raise SystemExit(
             "these guarded surfaces did not return to the instructive refusal after the extra was "
@@ -379,7 +379,7 @@ for surface in json.loads({calls!r}):
     try:
         eval(surface["call"])
     except MissingOptionalExtraError as exc:
-        outcomes.append({{"name": surface["name"], "outcome": "refused", "hint": exc.install_hint}})
+        outcomes.append({{"name": surface["name"], "outcome": "refused", "extra": exc.extra.extra}})
     except ModuleNotFoundError as exc:
         outcomes.append({{"name": surface["name"], "outcome": "module-not-found", "hint": str(exc)}})
     except BaseException as exc:
@@ -523,8 +523,8 @@ if optional_extra_available(LLM_EXTRA):
         "the llm extra probes as PRESENT in a core install (probe import name "
         f"{{LLM_EXTRA.import_name!r}}), so every guard below it is dormant"
     )
-if LLM_EXTRA.install_hint != {_EXPECTED_HINT!r}:
-    raise SystemExit(f"unexpected install hint: {{LLM_EXTRA.install_hint!r}}")
+if LLM_EXTRA.extra != {_EXPECTED_EXTRA!r}:
+    raise SystemExit(f"unexpected extra identity: {{LLM_EXTRA.extra!r}}")
 print("llm-extra-absent-ok")
 """
     run_checked(
@@ -583,7 +583,7 @@ for surface in json.loads({surfaces!r}):
     try:
         eval(surface["call"])
     except MissingOptionalExtraError as exc:
-        outcomes.append({{"name": surface["name"], "outcome": "refused", "hint": exc.install_hint}})
+        outcomes.append({{"name": surface["name"], "outcome": "refused", "extra": exc.extra.extra}})
     except ModuleNotFoundError as exc:
         outcomes.append({{"name": surface["name"], "outcome": "module-not-found", "hint": str(exc)}})
     except BaseException as exc:
@@ -611,11 +611,11 @@ print("SURFACE_OUTCOMES:" + json.dumps(outcomes))
     if driven != expected:
         raise SystemExit(f"the driver did not reach every surface: missing {sorted(expected - driven)!r}")
 
-    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry["hint"] != _EXPECTED_HINT]
+    wrong = [entry for entry in outcomes if entry["outcome"] != "refused" or entry.get("extra") != _EXPECTED_EXTRA]
     if wrong:
         raise SystemExit(
             "these inference surfaces did not refuse with the declared install guidance in a core "
-            f"install: {wrong!r}. Each must raise MissingOptionalExtraError naming {_EXPECTED_HINT!r}; a "
+            f"install: {wrong!r}. Each must raise MissingOptionalExtraError naming extra {_EXPECTED_EXTRA!r}; a "
             "'module-not-found' outcome is the raw failure the guard exists to convert, and a 'succeeded' "
             "outcome is a model-bearing surface running without the model-bearing dependencies.",
         )

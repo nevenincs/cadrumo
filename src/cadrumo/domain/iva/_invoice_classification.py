@@ -58,7 +58,7 @@ from ._flow import (
     is_devengada_flow,
     settlement_sides_for_flow,
 )
-from ._schema import IvaCategory, IvaRateKind
+from ._schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
     from ..calculations.registry import IvaLedgerObservation
@@ -214,9 +214,9 @@ def invoice_line_to_iva_observation(
     iva_rate: IvaRate,
     base_amount: Decimal,
     iva_amount: Decimal,
+    deduction_fact_kind: IvaDeductionFactKind | None,
+    deduction_provenance: IvaDeductionClassificationProvenance | None,
     recargo_amount: Decimal = Decimal("0"),
-    deduction_fact_kind: IvaDeductionFactKind | None = None,
-    deduction_provenance: IvaDeductionClassificationProvenance | None = None,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
 ) -> IvaLedgerObservation:
@@ -246,6 +246,10 @@ def invoice_line_to_iva_observation(
             (substrate-NULL category needs explicit construction).
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR.
+        deduction_fact_kind: Exact statutory deduction family for a received
+            IVA input, or ``None`` for an issued output.
+        deduction_provenance: Immutable evidence provenance for a received
+            IVA input, or ``None`` for an issued output.
         recargo_amount: Recargo de equivalencia charged on this line in EUR
             (LIVA art. 161), or zero when none was. Routed to the Modelo 303
             recargo cuota casilla for the line's rate tier via the
@@ -305,6 +309,7 @@ def invoice_line_to_iva_observation(
         # the line out of every rate-specific box on the annual return -- the
         # 2 % foodstuffs line silently missing from the 2 % box it belongs in.
         applied_rate=iva_rate_percentage(iva_rate, issued_at),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

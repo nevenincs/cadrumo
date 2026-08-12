@@ -33,7 +33,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     IvaLedgerObservation,
     ModeloRevision,
@@ -82,6 +82,7 @@ def _observation(
         base_amount=base,
         iva_amount=iva,
         recargo_amount=Decimal("0"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

@@ -112,12 +112,20 @@ def _blocking_transaction() -> Transaction:
     )
 
 
-def _seed_profile(bucket_id: str, *, iva_regime: str) -> None:
+def _seed_profile(bucket_id: str, *, iva_regime: str, m303_regime_composition: str) -> None:
     UserProfileLifecycleRepository(bucket_id=bucket_id).save(
         UserProfileRecord(
             profile_id=bucket_id,
             display_name="Test runtime profile",
-            facts=(UserProfileFact(path="iva.regime", value=iva_regime),),
+            facts=(
+                UserProfileFact(path="iva.regime", value=iva_regime),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.m303_regime_composition", value=m303_regime_composition),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+            ),
             created_at=_T0,
             updated_at=_T0,
         ),
@@ -141,7 +149,7 @@ def test_simplificado_bypasses_ledger_preflight_when_transactions_are_unclassifi
     """
     bucket_id = _SIMPLIFICADO_PROFILE_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        _seed_profile(bucket_id, iva_regime="SIMPLIFICADO")
+        _seed_profile(bucket_id, iva_regime="SIMPLIFICADO", m303_regime_composition="simplified")
         tx_repo = _seed_blocking_transaction(bucket_id)
         work_unit = _build_work_unit(bucket_id)
         snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
@@ -162,7 +170,7 @@ def test_general_profile_raises_preflight_error_when_transactions_are_unclassifi
     """
     bucket_id = _GENERAL_PROFILE_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
-        _seed_profile(bucket_id, iva_regime="GENERAL")
+        _seed_profile(bucket_id, iva_regime="GENERAL", m303_regime_composition="general")
         tx_repo = _seed_blocking_transaction(bucket_id)
         work_unit = _build_work_unit(bucket_id)
         snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")

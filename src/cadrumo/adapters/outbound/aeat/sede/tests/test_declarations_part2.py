@@ -18,6 +18,7 @@ from ._declarations_support import (
     _COTEJO_DOCUMENT_URL,
     _DECLARATIONS_LISTING_BASE_PATH,
     _DECLARATIONS_LISTING_URL,
+    _FIXTURE_ROOT,
     _MODELO_130_COMPUTED_CASILLAS,
     _REGISTER_DOWNLOAD_URL,
     _SUBMITTED_FILE_100_2023_0A,
@@ -80,6 +81,9 @@ _M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA: CasillaId = validated_casilla_id(
     "saldo-negativo-fin-periodo",
     surface="_M130_SALDO_NEGATIVO_FIN_PERIODO_CASILLA",
 )
+_SUBMITTED_FILE_111_2025_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-111-2025-1T-redacted.txt"
+_M111_RETENCIONES_CASILLA: CasillaId = validated_casilla_id("28", surface="_M111_RETENCIONES_CASILLA")
+_M111_RESULTADO_CASILLA: CasillaId = validated_casilla_id("30", surface="_M111_RESULTADO_CASILLA")
 
 
 def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal]:
@@ -273,6 +277,54 @@ class TestSubmittedFileObservation:
         observed_ids = {casilla.casilla_id for casilla in casillas}
         assert coverage == len(observed_ids & expected) / len(expected)
         assert coverage == pytest.approx(1.0)
+
+    def test_modelo_111_live_redacted_submitted_file_values_become_observed_casillas(self) -> None:
+        snapshot = _modelo_snapshot("111", filing_year=2025, period="1T")
+        profile = snapshot.extraction_profiles["modelo-111-export-record"]
+        body = _submitted_file_payload(_SUBMITTED_FILE_111_2025_1T)
+        declaration = Declaracion(
+            modelo="111",
+            ejercicio=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            expediente_id="202511113520436S",
+            estado="ALTA",
+            presented_at=datetime(2025, 7, 21, 20, 15, 9, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclaracionArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 5, 5, 6, 9, 7, tzinfo=UTC),
+        )
+
+        observed = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+        observed_values = {item.casilla_id: Decimal(item.value) for item in observed}
+        calculated = calculate_registry_snapshot(
+            snapshot,
+            inputs={
+                casilla_id: value
+                for casilla_id, value in observed_values.items()
+                if casilla_id not in {_M111_RETENCIONES_CASILLA, _M111_RESULTADO_CASILLA}
+            },
+            date_context={},
+        )
+        parsed = parse_export_payload(resolve_export_layout(snapshot).layout, body)
+        parsed_fields = {field.field_id: field.value for field in parsed.fields}
+
+        assert set(observed_values) == {t.casilla_id for t in profile.target_casillas}
+        assert parsed_fields["modelo-111-tax-id"] == "Y0000001S"
+        assert parsed_fields["modelo-111-surnames"] == "SANITIZED SURNAME"
+        assert observed_values[_M111_RETENCIONES_CASILLA] == calculated.values[_M111_RETENCIONES_CASILLA]
+        assert observed_values[_M111_RESULTADO_CASILLA] == calculated.values[_M111_RESULTADO_CASILLA]
 
     def test_modelo_100_redacted_xml_dictionary_values_become_observed_casillas(self) -> None:
         snapshot = _modelo_snapshot("100", filing_year=2023, period="0A")

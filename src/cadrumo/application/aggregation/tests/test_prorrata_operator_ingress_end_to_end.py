@@ -141,6 +141,7 @@ def _deducible_cuota(tx_repo: TransactionCatalogueRepository) -> Decimal:
         bucket_id=_BUCKET_ID,
         period=_PERIOD,
         transaction_repository=tx_repo,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
         investment_asset_register=BienesInversionIvaRegister(),
         investment_asset_profile_id=_BUCKET_ID,
     )
@@ -177,6 +178,7 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Pa
             ProrrataRegisterEntry(
                 ejercicio=_EJERCICIO,
                 regime=ProrrataRegisterRegime.ESPECIAL,
+                especial_transition=None,
                 provisional_percentage=general_percentage,
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             )
@@ -225,6 +227,7 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
                 ProrrataRegisterEntry(
                     ejercicio=_EJERCICIO,
                     regime=ProrrataRegisterRegime.GENERAL,
+                    especial_transition=None,
                     sector_id=sector_id,
                     provisional_percentage=pct,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,

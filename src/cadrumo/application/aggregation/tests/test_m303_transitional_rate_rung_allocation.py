@@ -42,6 +42,7 @@ from ....domain.iva import (
     EUMemberState,
     IvaCategory,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
     rate_kinds_for_declared_rate,
 )
@@ -369,6 +370,7 @@ def test_an_underdetermined_observation_would_reach_no_rung_at_all() -> None:
             iva_amount=Decimal("120.00"),
             recargo_amount=Decimal("0"),
             applied_rate=applied_rate,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
         )
         values = resolve_iva_ledger_binding_values(revision, (observation,))
         return {str(k): v for k, v in values.items() if "iva-repercutido" in str(k) and v != Decimal("0")}

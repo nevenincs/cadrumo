@@ -27,6 +27,7 @@ from .....domain.calculations.registry import (
 from .....domain.calculations.registry import (
     resolve_relation_values_from_observations as resolve_relation_values_from_observations,
 )
+from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .....domain.period import calculation_filing_date
 from .....tests import FIXTURES_DIR
 from .....tests.registry_observations import registry_grounded_observations
@@ -160,6 +161,7 @@ def _calculate_engine_values_from_inputs(
             binding_values=binding_values,
             enum_binding_values=enum_binding_values,
             relation_values=relation_values,
+            m303_annual_orden=None,
         )
     except RegistryValidationError as exc:
         detail = f"\n  binding_values: {sorted(binding_values)}" if binding_values is not None else ""
@@ -267,6 +269,7 @@ def _assert_annual_relation_closure_chain(
             date_context={"filing_period": _period_to_date(year, period)},
             binding_values=binding_values,
             relation_values=relation_values,
+            m303_annual_orden=None,
         )
     except RegistryValidationError as exc:
         pytest.fail(
@@ -384,6 +387,9 @@ def _calculate_m303_engine_values_from_inputs(
             inputs=inputs,
             date_context={"filing_period": date(year, _period_month, 1)},
             binding_values=binding_values,
+            m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+                scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+            ),
         )
     except RegistryValidationError as exc:
         pytest.fail(

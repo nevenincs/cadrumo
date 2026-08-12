@@ -50,6 +50,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import (
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -91,6 +92,7 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
     upsert_calculation_revision,
 )
+from ..calculations import CalculationObservationRepository
 from ..calculations import cross_period_dependency_requirements as _cross_period_dependency_requirements
 from ._action_errors import (
     CalculationRevisionNotFoundError,
@@ -154,7 +156,7 @@ from ._m349_ledger_guard import (
 from ._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ._preconditions import build_modelo_precondition_failure
 from ._registry_helpers import validate_casilla_input_ids as _validate_casilla_input_ids
-from ._revision_persistence import persist_calculation_revision
+from ._revision_persistence import persist_calculation_revision, require_filing_instance_evidence_for_work_unit
 from ._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository
 
 if TYPE_CHECKING:
@@ -722,6 +724,7 @@ def _resolve_bucket_source_mesh(
         bucket_id=work_unit.bucket_id,
     )
     memoized_transaction_repository = MemoizedTransactionCatalogueRepository(resolved_transaction_repository)
+    prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
     iva_investment_asset_register = None
     iva_investment_asset_profile_id = None
     if any(binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION for binding in snapshot.revision.bindings):
@@ -764,12 +767,14 @@ def _resolve_bucket_source_mesh(
         (
             LedgerIvaAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
+                prorrata_register_repository=prorrata_register_repository,
                 investment_asset_register=iva_investment_asset_register,
                 investment_asset_profile_id=iva_investment_asset_profile_id,
             ).resolve(context),
             LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
                 invoice_repository=invoice_repository,
+                prorrata_register_repository=prorrata_register_repository,
             ).resolve(context),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
             LedgerRentaIncomeAggregationSourceResolver(
@@ -780,6 +785,7 @@ def _resolve_bucket_source_mesh(
             # income resolver, same cumulative quarterly window.
             LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
                 transaction_repository=memoized_transaction_repository,
+                prorrata_register_repository=prorrata_register_repository,
             ).resolve(context),
             # M151 impatriado (Ley Beckham) Spanish-source base
             # (ledger_impatriado_income_aggregation): folds only ES-source income
@@ -871,6 +877,8 @@ def _resolve_bucket_source_mesh(
         filing_period_date=filing_period_date,
         m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
         m303_annual_orden=m303_annual_orden,
+        prorrata_register_repository=prorrata_register_repository,
+        observation_repository=CalculationObservationRepository(bucket_id=work_unit.bucket_id),
     )
     source_resolution = _add_unhandled_source_diagnostics(snapshot.revision, source_resolution)
     return _add_expected_missing_binding_diagnostics(snapshot.revision, source_resolution)
@@ -1811,6 +1819,7 @@ def mark_revision_verificado_completo(
             translated_message="errors.error.error_modelo_calculation_revision_state",
             context={"calculation_revision_id": calculation_revision_id, "state": existing.state.value},
         )
+    require_filing_instance_evidence_for_work_unit(work_unit=work_unit, revision=existing)
     if existing.source_transaction_ids:
         # A ledger-derived revision owes a bundled evidence record pegged to its
         # snapshot fingerprint, and that bundle is built inside verify's granted

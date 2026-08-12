@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+from typing import get_args
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
@@ -11,48 +12,95 @@ from pydantic import TypeAdapter, ValidationError
 from ... import core
 from .. import (
     FilingProjectionRef,
+    M303DifferentiatedDeductionProjectionField,
+    M303DifferentiatedDeductionProjectionRef,
+    M303Exonerado390ActivityField,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoFactProjectionRef,
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
     compile_filing_projection_ref,
+    filing_projection_ref_casilla_id,
 )
 from .. import _filing_projection_ref as owner
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+_REF_MODELS = (
+    M303ProrrataActivityProjectionRef,
+    M303DifferentiatedDeductionProjectionRef,
+    M303RegimenSimplificadoActivityProjectionRef,
+    M303RegimenSimplificadoFactProjectionRef,
+    M303RegimenSimplificadoModuleProjectionRef,
+    M303Exonerado390ActivityProjectionRef,
+    M303Exonerado390OperacionesTercerosProjectionRef,
+)
 
-def test_core_facade_exposes_the_single_projection_union_owner() -> None:
-    assert core.FilingProjectionRef is owner.FilingProjectionRef
-    declarations = {
-        node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)
-    }
-    assert "M303ProrrataActivityProjectionRef" in declarations
-    assert core.M303ProrrataActivityProjectionRef is owner.M303ProrrataActivityProjectionRef
+
+def test_core_facade_exposes_the_canonical_flat_projection_union() -> None:
+    assert core.FilingProjectionRef is FilingProjectionRef
+    assert core.compile_filing_projection_ref is compile_filing_projection_ref
+    assert len(get_args(get_args(FilingProjectionRef)[0])) == 7
 
 
-def test_discriminator_hydrates_one_exact_member_and_rejects_unknown_shapes() -> None:
+def test_every_projection_discriminator_and_payload_field_is_required() -> None:
+    for model_type in _REF_MODELS:
+        assert model_type.model_fields
+        assert all(field.is_required() for field in model_type.model_fields.values()), model_type.__name__
+        assert model_type.model_fields["projection_kind"].is_required(), model_type.__name__
+
+
+def test_all_seven_flat_projection_variants_validate() -> None:
+    references: tuple[FilingProjectionRef, ...] = (
+        M303ProrrataActivityProjectionRef(
+            projection_kind="m303_prorrata_activity",
+            slot=1,
+            field=M303ProrrataActivityProjectionField.CNAE,
+            casilla_id="500",
+        ),
+        M303DifferentiatedDeductionProjectionRef(
+            projection_kind="m303_differentiated_deduction",
+            slot=1,
+            field=M303DifferentiatedDeductionProjectionField.DOMESTIC_CURRENT_BASE,
+            casilla_id="700",
+        ),
+        M303RegimenSimplificadoActivityProjectionRef(
+            projection_kind="m303_regimen_simplificado_activity",
+            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+            slot=1,
+            field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
+        ),
+        M303RegimenSimplificadoFactProjectionRef(
+            projection_kind="m303_regimen_simplificado_fact",
+            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+            slot=1,
+            fact_identity="indice-corrector",
+        ),
+        M303RegimenSimplificadoModuleProjectionRef(
+            projection_kind="m303_regimen_simplificado_module",
+            cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+            slot=1,
+            module_order=1,
+            value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
+        ),
+        M303Exonerado390ActivityProjectionRef(
+            projection_kind="m303_exonerado_390_activity",
+            slot=1,
+            field=M303Exonerado390ActivityField.ACTIVITY_CODE,
+        ),
+        M303Exonerado390OperacionesTercerosProjectionRef(
+            projection_kind="m303_exonerado_390_operaciones_terceros",
+        ),
+    )
+
     adapter: TypeAdapter[FilingProjectionRef] = TypeAdapter(FilingProjectionRef)
-    hydrated = adapter.validate_python(
-        {
-            "projection_kind": "m303_prorrata_activity",
-            "slot": 1,
-            "field": "cnae",
-            "casilla_id": "500",
-        },
-        strict=False,
-    )
-
-    assert hydrated == M303ProrrataActivityProjectionRef(
-        slot=1,
-        field=M303ProrrataActivityProjectionField.CNAE,
-        casilla_id="500",
-    )
-    with pytest.raises(ValidationError):
-        adapter.validate_python({"projection_kind": "legacy_slot", "slot": 1}, strict=False)
+    assert tuple(adapter.validate_python(reference) for reference in references) == references
 
 
 @pytest.mark.parametrize("slot", ["1", 1.0, True])
@@ -66,21 +114,6 @@ def test_persisted_projection_compiler_refuses_coerced_slot_primitives(slot: obj
                 "casilla_id": "500",
             },
         )
-
-
-def test_persisted_projection_compiler_accepts_only_the_exact_integer_wire_shape() -> None:
-    assert compile_filing_projection_ref(
-        {
-            "projection_kind": "m303_prorrata_activity",
-            "slot": 1,
-            "field": "cnae",
-            "casilla_id": "500",
-        },
-    ) == M303ProrrataActivityProjectionRef(
-        slot=1,
-        field=M303ProrrataActivityProjectionField.CNAE,
-        casilla_id="500",
-    )
 
 
 @pytest.mark.parametrize("module_order", ["1", 1.0, True])
@@ -97,37 +130,177 @@ def test_persisted_projection_compiler_refuses_coerced_module_ordinals(module_or
         )
 
 
-def test_simplified_module_reference_owns_a_source_slot_not_an_activity_identity() -> None:
+def test_compiler_constructs_the_required_module_shape_without_defaults() -> None:
     assert compile_filing_projection_ref(
         {
             "projection_kind": "m303_regimen_simplificado_module",
             "cohort": "no_agricola",
             "slot": 1,
-            "module_order": 1,
-            "value": "declared_quantity",
+            "module_order": 7,
+            "value": "off_form_result",
         },
     ) == M303RegimenSimplificadoModuleProjectionRef(
+        projection_kind="m303_regimen_simplificado_module",
+        cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
         slot=1,
-        module_order=1,
-        value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
+        module_order=7,
+        value=M303RegimenSimplificadoModuleValue.OFF_FORM_RESULT,
     )
 
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "projection_kind": "m303_regimen_simplificado_fact",
+            "cohort": "agricola",
+            "slot": 1,
+            "fact_identity": "  indice-corrector  ",
+        },
+        {
+            "projection_kind": "m303_prorrata_activity",
+            "slot": 1,
+            "field": "cnae",
+            "casilla_id": " 500 ",
+        },
+    ],
+)
+def test_compiler_refuses_surrounding_whitespace_in_identity_tokens(payload: dict[str, object]) -> None:
+    with pytest.raises(ValueError, match="must not contain surrounding whitespace"):
+        compile_filing_projection_ref(payload)
+
+
+def test_fact_identity_model_refuses_instead_of_normalizing_whitespace() -> None:
     with pytest.raises(ValidationError):
-        compile_filing_projection_ref(
+        M303RegimenSimplificadoFactProjectionRef(
+            projection_kind="m303_regimen_simplificado_fact",
+            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+            slot=1,
+            fact_identity="  indice-corrector  ",
+        )
+
+
+@pytest.mark.parametrize(
+    "legacy_payload",
+    [
+        {"kind": "m303_prorrata_activity", "slot": 1, "field": "cnae", "casilla_id": "500"},
+        {
+            "projection_kind": "m303_regimen_simplificado",
+            "cohort": "no_agricola",
+            "slot": 1,
+            "address": {"kind": "orden_module", "module_order": 1},
+        },
+        {
+            "projection_kind": "m303_regimen_simplificado_module",
+            "cohort": "no_agricola",
+            "slot": 1,
+            "module_identity": "modulo-1",
+            "value": "declared_quantity",
+        },
+    ],
+)
+def test_compiler_refuses_every_retired_discriminator_and_shape(legacy_payload: dict[str, object]) -> None:
+    with pytest.raises((ValidationError, ValueError)):
+        compile_filing_projection_ref(legacy_payload)
+
+
+def test_module_reference_requires_explicit_no_agricola_cohort_and_valid_order() -> None:
+    with pytest.raises(ValidationError):
+        M303RegimenSimplificadoModuleProjectionRef.model_validate(
             {
                 "projection_kind": "m303_regimen_simplificado_module",
-                "cohort": "no_agricola",
                 "slot": 1,
-                "module_identity": "retired-activity-specific-address",
+                "module_order": 1,
+                "value": "declared_quantity",
+            },
+        )
+    with pytest.raises(ValidationError):
+        M303RegimenSimplificadoModuleProjectionRef.model_validate(
+            {
+                "projection_kind": "m303_regimen_simplificado_module",
+                "cohort": "agricola",
+                "slot": 1,
+                "module_order": 8,
                 "value": "declared_quantity",
             },
         )
 
 
+def test_slotless_marker_rejects_legacy_slot_and_models_are_frozen() -> None:
+    with pytest.raises(ValidationError):
+        M303Exonerado390OperacionesTercerosProjectionRef.model_validate(
+            {
+                "projection_kind": "m303_exonerado_390_operaciones_terceros",
+                "slot": 1,
+            },
+        )
+    reference = M303ProrrataActivityProjectionRef(
+        projection_kind="m303_prorrata_activity",
+        slot=1,
+        field=M303ProrrataActivityProjectionField.CNAE,
+        casilla_id="500",
+    )
+    with pytest.raises(ValidationError, match="frozen"):
+        reference.slot = 2  # type: ignore[misc]
+
+
+def test_core_facade_exposes_the_single_projection_union_owner() -> None:
+    assert core.FilingProjectionRef is owner.FilingProjectionRef
+    declarations = {
+        node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)
+    }
+    assert {model_type.__name__ for model_type in _REF_MODELS} <= declarations
+    assert core.M303ProrrataActivityProjectionRef is owner.M303ProrrataActivityProjectionRef
+    assert core.filing_projection_ref_casilla_id is owner.filing_projection_ref_casilla_id
+
+
 def test_simplified_activity_reference_refuses_cross_cohort_field_drift() -> None:
     with pytest.raises(ValidationError, match="requires field"):
         M303RegimenSimplificadoActivityProjectionRef(
+            projection_kind="m303_regimen_simplificado_activity",
             cohort=M303RegimenSimplificadoCohort.AGRICOLA,
             slot=1,
             field=M303RegimenSimplificadoActivityField.IAE_EPIGRAFE,
         )
+
+
+def test_numbered_endpoint_accessor_answers_only_for_casilla_bearing_variants() -> None:
+    assert (
+        filing_projection_ref_casilla_id(
+            M303ProrrataActivityProjectionRef(
+                projection_kind="m303_prorrata_activity",
+                slot=1,
+                field=M303ProrrataActivityProjectionField.CNAE,
+                casilla_id="500",
+            ),
+        )
+        == "500"
+    )
+    assert (
+        filing_projection_ref_casilla_id(
+            M303DifferentiatedDeductionProjectionRef(
+                projection_kind="m303_differentiated_deduction",
+                slot=2,
+                field=M303DifferentiatedDeductionProjectionField.TOTAL,
+                casilla_id="700",
+            ),
+        )
+        == "700"
+    )
+    for slotless in (
+        M303RegimenSimplificadoActivityProjectionRef(
+            projection_kind="m303_regimen_simplificado_activity",
+            cohort=M303RegimenSimplificadoCohort.AGRICOLA,
+            slot=1,
+            field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
+        ),
+        M303Exonerado390ActivityProjectionRef(
+            projection_kind="m303_exonerado_390_activity",
+            slot=1,
+            field=M303Exonerado390ActivityField.ACTIVITY_CODE,
+        ),
+        M303Exonerado390OperacionesTercerosProjectionRef(
+            projection_kind="m303_exonerado_390_operaciones_terceros",
+        ),
+    ):
+        assert filing_projection_ref_casilla_id(slotless) is None

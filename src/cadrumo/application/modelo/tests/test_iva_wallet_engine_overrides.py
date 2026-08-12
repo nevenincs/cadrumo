@@ -41,6 +41,7 @@ from ._iva_wallet_engine_support import (
     _TARGET_PERIOD_VALUE,
     _TARGET_YEAR,
     _TAXPAYER_NIF,
+    _filing_instance_evidence,
     _modelo_303_engine_inputs,
     _save_wallet_gate_decision,
     _secure_backend,
@@ -93,6 +94,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
             backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
+            filing_instance_evidence=_filing_instance_evidence(work_unit.period),
             filing_period_date=date(2026, 6, 30),
             work_unit_repository=work_repo,
             calculation_repository=calc_repo,
@@ -124,6 +126,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
                 backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=None,
+                filing_instance_evidence=_filing_instance_evidence(work_unit.period),
                 filing_period_date=date(2026, 6, 30),
                 work_unit_repository=work_repo,
                 calculation_repository=calc_repo,
@@ -163,6 +166,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
         casilla_values: dict[CasillaId, Decimal] = {
             _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Decimal("450.00"),
         }
+        sealed_filing_instance_evidence = _filing_instance_evidence(work_unit.period)
         sealed_revision = CalculationRevision.model_validate(
             {
                 "calculation_revision_id": derive_calculation_revision_id(
@@ -170,6 +174,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                     input_values_by_casilla_id={},
                     binding_overrides={},
                     casilla_values=casilla_values,
+                    filing_instance_evidence=sealed_filing_instance_evidence,
                 ),
                 "work_unit_id": work_unit.work_unit_id,
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -186,6 +191,7 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                 "updated_at": _DECIDED_AT,
                 "verified_at": _DECIDED_AT,
                 "verified_by": "tester",
+                "filing_instance_evidence": sealed_filing_instance_evidence,
             },
         )
         wu_repo = WorkUnitCatalogueRepository()

@@ -87,7 +87,9 @@ def test_missing_optional_extra_still_degrades_gracefully() -> None:
 
     The legitimate half of the distinction. A bare install omits these packages
     by design, so the subtree must stay resolvable, render help, and refuse with
-    the install hint rather than crashing the CLI.
+    the extra's machine identity rather than crashing the CLI. The refusal names
+    the extra it needs and renders no install command; the recovery is resolved
+    downstream from that identity.
     """
     extra = next(candidate for candidate in OPTIONAL_EXTRAS if candidate.extra == "browser")
     error = ModuleNotFoundError(f"No module named {extra.import_name!r}", name=extra.import_name)
@@ -100,5 +102,7 @@ def test_missing_optional_extra_still_degrades_gracefully() -> None:
 
     refusal = CliRunner().invoke(surface, [])
     assert refusal.exit_code == get_error_exit_code(ErrorCategory.ERROR), refusal.output
-    # The refusal names the exact install command, never a bare "unavailable".
-    assert extra.install_hint in refusal.output
+    # The refusal names the extra it needs, never a bare "unavailable" -- and
+    # never a rendered install command, which is the prose this boundary drops.
+    assert extra.extra in refusal.output or extra.import_name in refusal.output
+    assert "pip install" not in refusal.output

@@ -20,7 +20,7 @@
         {
           "json_path": "result.work_unit_id",
           "name": "another_work_unit_id",
-          "value": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+          "value": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
         }
       ],
       "envelope": {
@@ -47,15 +47,15 @@
             "code": "2T",
             "filing_year": 2026
           },
-          "revision_id": "2023-y-siguientes",
+          "revision_id": "2026-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "ba41620fbe79",
+          "short_work_unit_id": "e01a09d64767",
           "state": "borrador",
           "status": "created",
           "status_message": "New work unit created.",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+          "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
         },
         "schema_version": "2",
         "status": "success"
@@ -88,11 +88,36 @@
         "command": "modelo.work.status",
         "notices": [
           {
+            "action": {
+              "action": {
+                "action_id": "operator.modelo.work.calculate",
+                "cli_path": [
+                  "app",
+                  "modelo",
+                  "work",
+                  "calculate"
+                ],
+                "target_command_key": "modelo.work.calculate"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "work_unit_id",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "work_unit_id",
+                  "status": "resolved",
+                  "value": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
+                }
+              ]
+            },
             "code": "modelo.work.status.next_action",
-            "context": null,
-            "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo work calculate 48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+            "context": {
+              "continuation_outcome": "action_available",
+              "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767",
+              "work_unit_state": "borrador"
+            },
+            "message": "Status calculate summary",
+            "severity": "info"
           }
         ],
         "result": {
@@ -113,13 +138,13 @@
             "code": "2T",
             "filing_year": 2026
           },
-          "revision_id": "2023-y-siguientes",
+          "revision_id": "2026-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "ba41620fbe79",
+          "short_work_unit_id": "e01a09d64767",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+          "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
         },
         "schema_version": "2",
         "status": "success"
@@ -139,7 +164,7 @@
         "modelo",
         "work",
         "status",
-        "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+        "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
       ],
       "captures": [],
       "envelope": {
@@ -147,11 +172,36 @@
         "command": "modelo.work.status",
         "notices": [
           {
+            "action": {
+              "action": {
+                "action_id": "operator.modelo.work.calculate",
+                "cli_path": [
+                  "app",
+                  "modelo",
+                  "work",
+                  "calculate"
+                ],
+                "target_command_key": "modelo.work.calculate"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "work_unit_id",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "work_unit_id",
+                  "status": "resolved",
+                  "value": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
+                }
+              ]
+            },
             "code": "modelo.work.status.next_action",
-            "context": null,
-            "message": "Draft or recalculate this unit with `aeat app modelo work calculate`, then verify the draft with `aeat app modelo work verify`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo work calculate 48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+            "context": {
+              "continuation_outcome": "action_available",
+              "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767",
+              "work_unit_state": "borrador"
+            },
+            "message": "Status calculate summary",
+            "severity": "info"
           }
         ],
         "result": {
@@ -172,13 +222,13 @@
             "code": "2T",
             "filing_year": 2026
           },
-          "revision_id": "2023-y-siguientes",
+          "revision_id": "2026-y-siguientes",
           "short_current_calculation_revision_id": null,
           "short_filed_calculation_revision_id": null,
-          "short_work_unit_id": "ba41620fbe79",
+          "short_work_unit_id": "e01a09d64767",
           "state": "borrador",
           "updated_at": "2026-04-01T09:00:00+00:00",
-          "work_unit_id": "48784394e30d393c1368cfa28174775ce169a92e78303bd6eea8ba41620fbe79"
+          "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767"
         },
         "schema_version": "2",
         "status": "success"

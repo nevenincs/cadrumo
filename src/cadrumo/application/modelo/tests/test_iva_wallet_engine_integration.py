@@ -8,6 +8,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
 from ....core import ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.iva_compensation import IvaCompensationOverride, IvaCompensationReconciliationDecision
@@ -99,6 +101,9 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-engine-integration"
+            ),
         )
 
         assert Decimal(revision.binding_overrides["modelo-303-compensacion-pendiente-anteriores"]) == Decimal("1200.00")
@@ -146,6 +151,9 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                ),
             )
 
     # Blocked on the filed-history-only divergence — never silently carried.
@@ -194,6 +202,9 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit.period, reference="test:iva-wallet-engine-integration"
+                ),
             )
         assert not hasattr(exc_info.value, "suggestion")
         assert (
@@ -230,6 +241,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=decided_1t_at,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit_1t.period, reference="test:iva-wallet-engine-integration"
+            ),
         )
         assert revision_1t.casilla_values[_M303_RESULTADO_CASILLA] == Decimal("84.00")
         assert revision_1t.casilla_values[_M303_DISPONIBLE_CASILLA] == Decimal("0.00")
@@ -249,6 +263,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
                 clock=_DECIDED_AT,
+                filing_instance_evidence=general_m303_filing_evidence(
+                    work_unit_2t.period, reference="test:iva-wallet-engine-integration"
+                ),
             )
 
         observation_repository = CalculationObservationRepository()
@@ -272,6 +289,9 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit_2t.period, reference="test:iva-wallet-engine-integration"
+            ),
         )
 
         assert revision_2t.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("0")
@@ -335,6 +355,9 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:iva-wallet-engine-integration"
+            ),
         )
 
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("450.00")
@@ -364,6 +387,9 @@ def _calculate_credit_1t(
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
         clock=_DECIDED_AT,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period, reference="test:iva-wallet-engine-integration"
+        ),
     )
     assert revision.casilla_values[_M303_DISPONIBLE_CASILLA] > Decimal("0")
     return work_unit, revision, work_repo, calc_repo, event_repo
@@ -444,6 +470,9 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit_2t.period, reference="test:iva-wallet-engine-integration"
+            ),
         )
         persist_filed_revision_observation(
             revision=revision_2t,
@@ -470,6 +499,9 @@ def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_pa
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
             clock=_DECIDED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit_3t.period, reference="test:iva-wallet-engine-integration"
+            ),
         )
 
         decisions = IvaWalletDecisionRepository()

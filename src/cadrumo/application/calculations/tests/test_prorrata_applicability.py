@@ -32,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _entry(regime: ProrrataRegisterRegime) -> ProrrataRegisterEntry:
-    return ProrrataRegisterEntry(ejercicio=2026, regime=regime)
+    return ProrrataRegisterEntry(ejercicio=2026, regime=regime, especial_transition=None)
 
 
 def test_prorrata_applies_when_register_holds_active_general_entry() -> None:

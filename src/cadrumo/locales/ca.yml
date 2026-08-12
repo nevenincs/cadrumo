@@ -821,6 +821,45 @@ application:
         build_failed: 'l''assistent de factures ha rebutjat: %{detail}'
         field_errors: 'l''assistent de factures ha rebutjat %{field_count} camp(s):
           %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: S'ha seleccionat l'última observació vàlida de la
+        cartera de l'AEAT; no hi havia recurrència local disponible per contrastar-la.
+      aeat_wallet_validated: L'última observació vàlida de la cartera de l'AEAT coincideix
+        amb la recurrència local per a la compensació anterior del Modelo 303.
+      caller_zero_matches_local_authority: El zero proporcionat per qui fa la crida
+        coincideix amb l'autoritat local de zero persistida.
+      filed_history_requires_override: No hi ha prova de la cartera de l'AEAT; la
+        recurrència de l'historial presentat requereix una anul·lació expressa del
+        contribuent abans de generar el resultat automàtic.
+      filed_history_zero: La prova registrada de l'historial presentat del Modelo
+        303 estableix una compensació a traslladar de zero.
+      first_period_zero_activity_start_uncontrasted: 'SENSE CONTRASTAR: El zero del
+        primer període es basa en la data d''inici d''activitat declarada per l''operador;
+        Cadrumo no pot verificar aquesta data amb la informació censal actual de l''AEAT.'
+      first_period_zero_aeat_wallet: La cartera de l'AEAT confirma que la compensació
+        anterior és zero en el primer període d'IVA registrat.
+      first_period_zero_local_recurrence: Un zero local inicial estableix que no existeix
+        compensació anterior en el primer període d'IVA registrat.
+      local_evidence_unreadable: Existeix un registre anterior del Modelo 303, però
+        no es pot llegir com a prova de compensació anterior i no hi ha cap observació
+        disponible de la cartera de l'AEAT.
+      local_recurrence_requires_override: La cartera de l'AEAT no està disponible;
+        la recurrència local requereix una anul·lació expressa del contribuent abans
+        de generar el resultat automàtic.
+      local_recurrence_zero: La recurrència local del Modelo 303 estableix una compensació
+        a traslladar de zero.
+      no_usable_authority: No hi ha cap observació de la cartera de l'AEAT ni recurrència
+        local utilitzable per a la compensació anterior del Modelo 303.
+      stale_wallet_local_recurrence_requires_override: L'observació de la cartera
+        de l'AEAT està desactualitzada; la recurrència local requereix una anul·lació
+        expressa del contribuent abans de generar el resultat automàtic.
+      stale_wallet_no_local_recurrence: L'observació de la cartera de l'AEAT està
+        desactualitzada i no hi ha recurrència local alternativa disponible.
+      taxpayer_override: S'ha seleccionat l'anul·lació expressa del contribuent; l'explicació
+        de l'operador registrada per separat n'indica el fonament probatori.
+      wallet_local_recurrence_divergence: La cartera de l'AEAT i la recurrència local
+        difereixen; cal una revisió abans de generar el resultat automàtic.
   ledger:
     errors:
       evidence_attachment_requires_ids: L'adjunt d'evidència del llibre diari requereix
@@ -1054,6 +1093,9 @@ application:
         no coincideix amb el modelo %{modelo}, exercici %{filing_year}, període %{period}.
       external_import_justificante_missing: L'evidència d'importació externa %{evidence_reference_id}
         (%{evidence_kind}) no està registrada com a artefacte de justificant persistent.
+      external_import_m303_filing_evidence_required: La importació externa del model
+        303 requereix evidència tipada completa de la instància de declaració i no
+        la pot inferir dels valors de caselles.
       external_import_registry_root_missing: L'arrel del registre %{registry_root}
         no existeix; no es poden validar els ids de casella importats.
       external_import_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
@@ -1424,19 +1466,6 @@ application:
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
-  verification:
-    errors:
-      missing_binding_values: La verificació del registre requereix valors de vinculació
-        externs.
-      period_mapping_failed: El període de la declaració no s'ha pogut assignar a
-        un període del registre.
-      registry_policy_invalid: No s'ha pogut carregar la política de verificació del
-        registre.
-      registry_snapshot_invalid: No s'ha pogut carregar la instantània del registre
-        per verificar la declaració.
-      registry_snapshot_ref_mismatch: 'La instantània del registre per al model %{modelo}
-        %{period} no coincideix amb la referència estampada a la declaració: observada
-        %{observed_ref}, resolta %{resolved_ref}.'
   wizard:
     errors:
       command_input_invalid: 'Les dades del perfil no han superat la validació: %{details}'
@@ -2122,6 +2151,9 @@ cli:
           aquest sector.
         list_help: Llista cada entrada del registre i cada sector diferenciat declarat
           al perfil actiu.
+        optional_evidence_reference_help: Evidència en poder de l'operador d'una opció
+          exercida en aquest exercici; omet-la per registrar una continuació expressa
+          del règim ja vigent.
         percentage_help: Percentatge de deducció d'ús comú 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
         provenance_help: Origen del percentatge provisional segons LIVA art. 105.
@@ -4732,8 +4764,6 @@ cli:
       command_input_invalid_fallback: un o més camps no han superat la validació
       confirm_required: Passa --yes per confirmar aquesta operació destructiva del
         llibre.
-      filter_parse_error: 'Fallada en analitzar el filtre del llibre prop de %{token}:
-        %{reason}.'
       invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories
         conegudes: {known}.'
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el
@@ -4741,9 +4771,6 @@ cli:
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
-      period_year_pairing: Els filtres de període del llibre requereixen període i
-        exercici junts. Per a un any complet useu --period 0A --year %{year}, o --filter
-        period=0A --filter year=%{year}.
       unknown_category: --category-id {category!r} no reconegut. Indica un identificador
         de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
         de família.
@@ -71451,6 +71478,12 @@ profile:
           label: Situació familiar
         unidad_familiar_otros_miembros_base:
           label: Base imposable d'altres membres de la unitat familiar (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Tipus de declaració
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          label: Tram de reducció per lloguer (art. 23.2)
       renta_spouse:
         birth_date:
           label: Data de naixement del cònjuge
@@ -71585,6 +71618,10 @@ profile:
         title: Origen i vigència
       renta_family:
         title: Família (Renda)
+      renta_filing:
+        title: Context de presentació (Renda)
+      renta_rental:
+        title: Context de lloguer (Renda)
       renta_spouse:
         title: Cònjuge (Renda)
       renta_taxpayer:
@@ -72116,7 +72153,7 @@ wizard:
       iva-sii-enrolled:
         help: Si el contribuent està inscrit al SII
       iva-voluntary-sii-enrolled:
-        help: Declara la inscripció voluntària al SII, separada de les causes d'inclusió
+        help: Declara l'alta voluntària al SII, separada de les causes d'inclusió
           obligatòria.
       legal-entity-form:
         help: Forma jurídica reconeguda quan el tipus d'entitat és persona jurídica
@@ -72272,7 +72309,7 @@ wizard:
       Després de desar, revisa el progrés amb `aeat config profile status`.'
     iva:
       iva-cash-accounting-regime-enrolled:
-        prompt: Està inscrit en el règim especial del criteri de caixa?
+        prompt: Està inscrit al règim especial del criteri de caixa?
       iva-group-dominant-entity-enrolled:
         prompt: Alta com a entitat dominant d'un grup d'IVA
       iva-group-member-enrolled:
@@ -72299,10 +72336,10 @@ wizard:
           general:
             label: Només règim general
           mixed:
-            label: Règim mixt
+            label: Règims mixtos
           simplified:
             label: Només règim simplificat
-        prompt: Quina composició de règims declara el Model 303?
+        prompt: Quina composició de règims s'aplica al Model 303?
       title: IVA configuració
     notes:
       notes:
@@ -72513,7 +72550,7 @@ wizard:
             label: Territori comú
           foral_unsupported:
             label: Territori foral (encara no compatible)
-        prompt: Quin règim territorial s'aplica a aquest perfil?
+        prompt: Quin territori tributari s'aplica a aquest Model 303?
       title: Residència fiscal
     review:
       registered-non-official-suffix: ' (del certificat censal - no verificat per

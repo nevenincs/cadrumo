@@ -163,6 +163,21 @@ def _validate_modelo_once(modelo: ModeloDefinition, catalogues: RegistryCatalogu
     _VALIDATION_CACHE[key] = (modelo, catalogues)
 
 
+def _validate_materialized_export_record_families(revision: ModeloRevision) -> None:
+    """Refuse unresolved or mixed field families before a revision enters a snapshot."""
+    failures = [
+        f"export record {record.id!r}: {failure}"
+        for layout in revision.export_layouts
+        for record in layout.records
+        if (failure := record.repeat_field_family_failure(allow_unresolved_binding_record=False)) is not None
+    ]
+    if failures:
+        raise RegistryValidationError(
+            "materialized export record family validation failed:\n"
+            + "\n".join(f" - {failure}" for failure in failures),
+        )
+
+
 def _build_validated_snapshot(
     modelo: ModeloDefinition,
     catalogues: RegistryCatalogues,
@@ -207,6 +222,7 @@ def _build_validated_snapshot(
     # rather than collapsing it to the symbolic EVENT-N selector.
     period = registry_period_for_request(revision.period_selector.periods, period) or period
     revision = revision.model_copy(update={"export_layouts": derive_export_layouts_from_bindings(revision)})
+    _validate_materialized_export_record_families(revision)
     legal_ids, source_ids = _collect_snapshot_ref_ids(modelo, revision)
     _check_revision_scoped_legal_windows(modelo, revision, catalogues)
     _check_revision_scoped_source_windows(modelo, revision, catalogues)

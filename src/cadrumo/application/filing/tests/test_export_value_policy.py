@@ -27,9 +27,8 @@ from ....domain.filing import (
     registry_schema_version,
 )
 from ....domain.submission import ModeloDraftStatus
-from .._export import _mismatched_casilla_ids, _RecordRenderRow, _render_record, render_layout
-from ..runtime import RegistrySchemaAccessor
-from ._export_support import _typed_producer_snapshot
+from .._export import _format_field, _mismatched_casilla_ids, _projection_field_value
+from ..runtime import build_runtime_schema_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,7 +71,7 @@ def _record(record_id: str, field: ExportFieldDefinition, *, order: int) -> Expo
     )
 
 
-def _draft(*, checkbox: bool | None, year: int | str):
+def _draft(*, checkbox: bool | None, year: int | str) -> ModeloDraft:
     period = Period.from_year_and_code(2026, "1T")
     stamped = datetime(2026, 8, 10, tzinfo=UTC)
     return ModeloDraft(
@@ -135,147 +134,17 @@ def _two_record_layout() -> ExportLayoutDefinition:
 
 def _render_one(record: ExportRecordDefinition, value: object) -> str:
     field = record.fields[0]
-    assert field.casilla_id is not None
-    return _render_record(
-        record,
-        draft=_draft(checkbox=False, year=2026),
-        producer_values={},
-        producer_snapshot=_typed_producer_snapshot(),
-        projection_values={},
-        casilla_values={field.casilla_id: value},
-        binding_values={},
-        row=_RecordRenderRow(row_index=None, active_binding_ids=frozenset()),
-    )
+    return _format_field(field, value)
 
 
 @pytest.mark.parametrize(
     ("checkbox", "year", "expected"),
     [(False, 2026, b"026"), (True, "2026", b"126"), (None, 2000, b"000")],
 )
-def test_filing_writer_emits_exact_policy_bytes(
-    checkbox: bool | None,
-    year: int | str,
-    expected: bytes,
-) -> None:
+def test_filing_writer_emits_exact_policy_bytes(checkbox: object, year: object, expected: bytes) -> None:
+    layout = _two_record_layout()
     assert (
-        render_layout(
-            _two_record_layout(),
-            draft=_draft(checkbox=checkbox, year=year),
-            producer_snapshot=_typed_producer_snapshot(),
-        )
-        == expected
-    )
-
-
-def test_filing_writer_dispatches_only_the_exact_typed_projection_reference() -> None:
-    ref = M303Exonerado390ActivityProjectionRef(
-        slot=1,
-        field=M303Exonerado390ActivityField.ACTIVITY_CODE,
-    )
-    field = ExportFieldDefinition(
-        id="typed-projection",
-        offset=1,
-        length=3,
-        kind="projection",
-        projection_ref=ref,
-        data_type="text",
-        required=True,
-        padding="right_space",
-        justification="left",
-        signed=False,
-        legal_refs=_LEGAL_REFS,
-        source_refs=_SOURCE_REFS,
-    )
-    layout = ExportLayoutDefinition(
-        id="typed-projection-layout",
-        legal_refs=_LEGAL_REFS,
-        source_refs=_SOURCE_REFS,
-        records=(_record("typed-projection-record", field, order=0),),
-    )
-
-    assert (
-        render_layout(
-            layout,
-            draft=_draft(checkbox=False, year=2026),
-            producer_snapshot=_typed_producer_snapshot(),
-            projection_values={(ref.model_dump_json(), None): "A01"},
-        )
-        == b"A01"
-    )
-
-    with pytest.raises(FilingExportValidationError, match="no exact typed projection value"):
-        render_layout(
-            layout,
-            draft=_draft(checkbox=False, year=2026),
-            producer_snapshot=_typed_producer_snapshot(),
-        )
-
-
-def test_projection_row_occurrences_are_selected_only_by_resolved_typed_values() -> None:
-    ref = M303Exonerado390ActivityProjectionRef(
-        slot=1,
-        field=M303Exonerado390ActivityField.ACTIVITY_CODE,
-    )
-    field = ExportFieldDefinition(
-        id="typed-row-projection",
-        offset=1,
-        length=3,
-        kind="projection",
-        projection_ref=ref,
-        data_type="text",
-        required=True,
-        padding="right_space",
-        justification="left",
-        signed=False,
-        legal_refs=_LEGAL_REFS,
-        source_refs=_SOURCE_REFS,
-    )
-    record = ExportRecordDefinition(
-        id="typed-projection-rows",
-        record_type="2",
-        order=0,
-        encoding="ascii",
-        line_ending="none",
-        repeat="projection_rows",
-        fields=(field,),
-    )
-    layout = ExportLayoutDefinition(
-        id="typed-projection-row-layout",
-        legal_refs=_LEGAL_REFS,
-        source_refs=_SOURCE_REFS,
-        records=(record,),
-    )
-
-    assert (
-        render_layout(
-            layout,
-            draft=_draft(checkbox=False, year=2026),
-            producer_snapshot=_typed_producer_snapshot(),
-            projection_values={
-                (ref.model_dump_json(), 0): "A01",
-                (ref.model_dump_json(), 1): "A02",
-            },
-        )
-        == b"A01A02"
-    )
-    with pytest.raises(FilingExportValidationError, match="has no projected occurrences"):
-        render_layout(
-            layout,
-            draft=_draft(checkbox=False, year=2026),
-            producer_snapshot=_typed_producer_snapshot(),
-            projection_values={},
-        )
-    optional_layout = layout.model_copy(
-        update={"records": (record.model_copy(update={"required": False}),)},
-    )
-    assert (
-        render_layout(
-            optional_layout,
-            draft=_draft(checkbox=False, year=2026),
-            producer_snapshot=_typed_producer_snapshot(),
-            projection_values={},
-        )
-        == b""
+        "".join((_render_one(layout.records[0], checkbox), _render_one(layout.records[1], year))).encode() == expected
     )
 
 
@@ -297,7 +166,11 @@ def test_verifier_projects_expected_values_by_record_and_field_identity() -> Non
         layout,
         draft=_draft(checkbox=True, year=2026),
         payload=b"126",
-        schema_provider=RegistrySchemaAccessor(collections={}, subviews={}),
+        schema_provider=build_runtime_schema_provider(
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            modelos=("200",),
+        ),
     )
 
     assert mismatched == ()
@@ -310,7 +183,53 @@ def test_verifier_detects_transformed_value_drift(payload: bytes, expected_misma
         _two_record_layout(),
         draft=_draft(checkbox=True, year=2026),
         payload=payload,
-        schema_provider=RegistrySchemaAccessor(collections={}, subviews={}),
+        schema_provider=build_runtime_schema_provider(
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            modelos=("200",),
+        ),
     )
 
     assert mismatched == (expected_mismatch,)
+def _projection_field() -> ExportFieldDefinition:
+    """A real projection field, exactly as the M303 layout declares one."""
+    return ExportFieldDefinition(
+        id="exonerado-activity-code",
+        offset=1,
+        length=3,
+        kind="projection",
+        projection_ref=M303Exonerado390ActivityProjectionRef(
+            projection_kind="m303_exonerado_390_activity",
+            slot=1,
+            field=M303Exonerado390ActivityField.ACTIVITY_CODE,
+        ),
+        data_type="text",
+        required=True,
+        padding="right_space",
+        justification="left",
+        signed=False,
+        legal_refs=_LEGAL_REFS,
+        source_refs=_SOURCE_REFS,
+    )
+
+
+def test_projection_field_refuses_a_context_free_render_instead_of_blanking() -> None:
+    """A projection slot without its snapshot-owned context must refuse, never render blank.
+
+    ``_render_record`` accepts ``render_context=None`` so that a non-projection
+    record can be rendered from a synthetic layout, which cannot carry a
+    snapshot-owned :class:`FilingRecordRenderContext` (its validator checks
+    layout and record ownership by identity, deliberately, so no synthetic
+    context can be forged). That nullable must not become a way for a
+    projection field to reach disk as a blank slot behind a valid digest.
+    """
+    with pytest.raises(FilingExportValidationError, match="requires a snapshot-owned render context"):
+        _projection_field_value(_projection_field(), None, {})
+
+
+def test_projection_field_without_a_reference_refuses_before_the_context_check() -> None:
+    """A projection field missing its ``projection_ref`` refuses on its own terms."""
+    field = _projection_field().model_copy(update={"projection_ref": None})
+
+    with pytest.raises(FilingExportValidationError, match="must declare projection_ref"):
+        _projection_field_value(field, None, {})

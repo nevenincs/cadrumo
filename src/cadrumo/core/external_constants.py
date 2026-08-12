@@ -126,6 +126,13 @@ class AeatSedePaths(_Frozen):
     notificaciones: str
     iva_compensation_wallet: str
     censal_datos: str
+    deudas_consulta: str
+    #: The *pagar todas mis deudas* launcher. Declared NOT to be navigated but
+    #: to be refused: it shares the ``/wlpl/SRVO-JDIT/`` application prefix with
+    #: :attr:`deudas_consulta`, so the deudas read guard must allow-list the
+    #: consulta ENDPOINT rather than that shared prefix. Naming it here keeps
+    #: the refusal case anchored to an observed route instead of a guess.
+    deudas_pagar_todas: str
 
 
 class AeatClaveMovilSurface(_Frozen):
@@ -356,21 +363,21 @@ class AeatSection(_Frozen):
         ``[aeat.pre303]`` block cannot break registry parsing for the
         many CLI paths that never scrape the AEAT portal. When the block
         is broken the leaked :exc:`pydantic.ValidationError` is wrapped
-        in a :class:`core.errors.CoreValidationError` carrying an
-        operator-facing recovery hint.
+        in a :class:`core.errors.CoreValidationError` carrying the section
+        identity and the failing error's type as machine facts. The wrapper
+        renders no prose and copies no validation message: the operator-facing
+        text is the registered code's translation key, and the recovery is
+        resolved downstream from the facts.
         """
         try:
             return AeatPre303Surface.model_validate(self.pre303_raw)
         except ValidationError as exc:
             raise CoreValidationError(
-                "The AEAT Pre303 / IVA-wallet surface section of "
-                "external_constants.toml is missing or malformed. This "
-                "section configures AEAT web-scraping selectors; only "
-                "commands that read the IVA compensation wallet or the "
-                "Pre303 portal need it.",
+                translated_message=CoreValidationError.code.message_key,
                 context={
                     "section": "aeat.pre303",
-                    "validation_error": str(exc),
+                    "valid": False,
+                    "validation_error_type": type(exc).__name__,
                 },
             ) from exc
 

@@ -13,6 +13,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.domain.calculations.registry import (
+    CasillaFieldKind,
     RegistrySnapshot,
     RegistryValidationError,
     SourceRefId,
@@ -209,6 +210,7 @@ def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnap
 
     casilla_ids = casillas_by_id(snapshot.revision)
     binding_ids = {binding.id for binding in snapshot.revision.bindings}
+    _validate_projection_ref_admission(semantic_map, snapshot)
     for entry in semantic_map.entries:
         if entry.casilla_id is not None and entry.casilla_id not in casilla_ids:
             raise RegistryValidationError(
@@ -221,6 +223,41 @@ def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnap
                 f"binding {entry.binding!r}",
             )
         _validate_catalogue_refs(entry, snapshot)
+
+
+def _validate_projection_ref_admission(semantic_map: SemanticMap, snapshot: RegistrySnapshot) -> None:
+    """Require each mapped repeated-row reference to be admitted exactly once.
+
+    The selected immutable revision owns this index.  Map anchors remain only
+    source evidence, so neither their geometry nor field labels can select or
+    repair a projection identity.
+    """
+    projection_refs = tuple(
+        entry.projection_ref for entry in semantic_map.entries if entry.kind is CasillaFieldKind.PROJECTION
+    )
+    if not projection_refs:
+        return
+    if any(projection_ref is None for projection_ref in projection_refs):
+        raise RegistryValidationError("projection semantic-map entries must carry a typed projection_ref")
+    typed_refs = tuple(projection_ref for projection_ref in projection_refs if projection_ref is not None)
+    duplicate_refs = tuple(projection_ref for projection_ref, count in Counter(typed_refs).items() if count > 1)
+    if duplicate_refs:
+        raise RegistryValidationError(
+            "semantic map contains duplicate projection references: "
+            f"{tuple(sorted(repr(projection_ref) for projection_ref in duplicate_refs))}",
+        )
+    admitted = snapshot.revision.projection_endpoint_index()
+    for projection_ref in typed_refs:
+        admitted_fields = admitted.get(projection_ref)
+        if admitted_fields is None:
+            raise RegistryValidationError(
+                f"semantic-map projection reference is not admitted by the target revision: {projection_ref!r}",
+            )
+        if len(admitted_fields) != 1:
+            raise RegistryValidationError(
+                "semantic-map projection reference is not admitted exactly once by the target revision: "
+                f"{projection_ref!r} resolves to {len(admitted_fields)} fields",
+            )
 
 
 def _validate_exact_record_bijection(

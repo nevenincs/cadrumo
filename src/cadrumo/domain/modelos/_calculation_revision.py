@@ -147,6 +147,13 @@ _M303Exonerado390EpigrafeIae = Annotated[
 ]
 
 
+# The AEAT DP30304 record design carries six (Clave, Epigrafe IAE) pairs - the
+# Principal pair plus Otras 1a through 5a - but marks none of them Obligatorio.
+# Six is the record's capacity, bounded by the slot field, not a population
+# requirement: a filer carrying one activity states one row. Requiring six would
+# force five fabricated activities, because both row fields reject blanks.
+
+
 class M303Exonerado390ActivityRowEvidence(BaseModel):
     """One ordered evidenced activity row for the exonerado-390 population."""
 
@@ -165,15 +172,14 @@ class M303Exonerado390FilingEvidence(BaseModel):
 
     applicable: bool
     applicability_reference: FilingEvidenceReference
-    endpoints: tuple[M303Exonerado390EndpointEvidence, ...] = ()
-    activity_rows: tuple[M303Exonerado390ActivityRowEvidence, ...] = ()
-    operaciones_terceros_declarables: bool | None = None
-    operaciones_terceros_reference: FilingEvidenceReference | None = None
+    endpoints: tuple[M303Exonerado390EndpointEvidence, ...]
+    activity_rows: tuple[M303Exonerado390ActivityRowEvidence, ...]
+    operaciones_terceros_declarables: bool | None
+    operaciones_terceros_reference: FilingEvidenceReference | None
 
     @model_validator(mode="after")
     def _applicability_matches_endpoint_population(self) -> M303Exonerado390FilingEvidence:
         _validate_m303_exonerado_endpoint_ids(self.endpoints)
-        _validate_m303_exonerado_activity_row_slots(self.activity_rows)
         if self.applicable:
             _validate_applicable_m303_exonerado_evidence(self)
         else:
@@ -189,19 +195,16 @@ def _validate_m303_exonerado_endpoint_ids(
         raise ModeloValidationError("M303 exonerado-390 evidence contains duplicate endpoint casillas")
 
 
-def _validate_m303_exonerado_activity_row_slots(
-    activity_rows: tuple[M303Exonerado390ActivityRowEvidence, ...],
-) -> None:
-    row_slots = tuple(row.slot for row in activity_rows)
-    if row_slots != tuple(range(1, len(row_slots) + 1)):
-        raise ModeloValidationError("M303 exonerado-390 activity rows must use contiguous ordered slots 1-6")
-
-
 def _validate_applicable_m303_exonerado_evidence(evidence: M303Exonerado390FilingEvidence) -> None:
     if not evidence.endpoints:
         raise ModeloValidationError("applicable M303 exonerado-390 evidence requires endpoint facts")
     if not evidence.activity_rows:
         raise ModeloValidationError("applicable M303 exonerado-390 evidence requires activity rows")
+    row_slots = tuple(row.slot for row in evidence.activity_rows)
+    if row_slots != tuple(range(1, len(row_slots) + 1)):
+        raise ModeloValidationError(
+            "M303 exonerado-390 activity rows must use contiguous ordered slots 1-6",
+        )
     if evidence.operaciones_terceros_declarables is None or evidence.operaciones_terceros_reference is None:
         raise ModeloValidationError("applicable M303 exonerado-390 evidence requires the Modelo 347 decision")
 
@@ -472,7 +475,7 @@ def derive_calculation_revision_id(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
+    filing_instance_evidence: FilingInstanceEvidence | None,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -748,8 +751,10 @@ class CalculationRevision(BaseModel):
     ledger_filing_evidence: LedgerFilingEvidence | None = None
     # Complete filing-instance facts are selected before calculation and take
     # part in the content-addressed revision identity. They are never authored
-    # or replaced on an existing BORRADOR.
-    filing_instance_evidence: FilingInstanceEvidence | None = None
+    # or replaced on an existing BORRADOR. Stated explicitly at every
+    # construction site, so "no filing facts" is a decision on the record rather
+    # than a field nobody supplied.
+    filing_instance_evidence: FilingInstanceEvidence | None
     # Resolver-level source-mesh provenance: the typed
     # resolver→source-object→fingerprint trace projected
     # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist

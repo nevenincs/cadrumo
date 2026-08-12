@@ -58,7 +58,12 @@ _LEDGER_NOTICE_MODULES: tuple[ModuleType, ...] = (
 _COMMAND_PROSE = re.compile(r"(?i)\b(?:aeat\s+)?app\s+ledger\b")
 _PACKAGE_ROOT = Path(inspect.getfile(_ledger)).parents[2]
 _LOCALES_DIR = _PACKAGE_ROOT / "locales"
-_REGISTERED_LEDGER_LOCALE_KEYS = {"cli.ledger.errors.period_year_pairing"}
+_REGISTERED_LEDGER_LOCALE_KEYS: set[str] = set()
+"""Catalogue leaves consumed somewhere the ``cli.ledger.`` constant scan cannot see.
+
+Empty today: every surviving ledger leaf is named by a literal in the scanned
+package. An entry here admits a catalogue key the scan would otherwise report
+as unconsumed, so it must state why the key is invisible to the walk."""
 _TYPED_LEDGER_ERROR_NAMES = {
     "ConfirmationBlockedError",
     "InvoiceValidationError",

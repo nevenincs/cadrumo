@@ -8,18 +8,27 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core import Period, ProrrataEspecialTransitionKind, ProrrataRegisterRegime
+from ....core import Period, ProrrataEspecialTransitionKind, ProrrataRegisterRegime, SectorDiferenciadoLetra
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import IvaLedgerObservation
-from ....domain.iva import IvaCashAccountingTreatment, IvaCategory, IvaFlowDirection, IvaRateKind
+from ....domain.iva import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ....domain.prorrata_register import (
     ProrrataEspecialTransitionEvidence,
     ProrrataRegister,
     ProrrataRegisterEntry,
+    SectorDefinition,
 )
 from .. import (
     AggregationValidationError,
     IvaLedgerAggregation,
+    M303ProrrataTransitionArrival,
+    M303SupplierRegimeArrival,
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
@@ -47,6 +56,7 @@ def _observation(
         base_amount=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
         cash_accounting_treatment=cash_accounting_treatment,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 
@@ -143,9 +153,10 @@ def test_prorrata_transition_applicability_matches_the_official_2026_note_6() ->
     assert "SI para el último periodo (12 y 4T)" in source
     assert "Blanco para periodos distintos del último (12 y 4T)" in source
     assert (
-        resolve_m303_prorrata_transition_arrival(
+        M303ProrrataTransitionArrival(
             period=_DECEMBER_2026,
-            prorrata_register=ProrrataRegister(),
+            transition=None,
+            register_evidence=(),
         ).is_applicable
         is True
     )
@@ -171,13 +182,30 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
         ),
     )
 
-    with pytest.raises(ValidationError, match="contradictory prorrata especial option and revocation"):
-        ProrrataRegister(entries=(option_entry, revocation_entry))
+    with pytest.raises(ValidationError, match="contradictory prorrata especial option and revocation evidence"):
+        ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=2025,
+                    sector_id="wholesale",
+                    regime=ProrrataRegisterRegime.ESPECIAL,
+                    especial_transition=None,
+                ),
+                option_entry,
+                revocation_entry,
+            )
+        )
 
 
 def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_especial_state() -> None:
     register = ProrrataRegister(
-        entries=(ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.ESPECIAL),),
+        entries=(
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.ESPECIAL,
+                especial_transition=None,
+            ),
+        ),
     )
 
     arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
@@ -212,7 +240,11 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
     )
     register = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.ESPECIAL),
+            ProrrataRegisterEntry(
+                ejercicio=2025,
+                regime=ProrrataRegisterRegime.ESPECIAL,
+                especial_transition=None,
+            ),
             revocation_entry,
         ),
     )
@@ -222,3 +254,92 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
     assert arrival.is_applicable is True
     assert arrival.transition is ProrrataEspecialTransitionKind.REVOCACION
     assert arrival.register_evidence == (revocation_entry,)
+
+
+def test_prorrata_transition_arrival_requires_complete_current_year_register_coverage() -> None:
+    """A final-period artifact never treats missing sector declarations as NO."""
+    current = ProrrataRegisterEntry(
+        ejercicio=2026,
+        sector_id="retail",
+        regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
+    )
+    register = ProrrataRegister(
+        entries=(current,),
+        sector_definitions=(
+            SectorDefinition(
+                sector_id="retail",
+                letra=SectorDiferenciadoLetra.A,
+                member_activity_codes=("471",),
+            ),
+            SectorDefinition(
+                sector_id="leasing",
+                letra=SectorDiferenciadoLetra.A,
+                member_activity_codes=("649",),
+            ),
+        ),
+    )
+
+    with pytest.raises(AggregationValidationError, match="complete explicit current-year declaration"):
+        resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
+
+    assert resolve_m303_prorrata_transition_arrival(period=_Q1_2026, prorrata_register=register).transition is None
+
+    complete_register = ProrrataRegister(
+        entries=(
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+            ),
+            current,
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                sector_id="leasing",
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+            ),
+        ),
+        sector_definitions=register.sector_definitions,
+    )
+
+    arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=complete_register)
+    assert arrival.transition is None
+    assert arrival.register_evidence == ()
+
+
+def test_prorrata_transition_arrival_refuses_an_empty_final_period_register() -> None:
+    with pytest.raises(AggregationValidationError, match="complete explicit current-year declaration"):
+        resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=ProrrataRegister())
+
+
+def test_arrival_evidence_axes_are_required_and_explicit_empty_or_null_values_remain_valid() -> None:
+    assert M303SupplierRegimeArrival.model_fields["source_ledger_ids"].is_required()
+    assert M303ProrrataTransitionArrival.model_fields["transition"].is_required()
+    assert M303ProrrataTransitionArrival.model_fields["register_evidence"].is_required()
+
+    assert (
+        M303SupplierRegimeArrival(
+            period=_Q1_2026,
+            recipient_of_cash_accounting_operations=False,
+            source_ledger_ids=(),
+        ).source_ledger_ids
+        == ()
+    )
+    assert (
+        M303ProrrataTransitionArrival(
+            period=_Q1_2026,
+            transition=None,
+            register_evidence=(),
+        ).transition
+        is None
+    )
+
+    with pytest.raises(ValidationError):
+        M303SupplierRegimeArrival.model_validate(
+            {"period": _Q1_2026, "recipient_of_cash_accounting_operations": False},
+        )
+    with pytest.raises(ValidationError):
+        M303ProrrataTransitionArrival.model_validate({"period": _Q1_2026, "register_evidence": ()})
+    with pytest.raises(ValidationError):
+        M303ProrrataTransitionArrival.model_validate({"period": _Q1_2026, "transition": None})

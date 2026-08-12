@@ -29,6 +29,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+from cadrumo.tests.filing_evidence import general_m303_filing_evidence
 
 from ....core import CasillaId, Period, ResultDisposition, validated_casilla_id
 from ....core.resources import resources
@@ -38,6 +39,7 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     materialize_relation_binding_values,
 )
+from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -156,6 +158,10 @@ def _calculate_303(
         binding_values=binding_values,
         relation_values=dict(relation_values),
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+        m303_annual_orden=None,
     )
 
 
@@ -169,11 +175,13 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
     """
     work_unit_id = _year_n_4t_work_unit().work_unit_id
     values = dict(result.values)
+    filing_instance_evidence = general_m303_filing_evidence(Period.from_year_and_code(2025, "4T"), reference="test:m303-refunded-period-carry")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     return CalculationRevision(
         calculation_revision_id=revision_id,
@@ -187,6 +195,7 @@ def _revision_from_result(result: RegistryCalculationResult) -> CalculationRevis
         verified_by="refund-carry-test",
         filed_at=_CLOCK,
         filed_by="refund-carry-test",
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 

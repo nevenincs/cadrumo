@@ -163,7 +163,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
     period: Period,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     profile_record: UserProfileRecord | None = None,
-    prorrata_register_repository: ProrrataRegisterRepositoryProtocol | None = None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
 ) -> RentaGastoLedgerAggregation:
     """Load the transaction catalogue and aggregate cumulative M130 gastos.
 
@@ -172,8 +172,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
     M100 annual first slice uses, for the SAME ejercicio (``period.filing_year``),
     so the two filings cannot diverge on it. ``profile_record`` (a
     :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
-    profile and register directly (tests); otherwise both are loaded from the
-    bucket.
+    profile and canonical register directly.
 
     Returns a :class:`RentaGastoLedgerAggregation`.
     """

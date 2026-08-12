@@ -14,6 +14,8 @@ rate_kinds = ["general"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -33,6 +35,8 @@ rate_kinds = ["reduced"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -52,6 +56,8 @@ rate_kinds = ["super_reduced"]
 flow_direction = "repercutido"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -71,6 +77,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -100,6 +108,8 @@ rate_kinds = ["general"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -119,6 +129,8 @@ rate_kinds = ["reduced"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -138,6 +150,8 @@ rate_kinds = ["super_reduced"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -157,6 +171,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -185,6 +201,8 @@ rate_kinds = ["general"]
 flow_direction = "repercutido"
 fact = "recargo_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -204,6 +222,8 @@ rate_kinds = ["reduced"]
 flow_direction = "repercutido"
 fact = "recargo_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -223,6 +243,8 @@ rate_kinds = ["super_reduced"]
 flow_direction = "repercutido"
 fact = "recargo_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -252,6 +274,8 @@ rate_kinds = ["zero"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -271,6 +295,8 @@ rate_kinds = ["zero"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -290,6 +316,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -322,6 +350,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -341,6 +371,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "inversion_sujeto_pasivo"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -367,6 +399,8 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -405,6 +439,7 @@ flow_direction = "repercutido"
 cash_accounting_treatments = ["taxpayer_regime"]
 fact = "base_amount_sum"
 
+observation_roles = ["operation_informational"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -425,6 +460,7 @@ flow_direction = "repercutido"
 cash_accounting_treatments = ["taxpayer_regime"]
 fact = "iva_amount_sum"
 
+observation_roles = ["operation_informational"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -445,6 +481,7 @@ flow_direction = "soportado"
 cash_accounting_treatments = ["taxpayer_regime", "supplier_regime"]
 fact = "base_amount_sum"
 
+observation_roles = ["operation_informational"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -465,6 +502,7 @@ flow_direction = "soportado"
 cash_accounting_treatments = ["taxpayer_regime", "supplier_regime"]
 fact = "iva_amount_sum"
 
+observation_roles = ["operation_informational"]
 [revisions.2009-y-siguientes.bindings.aggregation]
 op = "sum"
 

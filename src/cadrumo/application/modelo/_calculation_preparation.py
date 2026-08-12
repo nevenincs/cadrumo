@@ -102,7 +102,7 @@ def prepare_calculation(
     borrador_snapshot_repository: Borrador100SnapshotRepository | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None = None,
+    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
 ) -> PreparedCalculation:
     """Prepare validated inputs, source channels, and gates for calculation.
 

@@ -150,6 +150,7 @@ def quickfile(
             relation=relation,
             row=row,
             borrador_snapshot_id=None,
+            filing_instance_evidence=filing_instance_evidence,
             prestacion_inss_exenta=None,
             rescate_plan_pensiones_capital=None,
             rescate_plan_pensiones_aportaciones_pre_2007=None,

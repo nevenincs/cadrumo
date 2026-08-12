@@ -51,7 +51,15 @@ import pytest
 
 from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
 
-from ....core import CasillaId, Period, derive_result_disposition, result_disposition_casilla_ids, validated_casilla_id
+from ....core import (
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+    derive_result_disposition,
+    result_disposition_casilla_ids,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
@@ -61,7 +69,15 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....domain.iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from .._iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
@@ -136,6 +152,17 @@ _QUARTER_IVA: dict[str, tuple[Decimal, Decimal]] = {
 
 
 def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:
+    """Build one quarter-ledger row, carrying deduction authority on input flows only.
+
+    The observation model splits the two directions: an input row (``soportado``,
+    ``inversion_sujeto_pasivo``) MUST carry the exact statutory deduction family
+    and its evidence provenance, and an output row MUST NOT carry either. A
+    fixture that supplied both unconditionally, or neither, is refused by the
+    model rather than silently recorded -- which is the point, since the 390
+    annual return reconciles against the summed quarters and an input row with
+    invented authority would reconcile just as cleanly as a real one.
+    """
+    is_input_flow = flow in {IvaFlowDirection.SOPORTADO, IvaFlowDirection.INVERSION_SUJETO_PASIVO}
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -144,6 +171,17 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         flow_direction=flow,
         base_amount=Decimal("100.00"),
         iva_amount=iva,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT if is_input_flow else None,
+        deduction_provenance=(
+            IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="d" * 64,
+            )
+            if is_input_flow
+            else None
+        ),
     )
 
 
@@ -195,6 +233,10 @@ def _calculate_303_quarter(
         binding_values=binding_values,
         relation_values={},
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+        m303_annual_orden=None,
     )
 
 
@@ -272,6 +314,8 @@ def _calculate_390_annual(
         inputs=inputs,
         binding_values=binding_values,
         date_context={"filing_period": date(filing_year, 12, 31)},
+        m303_regimen_simplificado_scope=None,
+        m303_annual_orden=None,
     )
     return result, len(result.values)
 

@@ -14,6 +14,7 @@ from ....core import Modelo, NoRecoveryOutcome, Period
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    FilingInstanceEvidence,
     ModeloCode,
     WorkUnit,
     derive_calculation_revision_id,
@@ -22,6 +23,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository, record_to_path_values
@@ -44,7 +46,8 @@ _NOW = datetime(2026, 6, 27, 12, 0, 0, tzinfo=UTC)
 _M100_REVISION = "2025"
 _M130_REVISION = "2019-y-siguientes"
 _M200_REVISION = "2024-y-siguientes"
-_M303_REVISION = "2023-y-siguientes"
+_M303_2025_REVISION = "2025"
+_M303_2026_REVISION = "2026-y-siguientes"
 _OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"
 _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
 
@@ -83,6 +86,12 @@ def _store_profile_without_activity(bucket_id: str) -> None:
                 UserProfileFact(path="identity.name", value="Ready"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -107,6 +116,11 @@ def _store_ready_profile(bucket_id: str, *, activity_start_date: date) -> None:
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -128,6 +142,12 @@ def _store_nonresident_legal_entity_profile(bucket_id: str) -> None:
                 UserProfileFact(path="identity.legal_name", value="NordHaus GmbH"),
                 UserProfileFact(path="activities.description", value="Spanish-source services"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
                 UserProfileFact(path="taxpayer_type.legal_entity_form", value="sl"),
                 UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
@@ -157,6 +177,12 @@ def _store_nonresident_natural_person_profile(bucket_id: str) -> None:
                 UserProfileFact(path="identity.surnames", value="Whitfield"),
                 UserProfileFact(path="activities.description", value="UK-source pension"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
+                UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                UserProfileFact(path="iva.redeme_enrolled", value=False),
+                UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
                 UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
                 UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
                 UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
@@ -178,7 +204,7 @@ def _store_work_unit(
     modelo: Modelo = Modelo.M303,
     filing_year: int = 2025,
     period_code: str = "1T",
-    revision_id: str = _M303_REVISION,
+    revision_id: str = _M303_2025_REVISION,
 ) -> WorkUnit:
     period = Period.from_year_and_code(filing_year, period_code)
     modelo_code = modelo.value
@@ -203,12 +229,18 @@ def _store_work_unit(
     return work_unit
 
 
-def _store_draft_revision(repository: CalculationRevisionCatalogueRepository, *, work_unit: WorkUnit) -> str:
+def _store_draft_revision(
+    repository: CalculationRevisionCatalogueRepository,
+    *,
+    work_unit: WorkUnit,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+) -> str:
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values={},
+        filing_instance_evidence=filing_instance_evidence,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -216,7 +248,7 @@ def _store_draft_revision(repository: CalculationRevisionCatalogueRepository, *,
         state=CalculationRevisionState.BORRADOR,
         created_at=_NOW,
         updated_at=_NOW,
-        filing_instance_evidence=None,
+        filing_instance_evidence=filing_instance_evidence,
     )
     repository.save(upsert_calculation_revision(repository.load(), revision))
     return revision_id
@@ -232,7 +264,7 @@ def test_create_work_unit_service_refuses_incomplete_profile(tmp_path: Path) -> 
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
-                revision_id=_M303_REVISION,
+                revision_id=_M303_2025_REVISION,
                 clock=_NOW,
             )
 
@@ -308,7 +340,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision_id=_M303_REVISION,
+                revision_id=_M303_2025_REVISION,
                 repository=repository,
                 clock=_NOW,
             )
@@ -319,7 +351,7 @@ def test_create_work_unit_service_refuses_period_year_mismatch_with_typed_error(
             "filing_year": 2025,
             "period_year": 2026,
             "period": "1T",
-            "revision_id": _M303_REVISION,
+            "revision_id": _M303_2025_REVISION,
             "filing_year_matches_period": False,
         }
         failure = excinfo.value.precondition_failure
@@ -367,7 +399,14 @@ def test_mark_verified_service_refuses_existing_work_unit_with_incomplete_profil
         work_repository = WorkUnitCatalogueRepository()
         calculation_repository = CalculationRevisionCatalogueRepository()
         work_unit = _store_work_unit(work_repository, bucket_id=_OPERATOR_PROFILE_ID)
-        revision_id = _store_draft_revision(calculation_repository, work_unit=work_unit)
+        revision_id = _store_draft_revision(
+            calculation_repository,
+            work_unit=work_unit,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period,
+                reference="test:profile-readiness:verification-refusal",
+            ),
+        )
 
         with pytest.raises(ModeloProfileReadinessError):
             mark_revision_verificado_completo(
@@ -610,7 +649,7 @@ def test_create_work_unit_service_refuses_pre_activity_m303_and_persists_no_work
                 modelo=Modelo.M303.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                revision_id=_M303_REVISION,
+                revision_id=_M303_2026_REVISION,
                 repository=repository,
                 clock=_NOW,
             )
@@ -667,6 +706,7 @@ def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp
             bucket_id=_OPERATOR_PROFILE_ID,
             filing_year=2026,
             period_code="1T",
+            revision_id=_M303_2026_REVISION,
         )
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
@@ -741,7 +781,7 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
             modelo=Modelo.M303.value,
             filing_year=2026,
             period=period,
-            revision_id=_M303_REVISION,
+            revision_id=_M303_2026_REVISION,
             repository=work_repository,
             clock=_NOW,
         )
@@ -751,6 +791,10 @@ def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) ->
             work_unit_repository=work_repository,
             calculation_repository=calculation_repository,
             iva_compensation_decision_repository=wallet_repository,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period,
+                reference="test:profile-readiness:first-active-m303",
+            ),
             clock=_NOW,
         )
 
@@ -770,7 +814,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
             bucket_id=_OPERATOR_PROFILE_ID,
             filing_year=2026,
             period_code="1T",
-            revision_id=_M303_REVISION,
+            revision_id=_M303_2026_REVISION,
         )
 
         with pytest.raises(ModeloProfileReadinessError) as excinfo:
@@ -779,7 +823,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
                 modelo=Modelo.M303.value,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
-                registry_revision_id=_M303_REVISION,
+                registry_revision_id=_M303_2026_REVISION,
                 name="renamed stale work",
                 actor="operator",
             )
@@ -810,7 +854,7 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 modelo=Modelo.M303.value,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "1T"),
-                revision_id=_M303_REVISION,
+                revision_id=_M303_2025_REVISION,
                 clock=_NOW,
             )
         assert excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete"
@@ -855,7 +899,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
             modelo=Modelo.M303,
             filing_year=2025,
             period_code="1T",
-            revision_id=_M303_REVISION,
+            revision_id=_M303_2025_REVISION,
         )
         profile_repository = UserProfileLifecycleRepository(bucket_id=_OPERATOR_PROFILE_ID)
         record = profile_repository.load(_OPERATOR_PROFILE_ID)

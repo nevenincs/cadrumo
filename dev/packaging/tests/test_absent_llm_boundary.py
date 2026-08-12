@@ -25,7 +25,7 @@ import pytest
 
 from dev.packaging._distribution_names import normalise_distribution_name
 from dev.packaging._smoke_common import optional_extra_registry
-from dev.packaging.smoke_absent_llm import _EXPECTED_HINT, _INFERENCE_SURFACES
+from dev.packaging.smoke_absent_llm import _EXPECTED_EXTRA, _INFERENCE_SURFACES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -127,8 +127,8 @@ def test_the_surface_inventory_names_real_exported_entry_points() -> None:
     )
 
 
-def test_the_expected_hint_matches_the_registered_extra() -> None:
-    """The lane's expected refusal text is the registry's, not a copy that can drift."""
+def test_the_expected_extra_matches_the_registered_extra() -> None:
+    """The lane's expected refusal identity is the registry's, not a copy that can drift."""
     from cadrumo.core import LLM_EXTRA
 
-    assert LLM_EXTRA.install_hint == _EXPECTED_HINT
+    assert LLM_EXTRA.extra == _EXPECTED_EXTRA

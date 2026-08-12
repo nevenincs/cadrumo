@@ -16,7 +16,10 @@ from ....core import (
     Period,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry import (
+    project_m303_regimen_simplificado_rows,
+    resolve_m303_regimen_simplificado_snapshot,
+)
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import (
     ActividadNoAgricolaSimplificado,
@@ -27,7 +30,6 @@ from ....domain.iva import (
     RegimenSimplificadoFilingRows,
 )
 from ....domain.modelos import M303RegimenSimplificadoFilingEvidence
-from .. import build_runtime_schema_provider, project_m303_regimen_simplificado_value_arrival
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,31 +85,43 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
         regimen_snapshot=regimen_snapshot,
     )
 
-    projected = project_m303_regimen_simplificado_value_arrival(
-        period=period,
-        schema_provider=build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",)),
-        evidence=evidence,
+    assert evidence.rows.ejercicio == period.filing_year
+    projected = project_m303_regimen_simplificado_rows(
         projection_refs=(
             M303RegimenSimplificadoActivityProjectionRef(
+                projection_kind="m303_regimen_simplificado_activity",
                 cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
                 slot=1,
                 field=M303RegimenSimplificadoActivityField.IAE_EPIGRAFE,
             ),
             M303RegimenSimplificadoModuleProjectionRef(
+                projection_kind="m303_regimen_simplificado_module",
+                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
                 slot=1,
                 module_order=1,
                 value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
             ),
             M303RegimenSimplificadoModuleProjectionRef(
+                projection_kind="m303_regimen_simplificado_module",
+                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
                 slot=1,
                 module_order=7,
                 value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
             ),
             M303RegimenSimplificadoFactProjectionRef(
+                projection_kind="m303_regimen_simplificado_fact",
                 cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
                 slot=1,
                 fact_identity=annual_activity.applicable_fact_identities[0],
             ),
+        ),
+        rows=evidence.rows,
+        orden=evidence.regimen_snapshot.orden.activities,
+        applicable=not evidence.scope_decision.is_not_claimed,
+        censo_iae_epigraphs=frozenset(
+            activity.iae_epigrafe
+            for activity in evidence.rows.activities
+            if isinstance(activity, ActividadNoAgricolaSimplificado)
         ),
     )
 

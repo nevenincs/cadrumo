@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
+from pathlib import Path
 from typing import cast
 
 import pytest
@@ -82,6 +84,10 @@ def _general_m303_filing_evidence(period: Period) -> M303FilingInstanceEvidence:
         exonerado_390=M303Exonerado390FilingEvidence(
             applicable=False,
             applicability_reference=FilingEvidenceReference(reference="test:exonerado-390:not-applicable"),
+            endpoints=(),
+            activity_rows=(),
+            operaciones_terceros_declarables=None,
+            operaciones_terceros_reference=None,
         ),
         regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
             scope_decision=scope,
@@ -125,6 +131,8 @@ def test_m303_exonerado_390_evidence_preserves_shape_refusal_precedence() -> Non
                     evidence_reference=reference,
                 ),
             ),
+            operaciones_terceros_declarables=False,
+            operaciones_terceros_reference=reference,
         )
 
 
@@ -134,6 +142,7 @@ def _base_id() -> str:
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
 
 
@@ -274,8 +283,23 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
                             M303Exonerado390ActivityRowEvidence(
                                 slot=1,
                                 codigo_actividad=codigo_actividad,
-                                epigrafe_iae="4191",
+                                epigrafe_iae="4101",
                                 evidence_reference=reference,
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=2, codigo_actividad="A02", epigrafe_iae="4102", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=3, codigo_actividad="A03", epigrafe_iae="4103", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=4, codigo_actividad="A04", epigrafe_iae="4104", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=5, codigo_actividad="A05", epigrafe_iae="4105", evidence_reference=reference
+                            ),
+                            M303Exonerado390ActivityRowEvidence(
+                                slot=6, codigo_actividad="A06", epigrafe_iae="4106", evidence_reference=reference
                             ),
                         ),
                         operaciones_terceros_declarables=False,
@@ -285,7 +309,73 @@ def test_revision_id_changes_with_immutable_m303_filing_instance_evidence() -> N
             ),
         )
 
-    assert revision_id_for(annual_evidence("A01")) != revision_id_for(annual_evidence("A02"))
+    assert revision_id_for(annual_evidence("A01")) != revision_id_for(annual_evidence("B01"))
+
+
+def test_exonerado_evidence_rejects_legacy_marker_surface() -> None:
+    reference = FilingEvidenceReference(reference="test:no-s56-fields")
+    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
+        M303Exonerado390FilingEvidence.model_validate(
+            {
+                "applicable": False,
+                "applicability_reference": reference,
+                "endpoints": (),
+                "activity_rows": (),
+                "operaciones_terceros_declarables": None,
+                "operaciones_terceros_reference": None,
+                "marker_reference": "legacy-marker",
+            },
+        )
+
+
+@pytest.mark.parametrize(
+    "missing_field",
+    ("endpoints", "activity_rows", "operaciones_terceros_declarables", "operaciones_terceros_reference"),
+)
+def test_exonerado_evidence_requires_every_explicit_s56_field(missing_field: str) -> None:
+    payload = {
+        "applicable": False,
+        "applicability_reference": FilingEvidenceReference(reference="test:explicit-s56-fields"),
+        "endpoints": (),
+        "activity_rows": (),
+        "operaciones_terceros_declarables": None,
+        "operaciones_terceros_reference": None,
+    }
+    del payload[missing_field]
+    with pytest.raises(ValidationError, match=missing_field):
+        M303Exonerado390FilingEvidence.model_validate(
+            payload,
+        )
+
+
+def test_every_calculation_revision_constructor_declares_filing_evidence_explicitly() -> None:
+    source_root = Path(__file__).parents[4]
+    omissions: list[str] = []
+    for path in source_root.rglob("*.py"):
+        if path.relative_to(source_root).as_posix() == "cadrumo/core/tests/test_period.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = node.func.id if isinstance(node.func, ast.Name) else None
+            if name != "CalculationRevision":
+                continue
+            if not any(keyword.arg == "filing_instance_evidence" for keyword in node.keywords):
+                omissions.append(f"{path.relative_to(source_root).as_posix()}:{node.lineno}")
+    assert omissions == []
+
+
+def test_portable_revision_json_missing_filing_evidence_is_rejected() -> None:
+    payload = {
+        "calculation_revision_id": "a" * 64,
+        "work_unit_id": "b" * 64,
+        "state": "borrador",
+        "created_at": "2026-01-01T00:00:00Z",
+        "updated_at": "2026-01-01T00:00:00Z",
+    }
+    with pytest.raises(ValidationError, match="filing_instance_evidence"):
+        CalculationRevision.model_validate(payload)
 
 
 def test_revision_id_pinned_against_fully_populated_fixture() -> None:
@@ -334,6 +424,7 @@ def test_revision_id_pinned_against_fully_populated_fixture() -> None:
             "iva.aggregation",
             "renta.expense.aggregation",
         ),
+        filing_instance_evidence=None,
     )
     assert derived == pinned, (
         f"Hash domain shifted — derive_calculation_revision_id returned "
@@ -380,6 +471,7 @@ def test_revision_id_pinned_across_every_optional_branch() -> None:
             "iva.aggregation",
             "renta.expense.aggregation",
         ),
+        filing_instance_evidence=None,
     )
     assert derived == pinned, (
         f"Hash domain shifted for the optional payload branches — "
@@ -395,12 +487,14 @@ def test_revision_id_changes_when_input_casilla_value_changes() -> None:
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
         input_values_by_casilla_id={_INPUT_CASILLA_001: "99.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     assert id_a != id_b
 
@@ -412,12 +506,14 @@ def test_revision_id_changes_when_output_casilla_value_changes() -> None:
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("16.00")},
+        filing_instance_evidence=None,
     )
     assert id_a != id_b
 
@@ -429,12 +525,14 @@ def test_revision_id_changes_when_work_unit_id_changes() -> None:
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="b" * 64,
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     assert id_a != id_b
 
@@ -447,6 +545,7 @@ def test_revision_id_changes_when_row_binding_value_changes() -> None:
         binding_overrides={},
         row_binding_values={"modelo-720-asset-row-valuation": {"1": "60000"}},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
@@ -454,6 +553,7 @@ def test_revision_id_changes_when_row_binding_value_changes() -> None:
         binding_overrides={},
         row_binding_values={"modelo-720-asset-row-valuation": {"1": "65000"}},
         casilla_values={},
+        filing_instance_evidence=None,
     )
     assert id_a != id_b
 
@@ -468,6 +568,7 @@ def test_revision_id_normalises_row_binding_order() -> None:
             "modelo-720-asset-row-valuation": {"1": "60000", "2": "55000"},
         },
         casilla_values={},
+        filing_instance_evidence=None,
     )
     id_reversed = derive_calculation_revision_id(
         work_unit_id="a" * 64,
@@ -478,6 +579,7 @@ def test_revision_id_normalises_row_binding_order() -> None:
             "modelo-720-asset-row-class": {"2": "V", "1": "C"},
         },
         casilla_values={},
+        filing_instance_evidence=None,
     )
     assert id_ordered == id_reversed
 
@@ -490,6 +592,7 @@ def test_revision_id_changes_when_relation_override_changes() -> None:
         binding_overrides={},
         relation_overrides={_PAGOS_RELATION: "725.75"},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     id_b = derive_calculation_revision_id(
         work_unit_id="a" * 64,
@@ -497,6 +600,7 @@ def test_revision_id_changes_when_relation_override_changes() -> None:
         binding_overrides={},
         relation_overrides={_PAGOS_RELATION: "725.76"},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     assert id_a != id_b
 
@@ -509,6 +613,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             input_values_by_casilla_id={_NONCANONICAL_CASILLA_KEY: "10.00"},
             binding_overrides={},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match=r"casilla_values contains non-canonical casilla\.id"):
@@ -517,6 +622,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
             casilla_values={_NONCANONICAL_CASILLA_KEY: Decimal("15.00")},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match=r"input_values_by_casilla_id contains non-canonical casilla\.id"):
@@ -525,6 +631,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             input_values_by_casilla_id={_WHITESPACE_CASILLA_KEY: "10.00"},
             binding_overrides={},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match=r"input_values_by_casilla_id contains non-canonical casilla\.id"):
@@ -533,6 +640,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             input_values_by_casilla_id=cast("dict[CasillaId, str]", {1: "10.00"}),
             binding_overrides={},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match=r"casilla_values contains non-canonical casilla\.id"):
@@ -541,6 +649,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
             binding_overrides={},
             casilla_values=cast("dict[CasillaId, Decimal]", {1: Decimal("15.00")}),
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match="binding_overrides contains non-canonical binding id"):
@@ -549,6 +658,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
             binding_overrides={"Bad Binding": "10.00"},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match="relation_overrides contains non-canonical relation id"):
@@ -558,6 +668,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             binding_overrides={},
             relation_overrides={"Bad Relation": "10.00"},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match="row_binding_values contains non-canonical binding id"):
@@ -567,6 +678,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             binding_overrides={},
             row_binding_values={"Bad Binding": {"1": "C"}},
             casilla_values={},
+            filing_instance_evidence=None,
         )
 
     with pytest.raises(ModeloValidationError, match="non-positive row index"):
@@ -576,6 +688,7 @@ def test_revision_id_derivation_rejects_non_canonical_casilla_keys() -> None:
             binding_overrides={},
             row_binding_values={"modelo-720-asset-row-class": {"0": "C"}},
             casilla_values={},
+            filing_instance_evidence=None,
         )
 
 
@@ -608,6 +721,7 @@ def test_calculation_revision_rejects_legacy_inputs_snapshot_key() -> None:
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values=output_values,
+        filing_instance_evidence=None,
     )
     with pytest.raises(ValidationError) as exc_info:
         CalculationRevision.model_validate(
@@ -669,6 +783,7 @@ def test_calculation_revision_normalises_row_binding_values() -> None:
         binding_overrides={},
         row_binding_values=row_binding_values,
         casilla_values={},
+        filing_instance_evidence=None,
     )
 
     revision = CalculationRevision(
@@ -699,6 +814,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
         binding_overrides={replay_id: "1.00"},
         relation_overrides={replay_id: "1.00"},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     with pytest.raises(ValidationError, match="replay ids must be channel-unique"):
         CalculationRevision(
@@ -746,6 +862,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     rev = CalculationRevision(
@@ -790,6 +907,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     with pytest.raises(pydantic.ValidationError, match="inconsistent with the typed observations envelope"):
@@ -820,6 +938,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     created = datetime(2026, 5, 26, 10, 0, 0, tzinfo=UTC)
     with pytest.raises(pydantic.ValidationError, match="must carry typed observations"):
@@ -844,6 +963,7 @@ def test_revision_id_is_insensitive_to_dict_key_insertion_order() -> None:
             _ORDERED_OUTPUT_CASILLA_010: Decimal("5.00"),
             _ORDERED_OUTPUT_CASILLA_020: Decimal("6.00"),
         },
+        filing_instance_evidence=None,
     )
     id_reversed = derive_calculation_revision_id(
         work_unit_id="c" * 64,
@@ -853,6 +973,7 @@ def test_revision_id_is_insensitive_to_dict_key_insertion_order() -> None:
             _ORDERED_OUTPUT_CASILLA_020: Decimal("6.00"),
             _ORDERED_OUTPUT_CASILLA_010: Decimal("5.00"),
         },
+        filing_instance_evidence=None,
     )
     assert id_ordered == id_reversed
 
@@ -864,6 +985,7 @@ def test_revision_id_includes_present_borrador_metadata() -> None:
         input_values_by_casilla_id={_INPUT_CASILLA_001: "10.00"},
         binding_overrides={},
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
+        filing_instance_evidence=None,
     )
     with_borrador = derive_calculation_revision_id(
         work_unit_id="b" * 64,
@@ -872,6 +994,7 @@ def test_revision_id_includes_present_borrador_metadata() -> None:
         casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
         borrador_snapshot_id="snapshot-100-2025",
         bindings_sourced_from_borrador=("casilla_001",),
+        filing_instance_evidence=None,
     )
 
     assert with_borrador != base
@@ -908,6 +1031,7 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
         binding_overrides={},
         casilla_values={},
         detail_rows=(m184_row, m232_row, m349_row, m347_row),
+        filing_instance_evidence=None,
     )
     # Same rows in reverse order must produce the same id (sort-insensitive).
     id2 = derive_calculation_revision_id(
@@ -916,5 +1040,6 @@ def test_detail_rows_sort_key_handles_all_four_row_types() -> None:
         binding_overrides={},
         casilla_values={},
         detail_rows=(m347_row, m349_row, m232_row, m184_row),
+        filing_instance_evidence=None,
     )
     assert id1 == id2, "Row sort key must handle all four row types consistently"

@@ -188,6 +188,7 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -204,6 +205,7 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
         ),
         created_at=T0,
         updated_at=T0,
+        filing_instance_evidence=None,
     )
     calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
     work_repo.save(
@@ -422,6 +424,7 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
         input_values_by_casilla_id={},
         binding_overrides=binding_overrides,
         casilla_values={},
+        filing_instance_evidence=None,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -430,6 +433,7 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
         binding_overrides=binding_overrides,
         created_at=T0,
         updated_at=T0,
+        filing_instance_evidence=None,
     )
     calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), revision))
     work_repo.save(

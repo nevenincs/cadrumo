@@ -79,6 +79,9 @@ def _base_binding_values(
         "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2024-profile-declaration-type": Decimal("1"),
         "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
+        # Art. 81.1 LIRPF maternity deduction: zero in these retenciones scenarios,
+        # which declare no qualifying descendant.
+        "renta-2024-profile-deduccion-maternidad": Decimal("0"),
         # Art. 81.2 LIRPF guarderia bindings (b7ad3a993): zero in non-guarderia scenarios.
         "renta-2024-profile-guarderia-gastos-reales": Decimal("0"),
         "renta-2024-profile-incremento-guarderia": Decimal("0"),

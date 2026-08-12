@@ -40,10 +40,17 @@ import pytest
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage import SecureObjectRepository
-from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....core import (
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+    ProrrataProvisionalProvenance,
+    ProrrataRegisterRegime,
+)
 from ....core.resources import resources
+from ....domain.bienes_inversion import BienesInversionIvaRegister
 from ....domain.calculations.registry import BindingId
-from ....domain.iva import InputClassification
+from ....domain.iva import InputClassification, IvaDeductionClassificationProvenance
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import build_prorrata_especial_mandatory_advisory
@@ -97,6 +104,12 @@ def _classified_purchase(provider_id: str, classification: InputClassification):
             "iva_rate": Decimal("0.21"),
             "iva_amount": _INPUT_CUOTA,
             "input_classification": classification,
+            "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+            "deduction_provenance": IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{provider_id}",
+                evidence_digest="7" * 64,
+            ),
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -110,6 +123,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
                 ProrrataRegisterEntry(
                     ejercicio=2026,
                     regime=regime,
+                    especial_transition=None,
                     provisional_percentage=_GENERAL_PERCENTAGE,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
@@ -129,6 +143,9 @@ def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
         bucket_id=_BUCKET_ID,
         period=_PERIOD,
         transaction_repository=tx_repo,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id=_BUCKET_ID,
     )
     values = resolve_iva_ledger_binding_values(
         revision,
@@ -195,6 +212,9 @@ def test_each_art106_regla_isolated(
             bucket_id=_BUCKET_ID,
             period=_PERIOD,
             transaction_repository=tx_repo,
+            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+            investment_asset_register=BienesInversionIvaRegister(),
+            investment_asset_profile_id=_BUCKET_ID,
         )
         values = resolve_iva_ledger_binding_values(
             revision,

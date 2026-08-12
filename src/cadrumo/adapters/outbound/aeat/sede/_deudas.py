@@ -60,6 +60,9 @@ _AEAT_HOST_SUFFIX: Final = _EXTERNAL.aeat.domains.host_suffix
 DEUDAS_READ_SURFACE: Final = "deudas consulta"
 """Surface label a deudas landing refusal names, so a refusal says who refused."""
 
+_DEUDAS_CONSULTA_PATH: Final = _EXTERNAL.aeat.sede_paths.deudas_consulta
+_DEUDAS_PAGAR_TODAS_PATH: Final = _EXTERNAL.aeat.sede_paths.deudas_pagar_todas
+
 
 class Deuda(BaseModel):
     """One row from AEAT's *Consultar deudas* listing.
@@ -128,31 +131,43 @@ class Deuda(BaseModel):
 # surface may be driven — every payment and aplazamiento action is a control,
 # so any browser action added here fails the guard until it is declared, which
 # is the refusal we want rather than a gap.
+#
+# ``allowed_read_post_paths`` carries the consulta and nothing else. The debts
+# consulta is a TWO-STEP surface: the endpoint renders a NIF form, and the
+# listing exists only behind that form's submission, so the read genuinely needs
+# a POST. That is a query, not a mutation — it retrieves and changes nothing —
+# and it is the same shape the IVA compensation wallet reader already declares.
+# The guard admits a POST only for an ``authenticated_read_surface`` at a path
+# named here, so this stays one endpoint rather than a method-wide relaxation.
 _READ_GUARD_POLICY: Final = RemoteStateGuardPolicy(
     id="aeat-sede-deudas-consulta-read",
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
+    allowed_read_post_paths=(_DEUDAS_CONSULTA_PATH,),
     allowed_browser_action_patterns=(),
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
 )
 
-# EMPTY BY CONSTRUCTION, and empty is the whole point: an empty allow-list
-# refuses EVERY landing. No specimen of the debts consulta exists in this tree
-# — no observed URL, no observed DOM — so there is no honest prefix to declare,
-# and inventing a plausible-looking one would assert an observation nobody
-# made. Shipping the guard refusing everything means the surface is unreachable
-# until a real capture supplies a real prefix, and the only thing a later
-# change can do to this tuple is NARROW what is refused, never widen it by
-# having forgotten to add the guard at all.
+# Populated from an authenticated capture of the live consulta, which landed on
+# this exact path with no redirect. It replaces the empty tuple this guard
+# shipped with while no specimen existed.
+#
+# THE ENTRY IS THE ENDPOINT, NOT ITS APPLICATION PREFIX, and that distinction is
+# the whole finding. AEAT serves *pagar todas mis deudas* from
+# ``/wlpl/SRVO-JDIT/PagarTodas`` — the SAME ``/wlpl/SRVO-JDIT/`` application as
+# the consulta. Allow-listing that shared prefix, the obvious shape to reach for,
+# would admit the payment launcher into a read guard whose entire purpose is
+# keeping it out. The two are siblings in AEAT's routing and only their endpoint
+# segment separates them, so only the endpoint may be declared.
 #
 # The payment flow must never appear here under any future edit. A prefix
 # admitting a "pagar" path, an aplazamiento request or any procedure launcher
 # would put a taxpayer's money one navigation from a read.
-_DEUDAS_READ_PATH_PREFIXES: tuple[str, ...] = ()
+_DEUDAS_READ_PATH_PREFIXES: tuple[str, ...] = (_DEUDAS_CONSULTA_PATH,)
 
 
 def deudas_read_path_prefixes() -> tuple[str, ...]:
@@ -179,9 +194,9 @@ def assert_deudas_landing(landing_url: str | None) -> None:
     duplicate authority that could drift from the one every sibling reader is
     audited against.
 
-    With the prefix tuple empty, this refuses unconditionally. That is the
-    intended state until an operator-authorised capture establishes the real
-    consulta path.
+    The prefix tuple now carries the observed consulta endpoint, so a landing on
+    that endpoint is admitted and everything else — including the payment
+    launcher sharing its application prefix — is still refused.
 
     Args:
         landing_url: The URL AEAT actually served, after redirects — read off

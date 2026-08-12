@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef
 from cadrumo.domain.calculations.registry import (
@@ -73,11 +73,19 @@ class SemanticMapEntry(_StrictModel):
     binding: BindingId | None = None
     literal: str | None = None
     producer_key: FilingProducerKey | None = None
+    projection_ref: FilingProjectionRef | None = None
     draft_attribute: ExportDraftAttribute | None = None
     computed_key: ExportComputedKey | None = None
-    projection_ref: FilingProjectionRef | None = None
     legal_refs: LegalRefs
     source_refs: SourceRefs
+
+    @field_validator("projection_ref", mode="before")
+    @classmethod
+    def _require_loader_hydrated_projection_ref(cls, value: object) -> object:
+        """Refuse raw reference payloads outside the sole TOML compiler boundary."""
+        if value is not None and not isinstance(value, BaseModel):
+            raise ValueError("projection_ref must be a typed FilingProjectionRef hydrated by load_semantic_map")
+        return value
 
     @model_validator(mode="after")
     def _validate_exact_kind_semantics(self) -> SemanticMapEntry:
@@ -87,9 +95,9 @@ class SemanticMapEntry(_StrictModel):
             ExportSemanticPayloadAxis.BINDING: self.binding,
             ExportSemanticPayloadAxis.LITERAL: self.literal,
             ExportSemanticPayloadAxis.PRODUCER_KEY: self.producer_key,
+            ExportSemanticPayloadAxis.PROJECTION_REF: self.projection_ref,
             ExportSemanticPayloadAxis.DRAFT_ATTRIBUTE: self.draft_attribute,
             ExportSemanticPayloadAxis.COMPUTED_KEY: self.computed_key,
-            ExportSemanticPayloadAxis.PROJECTION_REF: self.projection_ref,
         }
         required = export_semantic_payload_axis(self.kind)
         declared = tuple(axis for axis, value in payloads.items() if value is not None)

@@ -35,6 +35,24 @@ def initialize_workspace(command: InitializeWorkspaceCommand) -> InitializeWorks
         UserProfileFact(path="identity.tax_id", value=command.tax_id),
         UserProfileFact(path="activities.description", value=command.activity),
         UserProfileFact(path="iva.regime", value=command.iva_regime),
+        UserProfileFact(
+            path="tax_residence.jurisdiction_scope",
+            value=command.tax_residence_jurisdiction_scope.value,
+        ),
+        UserProfileFact(
+            path="iva.m303_regime_composition",
+            value=command.iva_m303_regime_composition.value,
+        ),
+        UserProfileFact(path="iva.redeme_enrolled", value=command.iva_redeme_enrolled),
+        UserProfileFact(
+            path="iva.cash_accounting_regime_enrolled",
+            value=command.iva_cash_accounting_regime_enrolled,
+        ),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=command.iva_voluntary_sii_enrolled),
+        UserProfileFact(
+            path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+            value=command.iva_hydrocarbon_deposit_advance_payment_deduction_entitled,
+        ),
     ]
     if command.tax_residence_ccaa is not None:
         facts.append(UserProfileFact(path="tax_residence.ccaa", value=command.tax_residence_ccaa))

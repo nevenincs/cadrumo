@@ -14,7 +14,11 @@ from ....core import (
     validated_casilla_id,
 )
 from ....core.resources import resources
-from ....domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ....domain.calculations.registry import (
+    RegistrySnapshot,
+    SourceReference,
+    resolve_m303_regimen_simplificado_snapshot,
+)
 from ....domain.filing import FilingExportError
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
@@ -23,7 +27,7 @@ from ....domain.modelos import (
     M303Exonerado390EndpointEvidence,
     M303Exonerado390FilingEvidence,
 )
-from .. import build_runtime_schema_provider, project_m303_exonerado_390_value_arrival
+from .. import project_m303_exonerado_390_value_arrival
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -42,11 +46,17 @@ def _projection_refs() -> tuple[
 ]:
     return (
         *(
-            M303Exonerado390ActivityProjectionRef(slot=slot, field=field)
+            M303Exonerado390ActivityProjectionRef(
+                projection_kind="m303_exonerado_390_activity",
+                slot=slot,
+                field=field,
+            )
             for slot in range(1, 7)
             for field in M303Exonerado390ActivityField
         ),
-        M303Exonerado390OperacionesTercerosProjectionRef(),
+        M303Exonerado390OperacionesTercerosProjectionRef(
+            projection_kind="m303_exonerado_390_operaciones_terceros",
+        ),
     )
 
 
@@ -81,6 +91,19 @@ def _evidence(
     )
 
 
+def _snapshot(period: Period) -> RegistrySnapshot:
+    return resources().modelos.authority.snapshot("303", filing_year=period.filing_year, period=period.code)
+
+
+def _record_design(registry_snapshot: RegistrySnapshot) -> SourceReference:
+    return resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
+        ),
+    ).record_design
+
+
 @pytest.mark.parametrize(("operaciones_terceros_declarables", "marker"), ((False, None), (True, "X")))
 @pytest.mark.parametrize("period", _PERIODS)
 def test_evidence_arrives_at_all_six_pairs_and_the_exact_modelo_347_marker_for_each_epoch(
@@ -88,18 +111,7 @@ def test_evidence_arrives_at_all_six_pairs_and_the_exact_modelo_347_marker_for_e
     operaciones_terceros_declarables: bool,
     marker: str | None,
 ) -> None:
-    registry_snapshot = resources().modelos.authority.snapshot(
-        "303",
-        filing_year=period.filing_year,
-        period=period.code,
-    )
-    scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-    )
-    record_design = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=registry_snapshot,
-        scope_decision=scope,
-    ).record_design
+    registry_snapshot = _snapshot(period)
     reference = FilingEvidenceReference(reference=f"test:dp30304:{period.filing_year}:{period.code}")
     evidence = _evidence(
         reference=reference,
@@ -108,15 +120,10 @@ def test_evidence_arrives_at_all_six_pairs_and_the_exact_modelo_347_marker_for_e
     )
 
     projection = project_m303_exonerado_390_value_arrival(
-        period=period,
-        schema_provider=build_runtime_schema_provider(
-            filing_year=period.filing_year,
-            period=period,
-            modelos=("303",),
-        ),
-        evidence=evidence,
-        record_design=record_design,
+        registry_snapshot=registry_snapshot,
         projection_refs=_projection_refs(),
+        evidence=evidence,
+        record_design=_record_design(registry_snapshot),
     )
 
     assert projection is not None
@@ -139,14 +146,7 @@ def test_evidence_arrives_at_all_six_pairs_and_the_exact_modelo_347_marker_for_e
 
 def test_value_arrival_refuses_a_record_design_identity_mismatch() -> None:
     period = Period.from_year_and_code(2026, "4T")
-    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="4T")
-    scope = M303RegimenSimplificadoScopeDecision(
-        scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_NOT_CLAIMED,
-    )
-    record_design = resolve_m303_regimen_simplificado_snapshot(
-        registry_snapshot=registry_snapshot,
-        scope_decision=scope,
-    ).record_design
+    registry_snapshot = _snapshot(period)
     reference = FilingEvidenceReference(reference="test:dp30304:wrong-source")
     evidence = _evidence(
         reference=reference,
@@ -154,11 +154,12 @@ def test_value_arrival_refuses_a_record_design_identity_mismatch() -> None:
         six_rows=False,
     )
 
-    with pytest.raises(FilingExportError, match="no longer matches the registry"):
+    with pytest.raises(FilingExportError, match="snapshot-owned record-design source"):
         project_m303_exonerado_390_value_arrival(
-            period=period,
-            schema_provider=build_runtime_schema_provider(filing_year=2026, period=period, modelos=("303",)),
-            evidence=evidence,
-            record_design=record_design.model_copy(update={"id": "aeat-dr-303-2025"}),
+            registry_snapshot=registry_snapshot,
             projection_refs=_projection_refs(),
+            evidence=evidence,
+            record_design=_record_design(registry_snapshot).model_copy(
+                update={"id": "aeat-dr-303-not-in-this-snapshot"},
+            ),
         )

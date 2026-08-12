@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import ast
 from decimal import Decimal
 from pathlib import Path
+from typing import Any, cast, override
 
 import pytest
 
@@ -18,7 +20,7 @@ from ....domain.bienes_inversion import (
     BienInversionKind,
 )
 from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (
     CASILLA_M390_REGULARIZACION_BIENES_INVERSION,
@@ -38,10 +40,32 @@ _FILING_YEAR = 2024
 _BUCKET_ID = "bienes-inversion-regularizacion-source-resolver"
 
 
-def _context(modelo: str = "303", period: str = "4T") -> CalculationSourceContext:
+def _called_name(node: ast.Call) -> str | None:
+    """Return a direct callee name, including an ``Any``-cast target."""
+    match node.func:
+        case ast.Name(id=name):
+            return name
+        case ast.Call(
+            func=ast.Name(id="cast") | ast.Attribute(value=ast.Name(id="typing"), attr="cast"),
+            args=[
+                ast.Name(id="Any") | ast.Attribute(value=ast.Name(id="typing"), attr="Any"),
+                ast.Name(id=name),
+            ],
+        ):
+            return name
+        case _:
+            return None
+
+
+def _context(
+    modelo: str = "303",
+    period: str = "4T",
+    *,
+    bucket_id: str = _BUCKET_ID,
+) -> CalculationSourceContext:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=_FILING_YEAR, period=period)
     return CalculationSourceContext(
-        bucket_id=_BUCKET_ID,
+        bucket_id=bucket_id,
         modelo=modelo,
         filing_year=_FILING_YEAR,
         period=Period.from_year_and_code(_FILING_YEAR, period),
@@ -61,6 +85,33 @@ def _register() -> BienesInversionIvaRegister:
                 kind=BienInversionKind.MUEBLE,
                 acquisition_ledger_id="ledger-bi-2022-maquina",
             ),
+        )
+    )
+
+
+def _save_current_year_m303_prorrata_observation(
+    repository: CalculationObservationRepository,
+    *,
+    percentage: Decimal,
+) -> None:
+    snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    repository.save(
+        repository.prepare_observation_envelope(
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=_FILING_YEAR,
+                period="4T",
+                observations=(
+                    CasillaObservation(
+                        casilla_id=_CURRENT_YEAR_PRORRATA_ID,
+                        value=percentage,
+                        legal_refs=("ley-37-1992:art-104",),
+                        source_refs=("aeat-dr-303-2025",),
+                    ),
+                ),
+            ),
+            source_kind="operator_manual",
+            stamped_revision_id=snapshot.revision.id,
         )
     )
 
@@ -122,6 +173,7 @@ def test_source_resolver_projects_repository_register_to_binding_and_bound_casil
         resolution = BienesInversionRegularizacionSourceResolver(
             current_year_values={_CURRENT_YEAR_PRORRATA_ID: Decimal("60")},
             register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
         ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("200.00")
@@ -135,30 +187,11 @@ def test_source_resolver_projects_repository_register_to_binding_and_bound_casil
 
 def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observation(tmp_path: Path) -> None:
     """The M390 box 63 binding consumes the real register plus stamped M303 4T prorrata."""
-    m303_snapshot = resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
         register_repository.add(_register().records[0])
         observation_repository = CalculationObservationRepository(objects=profile.repository)
-        observation_repository.save(
-            observation_repository.prepare_observation_envelope(
-                RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=_FILING_YEAR,
-                    period="4T",
-                    observations=(
-                        CasillaObservation(
-                            casilla_id=_CURRENT_YEAR_PRORRATA_ID,
-                            value=Decimal("60"),
-                            legal_refs=("ley-37-1992:art-104",),
-                            source_refs=("aeat-dr-303-2025",),
-                        ),
-                    ),
-                ),
-                source_kind="operator_manual",
-                stamped_revision_id=m303_snapshot.revision.id,
-            )
-        )
+        _save_current_year_m303_prorrata_observation(observation_repository, percentage=Decimal("60"))
 
         resolution = BienesInversionRegularizacionSourceResolver(
             missing_current_year_casilla_ids=(_CURRENT_YEAR_PRORRATA_ID,),
@@ -172,6 +205,98 @@ def test_source_resolver_projects_m390_binding_from_stamped_m303_prorrata_observ
     assert resolution.diagnostics == ()
 
 
+def test_source_resolver_uses_the_explicit_secondary_m390_observation_store(tmp_path: Path) -> None:
+    """M390 capital-goods regularización reads only the injected bucket's M303 percentage."""
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        primary_observations = CalculationObservationRepository(objects=runtime.primary.repository)
+        _save_current_year_m303_prorrata_observation(primary_observations, percentage=Decimal("80"))
+        with runtime.switch_to_secondary():
+            secondary_register = BienesInversionIvaRegisterRepository(objects=runtime.secondary.repository)
+            secondary_register.add(_register().records[0])
+            secondary_observations = CalculationObservationRepository(objects=runtime.secondary.repository)
+            _save_current_year_m303_prorrata_observation(secondary_observations, percentage=Decimal("60"))
+
+            resolution = BienesInversionRegularizacionSourceResolver(
+                register_repository=secondary_register,
+                observation_repository=secondary_observations,
+            ).resolve(
+                _context(
+                    modelo="390",
+                    period="0A",
+                    bucket_id=runtime.secondary.bucket_id,
+                )
+            )
+
+        primary_observation = primary_observations.load_observation(
+            "303",
+            Period.from_year_and_code(_FILING_YEAR, "4T"),
+        )
+
+    assert primary_observation is not None
+    assert primary_observation.observation.casilla_values[_CURRENT_YEAR_PRORRATA_ID] == Decimal("80")
+    assert resolution.binding_values == {_M390_BINDING_ID: Decimal("200.00")}
+    assert resolution.unresolved_binding_ids == ()
+    assert resolution.diagnostics == ()
+
+
+def test_source_resolver_refuses_construction_without_an_explicit_observation_repository(tmp_path: Path) -> None:
+    """The M390 cross-period evidence store cannot re-enter through an active-store default."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        register_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        with pytest.raises(TypeError, match="observation_repository"):
+            cast(Any, BienesInversionRegularizacionSourceResolver)(register_repository=register_repository)
+
+
+def test_bienes_inversion_observation_repository_caller_ast_census_has_only_explicit_dependencies() -> None:
+    """Every capital-goods resolver consumer names an observation store; no fallback survives."""
+    source_root = Path(__file__).parents[3]
+    intentional_refusals = {
+        (
+            "application/calculations/tests/test_bienes_inversion_regularizacion.py",
+            "test_source_resolver_refuses_construction_without_an_explicit_observation_repository",
+        ),
+    }
+    omitted: set[tuple[str, str]] = set()
+
+    class _CallerCensus(ast.NodeVisitor):
+        def __init__(self, source_path: Path) -> None:
+            self._source_path = source_path
+            self._current_function = "<module>"
+
+        @override
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            previous = self._current_function
+            self._current_function = node.name
+            self.generic_visit(node)
+            self._current_function = previous
+
+        @override
+        def visit_Call(self, node: ast.Call) -> None:
+            called_name = _called_name(node)
+            if called_name == "BienesInversionRegularizacionSourceResolver" and not any(
+                keyword.arg == "observation_repository" for keyword in node.keywords
+            ):
+                omitted.add((self._source_path.relative_to(source_root).as_posix(), self._current_function))
+            self.generic_visit(node)
+
+    for source_path in source_root.rglob("*.py"):
+        source = source_path.read_text(encoding="utf-8")
+        if "BienesInversionRegularizacionSourceResolver" not in source:
+            continue
+        census = _CallerCensus(source_path)
+        census.visit(ast.parse(source))
+
+    assert omitted == intentional_refusals
+    fallback_module = source_root / "application" / "calculations" / "_bienes_inversion_regularizacion.py"
+    assert not [
+        node.lineno
+        for node in ast.walk(ast.parse(fallback_module.read_text(encoding="utf-8")))
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "CalculationObservationRepository"
+    ]
+
+
 def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata(tmp_path: Path) -> None:
     """A current-year definitive prorrata gap keeps the M303 binding unresolved."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -180,6 +305,7 @@ def test_source_resolver_leaves_binding_unresolved_without_current_year_prorrata
 
         resolution = BienesInversionRegularizacionSourceResolver(
             register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
         ).resolve(_context())
 
     assert _BINDING_ID in resolution.unresolved_binding_ids
@@ -198,6 +324,7 @@ def test_source_resolver_adds_disposal_year_art_110_amount(tmp_path: Path) -> No
 
         resolution = BienesInversionRegularizacionSourceResolver(
             register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
         ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("-2400.00")
@@ -213,6 +340,7 @@ def test_source_resolver_resolves_empty_register_to_explicit_zero(tmp_path: Path
 
         resolution = BienesInversionRegularizacionSourceResolver(
             register_repository=repository,
+            observation_repository=CalculationObservationRepository(objects=profile.repository),
         ).resolve(_context())
 
     assert resolution.binding_values[_BINDING_ID] == Decimal("0.00")

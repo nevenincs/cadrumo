@@ -17,7 +17,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BASE_VALUES: dict[str, str] = {
     "identity.tax_id": "X1234567L",
+    "tax_residence.jurisdiction_scope": "common_regime",
     "iva.regime": "GENERAL",
+    "iva.m303_regime_composition": "general",
+    "iva.redeme_enrolled": "false",
+    "iva.cash_accounting_regime_enrolled": "false",
+    "iva.voluntary_sii_enrolled": "false",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
 }
 
 
@@ -73,7 +79,13 @@ def test_lifecycle_validation_reports_conditional_irnr_profile_errors() -> None:
     schema = resources().user_profile_schema.singleton
     facts = (
         UserProfileFact(path="identity.tax_id", value="B66012345"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         UserProfileFact(path="taxpayer_type.entity_type", value="legal_entity"),
         UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
         UserProfileFact(path="taxpayer_type.country_of_fiscal_residence", value="GB"),
@@ -90,6 +102,7 @@ def test_profile_key_validation_does_not_require_iva_regime_for_natural_person_w
     result = validate_profile_values(
         {
             "identity.tax_id": "12345678Z",
+            "tax_residence.jurisdiction_scope": "common_regime",
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
         }
@@ -103,6 +116,7 @@ def test_lifecycle_validation_allows_natural_person_without_activity_to_omit_iva
     schema = resources().user_profile_schema.singleton
     facts = (
         UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
         UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
     )
@@ -117,6 +131,7 @@ def test_lifecycle_validation_requires_natural_person_with_activity_to_declare_i
     schema = resources().user_profile_schema.singleton
     facts = (
         UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
         UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
         UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
     )
@@ -134,7 +149,13 @@ def test_profile_preflight_reports_irnr_country_as_missing_before_modelo_work() 
         display_name="IRNR no country",
         facts=(
             UserProfileFact(path="identity.tax_id", value="X1234567L"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="taxpayer_type.fiscal_residency", value="non_resident_irnr"),
         ),
     )

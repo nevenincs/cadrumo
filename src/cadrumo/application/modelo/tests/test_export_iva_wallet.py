@@ -33,7 +33,13 @@ from ._export_modelo_303_support import (
     _filed_history_only_wallet_decision,
     _seed_modelo_303_1t_clean_state,
 )
-from ._export_test_support import _profile, _seed_profile, _seed_revision, isolated_backend_context
+from ._export_test_support import (
+    _general_m303_filing_evidence,
+    _profile,
+    _seed_profile,
+    _seed_revision,
+    isolated_backend_context,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -65,6 +71,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_blocked(
         modelo="303",
         filing_year=2026,
         period="2T",
+        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
     )
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     IvaWalletDecisionRepository().save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
@@ -93,6 +100,7 @@ def test_export_refuses_modelo_303_when_persisted_wallet_decision_is_filed_histo
         modelo="303",
         filing_year=2026,
         period="2T",
+        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
     )
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
@@ -121,6 +129,7 @@ def test_export_modelo_303_uses_injected_wallet_decision_repository(
         modelo="303",
         filing_year=2026,
         period="2T",
+        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
     )
     _seed_modelo_303_1t_clean_state(bucket_id=bucket_id)
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-export.db")
@@ -154,6 +163,7 @@ def test_verify_modelo_303_surfaces_filed_history_only_wallet_decision_as_blocki
         modelo="303",
         filing_year=2026,
         period="2T",
+        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
     )
     IvaWalletDecisionRepository().save_decision(_filed_history_only_wallet_decision(taxpayer_nif=taxpayer_nif))
 
@@ -189,6 +199,7 @@ def test_verify_modelo_303_uses_injected_wallet_decision_repository(
         modelo="303",
         filing_year=2026,
         period="2T",
+        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))
@@ -230,6 +241,7 @@ def test_file_modelo_303_uses_injected_wallet_decision_repository_before_mutatio
         modelo="303",
         filing_year=2026,
         period="2T",
+        filing_instance_evidence=_general_m303_filing_evidence(Period.from_year_and_code(2026, "2T")),
     )
     decision_repo, decision_settings = _wallet_decision_repository_at(tmp_path / "wallet-decisions-file.db")
     decision_repo.save_decision(_blocked_wallet_decision(taxpayer_nif=taxpayer_nif))

@@ -37,7 +37,7 @@ import pytest
 from pydantic import BaseModel
 
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
     DataBindingDefinition,
     IvaLedgerObservation,
@@ -103,6 +103,7 @@ def _observation(
         iva_amount=cuota,
         recargo_amount=Decimal("0"),
         applied_rate=applied_rate,
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
 

@@ -51,6 +51,12 @@ def test_projection_for_taxpayer_round_trips_iva_regime_through_descriptor() -> 
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         ),
     )
     profile = projection_for_taxpayer(record)
@@ -84,6 +90,12 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
             UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
             UserProfileFact(path="taxpayer_type.irpf_income_categories", value="capital_inmobiliario"),
             UserProfileFact(path="iva.regime", value="EXENTO"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
         ),
     )
 
@@ -94,7 +106,18 @@ def test_projection_for_taxpayer_preserves_explicit_iva_regime_for_natural_perso
 
 
 def test_projection_for_taxpayer_accepts_a_flat_mapping_directly() -> None:
-    profile = projection_for_taxpayer({"tax.id": "X9876543K", "iva.regime": "GENERAL"})
+    profile = projection_for_taxpayer(
+        {
+            "tax.id": "X9876543K",
+            "iva.regime": "GENERAL",
+            "tax_residence.jurisdiction_scope": "common_regime",
+            "iva.m303_regime_composition": "general",
+            "iva.redeme_enrolled": "false",
+            "iva.cash_accounting_regime_enrolled": "false",
+            "iva.voluntary_sii_enrolled": "false",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
+        },
+    )
     assert profile.tax_id == "X9876543K"
     assert profile.iva_regime is IVARegime.GENERAL
 
@@ -127,6 +150,12 @@ def test_projection_for_taxpayer_carries_section_prefixed_withholding_facts() ->
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(
                 path="irpf.art109_activity_income_withholding_ge_70pct",
                 value=True,
@@ -178,6 +207,12 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="obligations.bienes_extranjero_above_threshold", value=False),
             UserProfileFact(path="obligations.monedas_virtuales_extranjero_above_threshold", value=True),
         ),
@@ -237,6 +272,12 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="withholding.has_employees", value=True),
             UserProfileFact(path="contact.fiscal_address_is_habitual_vivienda", value=True),
         ),

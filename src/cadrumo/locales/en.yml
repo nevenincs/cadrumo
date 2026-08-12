@@ -740,6 +740,45 @@ application:
       errors:
         build_failed: 'invoice wizard refused: %{detail}'
         field_errors: 'invoice wizard refused %{field_count} field(s): %{detail}'
+  iva_wallet:
+    decision_reason:
+      aeat_wallet_uncrosschecked: The latest valid AEAT wallet observation was selected;
+        no local recurrence was available to cross-check it against.
+      aeat_wallet_validated: The latest valid AEAT wallet observation matches the
+        local recurrence for the previous Modelo 303 compensación.
+      caller_zero_matches_local_authority: The caller-supplied zero matches the persisted
+        local zero authority.
+      filed_history_requires_override: There is no AEAT wallet evidence; the filed-history
+        recurrence requires an express taxpayer override before the automatic result
+        is produced.
+      filed_history_zero: The recorded filed-history evidence for Modelo 303 establishes
+        a zero compensación to carry forward.
+      first_period_zero_activity_start_uncontrasted: 'UNCROSSCHECKED: The first-period
+        zero rests on the operator-declared activity start date; Cadrumo cannot verify
+        that date against current AEAT censal information.'
+      first_period_zero_aeat_wallet: The AEAT wallet confirms the previous compensación
+        is zero in the first recorded IVA period.
+      first_period_zero_local_recurrence: An initial local zero establishes that no
+        previous compensación exists in the first recorded IVA period.
+      local_evidence_unreadable: A previous Modelo 303 record exists, but it cannot
+        be read as previous-compensación evidence and no AEAT wallet observation is
+        available.
+      local_recurrence_requires_override: The AEAT wallet is unavailable; the local
+        recurrence requires an express taxpayer override before the automatic result
+        is produced.
+      local_recurrence_zero: The local Modelo 303 recurrence establishes a zero compensación
+        to carry forward.
+      no_usable_authority: There is no AEAT wallet observation and no usable local
+        recurrence for the previous Modelo 303 compensación.
+      stale_wallet_local_recurrence_requires_override: The AEAT wallet observation
+        is stale; the local recurrence requires an express taxpayer override before
+        the automatic result is produced.
+      stale_wallet_no_local_recurrence: The AEAT wallet observation is stale and no
+        alternative local recurrence is available.
+      taxpayer_override: The express taxpayer override was selected; the separately
+        recorded operator explanation states its evidential basis.
+      wallet_local_recurrence_divergence: The AEAT wallet and the local recurrence
+        diverge; a review is required before the automatic result is produced.
   ledger:
     errors:
       evidence_attachment_requires_ids: Ledger evidence attachment requires purchase
@@ -955,6 +994,8 @@ application:
         does not match modelo %{modelo}, filing year %{filing_year}, period %{period}.
       external_import_justificante_missing: External-filing import evidence %{evidence_reference_id}
         (%{evidence_kind}) is not registered as a persisted justificante artifact.
+      external_import_m303_filing_evidence_required: Modelo 303 external import requires
+        complete typed filing-instance evidence and cannot infer it from casilla values.
       external_import_registry_root_missing: Registry root %{registry_root} is missing;
         imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
@@ -1303,17 +1344,6 @@ application:
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'
-  verification:
-    errors:
-      missing_binding_values: Registry verification requires external binding values.
-      period_mapping_failed: The declaration period could not be mapped to a registry
-        period.
-      registry_policy_invalid: Registry verification policy could not be loaded.
-      registry_snapshot_invalid: The registry snapshot could not be loaded for declaration
-        verification.
-      registry_snapshot_ref_mismatch: 'Registry snapshot for modelo %{modelo} %{period}
-        does not match the stamped declaration reference: observed %{observed_ref},
-        resolved %{resolved_ref}.'
   wizard:
     errors:
       command_input_invalid: 'The profile details are invalid: %{details}'
@@ -1966,6 +1996,9 @@ cli:
         letra_help: LIVA art. 9.1.c letra (a/b/c/d) that makes this sector differentiated.
         list_help: List every register entry and declared differentiated sector on
           the active profile.
+        optional_evidence_reference_help: Operator-held evidence for an option exercised
+          in this ejercicio; omit to record an explicit continuation of the regime
+          already in force.
         percentage_help: Common-use deduction percentage 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
         provenance_help: LIVA art. 105 source of the provisional percentage.
@@ -2787,6 +2820,7 @@ cli:
           AEAT Sede when legally required.'
         dependencies_help: Show cross-period filing-history dependencies and current
           clean-state blockers for a target filing
+        dependencies_period_requires_modelo: The --period option requires --modelo.
         discard_help: Mark a work unit as discarded (auditable state transition)
         discard_requires_yes: Discard is an auditable state transition. Re-run 'aeat
           app modelo work discard %{work_unit_id} --yes' to confirm.
@@ -4410,7 +4444,6 @@ cli:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
-      filter_parse_error: 'Failed to parse ledger filter near %{token}: %{reason}.'
       invalid_category: 'Unknown spending category ''{category}''. Known categories:
         {known}.'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
@@ -4418,9 +4451,6 @@ cli:
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
-      period_year_pairing: Ledger period filters require period and year together.
-        For a full year use --period 0A --year %{year}, or --filter period=0A --filter
-        year=%{year}.
       unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
         id such as {example!r}, not a family-prefixed or compound key.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
@@ -71003,6 +71033,12 @@ profile:
           label: Family situation
         unidad_familiar_otros_miembros_base:
           label: Other household members' taxable base (Madrid)
+      renta_filing:
+        declaration_type:
+          label: Declaration type
+      renta_rental:
+        reduccion_art_23_2_tier_2024:
+          label: Rental reduction tier (art. 23.2)
       renta_spouse:
         birth_date:
           label: Spouse birth date
@@ -71137,6 +71173,10 @@ profile:
         title: Provenance and effective dating
       renta_family:
         title: Family (Renta)
+      renta_filing:
+        title: Filing context (Renta)
+      renta_rental:
+        title: Rental context (Renta)
       renta_spouse:
         title: Spouse (Renta)
       renta_taxpayer:
@@ -71834,7 +71874,7 @@ wizard:
             label: Mixed regimes
           simplified:
             label: Simplified regime only
-        prompt: Which regime composition does Modelo 303 declare?
+        prompt: Which Modelo 303 regime composition applies?
       title: IVA
     notes:
       notes:
@@ -72045,7 +72085,7 @@ wizard:
             label: Common territory
           foral_unsupported:
             label: Foral territory (not yet supported)
-        prompt: Which territorial tax regime applies to this profile?
+        prompt: Which tax territory applies to this Modelo 303?
       title: Tax residence
     review:
       registered-non-official-suffix: ' (from censal certificate - not AEAT-verified)'

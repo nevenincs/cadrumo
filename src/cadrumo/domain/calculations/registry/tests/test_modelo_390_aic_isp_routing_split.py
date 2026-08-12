@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import IvaLedgerObservation, resolve_ledger_iva_aggregation_binding_values
 from .._ledger_bindings import iva_ledger_selector
 from .._loader import load_registry_tree
@@ -124,6 +124,7 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("210.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
     domestic_isp_row = IvaLedgerObservation(
         ledger_id="domestic-isp",
@@ -133,6 +134,7 @@ def test_aic_and_domestic_isp_ledger_rows_resolve_to_different_bindings() -> Non
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("500.00"),
         iva_amount=Decimal("105.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row, domestic_isp_row)))
@@ -161,6 +163,7 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
     resolved = dict(resolve_ledger_iva_aggregation_binding_values(revision, (aic_row,)))
@@ -215,6 +218,7 @@ def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_pa
         flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         base_amount=Decimal("1739.25"),
         iva_amount=Decimal("0.00"),
+        observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
     mutated_resolved = dict(resolve_ledger_iva_aggregation_binding_values(_m390_revision(scratch_root), (aic_row,)))
 

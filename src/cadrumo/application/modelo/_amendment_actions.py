@@ -44,7 +44,7 @@ from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...core import CasillaId
+from ...core import CasillaId, Modelo
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import CasillaObservation
@@ -54,6 +54,7 @@ from ...domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    FilingInstanceEvidence,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -81,6 +82,7 @@ from ._amendment_kind_resolution import (
 )
 from ._calculation_helpers import amendment_observations as _amendment_observations
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
+from ._m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from ._revision_persistence import build_modelo_bucket_event as _build_bucket_event
@@ -127,6 +129,11 @@ def _load_amendment_baseline[CasillaKey](
     if baseline_revision is None:
         raise CalculationRevisionNotFoundError(
             f"baseline calculation revision {baseline.calculation_revision_id!r} is missing from the catalogue",
+        )
+    if work_unit.modelo == Modelo.M303.value and baseline_revision.filing_instance_evidence is None:
+        raise AmendmentEvidenceMissingError(
+            f"filing record {from_filing_record_id!r} references an evidence-less Modelo 303 revision; "
+            "amendment requires the baseline's complete immutable filing-instance evidence",
         )
 
     canonical_overrides = _reject_unknown_override_casillas(
@@ -235,6 +242,7 @@ def amend_modelo_revision[CasillaKey](
         source_transaction_ids=baseline_revision.source_transaction_ids,
         borrador_snapshot_id=baseline_revision.borrador_snapshot_id,
         bindings_sourced_from_borrador=baseline_revision.bindings_sourced_from_borrador,
+        filing_instance_evidence=baseline_revision.filing_instance_evidence,
     )
     if new_revision_id in revisions:
         raise CalculationRevisionStateError(
@@ -247,11 +255,19 @@ def amend_modelo_revision[CasillaKey](
     # persisted amendment revision and its CLI emit preserve
     # legal_refs / source_refs (and baseline formula provenance for
     # non-overridden casillas) instead of an empty observations tuple.
+    registry_snapshot = _resolve_registry_snapshot_for_work_unit(work_unit)
     amendment_observations = _amendment_observations(
         corrected_values=corrected_values,
         overrides=canonical_overrides,
         baseline_revision=baseline_revision,
-        snapshot=_resolve_registry_snapshot_for_work_unit(work_unit),
+        snapshot=registry_snapshot,
+    )
+    filing_instance_evidence = validate_m303_filing_instance_evidence_for_revision(
+        work_unit=work_unit,
+        registry_snapshot=registry_snapshot,
+        evidence=baseline_revision.filing_instance_evidence,
+        casilla_values=corrected_values,
+        observations=amendment_observations,
     )
 
     amendment_draft = _build_amendment_draft_revision(
@@ -263,6 +279,7 @@ def amend_modelo_revision[CasillaKey](
         amendment_kind=amendment_kind,
         reason=reason,
         now=now,
+        filing_instance_evidence=filing_instance_evidence,
     )
     revisions = upsert_calculation_revision(revisions, amendment_draft)
 
@@ -323,6 +340,7 @@ def _build_amendment_draft_revision(
     amendment_kind: CalculationRevisionAmendmentKind,
     reason: str,
     now: datetime,
+    filing_instance_evidence: FilingInstanceEvidence | None,
 ) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=new_revision_id,
@@ -341,6 +359,7 @@ def _build_amendment_draft_revision(
         amendment_kind=amendment_kind,
         amends_filing_record_id=baseline.filing_record_id,
         amendment_reason=reason.strip(),
+        filing_instance_evidence=filing_instance_evidence,
     )
 
 

@@ -24,7 +24,7 @@ from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos import CalculationRevisionState
+from ....domain.modelos import CalculationRevisionState, ModeloExportError
 from .. import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
@@ -43,6 +43,7 @@ from .._export import (
 from ._export_test_support import (
     _M130_RENDIMIENTO_NETO_CASILLA,
     _casilla_id_from_payload,
+    _general_m303_filing_evidence,
     _profile,
     _seed_profile,
     _seed_revision,
@@ -325,7 +326,7 @@ def test_export_refuses_cross_bucket_revision(
     assert "work_unit_id" in exc_info.value.context
 
 
-def test_m303_export_uses_revision_evidence_and_reaches_withdrawn_layout_refusal(
+def test_m303_export_refuses_revision_missing_filing_evidence(
     isolated_backend: None,
     tmp_path: Path,
 ) -> None:
@@ -336,6 +337,38 @@ def test_m303_export_uses_revision_evidence_and_reaches_withdrawn_layout_refusal
         modelo="303",
         filing_year=2026,
         period="1T",
+    )
+    output = tmp_path / "modelo-303.txt"
+
+    with pytest.raises(ModeloExportError) as exc_info:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=output,
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+        )
+
+    assert isinstance(exc_info.value.context, dict)
+    assert "filing-instance evidence" in str(exc_info.value.context["cause"])
+    assert not output.exists()
+    assert not output.with_name(output.name + ".tmp").exists()
+
+
+def test_m303_export_with_valid_revision_evidence_reaches_withdrawn_layout_refusal(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    bucket_id = _seed_profile()
+    period = Period.from_year_and_code(2026, "1T")
+    _, calc_rev_id = _seed_revision(
+        bucket_id=bucket_id,
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        filing_instance_evidence=_general_m303_filing_evidence(period),
     )
     output = tmp_path / "modelo-303.txt"
 

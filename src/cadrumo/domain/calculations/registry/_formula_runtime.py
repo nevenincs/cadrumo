@@ -41,11 +41,7 @@ from ._bindings import CasillaObservation
 from ._casilla_membership import casillas_by_id as _casillas_by_id
 from ._casilla_membership import duplicate_casilla_ids
 from ._convenio import ConvenioAuthority
-from ._errors import (
-    CasillaConstraintViolationError,
-    M303RegimenSimplificadoEvidenceRequiredError,
-    RegistryValidationError,
-)
+from ._errors import CasillaConstraintViolationError, RegistryValidationError
 from ._formula_initial_values import (
     binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
 )
@@ -105,7 +101,7 @@ from ._ids import (
     RelationId,
     SourceRefId,
 )
-from ._m303_orden_anual import M303AnnualOrdenSnapshot
+from ._m303_orden_anual import M303AnnualOrdenSnapshot, resolve_m303_regimen_simplificado_snapshot
 from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 
@@ -633,8 +629,20 @@ def _resolve_m303_formula_orden_context(
         raise RegistryValidationError("Modelo 303 formula evaluation requires a simplified-regime scope decision")
     if not scope_decision.is_not_claimed:
         if m303_annual_orden is None:
-            raise M303RegimenSimplificadoEvidenceRequiredError(
-                "Modelo 303 simplified or mixed scope requires the S58 annual-Orden evidence snapshot",
+            raise RegistryValidationError(
+                "Modelo 303 simplified or mixed scope requires the canonical annual-Orden evidence snapshot",
+            )
+        expected = resolve_m303_regimen_simplificado_snapshot(
+            registry_snapshot=snapshot,
+            scope_decision=scope_decision,
+        ).orden
+        if m303_annual_orden != expected:
+            raise RegistryValidationError(
+                "Modelo 303 annual-Orden evidence must equal the exact scope-selected registry snapshot",
+                context={
+                    "supplied_registry_revision_id": str(m303_annual_orden.registry_revision_id),
+                    "expected_registry_revision_id": str(expected.registry_revision_id),
+                },
             )
         return m303_annual_orden
     forbidden_numeric_ids = frozenset(

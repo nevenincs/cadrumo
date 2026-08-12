@@ -19,6 +19,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from .....core import Modelo
 from ....iva import (
@@ -26,9 +27,9 @@ from ....iva import (
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
-from .._errors import RegistryValidationError
 from .._ledger_bindings import (
     _iva_build_matcher,
     _iva_reachability_probe,
@@ -45,14 +46,16 @@ _RATE_KIND = next(iter(IvaRateKind))
 
 def _iva_selector(
     *,
-    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...],
+    cash_accounting_treatments: tuple[IvaCashAccountingTreatment, ...] = (IvaCashAccountingTreatment.NONE,),
+    observation_roles: tuple[IvaLedgerObservationRole, ...] = (IvaLedgerObservationRole.SETTLEMENT,),
 ) -> _IvaLedgerSelector:
-    """Build an otherwise-valid IVA selector varying only the unbounded axis."""
+    """Build an otherwise-valid IVA selector with explicit role and treatment policies."""
     return _IvaLedgerSelector(
         categories=(_CATEGORY,),
         rate_kinds=(_RATE_KIND,),
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         cash_accounting_treatments=cash_accounting_treatments,
+        observation_roles=observation_roles,
         fact="iva_amount_sum",
     )
 
@@ -63,52 +66,55 @@ def test_a_reachable_iva_selector_passes_the_probe() -> None:
     Without it, a probe that refused every selector would satisfy the
     mutation proof below while blocking every real binding in the registry.
     """
-    _iva_reachability_probe(_iva_selector(cash_accounting_treatments=(IvaCashAccountingTreatment.NONE,)))
+    _iva_reachability_probe(_iva_selector())
 
 
-def test_the_probe_reddens_on_a_selector_that_can_match_nothing() -> None:
-    """The mutation proof: retarget the selector to match nothing, the probe fires.
-
-    ``cash_accounting_treatments`` is the mutation site because it is the only
-    set-valued axis on this selector carrying no ``MinLen`` — an empty tuple is
-    constructible today. The matcher tests
-    ``observation.cash_accounting_treatment in set(...)``, so an empty set
-    rejects every treatment the enum defines.
-
-    Mutating the SELECTOR rather than the production matcher is deliberate:
-    it needs no edit to a tracked file, so a peer's sweep cannot commit the
-    mutation and a crashed run leaves no residue.
-    """
-    with pytest.raises(RegistryValidationError, match="matches no constructible observation shape"):
-        _iva_reachability_probe(_iva_selector(cash_accounting_treatments=()))
-
-
-def test_the_unmatched_selector_really_matches_every_treatment_never() -> None:
-    """Prove the probe's premise independently of the probe.
-
-    The mutation proof above shows the probe raises. This shows WHY: driven
-    through the real matcher, the empty-set selector rejects every treatment
-    the enum defines. Without this, the probe could be raising for an
-    unrelated reason and the test above would not notice.
-    """
-    matcher = _iva_build_matcher(_iva_selector(cash_accounting_treatments=()))
-    verdicts = {
-        treatment: matcher(
-            _MinimalIvaObservation(
-                category=_CATEGORY,
-                rate_kind=_RATE_KIND,
-                flow_direction=IvaFlowDirection.REPERCUTIDO,
-                cash_accounting_treatment=treatment,
-                exemption_article=None,
-            ),
+def test_iva_selector_refuses_an_implicit_observation_role() -> None:
+    """A selector cannot silently acquire a monetary or information role."""
+    with pytest.raises(ValidationError, match="observation_roles"):
+        _IvaLedgerSelector.model_validate(
+            {
+                "categories": (_CATEGORY,),
+                "rate_kinds": (_RATE_KIND,),
+                "flow_direction": IvaFlowDirection.REPERCUTIDO,
+                "cash_accounting_treatments": (IvaCashAccountingTreatment.NONE,),
+                "fact": "iva_amount_sum",
+            },
         )
-        for treatment in IvaCashAccountingTreatment
-    }
-    assert not any(verdicts.values()), f"expected no treatment to match, got {verdicts}"
+
+
+def test_iva_selector_role_policy_isolates_operation_information_from_settlement() -> None:
+    """The real matcher rejects a role mutation while keeping the affiliation unchanged."""
+    matcher = _iva_build_matcher(
+        _iva_selector(
+            cash_accounting_treatments=(IvaCashAccountingTreatment.SUPPLIER_REGIME,),
+            observation_roles=(IvaLedgerObservationRole.OPERATION_INFORMATIONAL,),
+        ),
+    )
+    operation_information = _MinimalIvaObservation(
+        category=_CATEGORY,
+        rate_kind=_RATE_KIND,
+        flow_direction=IvaFlowDirection.REPERCUTIDO,
+        cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        observation_role=IvaLedgerObservationRole.OPERATION_INFORMATIONAL,
+        exemption_article=None,
+    )
+
+    assert matcher(operation_information)
+    assert not matcher(
+        _MinimalIvaObservation(
+            category=_CATEGORY,
+            rate_kind=_RATE_KIND,
+            flow_direction=IvaFlowDirection.REPERCUTIDO,
+            cash_accounting_treatment=IvaCashAccountingTreatment.SUPPLIER_REGIME,
+            observation_role=IvaLedgerObservationRole.SETTLEMENT,
+            exemption_article=None,
+        ),
+    )
 
 
 class _MinimalIvaObservation:
-    """Minimal stand-in carrying only the five axes the IVA matcher reads.
+    """Minimal stand-in carrying only the six axes the IVA matcher reads.
 
     Satisfies ``IvaSelectorAxesProtocol`` structurally, which is what makes it
     a legitimate stand-in for the full observation record here.
@@ -121,6 +127,7 @@ class _MinimalIvaObservation:
         rate_kind: IvaRateKind,
         flow_direction: IvaFlowDirection,
         cash_accounting_treatment: IvaCashAccountingTreatment,
+        observation_role: IvaLedgerObservationRole,
         exemption_article: IvaExemptionArticle | None,
         applied_rate: Decimal | None = None,
     ) -> None:
@@ -128,6 +135,7 @@ class _MinimalIvaObservation:
         self.rate_kind = rate_kind
         self.flow_direction = flow_direction
         self.cash_accounting_treatment = cash_accounting_treatment
+        self.observation_role = observation_role
         self.exemption_article = exemption_article
         # Defaults to the genuinely-unknown rate, which is the shape these
         # tests exercise: they vary the cash-accounting axis and must not

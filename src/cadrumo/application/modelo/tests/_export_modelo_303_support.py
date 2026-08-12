@@ -21,8 +21,21 @@ from ....domain.iva_compensation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from ....domain.modelos import CalculationRevision, ExternalEvidenceKind
+from ....domain.modelos import (
+    CalculationRevision,
+    CalculationRevisionState,
+    ExternalEvidence,
+    ExternalEvidenceKind,
+    ModeloRecord,
+    ModeloRecordStatus,
+    derive_calculation_revision_id,
+    derive_filing_record_id,
+    upsert_calculation_revision,
+    upsert_filing_record,
+    upsert_work_unit,
+)
 from ....tests.env_scope import ready_clave_settings
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ...calculations import (
     CalculationObservationRepository,
@@ -32,9 +45,9 @@ from ...calculations import (
 from .. import (
     calculate_modelo_revision,
     create_work_unit,
-    import_external_filing_evidence,
     verify_modelo_revision,
 )
+from .._calculation_helpers import external_filing_observations
 from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .justificante_metadata import persist_justificante_metadata
 
@@ -152,6 +165,10 @@ def _seed_modelo_303_1t_clean_state(
     calculation_repository: CalculationRevisionCatalogueRepository | None = None,
     bucket_event_repository: BucketEventHistoryRepository | None = None,
 ) -> None:
+    # The verb this fixture replaced defaulted its own repositories; the direct
+    # writes below need concrete ones, so resolve the same bucket-local defaults.
+    work_unit_repository = work_unit_repository or WorkUnitCatalogueRepository()
+    calculation_repository = calculation_repository or CalculationRevisionCatalogueRepository()
     snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="2T")
     source_casilla_ids = sorted(
         {
@@ -184,18 +201,92 @@ def _seed_modelo_303_1t_clean_state(
         bucket_event_repository=bucket_event_repository,
         clock=datetime(2026, 5, 21, 11, 0, tzinfo=UTC),
     )
-    import_external_filing_evidence(
-        work_unit_id=work_unit.work_unit_id,
+    # Prior-1T filed history is a PRECONDITION of these wallet-gate tests, not
+    # their subject, so the fixture authors the end state directly. Modelo 303
+    # external import is refused outright (it cannot infer the typed
+    # filing-instance evidence a 303 filing requires), so routing through
+    # ``import_external_filing_evidence`` is no longer available here. The
+    # persisted shape below mirrors exactly what that verb used to leave behind:
+    # a PRESENTADO revision, a VIGENTE ModeloRecord carrying the justificante
+    # reference, and the advanced work-unit pointers.
+    filed_at = datetime(2026, 5, 21, 11, 1, tzinfo=UTC)
+    filed_by = "aeat-import-test"
+    # Deliberately None, exactly as the import verb persisted it: absent
+    # filing-instance evidence is what marks this revision as EXTERNALLY
+    # imported AEAT evidence rather than an app-produced local filing. Supplying
+    # real evidence here reclassifies the period as a local recurrence and
+    # changes the wallet reconciliation outcome these tests assert.
+    prior_filing_instance_evidence = None
+    prior_observations = external_filing_observations(
         casilla_values=values,
-        evidence_kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-        evidence_reference_id="JUST30320261T",
-        actor="aeat-import-test",
-        work_unit_repository=work_unit_repository,
-        calculation_repository=calculation_repository,
-        filing_repository=ModeloRecordCatalogueRepository(),
-        bucket_event_repository=bucket_event_repository,
-        expected_tax_id=taxpayer_tax_id,
-        clock=datetime(2026, 5, 21, 11, 1, tzinfo=UTC),
+        snapshot=source_snapshot,
+    )
+    prior_revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values=values,
+        filing_instance_evidence=prior_filing_instance_evidence,
+    )
+    prior_revision = CalculationRevision(
+        calculation_revision_id=prior_revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.PRESENTADO,
+        casilla_values=values,
+        observations=prior_observations,
+        created_at=filed_at,
+        updated_at=filed_at,
+        verified_at=filed_at,
+        verified_by=filed_by,
+        filed_at=filed_at,
+        filed_by=filed_by,
+        filing_instance_evidence=prior_filing_instance_evidence,
+    )
+    calculation_repository.save(
+        upsert_calculation_revision(calculation_repository.load(), prior_revision),
+    )
+    prior_filing_record_id = derive_filing_record_id(
+        work_unit_id=work_unit.work_unit_id,
+        calculation_revision_id=prior_revision_id,
+        filed_by=filed_by,
+    )
+    filing_repository = ModeloRecordCatalogueRepository()
+    filing_repository.save(
+        upsert_filing_record(
+            filing_repository.load(),
+            ModeloRecord(
+                filing_record_id=prior_filing_record_id,
+                work_unit_id=work_unit.work_unit_id,
+                calculation_revision_id=prior_revision_id,
+                bucket_id=work_unit.bucket_id,
+                modelo=work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period,
+                filed_at=filed_at,
+                filed_by=filed_by,
+                notes=None,
+                aeat_accepted=True,
+                status=ModeloRecordStatus.VIGENTE,
+                external_evidence=ExternalEvidence(
+                    kind=ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+                    reference_id="JUST30320261T",
+                    imported_at=filed_at,
+                ),
+            ),
+        ),
+    )
+    work_unit_repository.save(
+        upsert_work_unit(
+            work_unit_repository.load(),
+            work_unit.model_copy(
+                update={
+                    "current_calculation_revision_id": prior_revision_id,
+                    "filed_calculation_revision_id": prior_revision_id,
+                    "current_filing_record_id": prior_filing_record_id,
+                    "updated_at": filed_at,
+                },
+            ),
+        ),
     )
     CalculationObservationRepository().save(
         CalculationObservationRepository().prepare_observation_envelope(
@@ -287,6 +378,10 @@ def _build_verified_modelo_303_revision(
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
         iva_compensation_decision=decision,
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period,
+            reference="test:export-modelo-303-support",
+        ),
         filing_period_date=date(2026, 6, 30),
         work_unit_repository=work_repo,
         calculation_repository=calc_repo,

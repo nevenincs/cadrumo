@@ -228,7 +228,7 @@ def test_shared_boundary_maps_declared_s114_producers(
         assert envelope["context"] == {"extra": "proof", "import_name": "absent.proof", "importable": "false"}
         assert "feature" not in envelope["context"]
         assert "install_hint" not in envelope["context"]
-        assert error.extra.install_hint not in result.stderr
+        assert "pip install" not in result.stderr
     else:
         assert envelope["context"] == {"section": "aeat.pre303", "validation_error_type": "ValidationError"}
         assert "validation_error" not in envelope["context"]

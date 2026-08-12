@@ -115,12 +115,25 @@ class ProrrataRegisterRepository:
                 When neither ``objects`` nor ``bucket_id`` is supplied, defaults
                 to the active-bucket secure object store.
         """
+        self._bucket_id = bucket_id.strip() if bucket_id is not None else None
         self._storage = ProfileBareModelSecurePersistence(
             objects=resolve_profile_secure_object_repository(objects=objects, bucket_id=bucket_id),
             definition=PROFILE_PRORRATA_REGISTER_NAMESPACE,
             model_type=ProrrataRegister,
             empty_document=ProrrataRegister,
         )
+
+    @property
+    def bucket_id(self) -> str | None:
+        """Return the explicit profile bucket identity, when one was supplied.
+
+        A repository constructed against an injected secure-object store cannot
+        infer that store's bucket safely; it deliberately remains unbound until
+        the caller supplies ``bucket_id``. Consumers that combine authorities
+        from one filing bucket must reject that unbound shape rather than
+        treating it as interchangeable with an explicitly owned register.
+        """
+        return self._bucket_id
 
     @property
     def envelope_path(self) -> Path:

@@ -43,6 +43,7 @@ from ....domain.modelos import (
     upsert_calculation_revision,
     upsert_work_unit,
 )
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -124,11 +125,16 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         revision_id=work_unit_revision_marker,
     )
     casilla_values: dict[CasillaId, Decimal] = {_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: Decimal("1000.00")}
+    filing_instance_evidence = general_m303_filing_evidence(
+        typed_period,
+        reference="test:iva-wallet-correction",
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
         binding_overrides={},
         casilla_values=casilla_values,
+        filing_instance_evidence=filing_instance_evidence,
     )
     work_unit = WorkUnit(
         work_unit_id=work_unit_id,
@@ -169,6 +175,7 @@ def _persist_sealed_303(*, filing_year: int, period: str, state: CalculationRevi
         ),
         "created_at": when,
         "updated_at": when,
+        "filing_instance_evidence": filing_instance_evidence,
         **audit_metadata,
     }
     # model_validate (not **splat) so the dict[str, object] audit_metadata does

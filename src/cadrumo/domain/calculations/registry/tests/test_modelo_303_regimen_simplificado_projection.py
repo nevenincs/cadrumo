@@ -2,21 +2,39 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from .....core import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,
     M303RegimenSimplificadoCohort,
+    M303RegimenSimplificadoModuleProjectionRef,
+    M303RegimenSimplificadoModuleValue,
 )
-from .....domain.iva import RegimenSimplificadoFilingRows
-from .. import RegistryValidationError, project_m303_regimen_simplificado_rows
+from .....core.resources import resources
+from .....domain.iva import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    HechoActividadSimplificado,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
+from ....filing_evidence import FilingEvidenceReference
+from .. import (
+    RegistryValidationError,
+    project_m303_regimen_simplificado_rows,
+    resolve_m303_regimen_simplificado_snapshot,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _activity_ref() -> M303RegimenSimplificadoActivityProjectionRef:
     return M303RegimenSimplificadoActivityProjectionRef(
+        projection_kind="m303_regimen_simplificado_activity",
         cohort=M303RegimenSimplificadoCohort.AGRICOLA,
         slot=1,
         field=M303RegimenSimplificadoActivityField.ACTIVITY_CODE,
@@ -53,3 +71,82 @@ def test_projection_rejects_missing_or_duplicate_typed_references() -> None:
             applicable=False,
             censo_iae_epigraphs=frozenset(),
         )
+
+
+def test_projection_identity_never_uses_json_serialisation() -> None:
+    import inspect
+
+    from .. import _m303_regimen_simplificado_projection as module
+
+    source = inspect.getsource(module)
+    assert "model_dump_json" not in source
+    assert "json.dumps" not in source
+
+
+def test_module_projection_uses_the_exact_annual_orden_ordinal() -> None:
+    registry_snapshot = resources().modelos.authority.snapshot("303", filing_year=2026, period="1T")
+    resolved = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=registry_snapshot,
+        scope_decision=M303RegimenSimplificadoScopeDecision(
+            scope=M303RegimenSimplificadoScope.REGIMEN_SIMPLIFICADO_EVIDENCE_REQUIRED,
+        ),
+    )
+    annual_activity = resolved.orden.activities[0]
+    assert annual_activity.kind == "no_agricola"
+    assert annual_activity.iae_epigrafe is not None
+    assert len(annual_activity.modulos) == 3
+    evidence = FilingEvidenceReference(reference="test:s60:annual-orden-module-ordinal")
+    activity = ActividadNoAgricolaSimplificado(
+        orden_id=annual_activity.orden_id,
+        ejercicio=annual_activity.ejercicio,
+        activity_id="test-s60-actividad",
+        iae_epigrafe=annual_activity.iae_epigrafe,
+        modulos=tuple(
+            EntradaModuloSimplificado(
+                module_identity=module.identity,
+                declared_quantity=declared_quantity,
+                off_form_result=off_form_result,
+                evidence_reference=evidence,
+            )
+            for module, declared_quantity, off_form_result in zip(
+                annual_activity.modulos,
+                (Decimal("10"), Decimal("20"), Decimal("30")),
+                (Decimal("100"), Decimal("200"), Decimal("300")),
+                strict=True,
+            )
+        ),
+        facts=tuple(
+            HechoActividadSimplificado(
+                identity=identity,
+                value=Decimal("1"),
+                evidence_reference=evidence,
+            )
+            for identity in annual_activity.applicable_fact_identities
+        ),
+        evidence_reference=evidence,
+    )
+
+    projected = project_m303_regimen_simplificado_rows(
+        projection_refs=(
+            M303RegimenSimplificadoModuleProjectionRef(
+                projection_kind="m303_regimen_simplificado_module",
+                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+                slot=1,
+                module_order=2,
+                value=M303RegimenSimplificadoModuleValue.DECLARED_QUANTITY,
+            ),
+            M303RegimenSimplificadoModuleProjectionRef(
+                projection_kind="m303_regimen_simplificado_module",
+                cohort=M303RegimenSimplificadoCohort.NO_AGRICOLA,
+                slot=1,
+                module_order=3,
+                value=M303RegimenSimplificadoModuleValue.OFF_FORM_RESULT,
+            ),
+        ),
+        rows=RegimenSimplificadoFilingRows(ejercicio=annual_activity.ejercicio, activities=(activity,)),
+        orden=resolved.orden.activities,
+        applicable=True,
+        censo_iae_epigraphs=frozenset({annual_activity.iae_epigrafe}),
+    )
+
+    assert tuple(field.value for field in projected[0].fields) == (Decimal("20"), Decimal("300"))

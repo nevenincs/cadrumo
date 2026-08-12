@@ -82,6 +82,8 @@ def test_an_exempt_line_builds_a_declarable_observation() -> None:
         iva_rate=IvaRate.EXEMPT,
         base_amount=Decimal("1000.00"),
         iva_amount=Decimal("0"),
+        deduction_fact_kind=None,
+        deduction_provenance=None,
         recargo_amount=Decimal("0"),
     )
 

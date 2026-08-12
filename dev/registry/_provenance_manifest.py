@@ -63,16 +63,16 @@ __all__ = [
 ]
 
 
-EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 2
+EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 3
 """Current wire schema for the internal non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 3
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 4
 """Current generator contract recorded by every provenance manifest."""
 
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
 """Reviewed parser-to-wire normalization contract recorded for every field."""
 
-_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 3
+_LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 4
 _SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
 EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 """Internal JSON member ignored by the TOML-only registry loader."""
@@ -92,9 +92,9 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
         "binding",
         "literal",
         "producer_key",
+        "projection_ref",
         "draft_attribute",
         "computed_key",
-        "projection_ref",
         "legal_refs",
         "source_refs",
     },
@@ -141,9 +141,9 @@ _FIELD_KEYS: Final[frozenset[str]] = frozenset(
         "binding",
         "literal",
         "producer_key",
+        "projection_ref",
         "draft_attribute",
         "computed_key",
-        "projection_ref",
         "data_type",
         "required",
         "padding",
@@ -257,9 +257,9 @@ class ExportFieldDerivation(_StrictModel):
             "binding",
             "literal",
             "producer_key",
+            "projection_ref",
             "draft_attribute",
             "computed_key",
-            "projection_ref",
             "legal_refs",
             "source_refs",
         ):
@@ -774,9 +774,9 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         "binding": payload["binding"],
         "literal": payload["literal"],
         "producer_key": payload["producer_key"],
+        "projection_ref": payload["projection_ref"],
         "draft_attribute": payload["draft_attribute"],
         "computed_key": payload["computed_key"],
-        "projection_ref": payload["projection_ref"],
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="semantic-map legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="semantic-map source_refs"),
     }
@@ -867,9 +867,9 @@ def _normalise_loader_field(payload: Mapping[str, object]) -> dict[str, object]:
         "binding": payload["binding"],
         "literal": payload["literal"],
         "producer_key": payload["producer_key"],
+        "projection_ref": payload["projection_ref"],
         "draft_attribute": payload["draft_attribute"],
         "computed_key": payload["computed_key"],
-        "projection_ref": payload["projection_ref"],
         "data_type": payload["data_type"],
         "required": payload["required"],
         "padding": payload["padding"],

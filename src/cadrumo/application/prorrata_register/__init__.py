@@ -115,6 +115,7 @@ class ProrrataRegisterService:
         entry = ProrrataRegisterEntry(
             ejercicio=ejercicio,
             regime=regime,
+            especial_transition=None,
             sector_id=sector_id,
             provisional_percentage=provisional_percentage,
             provisional_provenance=_ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
@@ -146,6 +147,7 @@ class ProrrataRegisterService:
         entry = ProrrataRegisterEntry(
             ejercicio=ejercicio,
             regime=regime,
+            especial_transition=None,
             sector_id=sector_id,
             provisional_percentage=provisional_percentage,
             provisional_provenance=_ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,

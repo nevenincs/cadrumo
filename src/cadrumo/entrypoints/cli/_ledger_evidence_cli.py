@@ -20,7 +20,7 @@ from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceValidationError
-from ...domain.iva import InvoiceKind
+from ...domain.iva import InvoiceKind, SupplyNature
 from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
 from ._common import (
     _bad,
@@ -558,6 +558,11 @@ def _register_evidence_confirm_command() -> None:
             "--operation-type",
             help=tr("cli.app.ledger.evidence.confirm_operation_type_help"),
         ),
+        supply_nature: SupplyNature | None = typer.Option(
+            None,
+            "--supply-nature",
+            help=tr("cli.app.ledger.evidence.confirm_supply_nature_help"),
+        ),
         notes: str = typer.Option(
             "",
             "--notes",
@@ -592,6 +597,7 @@ def _register_evidence_confirm_command() -> None:
             country_code=country_code,
             currency=currency,
             operation_type=operation_type,
+            supply_nature=supply_nature,
             notes=notes,
             resolve=resolve,
         )
@@ -612,6 +618,7 @@ def _run_evidence_confirm(
     country_code: str,
     currency: str | None,
     operation_type: IntracomOperationType | None,
+    supply_nature: SupplyNature | None,
     notes: str,
     resolve: list[str],
 ) -> None:
@@ -637,6 +644,7 @@ def _run_evidence_confirm(
             iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
             currency=currency,
             operation_type=operation_type,
+            supply_nature=supply_nature,
             notes=notes,
             resolutions=resolutions,
         )

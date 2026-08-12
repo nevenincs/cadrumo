@@ -31,5 +31,7 @@ rate_kinds = ["general", "reduced", "super_reduced"]
 flow_direction = "soportado"
 fact = "iva_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2024-hasta-08-y-2t.bindings.aggregation]
 op = "sum"

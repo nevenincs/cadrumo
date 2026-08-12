@@ -8,7 +8,6 @@ Guards the explicit-authority projection:
      never appears in a formula expression (casilla 66 reads casilla 65 by casilla
      reference).
 
-Before the fix, casilla 65 silently resolved to 0 for every real profile (nothing
 The común-territory 100% attribution is grounded in the Concierto Económico
 (Ley 12/2002, art. 29), but support population is not evidence: the persisted
 territory fact must state it explicitly.

@@ -166,6 +166,7 @@ from ._filing_projection_ref import (
     M303RegimenSimplificadoModuleProjectionRef,
     M303RegimenSimplificadoModuleValue,
     compile_filing_projection_ref,
+    filing_projection_ref_casilla_id,
 )
 from ._fts_query import fts_or_group
 from ._google_credential_source import GoogleCredentialSourceKind
@@ -663,6 +664,7 @@ __all__: list[str] = [
     "exclusive_file_lock",
     "expected_floor",
     "extract_orden_anual_iva_tables",
+    "filing_projection_ref_casilla_id",
     "fold_diacritics",
     "fold_printed_phrase",
     "foreign_asset_obligation_group",

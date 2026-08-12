@@ -82,7 +82,13 @@ def test_active_natural_person_without_activity_is_profile_ready_without_iva_reg
         profile_id=_PROFILE_ID,
         overrides={
             "activities.description": "",
+            "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "",
+            "iva.m303_regime_composition": "",
+            "iva.redeme_enrolled": "",
+            "iva.cash_accounting_regime_enrolled": "",
+            "iva.voluntary_sii_enrolled": "",
+            "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "",
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "capital_inmobiliario",
         },

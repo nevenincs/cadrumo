@@ -43,6 +43,8 @@ rate_kinds = ["zero"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2026-y-siguientes.bindings.aggregation]
 op = "sum"
 
@@ -62,5 +64,7 @@ rate_kinds = ["zero"]
 flow_direction = "repercutido"
 fact = "base_amount_sum"
 
+observation_roles = ["settlement"]
+cash_accounting_treatments = ["none", "taxpayer_regime", "supplier_regime"]
 [revisions.2026-y-siguientes.bindings.aggregation]
 op = "sum"

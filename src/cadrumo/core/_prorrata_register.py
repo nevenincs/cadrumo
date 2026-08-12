@@ -63,10 +63,12 @@ class ProrrataRegisterRegime(StrEnum):
 class ProrrataEspecialTransitionKind(StrEnum):
     """Modelo 303 facts that change the voluntary prorrata-especial state.
 
-    A current ``ESPECIAL`` regime may simply continue from a prior ejercicio;
-    it must not be mistaken for a current-period option.  These two values
-    therefore type the separately evidenced transition that the filing surface
-    projects, rather than the regime itself.
+    A regime is durable state, not proof that an election happened in the
+    current ejercicio: a current ``ESPECIAL`` regime may simply continue from a
+    prior one, and it must not be mistaken for a current-period option.  These
+    two values therefore type the separately evidenced transition that the
+    filing surface projects, carried apart from
+    :class:`ProrrataRegisterRegime` rather than derived from it.
     """
 
     OPCION = "opcion"

@@ -616,6 +616,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
             input_values_by_casilla_id={},
             binding_overrides={},
             casilla_values=casilla_values,
+            filing_instance_evidence=None,
         ),
         work_unit_id=work_unit_id,
         state=CalculationRevisionState.BORRADOR,

@@ -180,12 +180,13 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
     assert raised.value.extra is extra
-    assert raised.value.install_hint == "pip install cadrumo[ghost]"
-    assert "pip install cadrumo[ghost]" in str(raised.value)
+    # The refusal carries machine identity only: no install command, and no
+    # human feature label that would read as operator-facing prose.
+    assert "pip install" not in str(raised.value)
     assert raised.value.context == {
         "extra": "ghost",
         "import_name": "aeat_definitely_not_installed_xyz",
-        "feature": "a ghost feature",
+        "importable": False,
     }
     assert raised.value.name == "aeat_definitely_not_installed_xyz"
     assert raised.value.path is None
