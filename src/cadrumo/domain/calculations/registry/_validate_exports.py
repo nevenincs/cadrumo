@@ -31,6 +31,7 @@ See Also:
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping
 
 from ....core import CasillaId, FilingProjectionRef, filing_projection_ref_casilla_id
@@ -51,6 +52,7 @@ from ._schema import (
     ExportRecordDefinition,
     LegalReference,
     ModeloRevision,
+    ProjectionEndpointDeclaration,
     SourceReference,
 )
 from ._schema_input_kind import InputKind
@@ -98,30 +100,107 @@ def validate_export_layout_section(
                 source_refs=source_refs,
                 evidence=evidence,
             )
-    _validate_projection_endpoint_index(
+    _validate_generated_projection_layout_bijection(failures, prefix=prefix, revision=revision)
+    _validate_projection_endpoint_declarations(
         failures,
         prefix=prefix,
         revision=revision,
         casillas=casillas,
         casilla_by_id=casilla_by_id,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        evidence=evidence,
     )
 
 
-def _validate_projection_endpoint_index(
+def _validate_generated_projection_layout_bijection(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+) -> None:
+    """Require loaded generated projection fields to exactly match declarations.
+
+    Pre-generation revisions deliberately have no export layouts, so their
+    declarations remain valid on their own. Once a layout exists, however, its
+    projection fields must be a one-for-one materialisation of the declared
+    revision authority.
+    """
+    if not revision.export_layouts:
+        return
+    generated = tuple(
+        field.projection_ref
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.PROJECTION
+    )
+    if any(reference is None for reference in generated):
+        failures.append(f"{prefix}: generated projection field lacks a typed projection_ref")
+        return
+    generated_refs = tuple(reference for reference in generated if reference is not None)
+    declared_refs = tuple(declaration.projection_ref for declaration in revision.projection_endpoints)
+    duplicate_generated = tuple(
+        sorted(repr(reference) for reference, count in Counter(generated_refs).items() if count > 1),
+    )
+    if duplicate_generated:
+        failures.append(
+            f"{prefix}: generated export layouts duplicate projection refs: {duplicate_generated!r}",
+        )
+    duplicate_declared = tuple(
+        sorted(repr(reference) for reference, count in Counter(declared_refs).items() if count > 1),
+    )
+    if duplicate_declared:
+        failures.append(
+            f"{prefix}: projection declarations are not unique: {duplicate_declared!r}",
+        )
+    missing = tuple(sorted(repr(reference) for reference in set(declared_refs) - set(generated_refs)))
+    undeclared = tuple(sorted(repr(reference) for reference in set(generated_refs) - set(declared_refs)))
+    if missing or undeclared:
+        details: list[str] = []
+        if missing:
+            details.append(f"missing declared refs {missing!r}")
+        if undeclared:
+            details.append(f"undeclared generated refs {undeclared!r}")
+        failures.append(
+            f"{prefix}: generated export layouts must exactly biject projection declarations; " + "; ".join(details),
+        )
+
+
+def _validate_projection_endpoint_declarations(
     failures: list[str],
     *,
     prefix: str,
     revision: ModeloRevision,
     casillas: set[CasillaId],
     casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
 ) -> None:
-    """Require each typed projection reference and numbered endpoint exactly once."""
+    """Validate revision-owned projection endpoint declarations.
+
+    A declaration is the sole semantic admission surface.  Generated export
+    fields cannot define, repair, or inherit an endpoint identity from a
+    casilla's ordinary ``export_refs`` membership.
+    """
     references_by_casilla: dict[CasillaId, list[FilingProjectionRef]] = {}
-    for reference, fields in revision.projection_endpoint_index().items():
-        if len(fields) != 1:
+    declarations_by_ref = revision.projection_endpoint_index()
+    for reference, declarations in declarations_by_ref.items():
+        if len(declarations) != 1:
             failures.append(
-                f"{prefix}: projection_ref {reference!r} is admitted by {len(fields)} export fields; "
+                f"{prefix}: projection_ref {reference!r} is admitted by {len(declarations)} projection declarations; "
                 "expected exactly one",
+            )
+        for declaration in declarations:
+            _validate_projection_endpoint_declaration_evidence(
+                failures,
+                prefix=prefix,
+                revision=revision,
+                declaration=declaration,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+                evidence=evidence,
             )
         casilla_id = filing_projection_ref_casilla_id(reference)
         if casilla_id is None:
@@ -135,15 +214,42 @@ def _validate_projection_endpoint_index(
             failures.append(
                 f"{prefix}: projection_ref {reference!r} references casilla {casilla_id!r} that is not projection_only",
             )
-        if any(field.id not in casilla.export_refs for field in fields):
-            failures.append(
-                f"{prefix}: projection_ref {reference!r} is not declared by casilla {casilla_id!r}",
-            )
     for casilla_id, references in references_by_casilla.items():
         if len(references) != 1:
             failures.append(
                 f"{prefix}: projection endpoint casilla {casilla_id!r} is addressed by multiple projection_refs",
             )
+    undeclared = tuple(
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.input_kind is InputKind.PROJECTION_ONLY and casilla.id not in references_by_casilla
+    )
+    if undeclared:
+        failures.append(
+            f"{prefix}: projection_only casillas lack revision-owned projection declarations: {undeclared!r}",
+        )
+
+
+def _validate_projection_endpoint_declaration_evidence(
+    failures: list[str],
+    *,
+    prefix: str,
+    revision: ModeloRevision,
+    declaration: ProjectionEndpointDeclaration,
+    legal_refs: Mapping[str, LegalReference],
+    source_refs: Mapping[str, SourceReference],
+    evidence: EvidenceValidator,
+) -> None:
+    """Require catalogue-grounded, revision-pinned endpoint evidence."""
+    owner = f"projection endpoint {declaration.projection_ref!r}"
+    failures.extend(_missing_refs(prefix, owner, declaration.legal_refs, legal_refs, "legal"))
+    failures.extend(_missing_refs(prefix, owner, declaration.source_refs, source_refs, "source"))
+    failures.extend(evidence.require_source_tier(prefix, owner, declaration.source_refs, "layout_authority"))
+    foreign_sources = tuple(sorted(set(declaration.source_refs) - set(revision.source_refs)))
+    if foreign_sources:
+        failures.append(
+            f"{prefix}: {owner} cites source refs outside the selected revision authority: {foreign_sources!r}",
+        )
 
 
 def _validate_export_record(

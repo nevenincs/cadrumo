@@ -17,7 +17,12 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from typing import Final, NamedTuple
+from typing import Annotated, Final, NamedTuple
+
+from pydantic import BaseModel, Field, StringConstraints, model_validator
+
+from ._models import STRICT_FROZEN_CONFIG
+from .identity import SubjectTaxId
 
 
 class IdentityReferent(StrEnum):
@@ -47,6 +52,54 @@ class ProductIdentity(NamedTuple):
     environment_prefix: str
     companion_distributions: tuple[str, str]
     companion_namespace: str
+
+
+type M303ProgramIdentifier = Annotated[
+    str,
+    StringConstraints(min_length=4, max_length=4, pattern=r"^[A-Z0-9]{4}$"),
+]
+"""Exact four-byte AEAT-assigned program identifier for the Modelo 303 envelope."""
+
+
+class M303ProductSoftwareEvidence(BaseModel):
+    """One immutable evidence item authorising a Modelo 303 software identity.
+
+    This is deliberately distinct from legal, taxpayer, presenter and filing
+    producer evidence.  A product developer must be explicitly authorised to
+    emit its program and tax identifiers; neither identifier may be guessed
+    from a filing participant.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    reference: str = Field(min_length=1, max_length=512)
+    digest: str = Field(pattern=r"^[0-9a-f]{64}$")
+
+
+class M303ProductSoftwareIdentity(BaseModel):
+    """The one explicit software authority for a Modelo 303 DP30300 envelope.
+
+    No module-level instance is supplied.  A caller must provide both the AEAT
+    program identifier and the developer's validated Spanish tax identifier
+    with reviewed evidence for every generated or emitted envelope.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    program_identifier: M303ProgramIdentifier
+    developer_tax_id: SubjectTaxId
+    evidence: tuple[M303ProductSoftwareEvidence, ...] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _require_exact_wire_widths(self) -> M303ProductSoftwareIdentity:
+        if len(self.program_identifier.encode("ascii")) != 4:
+            raise ValueError("M303 program identifier must encode to exactly four ASCII bytes")
+        if len(self.developer_tax_id.encode("ascii")) != 9:
+            raise ValueError("M303 developer tax identifier must encode to exactly nine ASCII bytes")
+        references = tuple(item.reference for item in self.evidence)
+        if len(set(references)) != len(references):
+            raise ValueError("M303 product software evidence must not repeat a reference")
+        return self
 
 
 PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
@@ -81,6 +134,9 @@ __all__ = [
     "AEAT_AUTHORITY_SHORT_NAME",
     "PRODUCT_IDENTITY",
     "IdentityReferent",
+    "M303ProductSoftwareEvidence",
+    "M303ProductSoftwareIdentity",
+    "M303ProgramIdentifier",
     "ProductIdentity",
     "normalise_product_identity_references",
 ]

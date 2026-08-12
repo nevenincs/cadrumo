@@ -10,7 +10,13 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from ....core import CasillaId, EstadoCasillaOficial, ExportExemptionReason, ExportLayoutFormat
+from ....core import (
+    CasillaId,
+    EstadoCasillaOficial,
+    ExportExemptionReason,
+    ExportLayoutFormat,
+    filing_projection_ref_casilla_id,
+)
 from ....core.aggregation import BindingAggregationOp
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
@@ -235,6 +241,14 @@ def _canales_representacion_casillas_oficiales(
                 for entry in xml_dictionary_entries(layout, source_root=source_root, sources=sources)
                 if entry.casilla_id is not None
             )
+    # A typed numbered endpoint addresses the official casilla even before the
+    # generated layout exists. The declaration contributes classification only:
+    # it never supplies a value or an export coordinate.
+    addressed.update(
+        casilla_id
+        for declaration in revision.projection_endpoints
+        if (casilla_id := filing_projection_ref_casilla_id(declaration.projection_ref)) is not None
+    )
     return addressed, has_binding_fields
 
 

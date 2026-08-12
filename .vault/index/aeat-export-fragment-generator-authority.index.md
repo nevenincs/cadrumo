@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:028f9607a79729bdfd8dbf1dc98f16d847eb18c217b0f0fba5e86c70925a1b74'
+body_hash: 'sha256:8af7f739efdd8b723a07a15dfe06ca6edf80b0397bb12129658e122deafb8c09'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -53,6 +53,8 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S58]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S59]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -111,6 +113,8 @@ related:
   - '[[2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -176,6 +180,8 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `parallel campaign merge reconciliation`
 - `2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S57 Typed Filing Projection Authority Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit` - `aeat-export-fragment-generator-authority` audit: `S60 Producer and Projection Address Closure Audit`
+- `2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit` - `aeat-export-fragment-generator-authority` audit: `S61 DP30300 Variable Envelope Audit`
+- `2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S62 Projection Declaration Authority Audit`
 
 ### exec
 
@@ -224,6 +230,8 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S58` - W04.P07.S58 Step Record
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S59` - Establish the single annual Orden registry authority by authoring ActividadOrdenAnualId, the immutable year/revision-scoped Orden projection, and ActividadOrdenAnualRef with Orden id, ejercicio, registry revision, and canonical source/content digest, exposing one snapshot resolver for Orden and active record-design epoch, and deleting test-only rows, parallel selectors, parameter-table redeclarations, and runtime inference. Own only the required closed calculation-scope input whose not-claimed value is neutral and whose evidence-required value refuses pending S58. Do not derive secure-profile composition or own any regime-composition enum, positive censo applicability, or filing-evidence owner because S55 owns profile mapping and S58 owns evidence-bearing applicability
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61` - Define and implement one typed DP30300 variable-envelope semantic and composition authority for all thirteen prefix fields, the Variable body, relative closer, and derived total across the five Modelo 303 epochs, resolving program identifier and developer tax identity from explicit product authority, carrying the contract through semantic-map provenance and generation, and deleting the blanket generator refusal without literals, aliases, defaults, or inferred producer identities
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with classify_official_boxes, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback
 
 ### plan
 

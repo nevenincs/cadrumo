@@ -202,6 +202,7 @@ __all__ = [
     "ParameterDefinition",
     "PeriodSelector",
     "ProfilePredicateDefinition",
+    "ProjectionEndpointDeclaration",
     "RegistryCatalogues",
     "RegistryExternalLink",
     "RegistryModel",
@@ -282,6 +283,7 @@ from ._schema_surfaces import (
     ExportSemanticPayloadAxis,
     ExportValuePolicyValue,
     OneBasedExportOffset,
+    ProjectionEndpointDeclaration,
     RelationDefinition,
     RelationPeriodAlignment,
     RelationRevisionSelector,
@@ -1257,6 +1259,7 @@ class ModeloRevision(RegistryModel):
     algorithm_providers: tuple[AlgorithmProviderDefinition, ...] = ()
     algorithm_bindings: tuple[AlgorithmBindingDefinition, ...] = ()
     relations: tuple[RelationDefinition, ...] = ()
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = ()
     export_layouts: tuple[ExportLayoutDefinition, ...] = ()
     extraction_profiles: tuple[ExtractionProfileDefinition, ...] = ()
     live_cross_references: tuple[LiveCrossReferenceDecision, ...] = ()
@@ -1304,23 +1307,25 @@ class ModeloRevision(RegistryModel):
         """Return the optional official-Spanish revision label."""
         return self.get_label("es")
 
-    def projection_endpoint_index(self) -> Mapping[FilingProjectionRef, tuple[ExportFieldDefinition, ...]]:
-        """Index typed projection endpoints without concealing duplicate declarations."""
-        fields_by_ref: dict[FilingProjectionRef, list[ExportFieldDefinition]] = {}
-        for layout in self.export_layouts:
-            for record in layout.records:
-                for field in record.fields:
-                    if field.projection_ref is not None:
-                        fields_by_ref.setdefault(field.projection_ref, []).append(field)
-        return _frozen_index(fields_by_ref)
+    def projection_endpoint_index(self) -> Mapping[FilingProjectionRef, tuple[ProjectionEndpointDeclaration, ...]]:
+        """Index declared projection endpoints without concealing duplicates.
 
-    def projection_fields_for_casilla(self, casilla_id: CasillaId) -> tuple[ExportFieldDefinition, ...]:
-        """Return projection fields whose typed reference addresses ``casilla_id``."""
+        Generated layouts deliberately do not participate in this authority:
+        their fields must later prove an exact bijection with this revision-owned
+        declaration index.
+        """
+        declarations_by_ref: dict[FilingProjectionRef, list[ProjectionEndpointDeclaration]] = {}
+        for declaration in self.projection_endpoints:
+            declarations_by_ref.setdefault(declaration.projection_ref, []).append(declaration)
+        return _frozen_index(declarations_by_ref)
+
+    def projection_declarations_for_casilla(self, casilla_id: CasillaId) -> tuple[ProjectionEndpointDeclaration, ...]:
+        """Return declarations whose typed reference addresses ``casilla_id``."""
         return tuple(
-            field
-            for reference, fields in self.projection_endpoint_index().items()
+            declaration
+            for reference, declarations in self.projection_endpoint_index().items()
             if filing_projection_ref_casilla_id(reference) == casilla_id
-            for field in fields
+            for declaration in declarations
         )
 
     def producer_inventory(self) -> CasillaProducerInventory:

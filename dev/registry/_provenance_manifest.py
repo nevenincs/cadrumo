@@ -15,6 +15,7 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
+from cadrumo.core import M303ProductSoftwareIdentity, sha256_hex
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
@@ -26,6 +27,7 @@ from cadrumo.domain.calculations.registry import (
     SourceRefId,
 )
 
+from ._m303_variable_envelope import M303EnvelopeBytes, M303EnvelopeMemberDigest, M303EnvelopeProvenance
 from ._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateField,
@@ -63,10 +65,10 @@ __all__ = [
 ]
 
 
-EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 3
+EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION: Final[int] = 4
 """Current wire schema for the internal non-loader provenance manifest."""
 
-EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 4
+EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION: Final[int] = 5
 """Current generator contract recorded by every provenance manifest."""
 
 EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION: Final[int] = 2
@@ -79,7 +81,9 @@ EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 
 _LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 
-_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset({"modelo", "design_epoch", "records", "entries"})
+_SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset(
+    {"modelo", "design_epoch", "records", "entries", "variable_envelopes"},
+)
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
     {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat"},
 )
@@ -102,6 +106,20 @@ _SEMANTIC_MAP_ENTRY_KEYS: Final[frozenset[str]] = frozenset(
 _SEMANTIC_MAP_ANCHOR_KEYS: Final[frozenset[str]] = frozenset(
     {"sheet", "source_row", "source_cell", "ordinal", "record_identity"},
 )
+_M303_VARIABLE_ENVELOPE_KEYS: Final[frozenset[str]] = frozenset(
+    {
+        "source_ref",
+        "source_sha256",
+        "record_identity",
+        "prefix_fields",
+        "body_anchor",
+        "body_record_ids",
+        "closer_anchor",
+        "total_anchor",
+    },
+)
+_M303_PREFIX_FIELD_KEYS: Final[frozenset[str]] = frozenset({"role", "anchor"})
+_M303_TOTAL_ANCHOR_KEYS: Final[frozenset[str]] = frozenset({"source_row", "source_cell", "label", "length"})
 _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
     {
         "id",
@@ -290,6 +308,7 @@ class ExportFragmentProvenanceManifest(_StrictModel):
     loader_semantic_sha256: str = Field(pattern=_SHA256_PATTERN)
     output_files: tuple[ExportFragmentOutputDigest, ...] = Field(min_length=1)
     field_derivations: tuple[ExportFieldDerivation, ...] = Field(min_length=1)
+    m303_variable_envelope: M303EnvelopeProvenance | None = None
 
     @model_validator(mode="after")
     def _refuse_unknown_schema_or_unordered_outputs(self) -> ExportFragmentProvenanceManifest:
@@ -341,12 +360,18 @@ def semantic_map_digest(semantic_map: SemanticMap) -> str:
     records = _as_object_list(payload["records"], subject="semantic-map records")
     normalised_records = [_normalise_semantic_map_record(record) for record in records]
     normalised_records.sort(key=_semantic_record_sort_key)
+    variable_envelopes = _as_object_list(payload["variable_envelopes"], subject="semantic-map variable envelopes")
+    normalised_variable_envelopes = [_normalise_m303_variable_envelope(envelope) for envelope in variable_envelopes]
+    normalised_variable_envelopes.sort(
+        key=lambda envelope: _as_string(envelope["record_identity"], subject="envelope id"),
+    )
     return content_hash_hex(
         {
             "modelo": payload["modelo"],
             "design_epoch": payload["design_epoch"],
             "records": normalised_records,
             "entries": normalised_entries,
+            "variable_envelopes": normalised_variable_envelopes,
         },
     )
 
@@ -438,6 +463,8 @@ def build_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Assemble provenance only from the exact joined and rendered authorities."""
     _validate_generation_scope(
@@ -464,6 +491,11 @@ def build_export_fragment_provenance_manifest(
         field_derivations=tuple(
             sorted(field_derivations, key=lambda item: (item.export_record_id, str(item.field.id)))
         ),
+        m303_variable_envelope=_m303_envelope_provenance(
+            joined,
+            product_software_identity=product_software_identity,
+            rendered_envelope=m303_variable_envelope,
+        ),
     )
     _require_field_derivations_match_layout(manifest.field_derivations, loaded_layout)
     return manifest
@@ -479,6 +511,8 @@ def emit_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Write one complete canonical sibling manifest after a fresh tree renders.
 
@@ -494,6 +528,8 @@ def emit_export_fragment_provenance_manifest(
         field_derivations=field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        product_software_identity=product_software_identity,
+        m303_variable_envelope=m303_variable_envelope,
     )
     manifest_path = export_fragment_provenance_path(export_root)
     if manifest_path.is_symlink() or manifest_path.is_junction():
@@ -514,6 +550,8 @@ def verify_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Refuse current-authority, file, loader-semantic, or derivation drift."""
     manifest_path = export_fragment_provenance_path(export_root)
@@ -529,6 +567,8 @@ def verify_export_fragment_provenance_manifest(
         target=target,
         render_profile=render_profile,
         render_profile_source_evidence=render_profile_source_evidence,
+        product_software_identity=product_software_identity,
+        m303_variable_envelope=m303_variable_envelope,
     )
     actual_outputs = collect_export_fragment_output_digests(export_root)
     if manifest.output_files != actual_outputs:
@@ -599,6 +639,11 @@ def _validate_generation_scope(
             f"semantic-map epoch {semantic_map.design_epoch!r} does not match generation target "
             f"{target.design_epoch!r}",
         )
+    if joined.m303_variable_envelope is not None and target.revision_id != joined.revision_id:
+        raise RegistryValidationError(
+            f"typed Modelo 303 DP30300 target revision {target.revision_id!r} does not match the selected "
+            f"snapshot revision {joined.revision_id!r}",
+        )
     if tuple(
         sorted(
             (field.semantic_entry for field in joined.fields),
@@ -649,6 +694,62 @@ def _validate_generation_scope(
         raise RegistryValidationError("joined records do not attest the supplied complete semantic map")
 
 
+def _m303_envelope_provenance(
+    joined: JoinedRecordDesign,
+    *,
+    product_software_identity: M303ProductSoftwareIdentity | None,
+    rendered_envelope: M303EnvelopeBytes | None,
+) -> M303EnvelopeProvenance | None:
+    """Require explicit product authority exactly when DP30300 is generated."""
+    joined_envelope = joined.m303_variable_envelope
+    if joined_envelope is None:
+        if product_software_identity is not None or rendered_envelope is not None:
+            raise RegistryValidationError(
+                "product/software identity and rendered envelope are only admitted for a typed Modelo 303 "
+                "DP30300 envelope",
+            )
+        return None
+    if product_software_identity is None:
+        raise RegistryValidationError(
+            "typed Modelo 303 DP30300 generation requires explicit product/software identity authority",
+        )
+    if rendered_envelope is None:
+        raise RegistryValidationError("typed Modelo 303 DP30300 generation requires one measured rendered envelope")
+    if joined.revision_id is None or joined.filing_period is None:
+        raise RegistryValidationError(
+            "typed Modelo 303 DP30300 generation requires the exact selected snapshot revision and filing period",
+        )
+    if rendered_envelope.filing_period != joined.filing_period:
+        raise RegistryValidationError(
+            "typed Modelo 303 DP30300 rendered period does not match the exact selected snapshot period",
+        )
+    body_record_ids = tuple(member.record_id for member in rendered_envelope.body_members)
+    if body_record_ids != joined_envelope.semantic.body_record_ids:
+        raise RegistryValidationError(
+            "typed Modelo 303 DP30300 generation body records do not match its reviewed source order",
+        )
+    return M303EnvelopeProvenance(
+        semantic=joined_envelope.semantic,
+        schema_version=1,
+        revision_id=joined.revision_id,
+        filing_period=joined.filing_period,
+        semantic_sha256=content_hash_hex(joined_envelope.semantic.model_dump(mode="json")),
+        prefix_derivations=tuple(field.role for field in joined_envelope.semantic.prefix_fields),
+        body_member_digests=tuple(
+            M303EnvelopeMemberDigest(
+                record_id=member.record_id,
+                sha256=sha256_hex(member.payload),
+            )
+            for member in rendered_envelope.body_members
+        ),
+        payload_sha256=rendered_envelope.payload_sha256,
+        total_length=rendered_envelope.total_length,
+        product_software_identity=product_software_identity,
+        closer_derivation="m303-relative-closer-v1",
+        total_derivation="m303-emitted-byte-total-v1",
+    )
+
+
 def _require_manifest_matches_current_authorities(
     manifest: ExportFragmentProvenanceManifest,
     *,
@@ -657,6 +758,8 @@ def _require_manifest_matches_current_authorities(
     target: ExportFragmentTarget,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
+    product_software_identity: M303ProductSoftwareIdentity | None,
+    m303_variable_envelope: M303EnvelopeBytes | None,
 ) -> None:
     _validate_generation_scope(
         joined=joined,
@@ -686,6 +789,13 @@ def _require_manifest_matches_current_authorities(
         raise RegistryValidationError(
             f"export provenance manifest does not match current generation authorities: {mismatches!r}",
         )
+    expected_envelope = _m303_envelope_provenance(
+        joined,
+        product_software_identity=product_software_identity,
+        rendered_envelope=m303_variable_envelope,
+    )
+    if manifest.m303_variable_envelope != expected_envelope:
+        raise RegistryValidationError("export provenance M303 variable-envelope authority does not match generation")
 
 
 def _require_field_derivations_match_layout(
@@ -779,6 +889,63 @@ def _normalise_semantic_map_entry(payload: Mapping[str, object]) -> dict[str, ob
         "computed_key": payload["computed_key"],
         "legal_refs": _sorted_strings(payload["legal_refs"], subject="semantic-map legal_refs"),
         "source_refs": _sorted_strings(payload["source_refs"], subject="semantic-map source_refs"),
+    }
+
+
+def _normalise_m303_variable_envelope(payload: Mapping[str, object]) -> dict[str, object]:
+    """Normalise the typed DP30300 contract without re-deriving its meaning."""
+    _require_exact_keys(payload, _M303_VARIABLE_ENVELOPE_KEYS, subject="M303 variable envelope")
+    prefix_fields = _as_object_list(payload["prefix_fields"], subject="M303 variable envelope prefix fields")
+    normalised_prefix_fields: list[dict[str, object]] = []
+    for prefix_field in prefix_fields:
+        _require_exact_keys(prefix_field, _M303_PREFIX_FIELD_KEYS, subject="M303 envelope prefix field")
+        anchor = _as_object(prefix_field["anchor"], subject="M303 envelope prefix anchor")
+        _require_exact_keys(anchor, _SEMANTIC_MAP_ANCHOR_KEYS, subject="M303 envelope prefix anchor")
+        normalised_prefix_fields.append(
+            {
+                "role": prefix_field["role"],
+                "anchor": {
+                    "sheet": anchor["sheet"],
+                    "source_row": anchor["source_row"],
+                    "source_cell": anchor["source_cell"],
+                    "ordinal": anchor["ordinal"],
+                    "record_identity": anchor["record_identity"],
+                },
+            },
+        )
+    body_anchor = _as_object(payload["body_anchor"], subject="M303 envelope body anchor")
+    closer_anchor = _as_object(payload["closer_anchor"], subject="M303 envelope closer anchor")
+    for subject, anchor in (("body", body_anchor), ("closer", closer_anchor)):
+        _require_exact_keys(anchor, _SEMANTIC_MAP_ANCHOR_KEYS, subject=f"M303 envelope {subject} anchor")
+    total_anchor = _as_object(payload["total_anchor"], subject="M303 envelope total anchor")
+    _require_exact_keys(total_anchor, _M303_TOTAL_ANCHOR_KEYS, subject="M303 envelope total anchor")
+    body_record_ids = _strings_in_order(payload["body_record_ids"], subject="M303 envelope body record ids")
+    return {
+        "source_ref": payload["source_ref"],
+        "source_sha256": payload["source_sha256"],
+        "record_identity": payload["record_identity"],
+        "prefix_fields": normalised_prefix_fields,
+        "body_anchor": {
+            "sheet": body_anchor["sheet"],
+            "source_row": body_anchor["source_row"],
+            "source_cell": body_anchor["source_cell"],
+            "ordinal": body_anchor["ordinal"],
+            "record_identity": body_anchor["record_identity"],
+        },
+        "body_record_ids": body_record_ids,
+        "closer_anchor": {
+            "sheet": closer_anchor["sheet"],
+            "source_row": closer_anchor["source_row"],
+            "source_cell": closer_anchor["source_cell"],
+            "ordinal": closer_anchor["ordinal"],
+            "record_identity": closer_anchor["record_identity"],
+        },
+        "total_anchor": {
+            "source_row": total_anchor["source_row"],
+            "source_cell": total_anchor["source_cell"],
+            "label": total_anchor["label"],
+            "length": total_anchor["length"],
+        },
     }
 
 
@@ -944,6 +1111,16 @@ def _sorted_strings(value: object, *, subject: str) -> list[str]:
     if any(not isinstance(item, str) for item in items):
         raise RegistryValidationError(f"{subject} schema drift: expected string array")
     return sorted(cast(list[str], items))
+
+
+def _strings_in_order(value: object, *, subject: str) -> list[str]:
+    """Validate a string array while retaining semantic sequence order."""
+    if not isinstance(value, list):
+        raise RegistryValidationError(f"{subject} schema drift: expected string array")
+    items = cast(list[object], value)
+    if any(not isinstance(item, str) for item in items):
+        raise RegistryValidationError(f"{subject} schema drift: expected string array")
+    return cast(list[str], items)
 
 
 def _as_string(value: object, *, subject: str) -> str:
