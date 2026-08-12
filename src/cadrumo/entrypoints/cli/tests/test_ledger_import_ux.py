@@ -172,8 +172,8 @@ def test_missing_or_blank_csv_currency_imports_as_default_and_list_view_succeed(
     assert json.loads(viewed.output)["result"]["transaction"]["currency"] == "EUR"
 
 
-def test_short_csv_currency_refuses_at_import_with_currency_column_message(tmp_path: Path) -> None:
-    """A malformed nonblank CSV currency cell is not misreported as config repair."""
+def test_short_csv_currency_preserves_typed_import_refusal(tmp_path: Path) -> None:
+    """A malformed nonblank currency preserves the import refusal identity."""
     statement = tmp_path / "short-currency.csv"
     statement.write_text(
         _N26_HEADER + "2026-04-15,Client SL,Invoice 1,121.00,EU,n26-001\n",
@@ -190,7 +190,7 @@ def test_short_csv_currency_refuses_at_import_with_currency_column_message(tmp_p
     "locale",
     ["ca", "en", "es", "hu"],
 )
-def test_malformed_csv_date_import_localises_inner_reason(
+def test_malformed_csv_date_import_preserves_contract_across_locales(
     tmp_path: Path,
     locale: str,
 ) -> None:
@@ -224,10 +224,8 @@ def test_malformed_csv_date_import_localises_inner_reason(
 def test_import_of_a_headers_only_csv_explains_zero_rows(tmp_path: Path) -> None:
     """A parsed-but-empty CSV explains the zero result, never silently.
 
-    A header-only N26 CSV fails provider validation outright with a
-    specific "no data rows" reason. The operator must see that reason
-    rather than a bare "imported 0" success line — the silent-success
-    path is the defect.
+    A header-only source fails provider validation outright and must retain
+    the canonical typed refusal rather than becoming a zero-row success.
     """
     statement = tmp_path / "empty.csv"
     statement.write_text(_N26_HEADER, encoding="utf-8")
