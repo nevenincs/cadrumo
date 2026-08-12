@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:602adb3d884457cb585d215d3db0dd920de8a3123f4bf415257674f0a4ca4a15'
+body_hash: 'sha256:b5349c6e538a509fcea0de0eba141e42e26616dbf1f610ac970d198ae97d97cf'
 step_id: 'S332'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -52,7 +52,7 @@ related:
 
 ## Description
 
-- Check whether the category-to-article grounding already exists before
+- Check whether the category-to-article grounding already exists, before
   authoring any of it.
 - Join the two shipped tables into a derivation that rules on nothing itself.
 - Rank it below the printed citation and gate the precedence and the traps.

@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:116848972f40175964a3677ebc835336b41aa0a3953bd36182aed5122e7c296c'
+body_hash: 'sha256:7126602ac8a638a389c7f4373a23b02c971f6d80d9bf475eeb78201a580d79a8'
 step_id: 'S331'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
@@ -52,7 +52,7 @@ related:
 
 ## Description
 
-- Trace where the supply nature actually comes from before designing a way to
+- Trace where the supply nature actually comes from, before designing a way to
   suggest one.
 - Wire the citation derivation into the declared-facts builder, behind the
   operator's own answer.
