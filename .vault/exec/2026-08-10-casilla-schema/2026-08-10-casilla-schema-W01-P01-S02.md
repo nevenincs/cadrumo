@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#casilla-schema'
 date: '2026-08-10'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee22918b0c3da592ba6b1bdd965876ee80ea3a1baefb771eb48a79deaefac059'
+body_hash: 'sha256:25a432bbd4a7521e307e2aca9fe7e6679341356ec9c1bc314ce30053b100094e'
 step_id: 'S02'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -18,6 +18,14 @@ related:
 - `src/cadrumo/_data/registry/aeat/`
 
 ## Description
+
+Confirm the registry restructure is committed by counting tracked `revision.toml` files and both M303 split revisions at HEAD, then pin that commit as the campaign's measurement SHA.
+
+Re-take the six basis-tracked numbers - registry revisions, relation pairs, relation-declaring revisions, export-exemption casillas, manifest-bearing revisions, and manifest-less revisions - with a repository-external probe that reads the compiled `ModeloDefinition` objects through `bundled_authority()` rather than a directory listing, per the registry-authority-flow rule.
+
+Verify the probe's own shape before trusting any zero: assert the revisions mapping yields revision objects rather than keys, and read the export-exemption field name off the registry validator instead of guessing it.
+
+Record the command, the probe's design, the six outputs, the printed totality controls, and every measurement impurity in this execution record.
 
 ## Outcome
 

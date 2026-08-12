@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f34b8540df493cadd26af9af1251c20dfce2f668d0a4b521c0d342d1ef729e34'
+body_hash: 'sha256:9895bcd3c7b05177aa89ff6960f970e433c50e221a438c197057c58873dc1690'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-blocker-spine-adr]]"
@@ -46,7 +46,7 @@ The feature-scoped VaultSpec check reports that `casilla-schema.index` has six r
 
 ### iva-stem-gate-prose | medium | Two S33 audit sentences make the campaign fail the IVA stem gate
 
-`2026-08-12-casilla-schema-s33-readiness-mapping-audit` lines 41 and 63 use the duplicated phrase `IVA/IVA` while describing the absence of such drift. The exact Spanish-stem gate passes four nodes and fails its authored-repository-prose node on only those two campaign-owned lines. Correct the sentences through the VaultSpec CLI so the audit states the same conclusion without reproducing the prohibited token.
+`2026-08-12-casilla-schema-s33-readiness-mapping-audit` lines 41 and 63 reproduce the doubled tax stem while describing the absence of such drift. The exact Spanish-stem gate passes four nodes and fails its authored-repository-prose node on only those two campaign-owned lines. Correct the sentences through the VaultSpec CLI so the audit states the same conclusion without reproducing the prohibited token.
 
 ### s02-empty-description | low | A checked execution record remains structurally incomplete
 

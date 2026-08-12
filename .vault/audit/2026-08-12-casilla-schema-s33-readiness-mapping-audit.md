@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:e82dad49168cae5d322ec48d9028149c249117bce3f229096ad3a29a5f71cb7b'
+body_hash: 'sha256:a9739b6fb1da72e4a474753f877134b66b35620bcd34c4ccf93ff6a3ec4b4879'
 related:
   - "[[2026-08-10-casilla-schema-dead-surface-adr]]"
   - "[[2026-08-10-casilla-schema-blocker-spine-adr]]"
@@ -38,7 +38,8 @@ The S33 execution record says readiness leaves were authored through `dev.locale
 - Add real list and resolve CLI assertions plus independent anchors for the deliberate shared ledger noun and representative distinct sources.
 - Re-run `dev.locales scaffold --check`, catalogue audit/honesty tests, focused readiness tests, Ruff, typing, and `git diff --check`; then update the execution record with exact current evidence.
 
-The production shape itself is otherwise aligned: the legacy dict/helper is deleted; the Spanish-named `MappingProxyType` is keyed by `BindingSourceKind`; import-time exact set equality is enforced; all three CLI consumers use typed indexing followed by `tr()` with no fallback/default; and Ruff passes on the changed Python surface. No authored `VAT` alias was found; English and Hungarian use `IVA`, avoiding `IVA/IVA` drift.
+The production shape itself is otherwise aligned: the legacy dict/helper is deleted; the Spanish-named `MappingProxyType` is keyed by `BindingSourceKind`; import-time exact set equality is enforced; all three CLI consumers use typed indexing followed by `tr()` with no fallback/default; and Ruff passes on the changed Python surface. No authored English alias for the tax stem was found; English and Hungarian both carry the Spanish stem, so no doubled-stem drift was introduced.
+
 ## Re-review resolution
 
 ### locale-authority-drift | resolved | Scanner-visible canonical mapping closes S33 readiness drift
@@ -60,7 +61,7 @@ The S33 record names the scanner contract and real CLI regression, records nine 
 - BasedPyright over the application owner and direct projection test: zero errors, warnings, or notes.
 - Scoped `git diff --check`: passed.
 - Exact-symbol sweep: the old entrypoint dict and fallback helper remain absent; all three consumers index the typed application mapping and call `tr()` without a default.
-- Manual semantic review: ledger-backed kinds deliberately share `datos_libro`; retention, IVA compensation, regularisation, invoice, evidence, foreign-asset, related-party, attribution, refund, and donor sources retain distinct nouns. No new `VAT` alias or duplicated `IVA/IVA` wording was authored.
+- Manual semantic review: ledger-backed kinds deliberately share `datos_libro`; retention, IVA compensation, regularisation, invoice, evidence, foreign-asset, related-party, attribution, refund, and donor sources retain distinct nouns. No new English alias for the tax stem and no doubled-stem wording was authored.
 
 ## Re-review verdict
 
