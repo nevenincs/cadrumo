@@ -62,4 +62,3 @@ The accepted `2026-08-10-casilla-schema-dead-surface-adr` therefore remains impl
 - No production or test code changed. The verification package remains intact for S30.
 - No registry consumer row, facade export, or displaced citation was removed; those are S30 scope.
 - No audit, plan check, staging, or commit was performed.
-

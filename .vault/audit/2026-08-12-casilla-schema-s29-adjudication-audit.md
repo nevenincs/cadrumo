@@ -36,4 +36,3 @@ No missing capability, unsupported covered claim, architecture-inconsistent drop
 Final verdict: PASS. The wording correction is present, S29 is warning-clean, and S30 is not blocked on semantic absorption.
 
 Verification: the exact S29 command passed with 78 tests. The production AST import census found zero importers. The declared table contains exactly 17 capability rows. A supplementary reconciliation-record and declaration-render run produced 77 passes and one existing Modelo 390 reproduced-render exact-set failure; the absent target is neither a computed nor a reconcile-when-present casilla, so that red gate does not contradict the S29 coverage or deletion conclusion and is not attributed to this Step.
-
