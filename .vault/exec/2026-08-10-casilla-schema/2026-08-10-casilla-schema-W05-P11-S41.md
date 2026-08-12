@@ -5,12 +5,12 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:ff5d791f5c26bfb51a6ba9b4719e9d11d149558c81d2345de5e1bedcdb723e6a'
+body_hash: 'sha256:6eb077a48f510ad937550c9aa4ec4d81d5e5368860ca96d9a33d1a5c4675fbd0'
 step_id: 'S41'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
 ---
-# correct the standing collect gate to measure the full repository
+# correct the standing collect gate to measure every tracked test root
 
 ## Scope
 
@@ -19,21 +19,23 @@ related:
 ## Description
 
 - Ground the collect-only behavior in the project pytest configuration and the prior full-collection audit.
-- Replace the ambiguous bare collect command with an explicit serial full-tree collection that clears inherited `addopts`.
-- Execute the corrected command twice against the current tree.
+- Replace the ambiguous bare collect command with a serial collection that clears inherited `addopts` and names every tracked test root.
+- Execute each candidate boundary and retain only the one that measures the intended tracked suite.
 
 ## Outcome
 
-The plan's global gate now names `uv run --no-sync pytest --collect-only -q -n 0 --override-ini=addopts=` and states why the empty override is load-bearing. The gate therefore measures all marker cohorts instead of silently inheriting the project default unit-lane selection.
+The plan's global gate now names `uv run --no-sync pytest src dev packaging --collect-only -q -n 0 --override-ini=addopts=`. The empty `addopts` override prevents the project default from selecting only the unit lane; the three positional roots cover every test file tracked by Git while excluding transient untracked probe trees in the shared worktree.
 
 ## Verification
 
-- Mandatory code RAG: `uv run --no-sync vaultspec-rag search "pytest collect-only inherits addopts marker deselect rule named collection gate casilla schema" --type code --port 8766 --timeout 120` passed and ranked the real marker-selection reachability evidence.
-- Mandatory Vault RAG: `uv run --no-sync vaultspec-rag search "casilla schema standing collect gate unit lane full collection plan verification" --type vault --port 8766 --timeout 120` passed and ranked the S01 audit's established full-collection command plus this plan.
-- First exact full serial collection exited zero in 100.5 seconds.
-- Second exact full serial collection exited zero with `29087 tests collected in 70.10s`.
-- The plan body update was performed only through `vaultspec-core vault set-body`, preserving its two non-schema prose blocks.
+- Mandatory code RAG passed and ranked the real marker-selection reachability evidence.
+- Mandatory Vault RAG passed and ranked the S01 audit's established full-collection command plus this plan.
+- The first candidate without positional roots exited zero with `29087 tests collected`, proving all marker cohorts only within configured `testpaths`; formal review correctly rejected its full-repository claim because it omitted 270 tracked `dev` test files.
+- The second candidate with positional root `.` reached the omitted population but also admitted untracked shared-worktree probe copies, producing `32280 tests collected, 2090 errors`; it was rejected as a non-reproducible tracked-suite boundary.
+- `git ls-files '*test_*.py'` identified the complete tracked root set: 2849 files under `src`, 271 under `dev`, and 4 under `packaging`, with no fourth tracked root.
+- The final exact command over `src dev packaging` exited zero with `32280 tests collected in 71.62s`.
+- Every plan body update used `vaultspec-core vault set-body`; no hand edit or unrelated plan-state mutation occurred.
 
 ## Notes
 
-The initial combined plan-update and exec-scaffold command timed out after 34 seconds while VaultSpec continued its own work. Read-only inspection confirmed both requested writes had completed successfully before any retry, so neither mutation was repeated.
+The initial combined plan-update and exec-scaffold command timed out after 34 seconds while VaultSpec completed both writes. Read-only inspection confirmed success before any retry. The failed `.` collection is retained as boundary evidence, not described as a product-test failure.

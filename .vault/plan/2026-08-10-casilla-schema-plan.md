@@ -4,7 +4,7 @@ tags:
   - '#casilla-schema'
 date: '2026-08-10'
 modified: '2026-08-12'
-body_hash: 'sha256:fde4dcbf6970dcda4e3fa360410ea6cac438d60336c59ee8fbbcaf9b6ff82951'
+body_hash: 'sha256:5d7995bed61bbdb4984ace4a5f6f762d8070b437937d2025ab04f464e644dcea'
 tier: L3
 related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
@@ -147,7 +147,7 @@ Open-ended by design: every mid-campaign discovery lands here as an appended Ste
 
 - [x] `W05.P11.S37` - reconcile the stale export-exemption docstring describing M720 design positions 5-8 against the layout whose records carry zero inline fields; `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`.
 - [x] `W05.P11.S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it; `src/cadrumo/core/`.
-- [ ] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
+- [x] `W05.P11.S41` - correct this plan's standing collect gate to name the selection it actually measures - a bare `pytest --collect-only -q` inherits the unit-lane marker expression from pyproject.toml addopts, deselects 4334 tests and never reaches three of the 21 rule-named gates, so the gate must either pass an empty marker expression or state in terms that it measures the unit lane only; `.vault/plan/2026-08-10-casilla-schema-plan.md`.
 - [x] `W05.P11.S80` - reconcile the invalid S08 manifest worklist against canonical calculation closure, retire false-positive steps S42-S79, correct plan prose, S08 execution, research A-09, and the exact-count test, and prove absent manifests remain canonical for empty closures; `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py`.
 
 ### Phase `W05.P12` - campaign close
@@ -166,7 +166,7 @@ Completeness-manifest authoring is grounded tax work (legal refs and identity ch
 
 ## Verification
 
-Global gates, holding for every step: the tree imports and the full serial collection `uv run --no-sync pytest --collect-only -q -n 0 --override-ini=addopts=` is clean before and after every relocation commit (the empty `addopts` override is load-bearing because the project default selects only the unit lane); a canonical landing leaves zero non-test references to its retired duplicates, with the grep proof cited in the exec record; every new gate is proven to bite once (break the production code deliberately, preferably by a runtime patch from outside the repo, observe the red, restore); no mocks, stubs, skips, xfail or tautological assertions anywhere; registry values stay in TOML, never inlined; and a step closes only through the plan verbs with a matching exec record or a recorded deferral.
+Global gates, holding for every step: the tree imports and the full tracked-suite serial collection `uv run --no-sync pytest src dev packaging --collect-only -q -n 0 --override-ini=addopts=` is clean before and after every relocation commit (the empty `addopts` override is load-bearing because the project default selects only the unit lane); a canonical landing leaves zero non-test references to its retired duplicates, with the grep proof cited in the exec record; every new gate is proven to bite once (break the production code deliberately, preferably by a runtime patch from outside the repo, observe the red, restore); no mocks, stubs, skips, xfail or tautological assertions anywhere; registry values stay in TOML, never inlined; and a step closes only through the plan verbs with a matching exec record or a recorded deferral.
 
 Per-phase exit gates:
 
