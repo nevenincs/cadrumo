@@ -4666,7 +4666,6 @@ cli:
       include_split_siblings_help: A lánc kibővítése minden olyan felosztási testvér
         eseményeivel, amely ugyanazzal a split_group_id-val rendelkezik.
     import:
-      all_files_refused: 'Egyetlen kivonatfájlt sem sikerült importálni: {detail}'
       all_rows_skipped: 'Nem importáltak új bejegyzéseket: minden {skipped} elemzett
         sor már létezik a főkönyvben (ismétlődő tranzakcióazonosítók).'
       dry_run_help: Az importálás futtatása próba módban (mentés nélkül).
@@ -4674,7 +4673,6 @@ cli:
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
-      file_refused: '{path} nem lett importálva: {reason}'
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
         a főkönyvben lévő tranzakcióéval, de a leírás eltér, ami ugyanazon mozgás

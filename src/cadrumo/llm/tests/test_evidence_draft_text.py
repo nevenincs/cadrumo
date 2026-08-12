@@ -21,12 +21,12 @@ import json
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from ...application.ledger import PurchaseInvoiceEvidenceInputError
-from ...core import FieldOrigin
+from ...core import FieldOrigin, NoRecoveryOutcome
 from ...core.config import load_settings
-from ...entrypoints.cli._common import cli_policy_refusal_projection
-from .._errors import LLMConfigError
+from .._errors import LLMConfigError, LLMValidationError
 from .._evidence_draft_text import (
     TextInvoiceFieldExtractor,
     build_text_field_extraction_prompt,
@@ -38,7 +38,7 @@ from .._invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
-from .._models import LLMProvider
+from .._models import LLMProvider, LLMRequest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -188,13 +188,24 @@ class TestTextExtractionPrompt:
         assert verdict.failed_condition_id == "llm.evidence.text_present"
         assert verdict.evidence[0].values == {"evidence_content_available": False}
 
-        projection = cli_policy_refusal_projection(raised.value)
-        assert projection is not None
-        action = projection.precondition_action
-        assert action.failed_condition_id == verdict.failed_condition_id
-        assert action.action is None
-        assert action.no_recovery_outcome == verdict.no_recovery_outcome
-        assert action.evidence[0].values == verdict.evidence[0].values
+        assert verdict.action is None
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+
+    def test_pydantic_preserves_the_nested_typed_llm_validation_verdict(self) -> None:
+        """The public request contract retains the producer error and verdict."""
+        with pytest.raises(ValidationError) as raised:
+            LLMRequest(prompt=" \t")
+
+        errors = raised.value.errors(include_url=False)
+        assert len(errors) == 1
+        nested = errors[0]["ctx"]["error"]
+        assert isinstance(nested, LLMValidationError)
+        verdict = nested.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "llm.request.prompt_nonempty"
+        assert verdict.action is None
+        assert verdict.no_recovery_outcome is NoRecoveryOutcome.OPERATOR_DECISION
+        assert verdict.evidence[0].values == {"request_prompt_nonempty": False}
 
 
 class TestAuthoredResponseParsesAndGrounds:

@@ -18,11 +18,11 @@ from ...application.ledger import (
     import_ledger_source,
 )
 from ...core import resolve_active_bucket_id
-from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import XLS_EXTENSION, XLSX_EXTENSION
 from ...core.i18n import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.transactions import TransactionValidationError
 from ._common import _bad, _emit_envelope, _optional_canonical_period, _state, _tx_repo
+from ._ledger_support import _ledger_transaction_validation_no_recovery
 
 if TYPE_CHECKING:
     from ...domain.currency import CurrencyNormalizationService
@@ -110,8 +110,8 @@ def _imported_files(
     command: Callable[[Path], LedgerSourceImportCommand],
     transaction_repository: TransactionCatalogueRepositoryProtocol | None,
     currency_normalizer: CurrencyNormalizationService,
-) -> tuple[list[LedgerSourceImportResult], list[tuple[Path, str]]]:
-    """Import each statement file, returning the successes and the refusals apart.
+) -> list[LedgerSourceImportResult]:
+    """Import each statement file without flattening typed failures.
 
     Caught per FILE, so one unreadable statement cannot discard the results
     already produced for the rest of the folder. Only the project's own failure
@@ -119,7 +119,6 @@ def _imported_files(
     than be reported as a bad statement.
     """
     file_results: list[LedgerSourceImportResult] = []
-    refusals: list[tuple[Path, str]] = []
     for file_path in import_paths:
         try:
             file_results.append(
@@ -129,9 +128,9 @@ def _imported_files(
                     currency_normalizer=currency_normalizer,
                 ),
             )
-        except CadrumoError as exc:
-            refusals.append((file_path, resolve_error_message(exc)))
-    return file_results, refusals
+        except TransactionValidationError as exc:
+            raise _ledger_transaction_validation_no_recovery(exc) from None
+    return file_results
 
 
 def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: bool) -> _ImportReport:
@@ -163,57 +162,6 @@ def _import_report(result: LedgerSourceImportResult, *, verbose: bool, verify: b
         dry_run_notice=dry_run_notice,
         empty_import_notice=empty_import_notice,
         likely_duplicate_notice=likely_duplicate_notice,
-    )
-
-
-def _refusal_lines_and_notices(
-    refusals: list[tuple[Path, str]],
-    *,
-    imported_files: int,
-) -> tuple[list[str], list[Notice]]:
-    """Surface every file that failed inside an otherwise-successful folder import.
-
-    A partially-failed folder must not read as a clean import. The aggregate sums
-    only the files that SUCCEEDED, so without these the totals would describe a
-    subset while presenting themselves as the whole -- the silent-degradation
-    shape, one layer up.
-    """
-    lines: list[str] = []
-    notices: list[Notice] = []
-    for refused_path, reason in refusals:
-        refusal_line = tr(
-            "cli.ledger.import.file_refused",
-            path=refused_path.name,
-            reason=reason,
-        )
-        lines.append(f"{tr('cli.ledger.labels.warning')}\t{refusal_line}")
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="ledger.import.file_refused",
-                message=refusal_line,
-                context={
-                    "path": refused_path.name,
-                    "reason": reason,
-                    "imported_files": str(imported_files),
-                    "refused_files": str(len(refusals)),
-                },
-            ),
-        )
-    return lines, notices
-
-
-def _all_files_refused(refusals: list[tuple[Path, str]]) -> typer.BadParameter:
-    """Build the hard refusal for an import that produced no result at all.
-
-    Nothing imported at all, which is the single-file failure case as well as a
-    folder in which every file failed. That stays a hard refusal: downgrading it
-    to a warning would turn today's error exit into a success for an operator who
-    imported nothing.
-    """
-    detail = "; ".join(f"{path.name}: {reason}" for path, reason in refusals)
-    return _bad(
-        tr("cli.ledger.import.all_files_refused", detail=detail),
     )
 
 
@@ -253,7 +201,7 @@ def register_import_commands(app: typer.Typer) -> None:
 
         currency_normalizer = CurrencyNormalizationService(rate_provider=default_ecb_rate_provider())
         canonical_period = _optional_canonical_period(period, year=year)
-        file_results, refusals = _imported_files(
+        file_results = _imported_files(
             _resolve_import_paths(file),
             command=lambda file_path: LedgerSourceImportCommand(
                 bucket_id=context.bucket_id,
@@ -269,11 +217,8 @@ def register_import_commands(app: typer.Typer) -> None:
             transaction_repository=context.transaction_repository,
             currency_normalizer=currency_normalizer,
         )
-        if not file_results:
-            raise _all_files_refused(refusals)
         result = file_results[0] if len(file_results) == 1 else _aggregate_import_results(file_results)
         report = _import_report(result, verbose=verbose, verify=verify)
-        refusal_lines, notices = _refusal_lines_and_notices(refusals, imported_files=len(file_results))
 
         from ._ledger_payloads import LedgerImportPayload
 
@@ -286,8 +231,7 @@ def register_import_commands(app: typer.Typer) -> None:
                 empty_import_notice=report.empty_import_notice,
                 likely_duplicate_notice=report.likely_duplicate_notice,
             ),
-            lines=[*report.lines, *refusal_lines],
-            notices=notices,
+            lines=report.lines,
         )
 
 

@@ -22,6 +22,7 @@ import pytest
 from ....core import LOCAL_TRANSPORT_LABEL, FieldOrigin
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .._consent_withdrawal import (
+    ConsentRederivationError,
     artefact_is_cloud_derived,
     provenance_stamp_transport,
     rederive_artefact_on_host,
@@ -288,7 +289,7 @@ def test_re_derivation_refuses_rather_than_re_reading_the_document(profile: Test
     """
     _seed_cloud_draft(profile)
 
-    with pytest.raises(ValueError, match="no cached transcription"):
+    with pytest.raises(ConsentRederivationError) as raised:
         rederive_artefact_on_host(
             bucket_id=profile.bucket_id,
             evidence_reference="ev-1",
@@ -297,6 +298,10 @@ def test_re_derivation_refuses_rather_than_re_reading_the_document(profile: Test
             settings=profile.settings,
             read_on_host=_local_reader,
         )
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "ledger.consent_rederivation.transcription_available"
+    assert verdict.evidence[0].values == {"transcription_available": False}
 
 
 def test_re_derivation_refuses_a_reader_that_stamps_a_cloud_transport(profile: TestRuntimeProfile) -> None:
@@ -314,7 +319,7 @@ def test_re_derivation_refuses_a_reader_that_stamps_a_cloud_transport(profile: T
         assert transcription.text
         return InvoiceDraft(), _CLOUD_STAMP
 
-    with pytest.raises(ValueError, match="on-host transport"):
+    with pytest.raises(ConsentRederivationError) as raised:
         rederive_artefact_on_host(
             bucket_id=profile.bucket_id,
             evidence_reference="ev-1",
@@ -323,6 +328,9 @@ def test_re_derivation_refuses_a_reader_that_stamps_a_cloud_transport(profile: T
             settings=profile.settings,
             read_on_host=_cloud_reader,
         )
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "ledger.consent_rederivation.on_host"
 
     stored = read_extraction_draft(
         bucket_id=profile.bucket_id,
@@ -337,7 +345,7 @@ def test_re_derivation_refuses_an_unknown_artefact(profile: TestRuntimeProfile) 
     """A reference with no pending artefact refuses rather than creating one."""
     _seed_transcription(profile)
 
-    with pytest.raises(ValueError, match="nothing to re-derive"):
+    with pytest.raises(ConsentRederivationError) as raised:
         rederive_artefact_on_host(
             bucket_id=profile.bucket_id,
             evidence_reference="ev-absent",
@@ -346,3 +354,7 @@ def test_re_derivation_refuses_an_unknown_artefact(profile: TestRuntimeProfile) 
             settings=profile.settings,
             read_on_host=_local_reader,
         )
+    verdict = raised.value.terminal_precondition_verdict
+    assert verdict is not None
+    assert verdict.failed_condition_id == "ledger.consent_rederivation.artefact_available"
+    assert verdict.evidence[0].values == {"artefact_available": False}

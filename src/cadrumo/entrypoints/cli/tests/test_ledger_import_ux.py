@@ -48,6 +48,26 @@ def test_unknown_provider_error_enumerates_known_providers(tmp_path: Path) -> No
         assert provider in result.output
 
 
+def test_missing_csv_preserves_the_typed_import_precondition(tmp_path: Path) -> None:
+    """A missing source reaches the shared boundary without refusal aggregation."""
+    missing = tmp_path / "missing.csv"
+
+    result = _invoke(
+        ["--format", "json", "app", "ledger", "import", "--file", str(missing), "--provider", "csv"],
+    )
+
+    assert result.exit_code != 0, result.output
+    document = json.loads(next(line for line in result.output.splitlines() if line.startswith("{")))
+    error = document["error"]
+    assert error["code"] == "ERROR_TRANSACTION_VALIDATION"
+    assert error["code"] != "REFUSED_CLI_BOUNDARY"
+    action = error["action"]
+    assert action["failed_condition_id"] == "cli.ledger.transaction.valid"
+    assert action["evidence"][0]["values"] == {"error_type": "TransactionValidationError"}
+    assert action["action"] is None
+    assert action["no_recovery_outcome"] == "operator_decision"
+
+
 def test_generic_csv_missing_currency_warning_is_provider_neutral_in_cli(tmp_path: Path) -> None:
     """`--provider csv` warnings must not invent a bank brand for generic CSV."""
     statement = tmp_path / "generic.csv"

@@ -4747,7 +4747,6 @@ cli:
       include_split_siblings_help: Inclou transaccions germanes del mateix grup de
         divisió
     import:
-      all_files_refused: 'No s''ha pogut importar cap fitxer d''extracte: {detail}'
       all_rows_skipped: 'No s''ha importat cap entrada nova: les {skipped} fila(es)
         analitzades ja existeixen al llibre (ids de transacció duplicats).'
       dry_run_help: Executar la importació en mode de prova (sense desar)
@@ -4756,7 +4755,6 @@ cli:
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
-      file_refused: '{path} no s''ha importat: {reason}'
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció ja present al llibre, però tenen una descripció diferent,

@@ -37,6 +37,9 @@ class LedgerPreconditionCondition(StrEnum):
     EVIDENCE_XML_INVOICE_SUPPORTED = "ledger.evidence.xml_invoice_supported"
     FILER_POSTCODE_VALID = "ledger.filer.postcode_valid"
     COUNTERPARTY_IDENTIFIER_VALID = "ledger.counterparty.identifier_valid"
+    CONSENT_REDERIVATION_ARTEFACT_AVAILABLE = "ledger.consent_rederivation.artefact_available"
+    CONSENT_REDERIVATION_TRANSCRIPTION_AVAILABLE = "ledger.consent_rederivation.transcription_available"
+    CONSENT_REDERIVATION_ON_HOST = "ledger.consent_rederivation.on_host"
 
 
 class LedgerPreconditionErrorMixin:

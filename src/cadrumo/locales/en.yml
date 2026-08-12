@@ -4422,7 +4422,6 @@ cli:
       include_split_siblings_help: Expand the chain to include events for every split
         sibling that shares a split_group_id with this transaction
     import:
-      all_files_refused: 'No statement file could be imported: {detail}'
       all_rows_skipped: 'No new entries were imported: all {skipped} parsed row(s)
         already exist in the ledger (duplicate transaction ids).'
       dry_run_help: Run the import in dry-run mode (without saving)
@@ -4430,7 +4429,6 @@ cli:
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
       file_help: Path to the bank statement file or directory
-      file_refused: '{path} was not imported: {reason}'
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description, indicating a likely

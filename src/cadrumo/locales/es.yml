@@ -4825,7 +4825,6 @@ cli:
       include_split_siblings_help: Incluye transacciones hermanas del mismo grupo
         de división
     import:
-      all_files_refused: 'No se pudo importar ningún fichero de extracto: {detail}'
       all_rows_skipped: 'No se importó ninguna entrada nueva: las {skipped} fila(s)
         analizadas ya existen en el libro (ids de transacción duplicados).'
       dry_run_help: Ejecutar la importación en modo de prueba (sin guardar)
@@ -4834,7 +4833,6 @@ cli:
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
       file_help: Ruta al archivo del extracto bancario o directorio
-      file_refused: '{path} no se importó: {reason}'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción ya presente en el libro, pero tienen una descripción distinta,

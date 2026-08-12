@@ -272,6 +272,17 @@ def test_ledger_bad_parameters_do_not_embed_caught_exception_text() -> None:
     assert failures == []
 
 
+def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
+    """Per-file typed failures cannot be reduced to refusal strings or one `_bad`."""
+    tree = ast.parse(inspect.getsource(_ledger_import_cli))
+    forbidden_names = {"resolve_error_message", "_all_files_refused"}
+    observed_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
+    assert observed_names.isdisjoint(forbidden_names)
+    for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
+        caught = {node.id for node in ast.walk(handler.type) if handler.type is not None and isinstance(node, ast.Name)}
+        assert "CadrumoError" not in caught
+
+
 def test_ledger_locale_key_sets_match_source_and_each_other() -> None:
     """Ledger catalogue leaves are complete, symmetric, and consumed by source."""
     manager = LocaleManager(_PACKAGE_ROOT, _LOCALES_DIR)
