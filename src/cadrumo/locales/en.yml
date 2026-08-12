@@ -2222,6 +2222,27 @@ cli:
         override_help: Temporary binding override with KEY=VALUE syntax (repeatable)
         period_help: 'Period token: 0A annual, 1T-4T quarters, 01-12 months; for censo
           modelos (036) use alta, modificacion, or baja.'
+        readiness:
+          activo_extranjero: foreign asset
+          borrador_aeat: AEAT draft
+          compensacion_iva_anual: annual IVA compensation
+          dato_perfil: profile fact
+          datos_libro: ledger data
+          decision_compensacion_iva: IVA compensation decision
+          declaracion_previa: prior filed declaration
+          donante_donativo: donation donor
+          entrada_manual: manual input
+          entrada_relacion: relation input
+          evidencia_factura_compra: purchase-invoice evidence
+          factura_emitida: issued invoice
+          factura_recibida: received invoice
+          miembro_atribucion: income-attribution member
+          operacion_reembolso: refund operation
+          operacion_vinculada: related-party operation
+          registro_retenciones: withholding register
+          regularizacion_bienes_inversion: capital-goods adjustment
+          regularizacion_prorrata: prorrata adjustment
+          retencion: withholding
         relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
           \ --relation %{relation_id}=VALUE"
         relation_input_guidance: Some bindings below are fed by registry relations

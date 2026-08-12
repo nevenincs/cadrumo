@@ -2329,6 +2329,27 @@ cli:
         override_help: Ideiglenes kötési felülbírálat KEY=VALUE szintaxissal (ismételhető).
         period_help: 'Időszaktokent: 0A éves, 1T-4T negyedévek, 01-12 hónapok; nyilvántartási
           nyomtatványokhoz (036) használja: alta, modificacion vagy baja.'
+        readiness:
+          activo_extranjero: külföldi eszköz
+          borrador_aeat: AEAT-tervezet
+          compensacion_iva_anual: éves IVA-kompenzáció
+          dato_perfil: profiladat
+          datos_libro: főkönyvi adatok
+          decision_compensacion_iva: IVA-kompenzációs döntés
+          declaracion_previa: korábban benyújtott bevallás
+          donante_donativo: adományozó
+          entrada_manual: kézi bevitel
+          entrada_relacion: kapcsolati bemenet
+          evidencia_factura_compra: beszerzési számla bizonylata
+          factura_emitida: kimenő számla
+          factura_recibida: bejövő számla
+          miembro_atribucion: jövedelemtulajdonítás tagja
+          operacion_reembolso: visszatérítési művelet
+          operacion_vinculada: kapcsolt ügylet
+          registro_retenciones: levonási nyilvántartás
+          regularizacion_bienes_inversion: tárgyi eszközök korrekciója
+          regularizacion_prorrata: prorrata-korrekció
+          retencion: levonás
         relation_input_channel: "%{binding_id}\ta(z) %{relation_id} reláció tölti\
           \ fel\thasználja: --relation %{relation_id}=VALUE"
         relation_input_guidance: Az alábbi kötések egy részét a registry-relációk

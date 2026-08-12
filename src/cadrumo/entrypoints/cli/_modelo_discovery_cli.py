@@ -32,6 +32,7 @@ from ...application.modelo import (
     registry_support_matrix,
 )
 from ...application.operator_actions import ActionReference
+from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from ...core import (
     ActionArgumentSource,
     ActionArgumentStatus,
@@ -676,25 +677,6 @@ def _unresolved_profile_requirements(checklist: DataInventoryChecklist) -> str:
     )
 
 
-_BINDING_SOURCE_TO_READINESS: dict[str, str] = {
-    "previous_filing": "prior filed revision",
-    "relation_prefill": "relation input",
-    "live_observation": "live observation",
-    "ledger_iva_aggregation": "ledger source",
-    "ledger_oss_aggregation": "ledger source",
-    "ledger_renta_gastos_estimacion_directa_aggregation": "ledger source",
-    "profile": "profile fact",
-    "profile_fact": "profile fact",
-    "bucket_state": "bucket",
-    "waiver": "waiver",
-    "blocking_finding": "blocking finding",
-}
-
-
-def _readiness_for_source(source: str) -> str:
-    return _BINDING_SOURCE_TO_READINESS.get(source, "ledger source")
-
-
 def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
     """Registry-derived ``--relation`` guidance for relation-fed bindings.
 
@@ -805,7 +787,7 @@ def _binding_list_rows_for_report(
     merged_rows: list[BindingListRowPayload] = []
     text_rows: list[str] = []
     for row in rows:
-        readiness = _readiness_for_source(row.source)
+        readiness = tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source])
         encoded_options = binding_encoded_option_payloads(row.encoded_options)
         merged_rows.append(
             BindingListRowPayload(
@@ -1080,7 +1062,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                 BindingPreviewRowPayload(
                     binding_id=row.binding_id,
                     source=row.source,
-                    readiness=_readiness_for_source(row.source),
+                    readiness=tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
                     typed_enum=row.typed_enum,
                     override=overrides.get(row.binding_id),
                     legal_refs=row.legal_refs,
@@ -1107,7 +1089,7 @@ def _register_bindings_resolve_command(bindings_app: typer.Typer, deps: _Discove
                     (
                         row.binding_id,
                         row.source,
-                        _readiness_for_source(row.source),
+                        tr(CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[row.source]),
                         overrides.get(row.binding_id) or "-",
                     ),
                 ),

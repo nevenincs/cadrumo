@@ -2392,6 +2392,27 @@ cli:
         override_help: Sobreescriptura temporal de binding amb sintaxi KEY=VALUE (repetible)
         period_help: 'Token de període: 0A anual, 1T-4T trimestres, 01-12 mesos; per
           a models censals (036) usa alta, modificacion o baja.'
+        readiness:
+          activo_extranjero: actiu estranger
+          borrador_aeat: esborrany de l’AEAT
+          compensacion_iva_anual: compensació anual de l'IVA
+          dato_perfil: dada del perfil
+          datos_libro: dades del llibre
+          decision_compensacion_iva: decisió de compensació d’IVA
+          declaracion_previa: declaració anterior presentada
+          donante_donativo: donant del donatiu
+          entrada_manual: entrada manual
+          entrada_relacion: entrada de relació
+          evidencia_factura_compra: evidència de factura de compra
+          factura_emitida: factura emesa
+          factura_recibida: factura rebuda
+          miembro_atribucion: membre d'atribució de rendes
+          operacion_reembolso: operació de reemborsament
+          operacion_vinculada: operació vinculada
+          registro_retenciones: registre de retencions
+          regularizacion_bienes_inversion: regularització de béns d’inversió
+          regularizacion_prorrata: regularització de prorrata
+          retencion: retenció
         relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
           useu --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunes vinculacions següents s'alimenten de relacions

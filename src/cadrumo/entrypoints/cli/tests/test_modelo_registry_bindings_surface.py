@@ -332,6 +332,56 @@ def test_bindings_resolve_echoes_override_for_known_key() -> None:
     assert row["override"] == "1234.56"
 
 
+def test_bindings_list_and_resolve_localise_distinct_registry_source_semantics() -> None:
+    """Real list and resolve leaves preserve distinct source meanings in Spanish."""
+
+    listed = invoke_cached_cli(
+        [
+            "--language",
+            "es",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "200",
+            "--year",
+            "2025",
+            "--period",
+            "0A",
+        ],
+    )
+    assert listed.exit_code == 0, listed.output
+    relation_rows = [row for row in _payload(listed.output)["bindings"] if row["source"] == "relation_prefill"]
+    assert relation_rows
+    assert {row["readiness"] for row in relation_rows} == {"entrada de relación"}
+
+    resolved = invoke_cached_cli(
+        [
+            "--language",
+            "es",
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "resolve",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+        ],
+    )
+    assert resolved.exit_code == 0, resolved.output
+    ledger_rows = [row for row in _payload(resolved.output)["bindings"] if row["source"] == "ledger_iva_aggregation"]
+    assert ledger_rows
+    assert {row["readiness"] for row in ledger_rows} == {"datos del libro"}
+
+
 def test_bindings_resolve_rejects_unknown_binding_with_suggestion_list() -> None:
     """Unknown override keys fail with a suggestion list sourced
     from the registry's binding catalogue for the active modelo /
