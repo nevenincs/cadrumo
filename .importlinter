@@ -675,10 +675,6 @@ ignore_imports =
     cadrumo.application.user_profile._profile_repository -> cadrumo.adapters.persistence.**
     cadrumo.application.user_profile._repository -> cadrumo.adapters.persistence.**
     # Reaches NO persistence: the second pin in this sweep whose storage-shaped
-    # label permitted only an inbound edge. Verification reads the taxpayer's
-    # filed declaracion through the inbound parse and checks it against the
-    # engine; the parse is inbound-adapter work and the check is this layer's.
-    cadrumo.application.verification._verify -> cadrumo.adapters.inbound.declaracion
     cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.auth
     cadrumo.application.workflow._adapters -> cadrumo.adapters.outbound.aeat.sede
     # The workflow model surface reports whether a browser session can be

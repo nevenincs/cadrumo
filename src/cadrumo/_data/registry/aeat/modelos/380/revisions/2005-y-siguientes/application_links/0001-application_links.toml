@@ -5,4 +5,3 @@ consumer = "cadrumo.application.filing"
 requires_snapshot = true
 legal_refs = ["orden-eha-1308-2005:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-380-procedure"]
-

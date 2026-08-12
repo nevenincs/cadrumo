@@ -534,7 +534,7 @@ class ApplicationLinkDefinition(RegistryModel):
         "calculation",
         "filing",
         "review",
-            "approval",
+        "approval",
         "reconciliation",
         "export",
         "deadline",

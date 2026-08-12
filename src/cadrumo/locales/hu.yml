@@ -6487,8 +6487,6 @@ errors:
     integrity_storage_secure_object_unreadable: Egy tárolt biztonságos objektum nem
       fejthető vissza az aktuális főkulccsal.
     integrity_storage_validation: Egy tárolási paraméter nem ment át az érvényesítésen.
-    integrity_verification: Az ellenőrzés helyrehozhatatlanul meghiúsult. A referencia-adatok
-      vagy a számítási motor sérült lehet.
     profile_import_signature: A profil-archívum nem ment át az aláírás- vagy integritás-ellenőrzésen.
       Ne importáljon archívumot nem megbízható forrásból.
   internal:
