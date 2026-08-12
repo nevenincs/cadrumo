@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:18d83f93d176ecf09a623d023d4c1852a3c686c42b863a36ec3548e3989d4524'
+body_hash: 'sha256:dabce9a264af2de458120ff98b11950089cc74acad11b4562326ab21e47193d4'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
   - "[[2026-08-10-casilla-schema-W04-P10-S35]]"
@@ -59,3 +59,39 @@ Use a real persisted report with findings that vary kind independently from seve
 - Static ownership and prohibited-construct census: no private application import, repository access, record/write mutation, fake, mock, stub, patch, monkeypatch, skip, or xfail in the owned screen and test.
 
 Verdict: **CHANGES REQUESTED / FAIL**. The current implementation is read-only, facade-correct, grain-local, stable, and mechanically green in the bounded lanes, and the deliberate single-record omissions are justified. S35 cannot close while two repeatable closed casilla axes are absent, interactive choice labels remain machine tokens with no opened narrow locale proof, and the pilots do not independently bite every matcher and AND/reset contract.
+## Re-review 2026-08-12
+
+### closed-axis-totality-resolution | high | RESOLVED - canonical relation channels and both missing facets are wired
+
+Commit `dc0e89c413` promotes the registry-owned `RelationConsumptionChannel` Literal through the public registry facade and types both the canonical handoff records and `ModeloWorkRelationConsumption.channels` with it. Commit `409fe4f026` derives the relation-channel options directly from `get_args(RelationConsumptionChannel)` and adds the binding resolved/unresolved boolean facet. Runtime type inspection confirms the public Literal's exact four members and the review model's tuple annotation. No adapter-authored channel string set or private registry import was introduced.
+
+### filter-option-localization-resolution | medium | RESOLVED - canonical payloads have localized labels and the opened narrow panel is usable
+
+Every enum and relation-channel option retains its canonical payload while obtaining its visible label from the four locale catalogues. The runtime concatenation emits the scanner-recognized `flows.modelo_review.filter.option.*` marker, and the f-string registry expands 67 concrete keys directly from the canonical enum and Literal owners. The registered-key parity and scaffold-visibility tests pass, providing stale/missing-member protection as those owners evolve.
+
+The real M720 pilot now runs at `80x24` in Catalan, English, Spanish, and Hungarian. It proves the disclosure starts collapsed, opens within the body width, mounts the localized long binding-source label without exposing its machine token, traverses the focus chain from the first selector to reset, keeps reset visible after scrolling, collapses back to the canonical table, and preserves theme toggling.
+
+### finding-and-reset-gate-resolution | medium | RESOLVED - independent finding matchers and complete reset state are pinned
+
+The encrypted-repository M130 fixture persists two findings whose kind and severity vary independently. The pilot filters `BLOCKING_RULE` with severity clear, then `WARNING` with kind clear, and each produces a strict one-of-two subset. Both M100 and M130 reset assertions inspect every mounted Select and require its public selection to be blank, alongside exact restoration of canonical row identities and unchanged frozen review records.
+
+### casilla-and-gate | medium | The claimed two-facet conjunction is logically redundant
+
+- [ ] The M100 test calls `InputKind.BOUND` plus `BindingSourceKind.PROFILE` a nontrivial AND proof, but every profile-sourced concrete binding necessarily belongs to a bound casilla in this real record. Direct measurement gives 49 bound rows, 30 profile rows, and a 30-row intersection: the intersection is strict only against `BOUND` and equals the entire `PROFILE` set. Removing or ignoring the input-kind matcher therefore leaves the asserted result unchanged, so the test does not prove both predicates participate conjunctively. Use two facets whose real intersection is non-empty and strictly smaller than each individual set; on the same M100 record, `InputKind.MANUAL` has 1,853 rows, `OfficialBoxStatus.ADDRESSED` has 2,062, and their intersection has 1,852.
+
+## Re-review verification
+
+- Mandatory semantic code and vault discovery succeeded and was followed by full source, test, locale-registry, audit, execution, facade, and commit inspection.
+- Complete real encrypted-storage/Textual S35 module: 12 passed in 95.69 seconds.
+- Canonical channel runtime proof: public `RelationConsumptionChannel` equals the exact four registry channels and `ModeloWorkRelationConsumption.channels` is typed as a tuple of that owner.
+- S35 dynamic-prefix probe: scanner marker present and 67 registered concrete option keys.
+- Registered-key locale parity and scaffold missing-key visibility: 2 passed in 71.10 seconds.
+- Global dynamic-prefix gate: 2 failed in 20.02 seconds only on unrelated `errors.context_labels`, `errors.prefix`, and stale allowlist entry `application.modelo.findings`; `flows.modelo_review.filter.option` is covered and absent from the failure.
+- Locale scaffold check: red on the previously recorded unrelated profile-schema, dependencies-period, retired verification/ledger, and IVA-wallet catalogue debt; no S35 filter key appeared.
+- Focused Ruff format and lint: passed for three repaired Python files.
+- Focused strict BasedPyright: zero errors, warnings, or notes.
+- Scoped diff check: passed.
+- Prohibited-construct and ownership inspection remains clean: no fake, mock, stub, patch, monkeypatch, skip, xfail, private application import, repository access, or record mutation in the S35 surface.
+
+Final verdict: **CHANGES REQUESTED / FAIL**. The closed-axis, localization, dynamic-prefix, narrow-panel, independent-finding, and reset findings are resolved. One medium acceptance gap remains: the casilla conjunction regression is redundant and does not bite both predicates. S35 should remain open until a real strict-against-both intersection replaces it and the focused pilot reruns green.
+

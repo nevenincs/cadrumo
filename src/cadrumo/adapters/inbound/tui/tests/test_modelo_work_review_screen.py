@@ -430,20 +430,40 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         await pilot.pause()
         assert _row_keys(table) == original_rows
 
-        cast("Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select)).value = InputKind.BOUND.value
-        cast(
-            "Select[str]", screen.query_one("#modelo-review-filter-binding-source", Select)
-        ).value = BindingSourceKind.PROFILE.value
-        await pilot.pause()
+        input_kind = cast("Select[str]", screen.query_one("#modelo-review-filter-input-kind", Select))
+        official_status = cast("Select[str]", screen.query_one("#modelo-review-filter-official-status", Select))
+        expected_manual = tuple(
+            str(row.casilla_id) for row in review.casillas if row.declared_input_kind is InputKind.MANUAL
+        )
+        expected_addressed = tuple(
+            str(row.casilla_id) for row in review.casillas if row.official_box_status is OfficialBoxStatus.ADDRESSED
+        )
         expected_intersection = tuple(
             str(row.casilla_id)
             for row in review.casillas
-            if row.declared_input_kind is InputKind.BOUND
-            and any(binding.source is BindingSourceKind.PROFILE for binding in row.concrete_bindings)
+            if row.declared_input_kind is InputKind.MANUAL and row.official_box_status is OfficialBoxStatus.ADDRESSED
         )
+        assert expected_manual
+        assert expected_addressed
         assert expected_intersection
-        assert len(expected_intersection) < sum(row.declared_input_kind is InputKind.BOUND for row in review.casillas)
+        assert set(expected_intersection) < set(expected_manual)
+        assert set(expected_intersection) < set(expected_addressed)
+
+        input_kind.value = InputKind.MANUAL.value
+        await pilot.pause()
+        assert len(_row_keys(table)) == len(expected_manual)
+        assert _row_keys(table) == expected_manual
+
+        official_status.value = OfficialBoxStatus.ADDRESSED.value
+        await pilot.pause()
+        assert len(_row_keys(table)) == len(expected_intersection)
         assert _row_keys(table) == expected_intersection
+
+        input_kind.clear()
+        await pilot.pause()
+        assert len(_row_keys(table)) == len(expected_addressed)
+        assert _row_keys(table) == expected_addressed
+
         screen.query_one("#modelo-review-filter-reset", Button).press()
         await pilot.pause()
         assert _row_keys(table) == original_rows
