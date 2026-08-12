@@ -123,9 +123,9 @@ class CorpusEntry(BaseModel):
         for part in pure.parts:
             if part in {"..", "."}:
                 raise CorpusManifestError(
-                translated_message="errors.integrity.integrity_storage_corpus_manifest",
-                context={"relative_path": str(value), "contains_dot_tokens": True},
-            )
+                    translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                    context={"relative_path": str(value), "contains_dot_tokens": True},
+                )
         return value
 
 
@@ -163,7 +163,14 @@ class CorpusManifest(BaseModel):
         try:
             return validate_utc_aware(value)
         except _CoreValidationError as exc:
-            raise CorpusManifestError(str(exc)) from exc
+            raise CorpusManifestError(
+                translated_message="errors.integrity.integrity_storage_corpus_manifest",
+                context={
+                    "field": "generated_at",
+                    "utc_aware": False,
+                    "validation_error_type": type(exc).__name__,
+                },
+            ) from exc
 
 
 class _ManifestPayloadValidationError(ValueError):
@@ -475,8 +482,12 @@ def load_corpus_manifest(target: Path) -> CorpusManifest:
             target,
         )
         raise CorpusManifestTamperError(
-            f"manifest at {target}: recorded manifest_sha256 does not match the body digest "
-            "(an attacker may have edited the manifest body without recomputing the digest).",
+            translated_message="errors.integrity.integrity_storage_corpus_manifest_tamper",
+            context={
+                "manifest_path": str(target),
+                "manifest_sha256_matches_body": False,
+                "digest_field": "manifest_sha256",
+            },
         ) from exc
     _logger.debug(
         "load_corpus_manifest: loaded %r with %d entries from %s",
@@ -510,8 +521,13 @@ def assert_corpus_clean(corpus_root: Path) -> None:
             len(diff.changed),
         )
         raise CorpusManifestDriftError(
-            f"corpus drift in {manifest.corpus_root_name!r}: "
-            f"added={list(diff.added)} removed={list(diff.removed)} changed={list(diff.changed)}",
+            translated_message="errors.integrity.integrity_storage_corpus_manifest_drift",
+            context={
+                "corpus_root_name": manifest.corpus_root_name,
+                "added": diff.added,
+                "removed": diff.removed,
+                "changed": diff.changed,
+            },
         )
     _logger.debug("assert_corpus_clean: corpus %r is clean", manifest.corpus_root_name)
 
@@ -682,12 +698,20 @@ def _load_bundle_manifest(archive: zipfile.ZipFile) -> CorpusManifest:
         ) from exc
     except _UnsupportedManifestVersionError as exc:
         raise CorpusBundleError(
-            f"embedded manifest is at version {exc}; consumer supports up to {_MANIFEST_VERSION}",
+            translated_message="errors.integrity.integrity_storage_corpus_bundle",
+            context={
+                "embedded_manifest_version": str(exc),
+                "supported_version": str(_MANIFEST_VERSION),
+            },
         ) from exc
     except _TamperedManifestPayloadError as exc:
         raise CorpusManifestTamperError(
-            "embedded manifest: recorded manifest_sha256 does not match the body digest "
-            "(the manifest member may have been edited without recomputing the digest).",
+            translated_message="errors.integrity.integrity_storage_corpus_manifest_tamper",
+            context={
+                "manifest_member": str(_BUNDLE_MANIFEST_MEMBER),
+                "manifest_sha256_matches_body": False,
+                "digest_field": "manifest_sha256",
+            },
         ) from exc
 
 
@@ -710,9 +734,13 @@ def assert_corpus_bundle_verifies(bundle_path: Path) -> CorpusManifest:
             len(result.mismatched),
         )
         raise CorpusBundleVerificationError(
-            f"corpus bundle {bundle_path} failed checksum verification: "
-            f"missing={list(result.missing)} unexpected={list(result.unexpected)} "
-            f"mismatched={list(result.mismatched)}",
+            translated_message="errors.integrity.integrity_storage_corpus_bundle_verification",
+            context={
+                "bundle_path": str(bundle_path),
+                "missing": result.missing,
+                "unexpected": result.unexpected,
+                "mismatched": result.mismatched,
+            },
         )
     _logger.info(
         "assert_corpus_bundle_verifies: bundle %s verified clean (%d files)",
