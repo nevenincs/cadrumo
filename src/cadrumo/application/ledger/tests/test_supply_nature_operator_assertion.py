@@ -375,3 +375,73 @@ def test_the_category_join_is_what_settles_it() -> None:
 
     assert without_category.supply_nature is None
     assert with_category.supply_nature is not None
+
+
+# -- the proposal is made where the transcription is, and decides nothing ----
+#
+# The governing amendment permits a model to PRE-SUGGEST the nature, and the
+# input it named -- the line descriptions -- does not exist on the lane that
+# needs it: only the structured reader populates a line decomposition, and a
+# text- or vision-read draft keeps raw_text_length, a number, not the text.
+#
+# So the proposal is made at the reading stage where the transcription is still
+# in hand, opt-in, and it never reaches the classifier: the value that does is
+# the one the operator states at confirm.
+
+
+def test_the_draft_carries_a_proposal_that_is_not_an_extracted_field() -> None:
+    """A judgement, not a transcription, so it lives outside the anchor contract.
+
+    An extracted field must be anchorable to a printed form. A proposal has no
+    printed form to point at, so folding it into the extraction contract would
+    put an unanchorable value inside the model whose whole guarantee is that
+    values are copied.
+    """
+    from ...ledger._evidence_draft import InvoiceDraft
+
+    assert "proposed_supply_nature" in InvoiceDraft.model_fields
+    assert InvoiceDraft().proposed_supply_nature is None
+
+
+def test_a_proposal_does_not_reach_the_classifier_on_its_own() -> None:
+    """The load-bearing separation: a proposal nobody confirmed has no effect.
+
+    The declared facts are built from the operator's answer and the document's
+    own statements. A draft carrying a proposal and nothing else must leave the
+    axis exactly as open as one carrying none, or the model would be deciding
+    through a channel labelled as the operator's.
+    """
+    from ...ledger._evidence_draft import InvoiceDraft
+
+    proposed = InvoiceDraft(proposed_supply_nature=SupplyNature.SERVICES)
+
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        printed_citation=proposed.regime_legend,
+    )
+
+    assert proposed.proposed_supply_nature is SupplyNature.SERVICES
+    assert declared.supply_nature is None, "a proposal nobody confirmed reached the criteria"
+
+
+def test_the_operators_answer_is_what_the_classifier_consumes() -> None:
+    """The other half: confirming is what makes a value an input.
+
+    Together with the case above this is the whole contract -- unconfirmed
+    reaches nothing, confirmed reaches the classifier as the operator's own
+    assertion.
+    """
+    declared = _declared_facts(
+        kind=InvoiceKind.ISSUED,
+        counterparty=_counterparty(),
+        filer_scope=IvaTerritorialScope.ES_MAINLAND,
+        stated_category=None,
+        supply_nature=SupplyNature.SERVICES,
+    )
+
+    assert declared.supply_nature is not None
+    assert declared.supply_nature.value is SupplyNature.SERVICES
+    assert declared.supply_nature.source is ClassifierInputSource.OPERATOR_ASSERTION

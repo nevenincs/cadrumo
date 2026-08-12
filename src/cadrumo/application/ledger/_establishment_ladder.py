@@ -519,7 +519,16 @@ def _printed_evidence(
     identification = identification_state_for_printed_tax_identifier(tax_identifier)
     spanish_iva_charged = _spanish_iva_was_charged(charged_iva_rates, on_date=on_date)
 
-    if identification is not None:
+    # FOREIGN registration, not merely a registration. The conflict this raises
+    # is the characteristic face of a foreign-registered entity operating
+    # through an establecimiento permanente here, so a SPANISH identification
+    # beside Spain-indicating evidence is agreement rather than contradiction.
+    #
+    # The test used to be "is not None" and was safe only by accident: ES was
+    # absent from the identification vocabulary, so no Spanish number ever
+    # reached it. Admitting ES made the accident visible, and the condition now
+    # says what it always meant.
+    if identification is not None and identification is not EUMemberState.ES:
         indicating = _spain_indicating(
             country_code=country_code,
             postal_code=postal_code,

@@ -128,6 +128,7 @@ from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import ContentDigest, same_tax_identifier
+from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
 from ...domain.currency import ExchangeRateProvider
@@ -691,6 +692,20 @@ class InvoiceDraft(BaseModel):
     invoice_number: str | None = None
     invoice_series: str | None = None
     rectifies_invoice_number: str | None = None
+    proposed_supply_nature: SupplyNature | None = None
+    """A model's PROPOSAL about goods-or-services, for a person to accept or discard.
+
+    Carried on the draft rather than inside the extracted fields because it is a
+    JUDGEMENT and not a transcription: it has no printed form to anchor to, and
+    the anchor check the extraction contract rests on would have nothing to
+    point at. Folding it in would put an unanchorable value inside the model
+    whose whole guarantee is that values are copied.
+
+    ``None`` is the ordinary state. It is populated only when the operator asked
+    for a proposal, and never reaches the classifier by itself -- the value that
+    does is the one they state at confirm, which is why the classifier's inputs
+    stay facts.
+    """
     invoice_date: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
@@ -959,6 +974,33 @@ def _active_filer_tax_id() -> str | None:
     return resolve_filer_tax_id(profile_record=state.active_profile_record())
 
 
+
+def _proposed_supply_nature(
+    transcription: DocumentTranscription,
+    *,
+    settings: Settings,
+) -> SupplyNature | None:
+    """Return a model's proposal about goods-or-services, or ``None``.
+
+    Advisory throughout. The proposal reaches a person on the review item that
+    already asks them to state the nature; the value that reaches the classifier
+    is the one they type at confirm, so nothing model-derived enters it.
+
+    Never raises into the read. A proposal that could fail an extraction would
+    make an optional convenience able to lose a document, so every failure --
+    an absent extra, an unreachable provider, a reply that did not survive
+    containment -- yields no proposal and leaves the operator asked exactly as
+    they were.
+    """
+    try:
+        from ...llm import SupplyNatureProposer
+
+        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
+    except Exception:
+        get_logger(__name__).info("supply-nature proposal unavailable; the operator is asked as before")
+        return None
+
+
 def _read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
@@ -967,6 +1009,7 @@ def _read_transcription_semantically(
     off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentToken | None = None,
     taxpayer_tax_id: str | None = None,
+    propose_supply_nature: bool = False,
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
@@ -1007,6 +1050,10 @@ def _read_transcription_semantically(
             entry from the active profile. Handed down rather than looked up
             here so one read of one document consults one profile, and so this
             function stays a pure reader of what it was given.
+        propose_supply_nature: Whether to ask a model to PROPOSE goods-or-services
+            from this transcription. Off by default and never consulted by the
+            classifier: the proposal reaches a person, and the value that reaches
+            the classifier is the one they state at confirm.
 
     Returns:
         The grounded draft.
@@ -1065,8 +1112,22 @@ def _read_transcription_semantically(
         # The reader is absent or unreachable. See the refusal's own docstring
         # for why this does not fall through to vision.
         _refuse_a_text_read_with_no_reader(exc)
+    grounded_input = read.model_copy(
+        update={
+            "transcription_sha256": transcription.source_content_sha256,
+            # Proposed HERE because the transcription is still in hand. A later
+            # verb would re-run the whole reading stage to recover text this
+            # call already holds, spending a document read to answer a question
+            # worth one short call. Off unless asked: a read that silently
+            # reaches a second model changes what the verb costs and what
+            # leaves the host.
+            "proposed_supply_nature": (
+                _proposed_supply_nature(transcription, settings=settings) if propose_supply_nature else None
+            ),
+        },
+    )
     return ground_draft_against_transcription(
-        draft=read.model_copy(update={"transcription_sha256": transcription.source_content_sha256}),
+        draft=grounded_input,
         transcription=transcription,
         taxpayer_tax_id=taxpayer_tax_id,
     )

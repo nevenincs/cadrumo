@@ -280,13 +280,19 @@ def test_a_spanish_identifier_contributes_nothing_to_the_identifier_rung(
     for IVA is the sede de actividad económica, and the validator's own
     non-resident leaders are the counter-population.
 
-    Neither spelling reaches the identification axis either, and for a reason
-    that belongs to that axis rather than to this one: ``ES`` is absent from the
-    printed-prefix vocabulary, so a Spanish identification is declared or read
-    from the Spanish identifier authority, never inferred from a printed number.
+    The IDENTIFICATION axis now answers for the prefixed spelling, and that is
+    the separation rather than a contradiction of it. RGAT art. 25 makes the
+    ``ES`` prefix the regulated printed form of a NIF-IVA, so a document
+    carrying it states where the party is REGISTERED -- while establishment
+    stays unanswered, because registration is not establishment. The bare CIF
+    prints no prefix and so states no identification at all: reading that
+    absence as Spanish would manufacture the fact from silence.
     """
     assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
-    assert identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
+    assert identification_state_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is EUMemberState.ES
+    # The rung this test is named for is the ESTABLISHMENT one, and neither
+    # spelling opens it.
+    assert country_code_for_printed_tax_identifier(f"ES{_SPANISH_CIF}") is None
 
     resolved = _resolve(repository, tax_identifier=_SPANISH_CIF)
 
