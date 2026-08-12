@@ -314,7 +314,10 @@ def resolve_modelo_work_bucket(request: ModeloWorkSelectorRequest) -> str:
         return request.bucket_id
     active_bucket_id = resolve_active_bucket_id()
     if active_bucket_id is None:
-        raise ModeloWorkNoActiveBucketError("modelo work selector requires an active profile bucket")
+        raise ModeloWorkNoActiveBucketError(
+            translated_message="errors.refused.modelo_work_selector_no_active_bucket",
+            context={"active_bucket_present": False},
+        )
     return active_bucket_id
 
 
@@ -333,7 +336,10 @@ def natural_target_work_units(
     guarded mutations must reach their canonical terminal verdict.
     """
     if not request.has_visible_target:
-        raise ModeloWorkSelectorContradictionError("modelo, filing_year, and period are required for natural lookup")
+        raise ModeloWorkSelectorContradictionError(
+            translated_message="errors.refused.modelo_work_selector_contradiction",
+            context={"has_visible_target": False},
+        )
     bucket_id = resolve_modelo_work_bucket(request)
     catalogue = (repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)).load()
     modelo = request.modelo
@@ -414,7 +420,7 @@ def resolve_active_natural_modelo_work_unit(
     """Resolve an active natural target only for create-or-reuse lifecycle operations."""
     if request.work_unit_id is not None or not request.has_visible_target:
         raise ModeloWorkSelectorContradictionError(
-            "an active natural selector requires modelo, filing_year, and period without work_unit_id"
+            translated_message="errors.refused.modelo_work_selector_contradiction",
         )
     bucket_id = resolve_modelo_work_bucket(request)
     repo = repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
@@ -456,7 +462,10 @@ def resolve_modelo_work_unit(
             ),
         )
         if not matches:
-            raise ModeloWorkUnitNotFoundError(f"no modelo work unit found with id={request.work_unit_id}")
+            raise ModeloWorkUnitNotFoundError(
+                translated_message="errors.error.modelo_work_selector_unit_not_found",
+                context={"work_unit_id": request.work_unit_id},
+            )
         if len(matches) > 1:
             raise ModeloWorkVisibleTargetAmbiguousError(
                 tuple(ModeloWorkUnitCandidate.from_work_unit(unit) for unit in matches),
@@ -498,8 +507,13 @@ def _validate_explicit_work_unit_matches_request(
     for field_name, supplied, actual in expected:
         if supplied is not None and supplied != actual:
             raise ModeloWorkSelectorContradictionError(
-                f"explicit work_unit_id {work_unit.work_unit_id} has {field_name}={actual!r}, "
-                f"but selector supplied {field_name}={supplied!r}",
+                translated_message="errors.refused.modelo_work_selector_contradiction",
+                context={
+                    "work_unit_id": work_unit.work_unit_id,
+                    "field_name": field_name,
+                    "work_unit_value": str(actual),
+                    "selector_value": str(supplied),
+                },
             )
 
 
@@ -521,7 +535,10 @@ def select_modelo_calculation_revision(
     revisions = _revisions_for_work_unit(work_unit, calculation_repository=calculation_repository)
     if selector is ModeloCalculationRevisionSelector.EXPLICIT:
         if calculation_revision_id is None:
-            raise ModeloCalculationRevisionSelectorNotFoundError("explicit revision selection requires an id")
+            raise ModeloCalculationRevisionSelectorNotFoundError(
+                translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+                context={"selection": "explicit", "calculation_revision_id_present": False},
+            )
         revision = _explicit_revision_for_work_unit(
             work_unit=work_unit,
             calculation_revision_id=calculation_revision_id,
@@ -535,7 +552,7 @@ def select_modelo_calculation_revision(
         )
     if calculation_revision_id is not None:
         raise ModeloCalculationRevisionSelectorStateError(
-            "calculation_revision_id is only accepted with the explicit revision selector",
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
 
     selected = {
@@ -620,8 +637,7 @@ def select_current_verified_revision(
     )
     if selection.revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise ModeloCalculationRevisionSelectorStateError(
-            f"current revision {selection.revision.calculation_revision_id!r} is in state "
-            f"{selection.revision.state.value!r}; filing requires a verified-complete revision",
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
     return selection
 
@@ -666,7 +682,7 @@ def select_exportable_revision(
             )
         if current_revision.state is CalculationRevisionState.BORRADOR:
             raise ModeloCalculationRevisionSelectorStateError(
-                "current revision is still draft; verify it before exporting or select a verified revision explicitly",
+                translated_message="errors.refused.modelo_calculation_revision_selector_state",
             )
 
     verified = tuple(
@@ -686,7 +702,10 @@ def select_exportable_revision(
         raise ModeloCalculationRevisionSelectorAmbiguousError(
             tuple(ModeloCalculationRevisionCandidate.from_revision(revision) for revision in verified),
         )
-    raise ModeloCalculationRevisionSelectorNotFoundError("no exportable verified or filed revision exists")
+    raise ModeloCalculationRevisionSelectorNotFoundError(
+        translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+        context={"selection": "exportable", "exportable_revision_present": False},
+    )
 
 
 def _revisions_for_work_unit(
@@ -708,12 +727,12 @@ def _explicit_revision_for_work_unit(
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(
-            f"no calculation revision found with id={calculation_revision_id}",
+            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
         )
     if revision.work_unit_id != work_unit.work_unit_id:
         raise ModeloCalculationRevisionSelectorStateError(
-            f"calculation revision {calculation_revision_id} belongs to work_unit_id={revision.work_unit_id}, "
-            f"not {work_unit.work_unit_id}",
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
     return revision
 
@@ -731,7 +750,10 @@ def _revision_by_pointer(
         calculation_repository=calculation_repository,
     )
     if revision is None:
-        raise ModeloCalculationRevisionSelectorNotFoundError(f"work unit has no selectable {pointer_name}")
+        raise ModeloCalculationRevisionSelectorNotFoundError(
+            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+            context={"selection": "pointer", "pointer_name": pointer_name},
+        )
     return revision
 
 
@@ -757,7 +779,10 @@ def _latest_revision_with_state(
 ) -> CalculationRevision:
     candidates = tuple(revision for revision in revisions if revision.state is state)
     if not candidates:
-        raise ModeloCalculationRevisionSelectorNotFoundError(f"no calculation revision in state {state.value!r}")
+        raise ModeloCalculationRevisionSelectorNotFoundError(
+            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+            context={"selection": "state", "revision_state": state.value},
+        )
     return max(candidates, key=lambda revision: (revision.created_at, revision.calculation_revision_id))
 
 

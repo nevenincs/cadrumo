@@ -82,9 +82,6 @@ def assert_amendment_kind_permitted(
         return
     accepted = ", ".join(sorted(regime.permitted_kinds))
     raise AmendmentKindNotPermittedError(
-        f"amendment kind {amendment_kind.value!r} is not legally available for modelo "
-        f"{modelo!r} filing_year={period.filing_year} period={period.registry_token!r}; "
-        f"accepted kinds for this period: {accepted}",
         translated_message="application.modelo.errors.amendment_kind_not_permitted",
         context={
             "modelo": modelo,
@@ -180,12 +177,6 @@ def assert_complementaria_liability_direction_permitted(
         return
 
     raise AmendmentComplementariaLiabilityDecreaseError(
-        f"complementaria for modelo {modelo!r} filing_year={period.filing_year} "
-        f"period={period.registry_token!r} would lower the declared result from "
-        f"{baseline_result} to {corrected_result}; a self-filed complementaria (LGT "
-        f"art. 122.2) cannot lawfully decrease liability — use the solicitud de "
-        f"rectificación procedure (LGT art. 120.3) for a liability-decreasing correction "
-        f"in a pre-rectificativa period",
         translated_message="application.modelo.errors.amendment_complementaria_liability_decrease",
         context={
             "modelo": modelo,

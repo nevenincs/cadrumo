@@ -279,9 +279,7 @@ def _work_unit_for_target(
     if len(matching) != 1:
         stored = sorted(str(unit.revision_id) for unit in candidates)
         raise WorkUnitRevisionDivergenceError(
-            f"persisted modelo work target for {modelo} {filing_year} {period.registry_token!r} "
-            f"was created against registry revision(s) {stored!r}, but law-determined resolution "
-            f"selected {registry_revision_id!r}. Re-create the work unit against the current registry revision.",
+            translated_message="application.modelo.errors.work_unit_revision_divergence_candidates",
             context={
                 "modelo": modelo,
                 "filing_year": filing_year,
@@ -344,8 +342,7 @@ def _persisted_decimal_bindings(
             decimal_bindings[binding_id] = Decimal(raw_value)
         except InvalidOperation as exc:
             raise StoredCalculationDriftError(
-                f"stored revision {revision.calculation_revision_id!r} has non-decimal value "
-                f"{raw_value!r} for decimal binding {binding_id!r}",
+                translated_message="errors.storage.stored_data_validation_boundary",
                 context={
                     "calculation_revision_id": revision.calculation_revision_id,
                     "binding_id": binding_id,

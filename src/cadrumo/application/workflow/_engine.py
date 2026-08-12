@@ -303,7 +303,8 @@ class WorkflowEngine:
             stripped = resumed_from.strip()
             if len(stripped) != 16 or any(c not in "0123456789abcdef" for c in stripped):
                 raise WorkflowInputMismatchError(
-                    f"resumed_from must be a 16-character lowercase hex run id; got {resumed_from!r}",
+                    translated_message="application.modelo.errors.workflow_input_mismatch",
+                    context={"field": "resumed_from", "value": str(resumed_from), "run_id_shape_valid": False},
                 )
             resumed_from = stripped
         return await self._drive(
@@ -698,7 +699,8 @@ class WorkflowEngine:
 
         if target_modelo is None or target_period is None:
             raise WorkflowError(
-                "verify workflow requires an explicit (modelo, period) target",
+                translated_message="errors.error.error_workflow",
+                context={"workflow": "verify", "explicit_target_supplied": False},
             )
         synthetic = WorkflowObligationFacts(
             modelo=Modelo(target_modelo),

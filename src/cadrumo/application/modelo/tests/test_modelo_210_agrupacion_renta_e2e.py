@@ -110,7 +110,7 @@ def test_annual_grouped_rentas_persist_without_becoming_a_second_arithmetic_path
             clock=_CLOCK,
         )
 
-        with pytest.raises(ModeloError, match="must match the selected official tipo de renta code"):
+        with pytest.raises(ModeloError):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",

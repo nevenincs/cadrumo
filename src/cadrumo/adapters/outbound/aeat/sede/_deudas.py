@@ -54,7 +54,16 @@ __all__ = [
 ]
 
 _EXTERNAL = Settings.external_constants()
-_SEDE_HOST: Final = urlsplit(_EXTERNAL.aeat.domains.www6).netloc
+# Built on the UNNUMBERED origin, matching the IVA compensation wallet reader.
+# ``www{n}`` is a per-SESSION variable: AEAT load-balances the authenticated
+# surface across its numbered pool and assigns whichever host answers a given
+# session, so a captured number describes one session and not the surface. The
+# live capture that grounded this module landed on ``www6``; naming that here
+# would encode a coincidence of that session as though it were the route.
+#
+# Numbered dispatch is admitted by ``allowed_host_suffixes`` below, which is the
+# field that actually carries the load-balancer case.
+_SEDE_HOST: Final = urlsplit(_EXTERNAL.aeat.domains.sede).netloc
 _AEAT_HOST_SUFFIX: Final = _EXTERNAL.aeat.domains.host_suffix
 
 DEUDAS_READ_SURFACE: Final = "deudas consulta"

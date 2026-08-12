@@ -232,7 +232,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
 def test_typed_period_scope_must_match_filing_year() -> None:
     """The helper refuses contradictory typed coordinates before querying the registry."""
 
-    with pytest.raises(RegistryValidationError, match="does not match filing year"):
+    with pytest.raises(RegistryValidationError):
         profile_resolvable_binding_ids(
             modelo="303",
             bucket_id="operator",

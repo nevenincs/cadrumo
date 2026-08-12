@@ -682,7 +682,7 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
 
 def _work_unit() -> WorkUnit:
     period = Period.from_year_and_code(_YEAR, _PERIOD)
-    revision_id = "2023-y-siguientes"
+    revision_id = "2026-y-siguientes"
     modelo = ModeloCode("303")
     return WorkUnit(
         work_unit_id=derive_work_unit_id(

@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
 from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError
 
-from ._semantic_map import SemanticMap, SemanticMapEntry, SemanticMapRecord
+from ._semantic_map import M303VariableEnvelopeSemantic, SemanticMap, SemanticMapEntry, SemanticMapRecord
 
 __all__ = [
     "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
@@ -47,11 +47,12 @@ class SemanticMapFragment(_StrictModel):
     design_epoch: str = Field(min_length=1)
     records: tuple[SemanticMapRecord, ...] = ()
     entries: tuple[SemanticMapEntry, ...] = ()
+    variable_envelopes: tuple[M303VariableEnvelopeSemantic, ...] = ()
 
     @model_validator(mode="after")
     def _require_authored_meaning(self) -> SemanticMapFragment:
-        if not self.records and not self.entries:
-            raise ValueError("semantic-map fragments must contain records or entries")
+        if not self.records and not self.entries and not self.variable_envelopes:
+            raise ValueError("semantic-map fragments must contain records, entries, or variable envelopes")
         return self
 
 
@@ -170,6 +171,7 @@ def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
 
     records = tuple(record for fragment in ordered for record in fragment.records)
     entries = tuple(entry for fragment in ordered for entry in fragment.entries)
+    variable_envelopes = tuple(envelope for fragment in ordered for envelope in fragment.variable_envelopes)
     if not records or not entries:
         raise RegistryValidationError(
             "compiled semantic map requires at least one record and one entry",
@@ -189,6 +191,7 @@ def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
             ),
         ),
         entries=tuple(sorted(entries, key=_entry_key)),
+        variable_envelopes=tuple(sorted(variable_envelopes, key=lambda envelope: envelope.record_identity)),
     )
 
 

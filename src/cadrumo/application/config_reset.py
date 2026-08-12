@@ -152,7 +152,7 @@ def config_reset_status(operation_id: str | None = None) -> ConfigResetOperation
             return repository.load(operation_id)
         except ConfigResetJournalNotFoundError as exc:
             raise ConfigResetOperationNotFoundError(
-                "configuration reset operation was not found",
+                translated_message="errors.error.error_cadrumo_core_not_found",
                 context={"operation_id": operation_id},
             ) from exc
     return repository.latest()
@@ -174,13 +174,13 @@ def resume_config_reset(
             operation = repository.load(operation_id)
         except ConfigResetJournalNotFoundError as exc:
             raise ConfigResetOperationNotFoundError(
-                "configuration reset operation was not found",
+                translated_message="errors.error.error_cadrumo_core_not_found",
                 context={"operation_id": operation_id},
             ) from exc
         except ConfigResetJournalCorruptError as exc:
             raise ConfigResetError(
-                "configuration reset journal is corrupt",
-                context={"operation_id": operation_id},
+                translated_message="errors.error.error_config_boundary",
+                context={"operation_id": operation_id, "journal_corrupt": True},
             ) from exc
         if operation.status is ConfigResetOperationStatus.COMPLETE:
             return operation
@@ -249,7 +249,8 @@ def resume_config_reset(
 def _require_confirmation(confirmed: bool) -> None:
     if not confirmed:
         raise ConfigResetConfirmationRequiredError(
-            "configuration reset requires explicit confirmation",
+            translated_message="errors.refused.refused_config_reset_unconfirmed",
+            context={"confirmed": False},
         )
 
 
@@ -267,7 +268,10 @@ def _capture_pointer_snapshot(root: Path, pointer: BucketPointer | None) -> Conf
     if captured is None:
         return ConfigResetPointerSnapshot(present=False)
     if pointer is None:
-        raise ConfigResetError("active pointer bytes do not contain a bucket identifier")
+        raise ConfigResetError(
+            translated_message="errors.error.error_config_boundary",
+            context={"pointer_carries_bucket_id": False},
+        )
     return ConfigResetPointerSnapshot(
         present=True,
         bucket_id=pointer.bucket_id,
@@ -596,8 +600,8 @@ def _clear_auth_for_targets(
         )
         if not assessment.exists or assessment.fingerprint is None:
             raise ConfigResetError(
-                "configuration reset target disappeared during auth cleanup",
-                context={"bucket_id": target.bucket_id},
+                translated_message="errors.error.error_config_boundary",
+                context={"bucket_id": target.bucket_id, "target_present_during_auth_cleanup": False},
             )
         target = _update_target(
             target,

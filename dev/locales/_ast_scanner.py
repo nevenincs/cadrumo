@@ -102,6 +102,14 @@ against concrete locale entries. No additional static registration is needed.
 """
 
 
+#: Keyword arguments whose dotted-literal value IS a translation key. The
+#: finding constructors use ``message_locale_key``; the error registry and the
+#: wizard verifiers use the other three.
+_TRANSLATION_KEY_KWARGS: frozenset[str] = frozenset(
+    {"translated_message", "message_key", "translation_key", "message_locale_key"},
+)
+
+
 def _is_dotted_literal(value: str) -> bool:
     """Return True when ``value`` matches the dot-notation key shape."""
     return bool(_KEY_LITERAL_RE.match(value))
@@ -199,7 +207,7 @@ def _collect_dotted_literals(node: ast.expr | None, findings: set[str]) -> None:
 def _collect_kwonly_default_keys(node: ast.FunctionDef, findings: set[str]) -> None:
     """Pick up dotted-literal defaults for translation-key kwonly args."""
     for arg, default in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
-        if default is None or arg.arg not in {"translated_message", "message_key", "translation_key"}:
+        if default is None or arg.arg not in _TRANSLATION_KEY_KWARGS:
             continue
         value = _dotted_literal_value(default)
         if value is not None:
@@ -254,7 +262,7 @@ def _collect_translation_key_kwargs(node: ast.Call, findings: set[str]) -> None:
     alike.
     """
     for kw in node.keywords:
-        if kw.arg not in {"message_key", "translation_key", "translated_message"}:
+        if kw.arg not in _TRANSLATION_KEY_KWARGS:
             continue
         value = _dotted_literal_value(kw.value)
         if value is not None:

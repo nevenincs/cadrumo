@@ -164,6 +164,7 @@ from ._retencion_parameters import (
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,
     professional_activity_retencion_rates,
+    rirpf_art95_retencion_legal_refs,
     sectoral_activity_retencion_rates,
     statutory_activity_retencion_rates,
 )
@@ -301,6 +302,7 @@ __all__ = [
     "prompt_spec_with_every_spending_category",
     "prompt_spec_with_saturation_fields",
     "resolve_profile",
+    "rirpf_art95_retencion_legal_refs",
     "sectoral_activity_retencion_rates",
     "set_classification",
     "snapshot_classification_state",

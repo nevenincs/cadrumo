@@ -150,7 +150,10 @@ def _uses_objective_estimation(profile: TaxpayerProfile) -> bool:
 def _require_parameter(parameters: Mapping[str, LegalParameter], parameter_id: str) -> LegalParameter:
     parameter = parameters.get(parameter_id)
     if parameter is None:
-        raise ModeloValidationError(f"missing legal parameter {parameter_id!r} for objective-estimation advisory")
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={"parameter_id": parameter_id, "parameter_present": False},
+        )
     return parameter
 
 
@@ -172,7 +175,10 @@ def _as_decimal(value: object, surface: str) -> Decimal:
         # string, which is that boundary and not this comparison.
         return coerce_decimal_strict(value if isinstance(value, Decimal) else str(value).strip())
     except (InvalidOperation, ValueError) as exc:
-        raise ModeloValidationError(f"invalid decimal value {value!r} for {surface}") from exc
+        raise ModeloValidationError(
+            translated_message="errors.error.error_modelos_validation",
+            context={"surface": surface, "decimal_valid": False},
+        ) from exc
 
 
 __all__ = ["_objective_estimation_exclusion_advisory_findings"]

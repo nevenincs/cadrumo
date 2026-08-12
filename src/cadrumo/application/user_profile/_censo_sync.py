@@ -147,38 +147,30 @@ def _assert_read_belongs_to_this_profile(
     """
     if recorded_identity is None:
         raise CensalIdentityMismatchError(
-            "this profile records no fiscal identity yet, so a censal read cannot be confirmed to belong to it",
             translated_message="application.user_profile.errors.censal_read_identity_unset",
         )
     if recorded_identity.value is None or not recorded_identity.value.strip():
         raise CensalIdentityMismatchError(
-            "this profile's fiscal identity was cleared, so a censal read cannot be confirmed to belong to it",
             translated_message="application.user_profile.errors.censal_read_identity_cleared",
         )
     if not (incoming_tax_id or "").strip():
         raise CensalIdentityMismatchError(
-            "censal read carries no fiscal identity; it cannot be confirmed to belong to this profile",
             translated_message="application.user_profile.errors.censal_read_identity_absent",
         )
     try:
         existing = validate_spanish_tax_id(recorded_identity.value)
     except IdentityError as exc:
         raise CensalIdentityMismatchError(
-            "this profile's fiscal identity is not a valid Spanish tax identifier, "
-            "so a censal read cannot be confirmed to belong to it",
             translated_message="application.user_profile.errors.censal_read_identity_profile_malformed",
         ) from exc
     try:
         incoming = validate_spanish_tax_id(incoming_tax_id or "")
     except IdentityError as exc:
         raise CensalIdentityMismatchError(
-            "the censal read's fiscal identity is not a valid Spanish tax identifier, "
-            "so it cannot be confirmed to belong to this profile",
             translated_message="application.user_profile.errors.censal_read_identity_read_malformed",
         ) from exc
     if incoming != existing:
         raise CensalIdentityMismatchError(
-            "censal read belongs to a different taxpayer than this profile; refusing to apply it",
             translated_message="application.user_profile.errors.censal_read_identity_mismatch",
         )
 

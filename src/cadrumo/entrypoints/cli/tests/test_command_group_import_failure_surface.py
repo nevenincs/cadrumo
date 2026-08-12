@@ -60,7 +60,14 @@ def test_missing_required_dependency_refuses_instead_of_degrading() -> None:
     # The refusal must name the actual failure and an actionable remedy.
     assert error["context"]["module"] == REQUIRED_DEPENDENCY
     assert error["context"]["group"] == AFFECTED_GROUP
-    assert error["suggestion"], "a required-dependency refusal must carry a remedy"
+    # The remedy rides the resolved action projection, not a free-form
+    # suggestion string: the envelope carries a bound action or an explicit
+    # no-recovery outcome, and never a rendered instruction of its own.
+    action = error["action"]
+    assert action["failed_condition_id"], "a required-dependency refusal must name the condition that failed"
+    assert action["action"] is not None or action["no_recovery_outcome"], (
+        "a required-dependency refusal must carry a bound action or an explicit no-recovery outcome"
+    )
     # The failure rides the shared envelope spine, not a bespoke channel.
     assert document["status"] == "error"
     assert document["notices"] == []

@@ -73,6 +73,7 @@ __all__ = [
     "SupplyNatureDerivationOutcome",
     "derive_supply_nature_from_citation",
     "match_statutory_citations",
+    "supply_nature_implied_by_category",
     "supply_nature_is_required",
 ]
 
@@ -102,7 +103,11 @@ class StatutoryCitation(BaseModel):
             whitespace-tolerantly, never as a bare substring.
         heading: The article's own rubric, quoted from the bundled consolidated
             text, so the row can be checked against the corpus by reading it.
-        corpus_ref: The bundled file the heading was quoted from.
+        corpus_ref: The bundled file the heading was quoted from, optionally
+            with the ``#anchor`` of one article within it. An anchor is what
+            lets a row cite a consolidated document: without it the check reads
+            the whole file, and a law carrying both limbs makes every row citing
+            it look mixed.
         establishes: The nature citing this article fixes, or ``None`` when the
             article governs goods and services alike. ``None`` is a finding about
             the statute, not a gap in the table.
@@ -166,6 +171,24 @@ STATUTORY_CITATIONS: Final[tuple[StatutoryCitation, ...]] = (
         establishes=SupplyNature.SERVICES,
     ),
     StatutoryCitation(
+        article="68",
+        heading="Lugar de realización de las entregas de bienes.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a68",
+        establishes=SupplyNature.GOODS,
+    ),
+    StatutoryCitation(
+        article="69",
+        heading="Lugar de realización de las prestaciones de servicios. Reglas generales.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a69",
+        establishes=SupplyNature.SERVICES,
+    ),
+    StatutoryCitation(
+        article="70",
+        heading="Lugar de realización de las prestaciones de servicios. Reglas especiales.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a70",
+        establishes=SupplyNature.SERVICES,
+    ),
+    StatutoryCitation(
         article="84",
         heading="Sujetos pasivos.",
         corpus_ref="corpus/normatives/html/ley-37-1992-art-84.html",
@@ -180,23 +203,28 @@ STATUTORY_CITATIONS: Final[tuple[StatutoryCitation, ...]] = (
 )
 """Every LIVA article this axis can read, and what each one establishes.
 
-The general place-of-supply articles -- LIVA arts. 68 for goods and 69 and 70 for
-services -- are absent, and the reason is a property of this table's check rather
-than a missing corpus. Their consolidated text *is* bundled, as the ``#a68``,
-``#a69`` and ``#a70`` anchored units of
-``corpus/normatives/html/ley-37-1992.html``, and each already carries a reviewed
-legal-catalogue entry pinned to that anchor; do not go fetching them. What no row
-can do yet is name them the way the rows above name their provisions: the check
-below reads the whole file a row cites, and the consolidated law reaches the goods
-limb and the services limb alike, so a row citing it could only ever establish
-nothing. They are added when a citation the check can read a single article from
-exists.
+Two shapes of ``corpus_ref`` appear here, and the difference is bookkeeping
+rather than authority. A row citing a per-article bundled file names that file;
+a row citing an article of the consolidated law names the file and the article's
+anchor. Both resolve to exactly one article, which is the property that matters:
+a row whose check could reach the whole IVA law would see the goods limb and the
+services limb alike and could only ever establish nothing.
 
-The consequence is worth stating plainly, because it bounds what this axis can do
-today: the articles present here reach the *exemption* and *special regime*
-citations an invoice prints, which is the population art. 6.1.j obliges to print a
-reference at all. An ordinary cross-border invoice citing nothing derives nothing
-and asks the operator, which is the designed outcome rather than a failure.
+**Art. 22 is deliberately absent, and not for that reason.** Assimilated exports
+are bundled as their own file, so scoping is not the obstacle. Its opening
+enumerates operation kinds -- "las entregas, construcciones, transformaciones,
+reparaciones, mantenimiento, fletamento ... y arrendamiento" -- without naming
+either limb, so the check cannot read what it establishes from the article
+itself. Which limbs it reaches IS decidable, but only by consulting arts. 8 and
+11, where the statute defines the two limbs; until the check does that, no row
+can be declared honestly. Typing the answer in directly would be the paraphrase
+this table exists to avoid.
+
+What the table reaches is therefore the *exemption*, *special regime* and
+*place-of-supply* citations an invoice prints, which is the population art. 6.1.j
+obliges to print a reference at all. An ordinary cross-border invoice citing
+nothing derives nothing and asks the operator, which is the designed outcome
+rather than a failure.
 """
 
 
@@ -363,6 +391,103 @@ def derive_supply_nature_from_citation(*, printed_citation: str | None) -> Suppl
             note=(
                 f"the document cites articles that establish different natures of supply ({cited}); "
                 "which citation is the mistake is not decidable from the document"
+            ),
+        )
+    return SupplyNatureDerivation(
+        outcome=SupplyNatureDerivationOutcome.DERIVED,
+        nature=natures.pop(),
+        citations=citations,
+    )
+
+
+#: Separates the norm from its article in a component-table legal reference,
+#: as in ``ley-37-1992:art-25``. Named because this module and the table it
+#: reads must agree on it exactly, and a literal spelled twice drifts silently.
+_ARTICLE_REFERENCE_SEPARATOR: Final[str] = ":art-"
+
+
+def supply_nature_implied_by_category(category: IvaCategory | None) -> SupplyNatureDerivation:
+    """Derive the nature from the articles the CATEGORY itself rests on.
+
+    The second route to the same answer, and it needs no citation printed on the
+    page: a category is grounded in specific LIVA articles, and some of those
+    articles define the operation as one of goods. An *entrega intracomunitaria*
+    is exempt under art. 25, which exempts "las entregas de bienes definidas en
+    el artículo 8" -- so an operator asked goods-or-services about one is being
+    asked a question the law has already answered.
+
+    **Two existing authorities, joined; no third judgement.** Which articles
+    ground a category is already declared once, in the component table's
+    ``legal_refs``. What an article establishes about the nature is already
+    declared once, in :data:`STATUTORY_CITATIONS`, each row carrying its
+    ``corpus_ref``. This walks from one to the other and rules on nothing
+    itself, which is what keeps a second category-keyed table -- a rival
+    authority on one question -- from existing.
+
+    **The dangerous case excludes itself, and that is the design rather than
+    luck.** LIVA art. 22, assimilated exports, covers "las entregas,
+    construcciones, transformaciones, reparaciones, mantenimiento, fletamento...
+    y arrendamiento": services as much as goods. A hand-written map over the
+    export family would have asserted GOODS on service exports. Art. 22 has no
+    row in the citation table because nothing ever ruled what it establishes, so
+    the join finds nothing and the category stays open.
+
+    Measured over the shipped tables: the three goods families derive GOODS --
+    intra-community supply and export via arts. 25 and 21, intra-community
+    acquisition via art. 15 -- and the two SERVICE members derive SERVICES via
+    the general place-of-supply rules 69 and 70. The services half arrived
+    entirely through the citation table: nothing here changed to admit it, which
+    is the join working as intended.
+
+    Args:
+        category: The category the document declared, or ``None``.
+
+    Returns:
+        :class:`SupplyNatureDerivation`: One of the three outcomes, carrying
+        exactly what that outcome establishes. ``ABSENT`` whenever the category
+        is unknown, ungrounded, or grounded only in articles that fix nothing.
+    """
+    if category is None:
+        return _NOTHING_DERIVED
+
+    # Imported at call time: the component table reaches the schema and the
+    # classification modules, so a module-scope import would make this lean
+    # module pay for them. The sanctioned cycle-break shape, and it changes only
+    # WHEN the owning module executes.
+    from ._components import IVA_CATEGORY_COMPONENTS
+
+    grounding = {
+        reference
+        for key, components in IVA_CATEGORY_COMPONENTS.items()
+        # The table is keyed per category AND direction, and the nature is a
+        # property of the supply rather than of who filed it -- so every row for
+        # this category contributes, whichever way the document ran.
+        if (key[0] if isinstance(key, tuple) else key) is category
+        for reference in components.legal_refs
+    }
+    articles = {
+        reference.split(_ARTICLE_REFERENCE_SEPARATOR, 1)[1]
+        for reference in grounding
+        if _ARTICLE_REFERENCE_SEPARATOR in reference
+    }
+    citations = tuple(citation for citation in STATUTORY_CITATIONS if citation.article in articles)
+    if not citations:
+        return _NOTHING_DERIVED
+
+    natures = {citation.establishes for citation in citations if citation.establishes is not None}
+    if not natures:
+        return SupplyNatureDerivation(
+            outcome=SupplyNatureDerivationOutcome.ABSENT,
+            citations=citations,
+        )
+    if len(natures) > 1:
+        grounded = ", ".join(f"art. {citation.article}" for citation in citations)
+        return SupplyNatureDerivation(
+            outcome=SupplyNatureDerivationOutcome.CONTRADICTED,
+            citations=citations,
+            note=(
+                f"the {category.value!r} category is grounded in articles that establish different "
+                f"natures of supply ({grounded}); the category cannot settle which"
             ),
         )
     return SupplyNatureDerivation(

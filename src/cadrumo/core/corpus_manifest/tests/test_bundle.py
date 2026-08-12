@@ -139,8 +139,10 @@ def test_verify_corpus_bundle_flags_mismatched_file_by_name(tmp_path: Path) -> N
     assert result.missing == ()
     assert result.unexpected == ()
 
-    with pytest.raises(CorpusBundleVerificationError, match=r"legal/ley-1\.html"):
+    with pytest.raises(CorpusBundleVerificationError) as refusal:
         assert_corpus_bundle_verifies(bundle_path)
+
+    assert (refusal.value.context or {})["mismatched"] == ("legal/ley-1.html",)
 
 
 def test_verify_corpus_bundle_flags_missing_file_by_name(tmp_path: Path) -> None:
@@ -155,8 +157,10 @@ def test_verify_corpus_bundle_flags_missing_file_by_name(tmp_path: Path) -> None
     assert result.mismatched == ()
     assert result.unexpected == ()
 
-    with pytest.raises(CorpusBundleVerificationError, match=r"manuals/renta/2024/sub/rules\.txt"):
+    with pytest.raises(CorpusBundleVerificationError) as refusal:
         assert_corpus_bundle_verifies(bundle_path)
+
+    assert (refusal.value.context or {})["missing"] == ("manuals/renta/2024/sub/rules.txt",)
 
 
 def test_verify_corpus_bundle_flags_unexpected_extra_file(tmp_path: Path) -> None:
@@ -191,16 +195,20 @@ def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatche
 
     _rewrite_bundle(bundle_path, mutate={"corpus.manifest.json": tampered_manifest})
 
-    with pytest.raises(CorpusManifestTamperError, match="manifest_sha256"):
+    with pytest.raises(CorpusManifestTamperError) as tamper:
         verify_corpus_bundle(bundle_path)
+
+    context = tamper.value.context or {}
+    assert context["digest_field"] == "manifest_sha256"
+    assert context["manifest_member"] == "corpus.manifest.json"
 
 
 @pytest.mark.parametrize(
-    ("raw_payload", "manifest_changes", "file_error", "bundle_error", "message"),
+    ("raw_payload", "manifest_changes", "file_error", "bundle_error"),
     (
-        (b'{"manifest_version":', None, CorpusManifestError, CorpusBundleError, "structurally invalid"),
-        (None, {"manifest_version": 2}, CorpusManifestError, CorpusBundleError, "at version 2"),
-        (None, {"manifest_sha256": "0" * 64}, CorpusManifestTamperError, CorpusManifestTamperError, "manifest_sha256"),
+        (b'{"manifest_version":', None, CorpusManifestError, CorpusBundleError),
+        (None, {"manifest_version": 2}, CorpusManifestError, CorpusBundleError),
+        (None, {"manifest_sha256": "0" * 64}, CorpusManifestTamperError, CorpusManifestTamperError),
     ),
     ids=("malformed", "future-version", "tampered"),
 )
@@ -210,7 +218,6 @@ def test_path_and_bundle_reject_the_same_invalid_manifest_payload(
     manifest_changes: dict[str, int | str] | None,
     file_error: type[Exception],
     bundle_error: type[Exception],
-    message: str,
 ) -> None:
     """Both real I/O forms must reject each defective raw payload consistently."""
     corpus_root, bundle_path = _build_bundle(tmp_path)
@@ -227,9 +234,11 @@ def test_path_and_bundle_reject_the_same_invalid_manifest_payload(
     manifest_path.write_bytes(raw_payload)
     _rewrite_bundle(bundle_path, mutate={"corpus.manifest.json": raw_payload})
 
-    with pytest.raises(file_error, match=message):
+    # Both surfaces refuse with their own registered error; the prose that
+    # distinguished them is catalogue-rendered now.
+    with pytest.raises(file_error):
         load_corpus_manifest(manifest_path)
-    with pytest.raises(bundle_error, match=message):
+    with pytest.raises(bundle_error):
         verify_corpus_bundle(bundle_path)
 
 
@@ -238,7 +247,7 @@ def test_verify_corpus_bundle_raises_on_missing_manifest_member(tmp_path: Path) 
 
     _rewrite_bundle(bundle_path, mutate={}, drop={"corpus.manifest.json"})
 
-    with pytest.raises(CorpusBundleError, match="missing its embedded manifest member"):
+    with pytest.raises(CorpusBundleError):
         verify_corpus_bundle(bundle_path)
 
 
@@ -246,7 +255,7 @@ def test_verify_corpus_bundle_raises_on_not_a_zip_file(tmp_path: Path) -> None:
     not_a_zip = tmp_path / "not-a-bundle.zip"
     not_a_zip.write_bytes(b"this is definitely not a zip archive")
 
-    with pytest.raises(CorpusBundleError, match="not a valid zip archive"):
+    with pytest.raises(CorpusBundleError):
         verify_corpus_bundle(not_a_zip)
 
 

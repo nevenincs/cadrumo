@@ -79,7 +79,6 @@ from ...domain.modelos import (
     FilingInstanceEvidence,
     LedgerFilingSnapshot,
     ModeloDetailRow,
-    ModeloError,
     ModeloRecord,
     ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -101,7 +100,9 @@ from ...domain.prorrata_register import (
     ProrrataRegisterRepositoryProtocol,
 )
 from ..calculations import CalculationObservationRepository, PriorDomiciliationElectionProjection
+from ._action_errors import M303FilingEvidenceError
 from ._filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
+from ._m303_filing_evidence import m303_filing_evidence_failure
 
 if TYPE_CHECKING:  # pragma: no cover - typing-only storage boundary import
     from ...adapters.persistence.storage import SecureObjectWrite
@@ -429,14 +430,31 @@ def _require_filing_instance_evidence_for_work_unit(
     """Validate the closed Modelo 303 evidence branch at creation or replay."""
     if work_unit.modelo == Modelo.M303.value:
         if evidence is None:
-            raise ModeloError(f"modelo 303 filing-instance evidence is required before {operation}")
+            raise M303FilingEvidenceError(
+                precondition_failure=m303_filing_evidence_failure(
+                    "missing",
+                    {"modelo": str(work_unit.modelo), "evidence_present": False, "operation": operation},
+                ),
+            )
         if evidence.m303.period != work_unit.period:
-            raise ModeloError(
-                "modelo 303 filing-instance evidence period must match the calculation revision work-unit period",
+            raise M303FilingEvidenceError(
+                precondition_failure=m303_filing_evidence_failure(
+                    "period_mismatch",
+                    {
+                        "work_unit_period": work_unit.period.registry_token,
+                        "evidence_period": evidence.m303.period.registry_token,
+                        "periods_match": False,
+                    },
+                ),
             )
         return evidence
     if evidence is not None:
-        raise ModeloError("filing-instance evidence is currently valid only for modelo 303 revisions")
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "unsupported_modelo",
+                {"modelo": str(work_unit.modelo), "evidence_present": True},
+            ),
+        )
     return None
 
 

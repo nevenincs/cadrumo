@@ -127,8 +127,8 @@ def export_profile_bundle(request: ProfileBundleExportRequest) -> ProfileBundleE
         raise
     except OSError as exc:
         raise ProfileExportError(
-            "portable profile export could not publish its destination",
-            context={"destination": str(request.destination)},
+            translated_message="errors.fail.profile_export",
+            context={"destination": str(request.destination), "destination_published": False},
         ) from exc
 
 
@@ -282,9 +282,13 @@ def publish_prepared_export(
         _emit_export_event(completed)
     except Exception as exc:
         raise ProfileExportError(
-            "profile export published its destination but its audit event could not be "
-            "recorded; the pending event completes on the next reconcile",
-            context={"destination": str(destination), "audit_error": type(exc).__name__},
+            translated_message="errors.fail.profile_export",
+            context={
+                "destination": str(destination),
+                "audit_error": type(exc).__name__,
+                "destination_published": True,
+                "audit_event_recorded": False,
+            },
         ) from exc
     _safe_delete_journal(repository, completed.operation_id)
     return _result_from_operation(completed)
@@ -467,8 +471,8 @@ def _resolve_export_profile(profile_name: str | None) -> ProfileBucketPointer:
         missing_identity = active or "active"
     if pointer is None:
         raise ProfileNotFoundError(
-            "profile export target does not exist",
-            context={"profile": missing_identity},
+            translated_message="errors.refused.refused_profile_not_found",
+            context={"profile": missing_identity, "target_exists": False},
         )
     return pointer
 
@@ -486,10 +490,16 @@ def _render_export_payload(
 ) -> str:
     if request.transport is ProfileBundleExportTransport.CLEARTEXT_LOCAL:
         if request.passphrase is not None:
-            raise ProfileExportError("cleartext profile export cannot carry a passphrase")
+            raise ProfileExportError(
+                translated_message="errors.fail.profile_export",
+                context={"export_mode": "cleartext", "passphrase_supplied": True},
+            )
         return bundle.model_dump_json(indent=2)
     if request.passphrase is None:
-        raise ProfileExportError("passphrase-encrypted profile export requires a passphrase")
+        raise ProfileExportError(
+            translated_message="errors.fail.profile_export",
+            context={"export_mode": "passphrase_encrypted", "passphrase_supplied": False},
+        )
     from ._bundle_encryption import encrypt_profile_bundle_for_passphrase
 
     encrypted = encrypt_profile_bundle_for_passphrase(
@@ -539,13 +549,13 @@ def _stage_export_tempfile(staged_path: Path, data: bytes) -> None:
 def _refuse_link_target(path: Path) -> None:
     if path.is_symlink():
         raise ProfileExportError(
-            "portable profile export refuses a symbolic-link destination",
-            context={"destination": str(path)},
+            translated_message="errors.fail.profile_export",
+            context={"destination": str(path), "destination_is_symlink": True},
         )
     if path.exists() and not path.is_file():
         raise ProfileExportError(
-            "portable profile export destination must be a regular file",
-            context={"destination": str(path)},
+            translated_message="errors.fail.profile_export",
+            context={"destination": str(path), "destination_is_regular_file": False},
         )
 
 

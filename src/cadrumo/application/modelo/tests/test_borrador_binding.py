@@ -108,7 +108,7 @@ def _modelo_100_registry_snapshot() -> RegistrySnapshot:
 def test_validate_casilla_input_ids_rejects_non_string_keys_without_coercion() -> None:
     snapshot = _modelo_100_registry_snapshot()
 
-    with pytest.raises(RegistryValidationError, match="malformed keys"):
+    with pytest.raises(RegistryValidationError):
         validate_casilla_input_ids(snapshot.revision, {1: Decimal("1")})
 
 
@@ -117,7 +117,7 @@ def test_validate_casilla_input_ids_keeps_unknown_only_context() -> None:
     snapshot = _modelo_100_registry_snapshot()
     unknown_casilla_id = "modelo-100-not-declared-test"
 
-    with pytest.raises(RegistryValidationError, match=r"unknown casilla.id values") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {unknown_casilla_id: Decimal("1")})
 
     assert raised.value.context == {
@@ -130,7 +130,7 @@ def test_validate_casilla_input_ids_keeps_malformed_key_precedence_over_other_fa
     """Malformed keys refuse before unknown ids or invalid values are considered."""
     snapshot = _modelo_100_registry_snapshot()
 
-    with pytest.raises(RegistryValidationError, match="malformed keys") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(
             snapshot.revision,
             {
@@ -153,30 +153,31 @@ def test_validate_casilla_input_ids_rejects_printed_number_for_semantic_id() -> 
     assert result_casilla.id != result_casilla.number
     assert result_casilla.number not in {casilla.id for casilla in snapshot.revision.casillas}
 
-    with pytest.raises(RegistryValidationError, match="non-canonical reference tokens are not accepted") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {result_casilla.number: Decimal("1")})
 
+    # The alias-to-target mapping is a machine fact now, not a rendered sentence.
     assert raised.value.context == {
         "casilla_ids": result_casilla.number,
         "revision_id": snapshot.revision.id,
+        "noncanonical_reference_targets": f"{result_casilla.number!r} -> {result_casilla.id}",
     }
-    assert f"{result_casilla.number!r} -> {result_casilla.id}" in str(raised.value)
 
 
 def test_validate_casilla_input_ids_rejects_ambiguous_reused_printed_number() -> None:
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
 
-    with pytest.raises(RegistryValidationError, match="is ambiguous") as raised:
+    with pytest.raises(RegistryValidationError) as raised:
         validate_casilla_input_ids(snapshot.revision, {_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")})
 
     assert raised.value.context == {
         "casilla_ids": _M200_AMBIGUOUS_PRINTED_NUMBER,
         "revision_id": snapshot.revision.id,
+        "noncanonical_reference_targets": (
+            f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
+            f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
+        ),
     }
-    assert (
-        f"{_M200_AMBIGUOUS_PRINTED_NUMBER!r} is ambiguous; candidate casilla.id values: "
-        f"{_M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA}, {_M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA}"
-    ) in str(raised.value)
 
 
 def test_validate_casilla_input_ids_rejects_decimal_value_for_non_numeric_casilla() -> None:

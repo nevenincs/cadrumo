@@ -95,7 +95,6 @@ def _rounding_rule_for(
     if formula.rounding == RegistryRoundingCode.INTEGER_CEILING:
         return ("integer-ceiling", 0)
     raise CalcSheetsEngineError(
-        "unsupported registry rounding code",
         context={"formula_id": formula.id},
         translated_message="application.storage.calc_sheets.engine.errors.unsupported_rounding",
     )
@@ -412,7 +411,6 @@ def _tariff_tables(
                 scalar = resolve_parameter(definition, {"filing_period": filing_date})
             except RegistryValidationError as exc:
                 raise CalcSheetsEngineError(
-                    "parameter has no dated value valid for requested date",
                     context={"parameter_id": definition.id, "valid_on": filing_date.isoformat()},
                     translated_message="application.storage.calc_sheets.engine.errors.parameter_no_dated_value",
                 ) from exc

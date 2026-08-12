@@ -44,6 +44,42 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     validator.validate_registry(modelos)
 
 
+#: The deliberately year-vintaged excerpts a corpus forbidden-text clause must
+#: never treat as a defect: each carries at least one phrase unique to its own
+#: historical redaction, which is what pins its intended vintage. See the
+#: grounding reference's "vintaged excerpts behave CORRECTLY" finding.
+_DELIBERATELY_VINTAGED_EXCERPT_IDS = (
+    "ley-35-2006:art-23-2021",
+    "ley-35-2006:art-52-2015",
+    "ley-35-2006:art-52-2021",
+    "ley-35-2006:art-66-2021",
+    "ley-35-2006:art-68-2018",
+)
+
+
+def test_forbidden_text_clause_is_additive_over_the_full_committed_legal_catalogue() -> None:
+    """The new optional forbidden-text clause must not disturb any existing entry.
+
+    A refusal firing on a synthetic fixture proves the clause CAN catch a
+    repealed phrase; it proves nothing about whether the clause over-reaches on
+    the real catalogue. This is the control that decides closure: every entry
+    in the committed catalogue still loads and validates unchanged now that the
+    schema carries the new clause. The deliberately year-vintaged excerpts are
+    named explicitly because they legitimately contain text current law does
+    not, and none of them is given a forbidden_text clause by this change.
+    """
+    _modelos, catalogues = _registry_tree()
+
+    assert len(catalogues.legal) > 0, "control is meaningless against an empty catalogue"
+    for vintaged_id in _DELIBERATELY_VINTAGED_EXCERPT_IDS:
+        assert vintaged_id in catalogues.legal, f"{vintaged_id!r} must remain in the committed legal catalogue"
+        assert catalogues.legal[vintaged_id].forbidden_text == (), (
+            f"{vintaged_id!r} is a deliberately historical excerpt; this control authors no forbidden_text for it"
+        )
+
+    verify_legal_catalogue(catalogues.legal, source_root=bundled_path())
+
+
 def test_no_legal_reference_grounds_a_normatives_citation_in_a_derived_artefact() -> None:
     """A ``corpus_ref`` under ``corpus/normatives/`` must name the source, not a build product.
 

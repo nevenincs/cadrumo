@@ -197,16 +197,34 @@ _CLASSIFICATION_CASES = (
         None,
     ),
     (
-        "r22-services-outbound-third-country",
+        "r22-services-outbound-b2b",
         {
             "customer_residency": IvaTerritorialScope.THIRD_COUNTRY,
+            "customer_tax_status": CustomerTaxStatus.B2B_IVA_REGISTERED,
             "kind": TransactionKind.SERVICES_GENERAL,
             "direction": InvoiceKind.ISSUED,
         },
         IvaCategory.OPERACION_NO_SUJETA,
-        "R22_services_outbound_third_country",
+        "R22_services_outbound_b2b",
         None,
         None,
+    ),
+    (
+        # The other limb of art. 69: 69.Uno.2.º places a B2C service at the
+        # SUPPLIER, so a mainland issuer's is realizada in the TAI and taxed at
+        # the Spanish rate rather than falling outside it.
+        "r24-services-outbound-b2c",
+        {
+            "customer_residency": IvaTerritorialScope.THIRD_COUNTRY,
+            "customer_tax_status": CustomerTaxStatus.B2C_CONSUMER,
+            "kind": TransactionKind.SERVICES_GENERAL,
+            "direction": InvoiceKind.ISSUED,
+            "rate_tier": IvaRateKind.GENERAL,
+        },
+        IvaCategory.DOMESTIC_GENERAL,
+        "R24_services_outbound_b2c_at_rate_tier",
+        None,
+        Decimal("21"),
     ),
     (
         "r30-canarias-issuer",

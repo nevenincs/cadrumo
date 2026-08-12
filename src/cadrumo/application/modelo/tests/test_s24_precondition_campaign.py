@@ -57,6 +57,10 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
         "m210_agrupacion_renta_verification_findings",
     ): "annual grouped-renta integrity belongs to the detail-row set",
     (
+        "src/cadrumo/application/modelo/_verification_actions.py",
+        "_resolve_verification_snapshot",
+    ): "an unresolved registry snapshot blocks the whole revision, so no single casilla owns it",
+    (
         "src/cadrumo/application/modelo/_m303_m349_reconcile.py",
         "m303_m349_intracom_reconcile_findings",
     ): "the reconciliation compares several casillas across two modelos",
@@ -80,10 +84,6 @@ _INTENTIONAL_RECORD_LEVEL_FINDING_OWNERS = {
         "src/cadrumo/application/modelo/_verification_actions.py",
         "_missing_oss_evidence_finding",
     ): "missing OSS evidence spans the revision's OSS bindings rather than one target",
-    (
-        "src/cadrumo/application/modelo/_verification_actions.py",
-        "_collect_revision_verification_findings",
-    ): "snapshot resolution failed before a registry casilla could be named",
     (
         "src/cadrumo/application/modelo/_verification_cross_period.py",
         "_modelo_202_incomplete_modality_finding",
@@ -160,7 +160,6 @@ _RETIRED_VERIFICATION_GROUPS = {
     ("_m210_rate.py", "resolve_m210_rate"),
     ("_m303_m349_reconcile.py", "m303_m349_intracom_reconcile_findings"),
     ("_objective_estimation_advisory.py", "_objective_estimation_exclusion_advisory_findings"),
-    ("_verification_actions.py", "_collect_revision_verification_findings"),
     ("_verification_actions.py", "_cuota_less_without_base_findings"),
     ("_verification_actions.py", "_iva_wallet_error_verification_finding"),
     ("_verification_actions.py", "_missing_evidence_findings"),
@@ -193,6 +192,76 @@ _IVA_WALLET_BLOCKED_DECISION_SCENARIOS = (
 )
 
 _EXPECTED_PROFILE_IDENTITIES = {
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.iva_composition_missing",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.iva_composition_unknown",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.profile_absent",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_profile_readiness.ready",
+        "modelo.work.calculate.m303_profile_readiness.profile_inactive",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoint_coverage_incomplete",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoints_on_non_applicable",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_not_final_period",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_observation_value_divergence",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_revision_value_divergence",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.missing",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.period_mismatch",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.regimen_scope_profile_divergence",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.regimen_snapshot_mismatch",
+    ),
+    (
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.unsupported_modelo",
+    ),
     (
         "modelo.filing_record.import",
         "modelo.filing_record.import.lifecycle.active",

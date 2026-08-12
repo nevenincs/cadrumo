@@ -249,9 +249,12 @@ def _reject_binding_channel_mismatch(
     misrouted_to_decimal = sorted(set(binding_values) & enum_consumed)
     if misrouted_to_decimal:
         raise ModeloError(
-            f"bindings {misrouted_to_decimal!r} are consumed by the registry as enum "
-            f"dispatch keys and must be supplied through the enum-binding channel, "
-            f"not as Decimal binding values",
+            translated_message="errors.error.error_modelos",
+            context={
+                "misrouted_binding_ids": ", ".join(str(b) for b in misrouted_to_decimal),
+                "expected_input_channel": "enum",
+                "supplied_input_channel": "decimal",
+            },
         )
     misrouted_to_enum = sorted(set(enum_binding_values) & {b.id for b in revision.bindings} - enum_consumed)
     misrouted_to_enum = [
@@ -259,11 +262,12 @@ def _reject_binding_channel_mismatch(
     ]
     if misrouted_to_enum:
         raise ModeloError(
-            f"bindings {misrouted_to_enum!r} are consumed by the registry as Decimal "
-            f"operands and must be supplied as Decimal binding values, not through the "
-            f"enum-binding channel. `aeat app modelo bindings list` reports each "
-            f"binding's input_channel; a binding shown as input_channel=decimal "
-            f"takes a numeric --binding KEY=VALUE even when typed_enum is set",
+            translated_message="errors.error.error_modelos",
+            context={
+                "misrouted_binding_ids": ", ".join(str(b) for b in misrouted_to_enum),
+                "expected_input_channel": "decimal",
+                "supplied_input_channel": "enum",
+            },
         )
 
 
@@ -399,9 +403,12 @@ def _informational_semantic_role_casilla_id(revision: ModeloRevision, semantic_r
     casilla = casillas_by_id(revision).get(casilla_id)
     if casilla is None or casilla.input_kind != InputKind.INFORMATIONAL:
         raise ModeloError(
-            f"semantic_role={semantic_role!r} resolved to casilla {casilla_id!r}, "
-            "but declaration-period metadata can only populate informational casillas",
-            context={"semantic_role": semantic_role, "casilla_id": casilla_id},
+            translated_message="errors.error.error_modelos",
+            context={
+                "semantic_role": semantic_role,
+                "casilla_id": casilla_id,
+                "casilla_informational": False,
+            },
         )
     return casilla_id
 

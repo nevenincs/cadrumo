@@ -101,6 +101,7 @@ class ParsedEInvoice:
         "lines",
         "recargo_amount",
         "record_text",
+        "rectifies_invoice_number",
         "regime_legend",
         "retencion_amount",
         "shape",
@@ -138,6 +139,7 @@ class ParsedEInvoice:
         self.customer_country_code: str | None = None
         self.invoice_number: str | None = None
         self.invoice_series: str | None = None
+        self.rectifies_invoice_number: str | None = None
         self.invoice_date: str | None = None
         self.currency: str | None = None
         self.taxable_base: Decimal | None = None
@@ -695,6 +697,16 @@ def _apply_facturae_identification(invoice: Element, parsed: ParsedEInvoice) -> 
         # CORRECTED invoice's number under Corrective/ in this same subtree.
         parsed.invoice_number = _direct_child_text(header, "InvoiceNumber")
         parsed.invoice_series = _direct_child_text(header, "InvoiceSeriesCode")
+        # The number of the invoice this one CORRECTS, which the direct-child
+        # scoping above deliberately steps past. It was read and discarded: a
+        # rectificativa is a different CLASS of invoice by RD 1619/2012 art. 15,
+        # and a confirm that cannot say so mints one as ordinaria with nothing
+        # downstream able to tell -- the Invoice model's own rectificativa
+        # invariants never fire, because nothing ever states the class.
+        for corrective in _find_all(header, "Corrective"):
+            parsed.rectifies_invoice_number = _direct_child_text(corrective, "InvoiceNumber")
+            if parsed.rectifies_invoice_number is not None:
+                break
     for issue in _find_all(invoice, "InvoiceIssueData"):
         parsed.invoice_date = _first_text(issue, "IssueDate")
         parsed.currency = _first_text(issue, "InvoiceCurrencyCode")

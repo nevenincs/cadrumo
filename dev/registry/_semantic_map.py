@@ -8,9 +8,10 @@ references nor matches a semantic entry to parser output.
 
 from __future__ import annotations
 
-from typing import Literal
+from enum import StrEnum
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
 
 from cadrumo.core import CasillaId, FilingProducerKey, FilingProjectionRef
 from cadrumo.domain.calculations.registry import (
@@ -23,11 +24,16 @@ from cadrumo.domain.calculations.registry import (
     LegalRefs,
     ModeloId,
     RecordId,
+    SourceRefId,
     SourceRefs,
     export_semantic_payload_axis,
 )
 
 __all__ = [
+    "M303EnvelopePrefixField",
+    "M303EnvelopePrefixRole",
+    "M303EnvelopeTotalAnchor",
+    "M303VariableEnvelopeSemantic",
     "SemanticMap",
     "SemanticMapAnchor",
     "SemanticMapEntry",
@@ -55,6 +61,99 @@ class SemanticMapAnchor(_StrictModel):
     source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
     ordinal: int = Field(gt=0)
     record_identity: str = Field(min_length=1)
+
+
+class M303EnvelopePrefixRole(StrEnum):
+    """The closed semantic roles of the thirteen DP30300 prefix slots."""
+
+    OPENING_TAG = "opening_tag"
+    MODELO = "modelo"
+    DISCRIMINANT = "discriminant"
+    FILING_YEAR = "filing_year"
+    PERIOD = "period"
+    RECORD_TYPE = "record_type"
+    AUX_OPENING_TAG = "aux_opening_tag"
+    PRE_PROGRAM_FILLER = "pre_program_filler"
+    PROGRAM_IDENTIFIER = "program_identifier"
+    BETWEEN_IDENTITIES_FILLER = "between_identities_filler"
+    DEVELOPER_TAX_ID = "developer_tax_id"
+    POST_DEVELOPER_FILLER = "post_developer_filler"
+    AUX_CLOSING_TAG = "aux_closing_tag"
+
+
+def _coerce_m303_envelope_prefix_role(value: object) -> object:
+    """Hydrate the authored TOML token into its one closed envelope role."""
+    if isinstance(value, M303EnvelopePrefixRole):
+        return value
+    if isinstance(value, str):
+        try:
+            return M303EnvelopePrefixRole(value)
+        except ValueError as exc:
+            raise ValueError(f"unknown M303 envelope prefix role {value!r}") from exc
+    raise ValueError("M303 envelope prefix role must be a string")
+
+
+type M303EnvelopePrefixRoleValue = Annotated[
+    M303EnvelopePrefixRole,
+    BeforeValidator(_coerce_m303_envelope_prefix_role),
+]
+
+
+_M303_PREFIX_ROLE_ORDER: tuple[M303EnvelopePrefixRole, ...] = tuple(M303EnvelopePrefixRole)
+
+
+class M303EnvelopePrefixField(_StrictModel):
+    """One exact source anchor and its non-inferable DP30300 prefix role."""
+
+    role: M303EnvelopePrefixRoleValue
+    anchor: SemanticMapAnchor
+
+
+class M303EnvelopeTotalAnchor(_StrictModel):
+    """The parser-owned ``Total: Variable`` marker addressed without a field slot."""
+
+    source_row: int = Field(gt=0)
+    source_cell: str | None = Field(default=None, pattern=r"^[A-Z]+[1-9][0-9]*$")
+    label: Literal["total"]
+    length: Literal["Variable"]
+
+
+class M303VariableEnvelopeSemantic(_StrictModel):
+    """Hash-pinned semantic and composition authority for one DP30300 envelope.
+
+    The ordinary semantic map deliberately excludes variable-envelope fields.
+    This separate contract retains the thirteen exact prefix anchors, ordered
+    references to the already-owned fixed body records, the relative closer,
+    and the parser's variable total marker without turning the wrapper into a
+    seventh fixed-width record.
+    """
+
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    record_identity: Literal["DP30300"]
+    prefix_fields: tuple[M303EnvelopePrefixField, ...] = Field(min_length=13, max_length=13)
+    body_anchor: SemanticMapAnchor
+    body_record_ids: tuple[RecordId, ...] = Field(min_length=1)
+    closer_anchor: SemanticMapAnchor
+    total_anchor: M303EnvelopeTotalAnchor
+
+    @model_validator(mode="after")
+    def _require_complete_ordered_semantics(self) -> M303VariableEnvelopeSemantic:
+        roles = tuple(field.role for field in self.prefix_fields)
+        if roles != _M303_PREFIX_ROLE_ORDER:
+            raise ValueError(
+                "M303 variable envelope prefix roles must be the exact ordered thirteen-slot DP30300 sequence",
+            )
+        anchors = tuple(field.anchor for field in self.prefix_fields)
+        if len(set(anchors)) != len(anchors):
+            raise ValueError("M303 variable envelope prefix anchors must be unique")
+        if self.body_anchor.record_identity != self.record_identity:
+            raise ValueError("M303 variable envelope body anchor must belong to DP30300")
+        if self.closer_anchor.record_identity != self.record_identity:
+            raise ValueError("M303 variable envelope closer anchor must belong to DP30300")
+        if len(set(self.body_record_ids)) != len(self.body_record_ids):
+            raise ValueError("M303 variable envelope body record identities must be unique and ordered")
+        return self
 
 
 class SemanticMapEntry(_StrictModel):
@@ -145,6 +244,7 @@ class SemanticMap(_StrictModel):
     design_epoch: str = Field(min_length=1)
     records: tuple[SemanticMapRecord, ...] = Field(min_length=1)
     entries: tuple[SemanticMapEntry, ...] = Field(min_length=1)
+    variable_envelopes: tuple[M303VariableEnvelopeSemantic, ...] = ()
 
     @model_validator(mode="after")
     def _require_unique_record_semantics(self) -> SemanticMap:
@@ -156,4 +256,10 @@ class SemanticMap(_StrictModel):
         duplicate_ids = sorted({record_id for record_id in record_ids if record_ids.count(record_id) > 1})
         if duplicate_ids:
             raise ValueError(f"semantic map contains duplicate canonical export record ids: {duplicate_ids!r}")
+        envelope_identities = tuple(envelope.record_identity for envelope in self.variable_envelopes)
+        duplicate_envelopes = sorted(
+            {identity for identity in envelope_identities if envelope_identities.count(identity) > 1},
+        )
+        if duplicate_envelopes:
+            raise ValueError(f"semantic map contains duplicate variable-envelope identities: {duplicate_envelopes!r}")
         return self

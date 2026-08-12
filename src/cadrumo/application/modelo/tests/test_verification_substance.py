@@ -81,9 +81,14 @@ def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
     """Predicate casilla references fail instead of reading malformed ids as absent zeroes."""
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000")}
 
-    with pytest.raises(ModeloError, match=r"non-canonical casilla\.id"):
+    with pytest.raises(ModeloError) as raised:
         evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, _workflow_profile())
 
+
+    # The refusal carries the offending token as a machine fact; the text is
+    # catalogue-rendered, so there is no sentence to match on.
+    assert raised.value.context is not None
+    assert raised.value.context["casilla_id_canonical"] is False
 
 def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
     """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""

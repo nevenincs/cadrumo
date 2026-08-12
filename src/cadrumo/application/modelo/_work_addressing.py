@@ -792,7 +792,10 @@ def resolve_modelo_work_address(address: ModeloWorkAddress) -> ModeloWorkResolut
     """Resolve an operator-facing modelo work address to a required :class:`ModeloWorkResolution`."""
     resolution = resolve_optional_modelo_work_address(address)
     if resolution.state is ModeloWorkSelectorState.ABSENT or resolution.work_unit is None:
-        raise ModeloWorkAddressNotFoundError("no modelo work unit matches the supplied address")
+        raise ModeloWorkAddressNotFoundError(
+            translated_message="errors.error.modelo_work_address_not_found",
+            context={"work_unit_present": False},
+        )
     return resolution
 
 

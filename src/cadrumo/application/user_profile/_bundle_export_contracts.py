@@ -235,9 +235,11 @@ def _refuse_unclassified_bundle_fields(field_names: tuple[str, ...]) -> None:
     )
     if unclassified:
         raise ProfileExportError(
-            "portable profile bundle carries schema fields with no declared personal-data "
-            "classification, so the disclosed category set would be incomplete",
-            context={"unclassified_fields": ", ".join(unclassified)},
+            translated_message="errors.fail.profile_export",
+            context={
+                "unclassified_fields": ", ".join(unclassified),
+                "all_fields_classified": False,
+            },
         )
 
 

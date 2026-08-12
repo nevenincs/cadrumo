@@ -140,11 +140,18 @@ establishing_reference = "ley-37-1992:art-69"
 notes = "Servicios declarados por el Esquema Unión. La naturaleza la fija el art. 69; el art. 163 unvicies alcanza ambas ramas y por sí solo no la determina."
 
 [[place_of_supply_rules]]
-rule_id = "R22_services_outbound_third_country"
+rule_id = "R22_services_outbound_b2b"
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
 establishing_reference = "ley-37-1992:art-69"
-notes = "Prestación de servicios a un destinatario establecido fuera de la Comunidad. El art. 69 la sitúa fuera del TAI; el art. 70 recoge los supuestos que la reconducen al TAI y prevalece."
+notes = "Prestación de servicios a un empresario o profesional establecido fuera de la Comunidad. El art. 69.Uno.1.º la localiza donde está establecido el destinatario, de modo que no se localiza en el TAI. La condición del destinatario es la mitad de la regla: el art. 69.Uno.2.º sitúa la operación B2C en sede del prestador. El art. 70 recoge los supuestos que la reconducen al TAI y prevalece."
+
+[[place_of_supply_rules]]
+rule_id = "R24_services_outbound_b2c_at_rate_tier"
+supply_nature = "services"
+legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
+establishing_reference = "ley-37-1992:art-69"
+notes = "Prestación de servicios a quien no es empresario ni profesional, fuera de la Comunidad. El art. 69.Uno.2.º la localiza en sede del prestador, de modo que un emisor establecido en el TAI la realiza aquí y tributa al tipo español. El art. 69.Dos exceptúa una lista cerrada de servicios cuando el destinatario está establecido fuera de la Comunidad, y expresamente NO la exceptúa cuando reside en Canarias, Ceuta o Melilla."
 
 # ── Territorial, and silent on the nature ────────────────────────────────────
 

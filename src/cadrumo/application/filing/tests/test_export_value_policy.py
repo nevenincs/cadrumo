@@ -191,6 +191,8 @@ def test_verifier_detects_transformed_value_drift(payload: bytes, expected_misma
     )
 
     assert mismatched == (expected_mismatch,)
+
+
 def _projection_field() -> ExportFieldDefinition:
     """A real projection field, exactly as the M303 layout declares one."""
     return ExportFieldDefinition(

@@ -28,6 +28,11 @@ def _m200_snapshot():
     return bundled_authority().snapshot("200", filing_year=2025, period="0A")
 
 
+@pytest.fixture
+def _m303_snapshot():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T")
+
+
 def _intermediate_payload(*, source_sha256: str = "0" * 64) -> dict[str, object]:
     return {
         "source": {
@@ -307,6 +312,16 @@ def test_validation_refuses_projection_ref_not_admitted_by_the_selected_snapshot
 
     with pytest.raises(RegistryValidationError, match="not admitted by the target revision"):
         validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
+
+
+def test_projection_admission_uses_the_real_revision_declaration_bijection(_m303_snapshot) -> None:
+    """A selected M303 snapshot admits its complete typed endpoint matrix only."""
+    references = tuple(declaration.projection_ref for declaration in _m303_snapshot.revision.projection_endpoints)
+
+    _semantic_map_validation._validate_projection_ref_bijection(references, _m303_snapshot)
+
+    with pytest.raises(RegistryValidationError, match="omits target-revision projection declarations"):
+        _semantic_map_validation._validate_projection_ref_bijection(references[1:], _m303_snapshot)
 
 
 def test_anomaly_exception_is_hash_pinned_and_cannot_supply_coordinates(_m200_snapshot) -> None:

@@ -27,15 +27,20 @@ from .. import (
     ExportRecordDefinition,
     ModeloRevision,
     PeriodSelector,
+    ProjectionEndpointDeclaration,
     RegistryLoadError,
     RegistryValidationError,
     bundled_authority,
     derive_export_layouts_from_bindings,
 )
-from .._loader import _compile_export_semantic_field
+from .._loader import _compile_export_semantic_field, _compile_projection_endpoint_declaration
 from .._snapshot import _validate_materialized_export_record_families
 from .._validate_evidence import EvidenceValidator
-from .._validate_exports import _validate_export_record, _validate_projection_endpoint_index
+from .._validate_exports import (
+    _validate_export_record,
+    _validate_generated_projection_layout_bijection,
+    _validate_projection_endpoint_declarations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -71,6 +76,14 @@ def _field(*, field_id: str = "projection.field", projection_ref: object) -> Exp
     )
 
 
+def _declaration(*, projection_ref: object) -> ProjectionEndpointDeclaration:
+    return ProjectionEndpointDeclaration(
+        projection_ref=projection_ref,
+        legal_refs=(_LEGAL_REF,),
+        source_refs=(_SOURCE_REF,),
+    )
+
+
 def _binding_field(*, field_id: str = "binding.field") -> ExportFieldDefinition:
     return ExportFieldDefinition(
         id=field_id,
@@ -92,6 +105,7 @@ def _revision(
     *fields: ExportFieldDefinition,
     repeat: Literal["binding_rows", "projection_rows"] | None = None,
     binding_record: str | None = None,
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = (),
 ) -> ModeloRevision:
     return ModeloRevision(
         id="projection-test",
@@ -100,6 +114,7 @@ def _revision(
         period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
         legal_refs=(_LEGAL_REF,),
         source_refs=(_SOURCE_REF,),
+        projection_endpoints=projection_endpoints,
         export_layouts=(
             ExportLayoutDefinition(
                 id="projection-layout",
@@ -209,21 +224,20 @@ def test_registry_loader_hydrates_required_flat_module_projection() -> None:
     )
 
 
-def test_projection_endpoint_index_preserves_duplicates_and_indexes_numbered_endpoints() -> None:
+def test_projection_endpoint_index_preserves_duplicate_declarations_and_indexes_numbered_endpoints() -> None:
     reference = _prorrata_ref()
-    first = _field(field_id="projection.first", projection_ref=reference)
-    second = _field(field_id="projection.second", projection_ref=reference)
-    slotless = _field(
-        field_id="projection.marker",
+    first = _declaration(projection_ref=reference)
+    second = _declaration(projection_ref=reference)
+    slotless = _declaration(
         projection_ref=M303Exonerado390OperacionesTercerosProjectionRef(
             projection_kind="m303_exonerado_390_operaciones_terceros",
         ),
     )
-    revision = _revision(first, second, slotless)
+    revision = _revision(projection_endpoints=(first, second, slotless))
 
     assert revision.projection_endpoint_index()[reference] == (first, second)
-    assert revision.projection_fields_for_casilla(_PROJECTION_CASILLA) == (first, second)
-    assert revision.projection_fields_for_casilla(_UNKNOWN_CASILLA) == ()
+    assert revision.projection_declarations_for_casilla(_PROJECTION_CASILLA) == (first, second)
+    assert revision.projection_declarations_for_casilla(_UNKNOWN_CASILLA) == ()
 
 
 def test_repeat_field_family_positive_controls_include_fixed_slot_projection() -> None:
@@ -327,21 +341,84 @@ def test_active_snapshots_materialize_repeated_and_fixed_binding_records(
 def test_projection_endpoint_validator_refuses_duplicate_and_unknown_casilla() -> None:
     duplicate = _prorrata_ref(casilla_id=_UNKNOWN_CASILLA)
     revision = _revision(
-        _field(field_id="projection.first", projection_ref=duplicate),
-        _field(field_id="projection.second", projection_ref=duplicate),
+        projection_endpoints=(
+            _declaration(projection_ref=duplicate),
+            _declaration(projection_ref=duplicate),
+        ),
     )
     failures: list[str] = []
 
-    _validate_projection_endpoint_index(
+    _validate_projection_endpoint_declarations(
         failures,
         prefix="modelo 303 revision projection-test",
         revision=revision,
         casillas=set(),
         casilla_by_id={},
+        legal_refs={},
+        source_refs={},
+        evidence=EvidenceValidator(legal_refs={}, source_refs={}, source_root=None),
     )
 
-    assert any("admitted by 2 export fields; expected exactly one" in failure for failure in failures)
+    assert any("admitted by 2 projection declarations; expected exactly one" in failure for failure in failures)
     assert any("references unknown casilla 'missing'" in failure for failure in failures)
+
+
+def test_generated_projection_fields_must_biject_revision_owned_declarations() -> None:
+    reference = _prorrata_ref()
+    revision = _revision(_field(projection_ref=reference))
+    failures: list[str] = []
+
+    _validate_generated_projection_layout_bijection(
+        failures,
+        prefix="modelo 303 revision projection-test",
+        revision=revision,
+    )
+
+    assert failures == [
+        "modelo 303 revision projection-test: generated export layouts must exactly biject projection declarations; "
+        "undeclared generated refs "
+        "(\"M303ProrrataActivityProjectionRef(projection_kind='m303_prorrata_activity', slot=1, "
+        "field=<M303ProrrataActivityProjectionField.CNAE: 'cnae'>, casilla_id='500')\",)",
+    ]
+    declared = revision.model_copy(update={"projection_endpoints": (_declaration(projection_ref=reference),)})
+    clean: list[str] = []
+    _validate_generated_projection_layout_bijection(
+        clean,
+        prefix="modelo 303 revision projection-test",
+        revision=declared,
+    )
+    assert clean == []
+
+
+def test_projection_endpoint_loader_hydrates_only_the_canonical_toml_payload() -> None:
+    source_path = Path("projection-endpoint.toml")
+    compiled = _compile_projection_endpoint_declaration(
+        source_path,
+        {
+            "projection_ref": {
+                "projection_kind": "m303_prorrata_activity",
+                "slot": 1,
+                "field": "cnae",
+                "casilla_id": _PROJECTION_CASILLA,
+            },
+            "legal_refs": (_LEGAL_REF,),
+            "source_refs": (_SOURCE_REF,),
+        },
+    )
+
+    assert ProjectionEndpointDeclaration.model_validate(compiled).projection_ref == _prorrata_ref()
+    with pytest.raises(ValidationError, match="loader-hydrated FilingProjectionRef"):
+        ProjectionEndpointDeclaration.model_validate(
+            {
+                **compiled,
+                "projection_ref": {
+                    "projection_kind": "m303_prorrata_activity",
+                    "slot": 1,
+                    "field": "cnae",
+                    "casilla_id": _PROJECTION_CASILLA,
+                },
+            },
+        )
 
 
 def test_projection_ref_compiler_has_only_the_two_canonical_loader_callers() -> None:

@@ -45,8 +45,11 @@ def verify_legal_reference(
         in :func:`_legal_corpus_text` will always find a non-empty path.
 
     This function therefore only checks runtime invariants that the
-    type system cannot express: known-bad citation patterns and
-    required-text presence against the local corpus.
+    type system cannot express: known-bad citation patterns, required-text
+    presence and forbidden-text absence against the local corpus. The two
+    text clauses diagnose opposite defects — a missing required phrase and a
+    present forbidden phrase — so their failures are raised with distinct
+    messages naming which clause fired.
     """
     if reference.kind == "manual":
         path_text = reference.corpus_ref.split("#", 1)[0]
@@ -62,12 +65,17 @@ def verify_legal_reference(
                         f"legal reference {reference.id!r} manual section JSON validation failed: {exc}",
                     ) from exc
 
-    if reference.required_text and source_root is not None:
+    if source_root is not None and (reference.required_text or reference.forbidden_text):
         corpus_text = _legal_corpus_text(source_root, reference)
         for required in reference.required_text:
             if normalise_corpus_text(required) not in corpus_text:
                 raise RegistryValidationError(
                     f"legal reference {reference.id!r} corpus text missing required text {required!r}",
+                )
+        for forbidden in reference.forbidden_text:
+            if normalise_corpus_text(forbidden) in corpus_text:
+                raise RegistryValidationError(
+                    f"legal reference {reference.id!r} corpus text contains forbidden text {forbidden!r}",
                 )
     if reference.article is None:
         return

@@ -323,8 +323,12 @@ class ProfileRepository:
                 # create, not a valid schedule — fail closed rather than register
                 # a bucket whose only key schedule is BUCKET_DEK_V1 with no DEK.
                 raise StorageValidationError(
-                    f"bucket {resolved_id!r} has no wrapped DEK at {bucket_dek_path}; "
-                    "the create span must mint the per-bucket DEK before manifest registration.",
+                    translated_message="errors.integrity.integrity_storage_validation",
+                    context={
+                        "bucket_id": str(resolved_id),
+                        "bucket_dek_path": str(bucket_dek_path),
+                        "wrapped_dek_present": False,
+                    },
                 )
             key_schedule = BucketKeySchedule.BUCKET_DEK_V1
             # Sourced from the manifest tier's own constant rather than restated
@@ -440,7 +444,6 @@ class ProfileRepository:
             # one exception contract regardless of which layer caught the
             # mismatch first.
             raise ProfileIntegrityError(
-                "profile physical stores disagree on identity",
                 translated_message="application.user_profile.errors.profile_integrity_identity_mismatch",
                 context={"mismatches": ("manifest_bucket_id",)},
             ) from exc

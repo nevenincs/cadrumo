@@ -16,10 +16,8 @@ from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
     ExportEncoding,
-    ExportFieldDefinition,
-    ExportLayoutDefinition,
-    ExportRecordDefinition,
     ExportValuePolicy,
+    ProjectionEndpointDeclaration,
     RegistryError,
     RegistryValidationError,
     bundled_authority,
@@ -827,40 +825,17 @@ def test_renderer_carries_semantic_projection_occurrence_authority_into_generate
     semantic_map = semantic_map.model_copy(
         update={"records": records, "entries": (*semantic_map.entries[:-1], projection_entry)},
     )
-    admission_layout = ExportLayoutDefinition(
-        id="projection-admission-probe",
-        format="fixed_width",
-        records=(
-            ExportRecordDefinition(
-                id="projection-admission-record",
-                record_type="detalle",
-                order=1,
-                encoding="latin-1",
-                line_ending="none",
-                repeat="projection_rows",
-                fields=(
-                    ExportFieldDefinition(
-                        id="projection-admission-field",
-                        offset=1,
-                        length=4,
-                        kind=CasillaFieldKind.PROJECTION,
-                        projection_ref=projection_entry.projection_ref,
-                        data_type="text",
-                        required=True,
-                        padding="right_space",
-                        justification="left",
-                        signed=False,
-                        legal_refs=("ley-27-2014:art-40",),
-                        source_refs=("aeat-dr-200-2025",),
-                    ),
+    assert projection_entry.projection_ref is not None
+    revision = _m200_snapshot.revision.model_copy(
+        update={
+            "projection_endpoints": (
+                ProjectionEndpointDeclaration(
+                    projection_ref=projection_entry.projection_ref,
+                    legal_refs=("ley-27-2014:art-40",),
+                    source_refs=("aeat-dr-200-2025",),
                 ),
             ),
-        ),
-        legal_refs=("ley-27-2014:art-40",),
-        source_refs=("aeat-dr-200-2025",),
-    )
-    revision = _m200_snapshot.revision.model_copy(
-        update={"export_layouts": (*_m200_snapshot.revision.export_layouts, admission_layout)},
+        },
     )
     snapshot = _m200_snapshot.model_copy(update={"revision": revision})
     joined = join_record_design_semantics(semantic_map, _intermediate(), snapshot)

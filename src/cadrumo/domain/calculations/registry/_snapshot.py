@@ -512,6 +512,7 @@ def _collect_snapshot_ref_ids(
         revision.relations,
         revision.algorithm_providers,
         revision.algorithm_bindings,
+        revision.projection_endpoints,
         revision.extraction_profiles,
         revision.live_cross_references,
         revision.workbook_parity_refs,

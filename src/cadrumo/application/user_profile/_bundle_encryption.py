@@ -118,21 +118,26 @@ def decrypt_profile_bundle_with_passphrase(
     """
     if envelope.encrypted_bundle_schema_version != _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle envelope is at schema version "
-            f"{envelope.encrypted_bundle_schema_version}; this application reads "
-            f"{_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION}",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={
+                "envelope_schema_version": str(envelope.encrypted_bundle_schema_version),
+                "supported_schema_version": str(_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION),
+            },
         )
     if envelope.payload_model != _ENCRYPTED_BUNDLE_PAYLOAD_MODEL:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle envelope declares the wrong payload model",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={"payload_model_expected": False},
         )
     if envelope.payload_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle envelope declares an unsupported payload schema",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={"payload_schema_supported": False},
         )
     if envelope.kdf != _ENCRYPTED_BUNDLE_KDF:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle envelope declares an unsupported KDF",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={"kdf_supported": False},
         )
     # Gated against the Argon2 ALGORITHM version the writer stamps, which is
     # what ``KdfParams.default()`` carries -- deliberately not against the
@@ -147,8 +152,11 @@ def decrypt_profile_bundle_with_passphrase(
     # apart.
     if envelope.kdf_version != ARGON2_VERSION:
         raise EncryptedProfileBundleError(
-            f"encrypted profile-bundle envelope declares KDF version {envelope.kdf_version}; "
-            f"this application derives under {ARGON2_VERSION}",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={
+                "envelope_kdf_version": str(envelope.kdf_version),
+                "supported_kdf_version": str(ARGON2_VERSION),
+            },
         )
     try:
         salt = base64.b64decode(envelope.salt_b64.encode("ascii"), validate=True)
@@ -167,7 +175,8 @@ def decrypt_profile_bundle_with_passphrase(
         )
     except Exception as exc:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle payload could not be decrypted",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={"payload_decrypted": False},
         ) from exc
     try:
         return validate_bundle_payload(
@@ -178,7 +187,8 @@ def decrypt_profile_bundle_with_passphrase(
         raise
     except Exception as exc:
         raise EncryptedProfileBundleError(
-            "encrypted profile-bundle payload could not be validated",
+            translated_message="errors.refused.refused_user_profile_validation",
+            context={"payload_valid": False},
         ) from exc
 
 

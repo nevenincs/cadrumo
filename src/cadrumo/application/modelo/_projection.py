@@ -161,8 +161,8 @@ def _required_casilla_value(
         return values[casilla_id]
     except KeyError as exc:
         raise ModeloProjectionError(
-            f"projection source {source!r} did not produce required casilla {casilla_id!r}",
-            context={"source": source, "casilla_id": casilla_id},
+            translated_message="errors.error.modelo_projection",
+            context={"source": source, "casilla_id": casilla_id, "casilla_produced": False},
         ) from exc
 
 
@@ -272,7 +272,7 @@ def _compare_row_provenance(
     cdef = casilla_meta.get(casilla_id)
     if cdef is None:
         raise ModeloProjectionError(
-            f"modelo compare cannot ground casilla {casilla_id!r}; it is not declared by either compared revision",
+            translated_message="errors.error.modelo_projection",
             context={
                 "modelo": modelo,
                 "year_a": year_a,
@@ -287,7 +287,7 @@ def _compare_row_provenance(
     source_refs = tuple(getattr(observation, "source_refs", ())) or tuple(cdef.source_refs)
     if not legal_refs or not source_refs:
         raise ModeloProjectionError(
-            f"modelo compare cannot ground casilla {casilla_id!r}; registry provenance is incomplete",
+            translated_message="errors.error.modelo_projection",
             context={
                 "modelo": modelo,
                 "year_a": year_a,
@@ -395,7 +395,10 @@ def _m130_annual_projection(year: int) -> _M130AnnualProjection:
     latest_period = max(m130_quarters, key=lambda period: period.quarter_ordinal or 0)
     latest_ordinal = latest_period.quarter_ordinal
     if latest_ordinal is None:
-        raise ModeloProjectionError("Modelo 130 quarter projection received a non-quarter period")
+        raise ModeloProjectionError(
+            translated_message="errors.error.modelo_projection",
+            context={"modelo": "130", "period_is_quarter": False},
+        )
     latest_revision = m130_quarters[latest_period]
     total_rendimiento_neto = _required_casilla_value(
         latest_revision.casilla_values,

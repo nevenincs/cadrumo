@@ -72,7 +72,9 @@ def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:
         _rounding_rule_for(formula)
 
     error = raised.value
-    assert str(error) == "unsupported registry rounding code"
+    # The refusal renders from its key alone now; the English sentence it used
+    # to carry alongside was never the surfaced text.
+    assert str(error) == "application.storage.calc_sheets.engine.errors.unsupported_rounding"
     assert "private-rounding-token" not in str(error)
     assert error.translated_message == "application.storage.calc_sheets.engine.errors.unsupported_rounding"
     assert error.context == {"formula_id": "formula-sensitive"}
@@ -99,7 +101,7 @@ def test_missing_scalar_value_error_uses_translated_message_and_structured_conte
         build_export_plan(snapshot)
 
     error = raised.value
-    assert str(error) == "parameter has no dated value valid for requested date"
+    assert str(error) == "application.storage.calc_sheets.engine.errors.parameter_no_dated_value"
     assert error.translated_message == "application.storage.calc_sheets.engine.errors.parameter_no_dated_value"
     assert error.context == {
         "parameter_id": "irpf.direct_estimation_fractional_payment_rate",

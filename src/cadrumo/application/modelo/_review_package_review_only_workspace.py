@@ -151,9 +151,6 @@ def assert_workspace_permits_official_action(workspace: ReviewOnlyWorkspace) -> 
     """
     if workspace.review_only:
         raise ReviewOnlyWorkspaceAuthorityError(
-            "review-only workspace carries no filing authority; it may be read "
-            "and verified but must never be treated as evidence the underlying "
-            "revision has been or will be filed",
             translated_message="application.modelo.errors.review_only_workspace_no_authority",
             context={
                 "calculation_revision_id": workspace.manifest.calculation_revision_id,

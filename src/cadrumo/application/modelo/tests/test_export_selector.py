@@ -101,5 +101,5 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
     work_unit = work_unit.model_copy(update={"current_calculation_revision_id": draft.calculation_revision_id})
     work_repo.save(upsert_work_unit(work_repo.load(), work_unit))
 
-    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="still draft"):
+    with pytest.raises(ModeloCalculationRevisionSelectorStateError):
         select_exportable_revision(work_unit, calculation_repository=calc_repo)

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, Protocol
 
 from pydantic import BeforeValidator
 
+from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
 from ....core.money import round_to_cents
 from ._errors import RegistryValidationError
@@ -77,6 +79,12 @@ class _ExportField(Protocol):
     def id(self) -> str: ...
 
     @property
+    def offset(self) -> int | None: ...
+
+    @property
+    def casilla_id(self) -> CasillaId | None: ...
+
+    @property
     def length(self) -> int | None: ...
 
     @property
@@ -105,6 +113,42 @@ class _ExportField(Protocol):
 
     @property
     def allowed_values(self) -> tuple[str, ...] | None: ...
+
+
+class _ExportRecord(Protocol):
+    """The registry-owned declaration shape needed by the record codec."""
+
+    @property
+    def id(self) -> str: ...
+
+    @property
+    def encoding(self) -> str: ...
+
+    @property
+    def line_ending(self) -> Literal["crlf", "lf", "none"]: ...
+
+    @property
+    def fields(self) -> tuple[_ExportField, ...]: ...
+
+
+class FixedWidthRecordRenderError(ValueError):
+    """A registry-owned fixed-record rendering refusal with exact context."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        field_id: str | None,
+        reason: str,
+        export_record_id: str,
+    ) -> None:
+        super().__init__(message)
+        self.field_id = field_id
+        self.reason = reason
+        self.export_record_id = export_record_id
+
+
+_LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 
 
 def validate_fixed_width_shape(field: _ExportField) -> None:
@@ -144,6 +188,89 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
     rendered = _render_typed_value(field, value)
     validate_export_wire_value(field.value_policy, rendered)
     return rendered
+
+
+def render_fixed_width_export_record_body(
+    record: _ExportRecord,
+    *,
+    field_values: Mapping[CasillaId, str | None],
+) -> bytes:
+    """Render one registry-owned fixed-width record without its terminator.
+
+    This is the sole record-byte producer. Callers that compose a multi-record
+    payload must use :func:`render_fixed_width_export_record_payload` so the
+    declared line ending remains part of the exact emitted member bytes.
+    """
+    fields = tuple(sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
+    if not fields:
+        raise FixedWidthRecordRenderError(
+            f"export record {record.id!r} declares no renderable fields",
+            field_id=None,
+            reason="empty_record",
+            export_record_id=record.id,
+        )
+    coordinates = tuple(_require_record_coordinates(field, record_id=record.id) for field in fields)
+    total_length = max(offset + length - 1 for offset, length in coordinates)
+    buffer = bytearray(b" " * total_length)
+    occupied = bytearray(total_length)
+    for field, (offset, length) in zip(fields, coordinates, strict=True):
+        kind = str(getattr(field.kind, "value", field.kind))
+        if kind not in {"literal", "filler", "casilla"}:
+            raise FixedWidthRecordRenderError(
+                f"export field {field.id!r} cannot be mapped to the fixed-width renderer",
+                field_id=field.id,
+                reason="field_kind",
+                export_record_id=record.id,
+            )
+        try:
+            raw_value = field_values.get(field.casilla_id, "") if field.casilla_id is not None else ""
+            rendered = render_fixed_width_export_field(field, raw_value).encode(record.encoding)
+        except (LookupError, UnicodeError, RegistryValidationError) as exc:
+            raise FixedWidthRecordRenderError(
+                f"export field {field.id!r} has an invalid fixed-width value",
+                field_id=field.id,
+                reason="fixed_width_value",
+                export_record_id=record.id,
+            ) from exc
+        if len(rendered) != length:
+            raise FixedWidthRecordRenderError(
+                f"export field {field.id!r} encoded to {len(rendered)} bytes instead of {length}",
+                field_id=field.id,
+                reason="encoded_width",
+                export_record_id=record.id,
+            )
+        start = offset - 1
+        end = start + length
+        if any(occupied[start:end]):
+            raise FixedWidthRecordRenderError(
+                f"export field {field.id!r} overlaps another field",
+                field_id=field.id,
+                reason="overlap",
+                export_record_id=record.id,
+            )
+        buffer[start:end] = rendered
+        occupied[start:end] = b"\x01" * length
+    return bytes(buffer)
+
+
+def render_fixed_width_export_record_payload(
+    record: _ExportRecord,
+    *,
+    field_values: Mapping[CasillaId, str | None],
+) -> bytes:
+    """Render one registry-owned record with its declared line terminator."""
+    return render_fixed_width_export_record_body(record, field_values=field_values) + _LINE_ENDINGS[record.line_ending]
+
+
+def _require_record_coordinates(field: _ExportField, *, record_id: str) -> tuple[int, int]:
+    if field.offset is None or field.length is None:
+        raise FixedWidthRecordRenderError(
+            f"export field {field.id!r} lacks fixed-width coordinates",
+            field_id=field.id,
+            reason="missing_coordinates",
+            export_record_id=record_id,
+        )
+    return field.offset, field.length
 
 
 def parse_fixed_width_export_field(
@@ -395,8 +522,11 @@ __all__ = [
     "ExportJustificationValue",
     "ExportPadding",
     "ExportPaddingValue",
+    "FixedWidthRecordRenderError",
     "pad_fixed_width_text",
     "parse_fixed_width_export_field",
     "render_fixed_width_export_field",
+    "render_fixed_width_export_record_body",
+    "render_fixed_width_export_record_payload",
     "validate_fixed_width_shape",
 ]

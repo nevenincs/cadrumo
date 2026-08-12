@@ -156,8 +156,10 @@ def test_sign_refuses_a_checksum_dirty_bundle(tmp_path: Path) -> None:
             dst.writestr(item, data)
     rewritten.replace(bundle_path)
 
-    with pytest.raises(CorpusBundleVerificationError, match=r"legal/ley-1\.html"):
+    with pytest.raises(CorpusBundleVerificationError) as refusal:
         sign_corpus_bundle(bundle_path, keypair=keypair)
+
+    assert (refusal.value.context or {})["mismatched"] == ("legal/ley-1.html",)
 
 
 def test_verify_fails_when_bundle_tampered_after_signing(tmp_path: Path) -> None:

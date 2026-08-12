@@ -55,7 +55,7 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
     if not is_m210_annual_group:
         if m210_rows:
             raise ModeloError(
-                "Modelo 210 agrupacion-renta rows are only valid for Modelo 210 period 0A",
+                translated_message="errors.error.error_modelos",
                 context={
                     "modelo": str(work_unit.modelo),
                     "period": work_unit.period.registry_token,
@@ -66,7 +66,7 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
 
     if len(m210_rows) != len(detail_rows):
         raise ModeloError(
-            "Modelo 210 period 0A accepts only agrupacion-renta detail rows",
+            translated_message="errors.error.error_modelos",
             context={
                 "detail_row_count": str(len(detail_rows)),
                 "m210_row_count": str(len(m210_rows)),
@@ -82,13 +82,13 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
 
     if m210_official_tipo_renta_code is None:
         raise ModeloError(
-            "Modelo 210 period 0A requires the raw official tipo de renta code alongside grouped-renta rows",
+            translated_message="errors.error.error_modelos",
             context={"m210_row_count": str(len(m210_rows))},
         )
     row_code = m210_rows[0].tipo_renta_code
     if row_code != m210_official_tipo_renta_code:
         raise ModeloError(
-            "Modelo 210 annual grouped-renta rows must match the selected official tipo de renta code",
+            translated_message="errors.error.error_modelos",
             context={
                 "selected_tipo_renta_code": m210_official_tipo_renta_code,
                 "row_tipo_renta_code": row_code,

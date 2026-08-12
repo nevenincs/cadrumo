@@ -54,7 +54,7 @@ def test_modelo_local_observation_error_is_registered_and_envelopes() -> None:
 def test_local_observation_refuses_ambiguous_printed_number_with_canonical_candidates() -> None:
     snapshot = resources().modelos.authority.snapshot("200", filing_year=2025, period="0A")
 
-    with pytest.raises(ModeloLocalObservationError, match="refused aliases") as exc_info:
+    with pytest.raises(ModeloLocalObservationError) as exc_info:
         _canonical_casilla_values(
             snapshot=snapshot,
             casilla_values={_M200_AMBIGUOUS_PRINTED_NUMBER: Decimal("1")},

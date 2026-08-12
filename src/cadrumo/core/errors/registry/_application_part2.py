@@ -678,6 +678,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo._action_errors.M303FilingEvidenceError",
+        ErrorCode(
+            code="REFUSED_MODELO_M303_FILING_EVIDENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="application.modelo.errors.m303_filing_evidence_invalid",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo._action_errors.ModeloProfileReadinessError",
         ErrorCode(
             code="REFUSED_MODELO_PROFILE_READINESS",

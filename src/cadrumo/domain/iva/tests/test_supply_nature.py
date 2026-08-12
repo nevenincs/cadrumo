@@ -22,6 +22,7 @@ import re
 
 import pytest
 
+from ....core import resolve_anchored_extracted_unit
 from ....core.resources import bundled_path
 from .. import (
     LIVA_CITATION_QUALIFIERS,
@@ -32,6 +33,7 @@ from .. import (
     SupplyNatureDerivationOutcome,
     derive_supply_nature_from_citation,
     match_statutory_citations,
+    supply_nature_implied_by_category,
     supply_nature_is_required,
 )
 
@@ -58,28 +60,47 @@ _SERVICES_WORDS = ("presten servicios", "prestaciones de servicios", "prestació
 
 
 def _bundled_text(corpus_ref: str) -> str:
-    path = _BUNDLED_ROOT / f"{corpus_ref}.extracted.md"
-    assert path.is_file(), f"the row names a corpus file that is not bundled: {corpus_ref}"
-    return path.read_text(encoding="utf-8", errors="replace").casefold()
+    """Return the cited text, scoped to one article whenever the row names an anchor.
+
+    An anchored ``corpus_ref`` resolves to that single extracted unit through the
+    same core resolver the registry's evidence validator reads citations by, so
+    an article is read here the way it is read everywhere else in the tree.
+
+    Scoping is what lets a row cite a consolidated document at all. Reading the
+    whole of the IVA law reaches the goods limb and the services limb alike, so
+    every row citing it would look mixed and could only ever establish nothing --
+    which is exactly why the general place-of-supply articles could not be
+    declared while the reader was file-scoped.
+    """
+    path_text, separator, anchor = corpus_ref.partition("#")
+    if not separator:
+        path = _BUNDLED_ROOT / f"{path_text}.extracted.md"
+        assert path.is_file(), f"the row names a corpus file that is not bundled: {corpus_ref}"
+        return path.read_text(encoding="utf-8", errors="replace").casefold()
+
+    sidecar = _BUNDLED_ROOT / f"{path_text}.extracted.json"
+    assert sidecar.is_file(), f"the row names a corpus sidecar that is not bundled: {corpus_ref}"
+    # ``include_title`` carries the article's own rubric, which is where the
+    # statute names the limb most plainly -- "Lugar de realización de las
+    # entregas de bienes" against "... de las prestaciones de servicios".
+    return resolve_anchored_extracted_unit(sidecar, anchor=anchor, include_title=True).casefold()
 
 
-@pytest.mark.parametrize("citation", STATUTORY_CITATIONS, ids=lambda c: c.article)
-def test_every_row_says_what_the_bundled_article_says(citation: StatutoryCitation) -> None:
+def _assert_row_matches_its_article(citation: StatutoryCitation) -> None:
     """Read the corpus and confirm the row's claim survives contact with it.
 
     The three cases the statute produces, each checked on the article's own
     words: an article reaching only the goods limb must establish ``GOODS``, only
     the services limb ``SERVICES``, and one reaching both must establish nothing.
 
-    This is what makes the table falsifiable. Asserting the row against a literal
-    typed here would restate it; asserting it against the text the row cites can
-    fail when the row is wrong, which is the only version worth running.
+    Extracted from the parametrized case so a proof can drive it with a row that
+    is deliberately wrong. A gate nothing can fail is not a gate.
     """
     text = _bundled_text(citation.corpus_ref)
 
     # Bounded to the opening of the article, where the rubric and the scoping
     # paragraph state what it governs. A long article mentions the other limb
-    # incidentally further down, and reading the whole file would make every row
+    # incidentally further down, and reading the whole of it would make every row
     # look mixed.
     opening = text[:1200]
     reaches_goods = any(word in opening for word in _GOODS_WORDS)
@@ -96,6 +117,55 @@ def test_every_row_says_what_the_bundled_article_says(citation: StatutoryCitatio
         assert establishes is SupplyNature.GOODS
     else:
         assert establishes is SupplyNature.SERVICES
+
+
+@pytest.mark.parametrize("citation", STATUTORY_CITATIONS, ids=lambda c: c.article)
+def test_every_row_says_what_the_bundled_article_says(citation: StatutoryCitation) -> None:
+    """Every shipped row, against the text it cites.
+
+    This is what makes the table falsifiable. Asserting the row against a literal
+    typed here would restate it; asserting it against the text the row cites can
+    fail when the row is wrong, which is the only version worth running.
+    """
+    _assert_row_matches_its_article(citation)
+
+
+def test_a_row_claiming_the_wrong_limb_at_its_anchor_is_refused() -> None:
+    """The mutation proof: the gate reds on a row the statute contradicts.
+
+    Art. 69 governs *prestaciones de servicios* and this row claims it fixes
+    goods. Nothing about the row's own fields is inconsistent -- only the corpus
+    says otherwise -- so a green here would mean the check had stopped reading
+    the article and every row above was passing on its own say-so.
+    """
+    wrong = StatutoryCitation(
+        article="69",
+        heading="Lugar de realización de las prestaciones de servicios. Reglas generales.",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a69",
+        establishes=SupplyNature.GOODS,
+    )
+
+    with pytest.raises(AssertionError):
+        _assert_row_matches_its_article(wrong)
+
+
+def test_two_anchors_in_one_document_read_as_two_different_articles() -> None:
+    """The property a file-scoped read cannot have, pinned on the real corpus.
+
+    Both articles live in the same consolidated document. A reader that fell
+    back to the file would hand back identical text for the two anchors and find
+    both limbs either way; the anchored reader finds one limb each. Losing this
+    would not fail loudly -- it would quietly make every anchored row establish
+    nothing.
+    """
+    goods = _bundled_text("corpus/normatives/html/ley-37-1992.html#a68")[:1200]
+    services = _bundled_text("corpus/normatives/html/ley-37-1992.html#a69")[:1200]
+
+    assert goods != services, "the two anchors resolved to the same text, so the anchor is not scoping"
+    assert any(word in goods for word in _GOODS_WORDS)
+    assert not any(word in goods for word in _SERVICES_WORDS)
+    assert any(word in services for word in _SERVICES_WORDS)
+    assert not any(word in services for word in _GOODS_WORDS)
 
 
 def test_the_table_carries_both_natures_and_at_least_one_that_fixes_nothing() -> None:
@@ -245,6 +315,63 @@ def test_a_domestic_operation_is_never_asked_for_the_distinction(category: IvaCa
 def test_a_branch_where_the_law_forks_does_ask(category: IvaCategory) -> None:
     """The other direction, so laziness cannot be a blanket "never ask"."""
     assert supply_nature_is_required(category) is True
+
+
+def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
+    """The gap the place-of-supply rows closed, pinned as a consistency invariant.
+
+    A member the catalogue calls a service supply is a *prestación de servicios*
+    by its own name, so any nature its grounding yields other than ``SERVICES``
+    is a disagreement between the catalogue and the statute rather than a
+    preference. Both members derived nothing until arts. 69 and 70 could be
+    declared, and an operator was asked a question the law had answered.
+
+    Discovered from the catalogue rather than listed, so a member added later is
+    covered without editing this file.
+    """
+    service_named = tuple(category for category in IvaCategory if "SERVICE" in category.name)
+    assert service_named, "the catalogue names no service member, so this case cannot discriminate"
+
+    for category in service_named:
+        derivation = supply_nature_implied_by_category(category)
+        assert derivation.nature is SupplyNature.SERVICES, (
+            f"{category.value} is named a service but its grounding derives "
+            f"{derivation.nature} ({derivation.outcome})"
+        )
+
+
+@pytest.mark.parametrize(
+    "category",
+    [
+        IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
+        IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
+    ],
+)
+def test_the_goods_categories_still_derive_goods(category: IvaCategory) -> None:
+    """The other side of the same change, so the rows cannot have moved the answer.
+
+    Adding a services article to the vocabulary must not disturb what the goods
+    families derived. Each of these rests on an article defining an operation on
+    *bienes* -- arts. 25, 15 and 21 -- and none cites art. 68 alongside them.
+    """
+    assert supply_nature_implied_by_category(category).nature is SupplyNature.GOODS
+
+
+def test_no_shipped_category_is_grounded_in_articles_that_disagree() -> None:
+    """A contradiction here is a defect in the component table, not a stray input.
+
+    ``CONTRADICTED`` is the honest report for a document citing incompatible
+    articles. Reached through a CATEGORY it means something else: the family's
+    own grounding disagrees with itself, which no invoice can resolve and no
+    operator can be asked about. Stated as a property so it keeps holding as
+    articles and members are added.
+    """
+    for category in IvaCategory:
+        derivation = supply_nature_implied_by_category(category)
+        assert derivation.outcome is not SupplyNatureDerivationOutcome.CONTRADICTED, (
+            f"{category.value} is grounded in articles establishing different natures: {derivation.note}"
+        )
 
 
 def test_an_unplaced_operation_is_asked_rather_than_assumed_domestic() -> None:

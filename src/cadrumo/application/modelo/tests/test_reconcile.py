@@ -291,7 +291,7 @@ def test_modelo_reconcile_refuses_unknown_work_unit() -> None:
     """An addressed work unit that is not in the active bucket's
     catalogue surfaces as ``WorkUnitNotFoundError``."""
 
-    with pytest.raises(WorkUnitNotFoundError, match=r"not found"):
+    with pytest.raises(WorkUnitNotFoundError):
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id="0" * 64,
@@ -332,7 +332,7 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
     repo = WorkUnitCatalogueRepository()
     repo.save(upsert_work_unit(repo.load(), foreign_unit))
 
-    with pytest.raises(ReconciliationCrossBucketRefusedError, match=r"active profile bucket"):
+    with pytest.raises(ReconciliationCrossBucketRefusedError) as raised:
         modelo_reconcile(
             ModeloReconciliationCommand(
                 work_unit_id=foreign_unit_id,
@@ -341,6 +341,11 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
             ),
         )
 
+
+    # Both bucket identities ride as machine facts rather than a sentence.
+    assert raised.value.context is not None
+    assert raised.value.context["active_bucket_id"]
+    assert raised.value.context["work_unit_bucket_id"]
 
 def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
     """A path that is not a valid AEAT justificante surfaces as

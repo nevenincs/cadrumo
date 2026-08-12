@@ -11,6 +11,9 @@ from .. import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     IdentityReferent,
+    M303ProductSoftwareEvidence,
+    M303ProductSoftwareIdentity,
+    M303ProgramIdentifier,
     ProductIdentity,
     normalise_product_identity_references,
 )
@@ -22,6 +25,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _IDENTITY_EXPORTS = frozenset(
     {
         "AEAT_AUTHORITY_SHORT_NAME",
+        "M303ProductSoftwareEvidence",
+        "M303ProductSoftwareIdentity",
+        "M303ProgramIdentifier",
         "PRODUCT_IDENTITY",
         "IdentityReferent",
         "ProductIdentity",
@@ -31,6 +37,9 @@ _IDENTITY_EXPORTS = frozenset(
 
 _CORE_IDENTITY_OBJECTS = {
     "AEAT_AUTHORITY_SHORT_NAME": AEAT_AUTHORITY_SHORT_NAME,
+    "M303ProductSoftwareEvidence": M303ProductSoftwareEvidence,
+    "M303ProductSoftwareIdentity": M303ProductSoftwareIdentity,
+    "M303ProgramIdentifier": M303ProgramIdentifier,
     "PRODUCT_IDENTITY": PRODUCT_IDENTITY,
     "IdentityReferent": IdentityReferent,
     "ProductIdentity": ProductIdentity,
@@ -110,6 +119,38 @@ def test_product_identity_is_immutable() -> None:
 
     assert PRODUCT_IDENTITY is original
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
+
+
+def test_m303_product_software_identity_requires_exact_values_and_evidence() -> None:
+    """DP30300 cannot reuse a filing participant or an implicit product default."""
+    identity = M303ProductSoftwareIdentity(
+        program_identifier="C303",
+        developer_tax_id="Y0000001S",
+        evidence=(
+            M303ProductSoftwareEvidence(
+                reference="aeat-software-registration:c303",
+                digest="a" * 64,
+            ),
+        ),
+    )
+
+    assert identity.program_identifier == "C303"
+    assert identity.developer_tax_id == "Y0000001S"
+    assert identity.evidence[0].reference == "aeat-software-registration:c303"
+    assert "M303_PRODUCT_SOFTWARE_IDENTITY" not in vars(identity_module)
+
+    with pytest.raises(ValueError, match="program_identifier"):
+        M303ProductSoftwareIdentity(
+            program_identifier="303",
+            developer_tax_id="Y0000001S",
+            evidence=identity.evidence,
+        )
+    with pytest.raises(ValueError, match="at least 1 item"):
+        M303ProductSoftwareIdentity(
+            program_identifier="C303",
+            developer_tax_id="Y0000001S",
+            evidence=(),
+        )
 
 
 def test_identity_referent_vocabulary_is_closed() -> None:

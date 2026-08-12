@@ -93,16 +93,22 @@ def test_it_refuses_when_a_file_occupies_a_directory_path(tmp_path: Path) -> Non
     with override_settings(cadrumo_local_storage_root=root), pytest.raises(CoreValidationError) as refusal:
         ensure_storage_tree()
 
-    message = str(refusal.value)
-    assert "tokens" in message, "the refusal must name the offending path"
+    context = refusal.value.context or {}
+    assert "tokens" in str(context["state_directory_target"]), "the refusal must name the offending path"
     # Asserting the diagnosis, not merely the exception type. ``mkdir`` would
     # raise ``FileExistsError`` here on its own, and the generic
     # could-not-create handler would re-raise it as the same exception naming
     # the same path -- so a test that stopped at the type and the path passed
     # identically with the check deleted, and proved nothing about it. What
     # the check earns is telling the operator WHY: a file is sitting where a
-    # directory belongs.
-    assert "occupied by a file" in message, "the refusal must diagnose the occupancy, not just report a failed mkdir"
+    # directory belongs. The refusal is catalogue-rendered, so that WHY is the
+    # ``occupied_by_file`` fact rather than a phrase inside a sentence, and the
+    # mkdir-failure branch carries it as ``False`` alongside its ``OSError``
+    # type -- the two branches stay distinguishable without any prose.
+    assert context["occupied_by_file"] is True, (
+        "the refusal must diagnose the occupancy, not just report a failed mkdir"
+    )
+    assert "mkdir_error_type" not in context, "the occupancy branch must not be reached through the mkdir handler"
 
 
 def test_the_refusal_probe_would_otherwise_succeed(tmp_path: Path) -> None:

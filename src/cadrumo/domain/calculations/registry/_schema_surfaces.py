@@ -78,6 +78,7 @@ __all__ = [
     "ExportSemanticPayloadAxis",
     "ExportValuePolicyValue",
     "OneBasedExportOffset",
+    "ProjectionEndpointDeclaration",
     "RecordDiscriminator",
     "RelationDefinition",
     "RelationPeriodAlignment",
@@ -772,6 +773,38 @@ def _is_canonical_digit_run(value: str, length: int) -> bool:
     enumerated member under two spellings.
     """
     return bool(value) and value.isascii() and value.isdigit() and str(int(value)) == value and len(value) <= length
+
+
+class ProjectionEndpointDeclaration(RegistryModel):
+    """Revision-owned admission and evidence for one typed filing endpoint.
+
+    The declaration is deliberately independent of a generated layout.  It
+    makes the semantic endpoint identity and its legal/source grounding an
+    immutable revision fact before record-design coordinates are generated.
+    """
+
+    projection_ref: FilingProjectionRef
+    legal_refs: LegalRefs
+    source_refs: SourceRefs
+
+    @field_validator("projection_ref", mode="before")
+    @classmethod
+    def _require_loader_hydrated_projection_ref(cls, value: object) -> object:
+        """Refuse raw reference payloads outside the sole registry TOML compiler."""
+        if isinstance(
+            value,
+            M303ProrrataActivityProjectionRef
+            | M303DifferentiatedDeductionProjectionRef
+            | M303RegimenSimplificadoActivityProjectionRef
+            | M303RegimenSimplificadoFactProjectionRef
+            | M303RegimenSimplificadoModuleProjectionRef
+            | M303Exonerado390ActivityProjectionRef
+            | M303Exonerado390OperacionesTercerosProjectionRef,
+        ):
+            return value
+        raise RegistryValidationError(
+            "projection_ref must be a loader-hydrated FilingProjectionRef; raw mappings and strings are forbidden",
+        )
 
 
 class ExportFieldDefinition(RegistryModel):

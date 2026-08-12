@@ -98,11 +98,23 @@ class ModelRole(StrEnum):
             never a transcription problem over an image -- a delimited export
             already IS text, so rasterising one to read it would be the defect,
             not the design.
+        SUPPLY_NATURE_PROPOSAL: Proposing whether an invoice supplies goods or
+            services, from its line descriptions, for an operator to confirm.
+            The same class of job as column-role mapping and strictly easier
+            still: a selection over a closed vocabulary of TWO tokens given a
+            handful of short strings, against a naming problem over as many
+            tokens as the role enum carries. It therefore clears the bar
+            wherever the mapper does and adds no hardware requirement of its
+            own. Kept as its own member rather than folded into the mapper's
+            because a role names the JOB -- borrowing another's identity would
+            make the catalogue unable to size this one down independently,
+            which is the whole reason these are separate.
     """
 
     VISION_TRANSCRIPTION = "vision_transcription"
     TEXT_EXTRACTION = "text_extraction"
     COLUMN_ROLE_MAPPING = "column_role_mapping"
+    SUPPLY_NATURE_PROPOSAL = "supply_nature_proposal"
 
 
 class ModelRuntime(StrEnum):
@@ -476,7 +488,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ModelCandidate(
         runtime_id="qwen3:1.7b",
         runtime=ModelRuntime.LOCAL_OLLAMA,
-        roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
+        roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING, ModelRole.SUPPLY_NATURE_PROPOSAL}),
         memory_requirement_bytes=1_400_000_000,
         max_context_tokens=40_000,
         licence=APACHE_2_0,
@@ -492,7 +504,7 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ModelCandidate(
         runtime_id="qwen2.5:3b",
         runtime=ModelRuntime.LOCAL_OLLAMA,
-        roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
+        roles=frozenset({ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING, ModelRole.SUPPLY_NATURE_PROPOSAL}),
         memory_requirement_bytes=1_900_000_000,
         max_context_tokens=32_768,
         licence=QWEN_RESEARCH,
@@ -507,7 +519,14 @@ MODEL_CATALOGUE: Final[tuple[ModelCandidate, ...]] = (
     ModelCandidate(
         runtime_id="claude-haiku-4-5",
         runtime=ModelRuntime.CLOUD_ANTHROPIC,
-        roles=frozenset({ModelRole.VISION_TRANSCRIPTION, ModelRole.TEXT_EXTRACTION, ModelRole.COLUMN_ROLE_MAPPING}),
+        roles=frozenset(
+            {
+                ModelRole.VISION_TRANSCRIPTION,
+                ModelRole.TEXT_EXTRACTION,
+                ModelRole.COLUMN_ROLE_MAPPING,
+                ModelRole.SUPPLY_NATURE_PROPOSAL,
+            },
+        ),
         input_price_per_mtok_usd=Decimal("1"),
         max_context_tokens=200_000,
         licence=ANTHROPIC_COMMERCIAL_TERMS,
@@ -531,11 +550,13 @@ DEFAULT_MODEL_BY_RUNTIME_AND_ROLE: Final[Mapping[ModelRuntime, Mapping[ModelRole
         ModelRole.VISION_TRANSCRIPTION: "qwen3-vl:2b",
         ModelRole.TEXT_EXTRACTION: "qwen3:1.7b",
         ModelRole.COLUMN_ROLE_MAPPING: "qwen3:1.7b",
+        ModelRole.SUPPLY_NATURE_PROPOSAL: "qwen3:1.7b",
     },
     ModelRuntime.CLOUD_ANTHROPIC: {
         ModelRole.VISION_TRANSCRIPTION: "claude-haiku-4-5",
         ModelRole.TEXT_EXTRACTION: "claude-haiku-4-5",
         ModelRole.COLUMN_ROLE_MAPPING: "claude-haiku-4-5",
+        ModelRole.SUPPLY_NATURE_PROPOSAL: "claude-haiku-4-5",
     },
 }
 """Every shipped default, keyed by runtime then role -- the source of the settings defaults.

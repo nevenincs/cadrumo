@@ -286,7 +286,7 @@ def test_explicit_work_unit_id_validates_supplied_natural_key_flags(work_repo: W
         clock=_T0,
     )
 
-    with pytest.raises(ModeloWorkSelectorContradictionError, match="filing_year=2025"):
+    with pytest.raises(ModeloWorkSelectorContradictionError):
         resolve_modelo_work_unit(
             _request(work_unit_id=unit.work_unit_id, filing_year=2025),
             repository=work_repo,
@@ -490,7 +490,7 @@ def test_current_command_specific_revision_selectors_enforce_state(
     )
 
     assert select_current_verified_revision(verified_current, calculation_repository=cr_repo).revision == verified
-    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="filing requires a verified"):
+    with pytest.raises(ModeloCalculationRevisionSelectorStateError):
         select_current_verified_revision(draft_current, calculation_repository=cr_repo)
 
 
@@ -552,7 +552,7 @@ def test_exportable_revision_refuses_draft_current_and_ambiguous_verified(
     )
     draft_current = work_unit.model_copy(update={"current_calculation_revision_id": draft.calculation_revision_id})
 
-    with pytest.raises(ModeloCalculationRevisionSelectorStateError, match="still draft"):
+    with pytest.raises(ModeloCalculationRevisionSelectorStateError):
         select_exportable_revision(draft_current, calculation_repository=cr_repo)
 
     with pytest.raises(ModeloCalculationRevisionSelectorAmbiguousError) as raised:

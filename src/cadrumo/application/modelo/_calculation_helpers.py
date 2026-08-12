@@ -108,13 +108,7 @@ def assert_snapshot_matches_work_unit_revision(
         return
     resolved_period = period if period is not None else work_unit.period
     raise WorkUnitRevisionDivergenceError(
-        f"work unit {work_unit.work_unit_id!r} was created against registry revision "
-        f"{work_unit.revision_id!r}, but the law-determined revision for "
-        f"modelo {work_unit.modelo!r} {work_unit.filing_year} {resolved_period.registry_token!r} "
-        f"is now {snapshot.revision.id!r}. "
-        f"The registry's law-mapping was corrected after this work unit was created. "
-        f"Re-create the work unit (discard this one and run `aeat app modelo work create`) "
-        f"to bind it to the current law-determined revision.",
+        translated_message="application.modelo.errors.work_unit_revision_divergence",
         context={
             "modelo": work_unit.modelo,
             "filing_year": str(work_unit.filing_year),
@@ -262,10 +256,8 @@ def casilla_observation_for(
         )
     if registry_casilla is None:
         raise CasillaProvenanceMissingError(
-            f"casilla {casilla_id!r} is present in the engine result but absent "
-            f"from the registry snapshot revision; it has no legal_refs / "
-            f"source_refs definition and cannot be projected to a "
-            f"CasillaObservation without erasing legal provenance",
+            translated_message="errors.error.error_modelo_casilla_provenance_missing",
+            context={"casilla_id": str(casilla_id), "origin": "engine_result"},
         )
     return CasillaObservation(
         casilla_id=casilla_id,
@@ -312,10 +304,8 @@ def amendment_observations(
         registry_casilla = revision_casillas_by_id.get(casilla_id)
         if registry_casilla is None:
             raise CasillaProvenanceMissingError(
-                f"casilla {casilla_id!r} is present in the amendment's corrected "
-                f"values but absent from the registry snapshot revision; it has "
-                f"no legal_refs / source_refs definition and cannot be projected "
-                f"to a CasillaObservation without erasing legal provenance",
+                translated_message="errors.error.error_modelo_casilla_provenance_missing",
+                context={"casilla_id": str(casilla_id), "origin": "amendment_corrected_values"},
             )
         observations.append(
             CasillaObservation(

@@ -445,6 +445,8 @@ class EvidenceExtractResult(OutputSchema):
     customer_stated_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
+    rectifies_invoice_number: str | None = None
+    proposed_supply_nature: str | None = None
     invoice_date: str | None = None
     taxable_base: str | None = None
     iva_rate: str | None = None

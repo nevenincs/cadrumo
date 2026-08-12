@@ -651,11 +651,18 @@ def validate_wallet_matches_snapshot(
     """Refuse a wallet observation that does not match the requested Modelo 303 target."""
     if wallet.taxpayer_nif != taxpayer_nif:
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet observation taxpayer does not match the requested taxpayer",
+            translated_message="errors.refused.reconciliation_evidence_invalid",
+            context={"taxpayer_matches_request": False},
         )
     if wallet.target_year != target_year or wallet.target_period != target_period:
         raise IvaCompensationReconciliationInputError(
-            "IVA wallet observation target does not match the Modelo 303 snapshot",
+            translated_message="errors.refused.reconciliation_evidence_invalid",
+            context={
+                "wallet_target_year": str(wallet.target_year),
+                "wallet_target_period": str(wallet.target_period),
+                "snapshot_target_year": str(target_year),
+                "snapshot_target_period": str(target_period),
+            },
         )
 
 
@@ -667,7 +674,10 @@ def _is_wallet_stale(
     if captured_at is None:
         return False
     if max_wallet_age_days < 0:
-        raise IvaWalletReconciliationError("max_wallet_age_days must be non-negative")
+        raise IvaWalletReconciliationError(
+            translated_message="errors.refused.refused_iva_wallet_reconciliation_invariant",
+            context={"max_wallet_age_days": str(max_wallet_age_days), "non_negative": False},
+        )
     return decided_at - captured_at > timedelta(days=max_wallet_age_days)
 
 

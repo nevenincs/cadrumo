@@ -1052,6 +1052,26 @@ required_text = [
     "el empresario o profesional obligado a la expedicion de la factura haya de considerarse establecido en dicho territorio",
 ]
 
+[legal."rd-1619-2012:art-15"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1619-2012.html#a15"
+document_id = "BOE-A-2012-14696"
+article = "15"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2012-14696#a15"
+published_at = 2012-12-01
+effective_from = 2013-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-12
+reviewed_by = "agent-review"
+notes = "RD 1619/2012 Reglamento de facturación art 15: facturas rectificativas. Establece cuándo la expedición de una factura rectificativa es OBLIGATORIA -- cuando la factura original no cumple los requisitos de los artículos 6 ó 7, y cuando las cuotas repercutidas se determinaron incorrectamente o concurren las circunstancias del artículo 80 de la Ley del Impuesto que modifican la base imponible. Fundamenta el eje de CLASE de factura en el camino de confirmación: una rectificativa es una clase distinta de una ordinaria por mandato reglamentario, no por preferencia de modelado, y el registro debe poder declararla. Se cita el artículo entero porque la obligación se reparte entre sus apartados 1 y 2 y ninguno la agota por sí solo. Anclado al texto consolidado porque no existe extracto por artículo para el 15."
+required_text = [
+    "Facturas rectificativas",
+    "Deberá expedirse una factura rectificativa en los casos en que la factura original no cumpla alguno de los requisitos",
+    "las cuotas impositivas repercutidas se hubiesen determinado incorrectamente",
+]
+
 [legal."rd-1619-2012:art-2"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -128,6 +128,7 @@ from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
 from ...core.identity import ContentDigest, same_tax_identifier
+from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
 from ...domain.currency import ExchangeRateProvider
@@ -690,6 +691,21 @@ class InvoiceDraft(BaseModel):
     customer_stated_country_code: str | None = None
     invoice_number: str | None = None
     invoice_series: str | None = None
+    rectifies_invoice_number: str | None = None
+    proposed_supply_nature: SupplyNature | None = None
+    """A model's PROPOSAL about goods-or-services, for a person to accept or discard.
+
+    Carried on the draft rather than inside the extracted fields because it is a
+    JUDGEMENT and not a transcription: it has no printed form to anchor to, and
+    the anchor check the extraction contract rests on would have nothing to
+    point at. Folding it in would put an unanchorable value inside the model
+    whose whole guarantee is that values are copied.
+
+    ``None`` is the ordinary state. It is populated only when the operator asked
+    for a proposal, and never reaches the classifier by itself -- the value that
+    does is the one they state at confirm, which is why the classifier's inputs
+    stay facts.
+    """
     invoice_date: str | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
@@ -958,6 +974,33 @@ def _active_filer_tax_id() -> str | None:
     return resolve_filer_tax_id(profile_record=state.active_profile_record())
 
 
+
+def _proposed_supply_nature(
+    transcription: DocumentTranscription,
+    *,
+    settings: Settings,
+) -> SupplyNature | None:
+    """Return a model's proposal about goods-or-services, or ``None``.
+
+    Advisory throughout. The proposal reaches a person on the review item that
+    already asks them to state the nature; the value that reaches the classifier
+    is the one they type at confirm, so nothing model-derived enters it.
+
+    Never raises into the read. A proposal that could fail an extraction would
+    make an optional convenience able to lose a document, so every failure --
+    an absent extra, an unreachable provider, a reply that did not survive
+    containment -- yields no proposal and leaves the operator asked exactly as
+    they were.
+    """
+    try:
+        from ...llm import SupplyNatureProposer
+
+        return SupplyNatureProposer(settings=settings).propose(transcription.text.splitlines()).nature
+    except Exception:
+        get_logger(__name__).info("supply-nature proposal unavailable; the operator is asked as before")
+        return None
+
+
 def _read_transcription_semantically(
     evidence: EvidenceInput,
     transcription: DocumentTranscription,
@@ -966,6 +1009,7 @@ def _read_transcription_semantically(
     off_host_provider: LLMProvider | None = None,
     consent_token: EvidenceConsentToken | None = None,
     taxpayer_tax_id: str | None = None,
+    propose_supply_nature: bool = False,
 ) -> InvoiceDraft:
     """Read a text-native PDF through the transcribe-extract-ground chain.
 
@@ -1006,6 +1050,10 @@ def _read_transcription_semantically(
             entry from the active profile. Handed down rather than looked up
             here so one read of one document consults one profile, and so this
             function stays a pure reader of what it was given.
+        propose_supply_nature: Whether to ask a model to PROPOSE goods-or-services
+            from this transcription. Off by default and never consulted by the
+            classifier: the proposal reaches a person, and the value that reaches
+            the classifier is the one they state at confirm.
 
     Returns:
         The grounded draft.
@@ -1064,8 +1112,22 @@ def _read_transcription_semantically(
         # The reader is absent or unreachable. See the refusal's own docstring
         # for why this does not fall through to vision.
         _refuse_a_text_read_with_no_reader(exc)
+    grounded_input = read.model_copy(
+        update={
+            "transcription_sha256": transcription.source_content_sha256,
+            # Proposed HERE because the transcription is still in hand. A later
+            # verb would re-run the whole reading stage to recover text this
+            # call already holds, spending a document read to answer a question
+            # worth one short call. Off unless asked: a read that silently
+            # reaches a second model changes what the verb costs and what
+            # leaves the host.
+            "proposed_supply_nature": (
+                _proposed_supply_nature(transcription, settings=settings) if propose_supply_nature else None
+            ),
+        },
+    )
     return ground_draft_against_transcription(
-        draft=read.model_copy(update={"transcription_sha256": transcription.source_content_sha256}),
+        draft=grounded_input,
         transcription=transcription,
         taxpayer_tax_id=taxpayer_tax_id,
     )
@@ -1371,6 +1433,11 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         customer_stated_country_code=_stated_country_code(parsed.customer_country_code),
         invoice_number=parsed.invoice_number,
         invoice_series=parsed.invoice_series,
+        # Read and DISCARDED until now. A rectificativa is a different class
+        # of invoice under RD 1619/2012 art. 15, and a confirm that cannot say
+        # so mints one as ordinaria -- so the Invoice model's own rectificativa
+        # invariants never fire, because nothing ever states the class.
+        rectifies_invoice_number=parsed.rectifies_invoice_number,
         invoice_date=parsed.invoice_date,
         taxable_base=parsed.taxable_base,
         iva_amount=parsed.iva_amount,
@@ -2674,6 +2741,31 @@ def confirm_invoice_draft_from_evidence(
     #
     # The operator's explicit value still wins, as it does on every field.
     resolved_iva_category = _operator_value_or_reading(iva_category, establishment.category.category)
+    # The document's own statement of what it corrects, layered under the
+    # operator exactly as every other read field is. Until this, the parser
+    # read the corrected number and the confirm defaulted the class to
+    # ORDINARIA regardless -- so a rectificativa reached the catalogue as an
+    # ordinary invoice, and the Invoice model's rectificativa invariants
+    # (a specific series per RD 1619/2012 art. 6.1.a.2, and naming the invoice
+    # it corrects per LIVA art. 89) never fired, because nothing ever stated
+    # the class for them to check.
+    resolved_rectifies = _operator_value_or_reading(rectifies_invoice_number, draft.rectifies_invoice_number)
+    # The series the document numbered itself in, layered the same way. It was
+    # read into the draft and never carried across either, which only became
+    # visible once the class above started being stated: RD 1619/2012
+    # art. 6.1.a.2 obliges a rectificativa into its OWN series, so the model
+    # refuses one without a series -- correctly, and it could not refuse
+    # before, because nothing ever told it the invoice was a rectificativa.
+    resolved_series = _operator_value_or_reading(series, draft.invoice_series)
+    # Derived from the corrected reference rather than carried as a second
+    # field: the Invoice model already ties the two together in BOTH
+    # directions, so a class and a reference that could disagree would be two
+    # spellings of one fact with no authority between them.
+    resolved_invoice_class = (
+        InvoiceClass.RECTIFICATIVA
+        if invoice_class is InvoiceClass.ORDINARIA and resolved_rectifies is not None
+        else invoice_class
+    )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     # Built with the SAME argument set `create_catalogue_invoice` is handed below,
@@ -2699,9 +2791,9 @@ def confirm_invoice_draft_from_evidence(
         operation_date=operation_date,
         retention_rate=retention_rate,
         retention_amount=retention_amount,
-        invoice_class=invoice_class,
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
+        invoice_class=resolved_invoice_class,
+        series=resolved_series,
+        rectifies_invoice_number=resolved_rectifies,
         recargo_amount=resolved_recargo_amount,
         lines=confirmed_lines,
         rate_provider=rate_provider,

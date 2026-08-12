@@ -529,8 +529,12 @@ def serialize_carried_objects(
             resolver = _fixed_resolver(definition.default_object_key)
         if resolver is None:
             raise ProfileExportError(
-                "carried secure-object namespace has no natural-key resolver",
-                context={"namespace": definition.namespace, "custody_profile": profile.value},
+                translated_message="errors.fail.profile_export",
+                context={
+                    "namespace": definition.namespace,
+                    "custody_profile": profile.value,
+                    "natural_key_resolver_present": False,
+                },
             )
         for record in repository.list_records(
             definition.namespace,
@@ -544,8 +548,12 @@ def serialize_carried_objects(
                 # a typed, attributable export error naming the namespace, not a bare
                 # pydantic/parse error bubbling out of the sealed-archive export.
                 raise ProfileExportError(
-                    "could not resolve the natural key for a carried secure-object row",
-                    context={"namespace": definition.namespace, "error": str(exc)},
+                    translated_message="errors.fail.profile_export",
+                    context={
+                        "namespace": definition.namespace,
+                        "resolver_error_type": type(exc).__name__,
+                        "natural_key_resolved": False,
+                    },
                 ) from exc
             carried.append(
                 CarriedSecureObject(

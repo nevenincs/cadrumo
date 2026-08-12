@@ -307,10 +307,7 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
     assert after_row["blocking_finding_count"] == 0
     assert after_row["summary"] == "Modelo 130: verification incomplete."
     assert payload["ready"] is False
-    assert any(
-        notice["code"] == "overview.pipeline.modelo.incomplete"
-        for notice in _notices(after.output)
-    )
+    assert any(notice["code"] == "overview.pipeline.modelo.incomplete" for notice in _notices(after.output))
 
 
 def test_pipeline_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:

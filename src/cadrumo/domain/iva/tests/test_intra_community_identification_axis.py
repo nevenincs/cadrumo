@@ -56,7 +56,10 @@ from .. import (
     IvaTerritorialScope,
     PartyFact,
     TransactionKind,
+    category_cuota_is_zero_by_law,
     classify_iva,
+    country_code_for_printed_tax_identifier,
+    identification_state_for_printed_tax_identifier,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -270,3 +273,254 @@ class TestEveryRowDeclaringTheIdentificationTurnsOnIt:
         without = dict(overrides)
         without[identification_field] = None
         assert classify_iva(_criteria(**without)).matched_rule_id != rule_id
+
+
+# -- ES joins the IDENTIFICATION vocabulary, and only that one --------------
+#
+# The axis was one-sided: an intra-community sale had the counterparty's
+# identification established from the paper while the filer's own was merely
+# assertable. The reason was structural rather than legal. Every sibling prefix
+# is recognised by matching the number's BODY against the structure its prefix
+# claims, and Spanish identifiers are checksum identifiers rather than
+# structural ones -- so ES could not join the way its siblings did.
+#
+# RGAT art. 25 is what makes the printed form readable: for a party in the
+# Registro de operadores intracomunitarios the identifier is the ordinary one
+# "al que se antepondra el prefijo ES, conforme al estandar internacional
+# codigo ISO-3166 alfa 2". The prefix is regulated, not conventional.
+#
+# The safety is STRUCTURAL, not careful: identification and establishment are
+# different questions, the establishment resolver returns nothing for Spain by
+# design because registration is not establishment, and this is reached only
+# where that resolver already declined.
+
+_SPANISH_CIF = "B12345674"
+_SPANISH_IVA = "ESB12345674"
+
+
+def test_a_spanish_iva_number_now_states_its_identification() -> None:
+    """The measured gap: the filer's own side was only ever assertable."""
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+
+
+@pytest.mark.parametrize(
+    "printed",
+    ["ES B12345674", "ES B-1234567-4", "esb12345674", "  ESB12345674  "],
+    ids=["spaced", "punctuated", "lowercase", "padded"],
+)
+def test_the_printed_spelling_does_not_change_the_identification(printed: str) -> None:
+    """An issuer prints the same number several ways; it is one identification."""
+    assert identification_state_for_printed_tax_identifier(printed) is EUMemberState.ES
+
+
+def test_stating_an_identification_states_no_establishment() -> None:
+    """The load-bearing separation, asserted rather than trusted.
+
+    Registration is not establishment: the non-resident N leader, the L and M
+    identifiers and the X/Y/Z series all belong to parties registered in Spain
+    and established elsewhere. So a Spanish prefix must reach the identification
+    axis without opening the postal rung behind it.
+    """
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+    assert country_code_for_printed_tax_identifier(_SPANISH_IVA) is None
+
+
+def test_a_bare_spanish_identifier_still_states_nothing() -> None:
+    """Absence must not become a Spanish identification.
+
+    A document printing a bare CIF prints no prefix at all, so reading it as a
+    Spanish identification would manufacture the fact from its own silence --
+    and that silence is the ordinary shape of a domestic invoice.
+    """
+    assert identification_state_for_printed_tax_identifier(_SPANISH_CIF) is None
+
+
+@pytest.mark.parametrize(
+    "printed",
+    ["ESB99999999", "ESFRANCISCO", "ES", "ES12345678A1"],
+    ids=["wrong-control-letter", "prose-in-the-field", "prefix-alone", "malformed-body"],
+)
+def test_an_es_prefix_over_a_body_that_fails_the_checksum_states_nothing(printed: str) -> None:
+    """The precision half, and the reason this is a checksum rather than a pattern.
+
+    The prefix alone establishes nothing: a party name lands in an identifier
+    field routinely, and FRANCISCO would otherwise be read as a Spanish
+    identification. The AEAT control letter is what makes the reading answer
+    only where a real number was printed.
+    """
+    assert identification_state_for_printed_tax_identifier(printed) is None
+
+
+def test_the_sibling_prefixes_are_unaffected() -> None:
+    """Adding ES must not disturb the vocabulary it could not join."""
+    assert identification_state_for_printed_tax_identifier("DE811234567") is EUMemberState.DE
+    assert country_code_for_printed_tax_identifier("DE811234567") == "DE"
+
+
+def test_the_checksum_is_what_admits_the_spanish_number() -> None:
+    """Mutation proof: without it an ES prefix over anything would identify Spain.
+
+    Re-runs the naive rule -- take the prefix, believe it -- and shows it reads
+    a party name as a Spanish identification. That is what the control letter
+    exists to refuse, and a suite asserting only that valid numbers pass would
+    not distinguish the two.
+    """
+
+    def _prefix_alone(printed: str) -> bool:
+        return printed.upper().startswith("ES")
+
+    assert _prefix_alone("ESFRANCISCO")
+    assert identification_state_for_printed_tax_identifier("ESFRANCISCO") is None
+    assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+
+
+# -- the outbound non-peninsular branch -------------------------------------
+#
+# The table had no row for a mainland issuer supplying a customer in Canarias,
+# Ceuta or Melilla, so that population resolved UNRESOLVED. R30 names those
+# territories but keys on the ISSUER being outside the TAI, which is the
+# inbound direction.
+#
+# LIVA art. 3.Dos.1 excludes all three from "interior del pais", art. 3.Dos.2
+# defines "Comunidad" as the territories that do constitute it, and art. 3.Dos.3
+# defines "territorio tercero" as anything else -- so art. 21 reaches them.
+
+
+def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCategory:
+    return classify_iva(
+        IvaInvoiceClassificationCriteria(
+            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+            customer_residency=customer,
+            kind=kind,
+            direction=InvoiceKind.ISSUED,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            transaction_date=date(2026, 3, 11),
+        ),
+    ).category
+
+
+@pytest.mark.parametrize(
+    "customer",
+    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    ids=["canarias", "ceuta-y-melilla"],
+)
+def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
+    customer: IvaTerritorialScope,
+) -> None:
+    """Art. 21 reaches all three third territories, so the two share an answer.
+
+    They are excluded from "interior del pais" for DIFFERENT reasons -- Ceuta
+    and Melilla sit outside the customs union and Canarias does not -- which
+    separates them for a customs question and not for this one.
+    """
+    assert _outbound(customer, TransactionKind.GOODS) is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+
+@pytest.mark.parametrize(
+    "customer",
+    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    ids=["canarias", "ceuta-y-melilla"],
+)
+def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
+    customer: IvaTerritorialScope,
+) -> None:
+    """Goods and services fork, and the fork is the point.
+
+    Art. 21 exempts *entregas de bienes* only. A service to a recipient
+    established outside the TAI is localised there by arts. 69 and 70, so it is
+    NOT SUBJECT here rather than exempt -- a different outcome carrying a
+    different Modelo 303 consequence, which is why one predicate feeds two rows
+    rather than one row covering both.
+    """
+    assert _outbound(customer, TransactionKind.SERVICES_GENERAL) is IvaCategory.OPERACION_NO_SUJETA
+
+
+def test_a_third_country_customer_is_unaffected() -> None:
+    """The rows these territories joined must keep answering as they did."""
+    assert (
+        _outbound(IvaTerritorialScope.THIRD_COUNTRY, TransactionKind.GOODS)
+        is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    )
+    assert (
+        _outbound(IvaTerritorialScope.THIRD_COUNTRY, TransactionKind.SERVICES_GENERAL)
+        is IvaCategory.OPERACION_NO_SUJETA
+    )
+
+
+def test_the_population_used_to_classify_as_nothing_at_all() -> None:
+    """Mutation proof: without the territories in the set the branch falls through.
+
+    Re-runs the pre-change predicate -- third countries only -- and shows a
+    Canarian customer matches neither outbound row, which is how an ordinary
+    peninsular invoice resolved UNRESOLVED.
+    """
+
+    def _third_country_only(customer: IvaTerritorialScope) -> bool:
+        return customer is IvaTerritorialScope.THIRD_COUNTRY
+
+    assert not _third_country_only(IvaTerritorialScope.ES_CANARIAS)
+    assert _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS) is not IvaCategory.UNKNOWN
+
+
+# -- a peninsular rate charged to a non-peninsular customer ------------------
+#
+# The contradiction this composes could not be asserted while the operation did
+# not classify at all: there is no contradiction between a charged rate and a
+# treatment nothing established. With the outbound branch above in place the
+# operation resolves, and the resolved category is cuota-less BY LAW -- so a
+# peninsular registry rate charged on it contradicts the document's own
+# treatment.
+#
+# The charged rate is ISSUER-ASSERTED TREATMENT EVIDENCE and never establishes
+# territory. Territory comes from the establishment ladder; the rate is what the
+# issuer DID about the operation, which is a claim to be checked rather than a
+# fact to resolve from. The cases below hold that separation explicitly, because
+# a fix that let a charged rate place a party would classify every mis-rated
+# invoice as domestic and never report anything.
+
+
+@pytest.mark.parametrize(
+    ("customer", "kind"),
+    [
+        (IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS),
+        (IvaTerritorialScope.ES_CANARIAS, TransactionKind.SERVICES_GENERAL),
+        (IvaTerritorialScope.ES_CEUTA_MELILLA, TransactionKind.GOODS),
+        (IvaTerritorialScope.ES_CEUTA_MELILLA, TransactionKind.SERVICES_GENERAL),
+    ],
+    ids=["canarias-goods", "canarias-services", "ceuta-melilla-goods", "ceuta-melilla-services"],
+)
+def test_the_resolved_treatment_admits_no_cuota_at_all(
+    customer: IvaTerritorialScope,
+    kind: TransactionKind,
+) -> None:
+    """Every outbound non-peninsular treatment is cuota-less by law.
+
+    That is what makes a charged peninsular rate a contradiction rather than a
+    disagreement about the number: a category admitting no cuota admits no tipo
+    either, so one of the two facts is wrong.
+    """
+    category = _outbound(customer, kind)
+
+    assert category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED)
+
+
+def test_a_domestic_treatment_is_not_cuota_less_so_the_check_stays_narrow() -> None:
+    """The precision half: the contradiction must not fire on ordinary invoices."""
+    assert not category_cuota_is_zero_by_law(IvaCategory.DOMESTIC_GENERAL, InvoiceKind.ISSUED)
+
+
+def test_the_charged_rate_never_places_the_customer() -> None:
+    """The separation the row insists on, asserted rather than assumed.
+
+    The criteria carry no charged rate at all on this branch -- territory comes
+    from the establishment ladder and the rate is evidence about TREATMENT. Were
+    a rate allowed to place a party, a peninsular rate charged in error would
+    silently reclassify the operation as domestic and the contradiction would
+    never be raised, which is the failure this ordering exists to prevent.
+    """
+    canarian = _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS)
+    peninsular_customer_would_be_domestic = IvaTerritorialScope.ES_MAINLAND
+
+    assert canarian is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    assert canarian is not IvaCategory.DOMESTIC_GENERAL
+    assert peninsular_customer_would_be_domestic is not IvaTerritorialScope.ES_CANARIAS

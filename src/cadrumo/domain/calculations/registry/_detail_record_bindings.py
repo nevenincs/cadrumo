@@ -13,7 +13,12 @@ from ....core import STRICT_FROZEN_CONFIG, MetodoValoracion, TipoOperacionVincul
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._binding_aggregation import binding_aggregation_op
-from ._binding_selector_utils import invariant_diagnostics, selector_against_model, uppercase_alpha_code
+from ._binding_selector_utils import (
+    invariant_diagnostics,
+    optional_uppercase_alpha_code,
+    selector_against_model,
+    uppercase_alpha_code,
+)
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
 from ._errors import RegistryValidationError
 from ._ids import BindingId
@@ -389,12 +394,23 @@ class AtributionMemberObservation(BaseModel):
     source_id: str = Field(min_length=1, max_length=128)
     member_tax_id: str = Field(min_length=1, max_length=64)
     member_legal_name: str = Field(default="", max_length=200)
-    country_code: str = Field(default="ES", min_length=2, max_length=2)
+    country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    """The party's country, or ``None`` when the source stated none.
+
+    Nullable rather than defaulted to ``ES``, because these forms carry the
+    NON-RESIDENT population by construction -- a perceptor on a withholding
+    form is routinely foreign, and an attribution member can be -- so a
+    default silently declares a foreign party Spanish on a filing surface.
+
+    Absence propagates as an ABSENT KEY in the built row rather than as a
+    value, so a binding that needs the country refuses with the shipped
+    not-produced error naming itself. That is the visible failure the silent
+    default replaced."""
     transaction_date: date
     share_percentage: Decimal
     base_imponible_assigned: Decimal
 
-    _country_code_uppercase = field_validator("country_code")(uppercase_alpha_code("country_code"))
+    _country_code_uppercase = field_validator("country_code")(optional_uppercase_alpha_code("country_code"))
 
     @field_validator("share_percentage")
     @classmethod

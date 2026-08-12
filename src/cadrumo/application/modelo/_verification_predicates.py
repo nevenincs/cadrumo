@@ -167,7 +167,10 @@ def _validated_predicate_casilla_id(token: str) -> CasillaId:
     try:
         return validated_casilla_id(token, surface="verification predicate casilla id")
     except ValueError as exc:
-        raise ModeloError(f"verification predicate references non-canonical casilla.id {token!r}") from exc
+        raise ModeloError(
+            translated_message="errors.error.error_modelos",
+            context={"casilla_id_token": token, "casilla_id_canonical": False},
+        ) from exc
 
 
 def _unique_predicate_casilla_id(predicate: VerificationPredicateDefinition) -> CasillaId | None:

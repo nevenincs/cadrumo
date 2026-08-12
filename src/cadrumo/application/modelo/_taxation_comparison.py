@@ -368,7 +368,10 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
     work_units = wu_repo.load()
     work_unit = work_units.get(work_unit_id)
     if work_unit is None:
-        raise WorkUnitNotFoundError(f"work unit {work_unit_id!r} not found; check 'aeat app modelo work list'")
+        raise WorkUnitNotFoundError(
+            translated_message="application.modelo.errors.work_unit_not_found",
+            context={"work_unit_id": work_unit_id},
+        )
 
     try:
         authority = _authority_via_resources()

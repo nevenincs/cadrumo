@@ -314,7 +314,7 @@ def test_refuses_empty_fragment_and_empty_directory(tmp_path: Path) -> None:
         load_semantic_map(root)
 
     _write(root / "0001-empty.toml", _fragment(fragment_id="empty", body=""))
-    with pytest.raises(RegistryValidationError, match="must contain records or entries"):
+    with pytest.raises(RegistryValidationError, match="must contain records, entries, or variable envelopes"):
         load_semantic_map(root)
 
 
@@ -402,7 +402,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "read_toml",
         },
         "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
-        "_semantic_map": {"SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
+        "_semantic_map": {"M303VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
     assert direct_imports == {("re", None)}
     assert not any(
@@ -411,6 +411,10 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
     )
     assert registry_facade.__all__ == [
         "SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION",
+        "M303EnvelopePrefixField",
+        "M303EnvelopePrefixRole",
+        "M303EnvelopeTotalAnchor",
+        "M303VariableEnvelopeSemantic",
         "SemanticMap",
         "SemanticMapAnchor",
         "SemanticMapEntry",

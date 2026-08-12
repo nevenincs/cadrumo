@@ -105,14 +105,66 @@ def test_relation_handoff_applicability_measures_period_and_clean_state_contract
     audit = audit_registry_relation_handoff_applicability(authority)
 
     assert isinstance(audit, RegistryRelationHandoffApplicabilityAudit)
-    assert audit.row_count == 108
-    assert audit.active_count == 81
-    assert audit.not_applicable_count == 27
+
+    # Totality against the registry, not against a tally. The expanded row set
+    # is the full product of every relation-bearing revision's declared periods
+    # and its declared relations, read off the authority the audit consumed; a
+    # dropped revision, period or relation moves both sides apart.
+    expected_rows = {
+        (modelo.id, revision.id, relation.id, period)
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        if revision.relations
+        for period in revision.period_selector.periods
+        for relation in revision.relations
+    }
+    assert {
+        (record.target_modelo, record.target_revision, record.relation_id, record.target_period)
+        for record in audit.records
+    } == expected_rows
+    assert audit.row_count == len(expected_rows)
+    assert audit.active_count + audit.not_applicable_count + audit.unresolved_count == audit.row_count
     assert audit.unresolved_count == 0
-    assert sum(record.clean_state_mode == "required" for record in audit.records) == 73
-    assert sum(record.clean_state_mode == "advisory" for record in audit.records) == 22
-    assert sum(record.clean_state_mode == "conditional" for record in audit.records) == 13
     assert all(record.runtime_clean_state == "unmeasured" for record in audit.records)
+
+    # The corpus populates every closed state, so no branch below passes vacuously.
+    assert {record.applicability for record in audit.records} == {"active", "not_applicable"}
+    assert {record.clean_state_mode for record in audit.records} == {"required", "conditional", "advisory"}
+
+    classifications = {
+        (modelo.id, revision.id, classification.source_modelo): classification
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        for classification in revision.dependency_classifications
+    }
+    for record in audit.records:
+        classification = classifications[(record.target_modelo, record.target_revision, record.source_modelo)]
+        assert record.taxpayer_files_source == classification.taxpayer_files_source
+        assert record.conditional_on_economic_activity == classification.conditional_on_economic_activity
+        assert record.dependency_treatment == classification.treatment
+
+        # The clean-state contract is decided by the registry classification: a
+        # source the taxpayer does not file can only be advisory, one gated on
+        # economic activity is conditional, and everything else is required.
+        if not record.taxpayer_files_source:
+            assert record.clean_state_mode == "advisory"
+        elif record.conditional_on_economic_activity:
+            assert record.clean_state_mode == "conditional"
+        else:
+            assert record.clean_state_mode == "required"
+
+        # Applicability is observable in the source contract it carries, not in
+        # a count: an active row resolved a requirement, an excluded row is
+        # excluded by the relation's own declared target periods and carries none.
+        if record.applicability == "active":
+            assert record.source_filing_year is not None
+            assert record.requirement_relation_ids
+        else:
+            assert record.relation_target_periods
+            assert record.target_period not in record.relation_target_periods
+            assert record.source_filing_year is None
+            assert record.source_periods == ()
+            assert record.requirement_relation_ids == ()
 
     m100_2025_193 = next(
         record

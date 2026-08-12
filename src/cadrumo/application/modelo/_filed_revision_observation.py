@@ -107,9 +107,6 @@ def _history_repository_in_observation_context(
         return override
     if override_context.engine.url != context.engine.url:
         raise ModeloLocalObservationError(
-            "iva compensation history repository is backed by a different database "
-            f"({override_context.engine.url!r}) than the calculation observation repository "
-            f"({context.engine.url!r})",
             translated_message="application.modelo.errors.filed_observation_split_storage_context",
             context={
                 "history_backend": str(override_context.engine.url),
@@ -141,7 +138,7 @@ def require_filing_result_disposition(
     """
     if work_unit.modelo == Modelo.M303.value and result_disposition is None:
         raise ModeloLocalObservationError(
-            "local Modelo 303 carry persistence requires the filing-boundary result disposition",
+            translated_message="errors.error.error_modelos",
             context={"modelo": work_unit.modelo, "period": work_unit.period.registry_token},
         )
 

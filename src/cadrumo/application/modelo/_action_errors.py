@@ -235,8 +235,22 @@ class ModeloRequiredBindingsMissingError(ModeloPreconditionErrorMixin, ModeloErr
     """Raised when Modelo 202 lifecycle work lacks required calculation bindings."""
 
 
-class ModeloProfileReadinessError(ModeloError):
-    """Raised when filing-grade modelo work starts with missing active-profile facts."""
+class ModeloProfileReadinessError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when filing-grade modelo work starts with missing active-profile facts.
+
+    Carries the declared precondition failure so the operator surface resolves
+    the recovery from the scenario identity and its machine facts rather than
+    from a rendered explanation.
+    """
+
+
+class M303FilingEvidenceError(ModeloPreconditionErrorMixin, ModeloError):
+    """Raised when Modelo 303 filing-instance evidence fails its revision-time validation.
+
+    Carries the declared precondition failure rather than a rendered
+    explanation, so the operator surface resolves the recovery from the
+    scenario identity and its machine facts.
+    """
 
 
 class CasillaProvenanceMissingError(ModeloError):

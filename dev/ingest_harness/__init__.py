@@ -53,6 +53,7 @@ from ._colocation_geometry_size import (
     geometry_payload_ratio,
     render_page_text,
 )
+from ._driver import DriverError, measure_structured_document, read_structured_draft
 from ._field_mapping import (
     COMPOSITE_LEAF_SEPARATOR,
     KEY_FIELD_MAPPINGS,
@@ -139,6 +140,7 @@ __all__ = [
     "CorpusKey",
     "CorpusKeyError",
     "Denominators",
+    "DriverError",
     "EmittedOnly",
     "EngineRoute",
     "FieldMapping",
@@ -171,8 +173,10 @@ __all__ = [
     "format_report",
     "geometry_payload_ratio",
     "load_corpus_key",
+    "measure_structured_document",
     "normalise_whitespace",
     "project_emission",
+    "read_structured_draft",
     "reference_points_with_key_context",
     "render_page_text",
     "require_model_tier",

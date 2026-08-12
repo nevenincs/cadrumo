@@ -203,7 +203,7 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(repos: _Repo
     )
     assert locally_filed.external_evidence is None
 
-    with pytest.raises(AmendmentEvidenceMissingError, match=r"external_evidence|imported|baseline"):
+    with pytest.raises(AmendmentEvidenceMissingError):
         amend_modelo_revision(
             from_filing_record_id=locally_filed.filing_record_id,
             overrides={_M111_AMENDMENT_CASILLA: Decimal("1700")},

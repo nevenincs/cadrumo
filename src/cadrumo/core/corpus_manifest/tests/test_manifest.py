@@ -151,8 +151,15 @@ def test_load_raises_tamper_error_when_manifest_sha256_does_not_match_body(tmp_p
     payload["manifest_sha256"] = "0" * 64
     target.write_text(json.dumps(payload), encoding="utf-8")
 
-    with pytest.raises(CorpusManifestTamperError, match="manifest_sha256"):
+    with pytest.raises(CorpusManifestTamperError) as tamper:
         load_corpus_manifest(target)
+
+    # The refusal is catalogue-rendered, so the digest that failed is a fact on
+    # the error rather than a phrase inside its sentence.
+    context = tamper.value.context or {}
+    assert context["digest_field"] == "manifest_sha256"
+    assert context["manifest_sha256_matches_body"] is False
+    assert context["manifest_path"] == str(target)
 
 
 def test_assert_corpus_clean_passes_matching_manifest_and_raises_on_drift(tmp_path: Path) -> None:
@@ -163,5 +170,12 @@ def test_assert_corpus_clean_passes_matching_manifest_and_raises_on_drift(tmp_pa
     assert_corpus_clean(corpus_root)
     (corpus_root / "manual.txt").write_bytes(b"diverged corpus state")
 
-    with pytest.raises(CorpusManifestDriftError, match=r"manual\.txt"):
+    with pytest.raises(CorpusManifestDriftError) as drift:
         assert_corpus_clean(corpus_root)
+
+    # Naming the diverged file is the whole value of the refusal: it now rides
+    # the typed drift triple rather than an interpolated sentence.
+    context = drift.value.context or {}
+    assert context["changed"] == ("manual.txt",)
+    assert context["added"] == ()
+    assert context["removed"] == ()

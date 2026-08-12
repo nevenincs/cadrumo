@@ -795,19 +795,21 @@ def _domestic_rate_tier_is_reachable(
     issuer_scope: IvaTerritorialScope | None,
     customer_scope: IvaTerritorialScope | None,
     supply_nature: SupplyNature | None,
+    customer_tax_status: CustomerTaxStatus | None = None,
 ) -> bool:
     """Whether any branch this operation can still reach demands a rate tier.
 
     Lazy in the idiom the supply-nature demand already uses: asked only where
-    the law forks on it. A cross-border operation never wants a domestic tier,
-    and the four kinds routed to reverse charge before the domestic rule runs
-    never want one either.
+    the law forks on it. A cross-border operation wants a domestic tier only
+    where the law brings it back here -- a B2C service under LIVA art. 69.Uno.2.º
+    is realizada in the TAI and taxed at a Spanish rate -- and the four kinds
+    routed to reverse charge before the domestic rule runs never want one.
 
-    Union semantics over the still-open kind axis, matching the identification
-    demand directly below: an operation that MIGHT land on a branch needing the
-    tier is asked for it. The alternative would spare an operation whose kind is
-    merely unread, and the tier would then surface as an unclassifiable probe
-    reported against the wrong field.
+    Union semantics over the still-open axes, matching the identification demand
+    directly below: an operation that MIGHT land on a branch needing the tier is
+    asked for it. The alternative would spare an operation whose kind or whose
+    recipient condition is merely unread, and the tier would then surface as an
+    unclassifiable probe reported against the wrong field.
 
     A scope that did not resolve returns False, because its own gap is already
     recorded and the demand cannot be decided without it.
@@ -820,6 +822,7 @@ def _domestic_rate_tier_is_reachable(
             issuer_residency=issuer_scope,
             customer_residency=customer_scope,
             kind=kind,
+            customer_tax_status=customer_tax_status,
         )
         for kind in kinds
     )
@@ -913,7 +916,18 @@ def assemble_classification_criteria(
             ),
         )
 
-    if rate_tier is None and _domestic_rate_tier_is_reachable(issuer_scope, customer_scope, supply_nature):
+    # An undetermined status is passed as an OPEN axis rather than as a value,
+    # so the tier is demanded alongside it instead of one round-trip later. The
+    # sentinel is a member of the enum but is the absence of the fact, and
+    # letting it answer "not B2C" would spare the tier on an operation that may
+    # yet land on the branch needing it.
+    settled_status = None if status is _UNDETERMINED_STATUS else status
+    if rate_tier is None and _domestic_rate_tier_is_reachable(
+        issuer_scope,
+        customer_scope,
+        supply_nature,
+        settled_status,
+    ):
         missing.append(
             MissingClassifierInput(
                 field="rate_tier",
