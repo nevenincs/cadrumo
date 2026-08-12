@@ -48,23 +48,41 @@ See Also:
 
 from __future__ import annotations
 
+import asyncio
 import json
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..core import LLM_EXTRA, ModelRole, build_provenance_stamp, require_optional_extra
+from ..core.config import Settings, load_settings
 from ..domain.iva import SupplyNature
+from ._client import LLMClient
+from ._errors import LLMConfigError
+from ._models import LLMProvider, LLMRequest
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 __all__ = [
+    "SUPPLY_NATURE_PROMPT_ID",
     "UNDETERMINED_SUPPLY_NATURE",
     "SupplyNatureProposal",
+    "SupplyNatureProposer",
     "build_supply_nature_prompt",
     "parse_supply_nature_response",
     "permitted_supply_natures",
 ]
+
+SUPPLY_NATURE_PROMPT_ID: Final[str] = "invoice-supply-nature-proposal"
+"""Names this instruction in the client's prompt registry and every stamp."""
+
+_MAX_REPLY_TOKENS: Final[int] = 200
+"""A token budget for two words and a short reason, and no room for an essay."""
+
+_PROPOSAL_TEMPERATURE: Final[float] = 0.0
+"""Pinned: one set of lines has one right answer, and a sampled one would
+make the same invoice propose differently on a retry."""
 
 UNDETERMINED_SUPPLY_NATURE: Final[str] = "undetermined"
 """The reply token a model uses to decline, spelled once.
@@ -245,3 +263,126 @@ def parse_supply_nature_response(text: str) -> SupplyNatureProposal:
     # Out of vocabulary. Not a decline -- the model did answer, and what it
     # answered was not one of the things it was allowed to say.
     return SupplyNatureProposal(note=note)
+
+
+class SupplyNatureProposer:
+    """Ask a model for one proposal, for a person to accept or discard.
+
+    Binds to :class:`~llm.LLMClient` and nothing lower, so which engine answers
+    is configuration rather than a fact this class holds.
+
+    **The model comes from the role, never the general default.** Left to
+    itself the client would answer on the configured frontier model for a task
+    that is choosing between two words. The role resolves through
+    :func:`~application.provisioning.select_model_for_role` against
+    :attr:`~core.ModelRole.SUPPLY_NATURE_PROPOSAL`, which names the WEAKEST
+    catalogued candidate clearing the capability, licence and headroom bars --
+    and that role clears wherever the column-role mapper does, because it is
+    the same selection job over a smaller vocabulary.
+
+    Args:
+        model: Optional runtime id, honoured over the role resolution.
+        provider: Optional provider override. ``None`` pairs a role-resolved
+            model with LOCAL, since a role-resolved id is an on-host runtime id.
+        client: Injected client; default-constructed otherwise.
+        settings: Injected settings; defaults to ``load_settings()``.
+    """
+
+    def __init__(
+        self,
+        *,
+        model: str | None = None,
+        provider: LLMProvider | None = None,
+        client: LLMClient | None = None,
+        settings: Settings | None = None,
+    ) -> None:
+        require_optional_extra(LLM_EXTRA)
+        resolved_settings = settings if settings is not None else load_settings()
+        self._model = model if model is not None else self._role_model(resolved_settings)
+        self._provider = provider if provider is not None else (None if model is not None else LLMProvider.LOCAL)
+        self._stamp_provider = self._provider or LLMProvider(resolved_settings.cadrumo_llm_provider)
+        self._client = (
+            client
+            if client is not None
+            else LLMClient(
+                settings=resolved_settings,
+                caller="cadrumo.llm.supply_nature_proposal",
+                prompt_id=SUPPLY_NATURE_PROMPT_ID,
+            )
+        )
+
+    @staticmethod
+    def _role_model(settings: Settings) -> str:
+        """Resolve the proposal role to a runtime id on this machine.
+
+        Deferred import: the selection surface sits in the application tier,
+        which reaches back into this package, so an eager binding would close
+        that loop at import time.
+
+        Raises:
+            LLMConfigError: When no catalogued candidate clears the bars here.
+        """
+        from ..application.provisioning import select_model_for_role
+
+        selection = select_model_for_role(ModelRole.SUPPLY_NATURE_PROPOSAL, settings=settings)
+        if not selection.selected or selection.runtime_id is None:
+            raise LLMConfigError(
+                context=selection.facts,
+                precondition_verdict=selection.precondition_verdict,
+            )
+        return selection.runtime_id
+
+    @property
+    def decided_by(self) -> str:
+        """Provenance stamp naming the transport and model a proposal was reached with."""
+        return build_provenance_stamp(
+            provider=self._stamp_provider,
+            reader="supply-nature-proposal",
+            model=self._model,
+        )
+
+    def propose(self, descriptions: Sequence[str]) -> SupplyNatureProposal:
+        """Propose a nature from ``descriptions``, or return an empty proposal.
+
+        Makes NO request when the instruction would be empty, which is the
+        no-usable-description case: a model asked about lines it cannot see
+        invents one, and there is nothing here worth spending a call on.
+
+        Args:
+            descriptions: The invoice's line descriptions, as printed.
+
+        Returns:
+            The proposal. Empty whenever nothing was asked, the model declined,
+            or its reply did not survive containment -- all of which leave the
+            operator asked exactly as they were.
+        """
+        prompt = build_supply_nature_prompt(descriptions)
+        if not prompt:
+            return SupplyNatureProposal()
+        response = asyncio.run(self._client.complete(self._build_request(prompt)))
+        return parse_supply_nature_response(response.text)
+
+    def _build_request(self, prompt: str) -> LLMRequest:
+        """Build the completion request for one invoice's descriptions.
+
+        Temperature is pinned to zero: the question has one right answer for a
+        given set of lines, and a sampled one would make the same invoice
+        propose differently on a retry.
+
+        **The evidence marker is stated True, and that is the opposite of the
+        column mapper's** -- deliberately, because the content is. A header
+        label is a file's own schema, printed by a bank to name its columns. A
+        line description is what a taxpayer's supplier wrote about what was
+        supplied: it is document content, so it rides behind the evidence
+        consent gate like every other read of a taxpayer's page. Marking it
+        False to reach the ungated lane would move real evidence off-host under
+        a flag that says it is not evidence.
+        """
+        return LLMRequest(
+            prompt=prompt,
+            max_tokens=_MAX_REPLY_TOKENS,
+            temperature=_PROPOSAL_TEMPERATURE,
+            provider_override=self._provider,
+            model_override=self._model,
+            evidence_derived=True,
+        )
