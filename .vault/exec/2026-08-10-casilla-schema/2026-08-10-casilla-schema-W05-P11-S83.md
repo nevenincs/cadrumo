@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:69cdf35d5ec1dfa9d43f593dac4338c181f9ed1e711d6cd82bf7e9f2bac4633d'
+body_hash: 'sha256:0ee1ce5ac180b85085b8a85aade98cd74825cda7709a6ce0dd9a17c407ae5c42'
 step_id: 'S83'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -33,4 +33,10 @@ The implementation-time `ruff format --check` and `ruff check` runs passed for t
 
 ## Notes
 
-The repository-wide retired-revision structural gate remains red outside this Step's scope: ten occurrences remain across `test_modelo_303_deductible_evidence_gate.py`, `test_modelo_303_official_box_under_declaration.py`, `test_diff.py`, `test_modelo_180_round_trip.py`, and `test_modelo_reconcile_verb.py`. Those pre-existing or concurrent paths were not modified. No data loss or destructive Git operation occurred.
+Formal review at 2026-08-12 re-ran the exact module serially and observed all four scenarios green in 32.20 seconds, so the review-time obstruction recorded above has cleared and the implementation-time result is confirmed at HEAD.
+
+Scope narrowing, recorded per the campaign's scope-change protocol. The first scenario previously asserted a written fichero-BOE artefact (byte size, non-empty payload, the tax id present in the bytes) and now asserts a typed `ModeloExportUnsupportedError` refusal instead. The narrowing is truthful, not a workaround: an independent authority probe confirmed that every live M303 revision the suite law-selects carries an absent or empty `export_layouts` definition, so refusal is the only correct production behaviour available. What the standing goal still asks for that this excludes: an end-to-end proof that ledger input reaches real filing-grade fixed-width BYTES for M303. No scenario in this suite proves that today, and no other suite was substituted for it. That proof returns only when a filing-grade `export_layouts` definition is authored for a live M303 revision.
+
+The cross-period advisory assertion was corrected from `app_filing` to `registry_relation` because the fact carries `requirement.origin.value`, the origin of the cross-period requirement, not the observation source kind. The prior value could never match, so the helper returned an empty set against an assertion demanding all four quarters. The non-official basis is still asserted directly through the persisted observation's `source_kind == "app_filing"`, and the advisory is only ever emitted on the `app_filing` admission branch, so the corrected assertion is strictly stronger than the one it replaced.
+
+The repository-wide retired-revision structural gate remains red outside this Step's scope: ten occurrences remain across `test_modelo_303_deductible_evidence_gate.py`, `test_modelo_303_official_box_under_declaration.py`, `test_diff.py`, `test_modelo_180_round_trip.py`, and `test_modelo_reconcile_verb.py`. Those pre-existing or concurrent paths were not modified. That surface is carried forward as its own intake step under the P11 protocol rather than absorbed here, because widening this Step's scope silently is forbidden. No data loss or destructive Git operation occurred.
