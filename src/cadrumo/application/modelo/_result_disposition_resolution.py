@@ -163,7 +163,7 @@ def _resolve_elected_disposition(
     if base_disposition is ResultDisposition.INGRESO:
         if refund_election is not RefundElection.COMPENSAR:
             raise ModeloRefundElectionNotEligibleError(
-                "a refund election is incompatible with a positive result",
+                translated_message="errors.error.error_modelos",
                 context={
                     "modelo": str(work_unit.modelo),
                     "base_disposition": base_disposition.value,
@@ -174,7 +174,7 @@ def _resolve_elected_disposition(
 
     if payment_election is not PaymentElection.INGRESO:
         raise ModeloPaymentElectionIncompatibleError(
-            "a payment election requires a positive result",
+            translated_message="errors.error.error_modelos",
             context={
                 "modelo": str(work_unit.modelo),
                 "base_disposition": base_disposition.value,
@@ -183,7 +183,7 @@ def _resolve_elected_disposition(
         )
     if refund_election is RefundElection.DEVOLVER and base_disposition is not ResultDisposition.COMPENSACION:
         raise ModeloRefundElectionNotEligibleError(
-            "a refund election requires an eligible negative Modelo 303 result",
+            translated_message="errors.error.error_modelos",
             context={
                 "modelo": str(work_unit.modelo),
                 "base_disposition": base_disposition.value,
@@ -209,12 +209,12 @@ def _apply_payment_election(
         return ResultDisposition.INGRESO
     if payment_election is PaymentElection.CUENTA_CORRIENTE:
         raise ModeloPaymentElectionCapabilityRefusedError(
-            "cuenta corriente payment is not supported until its AEAT filing semantics are grounded",
+            translated_message="errors.error.error_modelos",
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     if work_unit.modelo != Modelo.M303.value:
         raise ModeloPaymentElectionCapabilityRefusedError(
-            "direct-debit payment is currently supported only for Modelo 303",
+            translated_message="errors.error.error_modelos",
             context={"modelo": str(work_unit.modelo), "payment_election": payment_election.value},
         )
     return ResultDisposition.DOMICILIACION
@@ -301,15 +301,13 @@ def _reject_non_revision_casilla_values(
     if noncanonical_details:
         details = "; ".join(noncanonical_details)
         raise CoreValidationError(
-            f"result disposition for modelo {modelo!r} revision {revision_id!r} received "
-            f"non-canonical casilla reference tokens, not canonical casilla.id values: {details}",
+            translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_refs": details},
         )
     if unknown_ids:
         unknown = ", ".join(repr(casilla_id) for casilla_id in unknown_ids)
         raise CoreValidationError(
-            f"result disposition for modelo {modelo!r} revision {revision_id!r} received "
-            f"unknown casilla.id values: {unknown}",
+            translated_message="errors.integrity.integrity_cadrumo_core_validation",
             context={"modelo": modelo, "revision_id": revision_id, "casilla_ids": unknown},
         )
 
@@ -379,8 +377,12 @@ def _apply_modelo_303_refund_election(
     iva_profile = workflow_profile.iva
     if iva_profile is None:
         raise ModeloProfileReadinessError(
-            "Modelo 303 result disposition requires an explicitly declared IVA profile",
-            context={"modelo": Modelo.M303.value, "period": period.registry_token},
+            translated_message="application.modelo.errors.profile_readiness_missing",
+            context={
+                "modelo": Modelo.M303.value,
+                "period": period.registry_token,
+                "iva_profile_present": False,
+            },
         )
     redeme = iva_profile.redeme_enrolled
     # Standing REDEME election: resolve eligible negative periods to devolución,

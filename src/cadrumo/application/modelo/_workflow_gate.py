@@ -143,7 +143,6 @@ class _RevisionInputsProvider:
         """
         if modelo != self._modelo or period != self._period:
             raise WorkflowInputMismatchError(
-                "workflow input request does not match calculation revision",
                 translated_message="application.modelo.errors.workflow_input_mismatch",
                 context={
                     "expected_modelo": self._modelo,

@@ -479,7 +479,6 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
         validate_m184_member_share_sum(member_rows)
     except Modelo184ShareSumError as exc:
         raise ModeloCalculateDetailRowsError(
-            f"M184 miembro rows: share percentages must sum to exactly 100%; got {exc.total} across {exc.count} rows",
             context={"total": str(exc.total), "count": str(exc.count)},
             translated_message="application.modelo.errors.calculate_m184_share_sum_invalid",
         ) from exc
@@ -489,8 +488,6 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
         validate_m347_threshold(contraparte_rows)
     except Modelo347ThresholdError as exc:
         raise ModeloCalculateDetailRowsError(
-            f"M347 contraparte row (nif={exc.nif!r}): importe total {exc.total} "
-            f"does not exceed the EUR {M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 33.1",
             context={"nif": exc.nif, "total": str(exc.total), "threshold": str(M347_THRESHOLD_EUR)},
             translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc
@@ -653,15 +650,11 @@ def _validated_m210_official_tipo_renta_code(raw_value: str, *, key: str) -> str
     accepted = ", ".join(sorted(M210_TIPO_RENTA_CODE_PROJECTION))
     if value in FETCH_GATED_M210_TIPO_RENTA_CODES:
         raise ModeloCalculateTextInputError(
-            f"Modelo 210 tipo de renta code {value!r} is fetch-gated: its rate is not yet grounded "
-            f"in the bundled corpus, so it cannot be filed yet. Accepted codes: {accepted}.",
             context={"key": key, "value": value, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_m210_tipo_renta_fetch_gated",
         )
     fetch_gated = ", ".join(sorted(FETCH_GATED_M210_TIPO_RENTA_CODES))
     raise ModeloCalculateTextInputError(
-        f"{value!r} is not a valid Modelo 210 tipo de renta code. Accepted codes: {accepted}. "
-        f"Codes pending grounding (not yet fileable): {fetch_gated}.",
         context={"key": key, "value": value, "accepted": accepted, "fetch_gated": fetch_gated},
         translated_message="application.modelo.errors.calculate_m210_tipo_renta_unknown",
     )
@@ -1447,7 +1440,6 @@ def _semantic_role_casilla_id(work_unit_id: str, semantic_role: str) -> CasillaI
     if casilla_id is not None:
         return casilla_id
     raise ModeloCalculateSemanticRoleError(
-        f"modelo revision has no casilla with semantic_role={semantic_role!r}",
         context={
             "modelo": snapshot.modelo.id,
             "revision": snapshot.revision.id,

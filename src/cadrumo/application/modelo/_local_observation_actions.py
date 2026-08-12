@@ -182,12 +182,12 @@ def _canonical_casilla_values[CasillaKey](
 
     if malformed:
         raise ModeloLocalObservationError(
-            "local observation casilla keys must be canonical casilla.id values",
+            translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(sorted(malformed)), "revision_id": snapshot.revision.id},
         )
     if non_decimal:
         raise ModeloLocalObservationError(
-            "local observation casilla values must be Decimal instances",
+            translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(sorted(non_decimal)), "revision_id": snapshot.revision.id},
         )
 
@@ -204,11 +204,15 @@ def _canonical_casilla_values[CasillaKey](
                 for casilla_id, targets in sorted(noncanonical.items())
             )
             raise ModeloLocalObservationError(
-                f"local observation casillas must use canonical casilla.id values; refused aliases: {details}",
-                context={"casillas": ",".join(sorted(noncanonical)), "revision_id": snapshot.revision.id},
+                translated_message="errors.error.error_modelos",
+                context={
+                    "casillas": ",".join(sorted(noncanonical)),
+                    "revision_id": snapshot.revision.id,
+                    "noncanonical_reference_targets": details,
+                },
             )
         raise ModeloLocalObservationError(
-            f"local observation casillas are not declared in revision {snapshot.revision.id!r}: {unknown!r}",
+            translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(unknown), "revision_id": snapshot.revision.id},
         )
 
@@ -218,7 +222,7 @@ def _canonical_casilla_values[CasillaKey](
     )
     if non_numeric:
         raise ModeloLocalObservationError(
-            "local observation --set accepts only numeric casillas",
+            translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(non_numeric), "revision_id": snapshot.revision.id},
         )
     return canonical
@@ -244,7 +248,7 @@ def _observation_rows(
             )
         except (RegistryValidationError, ValidationError, TypeError, ValueError) as exc:
             raise ModeloLocalObservationError(
-                "local observation casilla cannot be persisted without registry legal/source provenance",
+                translated_message="errors.error.error_modelos",
                 context={"casilla": casilla_id, "revision_id": snapshot.revision.id},
             ) from exc
     return tuple(rows)

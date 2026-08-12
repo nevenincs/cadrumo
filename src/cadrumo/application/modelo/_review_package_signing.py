@@ -186,7 +186,7 @@ def _keypair_from_repository_payload(payload: bytes, *, bucket_id: str) -> Revie
     keypair = ReviewPackageSigningKeypair.model_validate_json(payload)
     if keypair.bucket_id != bucket_id:
         raise ReviewPackageSigningError(
-            "stored review-package signing keypair does not belong to the bucket it was read from",
+            translated_message="application.modelo.errors.review_package_generic",
         )
     return keypair
 

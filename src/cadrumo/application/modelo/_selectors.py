@@ -420,7 +420,7 @@ def resolve_active_natural_modelo_work_unit(
     """Resolve an active natural target only for create-or-reuse lifecycle operations."""
     if request.work_unit_id is not None or not request.has_visible_target:
         raise ModeloWorkSelectorContradictionError(
-            "an active natural selector requires modelo, filing_year, and period without work_unit_id"
+            translated_message="errors.refused.modelo_work_selector_contradiction",
         )
     bucket_id = resolve_modelo_work_bucket(request)
     repo = repository or WorkUnitCatalogueRepository(bucket_id=bucket_id)
@@ -507,8 +507,13 @@ def _validate_explicit_work_unit_matches_request(
     for field_name, supplied, actual in expected:
         if supplied is not None and supplied != actual:
             raise ModeloWorkSelectorContradictionError(
-                f"explicit work_unit_id {work_unit.work_unit_id} has {field_name}={actual!r}, "
-                f"but selector supplied {field_name}={supplied!r}",
+                translated_message="errors.refused.modelo_work_selector_contradiction",
+                context={
+                    "work_unit_id": work_unit.work_unit_id,
+                    "field_name": field_name,
+                    "work_unit_value": str(actual),
+                    "selector_value": str(supplied),
+                },
             )
 
 
@@ -547,7 +552,7 @@ def select_modelo_calculation_revision(
         )
     if calculation_revision_id is not None:
         raise ModeloCalculationRevisionSelectorStateError(
-            "calculation_revision_id is only accepted with the explicit revision selector",
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
 
     selected = {
@@ -632,8 +637,7 @@ def select_current_verified_revision(
     )
     if selection.revision.state is not CalculationRevisionState.VERIFICADO_COMPLETO:
         raise ModeloCalculationRevisionSelectorStateError(
-            f"current revision {selection.revision.calculation_revision_id!r} is in state "
-            f"{selection.revision.state.value!r}; filing requires a verified-complete revision",
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
     return selection
 
@@ -678,7 +682,7 @@ def select_exportable_revision(
             )
         if current_revision.state is CalculationRevisionState.BORRADOR:
             raise ModeloCalculationRevisionSelectorStateError(
-                "current revision is still draft; verify it before exporting or select a verified revision explicitly",
+                translated_message="errors.refused.modelo_calculation_revision_selector_state",
             )
 
     verified = tuple(
@@ -723,12 +727,12 @@ def _explicit_revision_for_work_unit(
     revision = catalogue.get(calculation_revision_id)
     if revision is None:
         raise ModeloCalculationRevisionSelectorNotFoundError(
-            f"no calculation revision found with id={calculation_revision_id}",
+            translated_message="errors.error.modelo_calculation_revision_selector_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
         )
     if revision.work_unit_id != work_unit.work_unit_id:
         raise ModeloCalculationRevisionSelectorStateError(
-            f"calculation revision {calculation_revision_id} belongs to work_unit_id={revision.work_unit_id}, "
-            f"not {work_unit.work_unit_id}",
+            translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
     return revision
 

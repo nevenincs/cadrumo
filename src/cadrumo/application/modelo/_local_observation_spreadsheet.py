@@ -48,7 +48,7 @@ from ...core.tabular import (
     decode_tabular_bytes,
     detect_tabular_delimiter,
 )
-from ...core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
+from ...core.workbook import first_formula_cell_column
 from ._action_errors import ModeloLocalObservationError
 
 CSV_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".txt"})
@@ -92,14 +92,14 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
     """
     if not path.exists() or not path.is_file():
         raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} does not exist",
+            translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
     suffix = path.suffix.lower()
     rows = _read_xlsx_rows(path) if suffix == XLSX_EXTENSION else _read_csv_rows(path)
     if not rows:
         raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} contains no rows",
+            translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
 
@@ -107,12 +107,12 @@ def parse_casilla_value_spreadsheet(path: Path) -> dict[str, Decimal]:
     values, malformed = _parse_value_rows(data_rows, code_index=code_index, value_index=value_index)
     if malformed:
         raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} has malformed rows: {'; '.join(malformed)}",
+            translated_message="errors.error.error_modelos",
             context={"path": str(path), "malformed_row_count": str(len(malformed))},
         )
     if not values:
         raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} contains no usable casilla_code/value rows",
+            translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         )
     return values
@@ -244,7 +244,7 @@ def _decode_bytes(source_bytes: bytes, *, path: Path) -> str:
         text, _, _ = decode_tabular_bytes(source_bytes)
     except TabularSourceError as exc:
         raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} could not be decoded as utf-8/cp1252/iso-8859-1",
+            translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         ) from exc
     return text
@@ -255,7 +255,7 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
         workbook = load_workbook(filename=path, read_only=True, data_only=False)
     except Exception as exc:  # openpyxl raises multiple unrelated types (OSError/KeyError/...) on a bad workbook
         raise ModeloLocalObservationError(
-            f"casilla-value spreadsheet {path} could not be opened as an XLSX workbook",
+            translated_message="errors.error.error_modelos",
             context={"path": str(path)},
         ) from exc
     try:
@@ -265,8 +265,7 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
             column_index = first_formula_cell_column(cells)
             if column_index is not None:
                 raise ModeloLocalObservationError(
-                    f"casilla-value spreadsheet {path} contains formula cell at row {row_index}, "
-                    f"column {column_index}; {FORMULA_CELL_REFUSAL}",
+                    translated_message="errors.error.error_modelos",
                     context={
                         "path": str(path),
                         "row": str(row_index),

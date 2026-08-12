@@ -271,11 +271,11 @@ def _require_profile_owns_bucket(*, profile_id: ProfileId, bucket_id: BucketId) 
     canonical_bucket = str(bucket_id).strip()
     if canonical_profile != canonical_bucket:
         raise LiveApplicationInputError(
-            f"m036 declaration profile_id={canonical_profile!r} does not own bucket {canonical_bucket!r}",
             translated_message="application.modelo.errors.m036_declaration_profile_bucket_mismatch",
             context={
                 "profile_id": canonical_profile,
                 "bucket_id": canonical_bucket,
+                "owns_bucket": False,
             },
         )
 
