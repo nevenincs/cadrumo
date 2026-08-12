@@ -704,11 +704,44 @@ def _r19_oss_union_services(criteria: IvaInvoiceClassificationCriteria) -> bool:
     )
 
 
+#: The customer-side territories LIVA art. 3 places outside the Comunidad.
+#:
+#: Read from the law's own definitional chain rather than assembled by judgement.
+#: Art. 3.Dos.1 excludes from "Estado miembro" / "interior del país" both Ceuta
+#: y Melilla -- "en cuanto territorios no comprendidos en la Unión Aduanera" --
+#: and, on separate grounds, Canarias. Art. 3.Dos.2 then defines "Comunidad" as
+#: the set of territories that DO constitute "interior del país", and art.
+#: 3.Dos.3 defines "territorio tercero" as "cualquier territorio distinto de los
+#: definidos como interior del país". All three are therefore third territories,
+#: and art. 21 -- which exempts "las entregas de bienes expedidos o transportados
+#: fuera de la Comunidad" -- reaches them.
+#:
+#: The two exclusions differ in their REASON and coincide in their effect here:
+#: Ceuta and Melilla sit outside the customs union while Canarias does not, which
+#: separates them for customs and not for this axis. Collapsing them into one set
+#: is therefore correct for IVA and would be wrong for a customs question.
+#:
+#: Without this a mainland business invoicing a Canarian customer -- an ordinary
+#: operation, not an edge -- matched no row at all and resolved UNRESOLVED.
+_OUTSIDE_THE_COMUNIDAD: Final[frozenset[IvaTerritorialScope]] = frozenset(
+    {
+        IvaTerritorialScope.THIRD_COUNTRY,
+        IvaTerritorialScope.ES_CANARIAS,
+        IvaTerritorialScope.ES_CEUTA_MELILLA,
+    },
+)
+
+
 def _r20_export_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an ES to THIRD_COUNTRY goods export (Art. 21, exención plena)."""
+    """Match an ES goods export outside the Comunidad (Art. 21, exención plena).
+
+    Reaches the non-peninsular Spanish territories as well as third countries,
+    because art. 3 places all three outside the Comunidad; see
+    :data:`_OUTSIDE_THE_COMUNIDAD` for the definitional chain.
+    """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency is IvaTerritorialScope.THIRD_COUNTRY
+        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
         and criteria.kind is TransactionKind.GOODS
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -725,10 +758,17 @@ def _r21_import_goods(criteria: IvaInvoiceClassificationCriteria) -> bool:
 
 
 def _r22_services_outbound_third_country(criteria: IvaInvoiceClassificationCriteria) -> bool:
-    """Match an ES to THIRD_COUNTRY services supply (Art. 69, place of supply outside TAI)."""
+    """Match an ES services supply localised outside the TAI (Art. 69).
+
+    Goods and services FORK here, which is why this stays a separate row rather
+    than sharing art. 21's: that article exempts *entregas de bienes* only. A
+    service to a recipient established outside the TAI is localised there by
+    arts. 69 and 70, so it is NOT SUBJECT here rather than exempt -- a different
+    outcome with a different Modelo 303 consequence.
+    """
     return (
         criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency is IvaTerritorialScope.THIRD_COUNTRY
+        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
         and criteria.kind is TransactionKind.SERVICES_GENERAL
         and criteria.direction is InvoiceKind.ISSUED
     )
@@ -964,7 +1004,7 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
     ),
     _IvaClassificationRule(
         "R20_export_goods",
-        "ES to 3rd-country goods export",
+        "ES goods export outside the Comunidad",
         _r20_export_goods,
         IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED,
         consumes=_ESTABLISHMENT_ONLY,
@@ -978,7 +1018,7 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
     ),
     _IvaClassificationRule(
         "R22_services_outbound_third_country",
-        "ES to 3rd-country services",
+        "ES services localised outside the TAI",
         _r22_services_outbound_third_country,
         IvaCategory.OPERACION_NO_SUJETA,
         consumes=_ESTABLISHMENT_ONLY,

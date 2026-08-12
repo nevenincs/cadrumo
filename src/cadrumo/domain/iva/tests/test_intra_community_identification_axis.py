@@ -371,3 +371,91 @@ def test_the_checksum_is_what_admits_the_spanish_number() -> None:
     assert _prefix_alone("ESFRANCISCO")
     assert identification_state_for_printed_tax_identifier("ESFRANCISCO") is None
     assert identification_state_for_printed_tax_identifier(_SPANISH_IVA) is EUMemberState.ES
+
+
+# -- the outbound non-peninsular branch -------------------------------------
+#
+# The table had no row for a mainland issuer supplying a customer in Canarias,
+# Ceuta or Melilla, so that population resolved UNRESOLVED. R30 names those
+# territories but keys on the ISSUER being outside the TAI, which is the
+# inbound direction.
+#
+# LIVA art. 3.Dos.1 excludes all three from "interior del pais", art. 3.Dos.2
+# defines "Comunidad" as the territories that do constitute it, and art. 3.Dos.3
+# defines "territorio tercero" as anything else -- so art. 21 reaches them.
+
+
+def _outbound(customer: IvaTerritorialScope, kind: TransactionKind) -> IvaCategory:
+    return classify_iva(
+        IvaInvoiceClassificationCriteria(
+            issuer_residency=IvaTerritorialScope.ES_MAINLAND,
+            customer_residency=customer,
+            kind=kind,
+            direction=InvoiceKind.ISSUED,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            transaction_date=date(2026, 3, 11),
+        ),
+    ).category
+
+
+@pytest.mark.parametrize(
+    "customer",
+    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    ids=["canarias", "ceuta-y-melilla"],
+)
+def test_goods_leaving_the_tai_are_an_export_whichever_territory_receives_them(
+    customer: IvaTerritorialScope,
+) -> None:
+    """Art. 21 reaches all three third territories, so the two share an answer.
+
+    They are excluded from "interior del pais" for DIFFERENT reasons -- Ceuta
+    and Melilla sit outside the customs union and Canarias does not -- which
+    separates them for a customs question and not for this one.
+    """
+    assert _outbound(customer, TransactionKind.GOODS) is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+
+
+@pytest.mark.parametrize(
+    "customer",
+    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    ids=["canarias", "ceuta-y-melilla"],
+)
+def test_services_leaving_the_tai_are_not_subject_rather_than_exempt(
+    customer: IvaTerritorialScope,
+) -> None:
+    """Goods and services fork, and the fork is the point.
+
+    Art. 21 exempts *entregas de bienes* only. A service to a recipient
+    established outside the TAI is localised there by arts. 69 and 70, so it is
+    NOT SUBJECT here rather than exempt -- a different outcome carrying a
+    different Modelo 303 consequence, which is why one predicate feeds two rows
+    rather than one row covering both.
+    """
+    assert _outbound(customer, TransactionKind.SERVICES_GENERAL) is IvaCategory.OPERACION_NO_SUJETA
+
+
+def test_a_third_country_customer_is_unaffected() -> None:
+    """The rows these territories joined must keep answering as they did."""
+    assert (
+        _outbound(IvaTerritorialScope.THIRD_COUNTRY, TransactionKind.GOODS)
+        is IvaCategory.EXPORT_THIRD_COUNTRY_ZERO_RATED
+    )
+    assert (
+        _outbound(IvaTerritorialScope.THIRD_COUNTRY, TransactionKind.SERVICES_GENERAL)
+        is IvaCategory.OPERACION_NO_SUJETA
+    )
+
+
+def test_the_population_used_to_classify_as_nothing_at_all() -> None:
+    """Mutation proof: without the territories in the set the branch falls through.
+
+    Re-runs the pre-change predicate -- third countries only -- and shows a
+    Canarian customer matches neither outbound row, which is how an ordinary
+    peninsular invoice resolved UNRESOLVED.
+    """
+
+    def _third_country_only(customer: IvaTerritorialScope) -> bool:
+        return customer is IvaTerritorialScope.THIRD_COUNTRY
+
+    assert not _third_country_only(IvaTerritorialScope.ES_CANARIAS)
+    assert _outbound(IvaTerritorialScope.ES_CANARIAS, TransactionKind.GOODS) is not IvaCategory.UNKNOWN
