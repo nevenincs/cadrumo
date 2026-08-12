@@ -426,7 +426,11 @@ def assemble_withholding_observations(
                     source_id=f"detalle:per_perceptor_clave:row-{row_index}",
                     perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
                     perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
-                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    # Blank is ABSENT, not an empty country. The coercer returns the
+                    # value itself for an empty string, so without this a blank field
+                    # reaches the model as "" -- which is neither a country nor the
+                    # honest "not stated" this row exists to make representable.
+                    country_code=_coerce_text(fields.get("country_code")) or None,
                     transaction_date=default_date,
                     clave=clave,
                     subclave=_coerce_text(fields.get("subclave")),
@@ -603,7 +607,11 @@ def assemble_atribucion_observations(
                     source_id=f"detalle:per_atribucion_member:row-{row_index}",
                     member_tax_id=_coerce_text(fields.get("member_tax_id")),
                     member_legal_name=_coerce_text(fields.get("member_legal_name")),
-                    country_code=_coerce_text(fields.get("country_code"), default="ES") or "ES",
+                    # Blank is ABSENT, not an empty country. The coercer returns the
+                    # value itself for an empty string, so without this a blank field
+                    # reaches the model as "" -- which is neither a country nor the
+                    # honest "not stated" this row exists to make representable.
+                    country_code=_coerce_text(fields.get("country_code")) or None,
                     transaction_date=default_date,
                     share_percentage=coerce_decimal(fields.get("share_percentage"), default=Decimal("0")),
                     base_imponible_assigned=coerce_decimal(fields.get("base_imponible_assigned"), default=Decimal("0")),

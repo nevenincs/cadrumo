@@ -57,7 +57,11 @@ def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> N
     assert by_nif["12345678A"].clave == "A"
     assert by_nif["12345678A"].percibido_dinerario == Decimal("10000")
     assert by_nif["12345678A"].retencion_practicada == Decimal("1500")
-    assert by_nif["12345678A"].country_code == "ES"
+    # These rows state no country, and that is now what the observation says.
+    # It previously read "ES" -- a default, not a reading -- on a form whose
+    # perceptor population is foreign by construction. The assertion encoded
+    # the default as the contract, so it is corrected rather than worked around.
+    assert by_nif["12345678A"].country_code is None
     assert by_nif["12345678A"].transaction_date == date(2025, 12, 31)
     assert by_nif["87654321Z"].clave == "G"
     assert by_nif["87654321Z"].percibido_dinerario == Decimal("30000")
@@ -421,3 +425,100 @@ def test_assemble_withholding_refuses_a_row_without_clave() -> None:
     )
     with pytest.raises(RegistryValidationError, match="no clave"):
         assemble_withholding_observations(cells, revision, filing_year=2025)
+
+
+# -- absence reaches the model, which is not the same as the literal being gone
+#
+# Both sites were TRIPLE-defaulted, one level deeper than a call-site reading
+# shows: `_coerce_text(..., default="ES") or "ES"` at the call site AND
+# `Field(default="ES")` on the observation model itself. Removing any one of the
+# three changes nothing, so a census keyed on the call-site syntax would report
+# these clean while the model still defaulted.
+#
+# The population is why it matters rather than a style point: withholding forms
+# carry the NON-RESIDENT population by construction -- a perceptor is routinely
+# foreign -- and an attribution member can be. A default declares such a party
+# Spanish on a filing surface, silently.
+
+
+def test_a_row_stating_no_country_produces_no_country() -> None:
+    """The whole row, asserted on the OBSERVATION rather than on the source text."""
+    revision = _modelo("190", "2024-y-siguientes")
+    cells = (
+        RowSetCellEdit(binding="modelo-190-perceptor-row-nif", row_index=1, value="12345678A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-name", row_index=1, value="Perceptor One"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-clave", row_index=1, value="A"),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-percibido-dinerario", row_index=1, value=Decimal("10000")),
+        RowSetCellEdit(binding="modelo-190-perceptor-row-retencion-practicada", row_index=1, value=Decimal("1500")),
+    )
+
+    observations = assemble_withholding_observations(cells, revision, filing_year=2025)
+
+    assert len(observations) == 1
+    assert observations[0].country_code is None
+
+
+def test_the_model_itself_no_longer_supplies_a_country() -> None:
+    """The third default, which a call-site fix alone would have left standing.
+
+    Constructed directly rather than through the assembly: if the model default
+    returned, every call-site fix above would silently stop mattering and the
+    row-level cases would still pass.
+    """
+    from ....domain.calculations.registry._withholding_bindings import WithholdingObservation
+
+    observation = WithholdingObservation(
+        source_id="direct",
+        perceptor_tax_id="12345678A",
+        perceptor_legal_name="Perceptor One",
+        transaction_date=date(2025, 12, 31),
+        clave="A",
+    )
+
+    assert observation.country_code is None
+
+
+def test_a_stated_country_still_arrives_intact() -> None:
+    """The precision half: removing the default must not lose a real reading."""
+    from ....domain.calculations.registry._withholding_bindings import WithholdingObservation
+
+    observation = WithholdingObservation(
+        source_id="direct",
+        perceptor_tax_id="12345678A",
+        perceptor_legal_name="Perceptor One",
+        country_code="FR",
+        transaction_date=date(2025, 12, 31),
+        clave="A",
+    )
+
+    assert observation.country_code == "FR"
+
+
+def test_an_absent_country_leaves_the_built_row_without_the_field() -> None:
+    """Absence propagates as an absent KEY, so a binding needing it refuses.
+
+    The payload carries decimals and strings and cannot hold a null, and the
+    shipped resolver already raises a not-produced error naming the binding when
+    a row_field is missing. So the absence surfaces there -- visibly, with the
+    binding named -- instead of as a silent country nobody stated.
+    """
+    from ....domain.calculations.registry._withholding_bindings import (
+        WithholdingObservation,
+        _build_withholding_rows,
+    )
+
+    def _observation(country: str | None) -> WithholdingObservation:
+        return WithholdingObservation(
+            source_id=f"row-{country}",
+            perceptor_tax_id="12345678A",
+            perceptor_legal_name="Perceptor One",
+            country_code=country,
+            transaction_date=date(2025, 12, 31),
+            clave="A",
+        )
+
+    stated = _build_withholding_rows("per_perceptor", (_observation("FR"),))[0]
+    unstated = _build_withholding_rows("per_perceptor", (_observation(None),))[0]
+
+    assert stated["country_code"] == "FR"
+    assert "country_code" not in unstated
