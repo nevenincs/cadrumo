@@ -9,16 +9,14 @@ the calculation assembly layer overlays them by precedence: profile, backend
 mesh, borrador, and finally caller overrides.
 
 The module also owns the application-specific partial projection from available
-binding values to :class:`~cadrumo.core.CasillaId` inputs.
-That differs from the domain registry's strict bound-input projection: live
-calculate paths may carry absent optional bindings while still projecting every
-value that did resolve.
+binding values to :class:`~cadrumo.core.CasillaId` inputs. Live calculate paths
+may carry absent optional bindings while still projecting every value that did
+resolve; completeness and unrouted-input concerns remain advisory or verify-gate
+responsibilities rather than a second projection contract.
 
 See Also:
     :mod:`~cadrumo.application.modelo._calculation_resolution`:
         Merges these tiers and builds the canonical engine input maps.
-    :func:`~cadrumo.domain.calculations.registry.resolve_bound_inputs_by_casilla_id`:
-        Strict registry projection that requires every bound fact to be present.
     :mod:`~cadrumo.application.modelo._profile_binding`:
         Resolves profile-sourced bindings into decimal, enum, and date channels.
     :mod:`~cadrumo.application.modelo._borrador_binding`:
@@ -337,8 +335,6 @@ def resolve_available_bound_inputs_by_casilla_id(
         casilla whose binding value is currently available.
 
     See Also:
-        :func:`~cadrumo.domain.calculations.registry.resolve_bound_inputs_by_casilla_id`:
-            Strict domain helper that rejects unknown or missing binding facts.
         :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_inputs`:
             Uses this partial projection when assembling engine inputs.
     """

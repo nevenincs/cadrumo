@@ -50,13 +50,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
     resolve_retenciones_aggregation_binding_values,
 )
 from ....tests.secure_sql import isolated_runtime_profile
@@ -136,7 +137,7 @@ def _calculate_193(
     )
     retenciones_binding_values = resolve_retenciones_aggregation_binding_values(snapshot.revision, aggregation)
     binding_values = {**relation_binding_values, **retenciones_binding_values}
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

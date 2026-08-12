@@ -8,6 +8,8 @@ from functools import lru_cache
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
@@ -584,10 +586,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
         OssIossRegime,
         TransactionKind,
     )
-    from .. import (
-        calculate_registry_snapshot,
-        resolve_bound_inputs_by_casilla_id,
-    )
+    from .. import calculate_registry_snapshot
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-union"]
@@ -630,7 +629,7 @@ def test_modelo_369_esquema_union_cuota_total_resolves_end_to_end() -> None:
 
     binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
     snapshot = _committed_snapshot("369", 2025, "1T")
-    casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    casilla_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=casilla_inputs,
@@ -668,10 +667,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
         OssIossRegime,
         TransactionKind,
     )
-    from .. import (
-        calculate_registry_snapshot,
-        resolve_bound_inputs_by_casilla_id,
-    )
+    from .. import calculate_registry_snapshot
 
     modelo, _ = _load_modelo_369()
     revision = modelo.revisions["esquema-importacion"]
@@ -703,7 +699,7 @@ def test_modelo_369_esquema_importacion_cuota_total_resolves_end_to_end() -> Non
 
     binding_values = resolve_ledger_oss_aggregation_binding_values(revision, observations)
     snapshot = _committed_snapshot("369", 2025, "01")
-    casilla_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    casilla_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=casilla_inputs,

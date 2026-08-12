@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import (
     CasillaId,
     IvaCompensationStateProvenance,
@@ -26,7 +28,6 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -146,7 +147,7 @@ def _calculate_303_from_observations(
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -313,7 +314,7 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
         }
         result = calculate_registry_snapshot(
             snapshot,
-            inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+            inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
             binding_values=binding_values,
             date_context={"filing_period": date(2025, 12, 31)},
         )

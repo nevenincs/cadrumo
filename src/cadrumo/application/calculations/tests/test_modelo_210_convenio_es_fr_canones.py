@@ -24,13 +24,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import (
-    BindingId,
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import BindingId, calculate_registry_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -53,7 +51,7 @@ def _resolve_rate(*, tipo_renta: str, country_code: str, base: str) -> tuple[Dec
         validated_casilla_id("gastos_deducibles", surface="es_fr_canones_test"): Decimal("0"),
         validated_casilla_id("retencion_practicada", surface="es_fr_canones_test"): Decimal("0"),
     }
-    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs={**bound, **casilla_inputs},

@@ -48,13 +48,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -156,7 +157,7 @@ def _calculate_131(
 ) -> tuple[RegistryCalculationResult, int]:
     """Run the REAL M131 engine for one quarter; return result + produced-value count."""
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=period)
-    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, carry_binding)
+    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, carry_binding)
     inputs = {**bound, **casilla_inputs}
     result = calculate_registry_snapshot(
         snapshot,

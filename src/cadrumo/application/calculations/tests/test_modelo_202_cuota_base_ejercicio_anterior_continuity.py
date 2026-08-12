@@ -43,6 +43,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -51,7 +53,6 @@ from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
@@ -192,7 +193,7 @@ def _calculate_202_2p(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="2P")
     binding_values = {**relation_binding_values}
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         # Casilla 02 (deductions/withholdings of the period) is a manual input;
         # zero keeps the 03 wiring assertion a clean 18% of the bound base.
         _M202_DEDUCCIONES_CASILLA: casilla_02,

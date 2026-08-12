@@ -18,8 +18,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core.resources import bundled_path
-from .. import InputKind, resolve_bound_inputs_by_casilla_id
+from .. import InputKind
 from .._formula_runtime import calculate_registry_snapshot
 from .._snapshot import build_snapshot
 from ._registry_schema_support import _committed_modelo
@@ -72,7 +74,7 @@ def test_modelo_180_copies_monetary_relations_and_binds_perceptor_count() -> Non
     binding_values = {"modelo-180-115-perceptores-anual": Decimal("3")}
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         date_context={"filing_period": date(2026, 1, 31)},
         binding_values=binding_values,
         relation_values=relation_values,

@@ -48,6 +48,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
@@ -58,7 +60,6 @@ from ....domain.calculations.registry import (
     WithholdingObservation,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
     resolve_retenciones_aggregation_binding_values,
     resolve_withholding_binding_values,
 )
@@ -307,7 +308,7 @@ def _calculate_111(
         period=Period.from_year_and_code(filing_year, period),
     )
     binding_values = resolve_retenciones_aggregation_binding_values(snapshot.revision, retenciones)
-    bound_inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound_inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     # Supply all remaining manual-input zero casillas plus the scenario inputs.
     zero_inputs = {cid: Decimal("0") for cid in _ZERO_CASILLAS if cid not in bound_inputs}
     manual_inputs = {cid: value for cid, value in casilla_inputs.items() if cid not in bound_inputs}
@@ -347,7 +348,7 @@ def _calculate_190(
     withholding_binding_values = resolve_withholding_binding_values(snapshot.revision, withholding_observations)
     binding_values = {**relation_binding_values, **withholding_binding_values}
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     result = calculate_registry_snapshot(
         snapshot,

@@ -7,6 +7,8 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Final
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....application.calculations import (
     ObservationEnvelopePayload,
     ResultDispositionProjection,
@@ -43,7 +45,6 @@ from .. import (
     RegistryModeloObservation,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from .._binding_selector_utils import selector_as_dict
@@ -226,7 +227,7 @@ def _calculate_303_from_observations(
         "modelo-303-profile-state-attribution-ratio": Decimal("100"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
@@ -321,7 +322,7 @@ def _calculate_390_from_observations_and_303_filings(
         **annual_partition_values,
         **_empty_register_bienes_inversion_binding_values(snapshot.revision),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

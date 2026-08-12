@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
@@ -15,7 +17,6 @@ from .. import (
     build_snapshot,
     calculate_registry_snapshot,
     relation_source_requirements,
-    resolve_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
 )
 from ._registry_schema_support import _committed_modelo, _committed_snapshot
@@ -165,7 +166,7 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
     binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
-        inputs=resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         date_context={"filing_period": date(2025, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,

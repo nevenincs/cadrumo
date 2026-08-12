@@ -55,6 +55,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -62,7 +64,6 @@ from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryValidationError,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -173,9 +174,9 @@ def _calculate_210_result(
     }
     if extra_casilla_inputs is not None:
         casilla_inputs.update(extra_casilla_inputs)
-    # resolve_bound_inputs_by_casilla_id handles bound casillas that the engine requires;
+    # resolve_available_bound_inputs_by_casilla_id handles bound casillas that the engine requires;
     # M210 primary has no previous_filing bindings, so this is a no-op here.
-    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     inputs = {**bound, **casilla_inputs}
     return calculate_registry_snapshot(
         snapshot,

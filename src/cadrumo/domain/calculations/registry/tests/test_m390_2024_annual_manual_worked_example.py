@@ -171,6 +171,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -179,7 +181,6 @@ from .. import (
     RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 
@@ -363,7 +364,7 @@ def _calculate(
             _annual_observations(include_recargo=include_recargo),
         ),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     if regularizacion_prorrata is not None:
         inputs = {**inputs, _CASILLA_PRORRATA_REGULARIZACION: regularizacion_prorrata}
     return calculate_registry_snapshot(
@@ -532,7 +533,7 @@ def _calculate_with_super_reducido_recargo(*, include_super_reducido_recargo: bo
         "modelo-390-prev-303-compensacion-generada-ejercicio-no-97": Decimal("0"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

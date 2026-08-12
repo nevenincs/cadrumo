@@ -46,6 +46,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -54,7 +56,6 @@ from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -211,7 +212,7 @@ def _calculate_123(
     """Run the REAL 123 quarterly calculation and return the engine result."""
     snapshot = resources().modelos.authority.snapshot(_MODELO_123, filing_year=filing_year, period=period)
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, {}),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, {}),
         **casilla_inputs,
     }
     return calculate_registry_snapshot(
@@ -243,7 +244,7 @@ def _calculate_193(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values, "modelo-193-123-perceptores-anual": Decimal("3")}
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     result = calculate_registry_snapshot(
         snapshot,

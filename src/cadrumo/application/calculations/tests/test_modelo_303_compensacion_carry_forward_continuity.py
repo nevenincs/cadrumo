@@ -51,6 +51,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -59,7 +61,6 @@ from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -206,7 +207,7 @@ def _calculate_303(
         **cuota_binding_overrides,
         **relation_binding_values,
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

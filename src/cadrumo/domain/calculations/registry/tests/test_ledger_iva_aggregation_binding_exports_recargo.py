@@ -10,6 +10,8 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import (
@@ -22,7 +24,6 @@ from .. import (
     ModeloRevision,
     RegistryCalculationResult,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from .._binding_selector_utils import selector_as_dict
@@ -222,7 +223,7 @@ def test_modelo_303_2009_revision_domestic_base_aggregates_from_ledger() -> None
     assert values["modelo-303-iva-repercutido-general-cuota"] == Decimal("1365")
     assert values["modelo-303-iva-soportado-interiores-cuota"] == Decimal("63")
     # The new base bindings map to the numbered base casillas (01/04/07/28).
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     assert inputs[_M303_REPERCUTIDO_GENERAL_BASE_CASILLA] == Decimal("6500")
     assert inputs[_M303_SOPORTADO_INTERIORES_BASE_CASILLA] == Decimal("300")
 
@@ -380,7 +381,7 @@ def _calculate_303_2009_from_observations(
         "modelo-303-compensacion-pendiente-anteriores": Decimal("0"),
         **resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

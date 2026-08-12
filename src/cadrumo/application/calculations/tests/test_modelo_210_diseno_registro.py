@@ -31,13 +31,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import validated_casilla_id
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import (
-    BindingId,
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import BindingId, calculate_registry_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,7 +63,7 @@ def _calculate(
     casilla_values = {
         validated_casilla_id(k, surface="diseno_registro_test"): Decimal(v) for k, v in casilla_inputs.items()
     }
-    bound = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    bound = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs={**bound, **casilla_values},

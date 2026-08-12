@@ -42,13 +42,11 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import (
-    ManualWorkedExamplePayload,
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import ManualWorkedExamplePayload, calculate_registry_snapshot
 from ....domain.iva import (
     InputClassification,
     ProrrataInputs,
@@ -178,7 +176,7 @@ def _m303_prorrata_percentage_from_manual_annual_volumes(payload: ManualWorkedEx
     binding_values = _m303_zero_bindings()
     manual_volume_inputs = _declared_annual_volumes()
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         **manual_volume_inputs,
     }
     result = calculate_registry_snapshot(

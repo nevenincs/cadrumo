@@ -72,6 +72,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -80,7 +82,6 @@ from .. import (
     RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 
@@ -127,7 +128,7 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
         ),
     )
     binding_values = dict(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, observations))
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     return calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

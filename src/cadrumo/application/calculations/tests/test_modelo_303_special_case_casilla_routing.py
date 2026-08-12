@@ -38,13 +38,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import (
-    calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
-)
+from ....domain.calculations.registry import calculate_registry_snapshot
 from ....domain.iva import IvaCategory
 from ....domain.transactions import (
     BusinessClassification,
@@ -146,7 +145,7 @@ def test_intracom_acquisition_self_assesses_and_deducts_the_same_cuota(tmp_path:
             _PRIOR_COMPENSATION_BINDING: Decimal("0"),
             **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
         }
-        inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+        inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
@@ -179,7 +178,7 @@ def test_intracom_cuota_is_not_silently_dropped_from_deducible(tmp_path: Path) -
             _PRIOR_COMPENSATION_BINDING: Decimal("0"),
             **{b: Decimal("0") for b in _LEDGER_CUOTA_BINDINGS if b != _INTRACOM_BINDING},
         }
-        inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+        inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,

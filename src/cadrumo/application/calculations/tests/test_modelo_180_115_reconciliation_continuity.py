@@ -51,6 +51,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -60,7 +62,6 @@ from ....domain.calculations.registry import (
     RelationId,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -182,7 +183,7 @@ def _calculate_115(
         if casilla_id not in _M115_BOUND_BINDINGS_BY_CASILLA
     }
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         **manual_inputs,
     }
     return calculate_registry_snapshot(
@@ -214,7 +215,7 @@ def _calculate_180(
     relation_binding_values = materialize_relation_binding_values(snapshot.revision, relation_values, period="0A")
     binding_values = {**relation_binding_values, "modelo-180-115-perceptores-anual": Decimal("2")}
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
     result = calculate_registry_snapshot(
         snapshot,

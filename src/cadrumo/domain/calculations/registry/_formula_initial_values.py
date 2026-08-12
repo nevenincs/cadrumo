@@ -260,8 +260,8 @@ def _reject_smuggled_previous_filing_inputs(
     if smuggled_previous_filing_bound:
         raise RegistryValidationError(
             "observation-backed bound registry casillas cannot be supplied via inputs "
-            "without a matching binding_values entry; the projection from "
-            "resolve_bound_inputs_by_casilla_id must include the binding value as the "
+            "without a matching binding_values entry; the available bound-input "
+            "projection must include the binding value as the "
             f"source of truth: {smuggled_previous_filing_bound!r}",
             translated_message="errors.calc.bound_input_smuggled_without_binding_value",
             context={"casilla_ids": ",".join(smuggled_previous_filing_bound)},

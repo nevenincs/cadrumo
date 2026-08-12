@@ -8,6 +8,8 @@ from typing import Any
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....application.filing import _filing_binding_values
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import bundled_path
@@ -16,7 +18,6 @@ from ....domain.calculations.registry import (
     RegistrySnapshotRef,
     calculate_registry_snapshot,
     load_modelo_path,
-    resolve_bound_inputs_by_casilla_id,
 )
 from ....domain.filing import (
     ModeloCasillaProvenance,
@@ -139,7 +140,7 @@ def _calculated_revision(
         "iva-349-declarante-numero-rectificaciones": Decimal("0"),
         "iva-349-declarante-importe-rectificaciones": Decimal("0"),
     }
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     engine_result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,

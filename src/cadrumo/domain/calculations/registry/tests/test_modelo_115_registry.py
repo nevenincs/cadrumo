@@ -7,8 +7,10 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from .....core.resources import bundled_path
-from .. import InputKind, RegistryValidator, build_snapshot, resolve_bound_inputs_by_casilla_id
+from .. import InputKind, RegistryValidator, build_snapshot
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_modelo
 
@@ -73,7 +75,7 @@ def test_modelo_115_binds_retenciones_aggregation_and_calculates_rent_withholdin
         "modelo-115-base-retenciones": Decimal("2700.00"),
     }
     inputs = {
-        **resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
         "04": Decimal("0"),
     }
     result = calculate_registry_snapshot(

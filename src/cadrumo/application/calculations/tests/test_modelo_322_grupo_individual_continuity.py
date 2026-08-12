@@ -41,13 +41,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
+
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
     RegistryCalculationResult,
     calculate_registry_snapshot,
-    resolve_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
@@ -123,7 +124,7 @@ def _calculate_322(*, filing_year: int) -> tuple[RegistryCalculationResult, int]
     """
     snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=filing_year, period=_PERIOD)
     binding_values = resolve_ledger_iva_aggregation_binding_values(snapshot.revision, _year_ledger(filing_year))
-    inputs = resolve_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
+    inputs = resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values)
     result = calculate_registry_snapshot(
         snapshot,
         inputs=inputs,
