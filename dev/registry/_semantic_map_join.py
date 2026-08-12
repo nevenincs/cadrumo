@@ -11,7 +11,13 @@ from __future__ import annotations
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import Period
-from cadrumo.domain.calculations.registry import ModeloId, RegistrySnapshot, RegistryValidationError, RevisionId
+from cadrumo.domain.calculations.registry import (
+    ModeloId,
+    ProjectionEndpointDeclaration,
+    RegistrySnapshot,
+    RegistryValidationError,
+    RevisionId,
+)
 
 from ._record_design_ir import (
     RecordDesignIntermediate,
@@ -101,6 +107,7 @@ class JoinedRecordDesign(_StrictModel):
     filing_period: Period | None = None
     records: tuple[JoinedRecordDesignRecord, ...] = Field(min_length=1)
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
+    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = ()
     variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...] = ()
     m303_variable_envelope: JoinedM303VariableEnvelope | None = None
 
@@ -175,6 +182,7 @@ def join_record_design_semantics(
         filing_period=snapshot.filing_period,
         records=joined_records,
         fields=tuple(field for record in joined_records for field in record.fields),
+        projection_endpoints=snapshot.revision.projection_endpoints,
         variable_envelopes=intermediate.variable_envelopes,
         m303_variable_envelope=(
             JoinedM303VariableEnvelope(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from decimal import Decimal
 
 import pytest
@@ -10,6 +11,7 @@ import pytest
 from .....core import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
+    OfficialBoxStatus,
     ProrrataActivityRowType,
     ProrrataRegisterRegime,
 )
@@ -18,7 +20,9 @@ from .....domain.prorrata_register import ProrrataActivityRow, ProrrataRegister,
 from .. import (
     InputKind,
     RegistryValidationError,
+    RegistryValidator,
     build_snapshot,
+    classify_official_boxes,
     extract_record_design,
     initial_value_casilla_ids,
     load_catalogue_file,
@@ -47,6 +51,16 @@ _FIELD_NAMES = (
 )
 _OFFICIAL_TYPE_CODES = ("An", "N", "N", "An", "Num")
 _CASILLA_TAG = re.compile(r"\[(5\d{2})\]")
+_NUMBERED_PROJECTION_ENDPOINTS = _ENDPOINTS | frozenset(str(number) for number in range(700, 736))
+_PROJECTION_KIND_COUNTS = {
+    "m303_prorrata_activity": 25,
+    "m303_differentiated_deduction": 36,
+    "m303_regimen_simplificado_activity": 4,
+    "m303_regimen_simplificado_fact": 2,
+    "m303_regimen_simplificado_module": 28,
+    "m303_exonerado_390_activity": 12,
+    "m303_exonerado_390_operaciones_terceros": 1,
+}
 
 
 def _projection_refs() -> tuple[M303ProrrataActivityProjectionRef, ...]:
@@ -204,6 +218,118 @@ def test_projection_only_endpoints_reject_direct_input_and_are_not_zero_seeded()
             binding_values={},
             target_period="4T",
         )
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "source_ref", "filing_year", "_design_epoch", "period", "_cnae_width"),
+    _DESIGNS,
+)
+def test_real_m303_revision_owns_the_complete_grounded_projection_declaration_matrix(
+    revision_id: str,
+    source_ref: str,
+    filing_year: int,
+    _design_epoch: str,
+    period: str,
+    _cnae_width: int,
+) -> None:
+    """Each supported record-design epoch declares every typed endpoint once."""
+    modelo, catalogues = _committed_modelo("303")
+    revision = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=filing_year,
+        period=period,
+    ).revision
+
+    assert revision.id == revision_id
+    assert revision.export_layouts == ()
+    assert len(revision.projection_endpoints) == 108
+    assert Counter(declaration.projection_ref.projection_kind for declaration in revision.projection_endpoints) == (
+        _PROJECTION_KIND_COUNTS
+    )
+    assert all(
+        declaration.legal_refs == ("rd-1624-1992:art-71", "orden-eha-3786-2008:art-1")
+        and declaration.source_refs == (source_ref,)
+        for declaration in revision.projection_endpoints
+    )
+    numbered = frozenset(
+        str(casilla_id)
+        for declaration in revision.projection_endpoints
+        if (
+            casilla_id := declaration.projection_ref.casilla_id
+            if hasattr(declaration.projection_ref, "casilla_id")
+            else None
+        )
+        is not None
+    )
+    assert numbered == _NUMBERED_PROJECTION_ENDPOINTS
+    assert all(
+        next(casilla for casilla in revision.casillas if casilla.id == casilla_id).input_kind
+        is InputKind.PROJECTION_ONLY
+        for casilla_id in numbered
+    )
+    statuses = classify_official_boxes(revision)
+    assert all(statuses[casilla_id] is OfficialBoxStatus.ADDRESSED for casilla_id in numbered)
+
+
+def test_m303_projection_declaration_refuses_a_foreign_revision_record_design_source() -> None:
+    """A mutation cannot transplant a 2025 endpoint declaration into the 2026 revision."""
+    modelo, catalogues = _committed_modelo("303")
+    revision = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2026,
+        period="4T",
+    ).revision
+    foreign = revision.projection_endpoints[0].model_copy(update={"source_refs": ("aeat-dr-303-2025",)})
+    revised = revision.model_copy(update={"projection_endpoints": (foreign, *revision.projection_endpoints[1:])})
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: revised}})
+
+    with pytest.raises(RegistryValidationError, match="outside the selected revision authority"):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+
+
+def test_m303_projection_declaration_matrix_cannot_be_deleted_before_snapshot_construction() -> None:
+    """All real 2025 projection-only casillas require their revision declaration matrix."""
+    modelo, catalogues = _committed_modelo("303")
+    revision = build_snapshot(
+        modelo,
+        catalogues,
+        source_root=bundled_path(),
+        filing_year=2025,
+        period="4T",
+    ).revision
+    assert len(revision.projection_endpoints) == 108
+    deleted = revision.model_copy(update={"projection_endpoints": ()})
+    mutated_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision.id: deleted}})
+
+    with pytest.raises(
+        RegistryValidationError, match="projection_only casillas lack revision-owned projection declarations"
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
+    with pytest.raises(
+        RegistryValidationError, match="projection_only casillas lack revision-owned projection declarations"
+    ):
+        build_snapshot(
+            mutated_modelo,
+            catalogues,
+            source_root=bundled_path(),
+            filing_year=2025,
+            period="4T",
+        )
+
+
+def test_real_layoutless_revision_without_projection_only_casillas_needs_no_declarations() -> None:
+    """The completeness gate is scoped to the canonical projection-only capability."""
+    modelo, catalogues = _committed_modelo("130")
+    revision = modelo.revisions["2019-y-siguientes"]
+
+    assert revision.export_layouts == ()
+    assert revision.projection_endpoints == ()
+    assert all(casilla.input_kind is not InputKind.PROJECTION_ONLY for casilla in revision.casillas)
+    RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(modelo)
 
 
 def test_typed_register_rows_project_to_only_their_deterministic_fixed_slots() -> None:

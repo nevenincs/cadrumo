@@ -215,7 +215,7 @@ def _build_modelo_definition_from_data(source_path: Path, data: Mapping[str, obj
             revision_id=revision_id,
             raw_revision=raw_revision_table,
         )
-        payload = _compile_revision_export_semantics(source_path, payload)
+        payload = _compile_revision_projection_semantics(source_path, payload)
         try:
             revision = ModeloRevision.model_validate(payload)
         except ValidationError as exc:
@@ -314,9 +314,28 @@ def _compile_export_semantic_field(source_path: Path, raw_field: object) -> dict
     return payload
 
 
-def _compile_revision_export_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
-    """Compile every export field's TOML token before strict schema construction."""
+def _compile_projection_endpoint_declaration(source_path: Path, raw_declaration: object) -> dict[str, object]:
+    """Hydrate one revision-owned projection declaration at the TOML boundary."""
+    declaration = _as_toml_table(raw_declaration)
+    if declaration is None:
+        return _passthrough_toml_row(raw_declaration)
+    payload = dict(declaration)
+    if "projection_ref" in payload:
+        try:
+            payload["projection_ref"] = compile_filing_projection_ref(payload["projection_ref"])
+        except (ValidationError, ValueError) as exc:
+            raise RegistryLoadError(f"{source_path}: {exc}") from exc
+    return payload
+
+
+def _compile_revision_projection_semantics(source_path: Path, payload: Mapping[str, object]) -> dict[str, object]:
+    """Compile revision-owned projection refs and export fields before schema construction."""
     compiled = dict(payload)
+    declarations = _as_toml_array(payload.get("projection_endpoints"))
+    if declarations is not None:
+        compiled["projection_endpoints"] = tuple(
+            _compile_projection_endpoint_declaration(source_path, raw_declaration) for raw_declaration in declarations
+        )
     layouts = _as_toml_array(payload.get("export_layouts"))
     if layouts is None:
         return compiled

@@ -9,6 +9,7 @@ any output fact from one.
 from __future__ import annotations
 
 import re
+from collections import Counter
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Final, Literal, cast
@@ -30,6 +31,7 @@ from cadrumo.domain.calculations.registry import (
     ExportValuePolicy,
     FixedWidthRecordRenderError,
     ModeloId,
+    ProjectionEndpointDeclaration,
     RegistryValidationError,
     RevisionId,
     SourceRefId,
@@ -193,6 +195,7 @@ def render_complete_export_tree(
             )
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
     records, derivations = _render_records(joined.records, transport_profile, render_profile)
+    _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     layout = ExportLayoutDefinition.model_validate(
         {
             "id": transport_profile.layout_id,
@@ -246,6 +249,47 @@ def render_complete_export_tree(
         provenance_manifest=provenance_manifest,
         m303_variable_envelope=m303_variable_envelope,
     )
+
+
+def _validate_generated_projection_bijection(
+    derivations: tuple[ExportFieldDerivation, ...],
+    declarations: tuple[ProjectionEndpointDeclaration, ...],
+) -> None:
+    """Refuse a generated layout that differs from revision endpoint authority."""
+    projection_refs = tuple(
+        derivation.field.projection_ref
+        for derivation in derivations
+        if derivation.field.kind is CasillaFieldKind.PROJECTION
+    )
+    if any(reference is None for reference in projection_refs):
+        raise RegistryValidationError("generated projection field must carry a typed projection_ref")
+    generated = tuple(reference for reference in projection_refs if reference is not None)
+    duplicate_generated = tuple(
+        sorted(repr(reference) for reference, count in Counter(generated).items() if count > 1),
+    )
+    if duplicate_generated:
+        raise RegistryValidationError(
+            "generated layout contains duplicate projection declarations: " + ", ".join(duplicate_generated),
+        )
+    declared = tuple(declaration.projection_ref for declaration in declarations)
+    duplicate_declared = tuple(
+        sorted(repr(reference) for reference, count in Counter(declared).items() if count > 1),
+    )
+    if duplicate_declared:
+        raise RegistryValidationError(
+            "revision projection declarations are not unique: " + ", ".join(duplicate_declared),
+        )
+    missing = tuple(sorted(repr(reference) for reference in set(declared) - set(generated)))
+    undeclared = tuple(sorted(repr(reference) for reference in set(generated) - set(declared)))
+    if missing or undeclared:
+        details: list[str] = []
+        if missing:
+            details.append("missing declarations " + ", ".join(missing))
+        if undeclared:
+            details.append("undeclared generated refs " + ", ".join(undeclared))
+        raise RegistryValidationError(
+            "generated projection layout must exactly biject revision declarations: " + "; ".join(details),
+        )
 
 
 def _validate_transport_profile(joined: JoinedRecordDesign, profile: ExportTreeTransportProfile) -> None:

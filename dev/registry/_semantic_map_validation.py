@@ -12,6 +12,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cadrumo.core import FilingProjectionRef
 from cadrumo.domain.calculations.registry import (
     CasillaFieldKind,
     RegistrySnapshot,
@@ -272,20 +273,27 @@ def _validate_entry_references(semantic_map: SemanticMap, snapshot: RegistrySnap
 
 
 def _validate_projection_ref_admission(semantic_map: SemanticMap, snapshot: RegistrySnapshot) -> None:
-    """Require each mapped repeated-row reference to be admitted exactly once.
+    """Require an exact semantic-map/declaration projection bijection.
 
-    The selected immutable revision owns this index.  Map anchors remain only
-    source evidence, so neither their geometry nor field labels can select or
-    repair a projection identity.
+    The selected immutable revision owns this declaration index. Map anchors
+    remain source evidence, so neither their geometry nor field labels can
+    select, repair, or omit a projection identity.
     """
     projection_refs = tuple(
         entry.projection_ref for entry in semantic_map.entries if entry.kind is CasillaFieldKind.PROJECTION
     )
-    if not projection_refs:
-        return
     if any(projection_ref is None for projection_ref in projection_refs):
         raise RegistryValidationError("projection semantic-map entries must carry a typed projection_ref")
     typed_refs = tuple(projection_ref for projection_ref in projection_refs if projection_ref is not None)
+    _validate_projection_ref_bijection(typed_refs, snapshot)
+
+
+def _validate_projection_ref_bijection(
+    projection_refs: tuple[FilingProjectionRef, ...],
+    snapshot: RegistrySnapshot,
+) -> None:
+    """Require typed map refs to be the exact selected-revision declaration set."""
+    typed_refs = projection_refs
     duplicate_refs = tuple(projection_ref for projection_ref, count in Counter(typed_refs).items() if count > 1)
     if duplicate_refs:
         raise RegistryValidationError(
@@ -294,16 +302,21 @@ def _validate_projection_ref_admission(semantic_map: SemanticMap, snapshot: Regi
         )
     admitted = snapshot.revision.projection_endpoint_index()
     for projection_ref in typed_refs:
-        admitted_fields = admitted.get(projection_ref)
-        if admitted_fields is None:
+        declarations = admitted.get(projection_ref)
+        if declarations is None:
             raise RegistryValidationError(
                 f"semantic-map projection reference is not admitted by the target revision: {projection_ref!r}",
             )
-        if len(admitted_fields) != 1:
+        if len(declarations) != 1:
             raise RegistryValidationError(
                 "semantic-map projection reference is not admitted exactly once by the target revision: "
-                f"{projection_ref!r} resolves to {len(admitted_fields)} fields",
+                f"{projection_ref!r} resolves to {len(declarations)} declarations",
             )
+    missing = tuple(sorted(repr(reference) for reference in set(admitted) - set(typed_refs)))
+    if missing:
+        raise RegistryValidationError(
+            "semantic map omits target-revision projection declarations: " + ", ".join(missing),
+        )
 
 
 def _validate_exact_record_bijection(

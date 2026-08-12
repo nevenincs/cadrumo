@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:f47d754e09a5c3bc7b944cd992956fb958909089336ec901d95fb7612df8ff7a'
+body_hash: 'sha256:ae5020edaad5beaa21d69bddbd107688f0b62ba40d4dcd30ee9ece79c381fc11'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -54,6 +54,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S59]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -107,6 +108,7 @@ related:
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -168,6 +170,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S57 Typed Filing Projection Authority Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit` - `aeat-export-fragment-generator-authority` audit: `S60 Producer and Projection Address Closure Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit` - `aeat-export-fragment-generator-authority` audit: `S61 DP30300 Variable Envelope Audit`
+- `2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S62 Projection Declaration Authority Audit`
 
 ### exec
 
@@ -217,6 +220,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S57` - Integrate the strict core-owned discriminated FilingProjectionRef union atomically through CasillaFieldKind.PROJECTION, projection_ref payload semantics, semantic-map and registry schemas and loaders, provenance, generator, renderer dispatch, and the S47-S50 projectors, deleting description-regex, section, slot, offset, numeric, neighbouring-field, string-key, and legacy inference
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61` - Define and implement one typed DP30300 variable-envelope semantic and composition authority for all thirteen prefix fields, the Variable body, relative closer, and derived total across the five Modelo 303 epochs, resolving program identifier and developer tax identity from explicit product authority, carrying the contract through semantic-map provenance and generation, and deleting the blanket generator refusal without literals, aliases, defaults, or inferred producer identities
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with classify_official_boxes, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback
 
 ### plan
 
