@@ -100,17 +100,14 @@ def rule_add(
             tr("cli.app.ledger.rule.empty_pattern"),
         )
     validated_category_id = _validate_category_id(category_id)
-    try:
-        rule = add_classification_rule(
-            bucket_id=bucket_id,
-            description_pattern=description_pattern,
-            classification=classification,
-            category_id=validated_category_id,
-            priority=priority,
-            actor=actor or resolve_active_bucket_id() or "operator",
-        )
-    except ValueError as exc:
-        raise _bad(str(exc)) from exc
+    rule = add_classification_rule(
+        bucket_id=bucket_id,
+        description_pattern=description_pattern,
+        classification=classification,
+        category_id=validated_category_id,
+        priority=priority,
+        actor=actor or resolve_active_bucket_id() or "operator",
+    )
     payload = {
         "rule_id": rule.rule_id,
         "description_pattern": rule.description_pattern,

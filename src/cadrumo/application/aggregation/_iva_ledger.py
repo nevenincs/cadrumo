@@ -1053,32 +1053,69 @@ def _sectorized_deduction_partitions(
     dict[str, IvaLedgerSectorApportionment],
     dict[str | None, list[IvaLedgerObservation]],
 ]:
-    by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
-    if len(by_sector) != len(apportionment.sector_apportionments):
-        raise AggregationValidationError(t("sectorized IVA apportionment carries duplicate sector definitions"))
+    by_sector = _sector_apportionments_by_id(apportionment)
     partitions: dict[str | None, list[IvaLedgerObservation]] = {}
     for observation in observations:
         if observation.deduction_fact_kind is None:
             continue
-        sector_key = observation.prorrata_sector_id
-        if sector_key is None:
-            if observation.input_classification is not InputClassification.COMMON:
-                raise AggregationValidationError(t("sectorized IVA input is missing explicit sector identity"))
-            partitions.setdefault(None, []).append(observation)
-            continue
-        if sector_key not in by_sector:
-            raise AggregationValidationError(
-                t("sectorized IVA input references an unknown sector"), context={"sector_id": sector_key}
-            )
-        sector = by_sector[sector_key]
-        if sector.regime is ProrrataRegisterRegime.NINGUNA:
-            raise AggregationValidationError(
-                t("sectorized IVA input references an inactive sector"), context={"sector_id": sector_key}
-            )
-        if sector.regime is ProrrataRegisterRegime.ESPECIAL and observation.input_classification is None:
-            raise AggregationValidationError(t("sectorized prorrata especial requires explicit input classification"))
-        partitions.setdefault(sector_key, []).append(observation)
+        _append_sectorized_deduction_observation(partitions, by_sector, observation)
     return by_sector, partitions
+
+
+def _sector_apportionments_by_id(
+    apportionment: IvaLedgerProrrataApportionment,
+) -> dict[str, IvaLedgerSectorApportionment]:
+    by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
+    if len(by_sector) != len(apportionment.sector_apportionments):
+        raise AggregationValidationError(t("sectorized IVA apportionment carries duplicate sector definitions"))
+    return by_sector
+
+
+def _append_sectorized_deduction_observation(
+    partitions: dict[str | None, list[IvaLedgerObservation]],
+    sectors: dict[str, IvaLedgerSectorApportionment],
+    observation: IvaLedgerObservation,
+) -> None:
+    sector_key = observation.prorrata_sector_id
+    if sector_key is None:
+        _append_common_sector_observation(partitions, observation)
+        return
+    sector = _active_sector_apportionment(sectors, sector_key)
+    _require_sector_input_classification(sector, observation)
+    partitions.setdefault(sector_key, []).append(observation)
+
+
+def _append_common_sector_observation(
+    partitions: dict[str | None, list[IvaLedgerObservation]],
+    observation: IvaLedgerObservation,
+) -> None:
+    if observation.input_classification is not InputClassification.COMMON:
+        raise AggregationValidationError(t("sectorized IVA input is missing explicit sector identity"))
+    partitions.setdefault(None, []).append(observation)
+
+
+def _active_sector_apportionment(
+    sectors: dict[str, IvaLedgerSectorApportionment],
+    sector_key: str,
+) -> IvaLedgerSectorApportionment:
+    sector = sectors.get(sector_key)
+    if sector is None:
+        raise AggregationValidationError(
+            t("sectorized IVA input references an unknown sector"), context={"sector_id": sector_key}
+        )
+    if sector.regime is ProrrataRegisterRegime.NINGUNA:
+        raise AggregationValidationError(
+            t("sectorized IVA input references an inactive sector"), context={"sector_id": sector_key}
+        )
+    return sector
+
+
+def _require_sector_input_classification(
+    sector: IvaLedgerSectorApportionment,
+    observation: IvaLedgerObservation,
+) -> None:
+    if sector.regime is ProrrataRegisterRegime.ESPECIAL and observation.input_classification is None:
+        raise AggregationValidationError(t("sectorized prorrata especial requires explicit input classification"))
 
 
 def _partition_apportionment(

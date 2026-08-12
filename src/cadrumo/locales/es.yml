@@ -3229,6 +3229,8 @@ cli:
           ids exactos quedan como escape avanzado.
         resume_target_help: Id opcional de ejecución de flujo de 16 caracteres o id
           de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
+        review_help: Revisa el esquema, los valores, los hallazgos, el progreso y
+          los bloqueos de una unidad de trabajo de modelo.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
         revision_selector_ambiguous: 'Más de una revisión de cálculo coincide con
@@ -3531,8 +3533,7 @@ cli:
         delegate_help: Correo de cuenta de servicio delegada en una suplantación encadenada
           (repetible)
         detail:
-          impersonation_config_invalid: 'la configuración de suplantación no es válida:
-            {detail}'
+          impersonation_config_invalid: La configuración de suplantación no es válida.
           oauth_desktop_rejects_impersonation_options: --kind oauth_desktop no acepta
             --target-principal, --scope, --delegate, --subject ni --lifetime-seconds
           target_principal_required: --target-principal es obligatorio cuando --kind
@@ -3558,11 +3559,11 @@ cli:
       detail:
         client_json_bad_wrapper: el JSON de cliente en {path} tiene un envoltorio
           "installed" que no es un objeto
-        client_json_invalid: 'el JSON de cliente en {path} no es JSON válido: {reason}'
+        client_json_invalid: El JSON de cliente de {path} no es un JSON válido.
         client_json_not_desktop: el JSON de cliente en {path} no es un cliente de
           escritorio de Cloud Console; se esperaba una clave envoltorio "installed"
-        client_json_schema_invalid: 'el JSON de cliente en {path} no superó la validación
-          de esquema: {reason}'
+        client_json_schema_invalid: El JSON de cliente de {path} no cumple el esquema
+          requerido.
         client_json_unreadable: 'no se pudo leer el JSON de cliente en {path}: {reason}'
         client_unregistered: no hay ningún cliente OAuth registrado para el perfil
           {profile}
@@ -3648,8 +3649,8 @@ cli:
               anuales, arrastre de trimestres anteriores, etc.)
             root_folder_required: No hay carpeta raíz de Drive configurada; ejecute
               `aeat config google folder set <id>` primero
-            snapshot_failure: 'No se puede construir el snapshot del registry para
-              modelo {modelo} ({period} {year}): {detail}'
+            snapshot_failure: No se puede construir la instantánea del registro para
+              el modelo {modelo} ({period} {year}).
             unknown_modelo: Modelo desconocido {modelo!r}; los modelos disponibles
               son {available}
             year_help: Año de declaración (p. ej. 2025)
@@ -3867,7 +3868,7 @@ cli:
           LIRPF.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
           descendiente(s).
-        invalid_flag: 'El indicador --descendiente %{flag} no es válido: %{detail}'
+        invalid_flag: El valor de --descendiente no es válido.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
@@ -3938,9 +3939,8 @@ cli:
       import_help: Registra un paquete portátil de perfil desde un archivo
       import_invalid_bundle: 'Paquete de perfil no válido: el JSON no se ajusta al
         esquema del paquete de perfil.'
-      import_invalid_tax_id: 'El identificador fiscal del paquete de perfil no es
-        válido: %{error}. Corrige el identificador y vuelve a exportar, o importa
-        un paquete válido.'
+      import_invalid_tax_id: El identificador fiscal del paquete de perfil no es válido.
+        Corrígelo y vuelve a exportar, o importa un paquete válido.
       import_label_help: Nombre visible para el perfil importado; por defecto el nombre
         guardado en el paquete. Úsalo cuando la etiqueta guardada ya esté en uso.
       import_label_taken: Ya existe un perfil con el nombre %{name}. Vuelve a ejecutar
@@ -3979,9 +3979,8 @@ cli:
       preflight_revision_id_help: Anulación opcional del id de revisión del registro
         para reproducción exacta (p. ej. 2024-0A); por defecto usa la revisión activa
         para el modelo, ejercicio y periodo.
-      preflight_revision_override_invalid: 'La anulación de la revisión del registro
-        no es válida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}.
-        Ejecute `aeat app modelo describe %{modelo}` para listar las revisiones registradas.'
+      preflight_revision_override_invalid: La revisión del registro no es válida para
+        el modelo {modelo} y el ejercicio {filing_year}.
       preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
         %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
         describe %{modelo}` para ver los periodos y revisiones válidos.

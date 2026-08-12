@@ -34,7 +34,7 @@ from ...application.ledger import (
 from ...core.config import load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
-from ._common import _bad, _emit_envelope, _state, _tx_repo
+from ._common import _emit_envelope, _state, _tx_repo
 from ._ledger_business_payloads import (
     EvidenceConsentListResult,
     EvidenceConsentRederiveResult,
@@ -210,24 +210,14 @@ def _register_consent_rederive_command() -> None:
     ) -> None:
         """Re-derive one artefact on this host from its cached transcription."""
         bucket_id = _tx_repo(_state()).bucket_id
-        try:
-            outcome = rederive_artefact_on_host(
-                bucket_id=bucket_id,
-                evidence_reference=evidence_reference,
-                source_content_sha256=content_address,
-                transcriber_cache_key=transcriber,
-                settings=load_settings(),
-                read_on_host=_on_host_reader(),
-            )
-        except ValueError as exc:
-            # RAISED, not merely constructed. `_bad` returns the exception rather
-            # than raising it, so calling it bare built an instructive refusal and
-            # threw it away: every re-derivation failure -- unknown artefact,
-            # absent cached transcription, a reader stamping a cloud transport --
-            # exited zero with nothing printed. Silence is the worst possible
-            # answer here, because the operator's next move is to trust that the
-            # artefact came back on-host when it never did.
-            raise _bad(tr(_REDERIVE_REFUSED_LOCALE_KEY, detail=str(exc))) from exc
+        outcome = rederive_artefact_on_host(
+            bucket_id=bucket_id,
+            evidence_reference=evidence_reference,
+            source_content_sha256=content_address,
+            transcriber_cache_key=transcriber,
+            settings=load_settings(),
+            read_on_host=_on_host_reader(),
+        )
         _emit_envelope(
             ctx,
             command="ledger.evidence.consent.rederive",

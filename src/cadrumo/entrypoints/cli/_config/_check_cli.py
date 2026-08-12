@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from ....core import ServiceCapability, resolve_active_bucket_id
+from ....core import NoRecoveryOutcome, ServiceCapability, resolve_active_bucket_id
 
 if TYPE_CHECKING:
     from ....application.provisioning import ContentionSnapshot, DependencyStatus, HardwareProfile
@@ -135,7 +135,14 @@ def register(app: typer.Typer) -> None:
         # storage adapter owns, so it is supplied here at the composition root rather
         # than reached for from the application layer.
         preflight = [
-            row.model_dump(mode="python")
+            {
+                "check": row.check,
+                "healthy": row.healthy,
+                "severity": row.severity,
+                "facts": {},
+                "precondition_action": None,
+                "no_recovery_outcome": None if row.healthy else NoRecoveryOutcome.OPERATOR_DECISION,
+            }
             for row in run_preflight_checks(
                 object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
             )
@@ -183,8 +190,9 @@ def register(app: typer.Typer) -> None:
         for dependency in dependency_payloads:
             lines.extend(_dependency_text_lines(dependency))
         for row in preflight:
-            tail = f"\t{row['remediation']}" if row["remediation"] else ""
-            lines.append(f"{preflight_label}\t{row['check']}\t{row['severity']}\t{row['detail']}{tail}")
+            lines.append(f"{preflight_label}\t{row['check']}\t{row['severity']}")
+            if row["no_recovery_outcome"] is not None:
+                lines.append(f"{row['check']}.outcome\t{row['no_recovery_outcome']}")
         for issue in issues:
             lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
         _emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))

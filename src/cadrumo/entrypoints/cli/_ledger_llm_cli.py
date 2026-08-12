@@ -51,7 +51,12 @@ from ...llm import (
     LLMSuggestionRejectionResult,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo
-from ._ledger_support import _ledger_validation_bad, _parse_decimal, _resolve_id
+from ._ledger_support import (
+    _ledger_transaction_validation_no_recovery,
+    _ledger_validation_bad,
+    _parse_decimal,
+    _resolve_id,
+)
 
 __all__ = [
     "dispatch_autosplit",
@@ -317,7 +322,7 @@ def _emit_split(
             actor=actor or resolve_active_bucket_id() or "operator",
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(applied, LLMSplitApplyResult)
@@ -384,7 +389,7 @@ def _emit_single(
             source_command="aeat app ledger classify --read-evidence --auto-split --apply",
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     transaction_payload = ledger_transaction_payload(result.transaction)
@@ -753,7 +758,7 @@ def ledger_saturate_llm(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(result, ManualLedgerTransactionResult)
@@ -816,7 +821,7 @@ def ledger_operator_iva_derive(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
 

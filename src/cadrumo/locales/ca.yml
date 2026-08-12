@@ -3164,6 +3164,8 @@ cli:
           els ids exactes queden com a escape avançat.
         resume_target_help: Id opcional d'execució de flux de 16 caràcters o id d'unitat
           de treball de 64 caràcters. Prefereix --modelo --year --period.
+        review_help: Revisa l'esquema, els valors, les troballes, el progrés i els
+          bloquejos d'una unitat de treball de model.
         revision_help: Identificador estable de la revisió registrada del model; executa
           `aeat app modelo describe MODEL` per veure els ids de revisió disponibles.
         revision_selector_ambiguous: 'Més d''una revisió de càlcul coincideix amb
@@ -3463,8 +3465,7 @@ cli:
         delegate_help: Correu de compte de servei delegat en una suplantació encadenada
           (repetible)
         detail:
-          impersonation_config_invalid: 'la configuració de suplantació no és vàlida:
-            {detail}'
+          impersonation_config_invalid: La configuració de suplantació no és vàlida.
           oauth_desktop_rejects_impersonation_options: --kind oauth_desktop no accepta
             --target-principal, --scope, --delegate, --subject ni --lifetime-seconds
           target_principal_required: --target-principal és obligatori quan --kind
@@ -3489,11 +3490,11 @@ cli:
       detail:
         client_json_bad_wrapper: el JSON de client a {path} té un embolcall "installed"
           que no és un objecte
-        client_json_invalid: 'el JSON de client a {path} no és JSON vàlid: {reason}'
+        client_json_invalid: El JSON de client de {path} no és un JSON vàlid.
         client_json_not_desktop: el JSON de client a {path} no és un client d'escriptori
           de Cloud Console; calia una clau embolcall "installed"
-        client_json_schema_invalid: 'el JSON de client a {path} no ha superat la validació
-          d''esquema: {reason}'
+        client_json_schema_invalid: El JSON de client de {path} no compleix l'esquema
+          requerit.
         client_json_unreadable: 'no s''ha pogut llegir el JSON de client a {path}:
           {reason}'
         client_unregistered: no hi ha cap client OAuth registrat per al perfil {profile}
@@ -3578,8 +3579,8 @@ cli:
               arrossegament de trimestres anteriors, etc.)
             root_folder_required: No hi ha cap carpeta arrel de Drive configurada;
               executeu `aeat config google folder set <id>` primer
-            snapshot_failure: 'No es pot construir el snapshot del registry per al
-              model {modelo} ({period} {year}): {detail}'
+            snapshot_failure: No es pot construir la instantània del registre per
+              al model {modelo} ({period} {year}).
             unknown_modelo: Model desconegut {modelo!r}; els models disponibles són
               {available}
             year_help: Any de declaració (p. ex. 2025)
@@ -3794,7 +3795,7 @@ cli:
           que aquest descendent es un fill, o indiqueu la relacio real amb RELACION=.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} descendent(s).
-        invalid_flag: 'L''indicador --descendiente %{flag} no és vàlid: %{detail}'
+        invalid_flag: El valor de --descendiente no és vàlid.
         list_help: Llista els descendents declarats al perfil actiu.
         remove_help: Elimina un descendent per índex (base 0) del perfil actiu.
         remove_index_help: Índex (base 0) del descendent a eliminar.
@@ -3866,9 +3867,8 @@ cli:
       import_help: Registra un paquet portable de perfil des d'un fitxer
       import_invalid_bundle: 'Paquet de perfil no vàlid: el JSON no s''ajusta a l''esquema
         del paquet de perfil.'
-      import_invalid_tax_id: 'L''identificador fiscal del paquet de perfil no és vàlid:
-        %{error}. Corregeix l''identificador i torna a exportar, o importa un paquet
-        vàlid.'
+      import_invalid_tax_id: L'identificador fiscal del paquet de perfil no és vàlid.
+        Corregeix-lo i torna a exportar, o importa un paquet vàlid.
       import_label_help: Nom visible per al perfil importat; per defecte el nom desat
         al paquet. Fes-lo servir quan l'etiqueta desada ja s'estigui utilitzant.
       import_label_taken: Ja existeix un perfil amb el nom %{name}. Torna a executar
@@ -3906,9 +3906,8 @@ cli:
       preflight_revision_id_help: Anul-lació opcional de l'id de revisió del registre
         per a reproducció exacta (p. ex. 2024-0A); per defecte fa servir la revisió
         activa per al model, exercici i període.
-      preflight_revision_override_invalid: 'L''anul-lació de la revisió del registre
-        no és vàlida per al model %{modelo} exercici %{filing_year}: %{detail}. Executeu
-        `aeat app modelo describe %{modelo}` per llistar les revisions registrades.'
+      preflight_revision_override_invalid: La revisió del registre no és vàlida per
+        al model {modelo} i l'exercici {filing_year}.
       preflight_revision_unresolved: Cap revisió del registre cobreix el model %{modelo}
         exercici %{filing_year} període %{period}. Executeu `aeat app modelo describe
         %{modelo}` per veure els períodes i revisions vàlids.

@@ -95,7 +95,7 @@ def _filing_period_or_refusal(*, modelo: str, period: str, year: int) -> Period:
     except ValueError as exc:
         raise CliRefusedBoundaryError(
             translated_message="cli.config.google.sync.calc.export.snapshot_failure",
-            context={"modelo": modelo, "period": period, "year": year, "detail": str(exc)},
+            context={"modelo": modelo, "period": period, "year": year},
         ) from exc
 
 
@@ -116,7 +116,6 @@ def _load_snapshot(modelo: str, period: Period):
                 "modelo": modelo,
                 "period": period.registry_token,
                 "year": period.filing_year,
-                "detail": str(exc),
             },
         ) from exc
 

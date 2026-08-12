@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.ledger import (
     FindingResolution,
     InvoiceConfirmationResult,
@@ -20,7 +21,7 @@ from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.invoices import InvoiceValidationError
 from ...domain.iva import InvoiceKind
-from ...llm import EvidenceConsentToken, LLMConsentError, LLMProvider, mint_evidence_consent_token
+from ...llm import EvidenceConsentToken, LLMProvider, mint_evidence_consent_token
 from ._common import (
     _bad,
     _emit_envelope,
@@ -46,6 +47,7 @@ from ._ledger_payloads import (
     EvidenceUpdateResult,
     EvidenceViewResult,
 )
+from ._ledger_support import _ledger_cli_no_recovery
 
 evidence_app = typer.Typer(
     name="evidence",
@@ -349,19 +351,16 @@ def _mint_extract_consent(
             tr("cli.app.ledger.evidence.extract_off_host_needs_content_address"),
         )
 
-    try:
-        return mint_evidence_consent_token(
-            settings=load_settings(),
-            # The SINGLE production reading of the standing per-profile bar. Passed
-            # through rather than re-decided here: the minting path refuses when it
-            # is false, so a surface cannot widen the posture by forgetting it.
-            profile_eligible=cloud_evidence_upload_eligible_for_active_profile(),
-            acknowledged=acknowledged,
-            surface=_EXTRACT_CONSENT_SURFACE,
-            evidence_content_address=content_address,
-        )
-    except LLMConsentError as exc:
-        raise _bad(str(exc)) from exc
+    return mint_evidence_consent_token(
+        settings=load_settings(),
+        # The SINGLE production reading of the standing per-profile bar. Passed
+        # through rather than re-decided here: the minting path refuses when it
+        # is false, so a surface cannot widen the posture by forgetting it.
+        profile_eligible=cloud_evidence_upload_eligible_for_active_profile(),
+        acknowledged=acknowledged,
+        surface=_EXTRACT_CONSENT_SURFACE,
+        evidence_content_address=content_address,
+    )
 
 
 def _register_evidence_extract_command() -> None:
@@ -642,7 +641,11 @@ def _run_evidence_confirm(
             resolutions=resolutions,
         )
     except InvoiceValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"error_type": type(exc).__name__},
+        ) from None
 
     invoice = result.invoice
     payload = {

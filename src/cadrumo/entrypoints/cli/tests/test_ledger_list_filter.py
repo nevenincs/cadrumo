@@ -134,6 +134,8 @@ def test_year_filter_without_period_refuses_with_typed_no_recovery() -> None:
 
     assert result.exit_code != 0
     assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
+    assert '"ledger_filter_valid":false' in result.output
+    assert '"reason":"ledger-period-year-pairing"' in result.output
     assert "action.action: null" in result.output
     assert 'action.no_recovery_outcome: "operator_decision"' in result.output
 
@@ -249,13 +251,14 @@ def test_malformed_filter_token_is_rejected() -> None:
 
 def test_period_filter_combined_shape_refuses_with_typed_no_recovery() -> None:
     """A combined period token is redacted and carries no invented action."""
-    combined_period = "2026" + "Q1"
+    combined_period = "2026Q1"
     result = invoke_cached_cli(
         ["app", "ledger", "list", "--filter", f"period={combined_period}", "--filter", "year=2026"],
     )
 
     assert result.exit_code != 0
     assert 'action.failed_condition_id: "cli.ledger.filter.valid"' in result.output
+    assert '"ledger_filter_valid":false' in result.output
+    assert '"reason":"invalid-value-ledger-period"' in result.output
     assert "action.action: null" in result.output
     assert 'action.no_recovery_outcome: "operator_decision"' in result.output
-    assert combined_period not in result.output

@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from .....application.cli_exception_preconditions import CliExceptionPrecondition
 from .....application.flows import run_scripted_flow
 from .....application.user_profile import (
     ProfileBundleExportPurpose,
@@ -434,9 +435,36 @@ async def test_full_screen_app_renders_and_submits_the_export_flow(_bundle_flow_
 #
 # The CLI runner's stdin is not a TTY, so an under-specified invocation is
 # classified NON_INTERACTIVE: no flow launches and the command refuses with
-# the typed error document. Assertions are structural (exit code, category,
-# code, command id, and the literal command-string suggestion) — never the
-# localized message prose.
+# the typed error document. Assertions prove the application-owned failed
+# condition, evidence, and explicit no-recovery outcome — never a local command
+# template or localized message prose.
+
+
+def _assert_no_recovery_refusal(
+    document: dict[str, object],
+    *,
+    condition: CliExceptionPrecondition,
+    facts: dict[str, bool],
+) -> None:
+    error = document["error"]
+    assert isinstance(error, dict)
+    assert "suggestion" not in error
+    action = error["action"]
+    assert isinstance(action, dict)
+    assert action["action"] is None
+    assert action["failed_condition_id"] == condition.value
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["argument_bindings"] == []
+    assert action["conditionality"] == "not_applicable"
+    evidence = action["evidence"]
+    assert evidence == [
+        {
+            "condition_id": condition.value,
+            "evidence_id": f"{condition.value}.observation",
+            "provenance": "runtime_observation",
+            "values": facts,
+        },
+    ]
 
 
 def test_non_interactive_export_without_destination_refuses_with_typed_envelope() -> None:
@@ -450,7 +478,11 @@ def test_non_interactive_export_without_destination_refuses_with_typed_envelope(
     assert document["command"] == "config.profile.export"
     assert document["error"]["category"] == "REFUSED"
     assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"
-    assert document["error"]["suggestion"] == "aeat config profile export NAME --to bundle.json --encrypt"
+    _assert_no_recovery_refusal(
+        document,
+        condition=CliExceptionPrecondition.PROFILE_EXPORT_REQUEST_COMPLETE,
+        facts={"destination_supplied": False},
+    )
 
 
 def test_non_interactive_import_without_path_refuses_with_typed_envelope() -> None:
@@ -464,4 +496,8 @@ def test_non_interactive_import_without_path_refuses_with_typed_envelope() -> No
     assert document["command"] == "config.profile.import"
     assert document["error"]["category"] == "REFUSED"
     assert document["error"]["code"] == "REFUSED_CLI_BOUNDARY"
-    assert document["error"]["suggestion"] == "aeat config profile import bundle.json"
+    _assert_no_recovery_refusal(
+        document,
+        condition=CliExceptionPrecondition.PROFILE_IMPORT_PATH_SUPPLIED,
+        facts={"path_supplied": False},
+    )

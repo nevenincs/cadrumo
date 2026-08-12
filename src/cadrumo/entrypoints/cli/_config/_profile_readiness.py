@@ -53,8 +53,6 @@ def _emit_profile_record_unreadable(
     error: Exception,
 ) -> None:
     from ....application.workflow import unavailable_profile_record_verdict
-
-    message = str(error).splitlines()[0] if str(error) else type(error).__name__
     from .._config_payloads import ConfigProfileShowResult
 
     action = resolve_cli_precondition_action(
@@ -71,7 +69,7 @@ def _emit_profile_record_unreadable(
         registered_bucket=True,
         profile_record_present=False,
         status="profile_record_unreadable",
-        error=f"{type(error).__name__}: {message}",
+        error=type(error).__name__,
         precondition_action=action,
     )
     _emit_envelope(

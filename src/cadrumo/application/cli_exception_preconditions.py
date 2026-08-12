@@ -41,6 +41,8 @@ class CliExceptionPrecondition(StrEnum):
     LEDGER_CENSO_RATIO_CONSISTENT = "cli.ledger.censo_ratio.consistent"
     LEDGER_FILTER_VALID = "cli.ledger.filter.valid"
     LEDGER_TRANSACTION_ID_RESOLVES = "cli.ledger.transaction_id.resolves"
+    LEDGER_TRANSACTION_VALID = "cli.ledger.transaction.valid"
+    LEDGER_INVOICE_VALID = "cli.ledger.invoice.valid"
 
 
 def cli_exception_no_recovery_verdict(

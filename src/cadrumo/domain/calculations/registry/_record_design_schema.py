@@ -62,6 +62,31 @@ class RecordDesignRelativeSuffixMarker(RegistryModel):
     content: str | None = None
 
 
+def _validate_m220_closing_part_shape(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    if tuple(part.offset for part in parts) != ("***",) * 6:
+        raise ValueError("composite relative closing requires six relative offsets")
+    if tuple(part.length for part in parts) != (3, 3, 1, 4, 2, 5):
+        raise ValueError("composite relative closing has an unsupported length sequence")
+    if tuple(part.type_code.strip().casefold() for part in parts) != ("an",) * 6:
+        raise ValueError("composite relative closing requires six alphanumeric parts")
+    if tuple(part.content for part in parts) != (
+        "</T",
+        "220",
+        "(*)[A|E|I|0]",
+        None,
+        "0A",
+        "0000>",
+    ):
+        raise ValueError("composite relative closing does not match the exact Modelo 220 source content")
+
+
+def _validate_m220_closing_source_sequence(parts: tuple[RecordDesignRelativeSuffixMarker, ...]) -> None:
+    if tuple(part.row for part in parts) != tuple(range(parts[0].row, parts[0].row + 6)):
+        raise ValueError("composite relative closing source rows are not consecutive")
+    if tuple(part.ordinal for part in parts) != tuple(range(parts[0].ordinal, parts[0].ordinal + 6)):
+        raise ValueError("composite relative closing ordinals are not consecutive")
+
+
 class RecordDesignCompositeRelativeClosing(RegistryModel):
     """Exact six-row relative closing declared by Modelo 220 designs."""
 
@@ -77,25 +102,8 @@ class RecordDesignCompositeRelativeClosing(RegistryModel):
     @model_validator(mode="after")
     def _validate_exact_m220_sequence(self) -> Self:
         parts = self.parts
-        if tuple(part.offset for part in parts) != ("***",) * 6:
-            raise ValueError("composite relative closing requires six relative offsets")
-        if tuple(part.length for part in parts) != (3, 3, 1, 4, 2, 5):
-            raise ValueError("composite relative closing has an unsupported length sequence")
-        if tuple(part.type_code.strip().casefold() for part in parts) != ("an",) * 6:
-            raise ValueError("composite relative closing requires six alphanumeric parts")
-        if tuple(part.content for part in parts) != (
-            "</T",
-            "220",
-            "(*)[A|E|I|0]",
-            None,
-            "0A",
-            "0000>",
-        ):
-            raise ValueError("composite relative closing does not match the exact Modelo 220 source content")
-        if tuple(part.row for part in parts) != tuple(range(parts[0].row, parts[0].row + 6)):
-            raise ValueError("composite relative closing source rows are not consecutive")
-        if tuple(part.ordinal for part in parts) != tuple(range(parts[0].ordinal, parts[0].ordinal + 6)):
-            raise ValueError("composite relative closing ordinals are not consecutive")
+        _validate_m220_closing_part_shape(parts)
+        _validate_m220_closing_source_sequence(parts)
         return self
 
     @property

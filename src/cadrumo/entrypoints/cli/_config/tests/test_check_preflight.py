@@ -2,11 +2,12 @@
 
 Verifies that the workstation doctor surfaces the per-auth-provider certificate /
 Cl@ve Móvil health, the secure-storage / bundled-corpus / configuration
-preflight, and the registry referential-integrity row through the
-typed ``preflight`` channel on the JSON envelope — and that a red preflight row
-is reported for operator visibility without crashing the command or leaking into
-the capability/dependency ``issues`` contract that owns the exit code. Real CLI
-surface, real persistence in an isolated storage root, no mocks.
+preflight, and the registry referential-integrity row through the typed
+``preflight`` channel. An unhealthy observation carries application facts plus
+either a schema-resolved action or an explicit no-recovery outcome — never a
+CLI-authored ``detail``/``remediation`` sentence. It remains report-only and
+therefore cannot leak into the capability/dependency ``issues`` exit contract.
+Real CLI surface, real persistence in an isolated storage root, no mocks.
 """
 
 from __future__ import annotations
@@ -61,9 +62,22 @@ def test_config_check_emits_typed_preflight_rows() -> None:
         "registry:referential-integrity",
     } <= set(by_id)
     for row in rows:
-        assert set(row) == {"check", "healthy", "severity", "detail", "remediation"}
+        assert set(row) == {
+            "check",
+            "healthy",
+            "severity",
+            "facts",
+            "precondition_action",
+            "no_recovery_outcome",
+        }
         assert isinstance(row["healthy"], bool)
         assert row["severity"] in {"ok", "warn", "error"}
+        assert isinstance(row["facts"], dict)
+        if row["healthy"]:
+            assert row["precondition_action"] is None
+            assert row["no_recovery_outcome"] is None
+        else:
+            assert bool(row["precondition_action"]) != bool(row["no_recovery_outcome"])
 
 
 def test_preflight_rows_do_not_leak_into_capability_issues() -> None:
@@ -83,7 +97,9 @@ def test_config_check_flags_missing_corpus_as_red_preflight_row(tmp_path: Path) 
     normatives = by_id["corpus:normatives"]
     assert normatives["healthy"] is False
     assert normatives["severity"] == "error"
-    assert normatives["remediation"]
+    assert normatives["facts"] == {}
+    assert normatives["precondition_action"] is None
+    assert normatives["no_recovery_outcome"] == "operator_decision"
 
 
 def test_config_check_payload_rows_refuse_empty_ids_and_unknown_severity() -> None:

@@ -98,7 +98,7 @@ from ._ledger_support import (
     _emit_update_result,
     _invoice_link_error_bad_parameter,
     _ledger_cli_no_recovery,
-    _ledger_transaction_validation_bad,
+    _ledger_transaction_validation_no_recovery,
     _ledger_validation_bad,
     _parse_amount_magnitude,
     _parse_decimal,
@@ -401,7 +401,7 @@ def ledger_add(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_bad(exc) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     # The gross-invariant (`taxable_base + iva_amount == amount`) and other
     # `Transaction.model_validate` rules fire inside `create_manual_transaction`,
     # raising a pydantic `ValidationError` whose default rendering dumps the full
@@ -745,7 +745,7 @@ def ledger_classify(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     except TransactionValidationError as exc:
-        raise _ledger_transaction_validation_bad(exc) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     from ._ledger_payloads import LedgerClassifySingleResult
 
     _emit_update_result(

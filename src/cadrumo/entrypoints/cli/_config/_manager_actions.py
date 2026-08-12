@@ -621,12 +621,9 @@ def _run_passphrase_change() -> ManagerActionOutcome:
             message=tr("flows.manager.action.passphrase_wrong_current"),
             disposition=ManagerActionDisposition.REFUSED,
         )
-    except (MasterKeyMaterialMissingError, SecretStoreError) as exc:
-        from ....core.errors import CadrumoError, resolve_error_message
-
-        message = resolve_error_message(exc) if isinstance(exc, CadrumoError) else ""
+    except (MasterKeyMaterialMissingError, SecretStoreError):
         return ManagerActionOutcome(
-            message=message or tr("flows.manager.action.passphrase_failed"),
+            message=tr("flows.manager.action.passphrase_failed"),
             disposition=ManagerActionDisposition.REFUSED,
         )
 
@@ -1421,7 +1418,7 @@ def _run_google_export() -> ManagerActionOutcome:
         )
 
     from ....adapters.inbound.tui import FormField, FormPage, ManagerActionDisposition, ManagerActionOutcome
-    from ....core.errors import CadrumoError, resolve_error_message
+    from ....core.errors import CadrumoError
     from ._manager_frontend import present_form
 
     page = FormPage(
@@ -1458,9 +1455,9 @@ def _run_google_export() -> ManagerActionOutcome:
             period=collected[_GOOGLE_EXPORT_PERIOD_KEY].strip(),
             year=int(collected[_GOOGLE_EXPORT_YEAR_KEY].strip()),
         )
-    except CadrumoError as exc:
+    except CadrumoError:
         return ManagerActionOutcome(
-            message=resolve_error_message(exc),
+            message=tr("flows.manager.action.failed"),
             disposition=ManagerActionDisposition.REFUSED,
         )
 

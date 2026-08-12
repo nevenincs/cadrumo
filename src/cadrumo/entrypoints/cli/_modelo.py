@@ -150,6 +150,7 @@ from ._modelo_work_options import (
     _WorkUnitIdArg,
     _YearOpt,
 )
+from ._modelo_work_review_cli import register_work_review_command
 from ._modelo_work_revision_cli import register_work_revision_commands
 from ._modelo_work_runs_cli import register_work_run_commands
 from ._modelo_work_verification_cli import register_work_verification_commands
@@ -829,6 +830,14 @@ register_work_revision_commands(
     resolve_revision_for_cli=_resolve_revision_for_cli,
     bad_parameter_from_error=_bad_parameter_from_error,
     selector_bad_parameter=_selector_bad_parameter,
+)
+
+
+register_work_review_command(
+    work_app,
+    activate_output_language=activate_subcommand_output_language,
+    require_active_profile=_require_active_profile,
+    resolve_work_unit_for_cli=_resolve_work_unit_for_cli,
 )
 
 

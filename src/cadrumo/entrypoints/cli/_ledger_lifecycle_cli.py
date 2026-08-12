@@ -38,7 +38,12 @@ from ...domain.transactions import (
 )
 from ...llm import LLMSplitApplyResult
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
-from ._ledger_support import _emit_update_result, _ledger_validation_bad, _resolve_id
+from ._ledger_support import (
+    _emit_update_result,
+    _ledger_transaction_validation_no_recovery,
+    _ledger_validation_bad,
+    _resolve_id,
+)
 
 if TYPE_CHECKING:
     from ...application.ledger import ManualLedgerTransactionResult
@@ -991,7 +996,7 @@ def _ledger_split_llm(
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_transaction_validation_no_recovery(exc) from None
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(applied, LLMSplitApplyResult)

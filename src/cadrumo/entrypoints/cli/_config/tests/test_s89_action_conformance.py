@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import ast
+import json
 import re
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 from dev.locales import LocaleManager
 
+from .....core.config import override_settings
 from .....core.i18n import tr
+from .....tests.cli_runner import invoke_cached_cli, semantic_cli_text
+from .....tests.secure_sql import isolated_profile_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -17,12 +22,68 @@ _CONFIG_ROOT = Path(__file__).parents[1]
 _PACKAGE_ROOT = Path(__file__).parents[4]
 _LOCALES_ROOT = _PACKAGE_ROOT / "locales"
 _COMMAND = re.compile(r"\baeat\s+(?:config|app)\b", re.IGNORECASE)
+_CONTEXT_FLATTENERS = frozenset({"str", "resolve_error_message", "_resolve_error_message"})
+_ERROR_PARAMETER_NAMES = frozenset({"error", "exc", "exception", "refusal"})
+_CONFIG_MODULE_NAMES = frozenset(
+    {
+        "__init__.py",
+        "_apoderado.py",
+        "_auth.py",
+        "_auth_diagnostics.py",
+        "_bucket_archive.py",
+        "_bucket_history.py",
+        "_capabilities_cli.py",
+        "_capabilities_payloads.py",
+        "_censo_file.py",
+        "_censo_payloads.py",
+        "_certificate.py",
+        "_check_cli.py",
+        "_check_hardware_rows.py",
+        "_check_payloads.py",
+        "_collab.py",
+        "_collab_payloads.py",
+        "_custody.py",
+        "_custody_secret.py",
+        "_descendiente.py",
+        "_errors.py",
+        "_google.py",
+        "_google_credential_source_cli.py",
+        "_google_credential_source_payloads.py",
+        "_google_errors.py",
+        "_google_folder.py",
+        "_google_payloads.py",
+        "_google_sync_calc.py",
+        "_login_frontend.py",
+        "_manager_actions.py",
+        "_manager_dispatch.py",
+        "_manager_frontend.py",
+        "_profile_bundle.py",
+        "_profile_bundle_flow.py",
+        "_profile_inspect.py",
+        "_profile_readiness.py",
+        "_provision_cli.py",
+        "_provision_payloads.py",
+        "_repair_cli.py",
+        "_repair_profile.py",
+        "_reset_cli.py",
+        "_sandbox.py",
+        "_secure_input.py",
+        "_status_frontend.py",
+        "_status_rendering.py",
+        "_storage_cli.py",
+        "_storage_payloads.py",
+    },
+)
 
 
 def _production_modules() -> tuple[Path, ...]:
-    modules = tuple(sorted(_CONFIG_ROOT.glob("*.py")))
-    assert len(modules) >= 45
-    return modules
+    discovered = {path.name for path in _CONFIG_ROOT.glob("*.py")}
+    assert discovered == _CONFIG_MODULE_NAMES, (
+        "The S89 config action audit has an incomplete or stale source scope. "
+        f"missing={sorted(_CONFIG_MODULE_NAMES - discovered)} "
+        f"unexpected={sorted(discovered - _CONFIG_MODULE_NAMES)}"
+    )
+    return tuple(_CONFIG_ROOT / name for name in sorted(_CONFIG_MODULE_NAMES))
 
 
 def _parents(tree: ast.AST) -> dict[ast.AST, ast.AST]:
@@ -33,6 +94,105 @@ def _is_docstring(node: ast.Constant, parents: dict[ast.AST, ast.AST]) -> bool:
     expression = parents.get(node)
     owner = parents.get(expression) if isinstance(expression, ast.Expr) else None
     return isinstance(expression, ast.Expr) and isinstance(owner, (ast.Module, ast.FunctionDef, ast.ClassDef))
+
+
+def _call_name(node: ast.expr) -> str:
+    return node.id if isinstance(node, ast.Name) else ""
+
+
+def _assignment_names(node: ast.Assign | ast.AnnAssign | ast.NamedExpr) -> set[str]:
+    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+    return {target.id for target in targets if isinstance(target, ast.Name)}
+
+
+def _assignment_value(node: ast.Assign | ast.AnnAssign | ast.NamedExpr) -> ast.expr:
+    return node.value
+
+
+def _exception_names(tree: ast.AST) -> set[str]:
+    names = {
+        handler.name
+        for handler in ast.walk(tree)
+        if isinstance(handler, ast.ExceptHandler) and isinstance(handler.name, str)
+    }
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        names.update(
+            argument.arg
+            for argument in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs)
+            if argument.arg in _ERROR_PARAMETER_NAMES
+        )
+        if node.args.vararg is not None and node.args.vararg.arg in _ERROR_PARAMETER_NAMES:
+            names.add(node.args.vararg.arg)
+        if node.args.kwarg is not None and node.args.kwarg.arg in _ERROR_PARAMETER_NAMES:
+            names.add(node.args.kwarg.arg)
+    return names
+
+
+def _is_exception_flattening(
+    node: ast.AST | None,
+    *,
+    exception_names: set[str],
+    flattened_names: set[str],
+) -> bool:
+    if node is None:
+        return False
+    if isinstance(node, ast.Name):
+        return node.id in flattened_names
+    if not isinstance(node, ast.Call):
+        return any(
+            _is_exception_flattening(child, exception_names=exception_names, flattened_names=flattened_names)
+            for child in ast.iter_child_nodes(node)
+        )
+    name = _call_name(node.func)
+    if name in _CONTEXT_FLATTENERS - {"str"}:
+        return True
+    if name == "str" and any(
+        isinstance(argument, ast.Name) and argument.id in exception_names for argument in node.args
+    ):
+        return True
+    return any(
+        _is_exception_flattening(child, exception_names=exception_names, flattened_names=flattened_names)
+        for child in ast.iter_child_nodes(node)
+    )
+
+
+def _flattened_context_failures(path: Path, tree: ast.AST) -> list[str]:
+    exception_names = _exception_names(tree)
+    flattened_names: set[str] = set()
+    assignments = sorted(
+        (node for node in ast.walk(tree) if isinstance(node, (ast.Assign, ast.AnnAssign, ast.NamedExpr))),
+        key=lambda node: (node.lineno, node.col_offset),
+    )
+    changed = True
+    while changed:
+        changed = False
+        for assignment in assignments:
+            if not _is_exception_flattening(
+                _assignment_value(assignment),
+                exception_names=exception_names,
+                flattened_names=flattened_names,
+            ):
+                continue
+            new_names = _assignment_names(assignment) - flattened_names
+            flattened_names.update(new_names)
+            changed = changed or bool(new_names)
+
+    failures: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for keyword in node.keywords:
+            if keyword.arg != "context":
+                continue
+            if _is_exception_flattening(
+                keyword.value,
+                exception_names=exception_names,
+                flattened_names=flattened_names,
+            ):
+                failures.append(f"{path.name}:{node.lineno}: flattened exception text in context")
+    return failures
 
 
 def test_config_runtime_has_no_fallback_or_raw_command_guidance() -> None:
@@ -62,6 +222,14 @@ def test_config_runtime_has_no_fallback_or_raw_command_guidance() -> None:
                 if isinstance(parent, ast.keyword) and parent.arg == "source_command":
                     continue
                 failures.append(f"{path.name}:{node.lineno}: raw command guidance")
+    assert failures == [], "\n".join(failures)
+
+
+def test_config_error_contexts_preserve_typed_exception_information() -> None:
+    failures: list[str] = []
+    for path in _production_modules():
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        failures.extend(_flattened_context_failures(path, tree))
     assert failures == [], "\n".join(failures)
 
 
@@ -124,3 +292,51 @@ def test_config_locale_keys_are_symmetric_resolved_and_consumed() -> None:
         for key in source_keys:
             value = tr(key, locale=locale)
             assert isinstance(value, str) and value.strip() and value != key
+
+
+@pytest.fixture
+def _isolated_config_check(tmp_path: Path) -> Iterator[None]:
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path / "storage", cadrumo_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path),
+    ):
+        yield
+
+
+@pytest.mark.parametrize("locale", ("ca", "en", "es", "hu"))
+def test_config_check_json_and_text_resolve_the_same_localized_action_surface(
+    _isolated_config_check: None,
+    locale: str,
+) -> None:
+    """The live check verb keeps JSON data locale-neutral and text catalogue-derived."""
+    json_result = invoke_cached_cli(["--format", "json", "--language", locale, "config", "check"])
+    text_result = invoke_cached_cli(["--language", locale, "config", "check"])
+
+    assert json_result.exit_code in (0, 2), json_result.output
+    assert text_result.exit_code == json_result.exit_code, text_result.output
+    document = json.loads(json_result.output)
+    result = document["result"]
+    assert document["command"] == "config.check"
+    assert set(result) == {"profile_id", "ok", "capabilities", "dependencies", "preflight", "issues"}
+    assert all(
+        set(dependency) == {"service", "available", "facts", "precondition_action"}
+        for dependency in result["dependencies"]
+    )
+    assert all(
+        set(preflight)
+        == {
+            "check",
+            "healthy",
+            "severity",
+            "facts",
+            "precondition_action",
+            "no_recovery_outcome",
+        }
+        for preflight in result["preflight"]
+    )
+    serialized = json.dumps(document, ensure_ascii=False, sort_keys=True)
+    assert "next_action" not in serialized
+
+    text = semantic_cli_text(text_result.output)
+    assert f"{tr('cli.config.check.profile_label', locale=locale)}\t" in text
+    assert f"{tr('cli.config.check.preflight_label', locale=locale)}\t" in text

@@ -3096,6 +3096,8 @@ cli:
           azonosítók haladó menekülőútvonalak.
         resume_target_help: 'Opcionális 16 karakteres munkafolyamat-futtatás azonosító
           vagy 64 karakteres munkaegység-azonosító. Előnyben: --modelo --year --period.'
+        review_help: Egy modell-munkaegység sémájának, értékeinek, megállapításainak,
+          előrehaladásának és akadályainak áttekintése.
         revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója;
           futtassa: `aeat app modelo describe NYOMTATVÁNY` az elérhető revízióazonosítók
           megtekintéséhez.'
@@ -3390,8 +3392,7 @@ cli:
         delegate_help: Láncolt megszemélyesítés delegnált szolgáltatási fiók e-mail
           címe (ismételhető)
         detail:
-          impersonation_config_invalid: 'a megszemélyesítési konfiguráció érvénytelen:
-            {detail}'
+          impersonation_config_invalid: A megszemélyesítési konfiguráció érvénytelen.
           oauth_desktop_rejects_impersonation_options: a --kind oauth_desktop nem
             fogadja el a --target-principal, --scope, --delegate, --subject vagy --lifetime-seconds
             paramétereket
@@ -3417,12 +3418,11 @@ cli:
       detail:
         client_json_bad_wrapper: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           rendelkezik megfelelő "installed" wrapper objektummal.
-        client_json_invalid: 'A(z) {path} elérési útján lévő ügyfél JSON-ja érvénytelen
-          JSON: {reason}'
+        client_json_invalid: A(z) {path} helyen lévő ügyfél-JSON érvénytelen.
         client_json_not_desktop: A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           Cloud Console asztali ügyfél; hiányzik az "installed" wrapper kulcs.
-        client_json_schema_invalid: 'A(z) {path} elérési útján lévő ügyfél JSON-ja
-          sémaervényesítés sikertelen: {reason}'
+        client_json_schema_invalid: A(z) {path} helyen lévő ügyfél-JSON nem felel
+          meg a szükséges sémának.
         client_json_unreadable: 'A(z) {path} elérési útján lévő ügyfél JSON-ja nem
           olvasható: {reason}'
         client_unregistered: Nincs regisztrált OAuth-ügyfél a(z) {profile} profilhoz.
@@ -3505,8 +3505,8 @@ cli:
               negyedévre átvitt értékek stb.).
             root_folder_required: 'Nincs beállított Drive gyökérmappa-azonosító; futtassa:
               `aeat config google folder set <azonosító>`.'
-            snapshot_failure: 'Nem sikerült nyilvántartási pillanatképet felépíteni
-              a(z) {modelo} ({period} {year}) nyomtatványhoz: {detail}'
+            snapshot_failure: A(z) {modelo} modell ({period}, {year}) beállításjegyzék-pillanatképe
+              nem készíthető el.
             unknown_modelo: 'Ismeretlen nyomtatvány: {modelo!r}; elérhető nyomtatványok:
               {available}'
             year_help: Benyújtási év (pl. 2025).
@@ -3727,7 +3727,7 @@ cli:
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} leszármazott van.
-        invalid_flag: 'A --descendiente jelző %{flag} érvénytelen: %{detail}'
+        invalid_flag: A --descendiente értéke érvénytelen.
         list_help: Az aktív profilon megadott leszármazottak listázása.
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
@@ -3799,8 +3799,8 @@ cli:
         vagy nem validálható. Ellenőrizd a passphrase értéket és a fájlt.
       import_help: Hordozható profilcsomag regisztrálása fájlból.
       import_invalid_bundle: 'Érvénytelen profilcsomag: a JSON nem felel meg a profilcsomag-sémának.'
-      import_invalid_tax_id: 'A profilcsomag adóazonosítója érvénytelen: %{error}.
-        Javítsd az azonosítót és exportáld újra, vagy érvényes csomagot importálj.'
+      import_invalid_tax_id: A profilcsomag adóazonosítója érvénytelen. Javítsa, majd
+        exportálja újra, vagy importáljon érvényes csomagot.
       import_label_help: 'Az importált profil megjelenítési neve; alapértelmezés:
         a csomagban tárolt név. Akkor használja, ha a tárolt címke már foglalt.'
       import_label_taken: Már létezik %{name} nevű profil. Futtassa újra `--label
@@ -3837,9 +3837,8 @@ cli:
       preflight_revision_id_help: Opcionális registry-revízió-azonosító felülbírálás
         pontos visszajátszáshoz (pl. 2024-0A); alapértelmezetten a modellhez, bevallási
         évhez és időszakhoz tartozó aktív revíziót használja.
-      preflight_revision_override_invalid: 'A registry-revízió felülbírálás nem érvényes
-        a(z) %{modelo} modellhez, %{filing_year} bevallási évhez: %{detail}. Futtassa
-        a `aeat app modelo describe %{modelo}` parancsot a regisztrált revíziók listázásához.'
+      preflight_revision_override_invalid: A beállításjegyzék-változat nem érvényes
+        a(z) {modelo} modellhez és a(z) {filing_year} bevallási évhez.
       preflight_revision_unresolved: Egyetlen registry-revízió sem fedi le a(z) %{modelo}
         modellt, %{filing_year} bevallási évet, %{period} időszakot. Futtassa a `aeat
         app modelo describe %{modelo}` parancsot az érvényes időszakok és revíziók

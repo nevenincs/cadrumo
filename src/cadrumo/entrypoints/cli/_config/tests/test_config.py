@@ -26,6 +26,7 @@ from click.testing import Result
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....core.config import override_settings
+from .....core.i18n import tr
 from .....tests.cli_runner import invoke_cached_cli
 from .....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._errors import ConfigBoundaryError
@@ -106,7 +107,13 @@ def test_cadrumo_error_envelope_is_well_formed_in_json_mode() -> None:
     # (unhandled exception) would produce an exit_code of 1 but no structured
     # payload.  Verify the boundary produced a non-empty stderr payload.
     stderr_payload = result.stderr if hasattr(result, "stderr") else result.output
-    assert stderr_payload or result.exit_code != 0
+    document = json.loads(stderr_payload)
+    error = document["error"]
+    assert document["command"] == "config.profile.show"
+    assert error["message"] == tr("cli.config.profile.unknown_profile", name="no-such-profile")
+    assert "ValueError" not in error["message"]
+    assert "suggestion" not in error
+    assert error["action"] is not None
 
 
 # ---------------------------------------------------------------------------

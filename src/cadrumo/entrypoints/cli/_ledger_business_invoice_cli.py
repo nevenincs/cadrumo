@@ -21,6 +21,7 @@ from typing import Annotated
 
 import typer
 
+from ...application.cli_exception_preconditions import CliExceptionPrecondition
 from ...application.invoices import (
     CatalogueInvoicePatch,
     build_catalogue_invoice,
@@ -57,6 +58,7 @@ from ._ledger_catalogue_invoice_payloads import (
     CatalogueInvoiceViewResult,
     CatalogueInvoiceWizardResult,
 )
+from ._ledger_support import _ledger_cli_no_recovery
 
 
 def register_business_invoice_commands(app: typer.Typer) -> None:
@@ -409,8 +411,6 @@ def invoice_add(
     ``modelo aggregate --received-invoice-retencion`` routes to Modelo 111 for
     a received invoice.
     """
-    from pydantic import ValidationError
-
     from ...domain.invoices import InvoiceValidationError
 
     bucket_id = _business_invoice_bucket_id()
@@ -448,10 +448,11 @@ def invoice_add(
         )
         result = create_catalogue_invoice(invoice=invoice)
     except InvoiceValidationError as exc:
-        raise _bad(str(exc)) from exc
-    except ValidationError as exc:
-        first = exc.errors()[0] if exc.errors() else {"msg": "invalid invoice input"}
-        raise _bad(str(first.get("msg", "invalid invoice input"))) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"error_type": type(exc).__name__},
+        ) from None
 
     _emit_envelope(
         ctx,
@@ -528,8 +529,11 @@ def invoice_wizard(
             retention_amount=retention_amount,
         )
     except InvoiceValidationError as exc:
-        message = tr(exc.translated_message, **(exc.context or {})) if exc.translated_message else str(exc)
-        raise _bad(message) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"error_type": type(exc).__name__},
+        ) from None
 
     payload = _catalogue_invoice_payload(wizard_result.invoice)
     payload["already_existed"] = wizard_result.already_existed
@@ -612,7 +616,11 @@ def invoice_import(
             declared_country=country.strip().upper() if country else None,
         )
     except InvoiceValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"error_type": type(exc).__name__},
+        ) from None
 
     lines = [
         f"bucket\t{bucket_id}",
@@ -898,7 +906,11 @@ def invoice_update(
     try:
         result = update_catalogue_invoice(bucket_id=bucket_id, invoice_id=invoice_id, patch=patch)
     except InvoiceValidationError as exc:
-        raise _bad(str(exc)) from exc
+        raise _ledger_cli_no_recovery(
+            exc,
+            condition=CliExceptionPrecondition.LEDGER_INVOICE_VALID,
+            facts={"error_type": type(exc).__name__},
+        ) from None
 
     payload = _catalogue_invoice_payload(result.invoice)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)

@@ -117,12 +117,12 @@ def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[s
     return tuple(result.transaction.transaction_id for result in results)
 
 
-def _ledger_cli_no_recovery(
-    error: CadrumoError,
+def _ledger_cli_no_recovery[ErrorT: CadrumoError](
+    error: ErrorT,
     *,
     condition: CliExceptionPrecondition,
     facts: dict[str, str | int | bool],
-) -> CadrumoError:
+) -> ErrorT:
     """Attach one typed, explicit no-recovery projection without flattening the error."""
     return attach_cli_policy_verdict(
         error,
@@ -329,13 +329,12 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     )
 
 
-def _ledger_transaction_validation_bad(error: TransactionValidationError) -> typer.BadParameter:
-    """Convert a typed transaction validation error into a specific refusal."""
-    return _bad(
-        tr(
-            "cli.ledger.errors.command_input_invalid",
-            details=str(error) or tr("cli.ledger.errors.command_input_invalid_fallback"),
-        ),
+def _ledger_transaction_validation_no_recovery(error: TransactionValidationError) -> TransactionValidationError:
+    """Preserve a typed transaction failure with a fact-only terminal verdict."""
+    return _ledger_cli_no_recovery(
+        error,
+        condition=CliExceptionPrecondition.LEDGER_TRANSACTION_VALID,
+        facts={"error_type": type(error).__name__},
     )
 
 

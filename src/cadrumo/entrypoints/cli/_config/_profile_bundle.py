@@ -40,7 +40,6 @@ from ....core import (
     ActionArgumentStatus,
 )
 from ....core.errors import CadrumoError as _CadrumoError
-from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import (
@@ -718,7 +717,7 @@ def _load_import_bundle_text(path: Path) -> str:
     except OSError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.import_invalid_bundle",
-            context={"error": str(exc)},
+            context={"error_type": type(exc).__name__},
         ) from exc
 
 
@@ -767,7 +766,7 @@ def _decode_import_bundle(
         get_logger(__name__).debug("config profile import rejected invalid portable bundle", exc_info=True)
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.import_invalid_bundle",
-            context={"error": str(exc)},
+            context={"error_type": type(exc).__name__},
         ) from exc
 
 
@@ -865,16 +864,14 @@ def _validate_imported_profile_tax_id(record: object) -> None:
         fact.value for fact in getattr(record, "facts", ()) if getattr(fact, "path", None) == _PROFILE_TAX_ID_PATH
     ]
     if len(tax_id_values) != 1:
-        raise _invalid_import_tax_id(
-            f"{_PROFILE_TAX_ID_PATH} must appear exactly once in the profile bundle",
-        )
+        raise _invalid_import_tax_id()
     tax_id = tax_id_values[0]
     if not isinstance(tax_id, str) or not tax_id.strip():
-        raise _invalid_import_tax_id(f"{_PROFILE_TAX_ID_PATH} must be a non-empty string")
+        raise _invalid_import_tax_id()
     try:
         validate_spanish_tax_id(tax_id.strip())
     except IdentityError as exc:
-        raise _invalid_import_tax_id(_resolve_error_message(exc)) from exc
+        raise _invalid_import_tax_id() from exc
 
 
 def _validate_imported_profile_filing_baseline(missing_flags: tuple[str, ...]) -> None:
@@ -891,10 +888,9 @@ def _format_missing_flags(missing_flags: tuple[str, ...]) -> str:
     return " ".join(f"--{flag}" for flag in missing_flags)
 
 
-def _invalid_import_tax_id(error: str) -> _CliRefusedBoundaryError:
+def _invalid_import_tax_id() -> _CliRefusedBoundaryError:
     return _CliRefusedBoundaryError(
         translated_message="cli.config.profile.import_invalid_tax_id",
-        context={"error": error},
     )
 
 

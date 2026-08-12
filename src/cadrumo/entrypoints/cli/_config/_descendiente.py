@@ -52,8 +52,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
     from datetime import date
 
-    from pydantic import ValidationError
-
     from ....adapters.inbound.tui import FormChoice, FormFieldKind, FormPage
     from ....application.workflow import ProfileBucketPointer
     from ....core.json_contract import Notice
@@ -154,24 +152,6 @@ def _tri(value: bool | None) -> str:
 def _iso_or_dash(value: date | None) -> str:
     """Render an optional entry-event date for the text row, or a dash when absent."""
     return value.isoformat() if value is not None else "-"
-
-
-def _record_refusal_detail(exc: ValidationError) -> str:
-    """Render a canonical-record refusal as the sentence its validator wrote.
-
-    The raw string form of a pydantic error is not operator copy. It carries the
-    model name, a bracketed error type, a documentation URL, and -- the reason
-    this matters beyond tidiness -- an ``input`` echo of the whole record under
-    construction, which is a taxpayer's family facts on this surface.
-
-    What the validators actually wrote is the ``msg``, and it is already good
-    copy: it names the field, the conflicting value and the two ways out.
-    Pydantic prefixes it with ``Value error,`` when the validator raised a
-    ``ValueError`` subclass, which every refusal in the descendant record does,
-    so that prefix is stripped rather than shown.
-    """
-    messages = [str(error.get("msg", "")).removeprefix("Value error, ").strip() for error in exc.errors()]
-    return " ".join(message for message in messages if message)
 
 
 def _guarderia_mensual_or_dash(descendant: DescendantInfo) -> str:
@@ -570,12 +550,12 @@ def descendiente_add(
         except ProfileAnswerTypeError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
-                context={"flag": raw, "detail": str(exc)},
+                context={"error_type": type(exc).__name__},
             ) from exc
         except ValidationError as exc:
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.descendiente.invalid_flag",
-                context={"flag": raw, "detail": _record_refusal_detail(exc)},
+                context={"error_type": type(exc).__name__},
             ) from exc
 
     combined = (*existing, *new_rows)

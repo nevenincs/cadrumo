@@ -162,14 +162,14 @@ def _coerce_client_json(path: Path) -> OAuthClient:
     except (OSError, UnicodeDecodeError) as exc:
         raise GoogleAuthValidationError(
             translated_message="cli.config.google.detail.client_json_unreadable",
-            context={"path": str(path), "reason": str(exc)},
+            context={"path": str(path), "error_type": type(exc).__name__},
         ) from exc
     try:
         raw_payload = json.loads(raw)
     except json.JSONDecodeError as exc:
         raise GoogleAuthValidationError(
             translated_message="cli.config.google.detail.client_json_invalid",
-            context={"path": str(path), "reason": exc.msg},
+            context={"path": str(path), "error_type": type(exc).__name__},
         ) from exc
     try:
         wrapper = _OAuthClientWrapper.model_validate(raw_payload)
@@ -191,7 +191,7 @@ def _coerce_client_json(path: Path) -> OAuthClient:
     except ValidationError as exc:
         raise GoogleAuthValidationError(
             translated_message="cli.config.google.detail.client_json_schema_invalid",
-            context={"path": str(path), "reason": str(exc.errors(include_url=False))},
+            context={"path": str(path), "error_type": type(exc).__name__},
         ) from exc
 
 
@@ -743,7 +743,7 @@ def _preflight_mirror_namespaces(
         try:
             blocking_failures, degradations = _inspect_existing_remote_mirror(provider=provider, manifest=manifest)
         except OutboundStorageError as exc:
-            failed.append((namespace, str(exc)))
+            failed.append((namespace, type(exc).__name__))
             blocked.add(namespace)
             continue
         if degradations:
@@ -803,7 +803,7 @@ def _push_mirror_objects(
                     label=label,
                 )
             except OutboundStorageError as exc:
-                failed.append((raw_row.namespace, hmac_hex, str(exc)))
+                failed.append((raw_row.namespace, hmac_hex, type(exc).__name__))
                 failed_namespaces.add(raw_row.namespace)
                 continue
             pushed_by_ns[raw_row.namespace] = pushed_by_ns.get(raw_row.namespace, 0) + 1
@@ -815,7 +815,7 @@ def _push_mirror_objects(
             try:
                 provider.delete(namespace, hmac_hex)
             except OutboundStorageError as exc:
-                cleanup_failed.append((namespace, hmac_hex, str(exc)))
+                cleanup_failed.append((namespace, hmac_hex, type(exc).__name__))
         # The manifest for this namespace is withheld regardless of rollback
         # outcome, so its object count must not be reported as pushed.
         pushed_by_ns.pop(namespace, None)
@@ -850,7 +850,7 @@ def _push_mirror_manifests(
             put_remote_mirror_namespace_manifest(provider, manifest)
             inspection_failures = _inspect_pushed_remote_mirror(provider=provider, manifest=manifest)
         except OutboundStorageError as exc:
-            manifest_failed.append((namespace, str(exc)))
+            manifest_failed.append((namespace, type(exc).__name__))
             continue
         if inspection_failures:
             manifest_failed.append((namespace, "; ".join(inspection_failures)))

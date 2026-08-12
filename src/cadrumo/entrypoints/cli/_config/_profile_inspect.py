@@ -269,7 +269,7 @@ def _resolve_preflight_revision_id(*, modelo: str, period: _Period, revision_id:
         # revisions so the operator can correct the override.
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.preflight_revision_override_invalid",
-            context={"modelo": modelo, "filing_year": period.filing_year, "detail": str(exc)},
+            context={"modelo": modelo, "filing_year": period.filing_year},
         ) from exc
 
 
