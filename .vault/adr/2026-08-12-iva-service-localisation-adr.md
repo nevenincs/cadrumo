@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:1f021558f80ee01df6385a51d96d332cec683ef221c4b5d9c8f67a909a398b32'
+body_hash: 'sha256:e39a963bb282e3bd399dcd046f7c45b163a652f4eb1b4af109522270830b3ad4'
 related:
   - "[[2026-08-12-iva-service-localisation-reference]]"
 ---
@@ -102,14 +102,24 @@ the existing join, with no change to the join itself.
 **The outbound services row reads the customer's condition.** The B2B limb keeps
 today's outcome and today's territorial reach, now on an affirmative fact:
 recipient is an empresario o profesional, established outside the Comunidad,
-not-subject under art. 69.Uno.1.º. The B2C limb resolves to a SUBJECT domestic
-outcome under art. 69.Uno.2.º, because the supplier is established in the TAI.
-The row declares that it consumes the customer's tax status alongside
-establishment, so an operator is asked for it on this branch and only on it.
+not-subject under art. 69.Uno.1.º. The B2C limb is a rate-tier row like the
+ES-to-ES default, because art. 69.Uno.2.º puts the supply inside the TAI and a
+supply located here is taxed here on the same terms -- so the tier picks its
+domestic category exactly as it does for a domestic sale.
 
 `UNKNOWN` reaches neither limb: an unresolved counterparty is not evidence of
 either condition, and letting it fall through to not-subject would grant the
 exemption on the absence of a fact.
+
+**Amended after execution, on a fact the record had wrong.** This section
+originally said the row would declare the customer's tax status among the party
+facts it consumes. It cannot and need not. `PartyFact` is a two-member vocabulary
+naming the establishment-versus-identification conflation specifically, while
+`customer_tax_status` is a required field on the criteria that nine sibling rows
+already read without declaring anything. What DID have to widen is the rate-tier
+demand, so the operator is asked for the tier in the same pass rather than one
+round-trip later; an undetermined status is passed to that predicate as an open
+axis rather than as a value.
 
 ## Rationale
 
