@@ -90,7 +90,8 @@ class ActiveProfilePointerTransaction:
             or ownership.depth < 1
         ):
             raise ActiveProfilePointerTransactionError(
-                "active-profile pointer transaction has no live ownership in this process and thread"
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                context={"live_ownership": False},
             )
 
 
@@ -142,15 +143,18 @@ def active_profile_pointer_transaction(
     if isinstance(ownership, _Ownership):
         if ownership.pid != current_pid:
             raise ActiveProfilePointerTransactionError(
-                "active-profile pointer transaction ownership was inherited from another process"
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                context={"owning_process_is_current": False},
             )
         if ownership.thread_id != current_thread_id:
             raise ActiveProfilePointerTransactionError(
-                "active-profile pointer transaction ownership belongs to another thread"
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                context={"owning_thread_is_current": False},
             )
         if ownership.root != canonical_root:
             raise ActiveProfilePointerTransactionError(
-                "nested active-profile pointer transaction targets a different storage root"
+                translated_message="errors.internal.internal_active_profile_pointer_transaction",
+                context={"nested_root_matches": False},
             )
         ownership.depth += 1
         try:
