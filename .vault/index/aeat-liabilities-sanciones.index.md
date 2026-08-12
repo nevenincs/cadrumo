@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:14a6c02e95ac2f001941305a01afb1e13cb08724bac003a02f9c320620f90684'
+body_hash: 'sha256:8429a80bbe8a8280c46f2939a7e0ba5b8b6dd75df545e9774b703742536fb0b2'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -20,11 +20,16 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P04-S10]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P04-S11]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P04-S12]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P05-S15]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P06-S19]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P06-S20]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P06-S21]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P06-S22]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P07-S23]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
-  - '[[2026-08-12-aeat-liabilities-sanciones-exec]]'
+  - '[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]'
 ---
 
 # `aeat-liabilities-sanciones` feature index
@@ -36,6 +41,10 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 ### adr
 
 - `2026-08-07-aeat-liabilities-sanciones-adr` - `aeat-liabilities-sanciones` adr: `Deudas y sanciones: read-only liability register, never a calculation input` | (**status:** `accepted`)
+
+### audit
+
+- `2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit` - `aeat-liabilities-sanciones` audit: `closeout honesty review after the live discovery session`
 
 ### exec
 
@@ -52,7 +61,11 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 - `2026-08-07-aeat-liabilities-sanciones-P04-S11` - Wire aeat app live deudas list, view and latest into the app live command group, matching the expedientes latest, list, view verb shape exactly
 - `2026-08-07-aeat-liabilities-sanciones-P04-S12` - Add the three new leaves to the reviewed-non-mutating roster as pure reads over persisted snapshots, verified by test_every_app_leaf_is_accounted_for_by_name_independent_census and a new CLI integration test asserting the three verb shapes
 - `2026-08-07-aeat-liabilities-sanciones-P07-S23` - Author real es, en, ca and hu values for the new deudas CLI help and label keys via python -m dev.locales set, then scaffold and scaffold --check clean. Lands as ONE unit with P04.S10 through S12 because the codebase-to-locale parity gate is tree-wide and immediate, so no ordering exists in which the CLI rows are green before these values exist in all four catalogues. The original en.yml and hu.yml peer-WIP blocker is discharged
-- `2026-08-12-aeat-liabilities-sanciones-exec` - populate the deudas guard's real allowed path prefixes
+- `2026-08-07-aeat-liabilities-sanciones-P05-S15` - BLOCKED on the same specimen: populate the guard real allowed_path_prefixes from the captured consulta path, verified by the guard test refusing every known payment and aplazamiento path observed in the specimen
+- `2026-08-07-aeat-liabilities-sanciones-P06-S19` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half of this row's blocker is discharged as of 2026-08-10: the consolidated Ley 58/2003 is bundled with its extracted sidecar, so art. 28 is present and a corpus_ref has a target. Author the legal-catalogue entry for LGT art. 28, recargo del periodo ejecutivo and recargo de apremio, pointing corpus_ref at the bundled consolidated file at anchor a28 rather than hand-authoring a duplicate excerpt. The reviewer cross-checks every percentage against live BOE before stamping, because the standing grounding rule distrusts bundled text on a number
+- `2026-08-07-aeat-liabilities-sanciones-P06-S20` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 178 through 212 are all present in the bundled consolidated Ley 58/2003 and in its sidecar. Author the legal-catalogue entry for the regimen sancionador focused on the arts. 191-197 pecuniaria proporcional bands, pointing corpus_ref at the bundled consolidated file. Every band percentage is cross-checked against live BOE by the reviewer before stamping
+- `2026-08-07-aeat-liabilities-sanciones-P06-S21` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 65 and 82 are present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for aplazamiento y fraccionamiento del pago and its garantias, pointing corpus_ref at the bundled consolidated file. Any interest rate the entry carries is cross-checked against live BOE by the reviewer before stamping
+- `2026-08-07-aeat-liabilities-sanciones-P06-S22` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 163 and 167 through 173 are all present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for the procedimiento de apremio, providencia and embargo, pointing corpus_ref at the bundled consolidated file, verified by the legal-entry evidence gate
 
 ### plan
 
