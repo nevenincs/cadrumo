@@ -238,9 +238,19 @@ check-types:
     @uv run --no-sync python -m dev.quality.types
 
 # Verify import structure and hexagonal boundaries. Silent on success.
+#
+# The shipped-package boundary rides here rather than in a recipe of its own so
+# that it inherits an invocation that already exists. `dev/` is excluded from
+# both distribution targets, so a shipped module importing it is an ImportError
+# for every installed consumer and a defect no repo-checkout run can reproduce
+# — which makes the per-push blocking lane its only useful home. A separate
+# recipe would have to be wired into a workflow to mean anything, and an
+# unwired recipe is the exact failure `src/cadrumo/tests/test_lane_reachability.py`
+# exists to catch.
 [group('static-checks')]
 check-imports:
     @uv run --no-sync python -m dev.quality.quiet lint-imports
+    @uv run --no-sync python -m dev.quality.shipped_package_boundary
 
 # Verify that all test modules only use relative imports. Silent on success.
 [group('static-checks')]
