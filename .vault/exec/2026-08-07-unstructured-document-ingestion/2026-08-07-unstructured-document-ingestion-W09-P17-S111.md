@@ -5,73 +5,92 @@ tags:
 date: '2026-08-11'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:19b15465d4cd76be763587e9e65cb817598c5eb63d20abb6e8b504ecdab79365'
+body_hash: 'sha256:fba9d04795dfe75caf2a374b935d7d66e575609261d4f573a1bfe2fd3fed8987'
 step_id: 'S111'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
 
-# Offer a model pre-suggestion for supply nature through the existing operator suggest, review and apply channel rather than building a second one, since that loop already exists in the ledger's LLM-assisted classification module and the assembly already names its settler as a printed statutory citation or an explicit operator assertion. Depends on the lazy-demand fix landing first: while the demand is unconditional, wiring the suggestion would fire a prompt on every document and manufacture a decision on the domestic path where the treatment does not depend on it. The suggestion must reach the deterministic classifier only after operator confirmation, entering as an operator-provenance assertion so the classifier's inputs stay facts and never model output. Gated by a test proving an unconfirmed suggestion never reaches the classifier and by a positive control proving a confirmed one does
-
-## Scope
-
-- `src/cadrumo/application/ledger`
-
 ## Description
 
-- Check the governing ADR for a ruling on the pre-suggestion before designing
-  one, and find it SANCTIONED.
-- Check the channel the row says to reuse, and find it is about a different
-  subject.
-- Check the precondition the suggestion sits on, and find it absent.
+- Check the governing ruling before designing, and find the permission real but
+  its named INPUT absent.
+- Rule where the proposal is made, as the tenth amendment.
+- Build the containment, the model role and the transport, then the call.
+- Gate that an unconfirmed proposal reaches nothing and a confirmed answer
+  reaches the classifier.
 
 ## Outcome
 
-BLOCKED ON A MISSING PRECONDITION that is more important than this row, and
-which measuring for this row is what surfaced.
+Delivered, and the ruling was the hard half.
 
-The ADR check came back POSITIVE, which is worth stating because the last two
-rows I touched came back negative: the second amendment explicitly permits a
-model to pre-suggest supply nature from the line descriptions through the
-accepted suggest-review-apply channel, calls it a cheap selection task within
-the low-context budget, and requires that the suggestion reach the
-deterministic classifier only after operator confirmation. So the row is
-sanctioned rather than a widening to argue for.
+THE PERMISSION WAS REAL AND ITS INPUT WAS NOT. The second amendment permits a
+model to pre-suggest the supply nature "from the line descriptions". Measured:
+`InvoiceDraft.lines` is populated ONLY by the structured reader, and a text- or
+vision-read draft carries no decomposition at all -- it keeps
+`raw_text_length`, a number, not the text. So on the lane the suggestion targets
+there are no line descriptions, while on the structured lane, where they exist,
+the document also declares its IVA category and frequently a citation -- both of
+which now settle the axis deterministically ahead of any model.
 
-The channel the row says to reuse is not the right one. The shipped
-suggest-review-apply loop is about a TRANSACTION -- its suggestion carries a
-business classification and a spending category -- while supply nature is an
-input to the INVOICE classification assembly at the confirm boundary. Reusing
-it would mean extending it to a second subject or building the second loop the
-row forbids, and that is a design decision rather than a wiring task.
+The residual population shrank twice before this landed: the printed-citation
+route was dormant and is wired, and a category route was added, each deciding by
+law. What remains is a cross-border document stating no citation, declaring no
+category, and carrying no line decomposition.
 
-THE PRECONDITION IS ABSENT, and this is the finding. ``supply_nature`` appears
-nowhere outside the classification assembly: no CLI option, no confirm
-parameter, no review-item resolution path. The production caller constructs
-the declared facts from the filer scope, the counterparty scope, the
-counterparty identification and the stated category -- never a supply nature.
+SO THE PROPOSAL IS MADE WHERE THE TRANSCRIPTION IS STILL IN HAND, at the reading
+stage. The transcription exists on both model-read lanes by construction -- it is
+what stage two extracts from. A separate later verb would re-run the whole
+reading stage to recover text the pipeline already held, spending a document read
+to answer a question worth one short call.
 
-So on a cross-border or reverse-charge branch, where the law forks on it and
-the lazy demand correctly fires, the category is absent and THE OPERATOR HAS NO
-WAY TO ANSWER. The ADR states the intended behaviour plainly -- the review gate
-surfaces one resolvable item, the operator states goods or services, and the
-classifier consumes it as an operator-provenance assertion -- so this is an
-unbuilt half of an accepted decision rather than an omission nobody decided.
+OPT-IN AND DEFAULT-OFF, on the shipped precedent rather than on preference: the
+existing suggest surface takes its evidence read off by default for the same
+reason, because a verb that silently reaches a model changes what it costs and
+what leaves the host.
 
-Rowed as its own step. This row stays open behind it, because the pre-suggestion
-is the optional convenience layered on the deterministic channel and must not be
-built before the path it feeds.
+A PROPOSAL IS NOT AN EXTRACTION. It rides on the draft rather than inside the
+extracted fields, because it is a judgement with no printed form to anchor to.
+Folding it into the extraction contract would put an unanchorable value inside
+the model whose whole guarantee is that values are copied, and the anchor check
+would have nothing to point at.
+
+It never reaches the classifier. Two cases hold the whole contract from both
+sides: a draft carrying a proposal and nothing else leaves the axis exactly as
+open as one carrying none, and an operator's stated answer arrives as an
+OPERATOR assertion. Unconfirmed reaches nothing; confirmed is theirs.
+
+The containment landed earlier and is unchanged: thirty cases with no model
+called, the vocabulary proved to come from the enum rather than a template
+literal, and the parser refusing invented, translated, compound, stray-key and
+wrapper-smuggled replies. The evidence marker is stated True, the opposite of
+the column mapper's, because a line description is what a taxpayer's supplier
+wrote rather than a file's own schema.
 
 ## Notes
 
-The row's own stated dependency was satisfied and its real one was not. It
-waits on the lazy-demand fix, correctly, because wiring a suggestion under an
-unconditional demand would fire a prompt on every document and manufacture a
-decision on the domestic path where the treatment does not depend on it. That
-fix has landed and is separately gated. What the row did not know is that the
-answer channel the suggestion feeds was never built, so satisfying the stated
-dependency does not unblock it.
+<!-- Incidents. Data loss. Difficulties; persistent failures. Skipped work. Scaffolds left in code. Failures. -->
 
-The ordering discipline this leaves behind: do not build the model convenience
-before the deterministic channel it feeds. A pre-suggestion wired to nothing
-would present an operator with an answer they cannot accept.
+I NEARLY REFUSED THIS ROW AS UNSANCTIONED and drafted the refusal before reading
+the amendment that permits it. The supply-nature module says a prose rule table
+"must not" exist, and I read that as barring anything a model proposes. It bars a
+table that DECIDES inside the derivation authority; an advisory a human accepts
+is a different object, and the same ADR paragraph says so. Two annotations on
+this row were wrong on that basis and are corrected in place rather than
+quietly replaced.
+
+NO FAILURE MAY COST A READ, which is why the proposal is wrapped. An absent
+optional extra, an unreachable provider, or a reply that did not survive
+containment all yield no proposal and leave the operator asked exactly as they
+were. A convenience that could lose a document would be worse than no
+convenience.
+
+ONE REGRESSION, MINE, FOUND AND FIXED HERE. Admitting ES to the identification
+vocabulary made a Spanish document with Spanish evidence trip the
+establecimiento-permanente conflict: its guard read "identification is not
+None", which was safe only by accident while ES could never produce one. The
+conflict is about a FOREIGN registration, so an ES identification beside
+Spain-indicating evidence is agreement. The condition now says what it always
+meant, and a sibling test that conflated the two axes -- asserting on
+identification under a name about the establishment rung -- was corrected to
+assert the separation rather than the old coincidence.
