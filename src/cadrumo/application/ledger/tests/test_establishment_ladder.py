@@ -31,7 +31,8 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -59,10 +60,18 @@ from .._counterparty_establishment import (
 from .._establishment_ladder import (
     CounterpartyEstablishment,
     EstablishmentRung,
+    _charged_iva_rates,
+    _spanish_iva_was_charged,
     resolve_counterparty_establishment_scope,
     resolve_draft_counterparty_establishment,
 )
-from .._evidence_draft import InvoiceDraft, counterparty_draft_side
+from .._evidence_draft import (
+    InvoiceDraft,
+    InvoiceDraftLine,
+    InvoiceDraftRateBreakdown,
+    counterparty_draft_side,
+)
+from .._regime_contradiction import draft_prints_a_repercutido_line
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -825,3 +834,92 @@ class TestRungReachabilityFromADraft:
         # The pairing is the point: a country that names Spain is what admits
         # the postal code as territory evidence at all.
         assert territorial_scope_for_spanish_postal_code("38001") is IvaTerritorialScope.ES_CANARIAS
+
+
+# -- the rate walk must see every carrier a reader can fill -----------------
+#
+# ``spanish_iva_charged`` is derived from this walk alone, and it decides
+# whether the establecimiento-permanente contradiction gets its rate signal and
+# whether rung 3 gets a corroborator. The three carriers are populated by
+# DIFFERENT readers -- lines and subtotals only by the structured one, the flat
+# rate only by the model-read one -- so a walk of a subset silently turns the
+# signal off for whole lanes rather than for odd documents.
+#
+# Driven from a DRAFT rather than by injecting the rate list. Every other rate
+# case in this package passes ``charged_iva_rates`` straight in, which is why a
+# collector blind to an entire lane sat unnoticed: injecting the answer cannot
+# test the question.
+
+_FLAT_RATE_DRAFT = InvoiceDraft(
+    taxable_base=Decimal("1000.00"),
+    iva_rate=Decimal("21"),
+    iva_amount=Decimal("210.00"),
+    grand_total=Decimal("1210.00"),
+)
+
+
+def test_the_model_read_lanes_only_rate_carrier_is_collected() -> None:
+    """The measured gap: a text- or vision-read document carries only this one.
+
+    Those readers recover printed totals rather than a line decomposition, so
+    neither structured carrier is ever populated for them.
+    """
+    assert _charged_iva_rates(_FLAT_RATE_DRAFT) == (Decimal("21"),)
+
+
+@pytest.mark.parametrize(
+    "draft",
+    [
+        _FLAT_RATE_DRAFT,
+        InvoiceDraft(lines=(InvoiceDraftLine(iva_rate=Decimal("21")),)),
+        InvoiceDraft(iva_breakdown=(InvoiceDraftRateBreakdown(iva_rate=Decimal("21")),)),
+    ],
+    ids=["flat-model-read", "lines-structured", "subtotals-structured"],
+)
+def test_each_carrier_alone_is_enough_to_report_the_charge(draft: InvoiceDraft) -> None:
+    """A document uses whichever carrier its reader could fill, and no more."""
+    assert _charged_iva_rates(draft) == (Decimal("21"),)
+
+
+def test_the_two_authorities_on_charged_tax_agree_about_the_flat_carrier() -> None:
+    """One package must not hold two answers to whether a document charged tax.
+
+    The regime-contradiction check already read the flat rate, so before this
+    the pair disagreed on exactly the model-read lane: that check fired while
+    the ladder saw no charge at all.
+    """
+    assert draft_prints_a_repercutido_line(_FLAT_RATE_DRAFT)
+    assert _charged_iva_rates(_FLAT_RATE_DRAFT) != ()
+
+
+def test_the_collected_flat_rate_reaches_the_spanish_registry_lookup() -> None:
+    """Collecting it is worthless unless it survives to the question it feeds."""
+    rates = _charged_iva_rates(_FLAT_RATE_DRAFT)
+
+    assert _spanish_iva_was_charged(rates, on_date=date(2026, 5, 12))
+
+
+def test_a_draft_charging_nothing_still_reports_no_rate() -> None:
+    """The precision half: an exempt or reverse-charge draft states no rate."""
+    assert _charged_iva_rates(InvoiceDraft(taxable_base=Decimal("1000.00"))) == ()
+
+
+def test_reading_the_flat_carrier_is_what_makes_the_lane_visible() -> None:
+    """Mutation proof: without it the model-read lane collects nothing at all.
+
+    Re-runs the pre-change walk, over the two structured carriers only. It
+    returns empty for a draft that plainly charges 21%, and every signal derived
+    from it goes quiet -- which is the silent lane blindness this closes.
+    """
+
+    def _structured_carriers_only(draft: InvoiceDraft) -> tuple[Decimal, ...]:
+        rates = [line.iva_rate for line in draft.lines if line.iva_rate is not None]
+        rates.extend(sub.iva_rate for sub in draft.iva_breakdown if sub.iva_rate is not None)
+        return tuple(rates)
+
+    assert _structured_carriers_only(_FLAT_RATE_DRAFT) == ()
+    assert not _spanish_iva_was_charged(
+        _structured_carriers_only(_FLAT_RATE_DRAFT),
+        on_date=date(2026, 5, 12),
+    )
+    assert _charged_iva_rates(_FLAT_RATE_DRAFT) != ()
