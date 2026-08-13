@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:fe43b133c5db8ad8097251fc92f38ae4ac525365a264d176c526a31678581feb'
+body_hash: 'sha256:910262c902a38ea97c28554231fbad6d7bff005b5af68ff27881ce5f6a219154'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -62,14 +62,14 @@ Build the registry, journal, leases, event stream, cancellation, deadline, clean
 Define registered executors, canonical action joins, resource ownership, and invocation context without frontend dependencies.
 
 - [x] `W02.P03.S13` - Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership; `src/cadrumo/application/operations/_executor.py`.
-- [x] `W02.P03.S14` - Implement operation definition registration and immutable lookup by canonical action reference; `src/cadrumo/application/operations/_registry.py`.
+- [ ] `W02.P03.S14` - Define the immutable operation registry, closed reconciliation and frontend projection declarations, executor-factory binding, and registry-owned concrete typed request and snapshot resolver keyed by definition identity with fail-closed unknown and mismatch refusal; `src/cadrumo/application/operations/_registry.py, src/cadrumo/application/operations/__init__.py, and direct registry/facade tests`.
 
 ### Phase `W02.P04` - Journal, leases, and persistence
 
 Persist safe lifecycle state and ordered events atomically while keeping confidential operands in encrypted domain storage.
 
-- [x] `W02.P04.S17` - Define lifecycle journal, ordered event stream, owner lease, compare-and-swap revision, and secure reference ports; `src/cadrumo/application/operations/_journal.py`.
-- [ ] `W02.P04.S18` - Implement the operation lifecycle journal over the existing atomic journal substrate; `src/cadrumo/adapters/persistence/operations/_journal.py`.
+- [ ] `W02.P04.S17` - Define lifecycle journal, ordered event stream, owner lease, compare-and-swap revision, secure reference ports, and a strict versioned credential-free persisted snapshot contract carrying a ContentDigest secure request reference plus safe state and events while runtime snapshots remain concretely typed; `src/cadrumo/application/operations/_journal.py and direct journal/facade tests`.
+- [ ] `W02.P04.S18` - Implement the operation lifecycle journal over the existing atomic journal substrate with two-hop public JournalRepositoryBase promotion, canonical operation-journal storage taxonomy, location and path grammar, durable-compatibility enrollment, concrete typed snapshot hydration, and atomic filesystem compare-and-swap tests; `src/cadrumo/application facade, src/cadrumo/adapters/persistence/operations/_journal.py, operation storage taxonomy/location/grammar and durability gates, and focused real-filesystem tests`.
 - [ ] `W02.P04.S19` - Implement owner lease acquisition, renewal, conflict refusal, expiry, and takeover evidence; `src/cadrumo/adapters/persistence/operations/_lease.py`.
 - [ ] `W02.P04.S20` - Expose the persistence adapter facade without exporting implementation internals; `src/cadrumo/adapters/persistence/operations/__init__.py`.
 - [ ] `W02.P04.S21` - Prove atomic snapshot and event commits, monotonic cursors, idempotent replay, lease conflicts, takeover, and credential-free persistence; `src/cadrumo/adapters/persistence/operations/tests`.
