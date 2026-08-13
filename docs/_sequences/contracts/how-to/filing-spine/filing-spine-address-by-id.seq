@@ -5,7 +5,7 @@
 @step Show the work unit status by its reference number.
 aeat --format json app modelo work status {work_unit_id}
 @step Calculate by the same reference number.
-aeat --format json app modelo work calculate {work_unit_id}
+aeat --format json app modelo work calculate {work_unit_id} --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @step List the saved revisions by the same reference number.
 @result aeat --format json app modelo work revisions {work_unit_id}
 @expect result.revision_count == 1

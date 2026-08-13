@@ -72,7 +72,7 @@
               "provisional_percentage": "80",
               "provisional_provenance": "carried_prior_definitiva",
               "regime": "general",
-              "schema_version": "1",
+              "schema_version": "2",
               "sector_id": null,
               "source_observation_ref": null
             }

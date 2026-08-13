@@ -1,4 +1,4 @@
-@setup aeat config profile create bruno-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 22222222J --name "Bruno" --surnames "Martin Ruiz" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid
+@setup aeat config profile create bruno-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 22222222J --name "Bruno" --surnames "Martin Ruiz" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid --tax-residence-jurisdiction-scope common_regime --iva-m303-regime-composition general --no-iva-redeme-enrolled --no-iva-cash-accounting-regime-enrolled --no-iva-voluntary-sii-enrolled --no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled
 @step Edit a fact with the flags you want to change.
 aeat config profile edit bruno-2026 --quiet --address-postcode 28013
 @step Rename the profile; the active-profile pointer follows the rename.

@@ -37,15 +37,15 @@
         "command": "ledger.add",
         "notices": [
           {
+            "action": null,
             "code": "ledger.add.input_classification_inert",
             "context": {
               "ejercicio": "2026",
               "input_classification": "common",
               "sector_id": ""
             },
-            "message": "--input-classification is inert for ejercicio 2026: no prorrata especial election applies, so the input deducts under the general percentage. Classifying every input of the ejercicio also enables the settlement LIVA art. 103.Dos.2 mandatory-especial check on a general bucket. Run 'app ledger prorrata elect-especial --ejercicio 2026' to route it by LIVA art. 106.",
-            "severity": "warning",
-            "suggestion": null
+            "message": "Input classification has no effect for ejercicio 2026: no special-prorrata election applies, so the input is deducted at the general percentage. Classification becomes operative only while a special-prorrata election applies.",
+            "severity": "warning"
           }
         ],
         "result": {

@@ -122,6 +122,7 @@
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
+              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
               "remedy": "Declare each descendant on the active profile, with its date of birth, before filing.",
               "source_kind": "minimo_descendientes_undeclared"
@@ -57951,6 +57952,22 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 8df53c040fb5ff8813af9b79dc32456b9d138655d2dbc19f6e9d2647961cbba0 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 8df53c040fb5ff8813af9b79dc32456b9d138655d2dbc19f6e9d2647961cbba0`.",
+          "source_provenance": [
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
+            },
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -171223,6 +171240,22 @@
               "label": "Increased net regional tax liability",
               "role": "key_figure",
               "value": "1651.19"
+            }
+          ],
+          "source_provenance": [
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
+            },
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
             }
           ],
           "state": "borrador",

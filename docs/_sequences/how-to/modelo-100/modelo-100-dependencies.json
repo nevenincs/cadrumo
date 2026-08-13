@@ -20,14 +20,26 @@
         "command": "modelo.requires",
         "notices": [
           {
+            "action": null,
             "code": "modelo.requires.missing_profile_coefficient",
             "context": {
               "missing_bindings": "renta-2025-family-ascendant-birth-date, renta-2025-family-ascendant-cohabiting-descendant-count, renta-2025-family-ascendant-death-date, renta-2025-family-ascendant-disability-grade, renta-2025-family-ascendant-display-name, renta-2025-family-ascendant-tax-id, renta-2025-family-descendant-birth-date, renta-2025-family-descendant-death-date, renta-2025-family-descendant-disability-grade, renta-2025-family-descendant-display-name, renta-2025-family-descendant-tax-id, renta-2025-profile-declaration-type, renta-2025-profile-display-name, renta-2025-profile-family-descendants-eu-eea-deduction, renta-2025-profile-family-minor-children-in-unit, renta-2025-profile-marital-status, renta-2025-profile-spouse-birth-date, renta-2025-profile-spouse-disability-grade, renta-2025-profile-spouse-display-name, renta-2025-profile-spouse-eu-eea-country, renta-2025-profile-spouse-eu-eea-resident, renta-2025-profile-spouse-non-resident-irpf, renta-2025-profile-spouse-sex, renta-2025-profile-spouse-tax-id, renta-2025-profile-tax-id, renta-2025-profile-tax-residence-ccaa, renta-2025-profile-taxpayer-birth-date, renta-2025-profile-taxpayer-death-date, renta-2025-profile-taxpayer-disability-grade, renta-2025-profile-taxpayer-sex",
               "modelo": "100"
             },
-            "message": "The active profile has not set the following coefficient(s) needed for this modelo: renta-2025-family-ascendant-birth-date, renta-2025-family-ascendant-cohabiting-descendant-count, renta-2025-family-ascendant-death-date, renta-2025-family-ascendant-disability-grade, renta-2025-family-ascendant-display-name, renta-2025-family-ascendant-tax-id, renta-2025-family-descendant-birth-date, renta-2025-family-descendant-death-date, renta-2025-family-descendant-disability-grade, renta-2025-family-descendant-display-name, renta-2025-family-descendant-tax-id, renta-2025-profile-declaration-type, renta-2025-profile-display-name, renta-2025-profile-family-descendants-eu-eea-deduction, renta-2025-profile-family-minor-children-in-unit, renta-2025-profile-marital-status, renta-2025-profile-spouse-birth-date, renta-2025-profile-spouse-disability-grade, renta-2025-profile-spouse-display-name, renta-2025-profile-spouse-eu-eea-country, renta-2025-profile-spouse-eu-eea-resident, renta-2025-profile-spouse-non-resident-irpf, renta-2025-profile-spouse-sex, renta-2025-profile-spouse-tax-id, renta-2025-profile-tax-id, renta-2025-profile-tax-residence-ccaa, renta-2025-profile-taxpayer-birth-date, renta-2025-profile-taxpayer-death-date, renta-2025-profile-taxpayer-disability-grade, renta-2025-profile-taxpayer-sex.",
-            "severity": "warning",
-            "suggestion": "aeat app ledger ratios set"
+            "message": "The active profile has not set the following coefficient(s) needed for this modelo: Tax ID (NIF/NIE/CIF) (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Surnames (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Given name (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Declaration type (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Sex (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Marital status (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Birth date (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse tax ID (NIF/NIE) (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse surnames (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse given name (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse birth date (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse sex (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Disability grade (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Death date (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse disability grade (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse non-resident (not IRPF taxpayer) (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse EU/EEA resident (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse EU/EEA country (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), EU/EEA descendant deduction (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Minor children in the household (ley-35-2006:art-82, ley-35-2006:art-83, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3).",
+            "severity": "warning"
+          },
+          {
+            "action": null,
+            "code": "modelo.requires.unbucketed_binding_source",
+            "context": {
+              "binding_ids": "renta-2025-certificado-trabajo-retenciones",
+              "casilla_ids": "0596",
+              "modelo": "100",
+              "source_kinds": "manual_input"
+            },
+            "message": "Some declared binding sources do not belong to a modelo.requires data-inventory bucket. They are reported without a suggested repair because their source semantics require review.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -304,6 +316,7 @@
               ]
             }
           ],
+          "live_observation": [],
           "modelo": "100",
           "operation": "modelo.requires",
           "optional_manual": [
@@ -41984,6 +41997,29 @@
             }
           ],
           "period": "0A",
+          "previous_filing": [
+            {
+              "binding_id": "renta-2025-base-liquidable-negativa-general-anterior",
+              "binding_source": "previous_filing",
+              "casilla_id": "1388",
+              "label": "FY 2024: Pending application at the start of the period",
+              "legal_refs": [
+                "ley-35-2006:art-50",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "1388",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-input-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-100-procedure",
+                "aeat-renta-web-open"
+              ]
+            }
+          ],
           "profile_checked": true,
           "profile_derivable": [
             {
@@ -42443,8 +42479,160 @@
               ]
             }
           ],
+          "relation_prefill": [
+            {
+              "binding_id": "renta-2025-modelo-111-retenciones-periodicas",
+              "binding_source": "relation_prefill",
+              "casilla_id": "0596",
+              "label": "For employment income",
+              "legal_refs": [
+                "ley-35-2006:art-17",
+                "ley-35-2006:art-18",
+                "ley-35-2006:art-19",
+                "ley-35-2006:art-20",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-80",
+                "rd-439-2007:art-86",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-3127-2009:art-1",
+                "orden-hac-1431-2025:art-2"
+              ],
+              "number": "0596",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-modelo-190-instructions-2025",
+                "boe-modelo-190-2025-form"
+              ]
+            },
+            {
+              "binding_id": "renta-2025-modelo-190-retenciones-anuales",
+              "binding_source": "relation_prefill",
+              "casilla_id": "0596",
+              "label": "For employment income",
+              "legal_refs": [
+                "ley-35-2006:art-17",
+                "ley-35-2006:art-18",
+                "ley-35-2006:art-19",
+                "ley-35-2006:art-20",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-80",
+                "rd-439-2007:art-86",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-3127-2009:art-1",
+                "orden-hac-1431-2025:art-2"
+              ],
+              "number": "0596",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-modelo-190-instructions-2025",
+                "boe-modelo-190-2025-form"
+              ]
+            },
+            {
+              "binding_id": "renta-2025-modelo-123-retenciones-periodicas",
+              "binding_source": "relation_prefill",
+              "casilla_id": "0597",
+              "label": "For movable-capital income",
+              "legal_refs": [
+                "ley-35-2006:art-25",
+                "ley-35-2006:art-26",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-90",
+                "ley-35-2006:art-99",
+                "orden-eha-3377-2011:art-1",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "0597",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-193-296-note-2025",
+                "boe-modelo-193-2011-form"
+              ]
+            },
+            {
+              "binding_id": "renta-2025-modelo-193-retenciones-anuales",
+              "binding_source": "relation_prefill",
+              "casilla_id": "0597",
+              "label": "For movable-capital income",
+              "legal_refs": [
+                "ley-35-2006:art-25",
+                "ley-35-2006:art-26",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-90",
+                "ley-35-2006:art-99",
+                "orden-eha-3377-2011:art-1",
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "0597",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-modelo-193-296-note-2025",
+                "boe-modelo-193-2011-form"
+              ]
+            },
+            {
+              "binding_id": "renta-2025-modelo-184-atribucion-actividades-economicas",
+              "binding_source": "relation_prefill",
+              "casilla_id": "1577",
+              "label": "Net income from an economic activity attributed by income-attribution entities",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30",
+                "ley-35-2006:art-31",
+                "ley-35-2006:art-32",
+                "orden-hap-2250-2015:art-3"
+              ],
+              "number": "1577",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1"
+              ]
+            }
+          ],
           "required_manual": [],
           "revision": "2025",
+          "unbucketed_sources": [
+            {
+              "binding_id": "renta-2025-certificado-trabajo-retenciones",
+              "binding_source": "manual_input",
+              "casilla_id": "0596",
+              "label": "For employment income",
+              "legal_refs": [
+                "ley-35-2006:art-17",
+                "ley-35-2006:art-18",
+                "ley-35-2006:art-19",
+                "ley-35-2006:art-20",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-80",
+                "rd-439-2007:art-86",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-3127-2009:art-1",
+                "orden-hac-1431-2025:art-2"
+              ],
+              "number": "0596",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1",
+                "aeat-modelo-190-instructions-2025",
+                "boe-modelo-190-2025-form"
+              ]
+            }
+          ],
           "unresolved_profile_bindings": [
             "renta-2025-family-ascendant-birth-date",
             "renta-2025-family-descendant-display-name",
@@ -42476,6 +42664,28 @@
             "renta-2025-profile-declaration-type",
             "renta-2025-profile-tax-residence-ccaa",
             "renta-2025-profile-spouse-eu-eea-country"
+          ],
+          "unresolved_profile_keys": [
+            "identity.tax_id",
+            "identity.surnames",
+            "identity.name",
+            "renta_filing.declaration_type",
+            "renta_taxpayer.sex",
+            "renta_taxpayer.marital_status",
+            "renta_taxpayer.birth_date",
+            "renta_spouse.tax_id",
+            "renta_spouse.surnames",
+            "renta_spouse.name",
+            "renta_spouse.birth_date",
+            "renta_spouse.sex",
+            "renta_taxpayer.disability_grade",
+            "renta_taxpayer.death_date",
+            "renta_spouse.disability_grade",
+            "renta_spouse.non_resident_irpf",
+            "renta_spouse.eu_eea_resident",
+            "renta_spouse.eu_eea_country",
+            "renta_family.descendants_eu_eea_deduction",
+            "renta_family.minor_children_in_unit"
           ]
         },
         "schema_version": "2",

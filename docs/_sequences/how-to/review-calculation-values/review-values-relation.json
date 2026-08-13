@@ -120,15 +120,17 @@
         "command": "modelo.work.calculate",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.calculate.source_advisory",
             "context": {
               "casilla_id": "0513",
+              "legal_refs": "ley-35-2006:art-56, ley-35-2006:art-58, ley-35-2006:art-61, orden-hac-277-2026:art-3",
               "reason": "source_issue",
+              "remedy": "Declare each descendant on the active profile, with its date of birth, before filing.",
               "source_kind": "minimo_descendientes_undeclared"
             },
             "message": "casilla '0513' (mínimo por descendientes, parte estatal) resolved to zero because the active profile declares no renta_family.descendiente facts. If you have children or other eligible descendants, the Art. 58 LIRPF allowance is being silently omitted",
-            "severity": "warning",
-            "suggestion": "Declare them with `aeat config profile descendiente add --descendiente NACIMIENTO=YYYY-MM-DD[,...]` before filing."
+            "severity": "warning"
           }
         ],
         "result": {
@@ -57952,6 +57954,22 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 100 --year 2025 --period 0A` and re-inspect this one with `aeat app modelo work revision 8a4112bbfd37052fbfdeea08a228d06dabe693beea27dc6f48c61211e38bf14a`.",
+          "source_provenance": [
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-130-pagos-fraccionados:130:2025:1T,2T,3T,4T:19"
+            },
+            {
+              "binding_source": "relation_prefill",
+              "dependency_treatment": "direct_annual_settlement",
+              "fingerprint": null,
+              "source_kind": "relation_prefill",
+              "source_ref": "renta-2025-rel-131-pagos-fraccionados:131:2025:1T,2T,3T,4T:15"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

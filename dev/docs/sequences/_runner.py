@@ -96,6 +96,7 @@ __all__ = [
     "default_fixtures_root",
     "execute_page_sequences",
     "execute_sequence",
+    "m303_filing_evidence_fixture_name",
     "sequence_sandbox",
 ]
 
@@ -272,6 +273,52 @@ def default_fixtures_root() -> Path:
     """
     repo_root = Path(__file__).resolve().parents[3]
     return repo_root / "docs" / "_sequences" / "fixtures"
+
+
+#: Periods for which a documented sequence calculates Modelo 303. Calculation
+#: refuses without a complete typed filing-evidence document, so the sandbox
+#: seeds one per period rather than asking every page to carry the argument.
+#:
+#: The four 2025 quarters are here for the shared ``iva-year-2025`` seed recipe,
+#: which files a whole year of Modelo 303 so the annual Modelo 390 page has
+#: quarters to fold in. A seed drives calculation exactly as a page frame does,
+#: so a period reachable only through a recipe still needs its document.
+_M303_EVIDENCE_PERIODS: tuple[tuple[int, str], ...] = (
+    (2025, "1T"),
+    (2025, "2T"),
+    (2025, "3T"),
+    (2025, "4T"),
+    (2026, "1T"),
+)
+
+
+def _seed_m303_filing_evidence(fixtures_dir: Path) -> None:
+    """Generate the Modelo 303 filing-evidence documents the sequences pass.
+
+    Generated per run rather than committed. The document embeds the registry
+    snapshot for its period, so a committed copy would be invalidated by any
+    Modelo 303 registry change and would red the docs build until someone
+    noticed it was a stale fixture rather than a real regression. Building it
+    from the shared evidence helper binds it to the live snapshot every time,
+    and keeps a six-figure-byte blob out of the tree.
+    """
+    from cadrumo.core import Period
+    from cadrumo.tests.filing_evidence import general_m303_filing_evidence
+
+    fixtures_dir.mkdir(parents=True, exist_ok=True)
+    for filing_year, code in _M303_EVIDENCE_PERIODS:
+        period = Period(filing_year=filing_year, code=code)
+        evidence = general_m303_filing_evidence(
+            period,
+            reference=f"docs:sequence-sandbox:m303-general:{filing_year}-{code}",
+        )
+        target = fixtures_dir / m303_filing_evidence_fixture_name(filing_year, code)
+        target.write_text(evidence.model_dump_json(indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
+def m303_filing_evidence_fixture_name(filing_year: int, code: str) -> str:
+    """Return the sandbox-relative filename a sequence passes for one period."""
+    return f"m303-filing-evidence-{filing_year}-{code}.json"
 
 
 def _frame_at(frame: SequenceFrame) -> str:
@@ -591,6 +638,7 @@ def sequence_sandbox(
     fixtures = fixtures_root if fixtures_root is not None else default_fixtures_root()
     if fixtures.is_dir():
         shutil.copytree(fixtures, workdir / "fixtures", dirs_exist_ok=True)
+    _seed_m303_filing_evidence(workdir / "fixtures")
 
     dispose_engine()
     # A login frame binds its BucketSession UNSCOPED (``bind_active_bucket_session``)

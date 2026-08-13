@@ -804,6 +804,29 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9`.",
+          "source_provenance": [
+            {
+              "binding_source": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_income_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "binding_source": "previous_filing",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "previous_filing",
+              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -1460,6 +1483,29 @@
               "value": "0.00"
             }
           ],
+          "source_provenance": [
+            {
+              "binding_source": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_income_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "binding_source": "previous_filing",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "previous_filing",
+              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -1579,35 +1625,36 @@
         "command": "modelo.work.verify",
         "notices": [
           {
+            "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
+              "activity_start_date": "2026-01-01",
               "kind": "advisory",
               "legal_refs": "rd-1065-2007:art-9",
+              "origin_code": "previous_filing_binding",
               "severity": "warning",
+              "source_filing_year": "2025",
+              "source_modelo": "100",
+              "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
-            "severity": "warning",
-            "suggestion": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared."
+            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).",
+            "severity": "warning"
           },
           {
+            "action": null,
             "code": "modelo.work.verify.finding.advisory",
             "context": {
+              "binding_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "diagnostic_reason_code": "missing_transaction_evidence",
               "kind": "advisory",
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
+              "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-            "severity": "warning",
-            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification."
-          },
-          {
-            "code": "modelo.work.verify.next_action_granted",
-            "context": null,
-            "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
-            "severity": "info",
-            "suggestion": "aeat app modelo export"
+            "message": "An output transaction has no supporting evidence.",
+            "severity": "warning"
           }
         ],
         "result": {
@@ -1615,14 +1662,14 @@
           "completeness_status": "complete",
           "findings": [
             {
+              "action": null,
               "casilla_id": null,
               "expectation_id": null,
               "kind": "advisory",
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
-              "next_action": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.",
+              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -1630,6 +1677,7 @@
               ]
             },
             {
+              "action": null,
               "casilla_id": null,
               "expectation_id": null,
               "kind": "advisory",
@@ -1637,8 +1685,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
-              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification.",
+              "message": "An output transaction has no supporting evidence.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -1651,7 +1698,7 @@
           "operation": "modelo.work.verify",
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "77cfb84b08e279f39b6a48e7860be2b53558aef757e56c0061c1690cf34850d3",
+          "verification_report_id": "812381548a3b77e5e99e282156b6c98d1b66c256ff923f9035a10dd7e700d06c",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

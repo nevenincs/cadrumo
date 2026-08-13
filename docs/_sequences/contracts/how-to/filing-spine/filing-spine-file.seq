@@ -2,7 +2,7 @@
 @step Create the work unit for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @step Calculate the quarter's IVA from the classified ledger.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
 @step Verify the calculated draft.
 @setup aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T
 @step File the current verified revision, recording a local marker only.

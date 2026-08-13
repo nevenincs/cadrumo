@@ -149,7 +149,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "previous_filing",
@@ -172,7 +172,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "previous_filing",
@@ -195,7 +195,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "previous_filing",
@@ -221,7 +221,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -246,7 +246,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -271,7 +271,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -295,7 +295,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -320,7 +320,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
@@ -385,7 +385,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "previous_filing",
@@ -408,7 +408,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "previous_filing",
@@ -431,7 +431,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "previous_filing",
@@ -457,7 +457,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -482,7 +482,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -507,7 +507,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -531,7 +531,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_income_aggregation",
@@ -556,7 +556,7 @@
               ],
               "modelo": "130",
               "period": "1T",
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "revision": "2019-y-siguientes",
               "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
@@ -618,7 +618,7 @@
                 "rd-439-2007:art-95"
               ],
               "override": null,
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "source": "previous_filing",
               "source_refs": [
@@ -636,7 +636,7 @@
                 "rd-439-2007:art-95"
               ],
               "override": null,
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "source": "previous_filing",
               "source_refs": [
@@ -654,7 +654,7 @@
                 "rd-439-2007:art-95"
               ],
               "override": "0",
-              "readiness": "prior filed revision",
+              "readiness": "prior filed declaration",
               "relation_inputs": [],
               "source": "previous_filing",
               "source_refs": [
@@ -675,7 +675,7 @@
                 "ley-35-2006:art-28"
               ],
               "override": null,
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "source": "ledger_renta_income_aggregation",
               "source_refs": [
@@ -695,7 +695,7 @@
                 "ley-35-2006:art-28"
               ],
               "override": null,
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "source": "ledger_renta_income_aggregation",
               "source_refs": [
@@ -715,7 +715,7 @@
                 "ley-35-2006:art-30"
               ],
               "override": null,
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "source": "ledger_renta_income_aggregation",
               "source_refs": [
@@ -734,7 +734,7 @@
                 "rd-439-2007:art-95"
               ],
               "override": null,
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "source": "ledger_renta_income_aggregation",
               "source_refs": [
@@ -754,7 +754,7 @@
                 "ley-35-2006:art-30"
               ],
               "override": null,
-              "readiness": "ledger source",
+              "readiness": "ledger data",
               "relation_inputs": [],
               "source": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "source_refs": [
@@ -1435,6 +1435,29 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9`.",
+          "source_provenance": [
+            {
+              "binding_source": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_income_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "binding_source": "previous_filing",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "previous_filing",
+              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

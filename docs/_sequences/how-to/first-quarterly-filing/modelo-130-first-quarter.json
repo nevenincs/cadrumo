@@ -811,6 +811,29 @@
           ],
           "saved": true,
           "saved_confirmation": "Saved as draft calculation revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8d8f54d4a861485b2991a45d6dbd4374fc7a984c84bc637161239fdfc311bdd9`.",
+          "source_provenance": [
+            {
+              "binding_source": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_income_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "binding_source": "previous_filing",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "previous_filing",
+              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -938,7 +961,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Cross period operator declared suppression",
+            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).",
             "severity": "warning"
           },
           {
@@ -953,7 +976,7 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Transaction evidence missing output",
+            "message": "An output transaction has no supporting evidence.",
             "severity": "warning"
           }
         ],
@@ -969,7 +992,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Cross period operator declared suppression",
+              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -985,7 +1008,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "Transaction evidence missing output",
+              "message": "An output transaction has no supporting evidence.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",

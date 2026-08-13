@@ -778,6 +778,29 @@
               "value": "0.00"
             }
           ],
+          "source_provenance": [
+            {
+              "binding_source": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_income_aggregation",
+              "source_ref": "transaction:5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303"
+            },
+            {
+              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
+            },
+            {
+              "binding_source": "previous_filing",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "source_kind": "previous_filing",
+              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
