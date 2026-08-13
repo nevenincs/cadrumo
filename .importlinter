@@ -280,6 +280,72 @@ ignore_imports =
     # construction site and is deliberately not bundled into a relocation.
     cadrumo.llm._client -> cadrumo.adapters.outbound.llm
 
+[importlinter:contract:tui-backend-prohibition]
+name = Backend and sibling entrypoints must not depend on the dedicated TUI
+# The dedicated TUI is an outermost process entrypoint, not a reusable frontend
+# adapter.  `cadrumo.*` covers every backend/test-support top-level package;
+# `cadrumo.entrypoints.*` closes the otherwise-overlapping entrypoints package so
+# CLI, MCP, schema and entrypoint tests cannot reach the TUI either.  The TUI
+# expression itself overlaps and is skipped by Import Linter, which is the
+# intended self-reference exception.  Dynamic, type-only and non-Python bypasses
+# are the separate AST gate owned by W01.P01.S03.
+type = forbidden
+source_modules =
+    cadrumo.*
+    cadrumo.entrypoints.*
+forbidden_modules =
+    cadrumo.entrypoints.tui
+
+[importlinter:contract:tui-launcher-only-adapter-wiring]
+name = Only the TUI launcher may wire concrete adapters
+# Match future TUI children without requiring the package to exist before its
+# migration wave.  Only direct imports matter here: feature modules consume
+# injected dependencies and public application facades, whose implementations
+# may themselves reach adapters.  The launcher is the sole concrete composition
+# root.  No unmatched exception warning is emitted before that root is created.
+type = forbidden
+source_modules =
+    cadrumo.entrypoints.tui.*
+forbidden_modules =
+    cadrumo.adapters
+allow_indirect_imports = true
+unmatched_ignore_imports_alerting = none
+ignore_imports =
+    cadrumo.entrypoints.tui.launcher -> cadrumo.adapters
+    cadrumo.entrypoints.tui.launcher -> cadrumo.adapters.**
+    cadrumo.entrypoints.tui.launcher.** -> cadrumo.adapters
+    cadrumo.entrypoints.tui.launcher.** -> cadrumo.adapters.**
+
+[importlinter:contract:tui-components-independent]
+name = TUI component implementations depend only on Textual and neutral core presentation
+# Component implementation modules are reusable presentation mechanics.  Their
+# package facade may re-export those implementations; facade/re-export and
+# Textual-location checks belong to W01.P01.S03.  Import Linter owns the runtime
+# dependency graph below and rejects feature, composition and backend reaches.
+type = forbidden
+source_modules =
+    cadrumo.entrypoints.tui.components.**
+forbidden_modules =
+    cadrumo.entrypoints.tui.*
+    cadrumo.application
+    cadrumo.domain
+    cadrumo.adapters
+    cadrumo.llm
+    cadrumo.entrypoints.cli
+    cadrumo.entrypoints.mcp
+
+[importlinter:contract:tui-feature-independence]
+name = TUI feature implementations share components rather than each other
+# Feature implementations may meet only in app.py.  Wildcard expressions keep
+# this pre-migration gate valid while the feature packages do not yet exist;
+# once implementation modules land, dependency chains in either direction fail.
+type = independence
+modules =
+    cadrumo.entrypoints.tui.operations.**
+    cadrumo.entrypoints.tui.profile.**
+    cadrumo.entrypoints.tui.secret.**
+    cadrumo.entrypoints.tui.flows.**
+
 [importlinter:contract:layered]
 name = AEAT layered architecture
 # ── S23: Full layered architecture contract ───────────────────────────────────
