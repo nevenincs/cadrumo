@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:4e2dfe70e0a1f5dadacf3fb3608b2896dc05751e2544ed4cf10bdc893d0d38e8'
+body_hash: 'sha256:68292c6bb2f3cd73363b0718fa2ad5cfc53c252ed6a69cbd9ecd6ccf4b17e76d'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -130,6 +130,32 @@ relative imports are pervasive, including in the very directories holding the
 violations — and the symbol at the centre of the largest cluster is already exported
 on the `application.modelo` facade, so conversion is facade-preserving. There is no
 third shape to invent and no reason to hide anything from either matcher.
+
+ONE CAVEAT QUALIFIES THAT ADJUDICATION AND MUST TRAVEL WITH IT. "Mechanical
+conversion is safe" holds for the SYNTAX question and not for every site. Where the
+importing module sits in `domain` and the imported one in `application`, the import
+is a hexagonal LAYERING reach regardless of how it is spelled, and rewriting it to
+relative form makes the gate green while preserving the inversion untouched. That is
+the same trap in a subtler guise: satisfying the syntax gate can conceal an
+architecture defect rather than resolve it. Such a site needs the dependency
+inverted or the symbol rehomed, never a spelling change. The conversion is therefore
+mechanical only after the direction has been checked, per cluster rather than per
+file.
+
+In practice this caveat has already been overtaken by the sweep. At the time of
+writing the residue is six violations with ZERO domain-to-application sites among
+them: the twenty-strong domain cluster is closed. All six sit in a single
+application-package test module and are intra-package, five of them reaching that
+package's own private modules plus one to `core`, so no layering dimension arises
+and relative conversion is unambiguously correct there.
+
+A SECOND OBSERVATION MATTERS MORE FOR WHETHER THE GATE STAYS GREEN. That single
+remaining file landed in a fresh commit during this very session, which means the
+backlog is being re-fed while it is being swept. A sweep alone therefore cannot
+close this permanently: the gate goes green and the next commit written with
+absolute imports reopens it. Durable closure needs the violation caught at write
+time — the same lesson the root cause already taught, since the 62-file cluster
+entered through a relocation that never re-ran the gate.
 
 THE CLUSTER HAS A SINGLE ROOT CAUSE, and it is a process gap rather than a design
 one. The sixty-two-file group entered in one commit, a registry relocation retiring
