@@ -415,7 +415,14 @@ class BucketEvent(BaseModel):
             payload=self.payload,
         )
         if derived != self.event_id:
-            raise BucketEventValidationError(f"event_id {self.event_id!r} does not match the derived id {derived!r}")
+            raise BucketEventValidationError(
+                translated_message="errors.error.error_storage_bucket",
+                context={
+                    "declared_event_id": str(self.event_id),
+                    "derived_event_id": str(derived),
+                    "event_id_matches_derivation": False,
+                },
+            )
         return self
 
 
@@ -451,7 +458,14 @@ class BucketEventHistoryCatalogue(BaseModel):
     def _enforce_keys_match(self) -> BucketEventHistoryCatalogue:
         for key, event in self.events.items():
             if key != event.event_id:
-                raise BucketEventValidationError(f"catalogue key {key!r} does not match event_id {event.event_id!r}")
+                raise BucketEventValidationError(
+                    translated_message="errors.error.error_storage_bucket",
+                    context={
+                        "catalogue_key": str(key),
+                        "event_id": str(event.event_id),
+                        "catalogue_key_matches_event_id": False,
+                    },
+                )
         return self
 
     def get(self, event_id: str) -> BucketEvent | None:

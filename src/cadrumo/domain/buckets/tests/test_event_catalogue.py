@@ -84,8 +84,19 @@ def test_catalogue_rejects_key_that_does_not_match_event_id() -> None:
         object_id="rev-1",
     )
     bogus_key = "0" * 64
-    with pytest.raises(ValidationError, match=r"does not match event_id"):
+    with pytest.raises(ValidationError) as raised:
         BucketEventHistoryCatalogue(events={bogus_key: event})
+
+    # The refusal names both sides as machine facts rather than a sentence, so
+    # the assertion pins the mismatch itself and not a phrase a translation or
+    # a reword would break.
+    cause = raised.value.errors()[0]["ctx"]["error"]
+    assert cause.context == {
+        "catalogue_key": bogus_key,
+        "event_id": event.event_id,
+        "catalogue_key_matches_event_id": False,
+    }
+    assert str(cause) == cause.translated_message, f"the raise site carries an authored sentence: {str(cause)!r}"
 
 
 def test_catalogue_for_bucket_returns_chronological_order() -> None:
