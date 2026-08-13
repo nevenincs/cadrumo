@@ -39,6 +39,16 @@ and no per-violation allowlist:
 
 Rule 3 is the fixture anchor for rules 1 and 2: it is what stops the detector
 going vacuous rather than going red.
+
+Separately from singularity: THREE grammars over this one convention ship
+deliberately — the anchored validator in ``core``, the unanchored capture group
+the PDF label readers embed, and the unanchored finder the sede wallet runs over
+its aggregate line. They differ on anchoring, on the sign, and on the ungrouped
+integer part, each difference earned by the job that grammar does. The
+separator set is the one axis on which they may never differ, so it is asserted
+across all three rather than left to each declaration's author. Reconciliation
+covered only two of them once, and the omitted one was reading a compensación
+carry a thousandfold low.
 """
 
 from __future__ import annotations
@@ -131,37 +141,55 @@ def test_every_consumer_resolves_to_the_one_grammar_object() -> None:
 
 
 @pytest.mark.parametrize("separator", list(AEAT_THOUSANDS_SEPARATORS))
-def test_both_grammars_read_the_same_thousands_separators(separator: str) -> None:
-    """The anchored grammar and the unanchored capture group must not diverge here.
+def test_every_grammar_reads_the_same_thousands_separators(separator: str) -> None:
+    """The three grammars over this convention must not diverge on the separator set.
 
-    They differ on anchoring by design. They must NOT differ on which code
-    points AEAT prints between thousand groups: a separator one accepts and the
-    other rejects means the same printed document reads as two different
-    figures depending on which surface received it.
+    They differ on anchoring, on the optional sign, and on whether an ungrouped
+    four-or-more-digit integer part is admitted — all deliberate, all a
+    consequence of the job each does. They must NOT differ on which code points
+    AEAT prints between thousand groups: a separator one accepts and another
+    rejects means the same printed document reads as two different figures
+    depending on which surface received it.
 
-    Sharing :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS` is what makes that
-    true structurally; this asserts the sharing actually reaches the compiled
-    behaviour rather than merely the source.
+    The wallet finder is asserted through ``findall``, not only ``fullmatch``,
+    because losing a group is how the divergence actually presented rather than
+    a flat refusal. Its separator class was a dot and nothing else, so
+    ``1\\xa0234,56`` yielded the fragment ``234,56`` — which then passed the
+    anchored check cleanly, because a fragment of the shape IS the shape. The
+    aggregate it reads is the IVA compensación carry a taxpayer claims, so that
+    silent thousandfold under-read over-paid.
+
+    Sharing :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS` is what makes the
+    parity true structurally; this asserts the sharing actually reaches the
+    compiled behaviour rather than merely the source.
     """
     printed = f"1{separator}234,56"
 
     assert is_aeat_printed_money(printed), f"anchored grammar rejects {printed!r}"
     match = re.fullmatch(SPANISH_AMOUNT_GROUP, printed)
     assert match is not None and match.group(1) == printed, f"capture group rejects {printed!r}"
+    found = _iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
+    assert found == [printed], f"wallet aggregate finder read {found!r} out of {printed!r}"
 
 
 @pytest.mark.parametrize("separator", [" ", "\t"])
-def test_neither_grammar_treats_column_whitespace_as_a_thousands_separator(separator: str) -> None:
-    """ASCII space and tab separate AEAT's COLUMNS, so neither may group thousands.
+def test_no_grammar_treats_column_whitespace_as_a_thousands_separator(separator: str) -> None:
+    """ASCII space and tab separate AEAT's COLUMNS, so none may group thousands.
 
     This is the half that must never be widened. A grammar that grouped across
     ordinary whitespace could bridge a label-to-value gap and fuse two adjacent
     printed numbers into one figure.
+
+    The wallet finder is unanchored and scans a whole labelled line, so the
+    assertion for it is that the spanning figure is not among what it found —
+    it legitimately still finds the trailing ``234,56`` on that line, which is
+    a value in its own right and precisely what a column gap should leave.
     """
     printed = f"1{separator}234,56"
 
     assert not is_aeat_printed_money(printed)
     assert re.fullmatch(SPANISH_AMOUNT_GROUP, printed) is None
+    assert printed not in _iva_compensation_wallet_parsing._SPANISH_AMOUNT_RE.findall(printed)
 
 
 @pytest.mark.parametrize(

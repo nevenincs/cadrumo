@@ -24,7 +24,7 @@ from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core import Period
 from .....core.config import Settings
-from .....core.decimal import is_aeat_printed_money, normalize_decimal_separators
+from .....core.decimal import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money, normalize_decimal_separators
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
@@ -40,13 +40,31 @@ from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 _ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
-_SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}")
+_AMOUNT_SEPARATOR_CLASS = f"[{re.escape(AEAT_THOUSANDS_SEPARATORS)}]"
+_SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:" + _AMOUNT_SEPARATOR_CLASS + r"\d{3})*,\d{2}|\d+,\d{2}")
 """Unanchored finder for the amount trailing AEAT's aggregate label on one line.
 
 The anchored counterpart -- mandating the printed figure IS the two-decimal
 comma-tailed AEAT money shape end to end rather than merely containing one --
 is :func:`~cadrumo.core.decimal.is_aeat_printed_money`, enforced by
 :func:`_parse_spanish_decimal` on every caller.
+
+The separator class is built from
+:data:`~cadrumo.core.decimal.AEAT_THOUSANDS_SEPARATORS` rather than spelled
+here. It was once ``(?:\\.\\d{3})*`` -- a dot and nothing else -- so an
+aggregate AEAT rendered with its other two thousands separators lost its
+leading group to the unanchored scan: ``1\\xa0234,56`` yielded ``234,56``, and
+that fragment then satisfied the anchored shape check cleanly, so no refusal
+fired. This aggregate is the compensación carry a taxpayer claims, and reading
+it a thousandfold low over-pays.
+
+This is the THIRD grammar over that one separator taxonomy, and the three are
+deliberately not interchangeable.
+:data:`~adapters.inbound.pdf.SPANISH_AMOUNT_GROUP` cannot stand in for it: that
+group has no ungrouped-integer alternative, so applied unanchored to ``1234,56``
+it captures ``234,56`` -- the very failure above, from a different direction.
+What the three must never differ on is which code points AEAT prints between
+thousand groups, which is why the class is imported and not written out.
 """
 
 _EXTERNAL = Settings.external_constants()
@@ -152,7 +170,7 @@ def _parse_wallet_result_rows(soup: BeautifulSoup) -> tuple[list[IvaCompensation
         for table_row in table.find_all("tr"):
             if table_row.find_all("th"):
                 continue
-            cells = [_normalised_text(cell.get_text(" ")) for cell in table_row.find_all("td")]
+            cells = [_cell_value_text(cell) for cell in table_row.find_all("td")]
             if len(cells) < 3:
                 continue
             try:
@@ -592,7 +610,7 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     if not is_aeat_printed_money(cleaned):
         raise SedeParseError(
             f"IVA wallet amount cell does not match the expected AEAT money shape "
-            f"(a dot-grouped thousands, two-decimal comma tail): {value!r}",
+            f"(thousands grouped by a dot or a non-breaking space, two-decimal comma tail): {value!r}",
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context={"raw_value": value},
         )
@@ -613,7 +631,7 @@ def _extract_spanish_amount(text: str) -> Decimal | None:
     Used to read AEAT's aggregate "pendientes de períodos anteriores" line, where the
     amount trails a textual label on the same element.
     """
-    matches = _SPANISH_AMOUNT_RE.findall(text.replace("\xa0", " "))
+    matches = _SPANISH_AMOUNT_RE.findall(text)
     if not matches:
         return None
     return _parse_spanish_decimal(matches[-1])
@@ -621,6 +639,29 @@ def _extract_spanish_amount(text: str) -> Decimal | None:
 
 def _normalised_text(value: str) -> str:
     return normalize_response_text(value).casefold()
+
+
+def _cell_value_text(cell: Tag) -> str:
+    r"""Return one table cell's text as printed, trimmed at the ends only.
+
+    A cell of this table is a VALUE -- an ejercicio, a período token, a printed
+    ``Cuota Disponible`` figure -- never a lookup key, so it must not go through
+    :func:`_normalised_text`. That helper exists to make a header or a label
+    MATCHABLE and collapses ``\s+`` to a single ASCII space, and ``\s`` matches
+    the non-breaking and narrow no-break spaces AEAT groups thousands with. A
+    genuine ``1\xa0234,56`` therefore arrived at the anchored shape check as
+    ``1 234,56``, which that check refuses by design because an ASCII space is
+    AEAT's COLUMN separator. The row was real; the reader rejected it outright.
+
+    :func:`~._adapter_utils.normalize_display_text` is not the alternative it
+    looks like: it folds the same code points for the same reason, differing
+    only in that it keeps case and accents.
+
+    Trimming the ends is safe and sufficient: ``str.strip`` removes NBSP and
+    narrow NBSP there too, and AEAT pads these cells with column whitespace that
+    carries no meaning. The interior is left exactly as printed.
+    """
+    return cell.get_text(" ").strip()
 
 
 def _looks_like_executed_empty_wallet_page(soup: BeautifulSoup) -> bool:

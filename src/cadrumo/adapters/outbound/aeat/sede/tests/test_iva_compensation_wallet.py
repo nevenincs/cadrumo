@@ -13,6 +13,7 @@ from pydantic import AnyUrl
 
 from ......core import Period
 from ......core.config import Settings
+from ......core.decimal import AEAT_THOUSANDS_SEPARATORS
 from ......core.external_constants import UTF_8_ENCODING
 from ......domain.calculations.registry import (
     RegistryValidationError,
@@ -57,6 +58,25 @@ _EXTERNAL = Settings.external_constants()
 _AEAT_AUTH_GATE_URL = f"{_EXTERNAL.aeat.domains.sede}{_EXTERNAL.aeat.sede_paths.auth_gate_4033}"
 _SYNTHETIC_TAXPAYER_REF = "synthetic-taxpayer"
 _TARGET_PERIOD = Period.from_year_and_code(2026, "2T")
+
+_SEPARATOR_NAMES = {
+    ".": "full-stop",
+    "\u00a0": "non-breaking-space",
+    "\u202f": "narrow-no-break-space",
+}
+"""Readable test ids for the separators AEAT groups thousands with.
+
+Keyed by escape rather than by a literal code point: two of the three are
+invisible in a diff and in an editor, so a literal is corruptible by anything
+that touches whitespace. The mapping is asserted complete against
+:data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS`, so a separator added there
+without a name here fails rather than silently dropping out of the sweep.
+"""
+
+assert set(_SEPARATOR_NAMES) == set(AEAT_THOUSANDS_SEPARATORS), (
+    "the separator id map has drifted from AEAT_THOUSANDS_SEPARATORS; "
+    f"named={sorted(_SEPARATOR_NAMES)!r} declared={sorted(AEAT_THOUSANDS_SEPARATORS)!r}"
+)
 
 
 def _cartera_results_html(*, total: str, rows: str) -> str:
@@ -178,6 +198,128 @@ def test_parse_iva_compensation_wallet_html_accepts_zero_aggregate_empty_cartera
 
     assert observation.total_pending == Decimal("0")
     assert observation.rows == ()
+
+
+@pytest.mark.parametrize(
+    ("separator", "name"),
+    [pytest.param(sep, _SEPARATOR_NAMES[sep], id=_SEPARATOR_NAMES[sep]) for sep in AEAT_THOUSANDS_SEPARATORS],
+)
+def test_an_aggregate_grouped_with_any_printed_separator_reads_the_whole_figure(
+    separator: str,
+    name: str,
+) -> None:
+    """No separator AEAT prints may cost the aggregate its leading group.
+
+    The sweep is over every member of
+    :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS` rather than over the two
+    that were broken, so a separator added to that set later cannot enter the
+    tree with this surface unproven.
+
+    The aggregate is the authoritative "cuotas a compensar pendientes de
+    períodos anteriores" line — the compensación carry a taxpayer claims — and
+    it is read by an UNANCHORED scan over a labelled line. When that scan's
+    separator class was a dot and nothing else, ``1{NBSP}900,50`` yielded the
+    fragment ``900,50``, and the fragment then satisfied the anchored shape
+    check cleanly, because a fragment of the shape IS the shape. Nothing raised.
+    A thousandfold under-read of this figure over-pays.
+
+    The detail rows are omitted deliberately. With rows present the aggregate is
+    cross-checked against their sum and a mis-read surfaces as a refusal; it is
+    the rows-absent capture — an aggregate AEAT prints with no itemisation — that
+    has no second opinion and would have persisted the wrong number silently.
+    """
+    html = f"""
+    <html><head><title>Cartera de cuotas de IVA a compensar</title></head><body>
+      <h1>Cartera de cuotas de IVA a compensar</h1>
+      <li class="ancho_99"><strong>Cuotas a compensar pendientes de períodos anteriores:</strong>
+        <span>1{separator}900,50</span></li>
+    </body></html>
+    """
+
+    observation = parse_iva_compensation_wallet_html(
+        html,
+        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+        target_year=2026,
+        target_period=_TARGET_PERIOD,
+        source_url=IVA_COMPENSATION_WALLET_URL,
+        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+    )
+
+    assert observation.total_pending == Decimal("1900.50"), f"{name}-grouped aggregate lost its leading group"
+    assert observation.rows == ()
+
+
+@pytest.mark.parametrize(
+    ("separator", "name"),
+    [pytest.param(sep, _SEPARATOR_NAMES[sep], id=_SEPARATOR_NAMES[sep]) for sep in AEAT_THOUSANDS_SEPARATORS],
+)
+def test_a_cuota_disponible_cell_grouped_with_any_printed_separator_is_read_not_refused(
+    separator: str,
+    name: str,
+) -> None:
+    """A row cell must reach the shape check as AEAT printed it, separators intact.
+
+    The row cells were built through the marker-matching normaliser, whose
+    ``\\s+`` collapse rewrites both non-breaking spaces to an ASCII space. The
+    anchored check refuses an ASCII-space grouping by design — that is AEAT's
+    COLUMN separator, and admitting it would let a grammar bridge a label-to-value
+    gap — so a genuine ``1{NBSP}500,00`` cell was refused outright by the time it
+    arrived. The widening to those separators was real and never reached this
+    surface.
+    """
+    html = _cartera_results_html(
+        total=f"1{separator}900,50",
+        rows=(
+            f'<tr><td class="texto_cen">2024</td><td class="texto_cen">4T</td>'
+            f'<td class="texto_der">                 1{separator}500,00</td></tr>'
+            '<tr><td class="texto_cen">2025</td><td class="texto_cen">1T</td>'
+            '<td class="texto_der">                 400,50</td></tr>'
+        ),
+    )
+
+    observation = parse_iva_compensation_wallet_html(
+        html,
+        taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+        authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+        target_year=2026,
+        target_period=_TARGET_PERIOD,
+        source_url=IVA_COMPENSATION_WALLET_URL,
+        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+    )
+
+    assert observation.rows[0].pending_amount == Decimal("1500.00"), f"{name}-grouped cell was not read as printed"
+    assert observation.total_pending == Decimal("1900.50")
+    # The cell survives into the row's own audit label with its printed
+    # separator intact, so the persisted evidence still shows what AEAT rendered.
+    raw_label = observation.rows[0].raw_label
+    assert raw_label is not None
+    assert f"1{separator}500,00" in raw_label
+
+
+def test_a_cuota_disponible_cell_grouped_with_an_ascii_space_is_still_refused() -> None:
+    """The half that must never be widened: an ASCII space does not group thousands.
+
+    AEAT reserves it for column separation, so a cell arriving with one is a
+    template change to surface, not a figure to read across the gap.
+    """
+    html = _cartera_results_html(
+        total="1.900,50",
+        rows="<tr><td>2024</td><td>4T</td><td>1 500,00</td></tr>",
+    )
+
+    with pytest.raises(SedeParseError) as exc_info:
+        parse_iva_compensation_wallet_html(
+            html,
+            taxpayer_nif=_SYNTHETIC_TAXPAYER_REF,
+            authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
+            target_year=2026,
+            target_period=_TARGET_PERIOD,
+            source_url=IVA_COMPENSATION_WALLET_URL,
+            captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
+        )
+
+    assert exc_info.value.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED
 
 
 def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> None:
