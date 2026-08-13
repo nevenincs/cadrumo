@@ -48,9 +48,9 @@ import pytest
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....core import CasillaId, Modelo, Period, validated_casilla_id
+from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import InputKind
+from ....domain.calculations.registry import InputKind, selector_as_dict
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -62,9 +62,9 @@ from ....domain.modelos import (
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ...calculations import CalculationObservationRepository
+from ...calculations import CalculationObservationRepository, modelo_720_prior_baseline_observation
 from ...user_profile import UserProfileLifecycleRepository
-from .._calculation_actions import calculate_modelo_revision
+from .._calculation_actions import _resolve_bucket_source_mesh, calculate_modelo_revision
 from .._verification_actions import verify_modelo_revision
 from .._work_lifecycle import create_work_unit
 
@@ -225,6 +225,124 @@ def _redeclaration_findings(report: VerificationReport) -> tuple[ModeloVerificat
     access on the one helper whose whole job is to hand findings to them.
     """
     return tuple(finding for finding in report.findings if finding.message_locale_key == _REDECLARATION_LOCALE_KEY)
+
+
+def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coordinate(tmp_path: Path) -> None:
+    """The M720 mesh admits only the prior annual coordinate declared by the work unit."""
+    prior_observation = registry_grounded_modelo_observation(
+        modelo=Modelo.M720.value,
+        filing_year=_YEAR_N,
+        period=_PERIOD,
+        casilla_values={
+            _CUENTAS_VALORACION: _CUENTAS_N,
+            _VALORES_VALORACION: _VALORES_N,
+            _INMUEBLES_VALORACION: _INMUEBLES_N,
+        },
+    )
+    snapshot_n1 = resources().modelos.authority.snapshot(
+        Modelo.M720.value,
+        filing_year=_YEAR_N_PLUS_1,
+        period=_PERIOD,
+    )
+    snapshot_n2 = resources().modelos.authority.snapshot(
+        Modelo.M720.value,
+        filing_year=_YEAR_N_PLUS_1 + 1,
+        period=_PERIOD,
+    )
+    expected_binding_values_n1 = {
+        binding.id: prior_observation.casilla_values[selector_as_dict(binding)["source_casilla_id"]]
+        for binding in snapshot_n1.revision.bindings
+        if binding.source is BindingSourceKind.PREVIOUS_FILING
+    }
+    expected_binding_ids_n2 = frozenset(
+        binding.id for binding in snapshot_n2.revision.bindings if binding.source is BindingSourceKind.PREVIOUS_FILING
+    )
+    assert expected_binding_values_n1
+    assert expected_binding_ids_n2
+
+    with _secure_backend(tmp_path):
+        observation_repository = CalculationObservationRepository()
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                prior_observation,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+            )
+        )
+        work_unit_repository = WorkUnitCatalogueRepository()
+        work_unit_n1 = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=Modelo.M720.value,
+            filing_year=_YEAR_N_PLUS_1,
+            period=Period.from_year_and_code(_YEAR_N_PLUS_1, _PERIOD),
+            revision_id=snapshot_n1.revision.id,
+            repository=work_unit_repository,
+            clock=_CLOCK_N_PLUS_1,
+        )
+        work_unit_n2 = create_work_unit(
+            bucket_id=_BUCKET_ID,
+            modelo=Modelo.M720.value,
+            filing_year=_YEAR_N_PLUS_1 + 1,
+            period=Period.from_year_and_code(_YEAR_N_PLUS_1 + 1, _PERIOD),
+            revision_id=snapshot_n2.revision.id,
+            repository=work_unit_repository,
+            clock=_CLOCK_N_PLUS_1,
+        )
+        resolution_n1 = _resolve_bucket_source_mesh(
+            snapshot_n1,
+            work_unit_n1,
+            transaction_repository=None,
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+        resolution_n2 = _resolve_bucket_source_mesh(
+            snapshot_n2,
+            work_unit_n2,
+            transaction_repository=None,
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    assert work_unit_n1.work_unit_id != work_unit_n2.work_unit_id
+    assert work_unit_n1.bucket_id == work_unit_n2.bucket_id
+    assert dict(resolution_n1.binding_values) == expected_binding_values_n1
+    assert resolution_n1.unresolved_binding_ids == ()
+    assert dict(resolution_n2.binding_values) == {}
+    assert frozenset(resolution_n2.unresolved_binding_ids) == expected_binding_ids_n2
+
+    previous_filing_provenance = tuple(
+        item for item in resolution_n1.provenance if item.source_kind == "previous_filing"
+    )
+    assert previous_filing_provenance
+    assert {item.dependency_treatment for item in previous_filing_provenance} == {"factual_evidence"}
+    assert {item.source_ref.rsplit(":", maxsplit=1)[-1] for item in previous_filing_provenance} == frozenset(
+        expected_binding_values_n1
+    )
+
+    projected = modelo_720_prior_baseline_observation(
+        binding_values=resolution_n1.binding_values,
+        modelo_revision=snapshot_n1.revision,
+        filing_year=work_unit_n1.filing_year,
+        period=work_unit_n1.period.registry_token,
+    )
+    projected_by_casilla = {item.casilla_id: item for item in projected.observations}
+    expected_source_casillas = {
+        selector_as_dict(binding)["source_casilla_id"]
+        for binding in snapshot_n1.revision.bindings
+        if binding.id in expected_binding_values_n1
+    }
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot_n1.revision.casillas}
+    assert projected.modelo == work_unit_n1.modelo
+    assert projected.filing_year == work_unit_n1.filing_year
+    assert projected.period == work_unit_n1.period.registry_token
+    assert set(projected_by_casilla) == expected_source_casillas
+    assert all(item.formula_id is None for item in projected_by_casilla.values())
+    assert all(
+        item.value == prior_observation.casilla_values[casilla_id]
+        and item.legal_refs == casillas_by_id[casilla_id].legal_refs
+        and item.source_refs == casillas_by_id[casilla_id].source_refs
+        for casilla_id, item in projected_by_casilla.items()
+    )
 
 
 def test_advisory_fires_through_real_verify_for_the_omitted_grown_cuentas_position(tmp_path: Path) -> None:

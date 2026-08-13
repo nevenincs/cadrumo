@@ -37,7 +37,7 @@ def test_calendar_evidence_payload_enforces_closed_state_and_csv_pairing() -> No
             OverviewCalendarFilingEvidencePayload.model_validate({**valid, field: value})
 
 
-def test_calendar_event_payload_enforces_verified_csv_pairing() -> None:
+def test_calendar_event_payload_enforces_verified_csv_pairing_and_csv_normalization() -> None:
     event = {
         "event_type": "filing",
         "event_date": "2026-05-01",
@@ -49,5 +49,13 @@ def test_calendar_event_payload_enforces_verified_csv_pairing() -> None:
         "verified_justificante_csv": "CSV20260000001",
     }
     assert OverviewCalendarEventPayload.model_validate(event).event_type == "filing"
+    normalized = OverviewCalendarEventPayload.model_validate(
+        {**event, "verified_justificante_csv": event["verified_justificante_csv"].lower()},
+    )
+    assert normalized.verified_justificante_csv == event["verified_justificante_csv"]
     with pytest.raises(ValidationError):
         OverviewCalendarEventPayload.model_validate({**event, "verified_justificante_csv": None})
+    with pytest.raises(ValidationError):
+        OverviewCalendarEventPayload.model_validate(
+            {**event, "verified_justificante_csv": "-".join(event["verified_justificante_csv"])},
+        )

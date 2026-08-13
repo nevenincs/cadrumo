@@ -27,6 +27,7 @@ from pathlib import Path
 import click
 import pytest
 from click.testing import CliRunner
+from dev.ci.perf_measurement import CPU_CONTENTION_MARGIN
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ....application.operator_actions import ActionReference
@@ -127,13 +128,11 @@ def test_overview_status_returns_envelope_on_empty_bucket() -> None:
 def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocation() -> None:
     """One real overview invocation shares its inventory without changing actions.
 
-    Full status necessarily emits workspace guidance, so it has no action-free
-    branch from which to subtract its ordinary report work. S38 separately
-    proves the one-inventory-per-root lifecycle. The first deterministic full
-    invocation therefore measures healthy overview work after subtracting that
-    one S37 inventory cost; the second is held to the approved 1.64 allowance.
-    Wall time is reported separately for operator diagnostics but deliberately
-    does not decide this CPU-bound contract.
+    S38 separately proves the one-inventory-per-root lifecycle. This test uses
+    the first full invocation as its live baseline and holds the next equivalent
+    invocation to the canonical CPU-contention margin. Wall time is reported
+    separately for operator diagnostics but deliberately does not decide this
+    CPU-bound contract.
     """
     baseline_cpu_started = time.process_time()
     baseline_wall_started = time.perf_counter()
@@ -150,14 +149,11 @@ def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocatio
     assert baseline.exit_code == 0, baseline.output
     assert overview.exit_code == 0, overview.output
     assert json.loads(baseline.output) == json.loads(overview.output)
-    healthy_overview_cpu_seconds = baseline_cpu_seconds - 9.495
     timing = (
         f"baseline_cpu={baseline_cpu_seconds:.3f}s baseline_wall={baseline_wall_seconds:.3f}s "
-        f"healthy_overview_cpu={healthy_overview_cpu_seconds:.3f}s "
         f"candidate_cpu={candidate_cpu_seconds:.3f}s candidate_wall={candidate_wall_seconds:.3f}s"
     )
-    assert healthy_overview_cpu_seconds >= 0, timing
-    assert candidate_cpu_seconds <= (9.495 + healthy_overview_cpu_seconds) * 1.64, timing
+    assert candidate_cpu_seconds <= baseline_cpu_seconds * CPU_CONTENTION_MARGIN, timing
     assert candidate_wall_seconds > 0, timing
 
     actions = tuple(

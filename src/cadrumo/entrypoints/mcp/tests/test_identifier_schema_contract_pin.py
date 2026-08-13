@@ -39,7 +39,7 @@ from collections.abc import Iterator, Mapping
 from typing import Any, Final
 
 import pytest
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from ....core import Hex16Str, Hex64Str
 from ....core.identity import (
@@ -459,34 +459,3 @@ def test_cli_and_mcp_advertise_the_same_constrained_string_shapes() -> None:
                 f"{command}: MCP-only {sorted(mcp_shapes - cli_shapes)}, CLI-only {sorted(cli_shapes - mcp_shapes)}",
             )
     assert not divergent, "CLI and MCP published string bounds diverged:\n" + "\n".join(divergent)
-
-
-def test_the_aeat_csv_pattern_is_enforced_though_it_is_not_advertised() -> None:
-    """The unadvertised CSV pattern is a publication gap, never an enforcement gap.
-
-    Pinning the absent ``pattern`` above would be dangerous on its own: it reads
-    as "this field is unconstrained beyond its length". It is not. The
-    normalising validator uppercases its input and the pattern then refuses
-    anything outside the uppercase-alphanumeric set, so the constraint is live
-    even where no consumer can see it declared.
-    """
-    from ...cli._overview_payloads import OverviewCalendarEventPayload
-
-    verified = {
-        "event_type": "filing",
-        "event_date": "2026-01-30",
-        "source": "aeat_sede_justificante",
-        "summary": "Modelo 303 4T presentado",
-        "reference_id": "overview-calendar-event-1",
-        "aeat_submission_state": "justificante_verified",
-        "justificante_verified": True,
-    }
-    normalised = OverviewCalendarEventPayload.model_validate(
-        {**verified, "verified_justificante_csv": "abcd1234efgh5678"},
-    )
-    assert normalised.verified_justificante_csv == "ABCD1234EFGH5678"
-
-    with pytest.raises(ValidationError):
-        OverviewCalendarEventPayload.model_validate(
-            {**verified, "verified_justificante_csv": "ABCD-1234-EFGH-5678"},
-        )
