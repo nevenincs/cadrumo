@@ -7875,3 +7875,221 @@ alias = "suggestion"
 action_identity = "aeat config profile edit"
 role = "producer"
 reason = "src/cadrumo/entrypoints/cli/_common.py:965 _filing_taxpayer_or_refuse: FilingIdentityRequiredError supplies the current free-form profile-edit recovery action pending its typed-verdict migration."
+
+[[disposition]]
+path = "src/cadrumo/adapters/inbound/tui/_theme.py"
+enclosing_symbol = "_notice_action_target"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat "
+role = "producer"
+reason = "src/cadrumo/adapters/inbound/tui/_theme.py:285 _notice_action_target: the literal is the 'aeat ' prefix this function joins with the resolved action's cli_path to produce the operator-runnable command for a notice."
+
+[[disposition]]
+path = "src/cadrumo/adapters/persistence/storage/_iva_deduction_schema.py"
+enclosing_symbol = "upgrade_bienes_inversion_v1_payload"
+candidate_role = "definition"
+alias = "remediation"
+action_identity = "[]"
+role = "excluded"
+symbol = "remediation"
+enclosing_function = "upgrade_bienes_inversion_v1_payload"
+reason = "src/cadrumo/adapters/persistence/storage/_iva_deduction_schema.py:89 upgrade_bienes_inversion_v1_payload: NOT operator action guidance. 'remediation' here is a local list of '<malformed-record>' diagnostic markers describing unlinked bienes-inversion rows, so the alias collides with the action vocabulary while the value is never a command."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "build_root_landing_report"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config repair profile"
+role = "producer"
+reason = "src/cadrumo/application/operator_surface/_help.py:67 build_root_landing_report: the concrete command is supplied as RootLandingReport's 'command' value, the action-bearing field its consumer renders."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "build_root_landing_report"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config login NAME"
+role = "producer"
+reason = "src/cadrumo/application/operator_surface/_help.py:74 build_root_landing_report: the concrete command is supplied as RootLandingReport's 'command' value, the action-bearing field its consumer renders."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config profile list"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:197 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config login NAME"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:201 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config profile status"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:205 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config profile edit [NAME]"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:209 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat app modelo work --help"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:234 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat app modelo verification-report list"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:238 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config recover"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:259 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config repair"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:263 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config repair profile"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:267 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:276 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat app"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:280 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat app overview status --verbose"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:289 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat --format json config repair"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:293 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config repair logs"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:297 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_root_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat --version --detail"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:301 _root_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_config_storage_section"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config storage show AREA"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:335 _config_storage_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_config_storage_section"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config storage reclaim AREA --yes"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:347 _config_storage_section: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_config_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config profile edit [NAME]"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:423 _config_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/application/operator_surface/_help.py"
+enclosing_symbol = "_config_help"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config profile history [PROFILE]"
+role = "renderer"
+reason = "src/cadrumo/application/operator_surface/_help.py:469 _config_help: the concrete command is rendered by HelpEntry in the operator presentation path; it displays guidance but does not evaluate the blocked condition."
+
+[[disposition]]
+path = "src/cadrumo/entrypoints/cli/_root_landing.py"
+enclosing_symbol = "_quick_start_lines"
+candidate_role = "command_literal"
+alias = "<command-literal>"
+action_identity = "aeat config login NAME"
+role = "validator"
+reason = "src/cadrumo/entrypoints/cli/_root_landing.py:78 _quick_start_lines: the existing landing 'command' value is read by a selection branch to choose the quick-start line for this specific action identity."
