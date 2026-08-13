@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:e4c6e3f845a4cec31239a0b00ef1924fd54f59c8a0a4a82bc0c600a7f48aeb3f'
+body_hash: 'sha256:599c2a7ddc1ff5c222cfb2b8ad0cb58bfaa6f3d4226126bf3ea8843d1b6c5d50'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -116,3 +116,20 @@ Re-verified from a clean context rather than trusting the prior entries. `aws st
 The live read-only probe is unchanged: `/docs/` answers 200; `/docs/es/`, `/docs/ca/`, `/docs/hu/` answer 404.
 
 No implementation files changed, no scaffold was run (the tree-wide scaffold-and-stage-your-own-lines discipline forbids this campaign closing a gap in modules it does not own), no deploy, cache invalidation, or live mutation was attempted. P04.S12 remains open. The blocker is the same documented failure mode as every prior entry: a full-tree build precondition red for reasons entirely outside this campaign's surface, compounded by an operator-owned credential that keeps re-expiring between sessions.
+
+### 2026-08-13 the code half lands: the emission is now verifiable without a publish
+
+The row's split was re-measured rather than inherited, and the opening sentence's premise is confirmed obsolete. The publisher already carries complete per-root handling: `_build_language_roots` builds each root under its own environment and canonical base URL, `_validate_language_roots` requires the full `_REQUIRED_ARTIFACTS` set plus a sitemap rooted at that language's own sub-path plus a record-bearing index on every root, `_validate_language_entry` refuses an apex that strands any built language, `_public_delivery_checks` already carries a 200 expectation for every localized root, and the committed CloudFront viewer function rewrites `/docs/es/` to that root's `index.html`. No language-root reachability defect remains in the code.
+
+What was genuinely missing was narrower and more useful: **none of that validation could be run without publishing.** The whole build-and-validate prefix lived inline inside `_publish`, behind an AWS session, a provisioned stack, a distribution-alias check and an authorization guard, with `_sync_site` as its very next statement. So the one check that would catch a root landing incomplete could not run until bytes were already going to the live destination. The sibling landing-page publisher had solved exactly this with a `dry-run` verb; the docs publisher had none.
+
+Landed in `dcf31c758a`:
+
+- `_build_site_roots` and `_validate_built_site` factor the publish's pre-upload prefix into ONE composition. `_publish` now calls exactly those two functions, so the dry run cannot drift from what a publish actually checks — a second composition would be free to diverge, and the divergence would only ever surface on the live site.
+- `dev.deploy.docs_static_site dry-run` builds every root and runs every validation, uploading nothing. It deliberately requires no AWS session and no publish authorization: unlike the sibling's dry run, whose subject IS the S3 sync, every check here reads the built tree. A pre-publish check available only to a credentialed caller is unavailable exactly where it is most useful — and this row's own history is the proof, since the credential lapsed twice and blocked every prior attempt.
+- Three real-behaviour gates in `dev/deploy/tests/test_docs_static_site.py` run the production validators over a real on-disk multi-root tree: the complete matrix passes, a root missing a required artifact refuses, and an apex entry that strands a root refuses. Their teeth are structural — drop `_validate_built_site` from the dry run and both refusal gates go red, with no edit to production code needed to prove it.
+- A `docs-site-dry-run` recipe in the justfile's `docs` group, not `deploy`: it needs no session and writes nothing outward, so it is a build-and-check verb by that file's own stated taxonomy.
+
+Gates run: `dev/deploy/tests` plus the justfile-scanning `test_justfile_release_guidance` and `test_ci_workflow` — 74 passed. Ruff clean.
+
+What this does NOT claim. The live-response half is untouched and stays rowed: `/docs/es/`, `/docs/ca/` and `/docs/hu/` are not proven to respond, and nothing here may be read as claiming they do. Nor does the verb make the deploy green — this row's 2026-08-12 and 2026-08-13 entries record a full-tree build precondition that is red for reasons entirely outside this campaign (31 missing API stubs owned by other campaigns, sequence-golden divergences, machine-specific hardware facts). The verb's value is that this precondition is now MEASURABLE offline, by anyone, at any time, instead of being discoverable only at the moment of publishing.
