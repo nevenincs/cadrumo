@@ -917,6 +917,14 @@ application:
       errors:
         bucket_id_blank: L'identificador del bucket de notificacions no pot estar
           buit.
+        certificado_id_blank: L'identificador de certificat de la notificació no pot
+          estar buit.
+        document_not_found: Cap document desat correspon a aquesta notificació. Descarregueu-lo
+          primer.
+        document_prefix_ambiguous: Aquest prefix de certificat correspon a diversos
+          documents desats. Indiqueu l'identificador complet.
+        document_row_mismatch: Aquest document pertany a una altra notificació i no
+          s'ha desat.
         snapshot_id_blank: L'identificador de la instantània de notificacions no pot
           estar buit.
         snapshot_not_found: Cap instantània de notificacions no coincideix amb l'identificador
@@ -7091,6 +7099,8 @@ errors:
       amb l'identificador indicat.
     refused_live_justificante_capture_snapshot_not_found: No existeix cap captura
       de justificant
+    refused_live_notification_document_not_found: Cap document desat correspon a aquesta
+      notificació.
     refused_live_notifications_snapshot_not_found: No existeix cap instantània de
       notificacions amb l'identificador indicat.
     refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador

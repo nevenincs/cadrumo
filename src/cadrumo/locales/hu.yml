@@ -859,6 +859,13 @@ application:
     notifications:
       errors:
         bucket_id_blank: A notifications bucket azonosítója nem lehet üres.
+        certificado_id_blank: Az értesítés tanúsítványazonosítója nem lehet üres.
+        document_not_found: Egyetlen tárolt dokumentum sem felel meg ennek az értesítésnek.
+          Töltse le előbb.
+        document_prefix_ambiguous: Ez a tanúsítványelőtag több tárolt dokumentumra
+          illeszkedik. Adja meg a teljes azonosítót.
+        document_row_mismatch: Ez a dokumentum egy másik értesítéshez tartozik, ezért
+          nem került tárolásra.
         snapshot_id_blank: A notifications pillanatkép azonosítója nem lehet üres.
         snapshot_not_found: Nem található notifications pillanatkép a kért azonosítóhoz.
         snapshot_prefix_ambiguous: A notifications pillanatkép előtag több pillanatképre
@@ -6960,6 +6967,8 @@ errors:
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
     refused_live_justificante_capture_snapshot_not_found: Nem létezik rögzített igazolás-pillanatkép
+    refused_live_notification_document_not_found: Egyetlen tárolt dokumentum sem felel
+      meg ennek az értesítésnek.
     refused_live_notifications_snapshot_not_found: Nem létezik értesítési pillanatkép
       a megadott azonosítóval.
     refused_live_portal_not_found: Nem létezik AEAT portál a megadott azonosítóval.

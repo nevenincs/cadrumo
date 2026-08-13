@@ -23,6 +23,12 @@ class AttachmentKind(StrEnum):
         DRIVE_DOCUMENT: Document captured from Google Drive.
         CONTRACT_PDF: Contract or agreement in PDF form.
         BANK_STATEMENT: Bank-issued statement document.
+        AEAT_NOTIFICATION_PDF: The document AEAT served behind a notification's
+            comparecencia — a sanción, liquidación or requerimiento act. It is
+            named rather than folded into ``OTHER`` because it is the only kind
+            here the taxpayer did not supply: it is an act of the tax authority
+            against them, and its custody record is what later evidences what
+            was served and when.
         METADATA_BLOB: Opaque metadata payload that supplements another record.
         OTHER: Catch-all for documents that do not fit the above categories.
     """
@@ -33,6 +39,7 @@ class AttachmentKind(StrEnum):
     DRIVE_DOCUMENT = "DRIVE_DOCUMENT"
     CONTRACT_PDF = "CONTRACT_PDF"
     BANK_STATEMENT = "BANK_STATEMENT"
+    AEAT_NOTIFICATION_PDF = "AEAT_NOTIFICATION_PDF"
     METADATA_BLOB = "METADATA_BLOB"
     OTHER = "OTHER"
 

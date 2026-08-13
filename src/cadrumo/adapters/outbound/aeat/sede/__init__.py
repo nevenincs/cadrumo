@@ -33,6 +33,8 @@ Public API::
         resolve_justificante_ref,
         walk_expedientes_tree,
         # Notifications / Comunicaciones surface
+        assert_notification_content_readable,
+        fetch_notification_document,
         fetch_notifications_query,
         fetch_notifications_summary,
         # Parsers (offline-testable)
@@ -119,8 +121,11 @@ from ._iva_compensation_wallet import (
 )
 from ._nif_iva_check import NifIvaCheckSedeDriver
 from ._notifications import (
+    NotificationDocument,
     NotificationsSnapshot,
     RemoteNotification,
+    assert_notification_content_readable,
+    fetch_notification_document,
     fetch_notifications_query,
     fetch_notifications_summary,
     parse_notifications_query,
@@ -181,6 +186,7 @@ __all__ = [
     "JustificanteFetchError",
     "JustificanteRef",
     "NifIvaCheckSedeDriver",
+    "NotificationDocument",
     "NotificationsSnapshot",
     "ObservedCasillaSkip",
     "ObservedCasillaValue",
@@ -205,6 +211,8 @@ __all__ = [
     "extract_renta_web_open_summary_value",
     "fetch_censal_datos",
     "fetch_iva_compensation_wallet",
+    "assert_notification_content_readable",
+    "fetch_notification_document",
     "fetch_notifications_query",
     "fetch_notifications_summary",
     "filed_declaracion_observation_object_key",

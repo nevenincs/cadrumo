@@ -829,6 +829,13 @@ application:
     notifications:
       errors:
         bucket_id_blank: Notifications bucket id must not be blank.
+        certificado_id_blank: The notification certificado id must not be blank.
+        document_not_found: No stored document matches that notification. Pull it
+          first.
+        document_prefix_ambiguous: That certificado prefix matches several stored
+          documents. Give the full id.
+        document_row_mismatch: That document belongs to a different notification and
+          was not stored.
         snapshot_id_blank: Notifications snapshot id must not be blank.
         snapshot_not_found: No notifications snapshot matches the requested id.
         snapshot_prefix_ambiguous: The notifications snapshot prefix matches multiple
@@ -6646,6 +6653,8 @@ errors:
       the identifier provided.
     refused_live_justificante_capture_snapshot_not_found: No captured justificante
       snapshot exists
+    refused_live_notification_document_not_found: No stored document matches that
+      notification.
     refused_live_notifications_snapshot_not_found: No notifications snapshot exists
       with the identifier provided.
     refused_live_portal_not_found: No AEAT portal exists with the identifier provided.

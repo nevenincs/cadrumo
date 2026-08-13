@@ -924,6 +924,14 @@ application:
       errors:
         bucket_id_blank: El identificador del bucket de notificaciones no puede estar
           vacío.
+        certificado_id_blank: El identificador de certificado de la notificación no
+          puede estar vacío.
+        document_not_found: Ningún documento guardado corresponde a esa notificación.
+          Descárguelo primero.
+        document_prefix_ambiguous: Ese prefijo de certificado corresponde a varios
+          documentos guardados. Indique el identificador completo.
+        document_row_mismatch: Ese documento pertenece a otra notificación y no se
+          guardó.
         snapshot_id_blank: El identificador de la instantánea de notificaciones no
           puede estar vacío.
         snapshot_not_found: No hay ninguna instantánea de notificaciones que coincida
@@ -7141,6 +7149,8 @@ errors:
       con el identificador indicado.
     refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura
       de justificante
+    refused_live_notification_document_not_found: Ningún documento guardado corresponde
+      a esa notificación.
     refused_live_notifications_snapshot_not_found: No existe ningún snapshot de notificaciones
       con el identificador indicado.
     refused_live_portal_not_found: No existe ningún portal de la AEAT con el identificador
