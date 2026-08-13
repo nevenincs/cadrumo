@@ -53,9 +53,9 @@ def run_retrieval(
     """
     cleaned = query.strip()
     if not cleaned:
-        raise CorpusSearchInputError("retrieval query must be non-empty", context={"query": query})
+        raise CorpusSearchInputError(reason="query_empty", context={"query": query})
     if limit <= 0:
-        raise CorpusSearchInputError("retrieval limit must be positive", context={"limit": limit})
+        raise CorpusSearchInputError(reason="limit_not_positive", context={"limit": limit})
 
     if citation_lookup is not None and cleaned in set(citation_lookup.citation_ids):
         return RetrievalResponse(

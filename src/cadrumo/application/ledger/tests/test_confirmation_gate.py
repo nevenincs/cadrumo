@@ -132,8 +132,11 @@ def test_each_finding_class_refuses_the_confirm_until_it_is_answered(
     with pytest.raises(ConfirmationBlockedError) as raised:
         resolved_blockers(draft=draft, resolutions=())
 
-    assert blockers[0].blocker_id in str(raised.value)
-    assert expected_reason.value in str(raised.value)
+    # The identifiers ride on the refusal's facts, never in an authored
+    # sentence: str(exc) would otherwise carry English into every locale.
+    carried = str(raised.value.context or {})
+    assert blockers[0].blocker_id in carried
+    assert expected_reason.value in carried
 
 
 def test_an_ambiguous_counterparty_identifier_blocks_without_any_arithmetic_finding() -> None:
@@ -230,8 +233,9 @@ def test_answering_one_of_two_findings_still_refuses() -> None:
             ),
         )
 
-    assert blockers[1].blocker_id in str(raised.value)
-    assert blockers[0].blocker_id not in str(raised.value)
+    carried = str(raised.value.context or {})
+    assert blockers[1].blocker_id in carried
+    assert blockers[0].blocker_id not in carried
 
 
 def test_answering_every_finding_lets_the_confirm_through() -> None:
@@ -261,7 +265,7 @@ def test_a_resolution_naming_no_finding_refuses_rather_than_passing_silently() -
     """
     draft = _draft_with_finding(DraftDiscrepancyKind.ARITHMETIC_CLOSURE)
 
-    with pytest.raises(ConfirmationBlockedError, match="0123456789abcdef"):
+    with pytest.raises(ConfirmationBlockedError) as raised:
         resolved_blockers(
             draft=draft,
             resolutions=(
@@ -272,6 +276,10 @@ def test_a_resolution_naming_no_finding_refuses_rather_than_passing_silently() -
                 ),
             ),
         )
+
+    # The mistyped id is named as a fact, so an operator (or an agent) can see
+    # WHICH id was rejected without parsing a localised sentence.
+    assert (raised.value.context or {}).get("blocker_id") == "0123456789abcdef"
 
 
 def test_choosing_a_value_the_document_never_offered_refuses() -> None:
@@ -302,7 +310,7 @@ def test_choosing_a_value_the_document_never_offered_refuses() -> None:
     # names the DIGESTS the review surface rendered, which is what the operator
     # can check their answer against -- and printing the raw candidates put the
     # very identity this blocker exists to protect into a refusal message.
-    with pytest.raises(ConfirmationBlockedError, match="was never offered that reading"):
+    with pytest.raises(ConfirmationBlockedError):
         resolved_blockers(
             draft=draft,
             resolutions=(

@@ -24,7 +24,7 @@ from pydantic import AnyHttpUrl, AnyUrl, TypeAdapter
 
 from .....core import Period
 from .....core.config import Settings
-from .....core.decimal import normalize_decimal_separators
+from .....core.decimal import is_aeat_printed_money, normalize_decimal_separators
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.hashing import sha256_hex
 from .....core.i18n import tr
@@ -41,13 +41,13 @@ from ._schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 
 _ANY_HTTP_URL_ADAPTER: TypeAdapter[AnyHttpUrl] = TypeAdapter(AnyHttpUrl)
 _SPANISH_AMOUNT_RE = re.compile(r"\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2}")
-_STRICT_AEAT_MONEY_RE = re.compile(r"^-?\d{1,3}(?:\.\d{3})*,\d{2}$|^-?\d+,\d{2}$")
-"""Anchored counterpart of :data:`_SPANISH_AMOUNT_RE`, mandating the printed
-figure IS the two-decimal comma-tailed AEAT money shape end to end, rather
-than merely containing one. Enforced by :func:`_parse_spanish_decimal` on
-every caller, including the per-row wallet cell that previously reached
-:func:`~cadrumo.core.decimal.normalize_decimal_separators` with no shape
-check at all -- see that function's docstring for why."""
+"""Unanchored finder for the amount trailing AEAT's aggregate label on one line.
+
+The anchored counterpart -- mandating the printed figure IS the two-decimal
+comma-tailed AEAT money shape end to end rather than merely containing one --
+is :func:`~cadrumo.core.decimal.is_aeat_printed_money`, enforced by
+:func:`_parse_spanish_decimal` on every caller.
+"""
 
 _EXTERNAL = Settings.external_constants()
 _WALLET_PATH = _EXTERNAL.aeat.sede_paths.iva_compensation_wallet
@@ -570,20 +570,26 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     mandatory two-decimal comma tail. The aggregate "pendientes de períodos
     anteriores" total is read through :data:`_SPANISH_AMOUNT_RE`, which
     already mandates that shape; this shared parser applies the same
-    anchored check (:data:`_STRICT_AEAT_MONEY_RE`) to every caller, closing
+    anchored check (:func:`~cadrumo.core.decimal.is_aeat_printed_money`) to
+    every caller, closing
     the asymmetry the per-row wallet cell previously had -- it reached
     :func:`~cadrumo.core.decimal.normalize_decimal_separators` with no shape
     check at all, so a future AEAT template rendering that column without
     decimals would have been silently reinterpreted as a thousands-grouped
     integer instead of surfacing as the shape change it would actually be.
     """
-    cleaned = value.replace("\xa0", " ").strip()
+    # Trim the ends only. Folding an interior non-breaking space to an ASCII
+    # space would destroy the thousands separator AEAT prints per UNE 82100 and
+    # send a genuine cell to the shape refusal below; ``str.strip`` removes NBSP
+    # and narrow NBSP at the ends anyway, and the scrub after the shape check
+    # removes any that survive into the conversion.
+    cleaned = value.strip()
     if not cleaned:
         raise SedeParseError(
             "IVA wallet amount cell is empty",
             translated_message=tr("adapters.sede.errors.iva_wallet_empty_amount_cell"),
         )
-    if not _STRICT_AEAT_MONEY_RE.match(cleaned):
+    if not is_aeat_printed_money(cleaned):
         raise SedeParseError(
             f"IVA wallet amount cell does not match the expected AEAT money shape "
             f"(a dot-grouped thousands, two-decimal comma tail): {value!r}",

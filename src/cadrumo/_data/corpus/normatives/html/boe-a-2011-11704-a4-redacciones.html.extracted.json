@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2011-11704-a4-redacciones.html",
+  "source_sha256": "23d9788eb6a912e2d5035397c77030b7009a33d80aefe1803b201439b307cc2f",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 4. Plazo de presentación del modelo 763.\nLa presentación del modelo 763, autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales, será trimestral y se efectuará durante el mes siguiente a la finalización de cada trimestre natural del año.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

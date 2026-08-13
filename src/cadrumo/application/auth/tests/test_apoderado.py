@@ -97,8 +97,19 @@ class TestConfigure:
         """A malformed represented-party tax id refuses through the single identity authority.
 
         The refusal must not leak the raw identifier: the typed error carries
-        no candidate value in its context.
+        no candidate value in its context, and it carries no machine facts at
+        all, because the only fact this failure has to report IS the rejected
+        identifier and that value is identity-sensitive.
+
+        The operator-facing text resolves from the registered locale key rather
+        than an authored English sentence. Asserting the key alone would stay
+        green if prose were passed positionally beside it, because resolution
+        prefers the key while ``str(exc)`` prefers the sentence -- which is how
+        English reaches tracebacks and logs in every locale. Pinning
+        ``str(exc)`` to the key is what fails a re-introduced sentence.
         """
+        from ....core.errors import get_registered_error_code, resolve_error_message
+
         svc = ApoderadoService(settings=isolated_settings)
         with pytest.raises(ApoderadoRepresentedNifInvalidError) as excinfo:
             svc.configure(
@@ -106,8 +117,15 @@ class TestConfigure:
                 represented_nif="NOTANIF",
                 scope_tokens=("RENT",),
             )
-        assert "NOTANIF" not in str(excinfo.value)
-        assert not excinfo.value.context
+        error = excinfo.value
+        assert "NOTANIF" not in str(error)
+        assert not error.context
+        assert error.translated_message == "errors.refused.refused_apoderado_invalid_represented_nif"
+        assert get_registered_error_code(error).code == "REFUSED_APODERADO_INVALID_REPRESENTED_NIF"
+        assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+        resolved = resolve_error_message(error)
+        assert resolved and resolved != error.translated_message
+        assert "NOTANIF" not in resolved
 
     def test_configure_rejects_unknown_scope(self, isolated_settings: Settings) -> None:
         svc = ApoderadoService(settings=isolated_settings)
@@ -119,13 +137,28 @@ class TestConfigure:
             )
 
     def test_configure_rejects_comma_separated_scope(self, isolated_settings: Settings) -> None:
+        """A comma-joined scope token refuses, and names the rule it broke as a fact.
+
+        The refusal used to be told apart from the other unknown-scope
+        rejections by the word "comma" in an authored English sentence. It now
+        shares the registered key with them and is distinguished by the
+        ``validation_rule`` fact, so matching on prose here would assert a
+        rendering that no longer exists rather than the contract that does.
+        """
         svc = ApoderadoService(settings=isolated_settings)
-        with pytest.raises(UnknownScopeError, match="comma"):
+        with pytest.raises(UnknownScopeError) as excinfo:
             svc.configure(
                 bucket_id=_APODERADO_BUCKET_ID,
                 represented_nif="12345678Z",
                 scope_tokens=("IVA,RENT",),
             )
+        error = excinfo.value
+        assert error.context == {
+            "scope_token": "IVA,RENT",
+            "validation_rule": "no_comma_separated_values",
+        }
+        assert error.translated_message == "errors.refused.refused_apoderado_unknown_scope"
+        assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
 
     def test_configure_overwrites_existing_record(self, isolated_settings: Settings) -> None:
         svc = ApoderadoService(settings=isolated_settings)
@@ -462,11 +495,32 @@ class TestStoredConfigurationOwnership:
         self,
         isolated_profile: TestRuntimeProfile,
     ) -> None:
-        """A bound repository writes only its own bucket's encrypted storage."""
-        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        """A bound repository writes only its own bucket's encrypted storage.
 
-        with pytest.raises(ApoderadoConfigurationIdentityError):
-            repo.save(self._foreign_configuration())
+        The refusal names both buckets as machine facts and renders from the
+        registered integrity key. Pinning ``str(exc)`` to that key is what
+        fails a re-introduced positional sentence, which resolution would hide
+        while tracebacks and logs still carried it in English.
+        """
+        from ....core.errors import get_registered_error_code, resolve_error_message
+
+        repo = _ApoderadoConfigRepository(bucket_id=_PROFILE_BUCKET_ID, settings=isolated_profile.settings)
+        foreign = self._foreign_configuration()
+
+        with pytest.raises(ApoderadoConfigurationIdentityError) as excinfo:
+            repo.save(foreign)
+
+        error = excinfo.value
+        assert error.translated_message == "errors.integrity.integrity_apoderado_configuration_identity"
+        assert error.context == {
+            "bucket_id": foreign.bucket_id,
+            "repository_bucket_id": _canonical_bucket_id(_PROFILE_BUCKET_ID),
+        }
+        assert get_registered_error_code(error).code == "INTEGRITY_APODERADO_CONFIGURATION_IDENTITY"
+        assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+        resolved = resolve_error_message(error)
+        assert resolved and resolved != error.translated_message
+        assert foreign.represented_nif not in resolved
 
     def test_same_bucket_round_trip_still_succeeds(
         self,

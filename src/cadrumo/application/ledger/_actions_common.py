@@ -140,24 +140,6 @@ def _bucket_event_repository(
     return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
 
 
-def _attachment_store(
-    store: _AttachmentStoreProtocol | None,
-) -> _AttachmentStoreProtocol:
-    """Return the injected attachment store, or construct the default concrete one.
-
-    Sibling of :func:`_transaction_repository`, :func:`_invoice_repository`, and
-    :func:`_bucket_event_repository`: this module is the one place in the ledger
-    package that resolves an injected port to a concrete adapter, so the
-    ``AttachmentStore`` construction has a single home rather than one copy per
-    call site that needs a default.
-    """
-    if store is not None:
-        return store
-    from ...adapters.persistence.storage import AttachmentStore
-
-    return AttachmentStore()
-
-
 def _require_actor(value: str, *, operation: str) -> str:
     trimmed = value.strip()
     if not trimmed:
@@ -455,7 +437,7 @@ def _verify_evidence_references(
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
 
-def _purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
+def purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
     """Return the bucket's registered ``PurchaseInvoiceEvidence`` records.
 
     Reads the bucket-scoped encrypted purchase-invoice evidence store written by
@@ -494,7 +476,7 @@ def _verify_purchase_invoice_evidence(
     reference = classify_evidence_reference(
         evidence_id,
         bucket_id=command.bucket_id,
-        evidence_records=_purchase_invoice_evidence_records(command.bucket_id),
+        evidence_records=purchase_invoice_evidence_records(command.bucket_id),
         invoices=_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
     )
     if reference.is_acceptable:
@@ -534,7 +516,9 @@ def _verify_attachment_references(
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
-    store = _attachment_store(attachment_store)
+    from ...adapters.persistence.storage import resolve_attachment_store
+
+    store = resolve_attachment_store(attachment_store)
     for attachment_id in command.attachment_ids:
         _verify_single_attachment(
             attachment_id,
@@ -748,6 +732,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
         "iva_rate": command.iva_rate,
         "iva_amount": command.iva_amount,
         "iva_category": command.iva_category,
+        "deduction_fact_kind": command.deduction_fact_kind,
         "recargo_amount": command.recargo_amount,
         "source_jurisdiction": command.source_jurisdiction,
         "counterparty_country": command.counterparty_country,
@@ -798,6 +783,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
         "iva_rate": current.iva_rate,
         "iva_amount": current.iva_amount,
         "iva_category": current.iva_category,
+        "deduction_fact_kind": current.deduction_fact_kind,
         "recargo_amount": current.recargo_amount,
         "source_jurisdiction": current.source_jurisdiction,
         "counterparty_country": current.counterparty_country,
@@ -952,7 +938,6 @@ def _result(
 
 
 # Public supporting contract for sibling ledger action services.
-attachment_store = _attachment_store
 persist_bucket_event = _append_bucket_event
 persist_bucket_events = _append_bucket_events
 blocking_modelo_references = _blocking_modelo_references

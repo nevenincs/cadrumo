@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2018-17772-a1-redacciones.html",
+  "source_sha256": "723ede48958fdbbffe3d85af4dc2453887e82b21d49bbbb6286d443fd58972bb",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 1. Aprobación del modelo 233, «Declaración informativa por gastos en guarderías o centros de educación infantil autorizados».\nSe aprueba el modelo 233, «Declaración informativa por gastos en guarderías o centros de educación infantil autorizados» cuyo contenido figura en el anexo de la presente orden.\nLas operaciones por medio de las cuales se presentarán las declaraciones complementarias o sustitutivas de otra declaración presentada anteriormente y que se refieran al mismo ejercicio se realizarán de acuerdo con los requisitos técnicos que consten en el momento de la presentación en la Sede Electrónica de la Agencia Estatal de Administración Tributaria, en la dirección electrónica https://www.agenciatributaria.gob.es.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

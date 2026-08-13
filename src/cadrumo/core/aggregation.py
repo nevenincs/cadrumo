@@ -22,7 +22,6 @@ Keep the three axes separate:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Final, Literal
@@ -699,54 +698,32 @@ class RetencionScheme(StrEnum):
     CAPITAL_OTHER = "otros_capital_mobiliario"  # clave C (other capital income)
 
 
-#: FIXED retención rate on rendimientos del trabajo perceived "por la condición de
-#: administradores y miembros de los consejos de administración, de las juntas que
-#: hagan sus veces, y demás miembros de otros órganos representativos". Binding
-#: provision: LIRPF art. 101.2 (Ley 35/2006, BOE-A-2006-20764), developed by RIRPF
-#: art. 80.1.3.º (RD 439/2007). Confirmed against the bundled consolidated LIRPF
-#: art-101 corpus ("será del 35 por ciento"). This is the GENERAL fixed tipo —
-#: distinct from the personalised progressive escala of art. 101.1 (19/24/30/37/45/47
-#: por ciento) that applies to ordinary empleados.
-ADMINISTRADOR_RETENCION_RATE: Final[Decimal] = Decimal("0.35")
-
-#: REDUCED fixed retención rate that replaces the 35 % when the administrador/consejero
-#: rendimientos proceed from "entidades con un importe neto de la cifra de negocios
-#: inferior a 100.000 euros". Binding provision: LIRPF art. 101.2 segundo inciso
-#: (Ley 35/2006), developed by RIRPF art. 80.1.3.º. Confirmed against the bundled
-#: consolidated LIRPF art-101 corpus ("el porcentaje de retención e ingreso a cuenta
-#: será del 19 por ciento").
-ADMINISTRADOR_RETENCION_REDUCED_RATE: Final[Decimal] = Decimal("0.19")
-
-#: LIRPF art. 101.2 INCN ceiling: the reduced 19 % administrador rate applies iff the
-#: paying entity's importe neto de la cifra de negocios is STRICTLY below this amount
-#: ("inferior a 100.000 euros"); at or above it the general 35 % applies. Binding
-#: provision: LIRPF art. 101.2 (Ley 35/2006) / RIRPF art. 80.1.3.º (RD 439/2007).
-ADMINISTRADOR_RETENCION_REDUCED_INCN_THRESHOLD_EUR: Final[Decimal] = Decimal("100000")
-
-
 class WorkIncomeRetencionTreatment(BaseModel):
-    """Statutory retención treatment for a rendimientos-del-trabajo scheme.
+    """Statutory retención PROCEDURE for a rendimientos-del-trabajo scheme.
 
     Separates the personalised progressive procedure the law applies to ordinary
     empleados (LIRPF art. 101.1, developed by RIRPF arts. 80/82-86) from the FIXED
     rate LIRPF art. 101.2 sets for administradores y miembros de consejos de
     administración. ``is_fixed_rate`` is ``False`` for the progressive empleado
     treatment (the per-perceptor percentage is a personalised computation, so no
-    single rate is carried) and ``True`` for the administrador treatment, which
-    carries the general fixed rate plus the reduced rate and its INCN threshold.
+    single rate is carried) and ``True`` for the administrador treatment.
 
-    A tiny closed carrier per this module's contract; the rate values are the
-    grounded module constants (:data:`ADMINISTRADOR_RETENCION_RATE` et al.).
+    A tiny closed carrier of the STRUCTURAL fact -- which procedure a scheme
+    follows -- per this module's contract of closed value sets and taxonomy
+    only. The fixed rate VALUES themselves (35 %, 19 %, the 100.000 € INCN
+    threshold) are regulatory data resolved from the registry, not module
+    constants: this layer is imported BY the registry schema and must not
+    import back from it (``aeat-architecture-boundaries``), so a caller
+    needing the actual figures reads them from
+    :func:`~domain.transactions.load_administrador_retencion_rates` /
+    :func:`~domain.transactions.administrador_retencion_legal_refs` instead --
+    the same layer the sibling RIRPF art. 95 rate set already lives in.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     scheme: RetencionScheme
     is_fixed_rate: bool
-    fixed_rate: Decimal | None = None
-    fixed_reduced_rate: Decimal | None = None
-    fixed_reduced_incn_threshold_eur: Decimal | None = None
-    legal_refs: tuple[str, ...]
 
 
 _WORK_INCOME_RETENCION_TREATMENTS: Mapping[RetencionScheme, WorkIncomeRetencionTreatment] = MappingProxyType(
@@ -754,15 +731,10 @@ _WORK_INCOME_RETENCION_TREATMENTS: Mapping[RetencionScheme, WorkIncomeRetencionT
         RetencionScheme.WORK_INCOME: WorkIncomeRetencionTreatment(
             scheme=RetencionScheme.WORK_INCOME,
             is_fixed_rate=False,
-            legal_refs=("ley-35-2006:art-101", "rd-439-2007:art-80", "rd-439-2007:art-86"),
         ),
         RetencionScheme.WORK_INCOME_DIRECTOR: WorkIncomeRetencionTreatment(
             scheme=RetencionScheme.WORK_INCOME_DIRECTOR,
             is_fixed_rate=True,
-            fixed_rate=ADMINISTRADOR_RETENCION_RATE,
-            fixed_reduced_rate=ADMINISTRADOR_RETENCION_REDUCED_RATE,
-            fixed_reduced_incn_threshold_eur=ADMINISTRADOR_RETENCION_REDUCED_INCN_THRESHOLD_EUR,
-            legal_refs=("ley-35-2006:art-101", "rd-439-2007:art-80"),
         ),
     },
 )
@@ -775,6 +747,7 @@ def work_income_retencion_treatment(scheme: RetencionScheme) -> WorkIncomeRetenc
     arrendamiento), which are not governed by the LIRPF art. 101.1/101.2 trabajo
     procedure. Use it to distinguish the empleado (progressive) treatment from the
     administrador/consejero (fixed art. 101.2) treatment at the operator boundary.
+    The actual fixed-rate figures live in :mod:`domain.transactions`, not here.
     """
     return _WORK_INCOME_RETENCION_TREATMENTS.get(scheme)
 

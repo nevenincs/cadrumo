@@ -21,11 +21,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import BindingId, calculate_registry_snapshot
+from ....domain.calculations.registry import (
+    BindingId,
+    calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

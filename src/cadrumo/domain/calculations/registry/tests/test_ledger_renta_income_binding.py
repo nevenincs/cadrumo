@@ -56,6 +56,19 @@ _M130_RENDIMIENTO_NETO_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
+def _tx(suffix: str) -> str:
+    """A real hex-64 shape ending in ``suffix``.
+
+    ``RentaIncomeObservation.transaction_id`` is typed
+    :data:`~core.identity.TransactionId`, so a human-readable placeholder
+    like the prior ``"inv-tagged"`` literal fails shape validation before
+    the aggregation behaviour each test exercises is ever reached. ``suffix``
+    must itself be hex-safe; distinct suffixes keep the fixtures below
+    distinguishable in failure output.
+    """
+    return suffix.rjust(64, "0")
+
+
 def _modelo_130_snapshot():
     modelo, catalogues = _committed_modelo("130")
     return build_snapshot(
@@ -91,7 +104,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
     """
     revision = _modelo_130_snapshot().revision
     tagged = RentaIncomeObservation(
-        transaction_id="inv-tagged",
+        transaction_id=_tx("1a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
@@ -99,7 +112,7 @@ def test_ingresos_integros_sum_uses_base_when_tagged_and_gross_when_not() -> Non
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     untagged = RentaIncomeObservation(
-        transaction_id="receipt-untagged",
+        transaction_id=_tx("1b"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
@@ -134,7 +147,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
     validate_ledger_renta_income_aggregation_binding_definition(binding)
 
     net_paid = RentaIncomeObservation(
-        transaction_id="inv-net-paid",
+        transaction_id=_tx("2a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("2120.00"),
         taxable_base_amount=Decimal("2000.00"),
@@ -143,7 +156,7 @@ def test_committed_m130_retenciones_binding_reads_withheld_amount_fact() -> None
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     no_withholding = RentaIncomeObservation(
-        transaction_id="inv-no-withholding",
+        transaction_id=_tx("2b"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
@@ -174,7 +187,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
     """
     revision = _modelo_130_snapshot().revision
     tagged = RentaIncomeObservation(
-        transaction_id="inv-tagged-base",
+        transaction_id=_tx("3a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
@@ -182,7 +195,7 @@ def test_taxable_base_sum_fact_sums_only_declared_taxable_base() -> None:
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     untagged = RentaIncomeObservation(
-        transaction_id="receipt-untagged-base",
+        transaction_id=_tx("3b"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
@@ -227,7 +240,7 @@ def test_cash_received_sum_fact_sums_gross_amount_unconditionally() -> None:
     revision_with_gross_binding = revision.model_copy(update={"bindings": (*revision.bindings, gross_binding)})
 
     tagged = RentaIncomeObservation(
-        transaction_id="inv-tagged-gross",
+        transaction_id=_tx("4a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
@@ -287,7 +300,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
     revision = _modelo_130_snapshot().revision
 
     routed = RentaIncomeObservation(
-        transaction_id="inv-routed",
+        transaction_id=_tx("5a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1000.00"),
         taxable_base_amount=None,
@@ -295,7 +308,7 @@ def test_unsupported_renta_income_flags_observation_routed_to_no_binding() -> No
         grounding=LedgerIncomeGrounding.CASH_FALLBACK,
     )
     unrouted = RentaIncomeObservation(
-        transaction_id="inv-unrouted",
+        transaction_id=_tx("5b"),
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
@@ -316,7 +329,7 @@ def test_unsupported_renta_income_does_not_flag_zero_income() -> None:
     revision = _modelo_130_snapshot().revision
 
     zero_unrouted = RentaIncomeObservation(
-        transaction_id="inv-zero",
+        transaction_id=_tx("6a"),
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("0.00"),
         taxable_base_amount=None,
@@ -342,7 +355,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
     revision = _modelo_130_snapshot().revision
 
     grounded = RentaIncomeObservation(
-        transaction_id="inv-with-base",
+        transaction_id=_tx("7a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
@@ -350,7 +363,7 @@ def test_ungrounded_screen_flags_cash_fallback_rows_a_binding_consumes() -> None
         grounding=LedgerIncomeGrounding.SUBSTRATE_DECLARED,
     )
     ungrounded = RentaIncomeObservation(
-        transaction_id="receipt-no-base",
+        transaction_id=_tx("7b"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
@@ -374,7 +387,7 @@ def test_ungrounded_screen_reports_nothing_when_every_row_declares_its_base() ->
     revision = _modelo_130_snapshot().revision
 
     grounded = RentaIncomeObservation(
-        transaction_id="inv-with-base",
+        transaction_id=_tx("7a"),
         target_casilla_id=_M130_INGRESOS_CASILLA,
         gross_amount=Decimal("1210.00"),
         taxable_base_amount=Decimal("1000.00"),
@@ -399,7 +412,7 @@ def test_ungrounded_screen_ignores_rows_no_base_reading_binding_consumes() -> No
     revision = _modelo_130_snapshot().revision
 
     unrouted = RentaIncomeObservation(
-        transaction_id="inv-unrouted-no-base",
+        transaction_id=_tx("8b"),
         target_casilla_id=_M130_RENDIMIENTO_NETO_CASILLA,
         gross_amount=Decimal("500.00"),
         taxable_base_amount=None,
@@ -444,7 +457,7 @@ def test_observation_refuses_a_grounding_marker_that_contradicts_its_base() -> N
     """
     with pytest.raises(ValidationError, match="contradicts taxable_base_amount"):
         RentaIncomeObservation(
-            transaction_id="inv-lying-marker",
+            transaction_id=_tx("9a"),
             target_casilla_id=_M130_INGRESOS_CASILLA,
             gross_amount=Decimal("500.00"),
             taxable_base_amount=None,

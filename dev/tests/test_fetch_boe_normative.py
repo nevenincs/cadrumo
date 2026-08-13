@@ -24,7 +24,9 @@ import pytest
 from dev.corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     assert_served_by_the_requested_endpoint,
+    assert_serves_the_published_document,
     assert_serves_the_text_in_force,
+    canonical_lf_bytes,
     version_selections,
 )
 
@@ -33,6 +35,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _CORPUS: Final[Path] = Path(__file__).resolve().parents[2] / "src/cadrumo/_data/corpus/normatives/html"
 _SINGLE_BLOCK: Final[str] = "ley-37-1992-art-90.html"
 _MULTI_BLOCK: Final[str] = "boe-a-2024-12944-rdl-4-2024-iva-alimentos.html"
+#: The as-published shape: BOE holds no consolidated text for a corrección
+#: de errores, so this is the only view of it that exists.
+_AS_PUBLISHED: Final[str] = "correccion-errores-real-decreto-ley-6-2024.html"
 
 
 def _payload(name: str) -> str:
@@ -190,3 +195,46 @@ def test_the_article_endpoint_refuses_a_different_block_path() -> None:
             final_url="https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a91",
             requested_url="https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/BOE-A-1992-28740/texto/bloque/a90",
         )
+
+
+def test_the_as_published_view_is_accepted_as_itself() -> None:
+    """The bundled corrección de errores is the ground truth for the doc.php shape."""
+    assert_serves_the_published_document(_payload(_AS_PUBLISHED), document_id="BOE-A-2024-24097")
+
+
+def test_an_as_published_payload_for_a_different_document_is_refused() -> None:
+    """Identity rests on the server-emitted canonical link, which names the endpoint too."""
+    with pytest.raises(NormativeAcquisitionError, match="canonical URL"):
+        assert_serves_the_published_document(_payload(_AS_PUBLISHED), document_id="BOE-A-2024-24096")
+
+
+def test_a_consolidated_payload_is_refused_by_the_as_published_arm() -> None:
+    """A consolidated page declares act.php as its canonical view, so it refuses here.
+
+    Driven against a real consolidated payload rather than a hand-written one.
+    Note what this does NOT prove: the refusal fires because the CANONICAL LINK
+    names the wrong endpoint, not because the page is consolidated. BOE will
+    serve a doc.php view of that same consolidated norm whose canonical link is
+    correct, and this function accepts it -- which is exactly why
+    ``fetch_published_document`` also probes act.php before writing anything.
+    """
+    with pytest.raises(NormativeAcquisitionError, match="canonical URL"):
+        assert_serves_the_published_document(_payload(_MULTI_BLOCK), document_id="BOE-A-2024-12944")
+
+
+def test_canonicalisation_normalises_crlf_and_leaves_legal_text_alone() -> None:
+    """Line terminators are the only thing the writers rewrite."""
+    assert canonical_lf_bytes(b"art\xc3\xadculo 11\r\n25 por ciento\r\n") == b"art\xc3\xadculo 11\n25 por ciento\n"
+    assert canonical_lf_bytes(b"already\nlf\n") == b"already\nlf\n"
+    assert canonical_lf_bytes(b"a lone \r stays") == b"a lone \r stays"
+
+
+def test_every_bundled_normative_is_already_canonical() -> None:
+    """The corpus the registry pins hashes identically on Windows and Unix."""
+    noncanonical = [
+        path.name
+        for path in sorted(_CORPUS.glob("*.html"))
+        if canonical_lf_bytes(payload := path.read_bytes()) != payload
+    ]
+
+    assert not noncanonical, f"bundled normatives carry CRLF line endings: {noncanonical!r}"

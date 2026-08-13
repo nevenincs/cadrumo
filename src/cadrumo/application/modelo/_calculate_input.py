@@ -422,11 +422,6 @@ def build_work_calculate_input_bundle(
         for raw_key, raw_value in binding_overrides.items():
             if raw_key in date_channel_ids:
                 raise ModeloCalculateBindingInputError(
-                    f"--binding {raw_key!r} is a date-valued binding sourced from the active "
-                    "profile (a taxpayer date fact such as the birth date); it cannot be "
-                    "supplied through --binding, which carries only decimal and enum "
-                    "values. Set it as a profile fact (e.g. `aeat config profile create "
-                    "... --taxpayer-birth-date YYYY-MM-DD`) and recalculate.",
                     context={"key": raw_key},
                     translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
                 )
@@ -509,7 +504,6 @@ def _decimal(raw_value: str, *, flag: str, key: str) -> Decimal:
     parsed = try_parse_canonical_decimal(raw_value)
     if parsed is None:
         raise ModeloCalculateDecimalInputError(
-            f"{flag} value for {key!r} is not a decimal: {raw_value!r}",
             context={"flag": flag, "key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         )
@@ -541,9 +535,6 @@ def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> De
             )
             accepted = ", ".join(option.encoded_value for option in encoded_options)
             raise ModeloCalculateDecimalInputError(
-                f"--binding value for {binding.id!r} is a decimal-encoded boolean flag and must "
-                f"be one of: {accepted}. Received {raw_value!r}. Accepted encoding: {mapping}. "
-                "Run `aeat app modelo bindings list <MODELO>` to see each binding's encoding.",
                 context={
                     "flag": "--binding",
                     "key": binding.id,
@@ -554,7 +545,6 @@ def _decimal_binding_value(raw_value: str, binding: DataBindingDefinition) -> De
                 translated_message="application.modelo.errors.calculate_boolean_binding_encoding_invalid",
             )
         raise ModeloCalculateDecimalInputError(
-            f"--binding value for {binding.id!r} is not a decimal: {raw_value!r}",
             context={"flag": "--binding", "key": binding.id, "value": raw_value},
             translated_message="application.modelo.errors.calculate_decimal_input_invalid",
         )
@@ -581,7 +571,6 @@ def _typed_text_value(raw_value: str, *, key: str, casilla_def: CasillaDefinitio
         return validate_registry_text_scalar(casilla_def.data_type, value)
     except RegistryValidationError as exc:
         raise ModeloCalculateTextInputError(
-            f"--casilla value for {key!r} is not a valid {casilla_def.data_type} value: {exc}",
             context={"key": key, "value": raw_value, "data_type": casilla_def.data_type},
             translated_message="application.modelo.errors.calculate_typed_text_input_invalid",
         ) from exc
@@ -601,7 +590,6 @@ def _text_value(raw_value: str, *, key: str) -> str:
     value = raw_value.strip()
     if not value:
         raise ModeloCalculateTextInputError(
-            f"--casilla value for {key!r} is a text casilla and must be a non-empty string; got {raw_value!r}",
             context={"key": key, "value": raw_value},
             translated_message="application.modelo.errors.calculate_text_input_empty",
         )
@@ -681,11 +669,6 @@ def _validated_declarante_selector(raw_value: str, *, key: CasillaId, casilla_de
     except (InvalidOperation, ValueError):
         return value
     raise ModeloCalculateTextInputError(
-        f"--casilla value for {key!r} ({casilla_def.label}) is a non-numeric "
-        f"data_type={casilla_def.data_type!r} declarante selector naming the "
-        f"contribuyente who obtains the income, not an amount; got {raw_value!r}. "
-        f"Enter the income figure in its own numeric casilla (e.g. `--casilla 0003=<amount>`) "
-        f"and reserve this casilla for the member selector.",
         context={
             "key": key,
             "value": raw_value,
@@ -701,11 +684,6 @@ def _refuse_detail_casilla_override(key: str) -> None:
     if not is_detail_casilla_override_key(key):
         return
     raise ModeloCalculateCasillaInputError(
-        f"--casilla {key!r} names a Modelo 180 perceptor/property detail field, not a scalar decimal "
-        "casilla input. The local work --casilla channel only accepts scalar decimal casillas; "
-        "Modelo 180 perceptor/property detail rows are not supported on the public --row surface yet. "
-        "Use `aeat app modelo aggregate --modelo 180 --retencion-observation ...` for the supported "
-        "annual perceptor count/base/retenciones source, and do not supply string fields through --casilla.",
         context={"key": key},
         translated_message="application.modelo.errors.calculate_detail_casilla_unsupported",
     )
@@ -1009,9 +987,6 @@ def _validated_binding_input_channel(
     if key not in known_binding_ids:
         accepted = ", ".join(sorted(known_binding_ids))
         raise ModeloCalculateBindingInputError(
-            f"--binding {key!r} does not match any binding id in this revision. "
-            f"Accepted binding ids: {accepted}. "
-            "Use `aeat app modelo bindings list <MODELO>` to list valid binding ids.",
             context={"key": key, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_binding_unknown",
         )
@@ -1023,7 +998,6 @@ def _validated_relation_id(key: str, known_relation_ids: set[RelationId]) -> Rel
         return key
     accepted = ", ".join(sorted(known_relation_ids))
     raise ModeloCalculateRelationInputError(
-        f"--relation {key!r} does not match any relation id in this revision. Accepted relation ids: {accepted}.",
         context={"key": key, "accepted": accepted},
         translated_message="application.modelo.errors.calculate_relation_unknown",
     )
@@ -1039,16 +1013,10 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
         accepted = ", ".join(noncanonical_targets)
         if len(noncanonical_targets) > 1:
             raise ModeloCalculateCasillaInputError(
-                f"--casilla {key!r} is not a canonical casilla.id and is ambiguous. "
-                f"Candidate casilla.id values: {accepted}. "
-                "Supply the exact canonical casilla.id.",
                 context={"key": key, "accepted": accepted},
                 translated_message="application.modelo.errors.calculate_casilla_noncanonical_ambiguous",
             )
         raise ModeloCalculateCasillaInputError(
-            f"--casilla {key!r} is a printed casilla number or form number or export reference, "
-            "not a canonical casilla.id. "
-            f"Use the canonical casilla.id instead: {accepted}.",
             context={"key": key, "accepted": accepted},
             translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
         )
@@ -1057,9 +1025,6 @@ def _validated_canonical_casilla_id(key: str, revision: ModeloRevision) -> Casil
     if len(known_ids) > 20:
         accepted_hint += ", ..."
     raise ModeloCalculateCasillaInputError(
-        f"--casilla {key!r} is not a canonical casilla.id in this revision. "
-        f"Accepted casilla.id values include: {accepted_hint}. "
-        "Use `aeat app modelo casillas <MODELO>` to list valid casilla IDs.",
         context={"key": key, "accepted": accepted_hint},
         translated_message="application.modelo.errors.calculate_casilla_unknown",
     )

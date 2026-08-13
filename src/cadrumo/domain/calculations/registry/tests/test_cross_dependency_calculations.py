@@ -45,8 +45,6 @@ from functools import cache
 import pdfplumber
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId, Period, validated_casilla_id, validated_casilla_id_map
 from .....core.aggregation import RetencionClave
 from .....tests import FIXTURES_DIR
@@ -55,6 +53,7 @@ from .. import (
     RegistryCalculationResult,
     WithholdingObservation,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_withholding_binding_values,
 )
 from .._authority import ValidatedRegistryAuthority

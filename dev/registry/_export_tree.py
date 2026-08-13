@@ -950,6 +950,13 @@ def _record_relative_path(index: int, part: int, record_id: object) -> str:
 
 
 def _require_semantic_map_attestation(joined: JoinedRecordDesign, semantic_map: SemanticMap) -> None:
+    if semantic_map.source_ref != joined.source.source_ref:
+        raise RegistryValidationError(
+            f"semantic-map source {semantic_map.source_ref!r} does not match joined source "
+            f"{joined.source.source_ref!r}",
+        )
+    if semantic_map.source_sha256 != joined.source.source_sha256:
+        raise RegistryValidationError("semantic-map SHA-256 does not match joined official source")
     joined_entries = frozenset(field.semantic_entry for field in joined.fields)
     if len(joined_entries) != len(joined.fields) or joined_entries != frozenset(semantic_map.entries):
         raise RegistryValidationError("joined fields do not attest the supplied complete semantic map")

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
@@ -19,6 +17,7 @@ from ....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
+from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ._action_test_support import (
     _BUCKET_ID,

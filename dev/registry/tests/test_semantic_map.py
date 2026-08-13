@@ -109,6 +109,8 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
         {
             "modelo": "303",
             "design_epoch": "2026",
+            "source_ref": "aeat-dr-303-2026",
+            "source_sha256": "a" * 64,
             "records": (
                 {
                     "sheet": "Registro tipo 1",
@@ -124,6 +126,8 @@ def test_semantic_map_retains_a_complete_workbook_anchor_and_canonical_grounding
     entry = semantic_map.entries[0]
     assert semantic_map.modelo == "303"
     assert semantic_map.design_epoch == "2026"
+    assert semantic_map.source_ref == "aeat-dr-303-2026"
+    assert semantic_map.source_sha256 == "a" * 64
     assert semantic_map.records[0].export_record_id == "registro-tipo-1"
     assert semantic_map.records[0].record_type == "declaracion"
     assert entry.anchor.sheet == "Registro tipo 1"
@@ -147,6 +151,30 @@ def test_semantic_map_supports_exact_pdf_anchors_without_a_workbook_cell() -> No
     assert entry.anchor.source_cell is None
     assert entry.anchor.ordinal == 3
     assert entry.anchor.record_identity == "registro-tipo-1"
+
+
+@pytest.mark.parametrize("identity_key", ("source_ref", "source_sha256"))
+def test_semantic_map_refuses_design_epoch_only_identity(identity_key: str) -> None:
+    """A source-pinned map cannot fall back to the design epoch alone."""
+    payload = {
+        "modelo": "303",
+        "design_epoch": "2026",
+        "source_ref": "aeat-dr-303-2026",
+        "source_sha256": "a" * 64,
+        "records": (
+            {
+                "sheet": "Registro tipo 1",
+                "record_identity": "registro-tipo-1",
+                "export_record_id": "registro-tipo-1",
+                "record_type": "declaracion",
+            },
+        ),
+        "entries": (_entry_payload("casilla", casilla_id="casilla.03"),),
+    }
+    del payload[identity_key]
+
+    with pytest.raises(ValidationError, match=identity_key):
+        SemanticMap.model_validate(payload)
 
 
 @pytest.mark.parametrize(

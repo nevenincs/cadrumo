@@ -187,8 +187,9 @@ def persist_filed_revision_observation(
         taxpayer_nif: Taxpayer NIF from the active profile. When supplied for a
             locally filed Modelo 303, the same observation is projected into the
             profile-local IVA compensation history repository.
-        filing_record_id: Local filing record id used as non-AEAT provenance for
-            the IVA compensation history state.
+        filing_record_id: Local filing record id used only to distinguish the
+            ``source_observation_key``. ``APP_FILING`` provenance is declared
+            by the required enum.
         iva_compensation_history_repository: Optional repository override for
             the Modelo 303 history projection.
 

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2020-2901-a1-redacciones.html",
+  "source_sha256": "4997e99715264c98f5950fe0a025d45360ccf2275951c72f0502b46cd63d7b53",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 1. Aprobación del modelo 140.\nSe aprueba el modelo 140 «Impuesto sobre la Renta de las Personas Físicas. Deducción por maternidad. Solicitud de abono anticipado», cuyo contenido figura como anexo de la presente orden.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

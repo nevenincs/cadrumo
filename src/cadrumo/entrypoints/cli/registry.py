@@ -123,6 +123,8 @@ def verify_registry_cmd(
         result=strict_round_trip(RegistryInspectResult, report),
         lines=(
             _metric_line("verified", report.verified),
+            _metric_line("verified_invariant_families", _join(list(report.verified_invariant_families))),
+            _metric_line("unverified_invariant_families", _join(list(report.unverified_invariant_families))),
             *_registry_tree_metric_lines(report),
         ),
     )

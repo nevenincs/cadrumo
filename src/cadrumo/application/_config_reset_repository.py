@@ -158,7 +158,10 @@ class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
         path = self.path_for(operation.operation_id)
         with exclusive_file_lock(self._lock_target):
             if path.exists():
-                raise ConfigResetJournalAlreadyExistsError(operation.operation_id)
+                raise ConfigResetJournalAlreadyExistsError(
+                    translated_message="errors.error.error_config_boundary",
+                    context={"operation_id": operation.operation_id, "journal_present": True},
+                )
             self._write(path, operation)
 
     def create_exclusive(self, operation: ConfigResetOperation) -> None:
@@ -168,7 +171,10 @@ class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
         with exclusive_file_lock(self._lock_target):
             self._raise_if_incomplete()
             if path.exists():
-                raise ConfigResetJournalAlreadyExistsError(operation.operation_id)
+                raise ConfigResetJournalAlreadyExistsError(
+                    translated_message="errors.error.error_config_boundary",
+                    context={"operation_id": operation.operation_id, "journal_present": True},
+                )
             self._write(path, operation)
 
     def refuse_if_incomplete(self) -> None:
@@ -230,7 +236,10 @@ class ConfigResetJournalRepository(JournalRepositoryBase[ConfigResetOperation]):
             candidate for candidate in self.list() if candidate.status is not ConfigResetOperationStatus.COMPLETE
         )
         if incomplete:
-            raise ConfigResetJournalIncompleteError(incomplete[-1].operation_id)
+            raise ConfigResetJournalIncompleteError(
+                translated_message="errors.error.error_config_boundary",
+                context={"operation_id": incomplete[-1].operation_id, "incomplete_count": len(incomplete)},
+            )
 
 
 __all__ = [

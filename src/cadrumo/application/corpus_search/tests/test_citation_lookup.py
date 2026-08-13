@@ -32,8 +32,10 @@ def test_resolve_refuses_a_sidecar_less_source(tmp_path: Path) -> None:
     copied_path.write_bytes(source_path.read_bytes())
 
     lookup = CitationLookup({reference.id: reference}, source_root=tmp_path)
-    with pytest.raises(CorpusSearchInputError, match="no readable extracted corpus text"):
+    with pytest.raises(CorpusSearchInputError) as raised:
         lookup.resolve("ley-35-2006:art-1")
+
+    assert raised.value.reason == "citation_extracted_text_absent"
 
 
 def test_resolve_slices_consolidated_document_by_anchor() -> None:

@@ -244,9 +244,9 @@ def seed_iva_compensation_period(
     :class:`~domain.iva_compensation._carry_forward.IvaCompensationPeriodState`.
 
     Intended for first-time users whose historical M303 carry-forward pre-dates
-    the local compensation history. The seeded state is structurally identical
-    to a filed-observation state but carries ``status='seeded'`` and synthetic
-    provenance so downstream diagnostics can distinguish seed from filed records.
+    the local compensation history. The seeded state declares
+    ``provenance=IvaCompensationStateProvenance.OPERATOR_SEED``; as a non-AEAT
+    path, it carries ``status is None`` and no AEAT ``expediente_id``.
 
     Raises ``IvaCompensationSeedConflictError`` if a state already exists for
     the specified period — seeding must not overwrite an existing record.

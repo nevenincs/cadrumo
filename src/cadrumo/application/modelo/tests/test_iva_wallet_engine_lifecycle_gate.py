@@ -8,9 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....tests import general_m303_filing_evidence
 from ....tests.env_scope import ready_clave_settings
 from ...calculations import (
     CalculationObservationRepository,

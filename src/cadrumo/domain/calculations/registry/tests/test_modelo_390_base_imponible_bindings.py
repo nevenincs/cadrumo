@@ -32,6 +32,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import IvaDeductionFactKind
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
@@ -40,6 +41,7 @@ from .. import (
     resolve_ledger_iva_aggregation_binding_values,
     selector_as_dict,
 )
+from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -71,6 +73,7 @@ def _observation(
     flow: IvaFlowDirection,
     base: Decimal,
     iva: Decimal,
+    deduction_fact_kind: IvaDeductionFactKind | None = None,
 ) -> IvaLedgerObservation:
     return IvaLedgerObservation(
         ledger_id="ledger-m390-base",
@@ -82,6 +85,15 @@ def _observation(
         base_amount=base,
         iva_amount=iva,
         recargo_amount=Decimal("0"),
+        deduction_fact_kind=deduction_fact_kind,
+        deduction_provenance=(
+            _deduction_provenance(
+                deduction_fact_kind,
+                source_locator="invoice:ledger-m390-base",
+            )
+            if deduction_fact_kind is not None
+            else None
+        ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 
@@ -125,6 +137,7 @@ def _annual_observations() -> tuple[IvaLedgerObservation, ...]:
             flow=IvaFlowDirection.SOPORTADO,
             base=_SOPORTADO_BASE,
             iva=_SOPORTADO_CUOTA,
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
         ),
         # Exempt supplies carrying base with no cuota. They reach the volume
         # boxes rather than the régimen-ordinario tiers, and without a row of

@@ -27,7 +27,7 @@ from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import schema_valid_placeholder
+from ....tests.user_profile import complete_conditional_facts, schema_valid_placeholder
 from ...workflow import WorkflowState
 from .. import (
     CENSAL_ADOPTABLE_PATHS,
@@ -133,7 +133,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
             path = f"{section.key}.{field.key}"
             value = _PROFILE_NIF if path == "identity.tax_id" else schema_valid_placeholder(field)
             facts.append(UserProfileFact(path=path, value=value))
-    return tuple(facts)
+    return complete_conditional_facts(schema, facts)
 
 
 def _record_with_cleared_identity() -> UserProfileRecord:

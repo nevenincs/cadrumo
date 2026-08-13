@@ -3,9 +3,9 @@
   "source_kind": "normatives_html",
   "status": "ok",
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/real-decreto-ley-7-2024.html",
-  "source_sha256": "65b76b3b271d1fc46f4baf57a54d3e55680eb840caecee25c7402cf5d0af6165",
+  "source_sha256": "13615f1354c9644aeccd62170c60a147e2b18a3d8211bea33c7d387bd63e6eb6",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.3",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-2024-23422",
   "units": [
     {

@@ -103,12 +103,10 @@ def notifications_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
         raise LiveApplicationInputError(
-            "bucket_id must not be blank",
             translated_message="application.live.notifications.errors.bucket_id_blank",
         )
     if not trimmed_snapshot:
         raise LiveApplicationInputError(
-            "snapshot_id must not be blank",
             translated_message="application.live.notifications.errors.snapshot_id_blank",
         )
     return f"notifications-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
@@ -124,12 +122,10 @@ def _notifications_repository(
         namespace_definition=LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
         object_key=notifications_snapshot_object_key,
         not_found_factory=lambda snapshot_id: NotificationsSnapshotNotFoundError(
-            "no notifications snapshot matches the requested id",
             translated_message="application.live.notifications.errors.snapshot_not_found",
             context={"snapshot_id": snapshot_id},
         ),
         ambiguous_prefix_factory=lambda snapshot_id, full_ids: NotificationsSnapshotNotFoundError(
-            "notifications snapshot prefix matches multiple snapshots",
             translated_message="application.live.notifications.errors.snapshot_prefix_ambiguous",
             context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
         ),

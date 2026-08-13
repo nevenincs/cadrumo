@@ -82,7 +82,7 @@ EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
 _LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "export.provenance.json"
 
 _SEMANTIC_MAP_KEYS: Final[frozenset[str]] = frozenset(
-    {"modelo", "design_epoch", "records", "entries", "variable_envelopes"},
+    {"modelo", "design_epoch", "source_ref", "source_sha256", "records", "entries", "variable_envelopes"},
 )
 _SEMANTIC_MAP_RECORD_KEYS: Final[frozenset[str]] = frozenset(
     {"sheet", "record_identity", "export_record_id", "record_type", "required", "repeat"},
@@ -369,6 +369,8 @@ def semantic_map_digest(semantic_map: SemanticMap) -> str:
         {
             "modelo": payload["modelo"],
             "design_epoch": payload["design_epoch"],
+            "source_ref": payload["source_ref"],
+            "source_sha256": payload["source_sha256"],
             "records": normalised_records,
             "entries": normalised_entries,
             "variable_envelopes": normalised_variable_envelopes,
@@ -639,6 +641,13 @@ def _validate_generation_scope(
             f"semantic-map epoch {semantic_map.design_epoch!r} does not match generation target "
             f"{target.design_epoch!r}",
         )
+    if semantic_map.source_ref != joined.source.source_ref:
+        raise RegistryValidationError(
+            f"semantic-map source {semantic_map.source_ref!r} does not match joined source "
+            f"{joined.source.source_ref!r}",
+        )
+    if semantic_map.source_sha256 != joined.source.source_sha256:
+        raise RegistryValidationError("semantic-map SHA-256 does not match joined official source")
     if joined.m303_variable_envelope is not None and target.revision_id != joined.revision_id:
         raise RegistryValidationError(
             f"typed Modelo 303 DP30300 target revision {target.revision_id!r} does not match the selected "

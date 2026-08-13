@@ -31,9 +31,9 @@ import pytest
 
 from ....core.resources import resources
 from ....domain.invoices import Invoice, IvaRate
-from ....domain.iva import InvoiceKind, IvaCategory
+from ....domain.iva import InvoiceKind, IvaCategory, is_deducible_flow
 from .._iva_ledger import resolve_iva_ledger_binding_values
-from .._modelo_bindings import _invoice_line_iva_observation
+from .._modelo_bindings import _DECLARED_CATEGORY_BASE_ONLY_FLOWS, _invoice_line_iva_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -43,6 +43,24 @@ _DEVENGO = date(2024, 3, 15)
 _CASILLA_122 = "modelo-303-casilla-122-inversion-sujeto-pasivo-base"
 _CASILLA_59 = "modelo-303-casilla-59-entregas-intracomunitarias-base"
 _CASILLA_60 = "modelo-303-casilla-60-exportaciones-base"
+
+
+def test_every_declared_category_base_only_flow_stays_outside_deduction_authority() -> None:
+    """The complete production table must remain output-side under the canonical predicate.
+
+    These cuota-less issued rows are constructed without deduction provenance.
+    If a future table member points at a deducible flow, the observation model
+    will refuse it before the intended base reaches its casilla. Iterating the
+    production table keeps the assertion total without restating its members or
+    duplicating the deduction-side flow set.
+    """
+    wrongly_deducible = {
+        category.value: flow.value
+        for category, flow in _DECLARED_CATEGORY_BASE_ONLY_FLOWS.items()
+        if is_deducible_flow(flow)
+    }
+
+    assert not wrongly_deducible
 
 
 def _revision():

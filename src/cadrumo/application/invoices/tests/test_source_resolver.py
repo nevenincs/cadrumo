@@ -1362,6 +1362,11 @@ def test_an_inferred_entrega_clave_is_disclosed_when_the_bucket_also_holds_an_im
     # already knowing that clave M exists.
     assert "IC-SUPPLY-001" in advisory.message
     assert "'M'" in advisory.message
+    # Advisory-asserted: this resolver holds no revision, snapshot or casilla
+    # definition anywhere, so the two LIVA provisions the message states
+    # (the ordinary art. 25 exemption and the art. 27.12 carve-out) are
+    # declared rather than read off a registry object.
+    assert advisory.asserted_legal_refs == ("ley-37-1992:art-25", "ley-37-1992:art-27")
     assert "'H'" in advisory.message
 
 

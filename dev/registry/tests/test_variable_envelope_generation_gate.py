@@ -59,6 +59,8 @@ def test_real_m200_variable_envelope_survives_join_and_refuses_fixed_generation(
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "source_ref": parsed.source.source_ref,
+            "source_sha256": parsed.source.source_sha256,
             "records": (
                 {
                     "sheet": real_sheet.sheet,
@@ -163,6 +165,8 @@ def test_real_m220_composite_envelope_survives_join_and_refuses_fixed_generation
         {
             "modelo": "220",
             "design_epoch": "2025",
+            "source_ref": parsed.source.source_ref,
+            "source_sha256": parsed.source.source_sha256,
             "records": (
                 {
                     "sheet": real_sheet.sheet,
@@ -277,6 +281,8 @@ def test_real_m303_envelope_with_explicit_product_authority_reaches_generation(
         {
             "modelo": "303",
             "design_epoch": design_epoch,
+            "source_ref": parsed.source.source_ref,
+            "source_sha256": parsed.source.source_sha256,
             "records": (
                 {
                     "sheet": real_sheet.sheet,

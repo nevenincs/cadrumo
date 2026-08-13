@@ -69,7 +69,12 @@ from ...domain.modelos import (
     is_justificante_backed_external_evidence,
     upsert_filing_record,
 )
-from ._errors import LiveApplicationError, LiveApplicationInputError
+from ._errors import (
+    LiveApplicationError,
+    LiveApplicationInputError,
+    LiveReadPrecondition,
+    live_read_no_recovery_verdict,
+)
 
 logger = get_logger(__name__)
 
@@ -148,9 +153,23 @@ def persist_filed_calculation_observation(
     """
     if not _is_active_filed_observation(observation):
         raise LiveApplicationInputError(
-            f"refusing to persist non-active AEAT filed observation "
-            f"{observation.modelo}/{observation.ejercicio}/{observation.period.registry_token} "
-            f"with status {observation.status!r}",
+            translated_message="application.live.filed_observations.errors.observation_not_active",
+            context={
+                "modelo": observation.modelo,
+                "ejercicio": observation.ejercicio,
+                "period": observation.period.registry_token,
+                "status": observation.status,
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.FILED_OBSERVATION_ACTIVE,
+                facts={
+                    "modelo": observation.modelo,
+                    "ejercicio": observation.ejercicio,
+                    "period": observation.period.registry_token,
+                    "status": observation.status,
+                    "observation_active": False,
+                },
+            ),
         )
     registry_observation = registry_observation_from_filed_declaration(observation)
     repo = repository if repository is not None else CalculationObservationRepository()
@@ -414,11 +433,13 @@ def persist_iva_compensation_history_observations_strict(
             key = persist_filed_calculation_observation(observation)
         except SedeParseError as exc:
             raise LiveApplicationError(
-                f"filed Modelo 303 {observation.period!s} could not be promoted into IVA compensation history",
+                translated_message="application.live.filed_observations.errors.iva_history_promotion_failed",
+                context={"modelo": Modelo.M303.value, "period": str(observation.period)},
             ) from exc
         if history_repo.load_period(observation.period) is None:
             raise LiveApplicationError(
-                f"secure IVA compensation history did not reload after persisting Modelo 303 {observation.period!s}",
+                translated_message="application.live.filed_observations.errors.iva_history_reload_missing",
+                context={"modelo": Modelo.M303.value, "period": str(observation.period)},
             )
         keys.append(key)
     return tuple(keys)
@@ -506,7 +527,10 @@ def _filed_observation_history_period_sort_key(modelo: str, period: Period) -> t
     if period.is_quarterly:
         quarter_ordinal = period.quarter_ordinal
         if quarter_ordinal is None:
-            raise LiveApplicationError("quarterly filed history period has no quarter ordinal")
+            raise LiveApplicationError(
+                translated_message="application.live.filed_observations.errors.quarter_ordinal_missing",
+                context={"modelo": modelo, "period": period.registry_token},
+            )
         return (quarter_ordinal, period.registry_token)
     if period.kind is PeriodKind.MONTHLY:
         return (int(period.registry_token), period.registry_token)

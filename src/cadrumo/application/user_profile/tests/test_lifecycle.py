@@ -26,7 +26,7 @@ from ....domain.user_profile import (
     UserProfileValidationError,
 )
 from ....tests.secure_sql import isolated_runtime_profile
-from ....tests.user_profile import schema_valid_placeholder
+from ....tests.user_profile import complete_conditional_facts, schema_valid_placeholder
 from .. import (
     CompleteSetupCommand,
     EditProfileFieldCommand,
@@ -87,7 +87,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
                         value=schema_valid_placeholder(field),
                     ),
                 )
-    return tuple(facts)
+    return complete_conditional_facts(schema, facts)
 
 
 def test_register_rejects_schema_violations(

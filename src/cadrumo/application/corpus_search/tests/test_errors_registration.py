@@ -26,7 +26,7 @@ def test_all_corpus_errors_are_registry_bound_cadrumo_errors() -> None:
 
 
 def test_input_error_renders_as_refused_not_internal() -> None:
-    error = CorpusSearchInputError("retrieval query must be non-empty", context={"query": ""})
+    error = CorpusSearchInputError(reason="query_empty", context={"query": ""})
     envelope = build_error_envelope(error)
     assert envelope.category == ErrorCategory.REFUSED.value
     assert envelope.code == "REFUSED_CORPUS_SEARCH_INPUT"
@@ -39,12 +39,16 @@ def test_input_error_renders_as_refused_not_internal() -> None:
 
 def test_input_error_has_context_but_no_local_suggestion_channel() -> None:
     error = CorpusSearchInputError(
-        "unknown citation id",
+        reason="citation_id_unknown",
         context={"citation_id": "ley-58-2003:art-999"},
     )
     envelope = build_error_envelope(error)
     assert envelope.category == ErrorCategory.REFUSED.value
-    assert error.context == {"citation_id": "ley-58-2003:art-999"}
+    assert error.context == {"reason": "citation_id_unknown", "citation_id": "ley-58-2003:art-999"}
+    # The condition travels as a discriminant, never as a sentence: str(exc)
+    # prefers a positional argument over the registered key, so an authored
+    # message here would reach tracebacks and logs in English in every locale.
+    assert str(error) == error.translated_message, f"the constructor authors a sentence: {str(error)!r}"
     assert not hasattr(error, "suggestion")
     assert "suggestion" not in envelope.model_dump()
 
@@ -52,4 +56,4 @@ def test_input_error_has_context_but_no_local_suggestion_channel() -> None:
 def test_context_stays_a_dict_even_when_unset() -> None:
     # The surface's always-a-dict `.context` contract must survive promotion
     # (CadrumoError's own base leaves it None when unset).
-    assert CorpusSearchError("x").context == {}
+    assert CorpusSearchError(reason="probe").context == {"reason": "probe"}

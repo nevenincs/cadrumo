@@ -810,17 +810,38 @@ docs-changed-rag BASE="HEAD":
 docs-gettext:
     uv run --no-sync python -m dev.docs.i18n
 
-# Build the user-scope documentation in one language (es/en/ca/hu).
+# Build the user-scope documentation in one language (es/en/ca/hu) into that
+# language's own root. `--out-dir` is what puts a build in a per-language
+# subdirectory; `--language` alone only selects the catalogue, so without it the
+# localized pages land in — and clear — the canonical English root, leaving no
+# language root at all and an English root full of translated pages.
+[doc('Build the user-scope documentation in one language into that language own root.')]
 [group('docs')]
 docs-lang LANG:
-    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}}
+    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}} --out-dir docs/_build/html/{{LANG}}
 
-# Build the user-scope documentation for every translation language.
+# Build the user-scope documentation for every translation language, each into
+# its own root beside the English one. These are plain local builds: for the
+# deploy-faithful multi-root artefact (strict, record-injected index, per-root
+# canonical URLs) use `docs-site-dry-run`.
+[doc('Build the user-scope documentation for every translation language, each into its own root.')]
 [group('docs')]
 docs-langs:
-    uv run --no-sync python -m dev.docs.build --scope user --language es
-    uv run --no-sync python -m dev.docs.build --scope user --language ca
-    uv run --no-sync python -m dev.docs.build --scope user --language hu
+    uv run --no-sync python -m dev.docs.build --scope user --language es --out-dir docs/_build/html/es
+    uv run --no-sync python -m dev.docs.build --scope user --language ca --out-dir docs/_build/html/ca
+    uv run --no-sync python -m dev.docs.build --scope user --language hu --out-dir docs/_build/html/hu
+
+# Build every published site root exactly as a publish builds it and run every
+# pre-upload validation against the result. It belongs in this group and not in
+# `deploy`: it needs no AWS session, writes nothing outward, and its entire
+# subject is the built tree. Its value is that the per-root artifact, sitemap
+# and record-index checks used to be reachable only through the publish itself,
+# so a root that would land incomplete could not be caught before bytes went to
+# the live destination.
+[doc('Build every published site root and run every pre-upload validation, uploading nothing.')]
+[group('docs')]
+docs-site-dry-run:
+    uv run --no-sync python -m dev.deploy.docs_static_site dry-run
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 # `workers` bounds the pytest-xdist lane: CI passes 8 (machine-aware sizing,

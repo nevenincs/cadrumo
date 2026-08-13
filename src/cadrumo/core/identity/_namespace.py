@@ -1,39 +1,7 @@
-"""Closed taxonomy of the document-identifier namespaces this app handles.
-
-An identifier is not interchangeable with another identifier merely because
-both are strings of similar length. AEAT issues several distinct identifier
-concepts against one filing -- a Código Seguro de Verificación, a *número de
-justificante*, an expediente id, a clave de liquidación -- and this app mints
-several of its own. Before this module existed, every one of them was a bare
-``str`` field carrying a locally re-declared bound, so a value from one
-namespace could be passed wherever another was expected and no layer objected.
-
-:class:`IdentifierNamespace` names each concept once. Each member's constraint
-shape is carried by a matching pydantic alias, so the namespace distinction is
-enforced at the model boundary rather than by field-naming discipline.
-
-The enum is split into two groups that must never be merged into one member:
-
-* ``AEAT_*`` -- issued by AEAT. External, never minted here, never
-  clock-derived, and shape-bounded by *observed AEAT behaviour* rather than by
-  a specification this app controls. Tightening one of these beyond what has
-  been observed risks refusing a real AEAT-issued document, which is a worse
-  failure than a diagnosed conflation.
-* ``APP_*`` -- minted by this application, content-addressed or otherwise
-  derived, and clock-free per the standing identity rule.
-
-Keeping the groups distinct is what stops a future author typing an
-app-derived identity as AEAT-issued, or the reverse.
-
-Enrollment is staged, so this taxonomy is deliberately incomplete until every
-namespace's alias lands: each member below records where its alias lives
-today, and a member whose alias is not yet declared says so plainly rather
-than implying the surface is closed.
-"""
+"""Canonical AEAT document-identifier aliases and their validated shapes."""
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Annotated, Final
 
 from pydantic import BeforeValidator, StringConstraints
@@ -50,101 +18,8 @@ __all__ = [
     "AeatCsv",
     "AeatExpedienteId",
     "AeatPresentationId",
-    "IdentifierNamespace",
     "RegistrySnapshotId",
 ]
-
-
-class IdentifierNamespace(StrEnum):
-    """Every document-identifier namespace this codebase distinguishes.
-
-    Membership is a claim that the concept is a distinct *identity namespace*:
-    two values from different members may share a shape and still name
-    unrelated things. Values that merely look identifier-shaped are not
-    members -- see the exclusions recorded below the enum.
-
-    Attributes:
-        AEAT_CSV: Código Seguro de Verificación. AEAT's per-document verifier
-            hash, printed on a justificante and accepted at the public cotejo
-            endpoint to re-serve that document. Shape contract lives at
-            :mod:`core._aeat_csv`. Alias: :data:`AeatCsv`.
-        AEAT_PRESENTATION_ID: *Número de justificante*. AEAT's internal
-            presentation identifier, printed on the receipt body. Distinct
-            from :attr:`AEAT_EXPEDIENTE_ID`, which never appears on a
-            receipt -- conflating the two is the defect this taxonomy exists
-            to make unrepresentable. Alias: :data:`AeatPresentationId`.
-        AEAT_EXPEDIENTE_ID: The register/procedure-listing identifier, read
-            from *Mis Expedientes* and *Consultar declaraciones presentadas*.
-            Alias: :data:`AeatExpedienteId`.
-        AEAT_CLAVE_LIQUIDACION: AEAT's identifier for a liquidación, carried
-            on a debt row. A fourth AEAT namespace, unrelated to the three
-            above. Alias: :data:`AeatClaveLiquidacion`.
-        APP_SNAPSHOT_ID: Content-addressed snapshot identity. Alias:
-            :data:`~core.identity.SnapshotId`.
-        APP_TRANSACTION_ID: Content-addressed ledger-transaction identity.
-            Alias: :data:`~core.identity.TransactionId`.
-        APP_INVOICE_ID: Content-addressed invoice identity. Its alias is
-            declared in the invoice domain and has not yet been relocated
-            into this package.
-        APP_WORK_UNIT_ID: Content-addressed modelo work-unit identity. Its
-            alias is declared in the modelo domain and has not yet been
-            relocated into this package.
-        APP_CALCULATION_REVISION_ID: Content-addressed calculation-revision
-            identity. Alias not yet relocated into this package. Distinct
-            from the registry's own human-authored revision version tag,
-            which is a different namespace with its own home in the registry
-            schema package.
-        APP_FILING_RECORD_ID: Content-addressed filing-record identity.
-            Alias not yet relocated into this package.
-        APP_VERIFICATION_REPORT_ID: Content-addressed verification-report
-            identity. Alias not yet relocated into this package.
-        APP_REGISTRY_SNAPSHOT_ID: The colon-joined ``modelo:revision_id:
-            filing_year:period`` composite naming one validated registry
-            snapshot. Explicitly NOT :data:`~core.identity.SnapshotId`,
-            whose own docstring disclaims non-hex minters, and not
-            content-addressed -- it is derived from the four coordinates
-            AEAT's own orden binds, not hashed from a payload. Alias:
-            :data:`RegistrySnapshotId`.
-        AEAT_CERTIFICADO_ID: *Nº de certificado*, AEAT's per-notification
-            identifier on the *notificaciones y comunicaciones* surface.
-            Alias: :data:`AeatCertificadoId`.
-        AEAT_BOX_NUMBER: The box or form number AEAT prints or displays for
-            one casilla position -- e.g. ``"611"`` or ``"0611"`` -- distinct
-            from the registry's own :class:`~domain.calculations.registry
-            .CasillaId` slug, which the registry mints and never AEAT.
-            Alias: :data:`AeatBoxNumber`.
-    """
-
-    AEAT_CSV = "aeat_csv"
-    AEAT_PRESENTATION_ID = "aeat_presentation_id"
-    AEAT_EXPEDIENTE_ID = "aeat_expediente_id"
-    AEAT_CLAVE_LIQUIDACION = "aeat_clave_liquidacion"
-    AEAT_CERTIFICADO_ID = "aeat_certificado_id"
-    AEAT_BOX_NUMBER = "aeat_box_number"
-    APP_SNAPSHOT_ID = "app_snapshot_id"
-    APP_TRANSACTION_ID = "app_transaction_id"
-    APP_INVOICE_ID = "app_invoice_id"
-    APP_WORK_UNIT_ID = "app_work_unit_id"
-    APP_CALCULATION_REVISION_ID = "app_calculation_revision_id"
-    APP_FILING_RECORD_ID = "app_filing_record_id"
-    APP_VERIFICATION_REPORT_ID = "app_verification_report_id"
-    APP_REGISTRY_SNAPSHOT_ID = "app_registry_snapshot_id"
-
-
-# Deliberately NOT members of the taxonomy above, recorded here so a later
-# sweep does not enroll them by name-shape and call the surface closed:
-#
-#   * AEAT-printed adjudicated-case prose the app neither controls nor can
-#     enumerate -- a declaration's ``estado``, a debt's ``situacion``. These
-#     are bounded free text. Typing them as a closed set would assert a
-#     vocabulary AEAT has never published.
-#   * Counterparty-issued document numbers -- an ``invoice_number`` is minted
-#     by a third party, not by AEAT and not by this app.
-#   * Identifiers from non-AEAT issuing authorities -- Google file, folder and
-#     spreadsheet ids; an X.509 certificate serial; an SPDX id. Each belongs
-#     to some other authority's namespace, and none belongs in the ``AEAT_*``
-#     group. Whether any warrants typing at all is a separate question this
-#     taxonomy does not answer.
 
 
 AeatCsv = Annotated[
@@ -180,7 +55,7 @@ lowercase side at the model boundary and deleted that capability, which is why
 normalising belongs here rather than at each comparison site: the boundary is
 the one place every value passes through.
 
-The bound is the one place in this taxonomy where the TIGHTER type won, so the
+The bound is the one place in this alias set where the TIGHTER type won, so the
 reasoning is recorded rather than assumed: every AEAT-issued CSV observed in
 this repository sits at sixteen characters, mid-window, with margin on both
 sides, while the retired bound admitted values no receipt could carry. The
@@ -244,7 +119,7 @@ Explicitly NOT :data:`~core.identity.SnapshotId`: that alias is a SHA-256
 content-address of a payload, while this one is DERIVED from four coordinates
 and carries no digest. Two snapshots with identical content but different
 coordinates get different ids here and would collide under the content-address
-scheme, which is the conflation this namespace exists to prevent.
+scheme, so they require distinct aliases.
 
 No colon-structure pattern is asserted, matching :data:`AeatClaveLiquidacion`'s
 reasoning: the ``revision_id`` segment is a human-authored registry slug of
@@ -308,8 +183,8 @@ Held at the receipt boundary's existing bound. This is NOT an expediente id
 and the two are not derivable from one another: a presentation id appears only
 on the receipt, an expediente id only in the register listing. Every
 comparison this app performs between a receipt and a filing target runs on
-:attr:`IdentifierNamespace.AEAT_CSV`, never on this namespace, precisely
-because a caller holding a register value cannot supply one of these.
+the CSV value, because a caller holding a register value cannot supply a
+presentation id.
 
 No lower bound is asserted, because the receipt sources that omit the label
 carry no value at all rather than an empty one -- absence is modelled by the

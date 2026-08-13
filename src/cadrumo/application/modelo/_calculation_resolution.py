@@ -35,13 +35,13 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistrySnapshot,
     RelationId,
+    resolve_available_bound_inputs_by_casilla_id,
 )
 from ...domain.modelos import WorkUnit
 from ..aggregation import CalculationSourceResolution, merge_source_resolutions_by_precedence
 from ._binding_resolution import (
     lift_previous_filing_casilla_overrides_to_bindings,
     reject_binding_channel_mismatch,
-    resolve_available_bound_inputs_by_casilla_id,
     resolve_borrador_source_tier,
     resolve_declaration_period_inputs,
     resolve_profile_source_tier,

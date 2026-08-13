@@ -27,12 +27,13 @@ from __future__ import annotations
 import argparse
 import ast
 import fnmatch
+import hashlib
 import json
 import sys
 import tomllib
 from collections import Counter, defaultdict
 from collections.abc import Iterable
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
@@ -41,6 +42,96 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = "utf-8"
+
+LEGACY_TUI_PACKAGE: Final[str] = "cadrumo.adapters.inbound.tui"
+LEGACY_TUI_ROOT: Final[Path] = PKG_ROOT / "adapters" / "inbound" / "tui"
+
+
+class TuiMigrationRowKind(StrEnum):
+    """The source fact represented by a legacy-TUI migration row."""
+
+    MODULE = "module"
+    EXPORT = "export"
+    IMPORT = "import"
+    REFERENCE = "reference"
+
+
+@dataclass(frozen=True, slots=True)
+class TuiMigrationDisposition:
+    """The accepted owner and destination for one legacy TUI identity."""
+
+    owner_lane: str
+    replacement: str
+
+
+@dataclass(frozen=True, slots=True)
+class TuiMigrationRow:
+    """One exact declaration or consumer edge in the legacy TUI census."""
+
+    kind: TuiMigrationRowKind
+    legacy_module: str
+    symbol: str | None
+    consumer: str
+    consumer_kind: str
+    locator: str
+    owner_lane: str
+    replacement: str
+    deletion_proof: str
+    state: str = "legacy"
+
+
+_TUI_MODULE_DISPOSITIONS: Final[dict[str, TuiMigrationDisposition]] = {
+    LEGACY_TUI_PACKAGE: TuiMigrationDisposition("integration", "cadrumo.entrypoints.tui"),
+    f"{LEGACY_TUI_PACKAGE}._app": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.flows"),
+    f"{LEGACY_TUI_PACKAGE}._confirm_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.components.dialogs"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._credential_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.secret.credentials"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._field_edit_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.profile.editor"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._form_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.components.forms"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._login_screen": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.secret.login"),
+    f"{LEGACY_TUI_PACKAGE}._manager_screen": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.profile"),
+    f"{LEGACY_TUI_PACKAGE}._modelo_work_review_screen": TuiMigrationDisposition(
+        "modelo", "cadrumo.entrypoints.tui.modelo.view"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._question_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.flows.question"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._registration_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.secret.registration"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._review_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.flows.review"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._select": TuiMigrationDisposition("integration", "installed:cadrumo-tui"),
+    f"{LEGACY_TUI_PACKAGE}._status_bar": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.components.status"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._status_screen": TuiMigrationDisposition(
+        "interface", "cadrumo.entrypoints.tui.profile.status"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._theme": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.components.theme"),
+}
+
+_TUI_SYMBOL_DISPOSITIONS: Final[dict[tuple[str, str], TuiMigrationDisposition]] = {
+    (f"{LEGACY_TUI_PACKAGE}._manager_screen", symbol): TuiMigrationDisposition(
+        "operations", "cadrumo.application.operations"
+    )
+    for symbol in (
+        "ManagerAction",
+        "ManagerActionDisposition",
+        "ManagerActionOutcome",
+        "ManagerProgressSinkBinder",
+    )
+}
+
+_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256: Final[str] = "af0f314fcc15fa1b677c29ba372fe805fb2bd12a7964a88e6186a6b5dd3176fd"
 
 
 # ---------------------------------------------------------------------------
@@ -1217,6 +1308,321 @@ def classify_fix_strategy(
 
 
 # ---------------------------------------------------------------------------
+# Legacy TUI migration manifest
+# ---------------------------------------------------------------------------
+
+
+class TuiMigrationManifestError(RuntimeError):
+    """The live legacy TUI contains an identity with no accepted disposition."""
+
+
+def _literal_dunder_all(tree: ast.Module) -> tuple[str, ...]:
+    """Return the literal public export set declared by one module."""
+    names: list[str] = []
+    for node in tree.body:
+        value = dunder_all_assignment_value(node)
+        if not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+            continue
+        names.extend(
+            element.value
+            for element in value.elts
+            if isinstance(element, ast.Constant) and isinstance(element.value, str)
+        )
+    return tuple(names)
+
+
+def _legacy_tui_modules(*, legacy_root: Path, src_root: Path) -> dict[str, tuple[Path, ast.Module]]:
+    """Load every production module in the legacy TUI package."""
+    modules: dict[str, tuple[Path, ast.Module]] = {}
+    for path in sorted(legacy_root.glob("*.py")):
+        try:
+            tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+        except (OSError, SyntaxError, UnicodeDecodeError) as error:
+            raise TuiMigrationManifestError(f"cannot parse legacy TUI module {path}: {type(error).__name__}") from error
+        modules[module_name_for(path, src_root=src_root)] = (path, tree)
+    return modules
+
+
+def _legacy_export_origins(
+    modules: dict[str, tuple[Path, ast.Module]],
+) -> tuple[dict[str, tuple[str, ...]], dict[tuple[str, str], str]]:
+    """Return public exports and their direct legacy source modules."""
+    exports: dict[str, tuple[str, ...]] = {}
+    origins: dict[tuple[str, str], str] = {}
+    for module, (_, tree) in modules.items():
+        module_exports = _literal_dunder_all(tree)
+        exports[module] = module_exports
+        for node in tree.body:
+            if not isinstance(node, ast.ImportFrom):
+                continue
+            target = resolve_relative_import(module, module == LEGACY_TUI_PACKAGE, node.level, node.module)
+            if target is None or not (target == LEGACY_TUI_PACKAGE or target.startswith(LEGACY_TUI_PACKAGE + ".")):
+                continue
+            for alias in node.names:
+                exported_as = alias.asname or alias.name
+                if exported_as in module_exports:
+                    origins[(module, exported_as)] = target
+    return exports, origins
+
+
+def _tui_disposition(
+    module: str,
+    symbol: str | None,
+    *,
+    origins: dict[tuple[str, str], str],
+) -> TuiMigrationDisposition:
+    """Resolve one identity to its accepted lane and canonical destination."""
+    source_module = origins.get((module, symbol), module) if symbol is not None else module
+    explicit = _TUI_SYMBOL_DISPOSITIONS.get((source_module, symbol)) if symbol is not None else None
+    disposition = explicit or _TUI_MODULE_DISPOSITIONS.get(source_module)
+    if disposition is None:
+        identity = source_module if symbol is None else f"{source_module}:{symbol}"
+        raise TuiMigrationManifestError(f"legacy TUI identity has no accepted disposition: {identity}")
+    return disposition
+
+
+def _tui_consumer_kind(path: Path, *, repo_root: Path, legacy_root: Path) -> str:
+    """Classify a consumer without using a mutable allowlist."""
+    relative = path.relative_to(repo_root).as_posix()
+    if legacy_root in path.parents:
+        return "tui_owned_test" if "tests" in path.parts else "legacy_internal"
+    if relative.startswith("dev/"):
+        return "development_tool"
+    if "/tests/" in f"/{relative}" or path.name.startswith("test_"):
+        return "backend_test"
+    return "production"
+
+
+def _legacy_module_deletion_proof(module: str, modules: dict[str, tuple[Path, ast.Module]], repo_root: Path) -> str:
+    """Name the exact absence check that retires a legacy module."""
+    path, _ = modules[module]
+    return f"absent:{path.relative_to(repo_root).as_posix()}"
+
+
+def _parse_tui_manifest_consumer(path: Path, *, repo_root: Path) -> ast.Module:
+    """Parse one census input, refusing any unreadable consumer."""
+    try:
+        return ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+    except (OSError, SyntaxError, UnicodeDecodeError) as error:
+        try:
+            locator = path.relative_to(repo_root).as_posix()
+        except ValueError:
+            locator = path.as_posix()
+        raise TuiMigrationManifestError(
+            f"cannot parse TUI migration consumer {locator}: {type(error).__name__}"
+        ) from error
+
+
+def _tui_migration_identity_sha256(rows: Iterable[TuiMigrationRow]) -> str:
+    """Hash exact semantic identities and dispositions, excluding volatile locators."""
+    identities_and_dispositions = sorted(
+        {
+            (
+                str(row.kind),
+                row.legacy_module,
+                row.symbol,
+                row.consumer,
+                row.consumer_kind,
+                row.owner_lane,
+                row.replacement,
+                row.deletion_proof,
+                row.state,
+            )
+            for row in rows
+        },
+        key=lambda row: tuple("" if part is None else part for part in row),
+    )
+    payload = json.dumps(identities_and_dispositions, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode(_UTF_8)).hexdigest()
+
+
+def _require_accepted_tui_migration_identities(
+    rows: tuple[TuiMigrationRow, ...],
+    *,
+    accepted_sha256: str,
+) -> None:
+    """Refuse any addition, removal, or reclassification of a census identity."""
+    actual = _tui_migration_identity_sha256(rows)
+    if accepted_sha256 and actual != accepted_sha256:
+        raise TuiMigrationManifestError(
+            "legacy TUI migration identities differ from the accepted exact census: "
+            f"expected sha256:{accepted_sha256}, found sha256:{actual}"
+        )
+
+
+def _qualified_tui_references(tree: ast.Module) -> tuple[tuple[int, str, str | None], ...]:
+    """Return fully-qualified legacy-TUI references embedded in Python strings."""
+    found: set[tuple[int, str, str | None]] = set()
+    prefix = LEGACY_TUI_PACKAGE + "."
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+            continue
+        text = node.value
+        offset = 0
+        while (start := text.find(LEGACY_TUI_PACKAGE, offset)) >= 0:
+            tail = text[start + len(LEGACY_TUI_PACKAGE) :]
+            module = LEGACY_TUI_PACKAGE
+            symbol: str | None = None
+            if tail.startswith("."):
+                candidate = tail[1:].split(maxsplit=1)[0]
+                candidate = candidate.split("`", 1)[0].split(":", 1)[0]
+                candidate = candidate.split("(", 1)[0].split(")", 1)[0]
+                parts = [part for part in candidate.split(".") if part.isidentifier()]
+                if parts and parts[0].startswith("_"):
+                    module = f"{LEGACY_TUI_PACKAGE}.{parts[0]}"
+                    symbol = parts[1] if len(parts) > 1 else None
+                elif parts:
+                    symbol = parts[0]
+            locator_line = node.lineno + text[:start].count("\n")
+            found.add((locator_line, module, symbol))
+            offset = start + len(prefix)
+    return tuple(sorted(found))
+
+
+def generate_tui_migration_manifest(
+    *,
+    repo_root: Path = REPO_ROOT,
+    src_root: Path = SRC_ROOT,
+    package_root: Path = PKG_ROOT,
+    legacy_root: Path = LEGACY_TUI_ROOT,
+    accepted_identity_sha256: str | None = _ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256,
+) -> tuple[TuiMigrationRow, ...]:
+    """Generate the exact declaration-and-consumer census for the legacy TUI.
+
+    The result is derived from the live Python graph. Policy appears only in the
+    accepted disposition tables above; module, export, consumer, and locator
+    identities are never copied into a baseline or allowlist. A newly introduced
+    legacy module therefore fails closed instead of silently joining the manifest.
+    """
+    modules = _legacy_tui_modules(legacy_root=legacy_root, src_root=src_root)
+    exports, origins = _legacy_export_origins(modules)
+    rows: list[TuiMigrationRow] = []
+
+    for module, (path, tree) in modules.items():
+        relative = path.relative_to(repo_root).as_posix()
+        module_disposition = _tui_disposition(module, None, origins=origins)
+        rows.append(
+            TuiMigrationRow(
+                kind=TuiMigrationRowKind.MODULE,
+                legacy_module=module,
+                symbol=None,
+                consumer=module,
+                consumer_kind="declaration",
+                locator=f"{relative}:1",
+                owner_lane=module_disposition.owner_lane,
+                replacement=module_disposition.replacement,
+                deletion_proof=_legacy_module_deletion_proof(module, modules, repo_root),
+            )
+        )
+        export_lines: dict[str, int] = {}
+        for node in ast.walk(tree):
+            value = dunder_all_assignment_value(node) if isinstance(node, ast.stmt) else None
+            if not isinstance(value, (ast.List, ast.Tuple, ast.Set)):
+                continue
+            for element in value.elts:
+                if isinstance(element, ast.Constant) and isinstance(element.value, str):
+                    export_lines[element.value] = element.lineno
+        for symbol in exports[module]:
+            disposition = _tui_disposition(module, symbol, origins=origins)
+            rows.append(
+                TuiMigrationRow(
+                    kind=TuiMigrationRowKind.EXPORT,
+                    legacy_module=module,
+                    symbol=symbol,
+                    consumer=module,
+                    consumer_kind="facade_export" if module == LEGACY_TUI_PACKAGE else "module_export",
+                    locator=f"{relative}:{export_lines[symbol]}",
+                    owner_lane=disposition.owner_lane,
+                    replacement=disposition.replacement,
+                    deletion_proof=_legacy_module_deletion_proof(module, modules, repo_root),
+                )
+            )
+
+    source_files = sorted(package_root.rglob("*.py"))
+    development_files = sorted((repo_root / "dev").rglob("*.py"))
+    for path in (*source_files, *development_files):
+        if path.resolve() == Path(__file__).resolve():
+            continue
+        scan_root = src_root if src_root in path.parents else repo_root
+        tree = _parse_tui_manifest_consumer(path, repo_root=repo_root)
+        sites = walk_module_imports(path, src_root=scan_root)
+        imported_lines: set[int] = set()
+        for site in sites:
+            if not (site.target_mod == LEGACY_TUI_PACKAGE or site.target_mod.startswith(LEGACY_TUI_PACKAGE + ".")):
+                continue
+            imported_lines.add(site.lineno)
+            imported = site.imported_names or [None]
+            for symbol in imported:
+                source_module = (
+                    origins.get((site.target_mod, symbol), site.target_mod) if symbol is not None else site.target_mod
+                )
+                if source_module not in modules:
+                    identity = source_module if symbol is None else f"{source_module}:{symbol}"
+                    raise TuiMigrationManifestError(f"consumer resolves to unknown legacy TUI identity: {identity}")
+                disposition = _tui_disposition(site.target_mod, symbol, origins=origins)
+                rows.append(
+                    TuiMigrationRow(
+                        kind=TuiMigrationRowKind.IMPORT,
+                        legacy_module=site.target_mod,
+                        symbol=symbol,
+                        consumer=site.importer_mod,
+                        consumer_kind=_tui_consumer_kind(path, repo_root=repo_root, legacy_root=legacy_root),
+                        locator=f"{path.relative_to(repo_root).as_posix()}:{site.lineno}",
+                        owner_lane=disposition.owner_lane,
+                        replacement=disposition.replacement,
+                        deletion_proof=_legacy_module_deletion_proof(source_module, modules, repo_root),
+                    )
+                )
+        for lineno, referenced_module, symbol in _qualified_tui_references(tree):
+            if lineno in imported_lines:
+                continue
+            if referenced_module not in modules:
+                raise TuiMigrationManifestError(f"reference resolves to unknown legacy TUI module: {referenced_module}")
+            disposition = _tui_disposition(referenced_module, symbol, origins=origins)
+            source_module = origins.get((referenced_module, symbol), referenced_module)
+            rows.append(
+                TuiMigrationRow(
+                    kind=TuiMigrationRowKind.REFERENCE,
+                    legacy_module=referenced_module,
+                    symbol=symbol,
+                    consumer=module_name_for(path, src_root=scan_root),
+                    consumer_kind=_tui_consumer_kind(path, repo_root=repo_root, legacy_root=legacy_root),
+                    locator=f"{path.relative_to(repo_root).as_posix()}:{lineno}",
+                    owner_lane=disposition.owner_lane,
+                    replacement=disposition.replacement,
+                    deletion_proof=_legacy_module_deletion_proof(source_module, modules, repo_root),
+                )
+            )
+
+    result = tuple(
+        sorted(
+            rows,
+            key=lambda row: (
+                row.legacy_module,
+                row.symbol or "",
+                row.consumer,
+                row.locator,
+                row.kind,
+            ),
+        )
+    )
+    if accepted_identity_sha256 is not None:
+        _require_accepted_tui_migration_identities(result, accepted_sha256=accepted_identity_sha256)
+    return result
+
+
+def tui_migration_manifest_payload(rows: Iterable[TuiMigrationRow]) -> dict[str, object]:
+    """Render a stable JSON-compatible migration-manifest payload."""
+    rendered = [{**asdict(row), "kind": str(row.kind)} for row in rows]
+    return {
+        "legacy_package": LEGACY_TUI_PACKAGE,
+        "schema_version": 1,
+        "rows": rendered,
+        "row_count": len(rendered),
+    }
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1225,6 +1631,12 @@ def main() -> int:
     """Scan ``src/cadrumo`` and print the import-hygiene inventory report."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", type=Path, default=None, help="Write full inventory as JSON to this path")
+    parser.add_argument(
+        "--tui-migration-json",
+        type=Path,
+        default=None,
+        help="Write the generated legacy-TUI migration manifest as JSON",
+    )
     parser.add_argument("--top", type=int, default=20, help="Top-N offender modules to print")
     args = parser.parse_args()
 
@@ -1245,6 +1657,7 @@ def main() -> int:
     underscore_in_all = find_underscore_in_all_violations(facades)
     dev_tooling_imports = find_dev_tooling_import_violations(py_files)
     dev_path_reaches = find_dev_path_reach_violations(py_files)
+    tui_migration_rows = generate_tui_migration_manifest()
 
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
@@ -1371,7 +1784,13 @@ def main() -> int:
     print(f"  underscore-named __all__ entries (Family 4): {len(underscore_in_all)}")
     print(f"  shipped modules importing dev/ tooling (Family 5): {len(dev_tooling_imports)}")
     print(f"  shipped modules reaching a dev/ path (Family 6): {len(dev_path_reaches)}")
+    print(f"  exact legacy TUI migration rows: {len(tui_migration_rows)}")
     print()
+
+    tui_manifest = tui_migration_manifest_payload(tui_migration_rows)
+    if args.tui_migration_json:
+        args.tui_migration_json.write_text(json.dumps(tui_manifest, indent=2), encoding=_UTF_8, newline="\n")
+        print(f"Wrote legacy TUI migration manifest to {args.tui_migration_json}")
 
     if args.json:
         payload = {
@@ -1435,6 +1854,7 @@ def main() -> int:
             "underscore_in_all_violations": [
                 {"package": v.package, "path": v.path, "name": v.name} for v in underscore_in_all
             ],
+            "tui_migration_manifest": tui_manifest,
         }
         args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8, newline="\n")
         print(f"Wrote full JSON inventory to {args.json}")

@@ -37,8 +37,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -51,6 +49,7 @@ from ....domain.calculations.registry import (
     iva_wallet_owned_binding_ids_for_revision,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceProvenance, CalculationSourceResolution

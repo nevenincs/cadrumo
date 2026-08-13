@@ -109,7 +109,10 @@ def test_active_capture_survives_encrypted_storage_roundtrip(tmp_path: Path) -> 
 
 def test_capture_rejects_pdf_hash_that_does_not_match_decoded_bytes() -> None:
     """The persisted source-bytes hash must describe the exact PDF payload."""
-    with pytest.raises(LiveApplicationInputError, match="pdf_sha256 does not match decoded PDF bytes"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.pdf_sha256_mismatch",
+    ):
         JustificanteCaptureSnapshot(
             snapshot_id="snapshot-hash-mismatch",
             bucket_id="renta-2026-bucket",
@@ -230,7 +233,10 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
             del decoded["payload"]["superseded_by_snapshot_id"]
             row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
 
-        with pytest.raises((ValidationError, LiveApplicationInputError), match="superseded"):
+        with pytest.raises(
+            (ValidationError, LiveApplicationInputError),
+            match=r"state_supersession_pointer_required|superseded",
+        ):
             repo.load(predecessor.snapshot_id)
 
 

@@ -92,6 +92,8 @@ def _semantic_map() -> SemanticMap:
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "source_ref": "aeat-dr-200-2025",
+            "source_sha256": "a" * 64,
             "records": (
                 {
                     "sheet": "Registro tipo 1",
@@ -136,6 +138,8 @@ def _projection_semantic_map(reference: M303ProrrataActivityProjectionRef) -> Se
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "source_ref": "aeat-dr-200-2025",
+            "source_sha256": "a" * 64,
             "records": (
                 {
                     "sheet": "Registro tipo 1",
@@ -486,6 +490,9 @@ def test_provenance_digests_and_derivation_equality_include_the_typed_projection
     )
 
     assert semantic_map_digest(initial_map) != semantic_map_digest(changed_map)
+    assert semantic_map_digest(initial_map) != semantic_map_digest(
+        initial_map.model_copy(update={"source_sha256": "b" * 64}),
+    )
     assert loader_semantic_digest(initial_layout) != loader_semantic_digest(changed_layout)
 
     with pytest.raises(ValidationError, match="emitted projection_ref does not match semantic-map entry"):

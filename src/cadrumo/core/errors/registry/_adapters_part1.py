@@ -118,6 +118,36 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.inbound.notificacion._errors.NotificacionParseError",
+        ErrorCode(
+            code="FAIL_NOTIFICACION_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_notificacion_parse",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.inbound.notificacion._errors.SancionParseError",
+        ErrorCode(
+            code="FAIL_SANCION_PARSE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_sancion_parse",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.adapters.inbound.notificacion._errors.SancionArithmeticError",
+        ErrorCode(
+            code="FAIL_SANCION_ARITHMETIC",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_sancion_arithmetic",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.aeat.browser._errors.BrowserError",
         ErrorCode(
             code="FAIL_BROWSER_SESSION_BROWSER",

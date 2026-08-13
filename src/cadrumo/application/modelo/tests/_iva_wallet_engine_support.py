@@ -9,8 +9,6 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.outbound.aeat.sede import IVA_COMPENSATION_WALLET_URL, parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -35,6 +33,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, IvaWalletDecisionRepository

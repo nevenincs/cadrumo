@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import pytest
 
-from ......core import CasillaId, validated_casilla_id
+from ......core import CasillaId, Period, validated_casilla_id
+from .._declarations_observations import resolve_relation_values_from_filed_declarations
 from ._declarations_support import (
     UTC,
     Decimal,
-    Period,
     RegistryValidationError,
     SedeParseError,
     _filed_observation,
@@ -17,7 +17,6 @@ from ._declarations_support import (
     _whitespace_nif_session,
     datetime,
     relation_source_requirements,
-    resolve_relation_values_from_filed_declarations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -64,7 +63,7 @@ class TestFiledObservationRelations:
             snapshot.revision,
             observations,
             filing_year=2025,
-            period="0A",
+            period=Period.from_year_and_code(2025, "0A"),
         )
 
         # Quarterly / monthly aggregations — verify inclusion (every
@@ -115,7 +114,7 @@ class TestFiledObservationRelations:
                 snapshot.revision,
                 observations,
                 filing_year=2025,
-                period="0A",
+                period=Period.from_year_and_code(2025, "0A"),
             )
 
     def test_modelo_100_relation_resolution_rejects_duplicate_source_periods(self) -> None:
@@ -133,7 +132,7 @@ class TestFiledObservationRelations:
                 snapshot.revision,
                 (*observations, duplicate),
                 filing_year=2025,
-                period="0A",
+                period=Period.from_year_and_code(2025, "0A"),
             )
 
     @pytest.mark.parametrize("filing_year", (2022, 2026))
@@ -174,7 +173,7 @@ class TestFiledObservationRelations:
                 for period, casilla_values in quarterly_values.items()
             ),
             filing_year=filing_year,
-            period="0A",
+            period=Period.from_year_and_code(filing_year, "0A"),
         )
 
         assert resolved == {
@@ -221,7 +220,7 @@ class TestFiledObservationRelations:
                 for period, casilla_values in quarterly_values.items()
             ),
             filing_year=2026,
-            period="0A",
+            period=Period.from_year_and_code(2026, "0A"),
         )
 
         assert resolved == {
@@ -252,7 +251,7 @@ class TestFiledObservationRelations:
                 snapshot.revision,
                 observations,
                 filing_year=2026,
-                period="0A",
+                period=Period.from_year_and_code(2026, "0A"),
             )
 
     def test_incomplete_relation_source_observation_is_rejected(self) -> None:
@@ -277,7 +276,7 @@ class TestFiledObservationRelations:
                 snapshot.revision,
                 observations,
                 filing_year=2026,
-                period="0A",
+                period=Period.from_year_and_code(2026, "0A"),
             )
 
 

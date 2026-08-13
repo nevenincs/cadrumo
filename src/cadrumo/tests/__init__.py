@@ -10,13 +10,16 @@ the hook uses (``_env_loader``), repo-meta tests (release config,
 Colocated unit tests live next to the modules they exercise (rust-style
 ``src/cadrumo/<subpkg>/test_*.py``); only repo-meta and fixture-bearing
 content lives here. The shared source-inventory helpers
-(:func:`ast_for_path`, :func:`package_python_files`, and friends) and the
-committed-justificante parse cache are re-exported here as the canonical
-cross-package import surface for other test modules' structural ratchets.
+(:func:`ast_for_path`, :func:`package_python_files`, and friends), the
+committed-justificante parse cache, and the shared typed M303
+filing-evidence fixture builder are re-exported here as the canonical
+cross-package import surface for other test modules' structural ratchets
+and cross-layer fixtures.
 """
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -77,6 +80,7 @@ from .mcp_session import connected_server_and_client_session
 
 if TYPE_CHECKING:
     from ._justificante_parse_cache import parse_committed_justificante_fixture
+    from .filing_evidence import general_m303_filing_evidence
 
 FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
 """Root of the on-disk fixture tree bundled with the package."""
@@ -105,6 +109,7 @@ __all__ = [
     "connected_server_and_client_session",
     "discover_test_control_modules",
     "evaluate_budget",
+    "general_m303_filing_evidence",
     "leaf_name",
     "literal_directory_runs",
     "load_size_budget_baseline",
@@ -133,19 +138,31 @@ __all__ = [
 ]
 
 
+#: Re-exported name -> owning submodule (relative, resolved through
+#: :func:`importlib.import_module`). Every row here is a domain-bearing fixture
+#: whose import cost the rest of this facade must not pay.
+_LAZY_EXPORTS: dict[str, str] = {
+    "parse_committed_justificante_fixture": "._justificante_parse_cache",
+    "general_m303_filing_evidence": ".filing_evidence",
+}
+
+
 def __getattr__(name: str) -> object:
-    """Lazily resolve ``parse_committed_justificante_fixture``.
+    """Lazily resolve the domain-bearing fixture names in :data:`_LAZY_EXPORTS`.
 
-    Deferred (not a module-level import) so that reaching any OTHER name on
-    this facade -- the pure, domain-free AST/path inventory helpers most
-    consumers want -- never drags ``cadrumo.adapters.inbound.justificante`` /
-    ``cadrumo.domain.justificante`` into a ``cadrumo.core`` test's import graph.
-    Mirrors the PEP 562 pattern :mod:`application.user_profile` already uses
-    for the same reason.
+    Deferred (not module-level imports) so that reaching any OTHER name on this
+    facade -- the pure, domain-free AST/path inventory helpers most consumers
+    want -- never drags ``cadrumo.adapters.inbound.justificante`` /
+    ``cadrumo.domain.justificante`` (for the justificante parse cache) or the
+    registry / IVA / modelos domain surfaces (for the filing-evidence builder)
+    into a ``cadrumo.core`` test's import graph. Mirrors the PEP 562 pattern
+    :mod:`application.user_profile` already uses for the same reason.
     """
-    if name == "parse_committed_justificante_fixture":
-        import importlib
-
-        module = importlib.import_module("cadrumo.tests._justificante_parse_cache")
-        return module.parse_committed_justificante_fixture
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module_path = _LAZY_EXPORTS.get(name)
+    if module_path is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    # module_path is resolved from this package's own closed _LAZY_EXPORTS
+    # mapping above, never from caller-supplied input.
+    return getattr(
+        importlib.import_module(module_path, __name__), name
+    )  # nosemgrep: python.lang.security.audit.non-literal-import.non-literal-import

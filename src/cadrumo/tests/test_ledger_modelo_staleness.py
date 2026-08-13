@@ -39,8 +39,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -75,6 +73,7 @@ from ..domain.transactions import (
     TransactionValidationError,
 )
 from ..tests.secure_sql import isolated_runtime_profile
+from .filing_evidence import general_m303_filing_evidence
 from .registry_observations import registry_grounded_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

@@ -39,6 +39,11 @@ from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
 )
+from ...core import IvaDeductionEvidenceAuthority
+from ...domain.iva import (
+    IvaDeductionClassificationProvenance,
+    required_deduction_evidence_authority,
+)
 from ...domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -63,7 +68,7 @@ from ._actions_common import (
     EventSpec as _EventSpec,
 )
 from ._actions_common import (
-    attachment_store as _attachment_store,
+    purchase_invoice_evidence_records,
 )
 from ._actions_common import (
     blocking_modelo_references as _blocking_modelo_references,
@@ -741,7 +746,9 @@ def _record_attachment_back_references(
     """
     if not transaction.attachment_ids:
         return
-    store = _attachment_store(attachment_store)
+    from ...adapters.persistence.storage import resolve_attachment_store
+
+    store = resolve_attachment_store(attachment_store)
     for attachment_id in transaction.attachment_ids:
         link_attachment_transaction(
             store,
@@ -989,6 +996,12 @@ def _command_from_patch(
     notes = _required_patched(patch, patch_fields, "notes", current.notes)
     attachment_ids = _required_patched(patch, patch_fields, "attachment_ids", current.attachment_ids)
     iva_category = _optional_patched(patch, patch_fields, "iva_category", current.iva_category)
+    deduction_fact_kind = _optional_patched(
+        patch,
+        patch_fields,
+        "deduction_fact_kind",
+        current.deduction_fact_kind,
+    )
     counterparty_country = _optional_patched(
         patch,
         patch_fields,
@@ -1030,6 +1043,7 @@ def _command_from_patch(
         attachment_ids=attachment_ids,
         notes=notes,
         iva_category=iva_category,
+        deduction_fact_kind=deduction_fact_kind,
         counterparty_country=counterparty_country,
         counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(
@@ -1214,6 +1228,48 @@ def _evidence_event_specs(
     return tuple(specs)
 
 
+
+def _invoice_evidence_provenance(
+    command: ManualLedgerTransactionCommand,
+) -> IvaDeductionClassificationProvenance | None:
+    """Derive the deduction's evidence pointer from its linked purchase invoice.
+
+    The operator declares WHICH deduction this is (the taxonomy is documented
+    as non-inferable, so ``deduction_fact_kind`` is carried, never guessed);
+    the evidence pointer behind it is not a judgement and must not be typed by
+    hand. It is read from the registered evidence record the row already links,
+    whose content-addressed ``attachment_id`` is the immutable digest the
+    provenance contract asks for.
+
+    Only the invoice-evidence authority is derivable here. A customs
+    declaration, an intra-EU self-assessment, a REAGP receipt or a
+    bienes-inversion regularisation is established by a record this link cannot
+    see, so those kinds resolve to ``None`` and refuse downstream rather than
+    being stamped with an invoice digest that did not establish them.
+    """
+    if command.deduction_fact_kind is None or command.purchase_invoice_evidence_id is None:
+        return None
+    if required_deduction_evidence_authority(command.deduction_fact_kind) is not (
+        IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE
+    ):
+        return None
+    evidence_id = command.purchase_invoice_evidence_id
+    record = next(
+        (
+            candidate
+            for candidate in purchase_invoice_evidence_records(command.bucket_id)
+            if candidate.evidence_id == evidence_id
+        ),
+        None,
+    )
+    if record is None:
+        return None
+    return IvaDeductionClassificationProvenance(
+        authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+        source_locator=record.evidence_id,
+        evidence_digest=record.attachment_id,
+    )
+
 def _transaction_from_command(
     command: ManualLedgerTransactionCommand,
     *,
@@ -1297,6 +1353,8 @@ def _transaction_from_command(
         ),
         "notes": command.notes,
         "iva_category": command.iva_category,
+        "deduction_fact_kind": command.deduction_fact_kind,
+        "deduction_provenance": _invoice_evidence_provenance(command),
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

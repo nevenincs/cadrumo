@@ -8,7 +8,12 @@ import pytest
 
 from .....core.config import override_settings
 from .....core.resources import resources
-from .....domain.calculations.registry import FormulaDefinition, RegistrySnapshot
+from .....domain.calculations.registry import (
+    FormulaDefinition,
+    RegistrySnapshot,
+    relation_requirement_index,
+    relation_source_requirements,
+)
 from .._engine import _rounding_rule_for, build_export_plan
 from .._errors import CalcSheetsEngineError
 from .._records import RelationValues
@@ -53,6 +58,9 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
 
     assert plan.relation_provenance is not None
     relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    requirements_by_relation = relation_requirement_index(
+        relation_source_requirements(snapshot.revision, filing_year=snapshot.filing_year, period=snapshot.period),
+    )
     relation_rows = plan.relation_provenance.values
     assert relation_rows
     for row in relation_rows:
@@ -61,8 +69,11 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
         assert row.provenance == "operator_manual"
         assert row.source_modelo == relation.source_modelo
         assert row.source_casilla_ids == (relation.source_casilla_id,)
+        assert row.dependency_treatment == requirements_by_relation[row.relation].dependency_treatment
         assert set(relation.legal_refs) <= set(row.legal_refs)
         assert set(relation.source_refs) <= set(row.source_refs)
+
+    assert any(row.dependency_treatment for row in relation_rows), "test precondition: the live snapshot declares treatment"
 
 
 def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:

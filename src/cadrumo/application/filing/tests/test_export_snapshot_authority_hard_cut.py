@@ -7,9 +7,8 @@ from operator import attrgetter
 
 import pytest
 
-import cadrumo.application.filing as filing
-from cadrumo.application.filing import export_draft
-
+from ... import filing
+from .. import export_draft
 from ._export_support import (
     _approved_modelo_131_historical_registry_draft,
     _schema_provider,

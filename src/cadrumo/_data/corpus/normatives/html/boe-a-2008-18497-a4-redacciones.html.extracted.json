@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2008-18497-a4-redacciones.html",
+  "source_sha256": "c287d602fad5d741e50545265fd266e6ee4355d584f89382da485c9e3b63a2d5",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 4. Plazo de presentación del modelo 216.\nDe acuerdo con lo dispuesto en el artículo 15.1 del Reglamento del Impuesto sobre la Renta de no Residentes, la presentación del modelo 216, así como, en su caso, el ingreso de su importe en el Tesoro Público, se efectuará en los veinte primeros días naturales de los meses de abril, julio, octubre y enero, en relación con las cantidades retenidas y los ingresos a cuenta que proceda realizar correspondientes al primero, segundo, tercero y cuarto trimestre del año natural, respectivamente.\nNo obstante, la declaración e ingreso a que se refiere el párrafo anterior se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta efectuados que correspondan por el mes inmediato anterior, cuando se trate de retenedores u obligados que tengan la consideración de grandes empresas por concurrir alguna de las circunstancias a que se refieren los números 1.º y 2.º del apartado 3 del artículo 71 del Reglamento del Impuesto sobre el Valor Añadido, aprobado por el Real Decreto 1624/1992, de 29 de diciembre. Por excepción, la declaración e ingreso correspondiente al mes de julio se efectuará durante el mes de agosto y los veinte primeros días naturales del mes de septiembre inmediato posterior.\nLos vencimientos de plazo que coincidan con un sábado o día inhábil se entenderán trasladados al primer día hábil inmediato siguiente.\nTodo ello, sin perjuicio de lo dispuesto en el apartado 3 del artículo 5 de la presente Orden.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

@@ -21,11 +21,10 @@ intentionally tiny:
 * :func:`same_tax_identifier` — the shared "these name the same bearer"
   predicate, checksum-free and separator-insensitive, for the places that
   compare an identifier rather than key on it.
-* :class:`IdentifierNamespace` and its per-namespace aliases
-  (:data:`AeatExpedienteId`, :data:`AeatClaveLiquidacion`,
-  :data:`AeatPresentationId`) — the closed document-identifier taxonomy, so a
-  value from one AEAT namespace cannot silently satisfy a field expecting
-  another.
+* :data:`AeatExpedienteId`, :data:`AeatClaveLiquidacion`,
+  :data:`AeatPresentationId`, and the sibling AEAT document-identifier
+  aliases — their source-specific constraints remain declared once and are
+  imported through this facade by every consumer.
 
 The module lives in :mod:`core` because identity validation is a
 domain concern, not a persistence concern. The persistence layer's
@@ -58,7 +57,6 @@ from ._namespace import (
     AeatCsv,
     AeatExpedienteId,
     AeatPresentationId,
-    IdentifierNamespace,
     RegistrySnapshotId,
 )
 from ._nif_iva import (
@@ -204,7 +202,6 @@ __all__ = [
     "ContentDigest",
     "ContentDigestOrAbsent",
     "FilingRecordId",
-    "IdentifierNamespace",
     "IdentityDocument",
     "IdentityError",
     "InvoiceId",

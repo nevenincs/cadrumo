@@ -300,13 +300,13 @@ def search_lexical(
 
     if limit <= 0:
         raise CorpusSearchInputError(
-            "corpus search limit must be positive",
+            reason="limit_not_positive",
             context={"limit": limit},
         )
     folded_terms = spanish_word_tokens(query)
     if not folded_terms:
         raise CorpusSearchInputError(
-            "corpus search query carries no searchable terms",
+            reason="query_has_no_searchable_terms",
             context={"query": query},
         )
     stemmed_terms = stem_spanish_terms(spanish_stemmer(), folded_terms)

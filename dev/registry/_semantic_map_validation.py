@@ -97,6 +97,15 @@ def _validate_scope(
             f"semantic map design epoch {semantic_map.design_epoch!r} does not match parser "
             f"design epoch {intermediate.source.design_epoch!r}",
         )
+    if semantic_map.source_ref != intermediate.source.source_ref:
+        raise RegistryValidationError(
+            f"semantic map source {semantic_map.source_ref!r} does not match parser intermediate source "
+            f"{intermediate.source.source_ref!r}",
+        )
+    if semantic_map.source_sha256 != intermediate.source.source_sha256:
+        raise RegistryValidationError(
+            "semantic map SHA-256 does not match parser intermediate source",
+        )
 
 
 def _validate_source_authority(
@@ -121,6 +130,11 @@ def _validate_source_authority(
         raise RegistryValidationError(
             f"parser intermediate source {source.id!r} design epoch {intermediate.source.design_epoch!r} "
             "does not match the target registry catalogue",
+        )
+    if intermediate.source.source_ref not in snapshot.revision.source_refs:
+        raise RegistryValidationError(
+            f"parser intermediate source {intermediate.source.source_ref!r} is not an authority of selected "
+            f"revision {snapshot.revision.id!r}",
         )
 
 
@@ -191,13 +205,6 @@ def _validate_variable_envelope_boundary(
             "Modelo 303 DP30300 parser output requires exactly one reviewed variable-envelope semantic contract",
         )
     semantic = semantic_map.variable_envelopes[0]
-    if (
-        semantic.source_ref != intermediate.source.source_ref
-        or semantic.source_sha256 != intermediate.source.source_sha256
-    ):
-        raise RegistryValidationError(
-            "M303 variable-envelope semantic contract is not pinned to the exact parser source",
-        )
     records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
     body_record_ids = tuple(
         records_by_anchor[_intermediate_record_key(sheet.sheet, sheet.record_identity)].export_record_id

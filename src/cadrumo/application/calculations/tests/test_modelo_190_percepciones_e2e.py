@@ -16,13 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....application.aggregation import WithholdingSourceResolver, persist_percepcion_observations
 from ....core import Period, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
-from ....domain.calculations.registry import WithholdingObservation
+from ....domain.calculations.registry import WithholdingObservation, resolve_available_bound_inputs_by_casilla_id
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 

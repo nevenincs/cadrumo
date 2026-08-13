@@ -9,8 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import (
     CasillaId,
     IvaCompensationStateProvenance,
@@ -30,6 +28,7 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import (

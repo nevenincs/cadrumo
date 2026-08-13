@@ -10,8 +10,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from .....core import CasillaId, Period, validated_casilla_id
 from .....domain.calculations.registry import CasillaObservation
 from .....domain.modelos import (
@@ -24,6 +22,7 @@ from .....domain.modelos import (
     derive_calculation_revision_id,
     derive_work_unit_id,
 )
+from .....tests import general_m303_filing_evidence
 from .....tests.secure_sql import isolated_runtime_profile
 from ...storage.sql import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository

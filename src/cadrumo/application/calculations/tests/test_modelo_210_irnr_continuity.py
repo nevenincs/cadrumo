@@ -55,8 +55,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -64,6 +62,7 @@ from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryValidationError,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
 )
 from ....tests.secure_sql import isolated_runtime_profile
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest

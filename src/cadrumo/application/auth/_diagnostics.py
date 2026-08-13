@@ -39,6 +39,12 @@ _DIAGNOSTIC_NAMESPACE = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
 _DIAGNOSTIC_SENSITIVITY = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity
 _DIAGNOSTIC_SCHEMA_VERSION = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version
 
+#: Registered locale key for every structural rejection of a persisted diagnostic
+#: payload. The refusals differ by the ``validation_rule`` fact on the error
+#: context, not by an authored sentence, so each renders in the operator's own
+#: locale while the failing check stays machine-readable.
+_PAYLOAD_MESSAGE_KEY = "errors.refused.refused_auth_diagnostic_payload"
+
 
 class AuthDiagnosticPhoneState(StrEnum):
     """Closed vocabulary of observed Cl@ve Móvil app states."""
@@ -237,7 +243,10 @@ def record_auth_diagnostic_phone_state(
     try:
         AuthDiagnosticPhoneState(phone_state)
     except ValueError as exc:
-        raise AuthDiagnosticPhoneStateError(phone_state, context={"phone_state": phone_state}) from exc
+        raise AuthDiagnosticPhoneStateError(
+            translated_message="errors.refused.refused_auth_diagnostic_phone_state",
+            context={"phone_state": phone_state},
+        ) from exc
     objects = _secure_objects()
     record = objects.load(
         _DIAGNOSTIC_NAMESPACE,
@@ -292,7 +301,10 @@ def _payload(raw: bytes) -> _DiagnosticPayload:
     """Deserialize an encrypted auth diagnostic blob into a typed payload envelope."""
     data = json.loads(raw.decode(UTF_8_ENCODING))
     if not isinstance(data, dict):
-        raise AuthDiagnosticPayloadError("auth diagnostic payload is not a JSON object")
+        raise AuthDiagnosticPayloadError(
+            translated_message=_PAYLOAD_MESSAGE_KEY,
+            context={"validation_rule": "json_root_object", "json_root_type": type(data).__name__},
+        )
     return _DiagnosticPayload.model_validate(data)
 
 
@@ -314,13 +326,15 @@ def _validated_utc_instant(raw: str, *, field: str) -> datetime:
         parsed = datetime.fromisoformat(raw)
     except ValueError as exc:
         raise AuthDiagnosticPayloadError(
-            f"auth diagnostic payload {field} is not an ISO-8601 instant",
+            translated_message=_PAYLOAD_MESSAGE_KEY,
+            context={"validation_rule": "iso_8601_instant", "field": field},
         ) from exc
     try:
         return validate_utc_aware(parsed)
     except CoreValidationError as exc:
         raise AuthDiagnosticPayloadError(
-            f"auth diagnostic payload {field} must be a UTC-aware instant",
+            translated_message=_PAYLOAD_MESSAGE_KEY,
+            context={"validation_rule": "utc_aware_instant", "field": field},
         ) from exc
 
 
@@ -345,9 +359,13 @@ def _validated_phone_state(raw: object) -> AuthDiagnosticPhoneState | None:
     try:
         return AuthDiagnosticPhoneState(text)
     except ValueError as exc:
-        accepted = ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES)
         raise AuthDiagnosticPayloadError(
-            f"auth diagnostic payload carries unknown phone state {text!r}; accepted values are: {accepted}",
+            translated_message=_PAYLOAD_MESSAGE_KEY,
+            context={
+                "validation_rule": "closed_phone_state_vocabulary",
+                "phone_state": text,
+                "accepted_phone_states": ", ".join(AUTH_DIAGNOSTIC_PHONE_STATES),
+            },
         ) from exc
 
 
@@ -361,11 +379,16 @@ def _phone_state_projection(payload: _DiagnosticPayload) -> _DiagnosticPhoneStat
     if browser_phone_state is not None:
         if payload.phone_state_source != AuthDiagnosticPhoneStateSource.AEAT_AUTHENTICATED_LANDING:
             raise AuthDiagnosticPayloadError(
-                "browser-proven auth diagnostic phone state is missing its authenticated landing source",
+                translated_message=_PAYLOAD_MESSAGE_KEY,
+                context={
+                    "validation_rule": "browser_proven_state_requires_landing_source",
+                    "phone_state_source": payload.phone_state_source,
+                },
             )
         if not payload.phone_state_observed_at:
             raise AuthDiagnosticPayloadError(
-                "browser-proven auth diagnostic phone state is missing its observation instant",
+                translated_message=_PAYLOAD_MESSAGE_KEY,
+                context={"validation_rule": "browser_proven_state_requires_observation_instant"},
             )
         return _DiagnosticPhoneStateProjection(
             state=browser_phone_state,
@@ -387,7 +410,10 @@ def _phone_state_projection(payload: _DiagnosticPayload) -> _DiagnosticPhoneStat
 def _summary_from_payload(payload: _DiagnosticPayload) -> AuthDiagnosticSummary:
     captured_at = payload.captured_at
     if not captured_at:
-        raise AuthDiagnosticPayloadError("auth diagnostic payload is missing captured_at")
+        raise AuthDiagnosticPayloadError(
+            translated_message=_PAYLOAD_MESSAGE_KEY,
+            context={"validation_rule": "captured_at_present"},
+        )
     auth_attempt = payload.auth_attempt
     phone_state = _phone_state_projection(payload)
     raw_headless = auth_attempt.get("headless")

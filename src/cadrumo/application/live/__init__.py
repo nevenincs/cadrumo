@@ -73,6 +73,12 @@ if TYPE_CHECKING:
         PersistedExpedientesSnapshot,
         expedientes_snapshot_object_key,
     )
+    from ._notification_documents import (
+        NotificationDocumentNotFoundError,
+        NotificationDocumentRecord,
+        NotificationDocumentService,
+        notification_document_object_key,
+    )
     from ._notifications import (
         NotificationsService,
         PersistedNotificationsSnapshot,
@@ -283,8 +289,8 @@ async def capture_expedientes_bulk(
     """Live-walk AEAT declaration-register rows and return an :class:`ExpedientesBulkCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
+            context={"year_from": year_from, "year_to": year_to},
         )
 
     from ._expedientes import ExpedientesCapture, ExpedientesService
@@ -531,6 +537,15 @@ def __getattr__(name: str):
 
         return getattr(_impl_mod, name)
     if name in (
+        "NotificationDocumentService",
+        "NotificationDocumentRecord",
+        "NotificationDocumentNotFoundError",
+        "notification_document_object_key",
+    ):
+        from . import _notification_documents as _impl_mod
+
+        return getattr(_impl_mod, name)
+    if name in (
         "DeudasService",
         "DeudasCapture",
         "DeudasSnapshotNotFoundError",
@@ -610,6 +625,9 @@ __all__ = [
     "LiveIvaReadStatus",
     "LiveIvaReadSurface",
     "LiveIvaSurfaceTimeoutError",
+    "NotificationDocumentNotFoundError",
+    "NotificationDocumentRecord",
+    "NotificationDocumentService",
     "NotificationsService",
     "PersistedDeudasSnapshot",
     "PersistedExpedientesSnapshot",
@@ -661,6 +679,7 @@ __all__ = [
     "list_iva_remote_state_acquisition_manifests",
     "load_iva_remote_state",
     "load_iva_remote_state_acquisition_manifest",
+    "notification_document_object_key",
     "notifications_snapshot_object_key",
     "parse_capture_to_justificante",
     "persist_and_reconcile_iva_compensation_wallet",

@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2011-11704-a1-redacciones.html",
+  "source_sha256": "4c0ee7af574247cbfd3ce76453a006509460e24a9b6d0422a90024d3c05f3900",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 1. Aprobación y forma de presentación del modelo 763.\n1. Se aprueba el modelo 763, «Autoliquidación del Impuesto sobre actividades de juego en los supuestos de actividades anuales o plurianuales» que figura como anexo I de la presente Orden y que deberá ser presentado por las entidades que operen, organicen o desarrollen tales actividades.\nEl citado modelo estará disponible exclusivamente en formato electrónico.\nEl número de justificante que habrá de figurar en el mismo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 763.\n2. La presentación del modelo 763 deberá realizarse, obligatoriamente, por vía telemática, de acuerdo con las condiciones generales y el procedimiento establecido en los artículos 2 y 3 de esta Orden.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

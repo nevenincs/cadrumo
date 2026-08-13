@@ -8,11 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....core import ObservedHeaderFact, Period, ResultDisposition
 from ....domain.calculations.registry import RegistryModeloObservation
 from ....domain.iva_compensation import IvaCompensationOverride, IvaCompensationReconciliationDecision
+from ....tests import general_m303_filing_evidence
 from ...calculations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,

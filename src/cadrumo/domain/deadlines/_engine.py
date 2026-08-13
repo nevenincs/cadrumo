@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ...core import Modelo
 from ...core.logging import get_logger
@@ -46,6 +46,15 @@ from ._recargo import build_recovery_for_overdue
 _logger = get_logger(__name__)
 
 _DEFAULT_DUE_SOON_DAYS = 14
+
+#: Locale keys for the two engine refusals, stated here so a reader sees which
+#: catalogue entry each raise site resolves through. They are the registered
+#: keys of :class:`NoDeadlineWindowsError` and
+#: :class:`ScheduleComputationError`; the engine states them rather than reading
+#: ``code.message_key`` so the key stays greppable from the raise site, and a
+#: gate holds the two spellings equal.
+_MISSING_WINDOWS_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_missing_windows"
+_SCHEDULE_COMPUTATION_MESSAGE_KEY: Final[str] = "errors.error.error_deadlines_schedule_computation"
 
 
 def classify_obligation_status(closes_on: date, today: date, due_soon_days: int) -> ObligationStatus:
@@ -149,7 +158,13 @@ class DeadlineEngine:
         try:
             self._registry = ValidatedRegistryAuthority.load(root, source_root=self._source_root)
         except RegistryError as exc:
-            raise ScheduleComputationError(f"deadline registry load failed: {exc}") from exc
+            raise ScheduleComputationError(
+                translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                context={
+                    "registry_stage": "load",
+                    "registry_error_type": type(exc).__name__,
+                },
+            ) from exc
 
     def compute(
         self,
@@ -194,7 +209,10 @@ class DeadlineEngine:
                 obligations.append(obligation)
         obligations.sort(key=lambda o: (o.closes_on, o.modelo, o.period.filing_year, o.period.registry_token))
         if not obligations and not self._has_deadline_windows(year):
-            raise NoDeadlineWindowsError(f"No registry deadline windows registered for year {year}")
+            raise NoDeadlineWindowsError(
+                translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
+                context={"filing_year": year},
+            )
         if obligations:
             _logger.debug("computed schedule year=%d obligations=%d", year, len(obligations))
         else:
@@ -283,7 +301,8 @@ class DeadlineEngine:
         ]
         if not windows:
             raise NoDeadlineWindowsError(
-                f"No registry deadline windows registered for modelo {modelo!r} in year {selected_year}",
+                translated_message=_MISSING_WINDOWS_MESSAGE_KEY,
+                context={"modelo": modelo, "filing_year": selected_year},
             )
         condition_text = self._evaluate_conditions(
             profile,
@@ -321,7 +340,14 @@ class DeadlineEngine:
         try:
             return self._registry.deadline_windows(year)
         except RegistryError as exc:
-            raise ScheduleComputationError(f"deadline registry validation failed: {exc}") from exc
+            raise ScheduleComputationError(
+                translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                context={
+                    "registry_stage": "validation",
+                    "filing_year": year,
+                    "registry_error_type": type(exc).__name__,
+                },
+            ) from exc
 
     def _has_deadline_windows(self, year: int) -> bool:
         return bool(self._deadline_windows(year))
@@ -374,7 +400,15 @@ class DeadlineEngine:
         try:
             explanations = evaluate_profile_conditions(conditions, profile, mode=mode)
         except RegistryError as exc:
-            raise ScheduleComputationError(f"deadline profile condition could not be evaluated: {exc}") from exc
+            raise ScheduleComputationError(
+                translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
+                context={
+                    "registry_stage": "profile_condition_evaluation",
+                    "condition_count": len(conditions),
+                    "condition_mode": mode,
+                    "registry_error_type": type(exc).__name__,
+                },
+            ) from exc
         if explanations is None:
             return None
         return " ".join(explanations)

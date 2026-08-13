@@ -883,7 +883,7 @@ required_text = [
 evidence_tier = "legal_authority"
 authority = "boe"
 kind = "real_decreto_ley"
-corpus_ref = "corpus/normatives/html/real-decreto-ley-7-2024-art-11.html#articulo-11"
+corpus_ref = "corpus/normatives/html/real-decreto-ley-7-2024.html#a1-3"
 document_id = "BOE-A-2024-23422"
 article = "11"
 permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2024-23422#a1-3"
@@ -894,7 +894,7 @@ consolidated_as_of = 2025-10-29
 review_status = "reviewed"
 reviewed_at = 2026-05-05
 reviewed_by = "operator"
-notes = "Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados."
+notes = "Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados; fundamenta el APARTADO 1 del articulo, que opera sobre el rendimiento neto de modulos del IRPF. El apartado 2 del mismo articulo reduce la cuota devengada por operaciones corrientes del regimen simplificado del IVA y tiene su propia entrada, real-decreto-ley-7-2024:art-11.2. CAMBIO DE CORPUS. corpus_ref apuntaba a un extracto recortado a mano del articulo que perdia su ultima frase (la que declara que la reduccion se computa sobre la cuota ANUAL del regimen simplificado); apunta ahora al documento consolidado integro ya empaquetado, cuyo bloque a1-3 es el mismo articulo completo. Ninguna de las tres frases de required_text cambia de resultado: se verificaron contra el bloque nuevo antes del cambio."
 required_text = [
     "Artículo 11",
     "rendimiento neto de módulos de\u00a02024",

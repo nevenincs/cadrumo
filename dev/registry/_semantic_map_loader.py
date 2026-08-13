@@ -16,7 +16,7 @@ from typing import Final, Literal
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError, model_validator
 
 from cadrumo.core import FilingProducerKey, compile_filing_projection_ref, freeze_toml, read_toml
-from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError
+from cadrumo.domain.calculations.registry import ModeloId, RegistryValidationError, SourceRefId
 
 from ._semantic_map import M303VariableEnvelopeSemantic, SemanticMap, SemanticMapEntry, SemanticMapRecord
 
@@ -39,12 +39,14 @@ class _StrictModel(BaseModel):
 
 
 class SemanticMapFragment(_StrictModel):
-    """One reviewable fragment of one exact modelo/design semantic map."""
+    """One reviewable fragment of one exact source-pinned semantic map."""
 
     schema_version: Literal[1]
     fragment_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9-]*$")
     modelo: ModeloId
     design_epoch: str = Field(min_length=1)
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     records: tuple[SemanticMapRecord, ...] = ()
     entries: tuple[SemanticMapEntry, ...] = ()
     variable_envelopes: tuple[M303VariableEnvelopeSemantic, ...] = ()
@@ -160,13 +162,26 @@ def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
             f"semantic map contains duplicate fragment ids: {duplicate_fragment_ids!r}",
         )
 
-    identity = ordered[0].modelo, ordered[0].design_epoch
+    identity = (
+        ordered[0].modelo,
+        ordered[0].design_epoch,
+        ordered[0].source_ref,
+        ordered[0].source_sha256,
+    )
     mismatched_fragments = tuple(
-        fragment.fragment_id for fragment in ordered if (fragment.modelo, fragment.design_epoch) != identity
+        fragment.fragment_id
+        for fragment in ordered
+        if (
+            fragment.modelo,
+            fragment.design_epoch,
+            fragment.source_ref,
+            fragment.source_sha256,
+        )
+        != identity
     )
     if mismatched_fragments:
         raise RegistryValidationError(
-            f"semantic-map fragments have conflicting modelo/design identities: {mismatched_fragments!r}",
+            f"semantic-map fragments have conflicting modelo/design/source identities: {mismatched_fragments!r}",
         )
 
     records = tuple(record for fragment in ordered for record in fragment.records)
@@ -180,6 +195,8 @@ def _compile_fragments(fragments: Iterable[SemanticMapFragment]) -> SemanticMap:
     return SemanticMap(
         modelo=ordered[0].modelo,
         design_epoch=ordered[0].design_epoch,
+        source_ref=ordered[0].source_ref,
+        source_sha256=ordered[0].source_sha256,
         records=tuple(
             sorted(
                 records,

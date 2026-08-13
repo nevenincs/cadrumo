@@ -29,7 +29,7 @@ def test_calendar_evidence_payload_enforces_closed_state_and_csv_pairing() -> No
         "aeat_submission_state": "justificante_verified",
         "justificante_required": True,
         "justificante_verified": True,
-        "verified_justificante_csv": "CSV-2026-001",
+        "verified_justificante_csv": "CSV20260000001",
     }
     assert OverviewCalendarFilingEvidencePayload.model_validate(valid).justificante_verified is True
     for field, value in (("aeat_submission_state", "bogus"), ("verified_justificante_csv", None)):
@@ -46,7 +46,7 @@ def test_calendar_event_payload_enforces_verified_csv_pairing() -> None:
         "reference_id": "ref-1",
         "aeat_submission_state": "justificante_verified",
         "justificante_verified": True,
-        "verified_justificante_csv": "CSV-2026-001",
+        "verified_justificante_csv": "CSV20260000001",
     }
     assert OverviewCalendarEventPayload.model_validate(event).event_type == "filing"
     with pytest.raises(ValidationError):

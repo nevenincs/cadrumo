@@ -355,13 +355,13 @@ def compare_taxation_for_work_unit(work_unit_id: str) -> TaxationComparisonResul
             work-unit state.
     """
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...domain.calculations.registry import RegistrySnapshotError
+    from ...domain.calculations.registry import (
+        RegistrySnapshotError,
+        resolve_available_bound_inputs_by_casilla_id,
+    )
     from ..aggregation import CalculationSourceContext, ProfileSourceResolver
     from ._action_errors import WorkUnitNotFoundError
-    from ._binding_resolution import (
-        resolve_available_bound_inputs_by_casilla_id,
-        resolve_declaration_period_inputs,
-    )
+    from ._binding_resolution import resolve_declaration_period_inputs
     from ._registry_resources import authority_via_resources as _authority_via_resources
 
     wu_repo = WorkUnitCatalogueRepository()

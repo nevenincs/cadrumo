@@ -72,9 +72,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
 from .....core.resources import resources
 from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
 from .. import (
@@ -82,8 +80,10 @@ from .. import (
     RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -126,6 +126,11 @@ def _calculate(*, devengado: Decimal, deducible: Decimal) -> RegistryCalculation
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("0"),
             iva_amount=deducible,
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_provenance=_deduction_provenance(
+                IvaDeductionFactKind.DOMESTIC_CURRENT,
+                source_locator="invoice:deducible-general",
+            ),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     )

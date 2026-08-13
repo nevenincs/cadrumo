@@ -129,6 +129,12 @@ adapters:
     pdf:
       errors:
         hash_failed: No s'ha pogut calcular l'empremta del PDF.
+  notificacion:
+    errors:
+      sancion_does_not_reconcile: Els imports impresos al document de sanció no quadren,
+        per la qual cosa s'ha rebutjat la lectura. Comproveu el document a mà.
+      sancion_incomplete: El document de sanció no s'ha pogut llegir completament.
+        Obriu-lo a la seu i comproveu-lo a mà.
   outbound:
     storage:
       factory:
@@ -290,6 +296,10 @@ adapters:
         sol·licitat.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
         executeu primer `aeat config auth status`.
+      notification_content_requires_operator: 'No es pot obrir el contingut d''una
+        notificació no llegida: aquest mateix pas és la compareixença, que la dóna
+        per notificada i n''inicia els terminis, i requereix la vostra signatura.
+        Obriu-la vós mateix a la Seu.'
       notifications_bad_landing: La pàgina de notificacions de l'AEAT no s'ha carregat
         correctament; la vostra sessió pot haver caducat o l'AEAT està en manteniment.
         Executeu 'aeat config auth status' i torneu-ho a provar. No ho interpreteu
@@ -667,6 +677,17 @@ application:
   filing:
     errors:
       amendment_not_persisted: no hi ha cap rectificació persistida amb id %{amendment_id}
+      complementaria_taxpayer_identity_absent: 'la complementària requereix una identitat
+        fiscal declarada: el profile_tax_id de la declaració presentada és %{submitted_tax_id}
+        mentre que l''esborrany original declara %{draft_tax_id}'
+      complementaria_taxpayer_identity_malformed: 'la complementària no pot confirmar
+        un únic contribuent: el profile_tax_id %{submitted_tax_id} de la declaració
+        presentada no és un NIF, NIE o CIF vàlid, i l''esborrany original declara
+        %{draft_tax_id}'
+      complementaria_taxpayer_identity_mismatch: 'la identitat fiscal de la complementària
+        divergeix: la declaració presentada declara profile_tax_id %{submitted_tax_id}
+        i l''esborrany original declara %{draft_tax_id}; tots dos han d''anomenar
+        el mateix contribuent'
       import_failed: 'no es pot importar el model %{modelo}: %{detail}'
       modelo_not_in_registry: el model %{modelo} no és present al registre de càlcul
       original_draft_not_persisted: l'esborrany original %{draft_id} no està persistit
@@ -885,6 +906,17 @@ application:
           i aquesta confirmació difereix en: %{divergent_fields}. Corregiu o elimineu
           la factura emmagatzemada en lloc de confirmar dues vegades el mateix document.'
   live:
+    borrador:
+      errors:
+        binding_value_key_blank: Les claus dels valors de vinculació del borrador
+          no poden estar buides.
+        bucket_id_blank: L'identificador del bucket del borrador no pot estar buit.
+        snapshot_id_blank: L'identificador del snapshot del borrador no pot estar
+          buit.
+        snapshot_not_found: Cap snapshot del borrador coincideix amb l'identificador
+          sol·licitat.
+        snapshot_prefix_ambiguous: El prefix del snapshot del borrador coincideix
+          amb diversos snapshots.
     deudas:
       errors:
         bucket_id_blank: L'identificador del bucket de deudas no pot estar buit.
@@ -903,10 +935,83 @@ application:
           amb l identificador sol·licitat.
         snapshot_prefix_ambiguous: El prefix de la instantània d expedients coincideix
           amb diverses instantànies.
+    filed_data:
+      errors:
+        sync_run_repository_required: Una captura persistida de dades presentades
+          requereix un repositori de persistència d'execucions de sincronització.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: La declaració presentada del Model 303 no s'ha
+          pogut incorporar a l'històric de compensació d'IVA.
+        iva_history_reload_missing: L'històric segur de compensació d'IVA no s'ha
+          recarregat després de desar el període del Model 303.
+        observation_not_active: L'AEAT no informa aquesta declaració presentada com
+          a activa, per la qual cosa no es desa com a evidència de càlcul.
+        quarter_ordinal_missing: El període trimestral de l'històric presentat no
+          té ordinal de trimestre.
+        registry_enrollment_failed: L'observació presentada no s'ha pogut inscriure
+          com a evidència de càlcul fonamentada en el registre.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: La decisió de conciliació de la cartera d'IVA no
+          s'ha recarregat amb evidència idèntica.
+        observation_reload_diverged: L'observació de la cartera d'IVA no s'ha recarregat
+          amb evidència idèntica.
+    justificante:
+      errors:
+        bucket_id_blank: L'identificador del bucket de la captura del justificant
+          no pot estar buit.
+        capture_axis_mismatch: El justificant capturat no coincideix amb el model
+          i el període del snapshot en viu.
+        csv_mismatch: El CSV del justificant capturat no coincideix amb el CSV del
+          snapshot en viu.
+        evidence_overwrite_refused: El registre de presentació ja té evidència de
+          l'AEAT, que l'evidència de captura en viu no sobreescriurà.
+        evidence_snapshot_not_active: Només un snapshot de captura en viu actiu es
+          pot segellar com a evidència de presentació.
+        expediente_not_in_tree: La declaració presentada referencia un expedient que
+          no és a l'arbre d'expedients.
+        filing_identity_unresolved: No s'ha pogut resoldre la identitat fiscal del
+          perfil de presentació, per la qual cosa no se segella l'evidència de captura
+          en viu.
+        filing_record_mismatch: El justificant capturat no coincideix amb el registre
+          de presentació actual.
+        filing_record_missing: No hi ha cap registre de presentació actual per a aquest
+          model i període. Presenteu el període primer.
+        metadata_snapshot_not_active: Només un snapshot de captura en viu actiu pot
+          registrar metadades del justificant.
+        modelo_unknown: El model de la captura del justificant no és un model conegut
+          de l'AEAT.
+        no_filed_declaration: No hi ha cap declaració presentada per a aquest model
+          i període, per la qual cosa no es pot resoldre l'expedient del justificant.
+        pdf_base64_empty: El contingut PDF de la captura del justificant es descodifica
+          a zero bytes.
+        pdf_base64_invalid: El contingut PDF de la captura del justificant no és base64
+          vàlid.
+        pdf_sha256_mismatch: El resum del PDF de la captura del justificant no coincideix
+          amb els bytes PDF descodificats.
+        snapshot_bucket_mismatch: El snapshot de la captura del justificant no pertany
+          al bucket del repositori.
+        snapshot_id_blank: L'identificador del snapshot de la captura del justificant
+          no pot estar buit.
+        snapshot_not_found: Cap snapshot de captura del justificant coincideix amb
+          l'identificador sol·licitat.
+        snapshot_prefix_ambiguous: El prefix del snapshot de captura del justificant
+          coincideix amb diversos snapshots.
     notifications:
       errors:
         bucket_id_blank: L'identificador del bucket de notificacions no pot estar
           buit.
+        certificado_id_blank: L'identificador de certificat de la notificació no pot
+          estar buit.
+        document_conflict: 'Ja hi ha desat un document diferent per a aquesta notificació;
+          no s''ha sobreescrit res. Discrepen: {diverging_fields}.'
+        document_not_found: Cap document desat correspon a aquesta notificació. Descarregueu-lo
+          primer.
+        document_prefix_ambiguous: Aquest prefix de certificat correspon a diversos
+          documents desats. Indiqueu l'identificador complet.
+        document_row_mismatch: Aquest document pertany a una altra notificació i no
+          s'ha desat.
         snapshot_id_blank: L'identificador de la instantània de notificacions no pot
           estar buit.
         snapshot_not_found: Cap instantània de notificacions no coincideix amb l'identificador
@@ -915,10 +1020,24 @@ application:
           amb diverses instantànies.
     snapshot_base:
       errors:
+        repository_bucket_mismatch: El repositori de snapshots ha informat d'un bucket
+          diferent del sol·licitat.
+        service_bucket_mismatch: El bucket del servei de snapshots no coincideix amb
+          el bucket del seu repositori.
         snapshot_bucket_mismatch: El bucket de la càrrega de la instantània no coincideix
           amb el bucket del repositori.
         snapshot_key_mismatch: La instantània està emmagatzemada sota la clau d'una
           altra instantània.
+        state_active_supersession_pointer: Un snapshot actiu no pot portar un punter
+          de substitució.
+        state_discard_audit_required: Un snapshot descartat requereix marca de temps
+          de descart i actor que el descarta.
+        state_discard_metadata_forbidden: Només un snapshot descartat pot portar metadades
+          de descart.
+        state_discarded_supersession_pointer: Un snapshot descartat no pot portar
+          un punter de substitució.
+        state_supersession_pointer_required: Un snapshot substituït ha de portar l'identificador
+          del snapshot que el substitueix.
     verify:
       errors:
         bucket_id_blank: L identificador del bucket de verificació no pot estar buit.
@@ -4752,6 +4871,9 @@ cli:
       counterparty_identification_state_help: Estat membre el NIF-IVA del qual utilitza
         la contrapart (la Llei 37/1992 art. 25 exempta per aquesta dada, no per on
         estigui establerta)
+      deduction_fact_kind_help: Origen exacte de la deducció d'IVA suportat (per exemple
+        domestic_current). Obligatori perquè la quota suportada es dedueixi; la taxonomia
+        no s'infereix.
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -5409,6 +5531,10 @@ cli:
       de treball de Model; aquesta vista es deriva del calendari de terminis i pot
       sobrenotificar un esborrany en curs com a encara pendent o ometre esborranys
       en curs més antics.
+    notificacion:
+      rechazo_tacito_summary: '%{count} notificació(ns) de l''AEAT estan legalment
+        notificades per rebuig tàcit (Llei 39/2015 art. 43.2): %{certificados}. Els
+        terminis ja estan corrent.'
     period: Període
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
@@ -5581,8 +5707,10 @@ cli:
       row_count: files
       source_reference_count: referències de font
       status: estat
+      unverified_invariant_families: Famílies d'invariants no verificades
       verification_expectation_count: expectatives de verificació
       verified: verificades
+      verified_invariant_families: Famílies d'invariants verificades
       workbook_parity_ref_count: refs de paritat del llibre
     observation_help: Manifest xifrat d'observació de declaració presentada que cal
       verificar
@@ -6570,6 +6698,8 @@ errors:
       d'informes de verificació.
     fail_modelo_work_unit_persistence: No s'ha pogut desar o llegir el catàleg d'unitats
       de treball.
+    fail_notificacion_parse: No s'ha pogut interpretar el document de la notificació
+      de l'AEAT.
     fail_observability_run_trace_persistence: El magatzem de traces d'execució no
       ha pogut completar una operació del sistema de fitxers.
     fail_outbound_storage: S'ha produït un error en el proveïdor d'emmagatzematge.
@@ -6579,6 +6709,10 @@ errors:
       temporalment. Espera uns minuts i torna-ho a provar.
     fail_repair_decision_not_found: No s'ha trobat la decisió de reparació sol.licitada.
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
+    fail_sancion_arithmetic: Els imports impresos al document de sanció no quadren
+      entre ells.
+    fail_sancion_parse: El document de sanció no s'ha pogut llegir completament; no
+      es retorna cap registre parcial.
     fail_secure_storage: S'ha produït un error en l'emmagatzematge segur.
     fail_sede_justificante_fetch: La descàrrega del justificant en PDF des de la Seu
       de l'AEAT ha fallat o el fitxer no és vàlid.
@@ -6806,6 +6940,20 @@ errors:
       emès un senyal de cancel·lació.'
     internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
       una excepció no controlada.'
+  iva:
+    category_has_no_legal_basis: Aquesta categoria d'IVA no té base legal al catàleg
+      i no es pot citar.
+    citation_legal_reference_absent: La referència legal de la citació no consta al
+      catàleg legal del registre.
+    cite_requires_catalogue_or_date: Citar una categoria d'IVA requereix un catàleg
+      explícit o una data d'efecte.
+    rate_member_state_unregistered: El registre de tipus d'IVA no conté cap tipus
+      per a l'estat membre sol·licitat.
+    rate_registry_coverage_gap: El registre de tipus d'IVA inclòs no arriba a aquesta
+      data per a aquest tram, de manera que el tipus no es pot confirmar. És un límit
+      de la nostra cobertura, no una afirmació que el tipus fos il·legal.
+    rate_slot_not_in_force: Aquest tipus d'IVA no estava en vigor per al seu tram
+      a Espanya en la data de l'operació.
   locked:
     locked_access_gate_live_submit_forbidden: L'enviament en viu a l'AEAT està permanentment
       prohibit. Aquesta aplicació construeix, valida i exporta declaracions; la presentació
@@ -7066,6 +7214,8 @@ errors:
       amb l'identificador indicat.
     refused_live_justificante_capture_snapshot_not_found: No existeix cap captura
       de justificant
+    refused_live_notification_document_not_found: Cap document desat correspon a aquesta
+      notificació.
     refused_live_notifications_snapshot_not_found: No existeix cap instantània de
       notificacions amb l'identificador indicat.
     refused_live_portal_not_found: No existeix cap portal de l'AEAT amb l'identificador

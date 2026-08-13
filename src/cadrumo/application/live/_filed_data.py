@@ -88,7 +88,6 @@ def select_declarations_for_capture(
         selected = tuple(row for row in selected if row.expediente_id == expediente_id)
     if expediente_id is not None and not selected:
         raise LiveApplicationInputError(
-            message=f"AEAT declaration register did not return expediente {expediente_id!r}",
             translated_message="live.errors.expediente_not_found",
             context={"expediente_id": str(expediente_id)},
         )

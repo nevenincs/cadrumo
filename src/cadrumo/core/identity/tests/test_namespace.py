@@ -1,9 +1,8 @@
-"""Real-behavior tests for the AEAT document-identifier namespace taxonomy.
+"""Real-behavior tests for AEAT document-identifier aliases.
 
-Covers :class:`~core.identity.IdentifierNamespace` and the three AEAT-issued
-aliases it names (:data:`~core.identity.AeatExpedienteId`,
-:data:`~core.identity.AeatClaveLiquidacion`,
-:data:`~core.identity.AeatPresentationId`).
+Covers the AEAT-issued aliases :data:`~core.identity.AeatExpedienteId`,
+:data:`~core.identity.AeatClaveLiquidacion`, and
+:data:`~core.identity.AeatPresentationId`.
 
 Two things are worth stating about what this suite proves, because a reader
 could reasonably assume more.
@@ -28,7 +27,7 @@ is evidence about this app's contract, never about AEAT's grammar.
 
 See Also:
     :mod:`~core.identity._namespace`
-        Taxonomy under test.
+        Alias definitions under test.
 """
 
 from __future__ import annotations
@@ -41,7 +40,6 @@ from .. import (
     AeatClaveLiquidacion,
     AeatExpedienteId,
     AeatPresentationId,
-    IdentifierNamespace,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -52,9 +50,6 @@ _Presentation = single_field_holder("presentation_id", AeatPresentationId)
 
 #: The expediente id the sede adapter records from the live capture.
 _CAPTURED_EXPEDIENTE = "202310013522456T"
-
-_AEAT_PREFIX = "aeat_"
-_APP_PREFIX = "app_"
 
 
 def test_expediente_accepts_the_captured_aeat_shape() -> None:
@@ -147,34 +142,3 @@ def test_presentation_id_admits_an_empty_value_so_its_absence_stays_modelled_as_
     standard.
     """
     assert _Presentation.value_of(_Presentation.build("")) == ""
-
-
-def test_every_namespace_member_declares_its_issuing_group() -> None:
-    """The AEAT-issued / app-derived split is total, and keyed by the property.
-
-    Asserted as a partition rather than against a member count, so adding a
-    namespace does not require editing this test -- but adding one that
-    belongs to neither group, or whose name and value disagree about which
-    group it is in, fails here.
-    """
-    for member in IdentifierNamespace:
-        assert member.value == member.name.lower(), member
-        aeat = member.name.startswith("AEAT_")
-        app = member.name.startswith("APP_")
-        assert aeat != app, f"{member.name} belongs to neither group or to both"
-        expected = _AEAT_PREFIX if aeat else _APP_PREFIX
-        assert member.value.startswith(expected), member
-
-
-def test_both_issuing_groups_are_populated() -> None:
-    """Guards the partition test above from passing vacuously on one group."""
-    groups = {member.name.split("_", 1)[0] for member in IdentifierNamespace}
-    assert {"AEAT", "APP"} <= groups
-
-
-def test_namespace_members_are_interchangeable_with_their_stored_token() -> None:
-    """``StrEnum`` substitution is relied on wherever a namespace is persisted."""
-    member = IdentifierNamespace.AEAT_EXPEDIENTE_ID
-    assert member == "aeat_expediente_id"
-    assert f"{member}" == "aeat_expediente_id"
-    assert IdentifierNamespace("aeat_expediente_id") is member

@@ -6,9 +6,11 @@ from datetime import date
 
 import pytest
 
+from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -166,6 +168,11 @@ def test_modelo_322_iva_bindings_resolve_against_ledger_observations() -> None:
             flow_direction=IvaFlowDirection.SOPORTADO,
             base_amount=Decimal("2000"),
             iva_amount=Decimal("420"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
+            deduction_provenance=_deduction_provenance(
+                IvaDeductionFactKind.DOMESTIC_CURRENT,
+                source_locator="invoice:sop-1",
+            ),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
     ]

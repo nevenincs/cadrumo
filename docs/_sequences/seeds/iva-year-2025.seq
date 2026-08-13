@@ -9,7 +9,7 @@
 @step Record a fourth-quarter sale with output VAT.
 @setup aeat app ledger add --date 2025-11-20 --amount 3025 --direction INCOMING --description "Servicio de consultoria cuarto trimestre" --classification BUSINESS --taxable-base 2500 --iva-rate 0.21 --iva-amount 525 --iva-category domestic_general --idempotency-key venta-4t-2025
 @step Record a first-quarter purchase with deductible input VAT.
-@setup aeat --format json app ledger add --date 2025-03-05 --amount 605 --direction OUTGOING --description "Compra de material de oficina" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --iva-category domestic_general --idempotency-key compra-1t-2025
+@setup aeat --format json app ledger add --date 2025-03-05 --amount 605 --direction OUTGOING --description "Compra de material de oficina" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --iva-category domestic_general --idempotency-key compra-1t-2025 --deduction-kind domestic_current
 @capture gasto_txn result.transaction_id
 @step Register the supplier's purchase invoice as encrypted evidence bytes.
 @setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2025-0087 --invoice-date 2025-03-05 --taxable-base 500 --iva-rate 0.21 --iva-amount 105

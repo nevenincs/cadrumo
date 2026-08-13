@@ -24,6 +24,7 @@ from ...domain.calculations.registry import (
     RegistryModeloObservation,
     RegistrySnapshot,
     RegistryValidationError,
+    iva_compensation_annual_partition_requirement,
     undeclared_casilla_ids,
 )
 from ...domain.iva_compensation import (
@@ -56,40 +57,10 @@ _log = get_logger(__name__)
 _STORAGE_DEGRADATION_ERRORS = (ClassificationError, DecryptionError, EnvelopeVersionError)
 _SOURCE_KIND: Final = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
 _ZERO: Final = Decimal("0")
-_LAST_PERIOD_OUTPUT: Final = "last_period_amount"
-_GENERATED_NOT_IN_LAST_OUTPUT: Final = "generated_not_in_last_amount"
-
-
 _303_GENERADA_ID: Final[CasillaId] = M303_GENERADA_CASILLA
 _303_APLICADA_ID: Final[CasillaId] = M303_COMPENSACION_APLICADA_CASILLA
 _303_DISPONIBLE_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
 _303_POSTERIOR_ID: Final[CasillaId] = M303_POSTERIOR_CASILLA
-
-
-def _partition_selector(binding: object) -> object:
-    return getattr(binding, "selector", None)
-
-
-def _partition_bindings_by_output(revision: ModeloRevision) -> dict[str, BindingId]:
-    bindings: dict[str, BindingId] = {}
-    for binding in revision.bindings:
-        if binding.source != _SOURCE_KIND:
-            continue
-        output = getattr(_partition_selector(binding), "partition_output", None)
-        if isinstance(output, str):
-            bindings[output] = binding.id
-    return bindings
-
-
-def _partition_source_periods(revision: ModeloRevision) -> tuple[str, ...]:
-    periods: list[str] = []
-    for binding in revision.bindings:
-        if binding.source != _SOURCE_KIND:
-            continue
-        for period in getattr(_partition_selector(binding), "source_periods", ()):
-            if period not in periods:
-                periods.append(period)
-    return tuple(periods)
 
 
 def _observed_value(values: Mapping[CasillaId, Decimal], casilla_id: CasillaId) -> Decimal | None:
@@ -171,8 +142,8 @@ def resolve_iva_compensation_annual_partition_binding_values(
         filing_year: Annual filing year used to select same-year Modelo 303
             observations.
     """
-    binding_by_output = _partition_bindings_by_output(revision)
-    if not binding_by_output:
+    requirement = iva_compensation_annual_partition_requirement(revision)
+    if requirement is None:
         return {}
     states = tuple(
         _period_state_from_303_envelope(envelope)
@@ -184,10 +155,10 @@ def resolve_iva_compensation_annual_partition_binding_values(
     report = build_iva_compensation_carry_forward_report(states, as_of_year=filing_year)
     partition = derive_iva_compensation_year_end_carry_partition(report, states, filing_year=filing_year)
     values: dict[BindingId, Decimal] = {}
-    last_period_binding = binding_by_output.get(_LAST_PERIOD_OUTPUT)
+    last_period_binding = requirement.last_period_amount_binding_id
     if last_period_binding is not None:
         values[last_period_binding] = partition.last_period_amount
-    generated_not_in_last_binding = binding_by_output.get(_GENERATED_NOT_IN_LAST_OUTPUT)
+    generated_not_in_last_binding = requirement.generated_not_in_last_amount_binding_id
     if generated_not_in_last_binding is not None:
         values[generated_not_in_last_binding] = partition.generated_not_in_last_amount
     return values
@@ -198,8 +169,11 @@ def _load_303_observations_for_partition(
     *,
     repository: CalculationObservationRepository,
 ) -> tuple[ObservationEnvelopePayload, ...]:
+    requirement = iva_compensation_annual_partition_requirement(snapshot.revision)
+    if requirement is None:
+        return ()
     envelopes: list[ObservationEnvelopePayload] = []
-    for period_code in _partition_source_periods(snapshot.revision):
+    for period_code in requirement.source_periods:
         payload = repository.load_observation(
             Modelo.M303.value,
             Period.from_year_and_code(snapshot.filing_year, period_code),
@@ -275,10 +249,8 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 filing_year=context.filing_year,
                 period=context.period.registry_token,
             )
-        declared_binding_ids = tuple(
-            sorted(binding.id for binding in snapshot.revision.bindings if binding.source == _SOURCE_KIND),
-        )
-        if not declared_binding_ids:
+        requirement = iva_compensation_annual_partition_requirement(snapshot.revision)
+        if requirement is None:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         repo = self._repository if self._repository is not None else CalculationObservationRepository()
         try:
@@ -295,7 +267,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
             envelopes,
             filing_year=snapshot.filing_year,
         )
-        unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
+        unresolved = tuple(binding_id for binding_id in requirement.binding_ids if binding_id not in binding_values)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
@@ -303,7 +275,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
             unresolved_binding_ids=unresolved,
             diagnostics=_unresolved_diagnostics(
                 binding_ids=unresolved,
-                source_periods=_partition_source_periods(snapshot.revision),
+                source_periods=requirement.source_periods,
                 resolver_id=self.resolver_id,
             ),
             provenance=tuple(
@@ -314,6 +286,14 @@ class IvaCompensationAnnualPartitionSourceResolver:
                         f"{envelope.observation.filing_year}:{envelope.observation.period}:"
                         "iva-compensation-annual-partition"
                     ),
+                    binding_source=_SOURCE_KIND,
+                    source_modelo=requirement.source_modelo,
+                    source_filing_year=envelope.observation.filing_year,
+                    source_periods=requirement.source_periods,
+                    source_casilla_ids=requirement.source_casilla_ids,
+                    legal_refs=requirement.legal_refs,
+                    source_refs=requirement.source_refs,
+                    dependency_treatment=requirement.dependency_treatment,
                 )
                 for envelope in envelopes
             ),

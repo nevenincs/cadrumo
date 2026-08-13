@@ -39,6 +39,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
+from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.identity import AeatCertificadoId
 from .....core.logging import get_logger
@@ -50,7 +51,7 @@ from .....domain.calculations.registry import (
 from .._html import parse_html
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
-from ._adapter_utils import assert_read_http_for, cell_text
+from ._adapter_utils import assert_pdf_response, assert_read_http_for, cell_text
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
 from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
@@ -80,6 +81,11 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     classification="authenticated_read_surface",
     allowed_hosts=(_SEDE_HOST,),
     allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
+    # The detail endpoint serves the notification PDF only on a POST. Scoped to
+    # that one path: the allowance is a transport fact, and the LEGAL gate is
+    # ``assert_notification_content_readable``, which refuses every row AEAT
+    # does not already report as read.
+    allowed_read_post_paths=(_EXTERNAL.aeat.sede_paths.notifications_detail,),
     synthetic_data_allowed=False,
     requires_authentication=True,
     requires_aeat_authorization=True,
@@ -527,6 +533,141 @@ def notifications_query_url(*, today: date, lookback_years: int | None = None) -
     return f"{_NOTIF_QUERY_URL}{separator}{urlencode(params)}"
 
 
+class NotificationDocument(BaseModel):
+    """The PDF AEAT serves for one already-read notification.
+
+    Attributes:
+        certificado_id: The notification the document belongs to.
+        pdf_bytes: The document as served. Held in memory by the caller and
+            written only to encrypted storage; never to disk.
+        pdf_sha256: Digest of :attr:`pdf_bytes`, for evidence integrity.
+        source_url: The detail endpoint the document was served from.
+        mode: Structural read-only marker.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    certificado_id: AeatCertificadoId
+    pdf_bytes: bytes
+    pdf_sha256: str = Field(min_length=64, max_length=64)
+    source_url: AnyHttpUrl
+    mode: Literal["read"] = "read"
+
+
+def notification_detail_url(certificado_id: str) -> str:
+    """Return the detail-page URL for one notification."""
+    return f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_detail}?{urlencode({'ncc': certificado_id})}"
+
+
+def assert_notification_content_readable(row: RemoteNotification) -> None:
+    """Refuse to fetch the content of any notification AEAT has not recorded as read.
+
+    **This guard exists for a legal reason, not a technical one.** AEAT serves a
+    notification's content and performs its *comparecencia* through the same
+    control. For a notification already read, driving it redisplays a document
+    and changes nothing. For an unread one, that same control is the act by
+    which the notification becomes legally served -- it starts the appeal and
+    payment periods, and AEAT requires the taxpayer's own signature to complete
+    it.
+
+    That signature is the taxpayer's to give. An agent must never stand in for
+    it, must never provoke the flow that asks for it, and must never cause a
+    notification to be served as a side effect of reading a mailbox. So the
+    predicate is not "is this fetchable" but "has AEAT already recorded that the
+    taxpayer read this" -- and anything else is refused, including a notification
+    that is already SERVED but still unread. Service and reading are different
+    events, and only the second one licenses this fetch.
+
+    Fail-closed by construction: ``leida`` is ``None`` for pending rows and for
+    rows whose column AEAT did not render, and both refuse here.
+
+    Args:
+        row: The notification whose content a caller wants.
+
+    Raises:
+        SedeNavigationError: When the row is anything other than already read.
+    """
+    if row.leida is True:
+        return
+    raise SedeNavigationError(
+        "refusing to fetch notification content: AEAT does not report this notification as read, "
+        "and the control that serves its content is the same one that performs the comparecencia. "
+        "Driving it would make the notification legally served and start its deadlines, which "
+        "requires the taxpayer's signature and is theirs alone to give. Open it in the sede "
+        f"personally. certificado_id={row.certificado_id!r} leida={row.leida!r} "
+        f"fecha_notificacion={row.fecha_notificacion!r}",
+        failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+        translated_message=tr("adapters.sede.errors.notification_content_requires_operator"),
+        context={
+            "certificado_id": str(row.certificado_id),
+            "leida": str(row.leida),
+            "blocked_operation": "notification_comparecencia",
+        },
+    )
+
+
+async def fetch_notification_document(
+    session: AeatSession,
+    row: RemoteNotification,
+    *,
+    settings: Settings | None = None,
+) -> NotificationDocument:
+    """Fetch the PDF of one ALREADY-READ notification.
+
+    Guarded by :func:`assert_notification_content_readable`, which refuses every
+    row AEAT does not already report as read. The refusal is checked before any
+    request crosses the wire, so a refused row produces no AEAT contact at all.
+
+    Args:
+        session: An authenticated :class:`AeatSession`.
+        row: The notification to fetch. Must be already read.
+        settings: Optional :class:`core.config.Settings` override.
+
+    Returns:
+        The :class:`NotificationDocument` as served.
+
+    Raises:
+        SedeNavigationError: When the row is not already read, or the landing is
+            off-policy.
+    """
+    assert_notification_content_readable(row)
+
+    settings = settings or Settings()
+    url = notification_detail_url(str(row.certificado_id))
+    assert_read_http_for(_READ_GUARD_POLICY, "POST", url)
+
+    storage_state = storage_state_for_session(session)
+    browser_session = await default_browser_session_factory(settings)
+    context = None
+    try:
+        context = await browser_session.create_context(storage_state=storage_state)
+        page = await context.new_page()
+        # Land the detail page first so AEAT sees the referring navigation.
+        await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+        response = await context.request.post(
+            url,
+            form={
+                "accion": _EXTERNAL.aeat.notifications_query.detail_view_action,
+                "ncc": str(row.certificado_id),
+            },
+        )
+        body = await response.body()
+        assert_pdf_response(
+            status=response.status,
+            content_type=response.headers.get("content-type", ""),
+            body=body,
+            subject=f"notification ncc={row.certificado_id!r}",
+        )
+        return NotificationDocument(
+            certificado_id=row.certificado_id,
+            pdf_bytes=body,
+            pdf_sha256=sha256_hex(body),
+            source_url=AnyHttpUrl(url),
+        )
+    finally:
+        await close_async_resources(context, browser_session, task_name="cadrumo-notification-document-close")
+
+
 async def fetch_notifications_query(
     session: AeatSession,
     *,
@@ -694,10 +835,14 @@ def _notifications_marker_present(html: str) -> bool:
 
 
 __all__ = [
+    "NotificationDocument",
     "NotificationsSnapshot",
     "RemoteNotification",
+    "assert_notification_content_readable",
+    "fetch_notification_document",
     "fetch_notifications_query",
     "fetch_notifications_summary",
+    "notification_detail_url",
     "notifications_query_url",
     "parse_notifications_query",
     "parse_notifications_summary",

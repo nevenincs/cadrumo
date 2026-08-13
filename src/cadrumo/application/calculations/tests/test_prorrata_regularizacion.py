@@ -20,8 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -65,6 +63,7 @@ from ....domain.modelos import (
     upsert_work_unit,
 )
 from ....domain.prorrata_register import ProrrataProvisionalResolution
+from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import persist_filed_revision

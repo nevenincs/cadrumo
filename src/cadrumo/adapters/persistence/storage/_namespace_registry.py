@@ -742,6 +742,16 @@ LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )
+LIVE_NOTIFICATION_DOCUMENT_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="live_notification_document",
+    namespace="cadrumo.application.live.notification_document",
+    owner="cadrumo.application.live",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="notification-document:{bucket_id}:{certificado_id}",
+    scope=StorageNamespaceScope.BUCKET_LOCAL,
+    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
+)
 LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="live_justificante_capture_snapshot",
     namespace="cadrumo.application.live.justificante_capture_snapshot",
@@ -1169,6 +1179,7 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         LIVE_DEUDAS_SNAPSHOT_NAMESPACE,
         LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE,
+        LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
         LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
         LIVE_VERIFY_OBSERVATION_NAMESPACE,
         ATTACHMENT_BLOB_NAMESPACE,
@@ -1226,6 +1237,7 @@ __all__ = [
     "LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE",
     "LIVE_JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE",
     "LIVE_M036_DECLARATION_NAMESPACE",
+    "LIVE_NOTIFICATION_DOCUMENT_NAMESPACE",
     "LIVE_NOTIFICATIONS_SNAPSHOT_NAMESPACE",
     "LIVE_VERIFY_OBSERVATION_NAMESPACE",
     "LLM_CACHE_NAMESPACE",

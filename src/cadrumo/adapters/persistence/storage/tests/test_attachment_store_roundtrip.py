@@ -50,6 +50,7 @@ from ..attachment import (
     _ATTACHMENT_BLOB_VERSION,
     _ATTACHMENT_MANIFEST_NAMESPACE,
     AttachmentStore,
+    resolve_attachment_store,
 )
 from ..crypto import (
     decrypt_secure_object_payload,
@@ -494,3 +495,32 @@ def test_put_many_bytes_on_an_empty_batch_writes_nothing(tmp_path: Path) -> None
     """An empty ingest must not open a transaction or raise."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         assert AttachmentStore().put_many_bytes([]) == ()
+
+
+def test_the_resolver_hands_back_the_injected_port_untouched(tmp_path: Path) -> None:
+    """An injected store must be used as given, never wrapped or replaced.
+
+    Every service accepting an optional custody port for testability relies on
+    this identity: a resolver that re-constructed the default would silently
+    write a test's bytes into the ambient store instead of the injected one.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        injected = AttachmentStore()
+
+        assert resolve_attachment_store(injected) is injected
+
+
+def test_the_resolver_constructs_the_encrypted_default_when_nothing_is_injected(tmp_path: Path) -> None:
+    """Omitting the port yields the concrete encrypted store, not a stand-in.
+
+    This is the single construction site the consuming packages delegate to, so
+    the assertion that matters is that what comes back genuinely writes to
+    encrypted custody rather than merely satisfying the protocol.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        resolved = resolve_attachment_store(None)
+
+        assert isinstance(resolved, AttachmentStore)
+        payload = b"%PDF-1.4\nresolved-default-store"
+        digest = resolved.put_bytes(payload)
+        assert AttachmentStore().read_bytes(digest) == payload

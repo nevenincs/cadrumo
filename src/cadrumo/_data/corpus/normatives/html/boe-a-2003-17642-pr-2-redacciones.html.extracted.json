@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2003-17642-pr-2-redacciones.html",
+  "source_sha256": "283ae35538e046a3b84a5e64cf5f55dc650f009ab268cd9490696a0f5ec83b88",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nPrimero.\nAprobación del modelo de declaración del Impuesto sobre Actividades Económicas.\nSe aprueba el modelo 840, \"Impuesto sobre Actividades Económicas\", que figura en el anexo I de la presente Orden. Este modelo consta de dos ejemplares, uno para la Administración y otro para el interesado.\nAsimismo, como anexo al modelo 840 se aprueba la \"Relación de locales\".\nEl número de referencia que habrá de figurar en el modelo 840 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 890.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

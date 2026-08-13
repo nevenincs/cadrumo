@@ -171,18 +171,23 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
-from .....core import CasillaId, validated_casilla_id
+from .....core import CasillaId, IvaDeductionFactKind, validated_casilla_id
 from .....core.resources import resources
-from ....iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ....iva import (
+    IvaCategory,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from .. import (
     IvaLedgerObservation,
     RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from ._ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -237,6 +242,11 @@ def _aic(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, iva: Deci
         "flow_direction": IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         "base_amount": base,
         "iva_amount": iva,
+        "deduction_fact_kind": IvaDeductionFactKind.INTRA_EU_CURRENT,
+        "deduction_provenance": _deduction_provenance(
+            IvaDeductionFactKind.INTRA_EU_CURRENT,
+            source_locator=f"manual-iva-2024:{ledger_id}",
+        ),
     }
 
 
@@ -250,6 +260,11 @@ def _dg_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
         "flow_direction": IvaFlowDirection.SOPORTADO,
         "base_amount": base,
         "iva_amount": iva,
+        "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+        "deduction_provenance": _deduction_provenance(
+            IvaDeductionFactKind.DOMESTIC_CURRENT,
+            source_locator=f"manual-iva-2024:{ledger_id}",
+        ),
     }
 
 
@@ -263,6 +278,11 @@ def _dr_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decimal, 
         "flow_direction": IvaFlowDirection.SOPORTADO,
         "base_amount": base,
         "iva_amount": iva,
+        "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
+        "deduction_provenance": _deduction_provenance(
+            IvaDeductionFactKind.DOMESTIC_CURRENT,
+            source_locator=f"manual-iva-2024:{ledger_id}",
+        ),
     }
 
 
@@ -276,6 +296,11 @@ def _import_soportado(ledger_id: str, *, day_month: tuple[int, int], base: Decim
         "flow_direction": IvaFlowDirection.SOPORTADO,
         "base_amount": base,
         "iva_amount": iva,
+        "deduction_fact_kind": IvaDeductionFactKind.IMPORT_CURRENT,
+        "deduction_provenance": _deduction_provenance(
+            IvaDeductionFactKind.IMPORT_CURRENT,
+            source_locator=f"manual-iva-2024:{ledger_id}",
+        ),
     }
 
 

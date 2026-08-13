@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, Period
 from ...core.hashing import content_hash_hex
+from ...core.identity import AeatCsv
 from ...core.time import UtcInstant
 from ._protocols import ModeloInputs
 from ._schema import ModeloDraft
@@ -79,7 +80,7 @@ class BaseAmendment(BaseModel):
 
     amendment_id: str = Field(min_length=1)
     submission_id: str = Field(min_length=1)
-    original_csv: str = Field(min_length=1)
+    original_csv: AeatCsv
     original_model: ModeloCode = Field(min_length=1)
     original_period: Period
     delta: CasillaDelta = Field(min_length=1)

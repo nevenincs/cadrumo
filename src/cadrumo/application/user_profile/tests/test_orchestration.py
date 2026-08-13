@@ -27,7 +27,7 @@ from ....domain.user_profile import (
     UserProfileStatus,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import schema_valid_placeholder
+from ....tests.user_profile import complete_conditional_facts, schema_valid_placeholder
 from ...workflow import (
     WorkflowState,
     read_profile_bucket,
@@ -76,7 +76,7 @@ def _all_required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFac
         for field in section.fields:
             if field.required:
                 facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
-    return tuple(facts)
+    return complete_conditional_facts(schema, facts)
 
 
 def test_register_active_profile_threads_state_and_emits_events(schema: ProfileSchemaDefinition) -> None:

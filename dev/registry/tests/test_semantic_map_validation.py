@@ -75,10 +75,17 @@ def _intermediate_payload(*, source_sha256: str = "0" * 64) -> dict[str, object]
     }
 
 
-def _semantic_map_payload(*, entries: tuple[dict[str, object], ...]) -> dict[str, object]:
+def _semantic_map_payload(
+    *,
+    entries: tuple[dict[str, object], ...],
+    source_ref: str = "aeat-dr-200-2025",
+    source_sha256: str = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
+) -> dict[str, object]:
     return {
         "modelo": "200",
         "design_epoch": "2025",
+        "source_ref": source_ref,
+        "source_sha256": source_sha256,
         "records": (
             {
                 "sheet": "Registro tipo 1",
@@ -127,6 +134,7 @@ def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m20
     intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
     semantic_map = SemanticMap.model_validate(
         _semantic_map_payload(
+            source_sha256=source_sha256,
             entries=(
                 _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
                 _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
@@ -135,6 +143,69 @@ def test_validation_accepts_complete_exact_map_with_live_revision_authority(_m20
     )
 
     validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
+
+
+@pytest.mark.parametrize(
+    ("source_ref", "source_sha256", "message"),
+    (
+        ("aeat-dr-200-2025", "b" * 64, "semantic map SHA-256 does not match parser intermediate source"),
+        ("aeat-dr-303-2025", "a" * 64, "semantic map source .* does not match parser intermediate source"),
+    ),
+)
+def test_validation_refuses_changed_or_mixed_semantic_map_source_identity(
+    _m200_snapshot,
+    source_ref: str,
+    source_sha256: str,
+    message: str,
+) -> None:
+    """Map source pins are exact and cannot cross-match a same-epoch design."""
+    intermediate_source_sha256 = _real_source_sha256(_m200_snapshot)
+    intermediate = RecordDesignIntermediate.model_validate(
+        _intermediate_payload(source_sha256=intermediate_source_sha256),
+    )
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            source_ref=source_ref,
+            source_sha256=source_sha256,
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+
+    with pytest.raises(RegistryValidationError, match=message):
+        validate_semantic_map(semantic_map, intermediate, _m200_snapshot)
+
+
+def test_validation_refuses_catalogued_parser_source_absent_from_selected_revision(_m200_snapshot) -> None:
+    """A source catalogue entry cannot implicitly select a different revision authority."""
+    source_ref = "aeat-dr-200-2025"
+    source_sha256 = _m200_snapshot.sources[source_ref].sha256
+    intermediate = RecordDesignIntermediate.model_validate(
+        _intermediate_payload(source_sha256=source_sha256),
+    )
+    semantic_map = SemanticMap.model_validate(
+        _semantic_map_payload(
+            source_ref=source_ref,
+            source_sha256=source_sha256,
+            entries=(
+                _entry(row=14, ordinal=1, field_id="generated.literal.one", literal="T"),
+                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
+            ),
+        ),
+    )
+    selected_revision_without_parser_source = _m200_snapshot.revision.model_copy(
+        update={
+            "source_refs": tuple(ref for ref in _m200_snapshot.revision.source_refs if ref != source_ref),
+        },
+    )
+    snapshot_without_parser_source = _m200_snapshot.model_copy(
+        update={"revision": selected_revision_without_parser_source},
+    )
+
+    with pytest.raises(RegistryValidationError, match="is not an authority of selected revision"):
+        validate_semantic_map(semantic_map, intermediate, snapshot_without_parser_source)
 
 
 @pytest.mark.parametrize(
@@ -170,7 +241,7 @@ def test_validation_refuses_missing_duplicate_or_extra_anchor_mappings(
     """No anomaly declaration can turn an incomplete or ambiguous map into a join."""
     source_sha256 = _real_source_sha256(_m200_snapshot)
     intermediate = RecordDesignIntermediate.model_validate(_intermediate_payload(source_sha256=source_sha256))
-    semantic_map = SemanticMap.model_validate(_semantic_map_payload(entries=entries))
+    semantic_map = SemanticMap.model_validate(_semantic_map_payload(entries=entries, source_sha256=source_sha256))
     exception = SemanticMapAnomalyException(
         source_ref="aeat-dr-200-2025",
         source_sha256=source_sha256,

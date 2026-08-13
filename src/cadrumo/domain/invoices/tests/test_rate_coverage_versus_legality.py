@@ -49,6 +49,9 @@ _COVERED = date(2024, 6, 1)
 #: The tiers bearing a positive ordinary rate, spelled out rather than imported
 #: so an edit to the predicate's own tuple cannot move this in step with it.
 _POSITIVE_TIERS = (IvaRateKind.GENERAL, IvaRateKind.REDUCED, IvaRateKind.SUPER_REDUCED)
+#: The coverage-limit refusal's key, spelled out here so the legality test can
+#: assert it is NOT the key raised, which is the whole point of the module.
+_COVERAGE_GAP_KEY = "errors.iva.rate_registry_coverage_gap"
 
 
 def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
@@ -86,17 +89,29 @@ def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) 
 
 
 def test_a_covered_date_still_refuses_a_rate_that_truly_was_not_in_force() -> None:
-    """The legality refusal must survive: RATE_2 existed only Oct-Dec 2024."""
+    """The legality refusal must survive: RATE_2 existed only Oct-Dec 2024.
+
+    The distinction is now carried by the refusal's KEY and by the
+    ``rate_registry_covers_date`` machine fact rather than by an English
+    sentence, so it holds in every locale instead of only the one the sentence
+    was written in. Collapsing the two conditions onto one key would excuse a
+    real out-of-window claim as a registry limitation, which is the failure
+    this module exists to prevent.
+    """
     with pytest.raises(IvaRateNotFoundError) as caught:
         iva_rate_percentage(IvaRate.RATE_2, _COVERED)
 
-    message = str(caught.value)
-    assert "was not in force" in message
-    assert "no IVA rate is on record" not in message, (
+    assert caught.value.translated_message == "errors.iva.rate_slot_not_in_force"
+    assert caught.value.translated_message != _COVERAGE_GAP_KEY, (
         "a genuinely out-of-window rate on a COVERED date must keep the legality "
-        "message -- collapsing both into the coverage wording would excuse a real "
+        "condition -- collapsing both onto the coverage key would excuse a real "
         "out-of-window claim as a registry limitation"
     )
+    context = caught.value.context or {}
+    assert context["rate_registry_covers_date"] is True
+    assert context["rate_in_force"] is False
+    assert context["iva_rate_slot"] == IvaRate.RATE_2.name
+    assert context["on_date"] == _COVERED.isoformat()
 
 
 def test_a_covered_date_resolves_normally() -> None:

@@ -17,6 +17,7 @@ from dev.deploy.docs_static_site import (
     _DOWNLOAD_LATEST_STATIC_PATH,
     _REQUIRED_ARTIFACTS,
     CANONICAL_DOCS_BASE_URL,
+    _dry_run,
     _language_build_command,
     _language_build_environment,
     _language_build_environments,
@@ -287,6 +288,51 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
         chunk.write_bytes(b"")
     with pytest.raises(SystemExit, match="no substantive generated index data"):
         _validate_language_roots(tmp_path)
+
+
+def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:
+    """The dry run passes on a complete multi-root tree, touching no AWS surface.
+
+    The verb exists because the whole build-and-validate prefix used to be
+    reachable only through ``publish``: the roots could not be checked until
+    bytes were already going to a live destination. Its subject is the built
+    tree, so the build is supplied here as a real prepared multi-root artefact
+    and the validation half runs production code against real files on disk.
+    """
+    for language in _localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _write_language_entry(tmp_path)
+
+    assert _dry_run(tmp_path, build=lambda _: tmp_path) == 0
+
+
+def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) -> None:
+    """The dry run's verdict is the publish's verdict: an incomplete root refuses.
+
+    A dry run that passed where the publish would refuse would be worse than
+    no dry run at all, so the refusal is asserted on the same defect the
+    publish path refuses on.
+    """
+    for language in _localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _write_language_entry(tmp_path)
+    (tmp_path / _localized_languages()[0] / "404.html").unlink()
+
+    with pytest.raises(SystemExit, match="required artifacts are missing"):
+        _dry_run(tmp_path, build=lambda _: tmp_path)
+
+
+def test_dry_run_refuses_an_apex_entry_that_strands_a_root(tmp_path: Path) -> None:
+    """The apex half of the publish's validation runs in the dry run too."""
+    for language in _localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _write_language_entry(tmp_path)
+    stranded = _localized_languages()[-1]
+    entry = tmp_path / "index.html"
+    entry.write_text(entry.read_text(encoding="utf-8").replace(f'"{stranded}"', '"zz"'), encoding="utf-8")
+
+    with pytest.raises(SystemExit, match="does not route to"):
+        _dry_run(tmp_path, build=lambda _: tmp_path)
 
 
 class _StaticResponseHandler(http.server.BaseHTTPRequestHandler):

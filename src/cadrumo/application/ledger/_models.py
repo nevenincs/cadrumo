@@ -10,7 +10,7 @@ from typing import Annotated, Self
 from pydantic import AfterValidator, BaseModel, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import Art104TresExclusion, Hex64Str, Period
+from ...core import Art104TresExclusion, Hex64Str, IvaDeductionFactKind, Period
 
 # CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
 from ...core.external_constants import (
@@ -149,6 +149,10 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] = ()
     notes: str = ""
     iva_category: IvaCategory | None = None
+    #: Operator-declared M303 deduction source. The taxonomy is documented as
+    #: non-inferable, so it is carried from the operator rather than derived
+    #: from the category, the direction, or the counterparty country.
+    deduction_fact_kind: IvaDeductionFactKind | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
@@ -258,6 +262,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     attachment_ids: tuple[str, ...] | None = None
     notes: _LedgerOptionalText = None
     iva_category: IvaCategory | None = None
+    deduction_fact_kind: IvaDeductionFactKind | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None

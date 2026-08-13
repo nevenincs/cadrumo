@@ -35,9 +35,7 @@ from ...iva_compensation import (
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
-    PreviousModeloSelector as _PreviousModeloSelector,
-)
-from ._bindings_previous_filing import (
+    _PreviousModeloSelector,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
@@ -217,6 +215,7 @@ __all__ = [
     "InvoiceObservation",
     "InvoiceObservationRequirement",
     "IrnrIncomeObservationProtocol",
+    "IvaCompensationAnnualPartitionRequirement",
     "IvaLedgerObservation",
     "Modelo349OperadorClaveTotal",
     "Modelo349OperadorTotalsParity",
@@ -248,10 +247,12 @@ __all__ = [
     "counterpart_binding_requirements",
     "default_binding_aggregation_op",
     "invoice_binding_requirements",
+    "iva_compensation_annual_partition_requirement",
     "previous_filing_observation_requirements",
     "previous_filing_source_reference",
     "renta_first_slice_binding_target_casillas",
     "resolve_atribucion_binding_row_values",
+    "resolve_available_bound_inputs_by_casilla_id",
     "resolve_bound_casilla_binding_value",
     "resolve_counterpart_binding_row_values",
     "resolve_counterpart_binding_values",
@@ -553,6 +554,44 @@ def resolve_bound_casilla_binding_value(
     return first_value, tuple(binding_id for binding_id, _value in present)
 
 
+def resolve_available_bound_inputs_by_casilla_id(
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Project available binding values into input values keyed by bound ``casilla.id``.
+
+    The :class:`ModeloRevision` supplies the
+    bound casilla-to-binding mapping; only values already present in
+    ``binding_values`` are projected. Missing optional bindings are skipped
+    rather than treated as registry errors, which lets calculate paths combine
+    partial source mesh output with caller overrides before the engine runs.
+
+    Args:
+        revision: The :class:`ModeloRevision`
+            whose bound casillas are inspected.
+        binding_values: Decimal values keyed by
+            :class:`~domain.calculations.registry.BindingId`.
+
+    Returns:
+        A ``dict`` keyed by
+        :class:`~cadrumo.core.CasillaId` for every bound
+        casilla whose binding value is currently available.
+
+    See Also:
+        :func:`resolve_bound_casilla_binding_value`:
+            Per-casilla primitive this projection folds over, including its
+            refusal of disagreeing equivalent alternate bindings.
+    """
+    resolved: dict[CasillaId, Decimal] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
+            continue
+        value, _binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
+        if value is not None:
+            resolved[casilla.id] = value
+    return resolved
+
+
 # Binding-family implementations are split by source family. This module keeps
 # the historical registry import surface and owns cross-family selector-shape
 # dispatch only.
@@ -669,6 +708,112 @@ class _IvaCompensationAnnualPartitionSelector(BaseModel):
         return value
 
 
+class IvaCompensationAnnualPartitionRequirement(BaseModel):
+    """One typed annual Modelo 303 compensation-partition projection.
+
+    The annual partition is a distinct FIFO resolution family, rather than a
+    relation fold. Its bindings nevertheless share one source fact: four
+    Modelo 303 state observations and the target revision's declared treatment
+    of that source. This projection is the only interpretation of the binding
+    selectors consumers may use; it retains each target slot and the complete
+    source/provenance contract without exposing raw selector mappings.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_modelo: ModeloId
+    source_periods: tuple[str, ...] = Field(min_length=1)
+    source_casilla_ids: tuple[CasillaId, ...] = Field(min_length=1)
+    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
+    last_period_amount_binding_id: BindingId | None = None
+    generated_not_in_last_amount_binding_id: BindingId | None = None
+    dependency_treatment: str = ""
+    legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
+    source_refs: tuple[SourceRefId, ...] = Field(min_length=1)
+
+
+def _iva_compensation_annual_partition_selector(
+    binding: DataBindingDefinition,
+) -> _IvaCompensationAnnualPartitionSelector:
+    try:
+        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding))
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} has malformed iva_compensation_annual_partition selector: {exc}",
+        ) from exc
+
+
+def iva_compensation_annual_partition_requirement(
+    revision: ModeloRevision,
+) -> IvaCompensationAnnualPartitionRequirement | None:
+    """Project the revision's annual compensation-partition bindings once.
+
+    Returns ``None`` when the revision declares no partition bindings. When it
+    does, every binding must name the same typed source selector and each of
+    the two partition outputs may be targeted at most once. The source's
+    dependency treatment comes directly from the revision classification and
+    stays empty only when that classification is absent; consumers must not
+    reconstruct or default it.
+    """
+    bindings = tuple(
+        binding
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
+    )
+    if not bindings:
+        return None
+
+    first_selector = _iva_compensation_annual_partition_selector(bindings[0])
+    last_period_amount_binding_id: BindingId | None = None
+    generated_not_in_last_amount_binding_id: BindingId | None = None
+    legal_refs: set[LegalRefId] = set()
+    source_refs: set[SourceRefId] = set()
+    for binding in bindings:
+        selector = _iva_compensation_annual_partition_selector(binding)
+        if (
+            selector.source_modelo != first_selector.source_modelo
+            or selector.source_casilla_ids != first_selector.source_casilla_ids
+            or selector.source_periods != first_selector.source_periods
+        ):
+            raise RegistryValidationError(
+                "iva_compensation_annual_partition bindings must share one source selector",
+            )
+        if selector.partition_output == "last_period_amount":
+            if last_period_amount_binding_id is not None:
+                raise RegistryValidationError(
+                    "iva_compensation_annual_partition declares multiple last_period_amount bindings",
+                )
+            last_period_amount_binding_id = binding.id
+        elif selector.partition_output == "generated_not_in_last_amount":
+            if generated_not_in_last_amount_binding_id is not None:
+                raise RegistryValidationError(
+                    "iva_compensation_annual_partition declares multiple generated_not_in_last_amount bindings",
+                )
+            generated_not_in_last_amount_binding_id = binding.id
+        legal_refs.update(binding.legal_refs)
+        source_refs.update(binding.source_refs)
+
+    classification = next(
+        (
+            candidate
+            for candidate in revision.dependency_classifications
+            if candidate.source_modelo == first_selector.source_modelo
+        ),
+        None,
+    )
+    return IvaCompensationAnnualPartitionRequirement(
+        source_modelo=first_selector.source_modelo,
+        source_periods=first_selector.source_periods,
+        source_casilla_ids=first_selector.source_casilla_ids,
+        binding_ids=tuple(sorted(binding.id for binding in bindings)),
+        last_period_amount_binding_id=last_period_amount_binding_id,
+        generated_not_in_last_amount_binding_id=generated_not_in_last_amount_binding_id,
+        dependency_treatment="" if classification is None else str(classification.treatment),
+        legal_refs=tuple(sorted(legal_refs)),
+        source_refs=tuple(sorted(source_refs)),
+    )
+
+
 class _ProrrataRegularizacionSelector(BaseModel):
     """Selector for annual prorrata regularisation filing targets."""
 
@@ -706,7 +851,7 @@ def binding_source_casilla_ids(binding: DataBindingDefinition) -> tuple[CasillaI
     if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_source_ids(_relation_prefill_selector(binding))
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
-        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
+        return _iva_compensation_annual_partition_selector(binding).source_casilla_ids
     if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
         return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_casilla_ids
     if binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION:
@@ -722,7 +867,7 @@ def binding_source_modelo(binding: DataBindingDefinition) -> ModeloId | None:
     if binding.source == BindingSourceKind.RELATION_PREFILL:
         return _relation_prefill_selector(binding).source_modelo
     if binding.source == BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION:
-        return _IvaCompensationAnnualPartitionSelector.model_validate(selector_as_dict(binding)).source_modelo
+        return _iva_compensation_annual_partition_selector(binding).source_modelo
     if binding.source == BindingSourceKind.PRORRATA_REGULARIZACION:
         return _ProrrataRegularizacionSelector.model_validate(selector_as_dict(binding)).source_modelo
     if binding.source == BindingSourceKind.BIENES_INVERSION_REGULARIZACION:

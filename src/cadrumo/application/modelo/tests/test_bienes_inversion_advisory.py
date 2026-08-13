@@ -22,18 +22,24 @@ import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core import BindingSourceKind
+from ....core.resources import resources
 from ....domain.bienes_inversion import (
     BienInversionDisposal,
     BienInversionDisposalRegime,
     BienInversionIvaRecord,
     BienInversionKind,
 )
+from ....domain.calculations.registry import ModeloRevision
 from ....tests.secure_sql import isolated_runtime_profile
 from .._bienes_inversion_advisory import collect_bienes_inversion_regularizacion_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET = "bi-advisory-bucket"
+
+
+def _revision(modelo: str, *, filing_year: int, period_token: str) -> ModeloRevision:
+    return resources().modelos.authority.snapshot(modelo, filing_year=filing_year, period=period_token).revision
 
 
 def _record(identifier: str = "bi-2022-maquina") -> BienInversionIvaRecord:
@@ -73,6 +79,7 @@ def test_advisory_fires_on_m303_settlement_period_with_in_window_good(tmp_path: 
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="4T"),
             modelo="303",
             period_token="4T",
             filing_year=2024,
@@ -84,6 +91,7 @@ def test_advisory_fires_on_m303_settlement_period_with_in_window_good(tmp_path: 
     assert diagnostic.binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
     assert "43" in diagnostic.message
     assert "pendiente" in diagnostic.message
+    assert diagnostic.legal_refs, "casilla 43's own registry grounding must reach the advisory"
 
 
 def test_advisory_fires_on_m303_annual_period(tmp_path: Path) -> None:
@@ -92,6 +100,11 @@ def test_advisory_fires_on_m303_annual_period(tmp_path: Path) -> None:
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            # 0A resolves no registered M303 revision on its own (a real
+            # quarterly-filer revision, selected on any of its valid quarterly
+            # tokens); the collector's own period-token handling is a pure
+            # calendar check independent of which revision variant is loaded.
+            _revision("303", filing_year=2024, period_token="4T"),
             modelo="303",
             period_token="0A",
             filing_year=2024,
@@ -107,6 +120,7 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="1T"),
             modelo="303",
             period_token="1T",
             filing_year=2024,
@@ -122,6 +136,7 @@ def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("390", filing_year=2024, period_token="0A"),
             modelo="390",
             period_token="0A",
             filing_year=2024,
@@ -135,6 +150,7 @@ def test_no_advisory_when_register_empty(tmp_path: Path) -> None:
     """An untouched register (no bienes declared) raises no advisory (no noise)."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET):
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="4T"),
             modelo="303",
             period_token="4T",
             filing_year=2024,
@@ -150,6 +166,7 @@ def test_no_advisory_when_good_is_out_of_window(tmp_path: Path) -> None:
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2030, period_token="4T"),
             modelo="303",
             period_token="4T",
             filing_year=2030,
@@ -170,6 +187,7 @@ def test_disposal_advisory_fires_on_m303_settlement_period(tmp_path: Path) -> No
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_disposed_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="4T"),
             modelo="303",
             period_token="4T",
             filing_year=2024,
@@ -181,6 +199,7 @@ def test_disposal_advisory_fires_on_m303_settlement_period(tmp_path: Path) -> No
     assert diagnostic.source_kind == "bienes_inversion_regularizacion_transmision"
     assert "43" in diagnostic.message
     assert "-2400.00" in diagnostic.message
+    assert diagnostic.legal_refs, "casilla 43's own registry grounding must reach the disposal advisory"
 
 
 def test_both_advisories_fire_when_the_register_holds_both_kinds(tmp_path: Path) -> None:
@@ -191,6 +210,7 @@ def test_both_advisories_fire_when_the_register_holds_both_kinds(tmp_path: Path)
         repo.add(_disposed_record())
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="4T"),
             modelo="303",
             period_token="4T",
             filing_year=2024,
@@ -209,6 +229,7 @@ def test_no_disposal_advisory_when_disposal_year_differs_from_filing_year(tmp_pa
         BienesInversionIvaRegisterRepository(objects=profile.repository).add(_disposed_record(disposal_year=2023))
 
         diagnostics = collect_bienes_inversion_regularizacion_diagnostics(
+            _revision("303", filing_year=2024, period_token="4T"),
             modelo="303",
             period_token="4T",
             filing_year=2024,

@@ -74,7 +74,7 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
             clock=datetime(2026, 6, 26, 12, 0, tzinfo=UTC),
         )
 
-        with pytest.raises(ModeloCalculateCasillaInputError, match="is ambiguous") as exc_info:
+        with pytest.raises(ModeloCalculateCasillaInputError) as exc_info:
             build_work_calculate_input_bundle(
                 work_unit_id=work_unit.work_unit_id,
                 casilla_overrides={_M200_AMBIGUOUS_PRINTED_NUMBER: "100.00"},
@@ -84,8 +84,12 @@ def test_work_calculate_input_bundle_rejects_ambiguous_reused_printed_number(tmp
                 borrador_snapshot_id=None,
             )
 
-    assert _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
-    assert _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA in str(exc_info.value)
+    # The competing casilla ids travel as facts; the refusal itself renders from
+    # its registered key, so neither id can be asserted through str(exc).
+    context = exc_info.value.context or {}
+    accepted = str(context.get("accepted", ""))
+    assert _M200_ECPN_REUSED_PRINTED_NUMBER_CASILLA in accepted
+    assert _M200_LIQUIDACION_REUSED_PRINTED_NUMBER_CASILLA in accepted
 
 
 # Forms a bare ``Decimal(raw_value)`` silently accepted before the canonical
@@ -160,7 +164,7 @@ def _m200_bundle_with_casilla_value(raw_value: str, *, tmp_path: Path) -> WorkCa
 @pytest.mark.parametrize("raw_value", _NON_CANONICAL_CASILLA_VALUES)
 def test_casilla_override_refuses_non_canonical_decimal(raw_value: str, tmp_path: Path) -> None:
     """A non-canonical ``--casilla`` value refuses instead of being coerced."""
-    with pytest.raises(ModeloCalculateDecimalInputError, match="is not a decimal"):
+    with pytest.raises(ModeloCalculateDecimalInputError):
         _m200_bundle_with_casilla_value(raw_value, tmp_path=tmp_path)
 
 
@@ -237,9 +241,9 @@ def test_period_code_casilla_override_refuses_a_malformed_token(tmp_path: Path) 
     with pytest.raises(ModeloCalculateTextInputError) as exc_info:
         _m303_bundle_with_period_override("9Q", tmp_path=tmp_path)
 
-    message = str(exc_info.value)
-    assert "period_code" in message
-    assert "9Q" in message
+    context = exc_info.value.context or {}
+    assert context.get("data_type") == "period_code"
+    assert context.get("value") == "9Q"
 
 
 # ---------------------------------------------------------------------------

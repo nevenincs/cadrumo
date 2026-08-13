@@ -370,6 +370,13 @@ _IVA_REGIME_VISIBLE = WizardVisibility(
     ),
 )
 
+# Every question whose answer CLAIMS the IVA block is gated here, not on
+# _IVA_REGIME_VISIBLE. Declaring any IVA fact obliges the whole block, so a
+# gate that admits one block-owned question without admitting the questions
+# the block requires produces a profile the domain resolver then refuses. Six
+# enrolment confirms sat on the entity-shaped gate while the facts they oblige
+# sat on this one, so answering "no" to ROI without declaring a regime built a
+# claimed block the wizard never finished asking about.
 _IVA_BLOCK_CLAIMED = WizardVisibility(
     any_of=tuple(
         WizardCondition(question_id="iva-regime", equals=member.value)
@@ -678,35 +685,35 @@ _IVA_SECTION = WizardSection(
             "iva.roi_enrolled",
             suffix="iva",
             default=None,
-            visible_when=_IVA_REGIME_VISIBLE,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
         _confirm(
             "iva-oss-enrolled",
             "iva.oss_enrolled",
             suffix="iva",
             default=None,
-            visible_when=_IVA_REGIME_VISIBLE,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
         _confirm(
             "iva-group-member-enrolled",
             "iva.group_member_enrolled",
             suffix="iva",
             default=None,
-            visible_when=_IVA_REGIME_VISIBLE,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
         _confirm(
             "iva-group-dominant-entity-enrolled",
             "iva.group_dominant_entity_enrolled",
             suffix="iva",
             default=None,
-            visible_when=_IVA_REGIME_VISIBLE,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
         _confirm(
             "iva-sii-enrolled",
             "iva.sii_enrolled",
             suffix="iva",
             default=None,
-            visible_when=_IVA_REGIME_VISIBLE,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
         _confirm(
             "iva-redeme-enrolled",
@@ -721,7 +728,7 @@ _IVA_SECTION = WizardSection(
             "iva.intracommunity_operations_exceed_50000_eur",
             suffix="iva",
             default=None,
-            visible_when=_IVA_REGIME_VISIBLE,
+            visible_when=_IVA_BLOCK_CLAIMED,
         ),
         _confirm(
             "iva-cash-accounting-regime-enrolled",

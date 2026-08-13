@@ -1,0 +1,7 @@
+200
+ok
+Artículo 3. Plazos de presentación del modelo 490.
+1. El período de liquidación coincidirá con el trimestre natural.
+2. El modelo 490 deberá presentarse e ingresarse durante el mes siguiente al correspondiente periodo trimestral natural.
+Lo dispuesto en este apartado se entenderá sin perjuicio del plazo para la domiciliación bancaria del pago de la deuda tributaria, establecido en el anexo I de la Orden EHA/1658/2009, de 12 de junio, por la que se establecen el procedimiento y las condiciones para la domiciliación del pago de determinadas deudas a través de cuentas abiertas en las Entidades de crédito que prestan el servicio de colaboración en la gestión recaudatoria de la Agencia Estatal de Administración Tributaria.
+3. Si en algún periodo de liquidación trimestral no resulta cuota a ingresar, el contribuyente vendrá obligado igualmente a presentar la correspondiente declaración negativa por el impuesto, en la forma establecida en el artículo 11 de la Orden HAP/2194/2013, de 22 de noviembre, por la que se regulan los procedimientos y las condiciones generales para la presentación de determinadas autoliquidaciones, declaraciones informativas, declaraciones censales, comunicaciones y solicitudes de devolución, de naturaleza tributaria.

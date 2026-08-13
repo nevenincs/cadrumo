@@ -148,6 +148,8 @@ def _semantic_map() -> SemanticMap:
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "source_ref": "aeat-dr-200-2025",
+            "source_sha256": "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
             "records": (
                 {
                     "sheet": "Registro tipo 1",
@@ -344,6 +346,8 @@ def _oversized_authorities(snapshot, *, field_count: int = 245) -> tuple[Semanti
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "source_ref": "aeat-dr-200-2025",
+            "source_sha256": "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505",
             "records": (
                 {
                     "sheet": "Oversized record",
@@ -1027,6 +1031,17 @@ def test_renderer_refuses_mismatched_map_without_emitting_a_manifest(_m200_snaps
             revision_id="2025",
             joined=_joined(_m200_snapshot),
             semantic_map=mismatched_map,
+            transport_profile=_profile(),
+            render_profile=_wire_profile(),
+            render_profile_source_evidence=_wire_evidence(),
+        )
+
+    with pytest.raises(RegistryValidationError, match="semantic-map SHA-256 does not match joined official source"):
+        render_complete_export_tree(
+            revision_dir / "export",
+            revision_id="2025",
+            joined=_joined(_m200_snapshot),
+            semantic_map=semantic_map.model_copy(update={"source_sha256": "b" * 64}),
             transport_profile=_profile(),
             render_profile=_wire_profile(),
             render_profile_source_evidence=_wire_evidence(),

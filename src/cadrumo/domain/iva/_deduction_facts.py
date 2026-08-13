@@ -65,6 +65,18 @@ _INTRA_EU_DEDUCTION_KINDS = frozenset(
 )
 
 
+def required_deduction_evidence_authority(kind: IvaDeductionFactKind) -> IvaDeductionEvidenceAuthority:
+    """Return the one evidence authority that can establish ``kind``.
+
+    Exposes the mapping :func:`validate_iva_deduction_fact` already enforces, so
+    a caller deciding whether it is ABLE to build a provenance for a kind reads
+    the same table the refusal is derived from. Without this a caller must
+    either duplicate the mapping or attempt a construction it knows will be
+    rejected, and a duplicate would be free to drift.
+    """
+    return _REQUIRED_AUTHORITY[kind]
+
+
 def _validate_required_authority(
     kind: IvaDeductionFactKind,
     provenance: IvaDeductionClassificationProvenance,

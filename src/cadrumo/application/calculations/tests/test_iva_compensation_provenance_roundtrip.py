@@ -23,13 +23,22 @@ field at all.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import select
 
+from ....adapters.persistence.storage.crypto import (
+    decrypt_secure_object_payload,
+    encrypt_secure_object_payload,
+    secure_object_payload_aad,
+)
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile
@@ -95,7 +104,7 @@ def test_every_defaultable_field_carries_a_non_default_value() -> None:
     assert defaulted == [], f"round-trip fixture leaves fields at their default: {defaulted}"
 
 
-def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load() -> None:
+def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load(tmp_path: Path) -> None:
     """The anti-tautology proof: delete the field, assert refusal, not a default.
 
     The refusal is asserted on its REASON, not merely on its type. A bare
@@ -105,23 +114,44 @@ def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load() -> None:
     for the missing field. That refusal looks identical from outside, so the
     proof would keep passing with the very default it exists to forbid.
     """
-    payload = _fully_populated_state().model_dump()
-    assert "provenance" in payload, "the producer must write provenance before deleting it proves anything"
-    assert payload["provenance"] is IvaCompensationStateProvenance.AEAT_CAPTURE
-    assert IvaCompensationPeriodState.model_validate(payload) == _fully_populated_state()
+    original = _fully_populated_state()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        repository = IvaCompensationHistoryRepository()
+        repository.save_period(original)
+        identifier = repository.extract_identifier(original)
 
-    del payload["provenance"]
+        with session_scope(profile.repository._engine) as session:
+            row = session.execute(
+                select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == repository.namespace,
+                    SecureObjectRow.object_key == identifier,
+                ),
+            ).scalar_one()
+            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
+            payload = json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad))
+            state_payload = payload["payload"]
+            assert "provenance" in state_payload, (
+                "the producer must write provenance before deleting it proves anything"
+            )
+            assert state_payload["provenance"] == IvaCompensationStateProvenance.AEAT_CAPTURE.value
+            del state_payload["provenance"]
+            row.payload = encrypt_secure_object_payload(
+                json.dumps(payload).encode("utf-8"),
+                associated_data=aad,
+            )
 
-    with pytest.raises(ValidationError) as caught:
-        IvaCompensationPeriodState.model_validate(payload)
+        with pytest.raises(ValidationError) as caught:
+            repository.load_period(original.period)
 
     reported = [(error["type"], error["loc"]) for error in caught.value.errors()]
-    assert reported == [("missing", ("provenance",))], f"expected only a missing-provenance error, got {reported}"
+    assert reported == [("missing", ("payload", "provenance"))], (
+        f"expected only a missing-provenance error, got {reported}"
+    )
 
 
 def test_an_operator_declared_state_cannot_carry_an_aeat_expediente() -> None:
     """The impersonation the discriminated pair exists to make unrepresentable."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="operator_seed compensation state must not carry an expediente_id"):
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
@@ -137,7 +167,9 @@ def test_an_operator_declared_state_cannot_carry_an_aeat_expediente() -> None:
 
 def test_an_aeat_capture_without_an_expediente_refuses() -> None:
     """The other half of the pair: an AEAT row must carry what AEAT issued."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(
+        ValidationError, match="aeat_capture compensation state must carry the AEAT-issued expediente_id"
+    ):
         IvaCompensationPeriodState(
             taxpayer_nif="12345678Z",
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,

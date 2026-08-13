@@ -188,6 +188,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.live._notification_documents.NotificationDocumentNotFoundError",
+        ErrorCode(
+            code="REFUSED_LIVE_NOTIFICATION_DOCUMENT_NOT_FOUND",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_live_notification_document_not_found",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.live._expedientes.ExpedientesSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_EXPEDIENTES_SNAPSHOT_NOT_FOUND",

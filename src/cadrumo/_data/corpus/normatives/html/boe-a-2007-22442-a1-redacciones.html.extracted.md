@@ -1,0 +1,11 @@
+200
+ok
+Artículo 1. Aprobación del modelo 576.
+1. Se aprueba el modelo 576 «Impuesto Especial sobre Determinados Medios de Transporte. Autoliquidación» que figura como anexo I de la presente Orden.
+Este modelo será presentado por los siguientes sujetos pasivos:
+a) Las personas o entidades a cuyo nombre se efectúe la primera matriculación definitiva de los medios de transporte en España, sean de fabricación comunitaria o importados, nuevos o usados.
+b) Las personas o entidades a que se refiere la disposición adicional primera de la Ley 38/1992, de 28 de diciembre, de Impuestos Especiales, en el supuesto contemplado en el artículo 65.1.d) de la citada Ley.
+c) Las personas o entidades a cuyo nombre se encuentre matriculado el medio de transporte en los casos previstos en el artículo 65.3 de la Ley 38/1992, de 28 de diciembre, de Impuestos Especiales.
+d) Sujetos pasivos que sean beneficiarios de las deducciones que pudieran establecerse en relación con determinadas circunstancias excepcionales.
+e) Sujetos pasivos que se beneficien de la reducción de la base imponible según lo dispuesto en el apartado 4 del artículo 66 de la Ley 38/1992, de 28 de diciembre, de Impuestos Especiales.
+2. El lugar, plazo y forma de presentación del modelo 576 de autoliquidación del Impuesto Especial sobre Determinados Medios de Transporte, así como las condiciones generales y el procedimiento para la presentación telemática por Internet de la citada autoliquidación se regirán por lo dispuesto en la Orden EHA/1981/2005, de 21 de junio, por la que se aprueba el modelo 576 de declaración-liquidación del Impuesto Especial sobre Determinados Medios de Transporte, el modelo 06 de declaración del Impuesto Especial sobre Determinados Medios de Transporte, exenciones y no sujeciones sin reconocimiento previo, se establecen las condiciones generales y el procedimiento para la presentación telemática por Internet de las declaraciones correspondientes al modelo 576 y se modifica la Orden de 30 de septiembre de 1999, por la que se establecen las condiciones generales y el procedimiento para la presentación telemática de las declaraciones-liquidaciones correspondientes a los modelos 110, 130, 300 y 330, y por lo dispuesto en la presente Orden.

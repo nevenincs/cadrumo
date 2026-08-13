@@ -14,7 +14,7 @@ from ....application.calculations import (
     query_iva_wallet_balance,
     seed_iva_compensation_period,
 )
-from ....core import Period
+from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
@@ -41,7 +41,8 @@ def test_seed_iva_compensation_persists_available_end_amount(tmp_path: Path) -> 
 
     assert loaded is not None
     assert loaded.available_end_amount == Decimal("1200.00")
-    assert loaded.status == "seeded"
+    assert loaded.provenance is IvaCompensationStateProvenance.OPERATOR_SEED
+    assert loaded.status is None
     assert loaded.taxpayer_nif == _NIF
     assert loaded == state
 
@@ -117,7 +118,7 @@ def test_seed_iva_compensation_refuses_duplicate(tmp_path: Path) -> None:
             )
 
     assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
-    assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
+    assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_provenance": "operator_seed"}
 
 
 def test_cli_seed_verb_refuses_without_confirm(tmp_path: Path) -> None:
@@ -164,9 +165,12 @@ def test_cli_seed_verb_happy_path(tmp_path: Path) -> None:
     assert payload["filing_year"] == 2024
     assert payload["period"] == {"filing_year": 2024, "code": "4T"}
     assert payload["amount"] == "1200.50"
-    assert payload["status"] == "seeded"
+    assert payload["provenance"] == "operator_seed"
+    assert payload["register_status"] is None
     assert stored is not None
     assert stored.available_end_amount == Decimal("1200.50")
+    assert stored.provenance is IvaCompensationStateProvenance.OPERATOR_SEED
+    assert stored.status is None
 
 
 def test_wallet_amount_refuses_non_canonical_forms() -> None:

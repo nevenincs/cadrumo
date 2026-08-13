@@ -799,22 +799,32 @@ def _merged_conflict_reference_ids(
     existing_csv = _clean_reference_id(existing.verified_justificante_csv)
     candidate_csv = _clean_reference_id(candidate.verified_justificante_csv)
     if existing_csv is not None and candidate_csv is not None:
-        if existing_csv.casefold() == candidate_csv.casefold():
+        if existing_csv == candidate_csv:
             return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
         references.extend((existing_csv, candidate_csv))
         return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if existing_csv is not None and candidate_ref is not None and candidate_ref.casefold() == existing_csv.casefold():
+    if existing_csv is not None and candidate_ref is not None and candidate_ref == existing_csv:
         return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if candidate_csv is not None and existing_ref is not None and existing_ref.casefold() == candidate_csv.casefold():
+    if candidate_csv is not None and existing_ref is not None and existing_ref == candidate_csv:
         return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if existing_ref is not None and candidate_ref is not None and existing_ref.casefold() != candidate_ref.casefold():
+    if existing_ref is not None and candidate_ref is not None and existing_ref != candidate_ref:
         references.extend((existing_ref, candidate_ref))
     return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
 
 
 def _clean_reference_id(reference_id: str | None) -> str | None:
-    cleaned = (reference_id or "").strip()
-    return cleaned or None
+    """Return an AEAT evidence reference in the canonical comparison form, or ``None``.
+
+    Delegates to the module's one CSV comparison form rather than carrying a
+    second: the references cleaned here are compared against justificante CSVs
+    in the same identity space -- the live-capture path stamps a receipt's CSV
+    as the evidence ``reference_id`` -- so both sides have to agree on one key.
+    This site previously stripped only and then casefolded at each comparison,
+    which produced a lowercase key the canonical uppercase contract refuses and
+    left the module with two forms for one identifier. Normalising once here
+    means the comparisons below are plain equality.
+    """
+    return _justificante_csv_key(reference_id or "") or None
 
 
 def _calendar_filing_evidence_sort_key(

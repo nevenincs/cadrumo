@@ -96,7 +96,7 @@ def _amendment(amendment_id: str) -> ModeloComplementaria:
     return ModeloComplementaria(
         amendment_id=amendment_id,
         submission_id="sub-row-identity",
-        original_csv="CSV-ORIG-001",
+        original_csv="CSVROWIDENT0001",
         original_model=_MODELO,
         original_period=period,
         delta=(

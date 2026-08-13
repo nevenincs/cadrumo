@@ -64,6 +64,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry import verification_tolerance_or_exact
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -108,7 +109,7 @@ def _law_resolved_snapshot(work_unit: WorkUnit) -> RegistrySnapshot | None:
 
     The whole snapshot is kept rather than only its revision because the
     comparison tolerance is published on the snapshot's verification policy, not
-    on the revision — see :func:`_registry_reconcile_tolerance`.
+    on the revision.
     """
     from ...core.errors import CadrumoError
     from ._calculation_helpers import resolve_registry_snapshot_for_work_unit
@@ -117,31 +118,6 @@ def _law_resolved_snapshot(work_unit: WorkUnit) -> RegistrySnapshot | None:
         return resolve_registry_snapshot_for_work_unit(work_unit)
     except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return None
-
-
-def _registry_reconcile_tolerance(snapshot: RegistrySnapshot) -> Decimal:
-    """Return the registry's own published tolerance for this snapshot.
-
-    The tolerance below which two casilla values are treated as agreeing is a
-    REGULATORY value, versioned by filing year and revision: the registry
-    declares it per verification expectation and folds the STRICTEST across them.
-    Some revisions publish one cent, others publish ``0.00`` and so demand exact
-    equality. Hardcoding a cent here would silently absorb a one-cent
-    under-declaration on every revision of the second kind.
-
-    Returns:
-        The published tolerance, or exact equality (``0``) when the revision
-        declares no verification expectations at all. Exact is the deliberate
-        fallback: with no published contract there is no authority to widen the
-        comparison, and the error direction of guessing too strict is a visible
-        advisory finding, while guessing too loose is a silent omission.
-    """
-    from ...domain.calculations.registry import RegistryValidationError
-
-    try:
-        return snapshot.verification_policy().tolerance
-    except RegistryValidationError:
-        return Decimal("0")
 
 
 def pulled_filing_divergence_findings(
@@ -185,7 +161,7 @@ def pulled_filing_divergence_findings(
         computed=target.casilla_values,
         filed=filed_values,
         scope=scope.divergence_scope,
-        tolerance=_registry_reconcile_tolerance(snapshot),
+        tolerance=verification_tolerance_or_exact(snapshot),
     )
     if not divergences:
         return []

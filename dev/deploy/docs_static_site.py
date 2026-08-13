@@ -944,6 +944,61 @@ def _provision(aws: str, repo_root: Path) -> int:
     return 0
 
 
+def _build_site_roots(repo_root: Path) -> Path:
+    """Build the apex site, every language root, and the apex language entry.
+
+    The write half of a publish's pre-upload work, factored out so the dry run
+    below and the publish share one composition. A second composition would be
+    free to drift, and the drift would only ever surface on the live site.
+
+    Returns:
+        The built HTML root, carrying every published root.
+    """
+    html_root = _build_site(repo_root)
+    _build_language_roots(repo_root, html_root)
+    _write_language_entry(html_root)
+    return html_root
+
+
+def _validate_built_site(html_root: Path) -> None:
+    """Run every validation a publish runs against the built tree before uploading."""
+    _validate_language_entry(html_root)
+    _validate_language_roots(html_root)
+
+
+def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roots) -> int:
+    """Build every site root and validate it exactly as a publish would, uploading nothing.
+
+    Without this verb the whole build-and-validate prefix was reachable only
+    through ``publish``, so the one check that a language root carries its
+    required artifacts, its own canonically-rooted sitemap and a record-bearing
+    index could not run until the moment bytes were already being written to a
+    live destination.
+
+    The sibling landing-page publisher's dry run authenticates because its
+    subject IS the S3 sync. This one's subject is entirely the built tree and
+    every check it runs reads the filesystem, so it deliberately requires no
+    AWS session and no publish authorization: a pre-publish check available
+    only to a credentialed caller is unavailable exactly where it is most
+    useful.
+
+    Args:
+        repo_root: Repository root the build commands run from.
+        build: DI seam for tests. Production builds the real roots; a test
+            passes a real prepared multi-root tree so the validation half is
+            proven against real on-disk artifacts without paying for five
+            Sphinx builds.
+    """
+    html_root = build(repo_root)
+    _validate_built_site(html_root)
+    print(
+        f"Verified the built docs site at {html_root}: apex entry plus the "
+        f"{', '.join(_localized_languages())} roots. Uploaded nothing.",
+        flush=True,
+    )
+    return 0
+
+
 def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None = None) -> int:
     """Build, validate, upload, and invalidate the fixed Cadrumo documentation site.
 
@@ -959,11 +1014,8 @@ def _publish(aws: str, repo_root: Path, *, environment: Mapping[str, str] | None
     target = _stack_target(aws, repo_root)
     _verify_distribution_alias(aws, repo_root, target.distribution_id)
     _refresh_download_latest(repo_root)
-    html_root = _build_site(repo_root)
-    _build_language_roots(repo_root, html_root)
-    _write_language_entry(html_root)
-    _validate_language_entry(html_root)
-    _validate_language_roots(html_root)
+    html_root = _build_site_roots(repo_root)
+    _validate_built_site(html_root)
     _sync_site(aws, repo_root, html_root, target.bucket)
     _invalidate_distribution_paths(aws, repo_root, target.distribution_id, _DOCS_INVALIDATION_PATHS)
     _verify_public_delivery(target)
@@ -990,9 +1042,12 @@ def main(argv: list[str] | None = None) -> int:
         required=True,
         help="Required literal acknowledgement for the local publishing.",
     )
+    commands.add_parser("dry-run", help="Build and validate every site root without uploading.")
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
+    if args.command == "dry-run":
+        return _dry_run(repo_root)
     aws = _required_executable("aws")
     if args.command == "provision":
         return _provision(aws, repo_root)

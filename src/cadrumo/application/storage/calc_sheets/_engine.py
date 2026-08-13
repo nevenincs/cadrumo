@@ -34,6 +34,7 @@ from ....domain.calculations.registry import (
     binding_aggregation_op,
     binding_row_set_selector,
     casillas_by_id,
+    relation_requirement_index,
     relation_source_requirements,
     resolve_parameter,
 )
@@ -707,15 +708,13 @@ def _relation_values_with_registry_grounding(
     """Attach registry-owned source identity and grounding to relation scalar rows."""
     supplied_by_relation = relation_values.by_relation()
     relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
-    requirements_by_relation = {
-        relation_id: requirement
-        for requirement in relation_source_requirements(
+    requirements_by_relation = relation_requirement_index(
+        relation_source_requirements(
             snapshot.revision,
             filing_year=snapshot.filing_year,
             period=snapshot.period,
         )
-        for relation_id in requirement.relation_ids
-    }
+    )
     values: list[RelationValue] = []
     for relation_id in layout.relation_cells:
         relation = relations_by_id[relation_id]
@@ -744,6 +743,13 @@ def _relation_values_with_registry_grounding(
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
                 source_casilla_ids=source_casilla_ids,
+                dependency_treatment=(
+                    requirement.dependency_treatment
+                    if requirement is not None
+                    else supplied.dependency_treatment
+                    if supplied is not None
+                    else ""
+                ),
                 legal_refs=legal_refs,
                 source_refs=source_refs,
                 resolved_at=supplied.resolved_at if supplied is not None else None,

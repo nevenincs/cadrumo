@@ -29,7 +29,12 @@ from ...application.ledger import (
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
 )
-from ...core import Art104TresExclusion, ProrrataRegisterRegime, resolve_active_bucket_id
+from ...core import (
+    Art104TresExclusion,
+    IvaDeductionFactKind,
+    ProrrataRegisterRegime,
+    resolve_active_bucket_id,
+)
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -281,6 +286,11 @@ def ledger_add(
         "--iva-category",
         help=tr("cli.ledger.classify.iva_category_help"),
     ),
+    deduction_fact_kind: IvaDeductionFactKind | None = typer.Option(
+        None,
+        "--deduction-kind",
+        help=tr("cli.ledger.classify.deduction_fact_kind_help"),
+    ),
     counterparty_country: str | None = typer.Option(
         None,
         "--counterparty-country",
@@ -381,6 +391,7 @@ def ledger_add(
             iva_rate=_parse_decimal(iva_rate, label="iva-rate"),
             iva_amount=_parse_decimal(iva_amount, label="iva-amount"),
             iva_category=iva_category,
+            deduction_fact_kind=deduction_fact_kind,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
             recargo_amount=_parse_decimal(recargo_amount, label="recargo-amount"),
@@ -589,6 +600,11 @@ def ledger_classify(
         "--iva-category",
         help=tr("cli.ledger.classify.iva_category_help"),
     ),
+    deduction_fact_kind: IvaDeductionFactKind | None = typer.Option(
+        None,
+        "--deduction-kind",
+        help=tr("cli.ledger.classify.deduction_fact_kind_help"),
+    ),
     counterparty_country: str | None = typer.Option(
         None,
         "--counterparty-country",
@@ -729,6 +745,7 @@ def ledger_classify(
             irpf_category=irpf_category,
             m210_income_classification=m210_income_classification,
             iva_category=iva_category,
+            deduction_fact_kind=deduction_fact_kind,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
             notes=reason,

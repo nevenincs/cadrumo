@@ -99,7 +99,10 @@ def test_resolves_second_quarter_to_a_distinct_expediente() -> None:
 
 
 def test_missing_period_declaration_refuses_rather_than_falls_back() -> None:
-    with pytest.raises(LiveApplicationInputError, match="no filed declaration"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.no_filed_declaration",
+    ):
         resolve_period_expediente(
             declarations=_DECLARATIONS,
             expedientes=_EXPEDIENTES,
@@ -109,7 +112,10 @@ def test_missing_period_declaration_refuses_rather_than_falls_back() -> None:
 
 
 def test_declaration_with_expediente_absent_from_tree_refuses() -> None:
-    with pytest.raises(LiveApplicationInputError, match="not present in the expedientes tree"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.expediente_not_in_tree",
+    ):
         resolve_period_expediente(
             declarations=_DECLARATIONS,
             expedientes=(_expediente(expediente_id=_EXP_1T),),  # tree missing the 2T expediente

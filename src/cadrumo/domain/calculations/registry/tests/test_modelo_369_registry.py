@@ -8,8 +8,6 @@ from functools import lru_cache
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import bundled_path
 from .....tests.aeat_literal_fixtures import aeat_host
@@ -20,6 +18,7 @@ from .. import (
     RegistryCatalogues,
     RegistryValidator,
     extract_record_design,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_oss_aggregation_binding_values,
 )
 from ._registry_schema_support import _committed_modelo, _committed_snapshot

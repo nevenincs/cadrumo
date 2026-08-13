@@ -1,0 +1,4 @@
+200
+ok
+Artículo 7. Plazo de presentación del modelo 122.
+La regularización de las cantidades percibidas en exceso que deban efectuar los contribuyentes del Impuesto sobre la Renta de las Personas Físicas no obligados a declarar, mediante la presentación del modelo 122, deberá realizarse en el plazo comprendido entre la fecha en que los pagos anticipados se hayan percibido de forma indebida hasta que finalice el plazo para la presentación de la declaración del Impuesto sobre la Renta de las Personas Físicas correspondiente al ejercicio en que se haya percibido el pago anticipado de forma indebida.

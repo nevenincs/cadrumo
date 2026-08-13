@@ -18,6 +18,7 @@ from urllib.parse import parse_qs, urlsplit
 from pydantic import AnyUrl
 
 from .....core import is_aeat_csv
+from .....core.identity import AeatCsv
 from .....domain.calculations.registry import (
     RemoteOperation,
     RemoteStateGuardPolicy,
@@ -49,8 +50,17 @@ def assert_read_browser_action(
     )
 
 
-def extract_csv_from_url(url: str) -> str:
-    """Extract and shape-validate the ``CSV`` query parameter from a cotejo URL."""
+def extract_csv_from_url(url: str) -> AeatCsv:
+    """Extract and shape-validate the ``CSV`` query parameter from a cotejo URL.
+
+    The return names :data:`~cadrumo.core.identity.AeatCsv` to document an
+    invariant this function already enforces rather than to add one: the
+    :func:`~cadrumo.core.is_aeat_csv` guard below is the same 8-32 uppercase
+    alphanumeric shape the alias constrains toward, so every value returned
+    here is already in the alias's canonical form. A plain function's
+    annotation runs no validator; the guard is what refuses, and the alias is
+    what names the contract the guard implements.
+    """
     parsed = urlsplit(url)
     qs = parse_qs(parsed.query)
     csv_values = qs.get("CSV", [])

@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import IvaDeductionFactKind
 from ....iva import (
     CUOTA_LESS_M303_IVA_CATEGORIES,
     CustomerTaxStatus,
@@ -58,12 +59,12 @@ def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero
     """AIC official-box parity: boxes 10/11 devengado + 36/37 deducible, net-zero.
 
     An ``INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE`` observation on the
-    ``INVERSION_SUJETO_PASIVO`` flow is consumed by BOTH new official-box parity
+        ``INVERSION_SUJETO_PASIVO`` flow is consumed by BOTH new official-box parity
     bindings: the devengado parity binding (official boxes 10/11, LIVA art. 13 +
     art. 15 + art. 84.Uno.2) and the deducible parity binding (official boxes
     36/37, + art. 92). Each resolves the same self-assessed cuota, so the pair
     nets to zero — mirroring the autorepercutido-interior pair. A ``SOPORTADO``
-    row on the same category must NOT leak in (different flow).
+    domestic recipient reverse-charge row must NOT leak in (different category).
     """
     revision = _revision_with_bindings(
         _binding("modelo-303-iva-autorepercutido-intracomunitaria-devengado-cuota"),
@@ -76,13 +77,15 @@ def test_resolve_aic_official_box_parity_routes_devengado_and_deducible_net_zero
             category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=Decimal("84.00"),
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
         ),
         _observation(
             applied_rate=Decimal("0.21"),
-            ledger_id="aic-stray-soportado",
-            category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            flow=IvaFlowDirection.SOPORTADO,
+            ledger_id="domestic-isp-stray",
+            category=IvaCategory.DOMESTIC_REVERSE_CHARGE,
+            flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=Decimal("99.00"),
+            deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -133,6 +136,7 @@ def test_calculate_303_aic_official_box_parity_books_boxes_and_leaves_resultado_
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=aic_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
             ),
         ),
     )
@@ -212,6 +216,7 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
             category=goods.category,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=goods_cuota,
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
         ),
         _observation(
             applied_rate=Decimal("0.21"),
@@ -219,6 +224,7 @@ def test_intracom_goods_and_services_share_the_combined_official_casilla_10_11()
             category=services.category,
             flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             iva=services_cuota,
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -246,6 +252,7 @@ def test_resolve_import_third_country_routes_deducible_only() -> None:
             category=IvaCategory.IMPORT_THIRD_COUNTRY,
             flow=IvaFlowDirection.SOPORTADO,
             iva=Decimal("33.00"),
+            deduction_fact_kind=IvaDeductionFactKind.IMPORT_CURRENT,
         ),
     ]
     result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
@@ -285,6 +292,7 @@ def test_calculate_303_import_deducible_reduces_resultado_by_its_cuota() -> None
                 category=IvaCategory.IMPORT_THIRD_COUNTRY,
                 flow=IvaFlowDirection.SOPORTADO,
                 iva=import_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.IMPORT_CURRENT,
             ),
         ),
     )
@@ -316,6 +324,7 @@ def test_64_advisory_no_longer_fires_on_aic_or_import() -> None:
         category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
         flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
         iva=Decimal("84.00"),
+        deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
     )
     import_row = _observation(
         applied_rate=Decimal("0.21"),
@@ -323,6 +332,7 @@ def test_64_advisory_no_longer_fires_on_aic_or_import() -> None:
         category=IvaCategory.IMPORT_THIRD_COUNTRY,
         flow=IvaFlowDirection.SOPORTADO,
         iva=Decimal("33.00"),
+        deduction_fact_kind=IvaDeductionFactKind.IMPORT_CURRENT,
     )
     assert unsupported_ledger_iva_observations(revision, (aic, import_row)) == ()
 
@@ -366,6 +376,12 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
     # is an outbound sale/supply the operator issued. This is the realistic
     # invoice direction the live classifier produces per category.
     received_categories = {IvaCategory.IMPORT_THIRD_COUNTRY}
+    deduction_kind_by_input_category = {
+        IvaCategory.DOMESTIC_REVERSE_CHARGE: IvaDeductionFactKind.DOMESTIC_CURRENT,
+        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE: IvaDeductionFactKind.INTRA_EU_CURRENT,
+        IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE: IvaDeductionFactKind.INTRA_EU_CURRENT,
+        IvaCategory.IMPORT_THIRD_COUNTRY: IvaDeductionFactKind.IMPORT_CURRENT,
+    }
 
     flagged: list[tuple[str, str]] = []
     for category in IvaCategory:
@@ -397,6 +413,7 @@ def test_64_advisory_residual_flagged_set_is_empty_for_all_declarable_categories
             applied_rate=ordinary_rate_for_tier[probe_tier],
             flow=flow,
             iva=Decimal("10.00"),
+            deduction_fact_kind=deduction_kind_by_input_category.get(category),
         )
         if unsupported_ledger_iva_observations(revision, (observation,)):
             flagged.append((category.value, flow.value))
@@ -445,6 +462,7 @@ def test_eu_service_acquisition_books_official_boxes_11_and_37_and_nets_to_zero(
                 category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=service_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
             ),
         ),
     )
@@ -502,6 +520,7 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
                 category=IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=goods_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
             ),
             _observation(
                 applied_rate=Decimal("0.21"),
@@ -510,6 +529,7 @@ def test_eu_service_and_goods_legs_sum_onto_the_one_official_intracom_line() -> 
                 category=IvaCategory.INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE,
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 iva=service_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
             ),
         ),
     )

@@ -192,6 +192,10 @@ def test_a_proxy_attributed_invoice_raises_one_advisory_naming_it() -> None:
     # be unrecognisable and would exhaust the message bound.
     assert proxied.invoice_number in diagnostic.message
     assert diagnostic.remedy is not None
+    # Advisory-asserted: this module holds no revision, snapshot or casilla
+    # definition anywhere, so the LIVA art. 75 claim the message states is
+    # declared rather than read off a registry object.
+    assert diagnostic.asserted_legal_refs == ("ley-37-1992:art-75",)
 
 
 def test_the_advisory_message_stays_inside_its_bound_for_a_large_catalogue() -> None:

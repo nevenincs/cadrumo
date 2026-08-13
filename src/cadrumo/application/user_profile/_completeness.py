@@ -5,7 +5,13 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ...domain.deadlines import EntityType, FiscalResidency, IrpfIncomeCategory, irnr_representante_fiscal_required
+from ...domain.deadlines import (
+    EntityType,
+    FiscalResidency,
+    IrpfIncomeCategory,
+    irnr_representante_fiscal_required,
+    modelo_iva_profile_required_paths,
+)
 
 if TYPE_CHECKING:
     from ...domain.user_profile import ProfileSchemaDefinition, ProfileSectionDefinition
@@ -42,10 +48,19 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     IRNR non-residents must declare their fiscal residence country, and
     non-EU/EEA IRNR residents must also declare both fiscal representative
     fields before any filing/modelo work can treat the profile as ready.
+
+    A profile declaring any Modelo IVA fact owes the rest of that block. The
+    paths it owes are answered by the domain resolver that refuses without
+    them rather than restated here, because restating them is precisely how
+    the two authorities came apart: the resolver hard-required six facts that
+    no readiness surface asked for, so ``config profile status`` reported a
+    profile ready and pointed the operator at a command that refused it.
     """
     required: list[str] = []
     if _token(values.get(AUTH_PROVIDER_PATH)).lower() == CLAVE_MOVIL_PROVIDER:
         required.append(CLAVE_MOVIL_ROUTE_PATH)
+
+    required.extend(modelo_iva_profile_required_paths(values))
 
     if _token(values.get(FISCAL_RESIDENCY_PATH)).lower() != FiscalResidency.NON_RESIDENT_IRNR.value:
         return tuple(required)

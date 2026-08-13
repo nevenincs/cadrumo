@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....core import CasillaId
+from .....core import CasillaId, IvaDeductionFactKind
 from ....iva import (
     IvaCategory,
     IvaFlowDirection,
@@ -53,6 +53,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 txn_date=date(2025, 3, 1),
                 flow=IvaFlowDirection.SOPORTADO,
                 iva=Decimal("42.00"),
+                deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
             ),
         ),
         "2T": (
@@ -65,6 +66,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 txn_date=date(2025, 6, 20),
                 flow=IvaFlowDirection.SOPORTADO,
                 iva=Decimal("30.00"),
+                deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
             ),
         ),
         "3T": (
@@ -90,6 +92,7 @@ def test_modelo_390_annual_iva_pipeline_resolves_binding_chain_from_four_303_fil
                 txn_date=date(2025, 12, 12),
                 flow=IvaFlowDirection.SOPORTADO,
                 iva=Decimal("45.00"),
+                deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT,
             ),
         ),
     }
@@ -167,6 +170,7 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 rate_kind=IvaRateKind.GENERAL,
                 iva=goods_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
             ),
         ),
         "2T": (
@@ -181,6 +185,7 @@ def test_m390_annual_intracom_matches_303_quarters_for_an_eu_services_acquisitio
                 flow=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
                 rate_kind=IvaRateKind.GENERAL,
                 iva=services_cuota,
+                deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
             ),
         ),
         "3T": (

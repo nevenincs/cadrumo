@@ -6,7 +6,11 @@ import pytest
 
 from .. import previous_filing_source_reference
 from .._schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RelationDefinition
-from .._validate_relation_periods import select_relation_source_revisions
+from .._validate_relation_periods import (
+    select_relation_source_revisions,
+    validate_relation_source_coordinate_coverage,
+)
+from .._validate_relation_sources import _relation_is_prior_year_filing_carry
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -39,8 +43,9 @@ def _relation_consistency_errors(
 
     Per-relation checks split out so each one reads as a single rule:
     target binding present → source modelo present → at least one
-    matching source revision → each source revision's outputs +
-    periods + offset-derived periods accept the relation's claim.
+    matching source revision → the production coordinate resolver assigns
+    each source period to one revision → each covered revision exposes the
+    claimed output and period.
     """
     errors: list[str] = []
     errors.extend(_target_binding_errors(modelo, revision, relation))
@@ -52,8 +57,26 @@ def _relation_consistency_errors(
     if not matching_revisions:
         errors.append(f"{modelo.id}/{revision.id}/{relation.id}: no source revision matches selector")
         return errors
-    for source_revision in matching_revisions:
-        errors.extend(_source_revision_consistency_errors(modelo, revision, relation, source_modelo, source_revision))
+    covered_revisions, coverage_failures = validate_relation_source_coordinate_coverage(
+        f"{modelo.id}/{revision.id}/{relation.id}",
+        relation=relation,
+        target_selector=revision.period_selector,
+        source_revisions=matching_revisions,
+        source_periods=relation.source_periods,
+        source_is_observation_history=_relation_is_prior_year_filing_carry(relation, revision),
+    )
+    errors.extend(failure.message for failure in coverage_failures)
+    for source_revision, covered_periods in covered_revisions:
+        errors.extend(
+            _source_revision_consistency_errors(
+                modelo,
+                revision,
+                relation,
+                source_modelo,
+                source_revision,
+                covered_periods=covered_periods,
+            ),
+        )
     return errors
 
 
@@ -74,8 +97,10 @@ def _source_revision_consistency_errors(
     relation: RelationDefinition,
     source_modelo: ModeloDefinition,
     source_revision: ModeloRevision,
+    *,
+    covered_periods: tuple[str, ...],
 ) -> list[str]:
-    """Three checks against one source-revision candidate: outputs, periods, offset-derived periods."""
+    """Check outputs and production-resolved periods for one covered source revision."""
     errors: list[str] = []
     source_casilla_ids = {casilla.id for casilla in source_revision.casillas}
     if relation.source_casilla_id not in source_casilla_ids:
@@ -84,52 +109,14 @@ def _source_revision_consistency_errors(
             f"not defined by {source_modelo.id}/{source_revision.id}",
         )
     revision_periods = set(source_revision.period_selector.periods)
-    relation_periods = set(relation.source_periods)
-    if relation_periods and not relation_periods.issubset(revision_periods):
-        unknown_periods = sorted(relation_periods - revision_periods)
+    resolved_periods = set(covered_periods)
+    if resolved_periods and not resolved_periods.issubset(revision_periods):
+        unknown_periods = sorted(resolved_periods - revision_periods)
         errors.append(
             f"{modelo.id}/{revision.id}/{relation.id}: source periods {unknown_periods} "
             f"not accepted by {source_modelo.id}/{source_revision.id}",
         )
-    errors.extend(
-        _offset_derived_period_errors(
-            modelo,
-            revision,
-            relation,
-            source_modelo,
-            source_revision,
-            revision_periods=revision_periods,
-        ),
-    )
     return errors
-
-
-def _offset_derived_period_errors(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    relation: RelationDefinition,
-    source_modelo: ModeloDefinition,
-    source_revision: ModeloRevision,
-    *,
-    revision_periods: set[str],
-) -> list[str]:
-    """For offset-driven relations, verify every derived source period is in revision_periods."""
-    if relation.source_period_offset_from_target is None:
-        return []
-    from .._relations import _derive_offset_source_period
-
-    derived: set[str] = set()
-    for target_period in relation.target_periods:
-        candidate = _derive_offset_source_period(relation, target_period=target_period)
-        if candidate is not None:
-            derived.add(candidate)
-    unknown_derived = sorted(derived - revision_periods)
-    if not unknown_derived:
-        return []
-    return [
-        f"{modelo.id}/{revision.id}/{relation.id}: offset-derived source periods "
-        f"{unknown_derived} not accepted by {source_modelo.id}/{source_revision.id}",
-    ]
 
 
 def test_registry_relations_reference_existing_modelo_outputs_and_target_bindings(
@@ -142,10 +129,9 @@ def test_registry_relations_reference_existing_modelo_outputs_and_target_binding
 
     The body now reads as a flat fold over the (modelo, revision,
     relation) cases; per-case logic is in :func:`_relation_consistency_errors`
-    and its three concern-specific helpers
+    and its concern-specific helpers
     (:func:`_target_binding_errors`,
-    :func:`_source_revision_consistency_errors`,
-    :func:`_offset_derived_period_errors`). When the assertion fails
+    :func:`_source_revision_consistency_errors`). When the assertion fails
     the message lists every offending triple at once so the developer
     can fix the registry in a single edit rather than chasing one
     triple per test-run cycle.

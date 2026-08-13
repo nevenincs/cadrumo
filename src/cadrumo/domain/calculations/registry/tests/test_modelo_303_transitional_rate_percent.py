@@ -51,13 +51,16 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....period import Period, calculation_filing_date
-from .. import RegistryCalculationResult, calculate_registry_snapshot, resolve_ledger_iva_aggregation_binding_values
+from .. import (
+    RegistryCalculationResult,
+    calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 from .._loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
