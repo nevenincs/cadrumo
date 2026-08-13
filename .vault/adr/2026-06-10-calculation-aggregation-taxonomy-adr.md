@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
-modified: '2026-07-17'
-body_hash: 'sha256:82df2d04ab70178823823b64fcc28e4e1b1081655f4b00fb0a0f4cfcf1ebc13d'
+modified: '2026-08-13'
+body_hash: 'sha256:ad9e52c3bbf7af8be32edfa1dc99b723bd5749774589d42a9da0f3f834751105'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-research]]"
 ---
