@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#cli-action-envelope-hardening'
 date: '2026-08-09'
-modified: '2026-08-12'
-body_hash: 'sha256:521dd068c748916b3f72209df81abc78659df7cf4e6ff71d0bfc241bd79abb5d'
+modified: '2026-08-13'
+body_hash: 'sha256:c7bdad6e55dfc0115b0868aa228621120421304a1346116bbe77a9fc034229a5'
 tier: L3
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
@@ -197,28 +197,28 @@ Complete the auth, wizard, ledger, deadline, live, adapter, renderer, and locale
 - [ ] `W05.P10.S40` - Migrate live-read recovery producers with explicit safety dispositions; `src/cadrumo/application/live`.
 - [x] `W05.P10.S41` - Own every new provisioning and optional-extra renderer key and template in all four locale catalogues, accepting only typed condition facts plus resolved action or no-recovery outcome and never feature identity, package command, or English prose; `src/cadrumo/locales`.
 - [ ] `W05.P10.S58` - Migrate AEAT adapter recovery producers with explicit external-system safety dispositions including browser _factory.py optional-extra forwarding with typed machine facts and no raw installation prose; `src/cadrumo/adapters/outbound/aeat`.
-- [ ] `W05.P10.S59` - Remove stale lazy schema-owner-table claims from the config payload surface while S91 exclusively owns residual Modelo CLI action producers; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
-- [ ] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
-- [ ] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
+- [x] `W05.P10.S59` - Remove stale lazy schema-owner-table claims from the config payload surface while S91 exclusively owns residual Modelo CLI action producers; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `W05.P10.S60` - Migrate TUI recovery rendering to the shared resolved action projection; `src/cadrumo/adapters/inbound/tui`.
+- [x] `W05.P10.S61` - Migrate shipped agent harness action citations to canonical action identities; `src/cadrumo/_data/agent`.
+- [x] `W05.P10.S67` - Migrate inbound censo parse-refusal action producers to typed conditions and canonical actions; `src/cadrumo/adapters/inbound/censo/_parser.py`.
 - [ ] `W05.P10.S68` - Migrate Google adapter recovery producers to canonical actions with external-system safety outcomes; `src/cadrumo/adapters/outbound/google`.
 - [ ] `W05.P10.S69` - Migrate outbound storage adapter recovery producers to canonical actions or explicit no-recovery outcomes; `src/cadrumo/adapters/outbound/storage`.
 - [ ] `W05.P10.S70` - Migrate persistence adapter recovery producers to current typed actions and delete recovery-hint fields; `src/cadrumo/adapters/persistence`.
 - [ ] `W05.P10.S71` - Migrate aggregation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/aggregation`.
 - [ ] `W05.P10.S72` - Migrate calculation recovery producers to typed conditions and canonical actions; `src/cadrumo/application/calculations`.
-- [ ] `W05.P10.S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions; `src/cadrumo/application/corpus_search`.
-- [ ] `W05.P10.S74` - Migrate evidence-service recovery producers to typed conditions and canonical actions; `src/cadrumo/application/evidence`.
+- [x] `W05.P10.S73` - Migrate corpus-search recovery producers to typed conditions and canonical actions; `src/cadrumo/application/corpus_search`.
+- [x] `W05.P10.S74` - Migrate evidence-service recovery producers to typed conditions and canonical actions; `src/cadrumo/application/evidence`.
 - [ ] `W05.P10.S75` - Migrate filing continuation producers to typed conditions and canonical actions; `src/cadrumo/application/filing`.
-- [ ] `W05.P10.S76` - Migrate inventory recovery producers to typed conditions and canonical actions; `src/cadrumo/application/inventory`.
-- [ ] `W05.P10.S77` - Replace operator-output suggestion producers with resolved typed action projections; `src/cadrumo/application/operator_output`.
+- [x] `W05.P10.S76` - Migrate inventory recovery producers to typed conditions and canonical actions; `src/cadrumo/application/inventory`.
+- [x] `W05.P10.S77` - Replace operator-output suggestion producers with resolved typed action projections; `src/cadrumo/application/operator_output`.
 - [ ] `W05.P10.S78` - Migrate residual operator-surface action producers outside the manifest and model owners; `src/cadrumo/application/operator_surface/_contract.py; src/cadrumo/application/operator_surface/_errors.py`.
 - [ ] `W05.P10.S79` - Migrate portal recovery producers to typed conditions and canonical actions; `src/cadrumo/application/portals`.
-- [ ] `W05.P10.S80` - Migrate integrity-repair continuation producers to typed conditions and canonical actions; `src/cadrumo/application/repair_integrity.py`.
-- [ ] `W05.P10.S81` - Migrate review action producers to typed conditions and canonical actions; `src/cadrumo/application/review`.
-- [ ] `W05.P10.S82` - Migrate storage-management recovery producers to typed conditions and canonical actions; `src/cadrumo/application/storage_management`.
-- [ ] `W05.P10.S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/auth`.
+- [x] `W05.P10.S80` - Migrate integrity-repair continuation producers to typed conditions and canonical actions; `src/cadrumo/application/repair_integrity.py`.
+- [x] `W05.P10.S81` - Migrate review action producers to typed conditions and canonical actions; `src/cadrumo/application/review`.
+- [x] `W05.P10.S82` - Migrate storage-management recovery producers to typed conditions and canonical actions; `src/cadrumo/application/storage_management`.
+- [x] `W05.P10.S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/auth`.
 - [ ] `W05.P10.S84` - Migrate calculation-registry recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/calculations`.
-- [ ] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
+- [x] `W05.P10.S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/contribuyente`.
 - [ ] `W05.P10.S86` - Migrate transaction-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/transactions`.
 - [ ] `W05.P10.S87` - Migrate user-profile-domain recovery producers to typed conditions and canonical actions; `src/cadrumo/domain/user_profile`.
 - [ ] `W05.P10.S88` - Migrate root lazy-import optional-extra placeholders and help to use machine identity with localized rendering and the resolved error envelope alongside residual root live and portal CLI producers with no raw feature or package-command compatibility; `src/cadrumo/entrypoints/cli/__init__.py; src/cadrumo/entrypoints/cli/_log_levels.py; src/cadrumo/entrypoints/cli/_app_diagnostics.py; src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py; src/cadrumo/entrypoints/cli/_app_maintenance.py; src/cadrumo/entrypoints/cli/_tty.py; src/cadrumo/entrypoints/cli/_app_live.py; src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`.
@@ -265,6 +265,8 @@ retired absence and reference-only status, and preserves the complete immutable
 - [ ] `W06.P12.S47` - Fail closure on unclassified sites, unresolved actions, insufficient bindings, missing proofs, ungrounded exclusions, or absent S118 canonical audit attestation, and after S118 accept checked S50 owners only when exact unchanged historical identity and canonical execution, independent PASS verdict, and subject-body-hash evidence all match while rejecting post-close drift unless a new unique open owner covers it; `src/cadrumo/entrypoints/cli/tests/test_action_coverage_closure.py`.
 - [ ] `W06.P12.S48` - Publish the final reconciliation and fresh-context honesty findings; `.vault/audit/2026-08-09-cli-action-envelope-hardening-audit.md`.
 - [ ] `W06.P12.S95` - Rule what the recoverable-refusal path tells an autonomous operator now that the dead suggestion instruction is struck, stating both branches rather than either, because the strike was correct and landed while its consequence has no row, and what went missing is narrower than silence since both rules now point at the code and the message which the envelope does emit, so the agent can classify a refusal but cannot be told what to run to fix it, which is neither self-remediating nor undiagnosable, and either the replacement is the action field once the migration has advanced far enough that it is not None for most codes, or the path carries no guidance by design and the honest cost is that an autonomous operator must infer the remedy from the code rather than be handed it, a real reduction and a defensible one that must be recorded as a decision rather than left as an accident; `src/cadrumo/_data/agent/ and the recoverable-refusal envelope surface`.
+- [ ] `W06.P12.S119` - Close the gap between the packaged rehoming gate and the CLI validator, whose sole live-source join test is named test_checked_rehoming_ledger_is_an_exact_live_source_join yet never calls validate_rehoming_ledger and re-implements a partial join inline instead, so the packaged gate and the validator can agree only by coincidence and every validator rule with no inline counterpart (owner scope, row overlap, current-unjoined, migration-required disposition) is unenforced by the packaged suite. The review that raised this asserted the gate was consequently green while the validator was red, which is false at HEAD where the module reports three failures including that very test, so the defect is an unenforced-rule surface plus a name that misdescribes what the test proves, rather than a silent-green gate, and the row must either call the validator directly or rename the test to what it actually asserts; `dev/tests/test_error_code_default_recovery_rehoming.py`.
+- [ ] `W06.P12.S120` - Reconcile the campaign-wide generalisation of the positional-English defect, in which a raise site passes an authored English sentence positionally alongside a registered message_key, so resolution prefers the key and the prose hides from every key-and-context assertion while str(exc) still prefers the positional argument and carries English into tracebacks, logs and every boundary rendering the exception directly, in every locale, leaving the registered catalogue value structurally dead. A review partitioned this as 2803 sites (1757 domain, 497 adapters, 443 application, 100 core, 6 entrypoints), but an independent proxy sweep at HEAD returns materially higher per-layer counts, so the owning step must recompute the population against the registered-code join rather than adopt either figure, then migrate by owner step and pin each migrated cluster with the proven absence assertion that str(exc) equals the key rather than a key-and-context assertion, which this campaign has now twice shown cannot catch the defect; `src/cadrumo/domain, src/cadrumo/adapters, src/cadrumo/application, src/cadrumo/core, src/cadrumo/entrypoints`.
 
 ## Parallelization
 
