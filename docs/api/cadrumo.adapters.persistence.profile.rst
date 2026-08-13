@@ -34,5 +34,6 @@ Submodules
    cadrumo.adapters.persistence.profile.prorrata_register
    cadrumo.adapters.persistence.profile.snapshots
    cadrumo.adapters.persistence.profile.submission
+   cadrumo.adapters.persistence.profile.sync_runs
    cadrumo.adapters.persistence.profile.transactions
    cadrumo.adapters.persistence.profile.usage_ratios

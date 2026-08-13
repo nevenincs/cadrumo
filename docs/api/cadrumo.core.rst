@@ -57,12 +57,14 @@ Submodules
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
    cadrumo.core._confirmation_gate
+   cadrumo.core._corpus_sidecar
    cadrumo.core._credentials
    cadrumo.core._declaracion_idioma
    cadrumo.core._descendant_relacion
    cadrumo.core._deuda_direccion
    cadrumo.core._document_shape
    cadrumo.core._draft_discrepancy
+   cadrumo.core._estado_casilla_oficial
    cadrumo.core._export_exemption_reason
    cadrumo.core._export_layout_format
    cadrumo.core._external_oracle_corpus
@@ -70,6 +72,8 @@ Submodules
    cadrumo.core._field_origin
    cadrumo.core._field_role
    cadrumo.core._filed_history_discovery_signal
+   cadrumo.core._filing_producer_key
+   cadrumo.core._filing_projection_ref
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._fts_query
@@ -82,12 +86,14 @@ Submodules
    cadrumo.core._irnr
    cadrumo.core._iva_category_resolution
    cadrumo.core._iva_compensation_provenance
+   cadrumo.core._iva_deduction_fact
    cadrumo.core._ledger_sort
    cadrumo.core._link_safety
    cadrumo.core._lockfile_unlink
    cadrumo.core._model_catalogue
    cadrumo.core._modelo
    cadrumo.core._modelo_232_codigos
+   cadrumo.core._modelo_work_progress_state
    cadrumo.core._models
    cadrumo.core._notificacion_estado_servicio
    cadrumo.core._objeto_tributario
@@ -95,6 +101,7 @@ Submodules
    cadrumo.core._operator_action_enums
    cadrumo.core._operator_progress
    cadrumo.core._optional_extras
+   cadrumo.core._orden_anual_html
    cadrumo.core._payment_election
    cadrumo.core._period
    cadrumo.core._pid_liveness
@@ -107,6 +114,7 @@ Submodules
    cadrumo.core._provenance_stamp
    cadrumo.core._refund_election
    cadrumo.core._register_scoping_signal
+   cadrumo.core._renta_declaracion_type
    cadrumo.core._rescate_type
    cadrumo.core._result_disposition
    cadrumo.core._revision_review

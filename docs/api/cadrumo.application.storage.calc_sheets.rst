@@ -16,6 +16,7 @@ Submodules
    cadrumo.application.storage.calc_sheets._engine
    cadrumo.application.storage.calc_sheets._errors
    cadrumo.application.storage.calc_sheets._evidence
+   cadrumo.application.storage.calc_sheets._export_service
    cadrumo.application.storage.calc_sheets._layout
    cadrumo.application.storage.calc_sheets._parity_comparison
    cadrumo.application.storage.calc_sheets._parity_harness
