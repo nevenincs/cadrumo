@@ -16,8 +16,8 @@ related:
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-reference]]'
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
-modified: '2026-08-12'
-body_hash: 'sha256:6023b0295f45deb423ebd5e78eac8582dbd8098c4a65e397c0c0a6dec3f5e437'
+modified: '2026-08-13'
+body_hash: 'sha256:344be0af53a4176aa436b1bbcab0dc1ae766f6d04b1371e74e85ebff3bda1bb7'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -54,7 +54,7 @@ Nonnumbered producer fields require the same single-home discipline. A raw expor
 
 - One fact has one semantic owner and one production path. An official endpoint never binds, aggregates, derives, or persists the same fact independently.
 - Semantic casilla identifiers remain calculation keys. Official numbered casillas are downstream endpoints except where an official-only value has no upstream twin; no shadow semantic identifier is created for such a value.
-- The reviewed semantic map joins one exact parser anchor to one canonical producer, official-only endpoint, or exact source literal/transport policy. It may not infer by number, label, position, width, neighbouring fields, or legacy layout.
+- The reviewed semantic map is the sole source-epoch coordinate authority and joins one exact parser anchor to one canonical producer, official-only endpoint, or exact source literal/transport policy. It carries the exact official `source_ref` and `source_sha256`; revision projection declarations remain coordinate-free admission evidence. It may not infer by number, label, position, width, neighbouring fields, implicit source selection, alternate anchor catalogues, or legacy layout.
 - Repeated official blocks preserve typed row identity and deterministic ordinal projection. They are never flattened into per-slot scalars, parallel selector lists, or export-specific stores.
 - Applicability is typed and fail-closed. Blank output is permitted only when the canonical applicability decision says the field is not applicable; an applicable missing or conflicting value refuses the complete export before bytes.
 - `clasificar_casillas_oficiales` is the sole declaration classifier. It answers whether an official box is addressed, represented through a binding, or undefined; it does not decide producer ownership, value arrival, applicability, or completeness.
@@ -316,3 +316,9 @@ Keeping the proposed simplified-regime record separate avoids converting an unac
 - The semantic map remains meaning-only, the casilla classifier remains declaration-only, and export completeness remains the value-arrival authority.
 - The proposed simplified-regime ADR remains non-governing and separate; casilla 48 remains manual until a later accepted completeness decision.
 - S45-S52 remain required implementation and proof work and may not be short-circuited by this architectural decision.
+
+### Complete simplified-regime value arrival
+
+DP30302 structural coverage is not calculation completeness. The accepted simplified-regime calculation decision owns one reviewed five-epoch semantic field matrix and one calculation-domain per-activity result derived from immutable filing-row evidence plus the exact annual Orden snapshot. Annual parameters, taxpayer statements, calculated results, snapshot arrival, and coordinate-only projection remain distinct canonical homes.
+
+An applicable simplified-regime filing must carry complete attested inputs and exactly one year-, revision-, period-, evidence-, and source-bound calculation result before any endpoint is projected. Projection selects typed values only; it never calculates, infers, defaults, or reads a generic result bag. Missing, extraneous, duplicate, wrong-epoch, or digest-divergent results refuse the whole export before target creation. The partial 34-endpoint assumption and any generic `off_form_result` path replaced by typed results are deleted without aliases or compatibility readers.

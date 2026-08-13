@@ -7,10 +7,10 @@ related:
   - "[[2026-05-27-khalid-cli-testimonial-audit]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
-modified: '2026-08-11'
-body_hash: 'sha256:be1ed79857bd73ec58298ab10e156367b621b52f50010b905e96e93cbd90866f'
+modified: '2026-08-13'
+body_hash: 'sha256:66c5e4cbfeabe1b45a021c0377d36d4c98c663652472b8d28e7986a76e7cee5c'
 ---
-# `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `proposed`)
+# `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -186,3 +186,15 @@ One production-neutral DOM parser supplies immutable table IR to both the regist
 The annual Orden dataset is therefore no longer a blocker or a manually maintained first slice. Official casilla 48 remains manual only for the independent taxpayer-evidence and full calculation-completeness conditions retained by this ADR; no partial catalogue claim may justify a second resolver, silent zero, or fallback.
 
 S59 does not infer or attest positive censal applicability. Its required closed typed scope input is deliberately narrower: not-claimed is neutral and must reject Orden/module rows, while evidence-required refuses before calculation or export until S58 supplies evidence. S59 does not derive that input from a taxpayer profile and owns no IVA regime-composition enum. S55 exclusively owns the required persisted `ModeloIVAProfile` composition and its exact mapping into the S59 scope input, with no default, backfill, or string coercion. S58 alone owns the nominal filing-evidence reference and the immutable, evidence-bearing applicability captured when a calculation revision is created. The annual Orden snapshot may validate a referenced activity after that evidence exists; it cannot manufacture censo facts or become a second evidence owner.
+
+## Amendment (2026-08-13): complete calculation and value-arrival authority
+
+The decision is now accepted. S59 removed the annual-Orden catalogue and corpus blockers, while S58 established immutable evidence-bearing applicability. The remaining filing-critical work is one complete calculation and value-arrival authority for every official DP30302 simplified-regime semantic value; structural field enumeration and projection declarations cannot substitute for it.
+
+The annual Orden snapshot remains the sole authority for activity taxonomy, annual module identity and order, coefficients, minimum-quota percentages, legal references, and source digests. It owns no taxpayer quantities or filing results. Immutable `RegimenSimplificadoFilingRows` remain the sole owner of taxpayer-declared activity and module inputs, each bound to exact filing evidence. One calculation-domain per-activity result owns all derived agricultural and non-agricultural values for the selected year, revision, period, and Orden snapshot. The result retains ordered evidence references, source and legal provenance, calculation-revision identity, and a deterministic digest.
+
+The existing registry calculation mechanism is extended atomically; no export-specific calculator, generic fact string, open result bag, parallel resolver, or per-slot scalar store is admitted. Values that law leaves as taxpayer statements remain explicit attested inputs. Values determined from those inputs and annual parameters are produced only by the canonical calculation service. `M303FilingFacts` and `FilingProducerSnapshot` carry the immutable result beside the filing rows and Orden snapshot. Projection selects a typed semantic value from that result and performs no formula, inference, default, or fallback.
+
+Before implementation, one reviewed five-epoch field matrix classifies every DP30302 semantic field as identity, declared input, attested off-form input, calculated output, or source-proven inapplicable. Applicable rows require complete evidence and exactly one matching calculation result. Wrong-year, wrong-revision, wrong-period, extraneous, duplicate, incomplete, or digest-divergent results refuse the whole export before any target is created. Non-applicability is decided only by the canonical typed scope decision.
+
+The partial 34-endpoint completeness assumption is withdrawn. Generic `off_form_result` paths that duplicate a typed calculated result are deleted in the same cutover. Blank and zero are never missing-value defaults, and no compatibility reader, alias, layout-derived semantic, or partial historical calculation survives.

@@ -62,12 +62,21 @@ record_identity = "registro-tipo-1"
 """
 
 
-def _fragment(*, fragment_id: str, body: str, epoch: str = "2026") -> str:
+def _fragment(
+    *,
+    fragment_id: str,
+    body: str,
+    epoch: str = "2026",
+    source_ref: str = "aeat-dr-303-2026",
+    source_sha256: str = "a" * 64,
+) -> str:
     return (
         f"schema_version = {SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION}\n"
         f'fragment_id = "{fragment_id}"\n'
         'modelo = "303"\n'
         f'design_epoch = "{epoch}"\n'
+        f'source_ref = "{source_ref}"\n'
+        f'source_sha256 = "{source_sha256}"\n'
         f"{body.strip()}\n"
     )
 
@@ -87,6 +96,8 @@ def test_loads_fragments_in_filename_order_independent_of_creation_order(tmp_pat
 
     assert semantic_map.modelo == "303"
     assert semantic_map.design_epoch == "2026"
+    assert semantic_map.source_ref == "aeat-dr-303-2026"
+    assert semantic_map.source_sha256 == "a" * 64
     assert tuple(record.export_record_id for record in semantic_map.records) == ("registro-tipo-1",)
     assert tuple(entry.export_field_id for entry in semantic_map.entries) == ("registro-tipo-1.declarante-nif",)
 
@@ -262,7 +273,45 @@ def test_refuses_conflicting_design_identity(tmp_path: Path) -> None:
     _write(root / "0001-records.toml", _fragment(fragment_id="records", body=_RECORD))
     _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY, epoch="2025"))
 
-    with pytest.raises(RegistryValidationError, match="conflicting modelo/design identities"):
+    with pytest.raises(RegistryValidationError, match="conflicting modelo/design/source identities"):
+        load_semantic_map(root)
+
+
+@pytest.mark.parametrize(
+    ("identity_key", "identity_value"),
+    (
+        ("source_ref", "aeat-dr-303-2025"),
+        ("source_sha256", "b" * 64),
+    ),
+)
+def test_refuses_mixed_fragment_source_identity(
+    tmp_path: Path,
+    identity_key: str,
+    identity_value: str,
+) -> None:
+    """All persisted fragments must attest one exact official source."""
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    _write(root / "0001-records.toml", _fragment(fragment_id="records", body=_RECORD))
+    fragment_arguments: dict[str, object] = {identity_key: identity_value}
+    _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY, **fragment_arguments))
+
+    with pytest.raises(RegistryValidationError, match="conflicting modelo/design/source identities"):
+        load_semantic_map(root)
+
+
+@pytest.mark.parametrize("identity_line", ("source_ref", "source_sha256"))
+def test_refuses_design_epoch_only_fragment(tmp_path: Path, identity_line: str) -> None:
+    """A fragment without its source identity is not a semantic-map authority."""
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    fragment = _fragment(fragment_id="authority", body=_RECORD + _ENTRY)
+    without_identity = "\n".join(
+        line for line in fragment.splitlines() if not line.startswith(f"{identity_line} =")
+    )
+    _write(root / "0001-authority.toml", without_identity)
+
+    with pytest.raises(RegistryValidationError, match=identity_line):
         load_semantic_map(root)
 
 
@@ -401,7 +450,7 @@ def test_public_loader_has_one_toml_parser_owner() -> None:
             "freeze_toml",
             "read_toml",
         },
-        "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError"},
+        "cadrumo.domain.calculations.registry": {"ModeloId", "RegistryValidationError", "SourceRefId"},
         "_semantic_map": {"M303VariableEnvelopeSemantic", "SemanticMap", "SemanticMapEntry", "SemanticMapRecord"},
     }
     assert direct_imports == {("re", None)}

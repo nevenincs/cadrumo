@@ -233,7 +233,7 @@ class SemanticMapRecord(_StrictModel):
 
 
 class SemanticMap(_StrictModel):
-    """One authored semantic map for one modelo and one design epoch.
+    """One authored semantic map for one exact official source design.
 
     Entries and records are exact parser keys only at this stage.  Exact parser
     joining, uniqueness, catalogue resolution, source applicability, and anomaly
@@ -242,12 +242,27 @@ class SemanticMap(_StrictModel):
 
     modelo: ModeloId
     design_epoch: str = Field(min_length=1)
+    source_ref: SourceRefId
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     records: tuple[SemanticMapRecord, ...] = Field(min_length=1)
     entries: tuple[SemanticMapEntry, ...] = Field(min_length=1)
     variable_envelopes: tuple[M303VariableEnvelopeSemantic, ...] = ()
 
     @model_validator(mode="after")
     def _require_unique_record_semantics(self) -> SemanticMap:
+        mismatched_envelopes = tuple(
+            envelope.record_identity
+            for envelope in self.variable_envelopes
+            if (
+                envelope.source_ref != self.source_ref
+                or envelope.source_sha256 != self.source_sha256
+            )
+        )
+        if mismatched_envelopes:
+            raise ValueError(
+                "semantic map variable-envelope identities must match the exact semantic-map source: "
+                f"{mismatched_envelopes!r}",
+            )
         record_keys = tuple((record.sheet, record.record_identity) for record in self.records)
         duplicate_keys = sorted({key for key in record_keys if record_keys.count(key) > 1})
         if duplicate_keys:

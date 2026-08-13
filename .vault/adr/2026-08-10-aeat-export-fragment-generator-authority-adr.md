@@ -12,9 +12,9 @@ related:
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
 supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:05ffe61ac2974f38de47b42e69ec6d53d3678040037b2fb53376f4bd5edc53e0'
+body_hash: 'sha256:1513ba4b3e7eb2531ead09665f9c59eda9f327483e6a73dad59695cd15b5415f'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
@@ -43,7 +43,7 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - The exact bundled official binary, selected through the source catalogue and verified by SHA-256, is the sole coordinate input.
 - The shipped typed record-design parser output is consumed directly; derived extraction files are never inputs.
 - The parser may recover official integer totals expressed by the source's `Total:` label and must prove them against terminal extent. It never invents a total, content value, coordinate, or wire interpretation.
-- A separate per-modelo, per-design semantic map supplies only registry meaning and is keyed by exact source anchors. Renderer formatting and transport interpretation never enter semantic-map entries. The join is bijective and refuses the entire design on missing, duplicate, fuzzy, or ambiguous matches.
+- A separate per-modelo, per-design semantic map supplies only registry meaning and is keyed by exact source anchors. The map and every fragment set carry one required exact `source_ref` and `source_sha256`; design epoch alone is not an admissible identity. Renderer formatting and transport interpretation never enter semantic-map entries. The join proves map-to-parser source identity, exact anchor and record bijection, selected-revision source membership, and exact projection-declaration admission, and refuses the entire design on missing, duplicate, fuzzy, ambiguous, implicit-source, or source-drifted matches.
 - One exhaustive per-design render profile, bound to the exact source SHA-256, is the sole reviewed authority for wire facts absent at their exact workbook field anchors. It may not override or conflict with wire facts present in the official source.
 - Every profile rule resolves to exact source anchors. Coverage must be complete for every otherwise-unrenderable field, including all 126 smaller-width fields; group conventions require an explicit reviewed membership set rather than type-and-width inference.
 - Profiles distinguish unsigned `Num` handling from signed `N` handling and define the sign representation explicitly. No numeric, decimal, date, flag, identifier, digit-string, or literal default is implicit.
@@ -89,7 +89,7 @@ The chosen profile is the narrowest extension that preserves the decisive split 
 - `2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr` remains superseded; this accepted record remains the single governing generator-authority decision.
 - The generator remains a prerequisite to relayout steps that promise parsed, non-transcribed export trees; existing manual trees remain unverified until regenerated and proven.
 - Render-profile changes become independently reviewable wire-authority changes and their digest becomes part of provenance and drift detection.
-- Semantic maps remain reviewable meaning-only artifacts.
+- Semantic maps remain reviewable meaning-only artifacts and are the sole reviewed source-epoch authority mapping parser coordinates to typed owners; projection declarations remain coordinate-free revision admission evidence.
 - Designs containing a variable envelope cannot generate fixed-width output until the separate envelope contract and composition proof pass.
 - Source, parser, or profile corrections can produce large generated diffs, but exhaustive validation and deterministic checks make that drift explicit.
 - Tests fail if generation reads legacy layout membership, applies a default to an uncovered anchor, conflates `Num` with signed `N`, leaves a smaller field ungrounded, accepts profile conflict or hash drift, truncates a variable envelope, or permits deleted compatibility surfaces to reappear.
