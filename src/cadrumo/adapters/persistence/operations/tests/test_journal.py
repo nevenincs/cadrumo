@@ -11,6 +11,7 @@ import pytest
 
 from .....application.operations import (
     OperationIdentity,
+    OperationLeaseDisposition,
     OperationOwnerLease,
     OperationPersistedSnapshot,
     OperationPhaseEvent,
@@ -21,6 +22,7 @@ from .....application.operations import (
 from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...storage import RepositoryError
 from .._journal import OperationJournalRepository
+from .._lease import OperationLeaseFilesystemRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,10 +63,19 @@ def _lease(operation_id: str = "a" * 64) -> OperationOwnerLease:
     )
 
 
+def _claim_lease(storage_root: Path, lease: OperationOwnerLease) -> None:
+    """Acquire the exact durable owner used by one journal writer."""
+    result = asyncio.run(
+        OperationLeaseFilesystemRepository(storage_root=storage_root).acquire(lease, observed_at=lease.acquired_at)
+    )
+    assert result.disposition is OperationLeaseDisposition.ACQUIRED
+
+
 def _commit_history(storage_root: Path) -> tuple[OperationJournalRepository, tuple[OperationPersistedSnapshot, ...]]:
     """Write three real revision transitions with a retained event per revision."""
     repository = OperationJournalRepository(storage_root=storage_root)
     snapshots = tuple(_snapshot(revision=revision, sequence=revision + 1) for revision in range(3))
+    _claim_lease(storage_root, _lease())
     for expected_revision, snapshot in zip((0, 0, 1), snapshots, strict=True):
         asyncio.run(repository.commit(snapshot, expected_revision=expected_revision, lease=_lease()))
     return repository, snapshots
@@ -95,6 +106,7 @@ def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_pat
     """The on-disk record advances once and all rejected writes leave it intact."""
     repository = OperationJournalRepository(storage_root=tmp_path)
     initial = _snapshot(revision=0, sequence=1)
+    _claim_lease(tmp_path, _lease())
     asyncio.run(repository.commit(initial, expected_revision=0, lease=_lease()))
     path = tmp_path / "operation-journals" / f"{initial.operation_id}.json"
     original_bytes = path.read_bytes()
@@ -110,6 +122,24 @@ def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_pat
     with pytest.raises(RepositoryError, match="lease"):
         asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=0, lease=_lease("e" * 64)))
     assert path.read_bytes() == original_bytes
+
+    future_lease = _lease().model_copy(
+        update={
+            "acquired_at": _STARTED + timedelta(minutes=2),
+            "expires_at": _STARTED + timedelta(minutes=4),
+        }
+    )
+    lease_repository = OperationLeaseFilesystemRepository(storage_root=tmp_path)
+    released = asyncio.run(lease_repository.release(_lease(), observed_at=_STARTED + timedelta(seconds=1)))
+    assert released.disposition is OperationLeaseDisposition.RELEASED
+    _claim_lease(tmp_path, future_lease)
+    with pytest.raises(RepositoryError, match="not yet active"):
+        asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=0, lease=future_lease))
+    assert path.read_bytes() == original_bytes
+
+    released = asyncio.run(lease_repository.release(future_lease, observed_at=_STARTED + timedelta(minutes=2)))
+    assert released.disposition is OperationLeaseDisposition.RELEASED
+    _claim_lease(tmp_path, _lease())
 
     with pytest.raises(RepositoryError, match="cursor"):
         asyncio.run(repository.commit(_snapshot(revision=1, sequence=3), expected_revision=0, lease=_lease()))
@@ -138,6 +168,7 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
         started_at=_STARTED,
         updated_at=_STARTED,
     )
+    _claim_lease(tmp_path, _lease())
     asyncio.run(repository.commit(empty, expected_revision=0, lease=_lease()))
     assert (
         asyncio.run(repository.read_after(identity.operation_id, 0, limit=1)).status is OperationReplayStatus.CAUGHT_UP
@@ -145,6 +176,7 @@ def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> 
 
     malformed_root = tmp_path / "malformed"
     malformed = OperationJournalRepository(storage_root=malformed_root)
+    _claim_lease(malformed_root, _lease())
     with pytest.raises(RepositoryError, match="begin at sequence one"):
         asyncio.run(malformed.commit(_snapshot(revision=0, sequence=2), expected_revision=0, lease=_lease()))
 

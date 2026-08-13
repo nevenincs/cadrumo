@@ -26,6 +26,7 @@ from ....application.operations import (
 )
 from ....core import STRICT_FROZEN_CONFIG, StorageCategory, exclusive_file_lock, storage_location
 from ..storage import RepositoryError
+from ._lease import OperationLeaseStorage
 
 
 class _OperationReplayRequest(BaseModel):
@@ -118,6 +119,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
             subject="operation journal",
             id_subject="operation",
         )
+        self._lease_storage = OperationLeaseStorage(storage_root=storage_root)
 
     def commit(
         self,
@@ -131,6 +133,7 @@ class _SnapshotJournalRepository(JournalRepositoryBase[_OperationJournalRecord])
         self._ensure_root()
         path = self.path_for(snapshot.operation_id)
         with exclusive_file_lock(self.lock_target):
+            self._lease_storage.require_live_exact_unlocked(lease, observed_at=snapshot.updated_at)
             if path.exists():
                 current = super().load(snapshot.operation_id)
                 self._validate_advance(current.snapshot, snapshot, expected_revision)
