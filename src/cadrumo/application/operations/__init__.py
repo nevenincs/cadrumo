@@ -63,6 +63,13 @@ from ._models import (
     OperationTerminalReceipt,
     new_operation_id,
 )
+from ._registry import (
+    OperationDefinition,
+    OperationExecutorFactory,
+    OperationFrontendProjection,
+    OperationReconciliationPolicy,
+    OperationRegistry,
+)
 
 __all__ = [
     "OperationActorReference",
@@ -76,6 +83,7 @@ __all__ = [
     "OperationConflictScope",
     "OperationDeadline",
     "OperationDeadlineAccess",
+    "OperationDefinition",
     "OperationDefinitionId",
     "OperationDiagnosticEvent",
     "OperationDiagnosticReference",
@@ -89,6 +97,8 @@ __all__ = [
     "OperationEventSequence",
     "OperationExecutor",
     "OperationExecutorContext",
+    "OperationExecutorFactory",
+    "OperationFrontendProjection",
     "OperationId",
     "OperationIdentity",
     "OperationInteractionId",
@@ -102,7 +112,9 @@ __all__ = [
     "OperationOwnedResource",
     "OperationPhaseEvent",
     "OperationProgressEvent",
+    "OperationReconciliationPolicy",
     "OperationReference",
+    "OperationRegistry",
     "OperationRejectResponse",
     "OperationReplayPolicy",
     "OperationRequest",

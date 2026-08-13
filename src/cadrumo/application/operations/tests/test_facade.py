@@ -38,4 +38,4 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
     tree = ast.parse(facade.read_text(encoding="utf-8"))
     targets = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None}
 
-    assert targets == {"core", "_capabilities", "_events", "_executor", "_interactions", "_models"}
+    assert targets == {"core", "_capabilities", "_events", "_executor", "_interactions", "_models", "_registry"}

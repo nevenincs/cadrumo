@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:19b8604e43b8b897cf94fb9ba9c1ec64c99cdaea7efdf1e7dc2759a6ce86a314'
+body_hash: 'sha256:9df094feee118926aefa6bdc314bc6338738d7ad3e4a50129967b2952ef14113'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -62,7 +62,7 @@ Build the registry, journal, leases, event stream, cancellation, deadline, clean
 Define registered executors, canonical action joins, resource ownership, and invocation context without frontend dependencies.
 
 - [x] `W02.P03.S13` - Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership; `src/cadrumo/application/operations/_executor.py`.
-- [ ] `W02.P03.S14` - Implement operation definition registration and immutable lookup by canonical action reference; `src/cadrumo/application/operations/_registry.py`.
+- [x] `W02.P03.S14` - Implement operation definition registration and immutable lookup by canonical action reference; `src/cadrumo/application/operations/_registry.py`.
 - [ ] `W02.P03.S15` - Join action-catalogue identities, operation definitions, recovery actions, and exposed surface projections at a fixed point; `src/cadrumo/application/operations/tests/test_operation_catalogue.py`.
 - [ ] `W02.P03.S16` - Prove duplicate registration, undeclared effects, invalid phase emission, and unowned resources are refused; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
 
