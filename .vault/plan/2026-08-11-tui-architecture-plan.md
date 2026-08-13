@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:90c1d31df67df7da740a0f063ad393a355039e8447b2f4c64dcd3aed72460cbd'
+body_hash: 'sha256:5e26747e8529ad57007ab52d5d1388f516b77b3b0328ae40ca1bc110befdfa42'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -71,7 +71,7 @@ Persist safe lifecycle state and ordered events atomically while keeping confide
 - [x] `W02.P04.S17` - Define lifecycle journal, ordered event stream, deterministic owner-lease observations distinguishing absent, active, and expired state, explicit caller-supplied observed-at lease acquire, inspect, exact-predecessor compare-and-swap, and release signatures, secure reference ports, and a strict versioned credential-free persisted snapshot contract carrying a ContentDigest secure request reference plus safe state and events while runtime snapshots remain concretely typed; `src/cadrumo/application/operations/_journal.py, src/cadrumo/application/operations/_leases.py, src/cadrumo/application/operations/_replay.py, src/cadrumo/application/operations/__init__.py, and direct journal, lease, replay, and facade tests`.
 - [x] `W02.P04.S18` - Implement the operation lifecycle journal over the existing atomic journal substrate with two-hop public JournalRepositoryBase promotion, canonical operation-journal storage taxonomy, location and path grammar, durable-compatibility enrollment, concrete typed snapshot hydration, and atomic filesystem compare-and-swap tests; `src/cadrumo/application facade, src/cadrumo/adapters/persistence/operations/_journal.py, operation storage taxonomy/location/grammar and durability gates, and focused real-filesystem tests`.
 - [x] `W02.P04.S19` - Implement durable owner lease acquisition, renewal, conflict refusal, expiry observation, exact-predecessor release, and expired-owner takeover evidence, and require operation journal commits to verify the exact current live lease while holding the same JournalRepositoryBase lock; `src/cadrumo/adapters/persistence/operations/_lease.py, src/cadrumo/adapters/persistence/operations/_journal.py, and focused real-filesystem lease and journal tests`.
-- [ ] `W02.P04.S20` - Expose the persistence adapter facade without exporting implementation internals; `src/cadrumo/adapters/persistence/operations/__init__.py`.
+- [x] `W02.P04.S20` - Expose the persistence adapter facade without exporting implementation internals; `src/cadrumo/adapters/persistence/operations/__init__.py`.
 - [ ] `W02.P04.S21` - Prove atomic snapshot and event commits, monotonic cursors, idempotent replay, lease conflicts, takeover, and credential-free persistence; `src/cadrumo/adapters/persistence/operations/tests`.
 
 ### Phase `W02.P05` - Supervisor lifecycle and recovery
