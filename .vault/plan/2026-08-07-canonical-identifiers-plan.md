@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:a7ef62d30b257d21759299fea6e2cfe5b14438b4cc42529bf1e391a017c3d911'
+body_hash: 'sha256:05cedb73628d9f558f0ed5dd798839606ca670165219f321f10e50da033570e4'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -321,9 +321,9 @@ TODO: Phase intent paragraph required by the convention ADR.
 
 TODO: Phase intent paragraph required by the convention ADR.
 
-- [ ] `W08.P13.S55` - enumerate every registered `OutputSchema` class carrying an identifier field this plan retyped, cross-referenced against the wire census's roughly-fifty-class sweep; `src/cadrumo/entrypoints/cli/`.
-- [ ] `W08.P13.S56` - add a golden-schema pinning test capturing each enumerated class's `model_json_schema()` output (the CLI envelope shape) and, for classes backing an MCP tool, the MCP `output_schema` from `_output_schema_for`, asserting the pinned constraints match the enrolled type; `src/cadrumo/entrypoints/mcp/tests/`.
-- [ ] `W08.P13.S57` - confirm `test_json_schema_conformance.py`'s existing key-parity gate still passes and add a note in its module docstring cross-referencing the new content-pinning test, since the existing gate self-describes as structural-shape-only; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
+- [x] `W08.P13.S55` - enumerate every registered `OutputSchema` class carrying an identifier field this plan retyped, cross-referenced against the wire census's roughly-fifty-class sweep; `src/cadrumo/entrypoints/cli/`.
+- [x] `W08.P13.S56` - add a golden-schema pinning test capturing each enumerated class's `model_json_schema()` output (the CLI envelope shape) and, for classes backing an MCP tool, the MCP `output_schema` from `_output_schema_for`, asserting the pinned constraints match the enrolled type; `src/cadrumo/entrypoints/mcp/tests/`.
+- [x] `W08.P13.S57` - confirm `test_json_schema_conformance.py`'s existing key-parity gate still passes and add a note in its module docstring cross-referencing the new content-pinning test, since the existing gate self-describes as structural-shape-only; `src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`.
 
 ## Wave `W09` - Ratchet gate and closeout
 
