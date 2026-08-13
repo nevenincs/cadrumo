@@ -409,3 +409,119 @@ class TestNotificationsQueryWindow:
         configured = Settings.external_constants().aeat.notifications_query.lookback_years
 
         assert configured > 4, "the search window no longer outreaches the four-year prescription period"
+
+
+def _row(*, leida, tipo="notificacion", fecha_notificacion=None):
+    """Return one notification row differing only in its read/served state."""
+    from datetime import date as _date
+
+    from .._notifications import RemoteNotification
+
+    return RemoteNotification(
+        certificado_id="2599062010435",
+        tipo=tipo,
+        concepto="LIQUIDACION DE INTERESES DE DEMORA",
+        titular_nif="X0000000Z",
+        titular_nombre="TITULAR PRUEBA",
+        destinatario_nif="X0000000Z",
+        destinatario_nombre="TITULAR PRUEBA",
+        fecha_emision=_date(2025, 6, 17),
+        fecha_notificacion=fecha_notificacion,
+        modo_notificacion="Comparecencia Electrónica",
+        leida=leida,
+        source_url=_QUERY_URL,
+    )
+
+
+class TestNotificationContentIsGatedOnAlreadyRead:
+    """Fetching a notification's content is a LEGAL act unless it is already read.
+
+    AEAT serves the content and performs the *comparecencia* through the same
+    control. On an already-read notification that redisplays a document. On an
+    unread one it is the moment the notification becomes legally served, which
+    starts the appeal and payment periods and requires the taxpayer's signature.
+
+    So the predicate is not "can this be fetched" but "has AEAT already recorded
+    that the taxpayer read it". Everything else refuses -- including a
+    notification that is already SERVED but still unread, because service and
+    reading are different events and only the second licenses the fetch.
+    """
+
+    def test_an_already_read_notification_is_admitted(self) -> None:
+        """The one case that may be fetched, and the control for every refusal below."""
+        from .._notifications import assert_notification_content_readable
+
+        assert_notification_content_readable(_row(leida=True))
+
+    def test_an_unread_notification_is_refused(self) -> None:
+        from .._notifications import assert_notification_content_readable
+
+        with pytest.raises(SedeNavigationError):
+            assert_notification_content_readable(_row(leida=False))
+
+    def test_a_row_with_no_leida_column_is_refused(self) -> None:
+        """``None`` is the pending/unrendered case and must fail CLOSED."""
+        from .._notifications import assert_notification_content_readable
+
+        with pytest.raises(SedeNavigationError):
+            assert_notification_content_readable(_row(leida=None))
+
+    def test_served_but_unread_is_still_refused(self) -> None:
+        """The sharpest case: SERVED is not READ.
+
+        A notification served by publicación edictal carries a
+        ``fecha_notificacion`` while remaining unread. Its deadlines are already
+        running, so fetching it arguably starts nothing new -- and it is refused
+        anyway. Reading someone's unread mail is the taxpayer's act, and the
+        guard keys on the taxpayer having taken it, not on whether a clock
+        happens to be running.
+        """
+        from datetime import date as _date
+
+        from .._notifications import assert_notification_content_readable
+
+        served_unread = _row(leida=None, fecha_notificacion=_date(2026, 7, 21))
+
+        with pytest.raises(SedeNavigationError) as excinfo:
+            assert_notification_content_readable(served_unread)
+        assert excinfo.value.context is not None
+        assert excinfo.value.context["blocked_operation"] == "notification_comparecencia"
+
+    def test_the_refusal_names_the_notification_and_its_state(self) -> None:
+        """A refusal an operator cannot act on is a dead end."""
+        from .._notifications import assert_notification_content_readable
+
+        with pytest.raises(SedeNavigationError) as excinfo:
+            assert_notification_content_readable(_row(leida=None))
+
+        context = excinfo.value.context
+        assert context is not None
+        assert context["certificado_id"] == "2599062010435"
+        assert "comparecencia" in str(excinfo.value).lower()
+
+    @pytest.mark.asyncio
+    async def test_a_refused_row_never_reaches_the_wire(self) -> None:
+        """The guard runs BEFORE any request, not as a check on the response.
+
+        A guard that refused only after contacting AEAT would already have
+        driven the comparecencia by the time it objected. Passing a session
+        object that raises on any attribute use proves nothing was touched.
+        """
+
+        class _ExplodingSession:
+            def __getattr__(self, name: str) -> object:
+                raise AssertionError(f"the guard reached the session ({name!r}) before refusing")
+
+        from .._notifications import fetch_notification_document
+
+        with pytest.raises(SedeNavigationError):
+            await fetch_notification_document(_ExplodingSession(), _row(leida=None))
+
+    def test_the_post_allowance_is_scoped_to_the_detail_endpoint_alone(self) -> None:
+        """The transport allowance must not widen beyond the one endpoint."""
+        from ......core.config import Settings
+        from .._notifications import _READ_GUARD_POLICY
+
+        detail = Settings.external_constants().aeat.sede_paths.notifications_detail
+
+        assert _READ_GUARD_POLICY.allowed_read_post_paths == (detail,)
