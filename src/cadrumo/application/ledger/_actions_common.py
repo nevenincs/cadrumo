@@ -455,7 +455,7 @@ def _verify_evidence_references(
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
 
-def _purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
+def purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
     """Return the bucket's registered ``PurchaseInvoiceEvidence`` records.
 
     Reads the bucket-scoped encrypted purchase-invoice evidence store written by
@@ -494,7 +494,7 @@ def _verify_purchase_invoice_evidence(
     reference = classify_evidence_reference(
         evidence_id,
         bucket_id=command.bucket_id,
-        evidence_records=_purchase_invoice_evidence_records(command.bucket_id),
+        evidence_records=purchase_invoice_evidence_records(command.bucket_id),
         invoices=_invoice_repository(bucket_id=command.bucket_id, repository=invoice_repository).load(),
     )
     if reference.is_acceptable:
@@ -748,6 +748,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
         "iva_rate": command.iva_rate,
         "iva_amount": command.iva_amount,
         "iva_category": command.iva_category,
+        "deduction_fact_kind": command.deduction_fact_kind,
         "recargo_amount": command.recargo_amount,
         "source_jurisdiction": command.source_jurisdiction,
         "counterparty_country": command.counterparty_country,
@@ -798,6 +799,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
         "iva_rate": current.iva_rate,
         "iva_amount": current.iva_amount,
         "iva_category": current.iva_category,
+        "deduction_fact_kind": current.deduction_fact_kind,
         "recargo_amount": current.recargo_amount,
         "source_jurisdiction": current.source_jurisdiction,
         "counterparty_country": current.counterparty_country,

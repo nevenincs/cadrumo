@@ -111,7 +111,7 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/invoices/_creation.py", "emit_catalogue_invoice_event"),
         ("application/ledger/_actions_common.py", "_attachment_store"),
         ("application/ledger/_actions_common.py", "_bucket_event_repository"),
-        ("application/ledger/_actions_common.py", "_purchase_invoice_evidence_records"),
+        ("application/ledger/_actions_common.py", "purchase_invoice_evidence_records"),
         ("application/ledger/_actions_import.py", "_resolve_financial_provider"),
         ("application/ledger/_actions_import.py", "import_ledger_source"),
         ("application/ledger/_batch_ingest.py", "_reads_without_a_model"),
