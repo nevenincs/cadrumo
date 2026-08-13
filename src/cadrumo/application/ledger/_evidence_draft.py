@@ -521,6 +521,42 @@ class DraftDiscrepancyFinding(BaseModel):
     observed: Decimal | None = None
 
 
+def _facturae_invoice_class_findings(
+    *,
+    declared: FacturaeInvoiceClass | None,
+    rectifies_invoice_number: str | None,
+) -> tuple[DraftDiscrepancyFinding, ...]:
+    """Report Facturae class gaps and contradictions without choosing a side."""
+    if declared is None:
+        return ()
+
+    findings: list[DraftDiscrepancyFinding] = []
+    if declared in {FacturaeInvoiceClass.ORIGINAL_SUMMARY, FacturaeInvoiceClass.COPY_SUMMARY}:
+        findings.append(
+            DraftDiscrepancyFinding(
+                kind=DraftDiscrepancyKind.INVOICE_CLASS_UNMODELLED,
+                detail=f"Facturae InvoiceClass {declared.value!r} declares recapitulativa, which is not modelled",
+            ),
+        )
+
+    declares_correction = declared in {
+        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
+        FacturaeInvoiceClass.COPY_CORRECTIVE,
+    }
+    carries_correction = rectifies_invoice_number is not None
+    if declares_correction != carries_correction:
+        findings.append(
+            DraftDiscrepancyFinding(
+                kind=DraftDiscrepancyKind.INVOICE_CLASS_CONTRADICTED,
+                detail=(
+                    f"Facturae InvoiceClass {declared.value!r} and Corrective/InvoiceNumber "
+                    f"presence={carries_correction!r} disagree"
+                ),
+            ),
+        )
+    return tuple(findings)
+
+
 class InvoiceDraft(BaseModel):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
 
@@ -1487,7 +1523,17 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
     # arithmetic closes, or whether the regime it prints in words matches the tax
     # it charged. Those are questions about the ISSUER's document, not about the
     # reader, and an exactly-read wrong invoice is still a wrong invoice.
-    return draft.model_copy(update={"discrepancies": deterministic_findings(draft)})
+    return draft.model_copy(
+        update={
+            "discrepancies": (
+                *deterministic_findings(draft),
+                *_facturae_invoice_class_findings(
+                    declared=parsed.facturae_invoice_class,
+                    rectifies_invoice_number=parsed.rectifies_invoice_number,
+                ),
+            ),
+        },
+    )
 
 
 def _extract_invoice_fields_via_vision(

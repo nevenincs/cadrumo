@@ -92,6 +92,12 @@ class ConfirmationBlockReason(StrEnum):
     value rather than to attest that a disagreement is acceptable.
     """
 
+    UNMODELLED_INVOICE_CLASS = "unmodelled_invoice_class"
+    """The document's declared invoice class has no domain representation."""
+
+    CONTRADICTED_INVOICE_CLASS = "contradicted_invoice_class"
+    """The document's class code and corrective reference disagree."""
+
 
 OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON: Mapping[ConfirmationBlockReason, OperatorActionAxis] = MappingProxyType(
     {
@@ -100,6 +106,8 @@ OPERATOR_ACTION_BY_CONFIRMATION_BLOCK_REASON: Mapping[ConfirmationBlockReason, O
         ConfirmationBlockReason.UNRESOLVED_DIRECTION: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         ConfirmationBlockReason.CONTRADICTED_REGIME: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
         ConfirmationBlockReason.UNDETERMINED_ESTABLISHMENT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        ConfirmationBlockReason.UNMODELLED_INVOICE_CLASS: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
+        ConfirmationBlockReason.CONTRADICTED_INVOICE_CLASS: OperatorActionAxis.RESOLVE_VALUE_DIVERGENCE,
     },
 )
 """Total operator-action projection for the native confirmation blocker axis."""

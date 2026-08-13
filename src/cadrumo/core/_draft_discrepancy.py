@@ -164,3 +164,19 @@ class DraftDiscrepancyKind(StrEnum):
     swap -- a value found in the other block and not its own -- never on a
     document the layout simply cannot separate, which stays an advisory.
     """
+
+    INVOICE_CLASS_UNMODELLED = "invoice_class_unmodelled"
+    """The document declares an invoice class the domain cannot represent.
+
+    Facturae's recapitulativa codes are valid statements, but the domain's
+    closed invoice taxonomy has no recapitulativa member. Flattening the code
+    onto ordinaria would discard evidence, so the gap is surfaced intact.
+    """
+
+    INVOICE_CLASS_CONTRADICTED = "invoice_class_contradicted"
+    """The declared class disagrees with the document's corrective reference.
+
+    A corrective class with no corrected invoice, or a non-corrective class
+    carrying one, gives two incompatible answers inside the same document.
+    Neither statement is silently selected over the other.
+    """
