@@ -54,6 +54,7 @@ __all__ = [
 
 
 RENDER_PROFILE_SCHEMA_VERSION: Final[int] = 1
+_RESERVED_DESCRIPTION_MARKER: Final[str] = "reservado"
 
 
 class _StrictModel(BaseModel):
@@ -534,14 +535,42 @@ def render_profile_digest(
     )
 
 
+def _is_source_reserved_field(field: RecordDesignIntermediateField) -> bool:
+    """Report whether the official description marks this slot reserved.
+
+    Reservation is read from the DESCRIPTION and never from the type column,
+    because the type column is unreliable for exactly these slots.  When AEAT
+    retires a numeric field it rewrites the description to mark the slot
+    reserved and leaves the original numeric type in place, so a retired
+    quantity keeps announcing itself as ``Num`` forever.  Modelo 303 shows both
+    states of that edit within one modelo: its 2023 design types every reserved
+    slot ``An``, while its 2025 design types five of thirteen ``Num``, and four
+    of those five sit exactly where live employee-count quantities stood before
+    they were retired.  The surviving ``Num`` is therefore a residue of the
+    slot's former life, not a claim that a reserved run carries a number.
+
+    The match is case-insensitive because official designs disagree on casing
+    for the same marker.
+    """
+    return _RESERVED_DESCRIPTION_MARKER in field.normalized_description.casefold()
+
+
 def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
 ) -> RenderProfileEligibility:
-    """Partition fixed joined fields eligible for reviewed absent-wire authority."""
+    """Partition fixed joined fields eligible for reviewed absent-wire authority.
+
+    A source-reserved slot is never eligible.  A render profile exists to state
+    a wire fact the official design left unstated, and a reserved run has no
+    wire fact beyond being filler, so admitting one would force an author to
+    model numeric meaning onto a slot that carries none.
+    """
     eligible = tuple(
         field
         for field in fixed_fields
-        if field.aeat_type in {"Num", "N"} and (field.content is None or not field.content.strip())
+        if field.aeat_type in {"Num", "N"}
+        and (field.content is None or not field.content.strip())
+        and not _is_source_reserved_field(field)
     )
     return RenderProfileEligibility(
         all_fields=eligible,

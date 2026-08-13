@@ -23,6 +23,7 @@ from cadrumo.domain.calculations.registry import (
 from .. import _export_tree, _render_profile
 from .._record_design_ir import (
     RecordDesignIntermediate,
+    RecordDesignIntermediateField,
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
@@ -960,3 +961,65 @@ def test_real_profile_fragments_stay_below_the_reviewability_line_cap() -> None:
     paths = tuple(profile_directory.glob("*.toml"))
     assert paths
     assert all(len(path.read_text(encoding="utf-8").splitlines()) <= 500 for path in paths)
+
+
+def test_source_reserved_slots_are_never_eligible_while_blank_numerics_remain_eligible() -> None:
+    """Reservation is read from the description because the type column lies.
+
+    Both directions are asserted deliberately: a predicate that excluded every
+    field would satisfy the reserved half alone and silently empty the profile.
+    """
+    reserved_num = RecordDesignIntermediateField(
+        sheet="DP30302",
+        record_identity="DP30302",
+        source_row=97,
+        source_cell="A97",
+        ordinal=92,
+        offset=1000,
+        length=3,
+        aeat_type="Num",
+        normalized_description="Reservado para la AEAT",
+    )
+    reserved_upper_case = reserved_num.model_copy(
+        update={"ordinal": 93, "source_row": 98, "source_cell": "A98", "offset": 1003},
+    ).model_copy(update={"normalized_description": "RESERVADO PARA LA A.E.A.T. (Dejar en blanco)"})
+    live_blank_numeric = RecordDesignIntermediateField(
+        sheet="DP30301",
+        record_identity="DP30301",
+        source_row=14,
+        source_cell="A14",
+        ordinal=9,
+        offset=20,
+        length=4,
+        aeat_type="Num",
+        normalized_description="Devengo (2) - Ejercicio",
+    )
+    eligibility = project_render_profile_eligibility(
+        (reserved_num, reserved_upper_case, live_blank_numeric),
+    )
+    assert live_blank_numeric in eligibility.all_fields
+    assert reserved_num not in eligibility.all_fields
+    assert reserved_upper_case not in eligibility.all_fields
+    assert eligibility.all_fields == (live_blank_numeric,)
+
+
+def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() -> None:
+    """The exclusion holds against the real epoch that exhibits the vestigial typing."""
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    intermediate = load_record_design_intermediate(
+        bundled_path(),
+        catalogues.sources,
+        source_ref="aeat-dr-303-2025",
+        filing_year=2025,
+        design_epoch="2025",
+    )
+    fixed = tuple(field for sheet in intermediate.sheets for field in sheet.fields)
+    reserved_numeric = tuple(
+        field
+        for field in fixed
+        if field.aeat_type in {"Num", "N"} and "reservado" in field.normalized_description.casefold()
+    )
+    assert reserved_numeric, "the 2025 design must still exhibit vestigially typed reserved slots"
+    eligibility = project_render_profile_eligibility(fixed)
+    assert not set(reserved_numeric) & set(eligibility.all_fields)
+    assert eligibility.all_fields, "excluding reserved slots must not empty the eligible set"
