@@ -103,6 +103,7 @@ class ParsedEInvoice:
         "customer_name",
         "customer_postal_code",
         "customer_tax_id",
+        "facturae_invoice_class",
         "grand_total",
         "invoice_date",
         "invoice_number",
@@ -151,6 +152,7 @@ class ParsedEInvoice:
         self.customer_country_code: str | None = None
         self.invoice_number: str | None = None
         self.invoice_series: str | None = None
+        self.facturae_invoice_class: FacturaeInvoiceClass | None = None
         self.rectifies_invoice_number: str | None = None
         self.invoice_date: str | None = None
         self.currency: str | None = None
@@ -709,6 +711,11 @@ def _apply_facturae_identification(invoice: Element, parsed: ParsedEInvoice) -> 
         # CORRECTED invoice's number under Corrective/ in this same subtree.
         parsed.invoice_number = _direct_child_text(header, "InvoiceNumber")
         parsed.invoice_series = _direct_child_text(header, "InvoiceSeriesCode")
+        stated_class = _direct_child_text(header, "InvoiceClass")
+        try:
+            parsed.facturae_invoice_class = FacturaeInvoiceClass(stated_class) if stated_class is not None else None
+        except ValueError:
+            parsed.facturae_invoice_class = None
         # The number of the invoice this one CORRECTS, which the direct-child
         # scoping above deliberately steps past. It was read and discarded: a
         # rectificativa is a different CLASS of invoice by RD 1619/2012 art. 15,
