@@ -265,6 +265,77 @@ def test_a_document_with_no_payable_line_refuses_rather_than_reading_zero() -> N
     assert "importe_a_ingresar" in excinfo.value.missing
 
 
+_FULLY_REDUCED_HEAD = """Clave de liquidación: A2860024500012345
+Referencia: 2024/0001234
+N.I.F.: 12345678Z
+Base sobre la que se liquida la sanción 1.000,00euros
+Porcentaje mínimo de sanción 50,00%
+Sanción resultante 500,00euros
+Reducción del 30% 150,00euros
+"""
+"""An act whose reducciones absorb the sanción entirely, leaving nothing payable.
+
+500,00 less 150,00 and 350,00 is exactly zero, so AEAT prints a payable of
+``0,00``. The figure is real, reconciles, and is the one a reader must not
+confuse with an absent line.
+"""
+
+
+def test_a_printed_zero_payable_is_read_in_the_flat_layout() -> None:
+    """``Importe a ingresar 0,00`` alone is a payable AEAT stated, not a missing line.
+
+    The flat layout prints one payable line. A reader selecting between the two
+    payable labels by TRUTHINESS discards a zero Decimal and then reports the
+    field missing — refusing a document it had in fact read correctly, and
+    telling the operator the reading failed when the act simply has nothing
+    left to pay after its reducciones.
+    """
+    record = _parse(f"{_FULLY_REDUCED_HEAD}Reducción del 40% 350,00euros\nImporte a ingresar 0,00euros\n")
+
+    assert record.importe_a_ingresar == Decimal("0.00")
+    assert record.diferencia is None
+    assert record.reducciones_total == Decimal("500.00")
+
+
+def test_a_printed_zero_payable_binds_to_importe_a_ingresar_in_the_sequential_layout() -> None:
+    """With both labels printed, the zero ``Importe a ingresar`` still takes precedence.
+
+    ``Diferencia`` in this layout is the INTERMEDIATE subtotal after the first
+    reducción. Falling through to it because the final payable is zero binds the
+    record to 350,00 — an act reported as owing money it does not owe — and the
+    reconciliation then fails, so the truthiness selection turned a correct
+    reading into an arithmetic refusal naming the wrong field.
+    """
+    record = _parse(
+        f"{_FULLY_REDUCED_HEAD}Diferencia 350,00euros\nReducción del 40% 350,00euros\nImporte a ingresar 0,00euros\n",
+    )
+
+    assert record.importe_a_ingresar == Decimal("0.00")
+    # The intermediate is still carried, so the precedence is a choice between
+    # two values that both resolved -- not an artefact of one being unread.
+    assert record.diferencia == Decimal("350.00")
+
+
+def test_a_printed_zero_diferencia_is_read_when_it_is_the_only_payable_line() -> None:
+    """The flat layout names its payable ``Diferencia``; a printed zero there reads too."""
+    record = _parse(f"{_FULLY_REDUCED_HEAD}Reducción del 40% 350,00euros\nDiferencia 0,00euros\n")
+
+    assert record.importe_a_ingresar == Decimal("0.00")
+    assert record.diferencia == Decimal("0.00")
+
+
+def test_a_document_with_neither_payable_label_still_refuses_after_the_zero_fix() -> None:
+    """Reading a printed zero must not soften the refusal for a genuinely absent payable.
+
+    The two are opposite facts — AEAT stated nothing is owed, versus AEAT stated
+    nothing at all — and only the first may produce a record.
+    """
+    with pytest.raises(SancionParseError) as excinfo:
+        _parse(f"{_FULLY_REDUCED_HEAD}Reducción del 40% 350,00euros\n")
+
+    assert "importe_a_ingresar" in excinfo.value.missing
+
+
 def test_a_whole_euro_rendering_refuses_instead_of_being_reinterpreted() -> None:
     """A template that drops the decimals is a shape change, not a thousands-grouped integer.
 
