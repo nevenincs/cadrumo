@@ -232,5 +232,10 @@ def devengo_proxy_attribution_diagnostics(
                 "Record the fecha de operacion on each invoice named so its period is "
                 "determined by the art. 75 devengo date rather than inferred from the issue date"
             ),
+            # Advisory-asserted: this module holds no revision, snapshot or
+            # casilla definition anywhere -- devengo attribution applies
+            # uniformly across every IVA-relevant modelo, so there is no
+            # single casilla whose own ref this could read instead.
+            asserted_legal_refs=("ley-37-1992:art-75",),
         ),
     )
