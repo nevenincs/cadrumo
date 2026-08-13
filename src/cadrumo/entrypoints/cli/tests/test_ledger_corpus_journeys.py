@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
+from ....tests import general_m303_filing_evidence
 from ....tests.registry_observations import registry_grounded_observations
 from ._ledger_corpus_support import (
     _REVISION_CASILLA,

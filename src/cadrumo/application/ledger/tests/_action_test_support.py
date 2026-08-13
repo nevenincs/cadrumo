@@ -13,8 +13,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....application.ledger import (
     ExportSerializationFormat,
     LedgerExportCommand,
@@ -62,6 +60,7 @@ from ....domain.transactions import (
     TransactionValidationError,
 )
 from ....domain.usage_ratios import UsageRatioProfile
+from ....tests import general_m303_filing_evidence
 from ....tests.ledger_action_adapters import (
     AttachmentStore,
     BucketEventHistoryRepository,

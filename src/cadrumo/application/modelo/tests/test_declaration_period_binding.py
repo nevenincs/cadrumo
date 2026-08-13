@@ -20,8 +20,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -31,6 +29,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository

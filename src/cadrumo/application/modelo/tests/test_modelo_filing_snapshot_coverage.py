@@ -16,8 +16,6 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....core import Period
 from ....domain.modelos import (
     CalculationRevision,
@@ -35,6 +33,7 @@ from ....domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from ....tests import general_m303_filing_evidence
 from ...aggregation import (
     LedgerFilingSnapshot,
     compute_ledger_filing_snapshot,

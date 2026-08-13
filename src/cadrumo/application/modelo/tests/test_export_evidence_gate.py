@@ -9,8 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.filing_evidence import general_m303_filing_evidence
-
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.calculations.registry import CasillaObservation
@@ -23,6 +21,7 @@ from ....domain.modelos import (
     derive_work_unit_id,
     upsert_calculation_revision,
 )
+from ....tests import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from ...user_profile import profile_create_storage_span
