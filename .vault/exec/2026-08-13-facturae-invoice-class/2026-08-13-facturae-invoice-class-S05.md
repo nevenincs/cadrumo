@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:882d4c451cb1ed965d5e6e88597dccfeb85d3e809a1bf6281c0caaeb3e541223'
+body_hash: 'sha256:0b908802eaa2be3d90e2133ee859f3a52ad55d818e1598669e9d2f936444c32b'
 step_id: 'S05'
 related:
   - "[[2026-08-13-facturae-invoice-class-plan]]"
