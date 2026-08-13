@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:b67a93329f846f921b639dabfbe7d8d2395db631b1edc1ef04075f3356139615'
+body_hash: 'sha256:765d10b7ad5279a276527a916a7f522fa900f726b0d12afbf44b319d8c07f62f'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S102]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S103]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S104]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S105]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S106]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S116]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S28]]'
@@ -319,6 +320,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope producers and failure boundaries with typed, locale-neutral outcomes.
+- `2026-08-09-cli-action-envelope-hardening-W05-P08-S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S36` - Migrate authentication and session recovery predicates and actions
 
