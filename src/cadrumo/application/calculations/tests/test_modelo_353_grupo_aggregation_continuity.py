@@ -52,7 +52,7 @@ import pytest
 
 from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
 
-from ....core import CasillaId, validated_casilla_id
+from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
     IvaLedgerObservation,
@@ -61,7 +61,13 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     resolve_ledger_iva_aggregation_binding_values,
 )
-from ....domain.iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from ....domain.iva import (
+    IvaCategory,
+    IvaDeductionClassificationProvenance,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -113,6 +119,7 @@ _MEMBER_DEC_IVA: dict[str, tuple[Decimal, Decimal]] = {
 
 
 def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva: Decimal) -> IvaLedgerObservation:
+    is_input = flow is IvaFlowDirection.SOPORTADO
     return IvaLedgerObservation(
         ledger_id=ledger_id,
         transaction_date=txn_date,
@@ -121,6 +128,16 @@ def _ledger_line(*, ledger_id: str, txn_date: date, flow: IvaFlowDirection, iva:
         flow_direction=flow,
         base_amount=Decimal("1000.00"),
         iva_amount=iva,
+        deduction_fact_kind=IvaDeductionFactKind.DOMESTIC_CURRENT if is_input else None,
+        deduction_provenance=(
+            IvaDeductionClassificationProvenance(
+                authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                source_locator=f"invoice:{ledger_id}",
+                evidence_digest="a" * 64,
+            )
+            if is_input
+            else None
+        ),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )
 

@@ -2200,3 +2200,61 @@ required_text = [
     "Se modifica el artículo 91",
     "Se aplicará el tipo del 4 por 100",
 ]
+
+[legal."ley-37-1992:art-163-quinquies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163quinquies"
+document_id = "BOE-A-1992-28740"
+article = "163 quinquies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163quinquies"
+published_at = 1992-12-29
+effective_from = 2006-12-01
+review_status = "reviewed"
+reviewed_at = 2026-08-13
+reviewed_by = "agent-prepared-pending-operator"
+notes = "LIVA art. 163 quinquies identifies the group-regime subject: an entidad dominante and its entidades dependientes, firmly linked in the financial, economic, and organisational orders. This entry is limited to that group-subject predicate; it does not itself establish aggregation. Provenance: prepared from the bundled BOE consolidated text and independently cross-checked against BOE act.php on 2026-08-13. No human operator has reviewed the entry; reviewed_by records that status honestly."
+required_text = [
+    "Artículo 163 quinquies. Requisitos subjetivos del régimen especial del grupo de entidades.",
+    "entidad dominante y sus entidades dependientes",
+]
+
+[legal."ley-37-1992:art-163-sexies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163sexies"
+document_id = "BOE-A-1992-28740"
+article = "163 sexies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163sexies"
+published_at = 1992-12-29
+effective_from = 2006-12-01
+review_status = "reviewed"
+reviewed_at = 2026-08-13
+reviewed_by = "agent-prepared-pending-operator"
+notes = "LIVA art. 163 sexies makes the special group regime conditional on individual agreement and option by qualifying entities, and on its application by the dominant entity. This entry establishes the applicable-regime condition, not the aggregate calculation. Provenance: prepared from the bundled BOE consolidated text and independently cross-checked against BOE act.php on 2026-08-13. No human operator has reviewed the entry; reviewed_by records that status honestly."
+required_text = [
+    "Artículo 163 sexies. Condiciones para la aplicación del régimen especial del grupo de entidades.",
+    "la aplicación del régimen especial quedará condicionada a su aplicación por parte de la entidad dominante",
+]
+
+[legal."ley-37-1992:art-163-nonies"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a163nonies"
+document_id = "BOE-A-1992-28740"
+article = "163 nonies"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a163nonies"
+published_at = 1992-12-29
+effective_from = 2006-12-01
+review_status = "reviewed"
+reviewed_at = 2026-08-13
+reviewed_by = "agent-prepared-pending-operator"
+notes = "LIVA art. 163 nonies makes the dominant entity present the group’s aggregate periodic self-assessments. Those aggregate self-assessments integrate the individual entities’ results and are filed after the individual self-assessments. This is the direct legal basis for Modelo 353’s direct settlement treatment of the same-period Modelo 322 group-member carries. Provenance: prepared from the bundled BOE consolidated text and independently cross-checked against BOE act.php on 2026-08-13. No human operator has reviewed the entry; reviewed_by records that status honestly."
+required_text = [
+    "Artículo 163 nonies. Obligaciones específicas en el régimen especial del grupo de entidades.",
+    "Dichas autoliquidaciones agregadas integrarán los resultados de las autoliquidaciones individuales",
+    "deberán presentarse una vez presentadas las autoliquidaciones periódicas individuales",
+]

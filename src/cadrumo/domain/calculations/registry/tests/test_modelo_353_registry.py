@@ -112,6 +112,46 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
     }
 
 
+def test_modelo_353_declares_322_group_settlement_treatment() -> None:
+    modelo, catalogues = _load_modelo_353()
+    revision = modelo.revisions["2008-y-siguientes"]
+    classifications = {classification.source_modelo: classification for classification in revision.dependency_classifications}
+
+    classification = classifications["322"]
+    assert classification.id == "modelo-353-dep-322"
+    assert classification.treatment == "direct_annual_settlement"
+    assert classification.target_constructs == ("modelo-353-iva-grupo-agregado",)
+    assert set(classification.legal_refs) == {
+        "orden-eha-3434-2007:art-2",
+        "ley-37-1992:art-163-quinquies",
+        "ley-37-1992:art-163-sexies",
+        "ley-37-1992:art-163-nonies",
+        "ley-37-1992:art-88",
+        "ley-37-1992:art-92",
+        "rd-1624-1992:art-71",
+    }
+    assert set(classification.source_refs) == {
+        "aeat-modelo-322-procedure",
+        "aeat-dr-353-2026",
+        "aeat-modelo-353-procedure",
+        "boe-modelo-322-2007-form",
+        "boe-modelo-353-2007-form",
+    }
+    assert set(classification.legal_refs) <= catalogues.legal.keys()
+    assert set(classification.source_refs) <= catalogues.sources.keys()
+
+    m322_carry_ids = {
+        binding.id
+        for binding in revision.bindings
+        if binding.source == "previous_filing" and binding.selector.source_modelo == classification.source_modelo
+    }
+    assert m322_carry_ids == {
+        "modelo-353-prev-322-cuota-devengada-total",
+        "modelo-353-prev-322-cuota-deducible-total",
+        "modelo-353-prev-322-resultado-regimen-general",
+    }
+
+
 def test_modelo_353_iva_bindings_resolve_against_substrate_observations() -> None:
     from decimal import Decimal
 
