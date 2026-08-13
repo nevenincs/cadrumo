@@ -476,6 +476,7 @@ from ._handoff_paths import (
 from ._relations import (
     RegistryFoldRequirement,
     materialize_relation_binding_values,
+    relation_requirement_index,
     relation_source_requirements,
     resolve_relation_values,
     resolve_relation_values_from_observations,
@@ -1193,6 +1194,7 @@ __all__ = [
     "relation_consumption_channels",
     "relation_consumption_index",
     "relation_is_consumed",
+    "relation_requirement_index",
     "relation_source_requirements",
     "relations_by_target_binding",
     "remote_state_policy_from_cross_reference",

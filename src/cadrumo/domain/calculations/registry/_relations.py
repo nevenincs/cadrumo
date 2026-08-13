@@ -39,6 +39,7 @@ if TYPE_CHECKING:
 __all__ = [
     "RegistryFoldRequirement",
     "RelationDefinition",
+    "relation_requirement_index",
     "relation_source_requirements",
     "resolve_relation_values",
     "resolve_relation_values_from_observations",
@@ -92,6 +93,29 @@ class _RelationRequirementBucket:
     target_bindings: set[BindingId]
     legal_refs: set[LegalRefId]
     source_refs: set[SourceRefId]
+
+
+def relation_requirement_index(
+    requirements: Iterable[RegistryFoldRequirement],
+) -> dict[RelationId, RegistryFoldRequirement]:
+    """Index canonical fold requirements by every relation they satisfy.
+
+    ``relation_source_requirements`` deliberately coalesces source filings that
+    satisfy more than one relation. Consumers nevertheless need a direct
+    relation-id lookup to project the one requirement's source identity,
+    treatment, and grounding. Keeping that fan-out here means every consumer
+    gets the same requirement object instead of reconstructing partial metadata
+    with a local comprehension.
+
+    The requirement producer sorts its rows deterministically, and this retains
+    its established last-row-wins behavior for an invalid duplicate relation id
+    until the registry validator reports that structural fault.
+    """
+    return {
+        relation_id: requirement
+        for requirement in requirements
+        for relation_id in requirement.relation_ids
+    }
 
 
 def relation_source_requirements(

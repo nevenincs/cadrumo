@@ -83,6 +83,7 @@ from ...domain.calculations.registry import (
     materialize_relation_binding_values,
     relation_consumption_channels,
     relation_consumption_index,
+    relation_requirement_index,
     relation_source_requirements,
     relations_by_target_binding,
     resolve_observed_requirement_value,
@@ -580,15 +581,13 @@ def resolve_relations_from_local_store(
         activity_start_date=activity_start_date,
         m111_no_retenciones_periods=m111_no_retenciones_periods,
     )
-    requirements_by_relation = {
-        relation_id: requirement
-        for requirement in _scoped_relation_source_requirements(
+    requirements_by_relation = relation_requirement_index(
+        _scoped_relation_source_requirements(
             snapshot,
             activity_start_date,
             m111_no_retenciones_periods=m111_no_retenciones_periods,
-        )
-        for relation_id in requirement.relation_ids
-    }
+        ),
+    )
 
     resolved_map = _resolve_available_relation_values(observations, requirements_by_relation=requirements_by_relation)
 
@@ -1113,15 +1112,13 @@ class RelationPrefillSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        requirements_by_relation = {
-            relation_id: requirement
-            for requirement in _scoped_relation_source_requirements(
+        requirements_by_relation = relation_requirement_index(
+            _scoped_relation_source_requirements(
                 snapshot,
                 activity_start_date,
                 m111_no_retenciones_periods=m111_no_retenciones_periods,
-            )
-            for relation_id in requirement.relation_ids
-        }
+            ),
+        )
         resolved = tuple(item for item in relation_values.values if item.value is not None)
         unresolved = _unresolved_relation_ids(
             snapshot,
