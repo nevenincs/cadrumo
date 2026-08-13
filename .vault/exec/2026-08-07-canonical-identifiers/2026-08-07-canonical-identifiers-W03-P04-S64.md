@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:bbfb0842793d9cb174c51731bb703a04d9bba445cbb225bae149bbb1467960be'
+body_hash: 'sha256:dce26dd73b85fbba8847f4d16e7e25e7c9511eef068ca6217af1bbcc0144dcec'
 step_id: 'S64'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
@@ -25,8 +25,10 @@ related:
   site, and the shape of the values it can receive.
 - Enumerate every production classifier and every generically-named identifier
   parameter on the CLI surface, and adjudicate each against the deciding test.
-- Measure separately whether the namespace taxonomy still earns its place.
-- Record the ruling. No production code changed.
+- Measure the distinction between the consumed aliases and the unconsumed
+  catalogue.
+- Delete the catalogue and its enum-only tests after the ruling; retain the
+  aliases at their existing canonical source.
 
 ## Outcome
 
@@ -133,21 +135,22 @@ surfaced. It classifies FIELDS by their declared annotation through a static
 walk, never VALUES by shape, it imports nothing from the taxonomy, and it is dev
 harness rather than production. Verdict: NOT a consumer.
 
-### The taxonomy is measured separately, and stands
+### The aliases stand; the catalogue does not
 
-The premise that the namespace enum has no role beyond feeding the resolver is
-stale and was not acted on. The enum is not retired and was not touched.
+The aliases have real production consumers outside the identity package: the
+CSV alias in four files, the expediente alias in five, the box-number alias in
+four, the certificado alias in three, and the clave, registry-snapshot and
+presentation aliases in two, two and one respectively. Each preserves its
+constraint at one direct canonical source and remains exported by the identity
+facade.
 
-All seven per-namespace pydantic aliases the enum indexes carry real production
-consumers outside the identity package: the CSV alias in four files, the
-expediente alias in five, the box-number alias in four, the certificado alias in
-three, and the clave, registry-snapshot and presentation aliases in two, two and
-one respectively. Every enum member's documentation names the alias that carries
-its constraint shape, so the enum is the index over a consumed family rather than
-a free-standing concept. It additionally carries the campaign's non-membership
-exclusions as a code comment, carries the second-pass triage dispositions, and is
-the vocabulary the still-open ratchet gate will assert against. The taxonomy
-earns its place on grounds wholly independent of the resolver.
+That evidence does not justify an otherwise unused `IdentifierNamespace`
+catalogue. The enum supplied neither validation nor a consumer-facing lookup;
+it only duplicated an index over aliases that callers already import directly.
+S64 therefore deletes the `StrEnum`, its facade export, the enum-only tests and
+constants, the stale membership catalogue, and alias prose referring back to
+the deleted index. No compatibility alias, re-export bridge, replacement
+catalogue, or manufactured consumer is introduced.
 
 ## Notes
 
@@ -155,10 +158,14 @@ The tree carries an explicit standing position against the mechanism this
 resolver would have supplied. The ledger identity-roles model records that a
 counterparty's country is never inferred from the identifier's own shape, and the
 presentation-id alias records that every receipt-to-filing comparison in the app
-runs on the CSV namespace precisely because a caller holding a register value
-cannot supply a presentation id. Both are prior rulings that shape is not a
-trustworthy source of namespace facts here, which is corroboration for the drop
-rather than merely an absence of callers.
+runs on the CSV value precisely because a caller holding a register value cannot
+supply a presentation id. Both are prior rulings that shape is not a trustworthy
+source of namespace facts here, which corroborates deletion rather than merely
+an absence of callers.
 
-No production code, test or configuration was modified by this Step, so no gates
-were run and none are owed.
+S24 and S25 close as dropped-without-implementation because their sole outcome
+depended on a resolver that S64 ruled out. The plan CLI supports only the closed
+checkbox disposition; this record supplies the required deletion evidence rather
+than falsely describing either row as implemented. Focused identity/import tests,
+Ruff, formatting, Ty, targeted zero-reference searches, and formal review are
+recorded with their exact results after the code change.

@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:4899de4b156f7060a770e56348fc23a50f7992fdf6feb005164b6fb06fc7a725'
+body_hash: 'sha256:480387483b80514e644ca55ced57e720c0ee3cf18690f1498d3227fa1a7ea2be'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -24,10 +24,9 @@ decided, staged so no Step retypes more than one identifier concept at once.
 Executes `2026-08-07-canonical-identifiers-adr` (including its same-day
 Amendment), grounded in `2026-08-07-canonical-identifiers-reference`. Waves
 `W01`-`W03` are the original ADR scope: hex-64 primitive consolidation,
-AEAT-issued namespace enrollment (expediente id, clave de liquidacion, then
-CSV under an evidence-gated Phase), and the resolver plus the
-`matches_filing_target` type-level guard delivering the sibling
-`justificante-identity-matching-adr`'s deferred "Option 4".
+AEAT-issued alias enrollment (expediente id, clave de liquidacion, then CSV
+under an evidence-gated Phase), and the resolver proposal that the accepted
+amendment later ruled out because it had no production consumer.
 
 The CSV Phase (`W02.P03`) was originally prioritised within `W02` because
 the sibling plan's fix for its own two-filings-per-period defect was said to
@@ -183,23 +182,22 @@ Steps and shipped without `AeatCsv`, so the dependency no longer exists and
 - [ ] `W02.P03.S23` - Retype extract_csv_from_url's return annotation from bare str to AeatCsv, resolving this row's OBSOLETE AS WRITTEN state on measurement rather than deleting it. The row assumed the sibling justificante-identity-matching plan would hand off a new persisted cotejo-derived CSV field. It did not. Its chosen Option 4 recovers the CSV non-persistingly from FiledDeclaracionArtefact.source_url through extract_csv_from_url, so there is no new field, but there is a real successor target. That function already shape-validates its result with is_aeat_csv, the exact canonical contract AeatCsv carries, so the retype documents an invariant the function already enforces rather than adding a constraint. Confirm all four consumers still type-check; `src/cadrumo/adapters/outbound/aeat/sede/_declarations_remote.py`.
 - [ ] `W02.P03.S67` - Retype the SIX further CSV-carrying fields the original rows did not name, on the same adopted bound. THE MEASUREMENT THIS PHASE WAS PLANNED AGAINST WAS INCOMPLETE and this row states the corrected one rather than leaving a reader to re-derive it. The reference and the phase rows both describe three divergent validation strengths across six sites. Re-measured at HEAD immediately before building, the concept spans roughly twelve sites and FIVE strengths -- the documented 8-32 contract inline at four sites, bare str or None at four, the retired 4-64 alias at two, plus TWO strengths named nowhere in the reference or in the phase rows. Those two are verified_justificante_csv at application/overview/_calendar_models.py lines 168 and 329 carrying min_length=1 and max_length=64, and original_csv at domain/filing/_amendment.py line 83 carrying a bare min_length=1. The remaining unnamed sites are justificante_csv at application/filing/_complementaria.py line 66 and verified_justificante_csv at entrypoints/cli/_overview_payloads.py lines 154 and 203, both entirely unconstrained. Rowed as a sibling rather than folded into the phase, because doubling a batch after its rows are written is how scope stops being reviewable, and because a concept-shaped gap left behind a row-shaped close is what this plan already had to correct once in its opening Wave. NOTE that domain/submission/_models.py line 194 is deliberately NOT in this row -- it consumes the JustificanteCsv alias directly, so it must land in whichever commit retires that alias or the retirement is a break rather than a deferral; `src/cadrumo/application/overview/_calendar_models.py, src/cadrumo/domain/filing/_amendment.py, src/cadrumo/application/filing/_complementaria.py, src/cadrumo/entrypoints/cli/_overview_payloads.py`.
 
-## Wave `W03` - Resolver and type-level namespace guard
+## Wave `W03` - Resolver retirement and direct alias boundary
 
-Lands the shape-only resolver with its documented ambiguity limit, then
-delivers the sibling `justificante-identity-matching` ADR's deferred
-"Option 4" by retyping `matches_filing_target`'s `presentation_id`
-parameter so a register-namespace value is refused at the type-checker
-boundary. Depends on Wave `W02` landing first.
+Closes the superseded shape-resolver proposal without manufacturing a caller.
+The sibling ADR already removed `matches_filing_target`'s wrong-namespace
+parameter; canonical AEAT aliases remain the direct, consumed boundary.
+Depends on Wave `W02` landing first.
 
-### Phase `W03.P04` - shape resolver and matches_filing_target hardening
+### Phase `W03.P04` - resolver retirement and matches_filing_target boundary
 
-Delivers the resolver the operator asked for, honest about where shape
-alone cannot disambiguate, and closes the recurrence risk the sibling ADR
-named as future hardening.
+Drops the unconsumed resolver and its dormant enum after the deciding search
+found no unknown-namespace production value. The accepted sibling fix remains
+the absence of `presentation_id`, guarded by its existing refusal test.
 
-- [ ] `W03.P04.S24` - HELD pending the deciding Step in this Phase. Do not land resolve_identifier_namespace until a production site is named that genuinely needs to ask which namespaces a bare value is consistent with. The 2026-08-10 ADR amendment records why. This row's only planned enrollment was matches_filing_target's presentation_id parameter, which no longer exists, and IdentifierNamespace already ships with no consumer outside its own module and test. Landing the resolver now would add a second dormant symbol beside the first; `src/cadrumo/core/identity/_namespace.py`.
-- [ ] `W03.P04.S25` - HELD with S24 and executed in the same action as it. Add unit coverage proving the resolver returns more than one namespace for a value shaped to overlap two members and exactly one for a value shaped to only one, but only once a real consumer exists to justify the resolver at all; `src/cadrumo/core/identity/tests/`.
-- [ ] `W03.P04.S64` - Decide whether resolve_identifier_namespace is enrolled or dropped, and record the outcome before S24 executes. Search production for a site holding an AEAT identifier value whose namespace is UNKNOWN at the point of use. A semantic sweep run for the 2026-08-10 ADR amendment found none, returning only the enum's own module, its own test and an in-flight census tool. The disconfirming observation that decides this row: a genuine consumer holds a value whose namespace cannot be read off its own field type. If every candidate turns out to hold a value whose namespace is already fixed by its field type, record that the resolver is DROPPED and retire IdentifierNamespace with it rather than leaving an exported concept nothing uses. Do not manufacture a caller to justify the symbol; `src/cadrumo/core/identity/`.
+- [x] `W03.P04.S24` - Drop `resolve_identifier_namespace` because S64 found no production consumer and delete dormant `IdentifierNamespace` too No resolver implementation lands; `src/cadrumo/core/identity/_namespace.py`.
+- [x] `W03.P04.S25` - Drop resolver-only coverage because S64 ruled out the unconsumed resolver so no resolver tests are authored; `src/cadrumo/core/identity/tests/test_namespace.py`.
+- [x] `W03.P04.S64` - Rule `resolve_identifier_namespace` DROPPED after semantic and targeted search found no unknown-namespace production value Delete dormant `IdentifierNamespace` while preserving direct canonical aliases; `src/cadrumo/core/identity/`.
 
 ## Wave `W04` - Mechanical app-derived alias adoption
 
@@ -448,8 +446,7 @@ Modelo 200 misattribution ADR, must not be touched here); registry TOML
 id-shaped values (architecturally clean per the wire census, but no
 measured denominator equivalent to the Python count); any second-pass
 sweep finding (`W07.P11.S49`) not triaged to a disposition by
-`W07.P11.S50`; and the enrollment of `resolve_identifier_namespace`, which
-is held behind `W03.P04.S64` pending a first real consumer and may resolve
-to dropping the resolver and its enum rather than landing them. A future
-plan referencing this one's ADR is the sanctioned next step for any of
-these, not a silent assumption that this plan's closure covers them.
+`W07.P11.S50`. `W03.P04` resolved the resolver proposal by deletion: neither
+`resolve_identifier_namespace` nor `IdentifierNamespace` remains. A future
+plan may propose a new resolver only with a named production consumer; it may
+not treat the retired surface as available.
