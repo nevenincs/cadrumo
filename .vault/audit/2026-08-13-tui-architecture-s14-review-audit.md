@@ -73,3 +73,29 @@ The frozen factory descriptor declares the exact request model and executor clas
 The execution record reports seven focused registry/facade tests passing, Ruff clean, and basedpyright with zero errors, warnings, or notes. The public facade exports the new registry-owned axes and descriptor, and its exact import topology remains frontend-free.
 
 Final verdict: PASS. No CRITICAL, HIGH, or MEDIUM findings remain.
+
+## Reopened typed-resolver review
+
+### concrete-two-pass-resolution | low | Resolver implementation hydrates only the registered concrete model
+
+Both methods strictly parse a minimal definition-bearing header, perform fail-closed immutable registry lookup, then validate the unchanged JSON through `OperationRequest[request_type]` or `OperationSnapshot[request_type]`. The full second pass forbids extra or malformed outer/inner data and reuses snapshot definition/subject correlation. There is no mapping, `Any`, unparameterized `BaseModel`, or payload fallback.
+
+### existential-return-annotation | low | BaseModel parameterization is a safe erased public view here
+
+The runtime object is always the dynamically selected concrete generic model, while the public annotation intentionally exposes only the common `BaseModel` payload bound to callers that cannot statically know the registry-selected type. It does not cause runtime hydration through `BaseModel`, and consumers cannot infer a narrower payload. A new erased protocol or alias would add a second structural authority without improving safety.
+
+### resolver-mutation-coverage | medium | Malformed JSON and subject-identity drift are not planted
+
+The ten-test gate proves concrete request/snapshot round trips, byte input, observable payload mutation, unknown definitions on both routes, snapshot payload-model mismatch, and outer/request definition drift. It does not directly plant malformed JSON, a request-route payload mismatch, or snapshot identity/request `subject_ref` drift. Production validators appear to refuse all three, but the reopened acceptance proof is not mutation-sensitive to regressions in those exact branches.
+
+Final verdict: FAIL. One MEDIUM finding remains; no CRITICAL or HIGH findings remain.
+
+## Typed-resolver mutation closure
+
+### resolver-mutation-coverage-closure | low | Both routes now carry exact refusal mutations
+
+The focused suite now plants malformed JSON against request and snapshot resolution, a wrong concrete payload on the request route, and outer/inner subject drift in addition to the prior unknown-definition, snapshot wrong-model, and definition-drift cases. All are refused through production resolvers without fallback or mirrored parsing.
+
+The execution record reports 11 focused tests passing, Ruff clean, and basedpyright with zero errors, warnings, or notes.
+
+Final verdict: PASS. No CRITICAL, HIGH, or MEDIUM findings remain.

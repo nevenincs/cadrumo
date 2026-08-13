@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:910262c902a38ea97c28554231fbad6d7bff005b5af68ff27881ce5f6a219154'
+body_hash: 'sha256:d576020b307129a13115e58ef464abc096927abfbddca83063dcff31f100b467'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -62,7 +62,7 @@ Build the registry, journal, leases, event stream, cancellation, deadline, clean
 Define registered executors, canonical action joins, resource ownership, and invocation context without frontend dependencies.
 
 - [x] `W02.P03.S13` - Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership; `src/cadrumo/application/operations/_executor.py`.
-- [ ] `W02.P03.S14` - Define the immutable operation registry, closed reconciliation and frontend projection declarations, executor-factory binding, and registry-owned concrete typed request and snapshot resolver keyed by definition identity with fail-closed unknown and mismatch refusal; `src/cadrumo/application/operations/_registry.py, src/cadrumo/application/operations/__init__.py, and direct registry/facade tests`.
+- [x] `W02.P03.S14` - Define the immutable operation registry, closed reconciliation and frontend projection declarations, executor-factory binding, and registry-owned concrete typed request and snapshot resolver keyed by definition identity with fail-closed unknown and mismatch refusal; `src/cadrumo/application/operations/_registry.py, src/cadrumo/application/operations/__init__.py, and direct registry/facade tests`.
 
 ### Phase `W02.P04` - Journal, leases, and persistence
 

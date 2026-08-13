@@ -9,7 +9,13 @@ from types import ModuleType
 
 import pytest
 
-from .. import OperationCapabilities, OperationExecutorContext, OperationInteractionRequest, OperationRequest
+from .. import (
+    OperationCapabilities,
+    OperationExecutorContext,
+    OperationInteractionRequest,
+    OperationRegistry,
+    OperationRequest,
+)
 from .. import __all__ as public_names
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -31,6 +37,9 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
     assert "OperationEvent" in public_names
     assert OperationExecutorContext.__module__.endswith("._executor")
     assert OperationInteractionRequest.__module__.endswith("._interactions")
+    assert OperationRegistry.__module__.endswith("._registry")
+    assert callable(OperationRegistry.resolve_request_json)
+    assert callable(OperationRegistry.resolve_snapshot_json)
 
 
 def test_facade_does_not_import_frontend_or_adapter_modules() -> None:

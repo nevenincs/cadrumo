@@ -6,14 +6,30 @@ from collections.abc import Callable
 from enum import StrEnum
 from typing import cast
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, OperationInteractionKind
 from ..operator_actions import ActionReference
 from ._capabilities import OperationCapabilities
 from ._events import OperationEventCode
 from ._executor import OperationExecutor
-from ._models import OperationDefinitionId
+from ._models import OperationDefinitionId, OperationIdentity, OperationRequest, OperationSnapshot
+
+
+class _OperationRequestResolutionHeader(BaseModel):
+    """Minimal request identity used only to select its registered model."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+
+    definition_id: OperationDefinitionId
+
+
+class _OperationSnapshotResolutionHeader(BaseModel):
+    """Minimal snapshot identity used only to select its registered model."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="ignore")
+
+    identity: OperationIdentity
 
 
 class OperationReconciliationPolicy(StrEnum):
@@ -97,9 +113,7 @@ class OperationRegistry(BaseModel):
         definition_ids = tuple(item.definition_id for item in value)
         if len(set(definition_ids)) != len(definition_ids):
             raise ValueError("operation definition IDs must be unique")
-        action_ids = tuple(
-            item.action_reference.action_id for item in value if item.action_reference is not None
-        )
+        action_ids = tuple(item.action_reference.action_id for item in value if item.action_reference is not None)
         if len(set(action_ids)) != len(action_ids):
             raise ValueError("operator action references must map to at most one operation definition")
         return tuple(sorted(value, key=lambda item: item.definition_id))
@@ -117,6 +131,18 @@ class OperationRegistry(BaseModel):
             if definition.action_reference == action:
                 return definition
         raise KeyError(f"operator action is not mapped to an operation definition: {action.action_id!r}")
+
+    def resolve_request_json(self, raw: str | bytes) -> OperationRequest[BaseModel]:
+        """Hydrate one request through the concrete model registered for its definition."""
+        header = _OperationRequestResolutionHeader.model_validate_json(raw)
+        request_type = self.lookup(header.definition_id).request_type
+        return OperationRequest[request_type].model_validate_json(raw)
+
+    def resolve_snapshot_json(self, raw: str | bytes) -> OperationSnapshot[BaseModel]:
+        """Hydrate one snapshot through the concrete model registered for its definition."""
+        header = _OperationSnapshotResolutionHeader.model_validate_json(raw)
+        request_type = self.lookup(header.identity.definition_id).request_type
+        return OperationSnapshot[request_type].model_validate_json(raw)
 
 
 __all__ = [

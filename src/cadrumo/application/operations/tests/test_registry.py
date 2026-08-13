@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
+
 import pytest
 from pydantic import BaseModel, ValidationError
 
@@ -12,6 +14,7 @@ from ....core import (
     OperationDeadline,
     OperationDurability,
     OperationEffect,
+    OperationLifecycle,
 )
 from ...operator_actions import ActionReference
 from .. import (
@@ -21,12 +24,14 @@ from .. import (
     OperationDefinition,
     OperationExecutorFactory,
     OperationFrontendProjection,
+    OperationIdentity,
     OperationInteractionKind,
     OperationReconciliationPolicy,
     OperationRegistry,
     OperationReplayPolicy,
     OperationRequest,
     OperationSensitiveInputPolicy,
+    OperationSnapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -88,6 +93,31 @@ def definition(*, definition_id: str, action_id: str | None = None) -> Operation
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
         action_reference=ActionReference(action_id=action_id) if action_id is not None else None,
+    )
+
+
+def request(*, definition_id: str = "profile.sync", value: str = "submitted") -> OperationRequest[RequestPayload]:
+    return OperationRequest[RequestPayload](
+        definition_id=definition_id,
+        subject_ref="profile:active",
+        payload=RequestPayload(value=value),
+        idempotency_key="sync-2026-08-13",
+    )
+
+
+def snapshot(*, definition_id: str = "profile.sync", value: str = "submitted") -> OperationSnapshot[RequestPayload]:
+    identity = OperationIdentity(
+        operation_id="a" * 64,
+        definition_id=definition_id,
+        subject_ref="profile:active",
+    )
+    return OperationSnapshot[RequestPayload](
+        identity=identity,
+        request=request(definition_id=definition_id, value=value),
+        revision=3,
+        lifecycle=OperationLifecycle.RUNNING,
+        updated_at=datetime(2026, 8, 13, 20, tzinfo=UTC),
+        event_cursor=9,
     )
 
 
@@ -154,6 +184,75 @@ def test_definition_requires_explicit_reconciliation_and_projection_policy() -> 
     payload.pop("reconciliation_policy")
     with pytest.raises(ValidationError):
         OperationDefinition.model_validate(payload)
+
+
+def test_registry_resolves_registered_concrete_request_and_snapshot_models() -> None:
+    registry = OperationRegistry(definitions=(definition(definition_id="profile.sync"),))
+    submitted = request()
+    observed = snapshot()
+
+    resolved_request = registry.resolve_request_json(submitted.model_dump_json().encode())
+    resolved_snapshot = registry.resolve_snapshot_json(observed.model_dump_json())
+
+    assert resolved_request == submitted
+    assert isinstance(resolved_request.payload, RequestPayload)
+    assert resolved_snapshot == observed
+    assert isinstance(resolved_snapshot.request.payload, RequestPayload)
+
+
+def test_registry_resolvers_hydrate_payload_mutations_through_the_registered_model() -> None:
+    registry = OperationRegistry(definitions=(definition(definition_id="profile.sync"),))
+    raw = snapshot().model_dump_json()
+    mutated = raw.replace('"value":"submitted"', '"value":"changed"')
+    assert mutated != raw, "the serialized request payload was not mutated"
+
+    resolved = registry.resolve_snapshot_json(mutated)
+
+    assert resolved.request.payload.value == "changed"
+    assert resolved != snapshot()
+
+
+def test_registry_resolvers_refuse_unknown_definition_identity_and_payload_model_mismatch() -> None:
+    registry = OperationRegistry(
+        definitions=(definition(definition_id="auth.login"), definition(definition_id="profile.sync")),
+    )
+    raw = snapshot().model_dump_json()
+    unknown_request = request().model_dump_json().replace("profile.sync", "profile.unknown")
+    unknown_snapshot = raw.replace("profile.sync", "profile.unknown")
+    wrong_payload_model = raw.replace('"value":"submitted"', '"reference":"unexpected"')
+    wrong_request_payload_model = request().model_dump_json().replace(
+        '"value":"submitted"', '"reference":"unexpected"'
+    )
+    mismatched_identity = raw.replace('"definition_id":"profile.sync"', '"definition_id":"auth.login"', 1)
+    mismatched_subject = raw.replace('"subject_ref":"profile:active"', '"subject_ref":"profile:other"', 1)
+
+    assert unknown_request != request().model_dump_json(), "the request definition identity was not mutated"
+    assert unknown_snapshot != raw, "the snapshot definition identity was not mutated"
+    assert wrong_payload_model != raw, "the serialized payload model was not mutated"
+    assert wrong_request_payload_model != request().model_dump_json(), "the request payload model was not mutated"
+    assert mismatched_identity != raw, "the snapshot definition identity was not mutated"
+    assert mismatched_subject != raw, "the snapshot subject identity was not mutated"
+    with pytest.raises(KeyError, match="unknown operation definition"):
+        registry.resolve_request_json(unknown_request)
+    with pytest.raises(KeyError, match="unknown operation definition"):
+        registry.resolve_snapshot_json(unknown_snapshot)
+    with pytest.raises(ValidationError):
+        registry.resolve_snapshot_json(wrong_payload_model)
+    with pytest.raises(ValidationError):
+        registry.resolve_request_json(wrong_request_payload_model)
+    with pytest.raises(ValidationError, match="request definition"):
+        registry.resolve_snapshot_json(mismatched_identity)
+    with pytest.raises(ValidationError, match="request subject"):
+        registry.resolve_snapshot_json(mismatched_subject)
+
+
+def test_registry_resolvers_refuse_malformed_json_as_controlled_validation_errors() -> None:
+    registry = OperationRegistry(definitions=(definition(definition_id="profile.sync"),))
+
+    with pytest.raises(ValidationError, match="Invalid JSON"):
+        registry.resolve_request_json('{"definition_id":')
+    with pytest.raises(ValidationError, match="Invalid JSON"):
+        registry.resolve_snapshot_json(b'{"identity":')
 
     payload = definition(definition_id="profile.sync").model_dump()
     payload["permitted_frontends"] = frozenset()

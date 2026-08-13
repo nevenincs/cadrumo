@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:c60b24a076d6e4a0d9ce3767664aad002aa139b480c28d1061692a807ac19384'
+body_hash: 'sha256:438a1f02de2ab606773a107589cf76277c6a253c21168af58fa1cd5414b36df3'
 step_id: 'S14'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -78,3 +78,17 @@ Live code semantic search returned the operation models, capabilities, interacti
 The first focused pytest correctly exposed the exact facade import-set expectation; it was updated to admit only the new canonical `_registry` owner and the final gate passed. S15 remains the owner of fixed-point catalogue/surface reconciliation, and S16 remains the owner of broader executor refusal conformance.
 
 Review found D6 completeness gaps around reconciliation, frontend projections, and factory correlation. A fresh semantic and exact sweep found no operation-level superset authority: operator-surface reconciliation describes command projection rather than owner-loss recovery, and entrypoint-specific exposure declarations are not generic operation policy. `OperationReconciliationPolicy` and `OperationFrontendProjection` therefore live narrowly in the operation registry and carry identities only. `OperationExecutorFactory` is a frozen descriptor: registration checks the declared executor class structurally without instantiation, definition validation binds the exact request model, and `create()` validates the constructed object before supervisor use without executing the operation.
+
+## Reopened typed-resolution outcome
+
+The registry now resolves raw request and snapshot JSON by first strictly validating only the definition-bearing header, looking up the immutable definition by its `definition_id`, and then validating the unchanged JSON exclusively through `OperationRequest[definition.request_type]` or `OperationSnapshot[definition.request_type]`. This preserves the registered concrete payload model across the JSON boundary; it does not hydrate through a `BaseModel`, mapping, or untyped payload fallback.
+
+Unknown definition identities fail at the registry lookup. A payload shaped for another model fails the selected concrete model validation, and snapshot identity/request definition or subject drift fails the existing snapshot correlation invariants. Direct registry tests cover request and snapshot concrete round trips, byte input, malformed JSON on both routes, observable payload mutation, unknown identity refusal, request- and snapshot-route payload/model mismatch, and identity/request definition and subject mismatch. The public facade test also proves both resolver methods remain reachable through `OperationRegistry`.
+
+Focused verification for the reopened scope:
+
+- `uv run ruff check src/cadrumo/application/operations/_registry.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_registry.py src/cadrumo/application/operations/tests/test_facade.py` - passed.
+- `uv run basedpyright src/cadrumo/application/operations/_registry.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_registry.py src/cadrumo/application/operations/tests/test_facade.py` - 0 errors, 0 warnings, 0 notes.
+- A direct production-model JSON proof passed for concrete request and snapshot restoration, an observable payload mutation, unknown-definition refusal, payload/model mismatch refusal, and snapshot identity/request mismatch refusal.
+- `uv run pytest -q -n 0 src/cadrumo/application/operations/tests/test_registry.py src/cadrumo/application/operations/tests/test_facade.py` - 11 passed in 0.93s. The final review remediation added controlled malformed-JSON refusal on both routes, a request-route wrong-model mutation, and outer/inner subject drift; the full focused surface passed.
+- `uvx vaultspec-core vault check all` - exit 0; structural checks passed with 1,377 advisory shared-corpus warnings and no closure error.
