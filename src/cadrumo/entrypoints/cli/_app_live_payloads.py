@@ -38,7 +38,7 @@ from ...application.live import (
 )
 from ...core import IvaCompensationStateProvenance, Modelo, Period
 from ...core.errors import CoreValidationError
-from ...core.identity import BucketId, ContentDigest, SnapshotId
+from ...core.identity import AeatExpedienteId, BucketId, ContentDigest, SnapshotId
 from ...core.json_contract import OutputSchema, register_schema
 from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import BindingId
@@ -716,7 +716,7 @@ class ExpedienteDeclarationPayload(OutputSchema):
     modelo: str
     ejercicio: int
     period: str
-    expediente_id: str
+    expediente_id: AeatExpedienteId
     estado: str
     tipo_solicitud: str | None
     observaciones: str | None
