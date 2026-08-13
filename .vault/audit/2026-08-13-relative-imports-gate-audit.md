@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:403ba75acd2e38f0f36338a0c46404bfe54661de8ef950bbbb8c9f66feb5d1fe'
+body_hash: 'sha256:b463f5b90318f4ac9382e393983b0e543b55cbc32aa9364ca4fbadeb99755f95'
 related: []
 ---
 
@@ -82,6 +82,38 @@ underscore-named; the ownership rule does not. The filing-evidence builder is no
 only one of the three routed through the facade, so the three siblings are governed
 inconsistently.
 
+### tests-submodule-reach-is-a-carve-out | high | the survey inverted the premise of the finding above
+
+The finding above framed this as three siblings governed inconsistently. A measurement at
+HEAD showed the framing was wrong by two orders of magnitude. Cross-package consumers
+reach the support modules in this package by submodule path at over fifteen hundred
+import sites, across roughly a thousand test modules and about thirty support modules.
+The heaviest single module accounts for more than seven hundred of those and drags the
+whole persistence storage adapter stack; the filing-evidence builder that prompted the
+question accounts for thirteen, the smallest of the heavy ones.
+
+So the choice was never between two siblings and one. Promoting the two named modules
+would have left twenty-six others on the prevailing convention, and promoting all of them
+would have meant rewriting over fifteen hundred import sites of test plumbing across
+roughly a thousand files, to build a facade carrying hundreds of names, for no
+behavioural change. The reach also costs nothing where it stands, while an eager facade
+would make every consumer of the domain-free inventory helpers import the persistence
+stack.
+
+Ruled a sanctioned carve-out: the facade-ownership discipline governs production packages,
+where one canonical public surface per package is what keeps a domain boundary auditable.
+This package is wheel-excluded test plumbing consumed only by other tests. The convention
+is now stated in the package's own module docstring, at the point of use, so it is
+discoverable without reference to any external document.
+
+**Correction to this campaign's own earlier work.** The promotion of the filing-evidence
+builder onto that facade, recorded above as a precondition of its consuming change, applied
+a production-package rule to test plumbing. The survey shows the tree's convention is
+otherwise. The promotion stands because it is lazy, tested and has working consumers, and
+unwinding it would churn twenty-two files for symmetry alone — but it is explicitly not a
+precedent, and the docstring says so, because two facade entries read from outside look
+like a migration in progress rather than two individually-reasoned exceptions.
+
 ### export-hard-cut-module-object | low | the module-object import was load-bearing, not sloppiness
 
 `src/cadrumo/application/filing/tests/test_export_snapshot_authority_hard_cut.py` bound
@@ -110,11 +142,19 @@ absorbed is that choosing the survivor by caller count silently relocated a doma
 concept into application and inverted twenty test modules' dependency direction, with
 no gate able to see it until an unrelated import mandate exposed the absolute imports.
 
-Tied to `tests-support-submodules-unowned`: the two remaining support submodules should
-either be promoted to the `cadrumo.tests` facade on the same lazy pattern, or the
-package's support submodules should be declared a sanctioned carve-out from the
-facade-ownership rule with the reason recorded. Governing three siblings three ways is
-the state to end, not the specific direction chosen.
+Tied to `tests-support-submodules-unowned` and closed by
+`tests-submodule-reach-is-a-carve-out`: the carve-out was taken and is recorded in the
+package's own docstring. The residual recommendation is narrower and is about method
+rather than outcome — the original finding was raised from three observed sites and
+proposed a remedy that a measurement then showed would have rewritten over fifteen
+hundred. A structural finding that proposes a sweep should carry the sweep's measured
+size before the remedy is chosen, because the two candidate remedies here differed by
+more than two orders of magnitude in cost and nothing in the finding revealed that.
+
+The follow-on decision worth an ADR is whether the facade-ownership rule should state its
+own scope explicitly. It currently reads as universal, and a reader has to infer that it
+governs production packages rather than bundled test plumbing. That inference was made
+twice in this session, once each way.
 
 Tied to `dynamic-import-strings`: the gate's docstring already names the blind spot and
 directs reviewers to grep for the prefix. That instruction is the whole enforcement, so
