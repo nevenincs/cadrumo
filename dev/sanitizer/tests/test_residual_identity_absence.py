@@ -110,6 +110,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: and after sides are one vocabulary.
 _PLANTED_NIF = "00000000T"
 _PLANTED_IBAN = "ES8200000000000000000000"
+
+#: The legal-entity and prefixed spellings of the same all-zero convention.
+#:
+#: ``B00000000`` is an all-zero CIF body under the ``B`` kind, whose control is
+#: a digit and is ``0`` for that body; ``ES00000000T`` is the intra-community
+#: spelling of the planted NIF above. Both are as unmistakably synthetic as the
+#: pair above and exist for the same reason: a class cannot be shown to refuse a
+#: wrong control character unless it is also shown to accept a right one.
+_PLANTED_CIF = "B00000000"
+_PLANTED_NIF_IVA = "ES00000000T"
 _PLANTED_NAME = "NOMBRE DE PRUEBA CERO"
 """The name the pre-sanitisation specimen carries before the sanitiser rewrites it.
 
@@ -272,9 +282,65 @@ def test_advisory_kinds_are_excluded_from_the_blocking_tier() -> None:
     rather than fixed, so the shape-only classes stay reportable but
     non-blocking.
     """
-    assert {ResidualKind.NIF_NIE, ResidualKind.IBAN} == CHECKSUM_VERIFIED_KINDS
     assert ResidualKind.EMAIL not in CHECKSUM_VERIFIED_KINDS
     assert ResidualKind.PHONE not in CHECKSUM_VERIFIED_KINDS
+    assert frozenset(ResidualKind) - {ResidualKind.EMAIL, ResidualKind.PHONE} == CHECKSUM_VERIFIED_KINDS
+
+
+@pytest.mark.parametrize(
+    ("shape_only", "kind"),
+    [
+        # Each body below is the shape its class matches, carrying a control
+        # character the AEAT algorithm does not produce for that body. The
+        # expected control for an all-zero NIF body is 'T' and for the CIF body
+        # 1234567 under kind 'B' it is '4', both derived from the published
+        # algorithm rather than from this scanner's output.
+        ("00000000X", ResidualKind.NIF_NIE),
+        ("K0000000X", ResidualKind.NIF_NIE),
+        ("B12345670", ResidualKind.CIF),
+        ("ESB12345670", ResidualKind.NIF_IVA),
+        ("ES00000000X", ResidualKind.NIF_IVA),
+        ("ES0000000000000000000000", ResidualKind.IBAN),
+    ],
+)
+def test_every_blocking_class_is_admitted_by_arithmetic_and_not_by_shape(
+    shape_only: str,
+    kind: ResidualKind,
+) -> None:
+    """A blocking class must reject its own shape when the check character is wrong.
+
+    Membership of :data:`CHECKSUM_VERIFIED_KINDS` is a claim that arithmetic,
+    not shape, admits the match. Asserting the membership alone would let a
+    class join the blocking tier with a validator that accepts everything, so
+    each class is made to refuse a specimen of exactly its own shape.
+    """
+    planted = _pdf_bytes_containing(f"identity {shape_only}")
+
+    findings = scan_for_residual_identities(planted, {"replacements_applied": []})
+
+    assert kind not in {finding.kind for finding in findings}, (
+        f"{kind.value} reported a specimen of its own shape whose control character is wrong, "
+        "so the class is admitted by shape rather than by its checksum"
+    )
+
+
+def test_a_legal_entity_identity_and_its_prefixed_spelling_are_both_found() -> None:
+    """The refusal proofs above are worthless unless the classes also fire.
+
+    A scanner carrying only the natural-person shape reported a document naming
+    a company by its tax identity as clean, and the same blindness covered the
+    prefixed spelling of every shape. Both are planted here with control
+    characters the published algorithm does produce, so a class that quietly
+    stopped matching cannot pass as a class that found nothing to report.
+    """
+    planted = _pdf_bytes_containing(f"empresa {_PLANTED_CIF} intracomunitario {_PLANTED_NIF_IVA}")
+
+    findings = scan_for_residual_identities(planted, {"replacements_applied": []})
+
+    assert {ResidualKind.CIF, ResidualKind.NIF_IVA} <= {finding.kind for finding in findings}, (
+        "a legal-entity identity and an ES-prefixed identity must both be blocking findings; "
+        f"got kinds {sorted(k.value for k in {f.kind for f in findings})}"
+    )
 
 
 def test_the_gate_and_the_sanitiser_agree_end_to_end() -> None:
