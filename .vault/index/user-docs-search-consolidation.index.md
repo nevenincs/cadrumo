@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:b49c9bcca392fd502829e65b9fd44b6978dc97b1b834f80e3b4efe0d9cde2a75'
+body_hash: 'sha256:b45330667f189ec14bf2293263ad3d9e816483799b4283682a392c86f5a861aa'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-01-user-docs-search-consolidation-P03-S08]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S09]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S18]]'
+  - '[[2026-08-01-user-docs-search-consolidation-P03-S40]]'
   - '[[2026-08-01-user-docs-search-consolidation-P03-S42]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S10]]'
   - '[[2026-08-01-user-docs-search-consolidation-P04-S11]]'
@@ -178,6 +179,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-01-user-docs-search-consolidation-P02-S36` - Delete the three orphaned Rung-2 build-time modules
 - `2026-08-01-user-docs-search-consolidation-P02-S37` - Resolve the shipped query/alias authority
 - `2026-08-01-user-docs-search-consolidation-P05-S39` - Confine a per-query relevance boost to its own display-class band
+- `2026-08-01-user-docs-search-consolidation-P03-S40` - Re-run the per-root multilingual recall probes against the deployed roots
 - `2026-08-01-user-docs-search-consolidation-P03-S42` - Derive the per-language build recipes from the canonical output-language set and gate the per-root output flag
 - `2026-08-01-user-docs-search-consolidation-P04-S41` - Reconcile what the apex root owes between the pre-upload validation and the post-publish index verification
 

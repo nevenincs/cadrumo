@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-06'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:7f9b182d6e71675c35702965d3a88ea82ac8908565521097b98001bc76733251'
+body_hash: 'sha256:d3ca1d4c013b11855b0566c3d18d6e39a533635f5732301236869550a9496078'
 step_id: 'S13'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -82,3 +82,21 @@ That does not clear the OTHER blocker the same entry named as not this campaign'
 Attempted a fresh strict full build to get direct current evidence rather than resting on the stub census alone. A first attempt stalled under concurrent shared-tree load and never returned a result; it is SUPERSEDED by the second attempt below and carries no signal of its own -- do not re-chase it. A second, separately launched attempt completed and corrects the picture: it passed the stage the stub census predicted would fail, then failed at the sequence-golden gate on the same class of divergence this row already recorded on 2026-08-06/07 -- CLI-sequence drift on M303 filing evidence and wallet notices, plus two per-machine hardware-fact fields no golden fixture can pin across runs. No `publish` was run either way; the precondition is unmet regardless of which gate reds first, and neither is this campaign's surface.
 
 No deployment, root mutation, cache invalidation, or live URL claim was made. P04.S13 remains open, blocked on the cross-campaign stub gap this campaign cannot close by itself and, independently, on a clean window to confirm the build precondition.
+
+### 2026-08-13 re-verified: both technical preconditions are now CLEAR, only the deploy authorisation remains
+
+Re-established from direct probes this session rather than inherited from the entries above, because both of the blockers those entries name have changed state.
+
+**The API stub gap is closed.** The census now reports the stub tree conformant with no drift detected. The 31 missing stubs recorded earlier on 2026-08-13 — the M303 filing, aggregation, regimen-simplificado, prorrata and exonerado rows, the IVA deduction facts, the TUI work-review screen, the profile sync-runs store, the calc-sheets export service, the filing-evidence and filing-projection core types, and the LLM preconditions modules — have been closed by the campaigns that own them. This campaign ran no scaffold, consistent with the tree-wide stage-your-own-lines discipline that forbade it closing a gap in modules it does not own.
+
+**The cloud session is valid.** The identity call succeeds. The credential that had lapsed twice across earlier sessions is live, and nothing in this session re-authenticated it.
+
+**The live state is unchanged.** The apex answers 200 but serves a stale build last modified 2026-07-12. The English, Spanish, Catalan and Hungarian roots and the casilla destination page all answer 404, confirmed on response headers.
+
+So the blocker on this row is no longer a technical precondition. It is the deploy authorisation itself: publishing is outward-facing, and an agent may not perform it however clear the path in front of it looks. A valid credential is emphatically not an authorisation to use it.
+
+What changed in this campaign's favour is that the publish is now checkable before it runs. The build-and-validate prefix a publish performs is reachable as its own verb, requires no session, writes nothing outward, and returns the complete pre-upload verdict: every root's artifact set, each root's own canonically-rooted sitemap, each root's record-bearing index, the apex's own search bundle, and an apex entry reaching every built language. An operator preparing this deploy can now get that verdict in advance instead of discovering a defect mid-publish. It stops at the upload, so it substitutes for nothing this row claims.
+
+One caveat stated plainly rather than glossed: a clean stub census is not proof that the full strict build passes end to end. The entries above also record sequence-golden divergences and machine-specific hardware-fact fields as a separate, recurring red. That class is unverified today and the dry-run verb is exactly how to settle it without publishing.
+
+P04.S13 remains open. No deploy, cache invalidation or live mutation was attempted.
