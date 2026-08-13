@@ -53,6 +53,7 @@ from __future__ import annotations
 
 from ...core import Modelo, Period
 from ...domain.bienes_inversion import BienInversionRecordError
+from ...domain.calculations.registry import ModeloRevision
 from ...domain.iva import is_m303_annual_settlement_period
 from ..aggregation import CalculationSourceDiagnostic
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
@@ -72,6 +73,7 @@ _STORAGE_DEGRADED_SOURCE_KIND = "bienes_inversion_register_unreadable"
 
 
 def collect_bienes_inversion_regularizacion_diagnostics(
+    revision: ModeloRevision,
     *,
     modelo: str,
     period_token: str,
@@ -93,6 +95,8 @@ def collect_bienes_inversion_regularizacion_diagnostics(
     neither an in-window good nor a disposal for the year.
 
     Args:
+        revision: The :class:`ModeloRevision` being calculated, read only for
+            casilla 43's own registry grounding -- never for a legal figure.
         modelo: The modelo identifier of the filing being calculated. Only
             Modelo 303 declares casilla 43; every other modelo returns an empty
             tuple immediately.
@@ -129,6 +133,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
     diagnostics: list[CalculationSourceDiagnostic] = []
 
     _annual_projection, annual_diagnostic = build_bienes_inversion_regularizacion_advisory(
+        revision,
         register,
         regularizacion_year=filing_year,
         prorrata_definitiva_by_identifier={},
@@ -137,6 +142,7 @@ def collect_bienes_inversion_regularizacion_diagnostics(
         diagnostics.append(annual_diagnostic)
 
     _transmision_projection, transmision_diagnostic = build_bienes_inversion_transmision_advisory(
+        revision,
         register,
         disposal_year=filing_year,
     )
