@@ -5628,9 +5628,6 @@ core:
         lennie szöveges formában.
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
-  topics:
-    errors:
-      catalogue_empty: A beépített témakatalógus egyetlen témát sem tartalmaz.
 docs:
   casilla:
     binding_source:
@@ -6499,6 +6496,8 @@ errors:
     fail_user_profile_not_found: A kért felhasználói profil szekció vagy mező nem
       található.
     fail_user_profile_schema_load: A felhasználói profil sémáját nem sikerült betölteni.
+    fixed_width_record_render: A rögzített szélességű exportrekordot nem sikerült
+      előállítani.
     ledger_check: Egy főkönyv-konzisztencia-ellenőrzés blokkoló eredményt talált.
     ledger_link: Egy főkönyvi tranzakciót nem sikerült modell-kötéshez kapcsolni.
     missing_exchange_rate: Hiányzó árfolyam a megadott dátumhoz és devizához.
@@ -7057,6 +7056,7 @@ errors:
       vagy nem tartalmaz fejlécsorral rendelkező táblázatot.
     refused_taxation_comparison: A közös-vs-egyéni adózás összehasonlítása nem végezhető
       el ennél a modelónál vagy pillanatképnél.
+    refused_topic_catalogue_empty: A beépített témakatalógus egyetlen témát sem tartalmaz.
     refused_topic_not_found: A kért téma nem található.
     refused_user_profile_validation: Egy felhasználói profil értéke érvénytelen. Javítsa
       a megjelenített mezőt.

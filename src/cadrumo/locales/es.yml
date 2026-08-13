@@ -1350,6 +1350,16 @@ application:
         registro para esta revisión.
       registry_snapshot_unresolved: No se ha podido resolver la instantánea del registro
         para este objetivo de trabajo.
+      suffered_retencion_capital_mobiliario_uncredited: Esta declaración consigna
+        rendimientos del capital mobiliario del ahorro pero no acredita ninguna retención
+        soportada. Introduzca el importe del certificado de retenciones e ingresos
+        a cuenta del pagador; el contribuyente nunca presentó el Modelo 123 que lo
+        declara, por lo que este valor no puede rellenarse automáticamente.
+      suffered_retencion_trabajo_uncredited: Esta declaración consigna rendimientos
+        del trabajo pero no acredita ninguna retención soportada. Introduzca el importe
+        del certificado de retenciones e ingresos a cuenta del pagador; el contribuyente
+        nunca presentó el Modelo 111 que lo declara, por lo que este valor no puede
+        rellenarse automáticamente.
       transaction_evidence_missing_deductible: Una transacción deducible no tiene
         evidencia justificativa.
       transaction_evidence_missing_output: Una transacción repercutida no tiene evidencia
@@ -3763,6 +3773,8 @@ cli:
             capability_disabled: La exportación a Google está desactivada para este
               perfil; actívala con 'aeat config profile capabilities set google_export
               on'.
+            dry_run_help: Previsualiza lo que esta exportación borraría y reescribiría
+              en el libro, sin escribir nada
             modelo_help: Identificador del modelo a exportar (p. ej. 130, 303, 100)
             period_help: Código de período (p. ej. 1T, 2T, 0A)
             prefill_relations_help: Prerrellenar valores de relaciones entre revisiones
@@ -4098,8 +4110,8 @@ cli:
         --revision-id indicando una de ellas.'
       preflight_revision_help: Id de revisión del registro.
       preflight_revision_id_help: Anulación opcional del id de revisión del registro
-        para reproducción exacta (p. ej. 2024-0A); por defecto usa la revisión activa
-        para el modelo, ejercicio y periodo.
+        para reproducción exacta (p. ej. 2019-y-siguientes); por defecto usa la revisión
+        activa para el modelo, ejercicio y periodo.
       preflight_revision_override_invalid: La revisión del registro no es válida para
         el modelo {modelo} y el ejercicio {filing_year}.
       preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
@@ -6648,6 +6660,8 @@ errors:
     fail_user_profile_not_found: No se encontró la sección o el campo solicitado del
       perfil de usuario.
     fail_user_profile_schema_load: No se pudo cargar el esquema del perfil de usuario.
+    fixed_width_record_render: No se ha podido generar el registro de exportación
+      de ancho fijo.
     ledger_check: Una comprobación de consistencia del libro detectó un problema que
       impide continuar.
     ledger_link: No se pudo vincular una transacción del libro a un binding de modelo.
@@ -7233,6 +7247,8 @@ errors:
       o no contiene ninguna tabla con fila de encabezado.
     refused_taxation_comparison: La comparación tributaria conjunta/individual no
       puede realizarse para este modelo o instantánea.
+    refused_topic_catalogue_empty: El catálogo de temas incluido no contiene ningún
+      tema.
     refused_topic_not_found: No se encontró el tema solicitado.
     refused_user_profile_validation: Un valor del perfil de usuario no es válido.
       Corrige el dato indicado.
@@ -50830,9 +50846,15 @@ modelo:
             x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
               help: null
               label: 7. Acuse de recibo, empresa o entidad pagadora
-            x-c5hnasr55lp6aor9c9nispj5cdk62:
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
               help: null
-              label: 7. Acuse de recibo, fecha
+              label: 7. Acuse de recibo, fecha, anio
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
+              help: null
+              label: 7. Acuse de recibo, fecha, dia
+            x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
+              help: null
+              label: 7. Acuse de recibo, fecha, mes
             x-c5hnasr55lp6aor9c9nisr3lctgn4:
               help: null
               label: 7. Acuse de recibo, lugar
@@ -50870,9 +50892,15 @@ modelo:
             x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
               help: null
               label: 3.2. Ascendientes mayores de 65 anios, grado de discapacidad
-            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo8:
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
               help: null
-              label: 6. Fecha y firma de la comunicacion, fecha
+              label: 6. Fecha y firma de la comunicacion, anio
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
+              help: null
+              label: 6. Fecha y firma de la comunicacion, dia
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
+              help: null
+              label: 6. Fecha y firma de la comunicacion, mes
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
               help: null
               label: 6. Fecha y firma de la comunicacion, lugar
@@ -50966,9 +50994,15 @@ modelo:
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
               help: null
               label: 1. Discapacidad del perceptor, grado reconocido
-            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4:
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
               help: null
-              label: 1. Movilidad geografica, fecha de traslado
+              label: 1. Movilidad geografica, fecha de traslado, anio
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
+              help: null
+              label: 1. Movilidad geografica, fecha de traslado, dia
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
+              help: null
+              label: 1. Movilidad geografica, fecha de traslado, mes
             x-e1in4or5e1q6ushedpkmc:
               help: null
               label: 1. NIF del perceptor
@@ -68058,256 +68092,306 @@ modelo:
             label: Resultado del regimen general (cuota devengada - cuota deducible)
           m303-deducciones-sector-1-domestic-current-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes
+              y servicios corrientes - Base imponible
           m303-deducciones-sector-1-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes
+              y servicios corrientes - Cuota deducible
           m303-deducciones-sector-1-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes
+              inversión - Base imponible
           m303-deducciones-sector-1-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes
+              inversión - Cuota deducible
           m303-deducciones-sector-1-import-current-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+              corrientes - Base imponible
           m303-deducciones-sector-1-import-current-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+              corrientes - Cuota deducible
           m303-deducciones-sector-1-import-investment-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+              inversión - Base imponible
           m303-deducciones-sector-1-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes
+              inversión - Cuota deducible
           m303-deducciones-sector-1-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+              - Bienes corrientes y servicios - Base imponible
           m303-deducciones-sector-1-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+              - Bienes corrientes y servicios - Cuota deducible
           m303-deducciones-sector-1-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+              - Bienes inversión - Base imponible
           m303-deducciones-sector-1-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun.
+              - Bienes inversión - Cuota deducible
           m303-deducciones-sector-1-investment-regularisation:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - Regularización de bienes de inversión
           m303-deducciones-sector-1-reagp-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+              - Base impon.
           m303-deducciones-sector-1-reagp-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca
+              - Cuota deduc.
           m303-deducciones-sector-1-rectification-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones -
+              Base impon.
           m303-deducciones-sector-1-rectification-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones -
+              Cuota deduc.
           m303-deducciones-sector-1-total:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones
           m303-deducciones-sector-2-domestic-current-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes
+              y servicios corrientes - Base imponible
           m303-deducciones-sector-2-domestic-current-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes
+              y servicios corrientes - Cuota deducible
           m303-deducciones-sector-2-domestic-investment-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes
+              inversión - Base imponible
           m303-deducciones-sector-2-domestic-investment-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes
+              inversión - Cuota deducible
           m303-deducciones-sector-2-import-current-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+              corrientes - Base imponible
           m303-deducciones-sector-2-import-current-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+              corrientes - Cuota deducible
           m303-deducciones-sector-2-import-investment-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+              inversión - Base imponible
           m303-deducciones-sector-2-import-investment-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes
+              inversión - Cuota deducible
           m303-deducciones-sector-2-intra-eu-current-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+              - Bienes corrientes y servicios - Base imponible
           m303-deducciones-sector-2-intra-eu-current-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+              - Bienes corrientes y servicios - Cuota deducible
           m303-deducciones-sector-2-intra-eu-investment-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+              - Bienes inversión - Base imponible
           m303-deducciones-sector-2-intra-eu-investment-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun.
+              - Bienes inversión - Cuota deducible
           m303-deducciones-sector-2-investment-regularisation:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - Regularización de bienes de inversión
           m303-deducciones-sector-2-reagp-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+              - Base impon.
           m303-deducciones-sector-2-reagp-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca
+              - Cuota deduc.
           m303-deducciones-sector-2-rectification-base:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones -
+              Base impon.
           m303-deducciones-sector-2-rectification-cuota:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones -
+              Cuota deduc.
           m303-deducciones-sector-2-total:
             help: null
-            label: null
+            label: 13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones
           m303-exonerado-390-107:
             help: null
-            label: null
+            label: 'Información de la tributación por razón de territorio: Territorio
+              común'
           m303-exonerado-390-125:
             help: null
-            label: null
+            label: Operaciones sujetas con inversión del sujeto pasivo
           m303-exonerado-390-126:
             help: null
-            label: null
+            label: Operaciones no sujetas por reglas de localización acogidas a los
+              regímenes especiales de ventanilla única
           m303-exonerado-390-127:
             help: null
-            label: null
+            label: OSS. Operaciones sujetas y acogidas a los regímenes especiales
+              de ventanilla única
           m303-exonerado-390-128:
             help: null
-            label: null
+            label: Operaciones intragrupo valoradas conforme a lo dispuesto en los
+              arts. 78 y 79 LIVA
           m303-exonerado-390-79:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Entregas de bienes inmuebles,
+              operaciones financieras y relativas al oro de inversión no habituales
           m303-exonerado-390-80:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+              general
           m303-exonerado-390-81:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+              especial del criterio de caja conforme art. 75 LIVA
           m303-exonerado-390-83:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones exentas sin
+              derecho a deducción
           m303-exonerado-390-84:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones no sujetas
+              por reglas de localización (excepto las incluidas en la casilla 126)
           m303-exonerado-390-86:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+              simplificado
           m303-exonerado-390-88:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Total volumen de operaciones
           m303-exonerado-390-89:
             help: null
-            label: null
+            label: 'Información de la tributación por razón de territorio: Álava'
           m303-exonerado-390-90:
             help: null
-            label: null
+            label: 'Información de la tributación por razón de territorio: Guipuzcoa'
           m303-exonerado-390-91:
             help: null
-            label: null
+            label: 'Información de la tributación por razón de territorio: Vizcaya'
           m303-exonerado-390-92:
             help: null
-            label: null
+            label: 'Información de la tributación por razón de territorio: Navarra'
           m303-exonerado-390-93:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Entregas intracomunitarias
+              de bienes y servicios
           m303-exonerado-390-94:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Exportaciones y otras
+              operaciones exentas con derecho a deducción
           m303-exonerado-390-95:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+              especial de la agricultura, ganadería y pesca
           m303-exonerado-390-96:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones realizadas
+              por sujetos pasivos acogidos al régimen especial del recargo de equivalencia
           m303-exonerado-390-97:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones en Régimen
+              especial de bienes usados, objetos de arte, antigüedades y objetos de
+              colección
           m303-exonerado-390-98:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Operaciones en régimen
+              especial de Agencias de Viajes
           m303-exonerado-390-99:
             help: null
-            label: null
+            label: Operaciones realizadas en el ejercicio - Entregas de bienes de
+              inversión
           m303-prorrata-actividad-fila-1-cnae:
             help: null
-            label: null
+            label: Prorratas - 1 - Código CNAE
           m303-prorrata-actividad-fila-1-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorratas - 1 - Importe de operaciones con derecho a deducción
           m303-prorrata-actividad-fila-1-operaciones-total:
             help: null
-            label: null
+            label: Prorratas - 1 - Importe de operaciones
           m303-prorrata-actividad-fila-1-porcentaje:
             help: null
-            label: null
+            label: Prorratas - 1 - % de prorrata
           m303-prorrata-actividad-fila-1-tipo:
             help: null
-            label: null
+            label: Prorratas - 1 - Tipo de prorrata
           m303-prorrata-actividad-fila-2-cnae:
             help: null
-            label: null
+            label: Prorratas - 2 - Código CNAE
           m303-prorrata-actividad-fila-2-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorratas - 2 - Importe de operaciones con derecho a deducción
           m303-prorrata-actividad-fila-2-operaciones-total:
             help: null
-            label: null
+            label: Prorratas - 2 - Importe de operaciones
           m303-prorrata-actividad-fila-2-porcentaje:
             help: null
-            label: null
+            label: Prorratas - 2 - % de prorrata
           m303-prorrata-actividad-fila-2-tipo:
             help: null
-            label: null
+            label: Prorratas - 2 - Tipo de prorrata
           m303-prorrata-actividad-fila-3-cnae:
             help: null
-            label: null
+            label: Prorratas - 3 - Código CNAE
           m303-prorrata-actividad-fila-3-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorratas - 3 - Importe de operaciones con derecho a deducción
           m303-prorrata-actividad-fila-3-operaciones-total:
             help: null
-            label: null
+            label: Prorratas - 3 - Importe de operaciones
           m303-prorrata-actividad-fila-3-porcentaje:
             help: null
-            label: null
+            label: Prorratas - 3 - % de prorrata
           m303-prorrata-actividad-fila-3-tipo:
             help: null
-            label: null
+            label: Prorratas - 3 - Tipo de prorrata
           m303-prorrata-actividad-fila-4-cnae:
             help: null
-            label: null
+            label: Prorratas - 4 - Código CNAE
           m303-prorrata-actividad-fila-4-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorratas - 4 - Importe de operaciones con derecho a deducción
           m303-prorrata-actividad-fila-4-operaciones-total:
             help: null
-            label: null
+            label: Prorratas - 4 - Importe de operaciones
           m303-prorrata-actividad-fila-4-porcentaje:
             help: null
-            label: null
+            label: Prorratas - 4 - % de prorrata
           m303-prorrata-actividad-fila-4-tipo:
             help: null
-            label: null
+            label: Prorratas - 4 - Tipo de prorrata
           m303-prorrata-actividad-fila-5-cnae:
             help: null
-            label: null
+            label: Prorratas - 5 - Código CNAE
           m303-prorrata-actividad-fila-5-operaciones-con-derecho:
             help: null
-            label: null
+            label: Prorratas - 5 - Importe de operaciones con derecho a deducción
           m303-prorrata-actividad-fila-5-operaciones-total:
             help: null
-            label: null
+            label: Prorratas - 5 - Importe de operaciones
           m303-prorrata-actividad-fila-5-porcentaje:
             help: null
-            label: null
+            label: Prorratas - 5 - % de prorrata
           m303-prorrata-actividad-fila-5-tipo:
             help: null
-            label: null
+            label: Prorratas - 5 - Tipo de prorrata
       construct:
         modelo-303-iva-autoliquidacion:
           field:
@@ -73778,6 +73862,10 @@ modelo:
             label: Modelo 848 (orden-hac-85-2003), ejercicios 2003 y siguientes
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
+  no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada
+    por la AEAT. La recuperación automática no puede obtener el historial de presentaciones
+    del Impuesto sobre Sociedades (modelo 200/202); consúltelo directamente en la
+    sede electrónica de la AEAT.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

@@ -5343,9 +5343,6 @@ core:
         code in text form.
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
-  topics:
-    errors:
-      catalogue_empty: The bundled topic catalogue contains no topics.
 docs:
   casilla:
     binding_source:
@@ -6199,6 +6196,7 @@ errors:
     fail_user_profile_not_found: The requested user profile section or field was not
       found.
     fail_user_profile_schema_load: The user-profile schema could not be loaded.
+    fixed_width_record_render: The fixed-width export record could not be rendered.
     ledger_check: A ledger consistency check surfaced a blocking finding.
     ledger_link: A ledger transaction could not be linked to a modelo binding.
     missing_exchange_rate: An exchange rate is missing for the date and currency provided.

@@ -5701,9 +5701,6 @@ core:
       registration_duplicate_callable: La implementació de respostes del projecte
         s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
         una vegada.
-  topics:
-    errors:
-      catalogue_empty: El catàleg de temes inclòs no conté cap tema.
 docs:
   casilla:
     binding_source:
@@ -6609,6 +6606,8 @@ errors:
     fail_user_profile_not_found: No s'ha trobat la secció o el camp sol·licitat del
       perfil d'usuari.
     fail_user_profile_schema_load: No s'ha pogut carregar l'esquema del perfil d'usuari.
+    fixed_width_record_render: No s'ha pogut generar el registre d'exportació d'amplada
+      fixa.
     ledger_check: Una comprovació de consistència del llibre ha detectat un problema
       que impedeix continuar.
     ledger_link: No s'ha pogut vincular una transacció del llibre a un binding de
