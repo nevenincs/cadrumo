@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:7387aa42a988a2432b1d05acfaeaf7336cc5218b67b3b4e47f8ffc099ffa0ab8'
+body_hash: 'sha256:dfd9fd244e357cc7132e1cce53b9177d1002f2bf8972c25a2e1738d2488518ec'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -121,6 +121,7 @@ related:
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit]]'
   - '[[2026-08-13-aeat-export-fragment-generator-authority-s64-source-pinned-semantic-map-authority-audit]]'
+  - '[[2026-08-13-aeat-export-fragment-generator-authority-s65-simplified-regime-authority-blockers-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -190,6 +191,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit` - `aeat-export-fragment-generator-authority` audit: `S61 DP30300 Variable Envelope Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S62 Projection Declaration Authority Audit`
 - `2026-08-13-aeat-export-fragment-generator-authority-s64-source-pinned-semantic-map-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S64 Source-Pinned Semantic Map Authority Audit`
+- `2026-08-13-aeat-export-fragment-generator-authority-s65-simplified-regime-authority-blockers-audit` - `aeat-export-fragment-generator-authority` audit: `S65 Simplified-Regime Authority Blockers`
 
 ### exec
 
