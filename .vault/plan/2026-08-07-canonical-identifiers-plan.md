@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:c4d30a86a4fca9db795ded90bbd69faa54652cc3fe61240106fed63c70acc098'
+body_hash: 'sha256:64c4bca65b3deb314caf57d0ccb70000d96996edb001c4a81d508273009698c8'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -314,8 +314,8 @@ TODO: Phase intent paragraph required by the convention ADR.
 
 - [x] `W08.P12.S51` - decide, and record the reason, whether every PII-shaped fold-in in `object_key_grammar` (`{member_nif}`, `{perceptor_nif}`, `{perceptor_tax_id}`) is pre-hashed uniformly or intentionally left raw beneath the outer `HashedLookup` HMAC, given the column is deterministically hashed either way; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
 - [x] `W08.P12.S52` - apply the `W08.P12.S51` decision to every `SecureObjectNamespaceDefinition.object_key_grammar` declaration that currently diverges from it; `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `W08.P12.S53` - discard and re-derive the affected Cadrumo profile databases via `resume_config_reset` / `BucketMaintenanceService.delete` for any namespace whose rendered key changed, never a filesystem-level delete; `src/cadrumo/application/config_reset.py`.
-- [x] `W08.P12.S54` - record the operator re-authentication step (Cl@ve Móvil) required to re-acquire the discarded live captures as an explicit OPERATOR action in the Step record, not an automated action; `.vault/exec/`.
+- [x] `W08.P12.S53` - ADJUDICATED CLOSED - record that no discard or re-derivation occurred because the disposable shared-master store must be treated as permanently unreadable through supported custody on the recorded evidence, and transfer the later local destructive reset plus current-format re-enrolment exactly once to 2026-08-13-profile-password-custody-plan W05.P08.S25, never a filesystem-level or SQL delete; `.vault/exec/ and .vault/plan/2026-08-13-profile-password-custody-plan.md`.
+- [x] `W08.P12.S54` - Record the conditional operator re-authentication boundary as an explicit OPERATOR action: only after profile-password-custody W05.P08.S25 completes reset and current-format re-enrolment, and only if the operator chooses to reacquire live captures, require typed operator.auth.login with Cl@ve Móvil human approval; `.vault/exec/`.
 
 ### Phase `W08.P13` - golden-schema pinning for the external MCP/CLI contract
 
@@ -435,10 +435,15 @@ The plan is complete when every Step above is closed (`- [x]`) and:
   `W06.P09`, `W06.P10`) carries a file enumeration in its execution record
   reconciled against the Reference's "Classification census" section, and
   landed as one atomic commit per Step.
-- Every discarded Cadrumo profile database from `W08.P12.S53` was
-  re-derived through `resume_config_reset` / `BucketMaintenanceService.delete`
-  only, confirmed by inspection of the Step's execution record, never a
-  filesystem-level delete.
+- `W08.P12.S53` records that this plan discarded or re-derived no database.
+  The disposable shared-master store's affected-row population is
+  uninspectable and its rows are unrecoverable through supported custody.
+  Ownership of the later local destructive reset and current-format
+  re-enrolment is transferred exactly once to
+  `2026-08-13-profile-password-custody-plan` `W05.P08.S25` after that
+  campaign proves its hard cutover. Canonical-identifiers completion makes
+  no deletion or recovery claim and authorizes no filesystem-level or SQL
+  deletion.
 
 **Explicitly deferred, not covered by this plan's completion** (recorded
 per `W09.P14.S60`):

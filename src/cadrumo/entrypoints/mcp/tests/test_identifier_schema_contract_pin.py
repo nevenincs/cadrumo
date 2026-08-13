@@ -40,6 +40,7 @@ from typing import Any, Final
 
 import pytest
 from pydantic import BaseModel
+from pydantic.json_schema import models_json_schema
 
 from ....core import Hex16Str, Hex64Str
 from ....core.identity import (
@@ -59,7 +60,7 @@ from ....core.identity import (
 )
 from ....core.json_contract import SCHEMA_REGISTRY
 from .._dispatch import is_exposable_command
-from .._result_thinning import THINNED_VERBS
+from .._result_thinning import THINNED_VERBS, thin_envelope
 from .._tools import _output_schema_for, build_tool_descriptors
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -331,101 +332,143 @@ def _mcp_result_leaves(command: str) -> tuple[dict[str, object], ...]:
     )
 
 
-def _mcp_commands_by_reachable_model() -> dict[type[BaseModel], tuple[str, ...]]:
-    """Map each registered-result projection model to every exposing MCP command.
+def _model_identity(model: type[BaseModel]) -> str:
+    """Return the schema owner's non-colliding Python identity."""
+    return f"{model.__module__}.{model.__qualname__}"
 
-    The map begins at the production ``SCHEMA_REGISTRY`` rather than at a test
-    allowlist, then follows the same resolved annotations as the CLI sweep.
-    This keeps nested rows tied to their actual command envelope and includes a
-    thinned command: thinning changes the advertised result schema, it does not
-    make its still-present identifier fields exempt from the pin.
-    """
-    commands_by_model: dict[type[BaseModel], set[str]] = {}
-    for command, schema in SCHEMA_REGISTRY.items():
-        models: set[type[BaseModel]] = set()
-        _reachable_models(schema, models)
+
+def _models_in(annotation: object) -> Iterator[type[BaseModel]]:
+    """Yield nested Pydantic models through arrays, unions, and RootModels."""
+    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+        yield annotation
+        return
+    for argument in typing.get_args(annotation):
+        yield from _models_in(argument)
+
+
+def _mcp_identifier_routes() -> tuple[tuple[str, type[BaseModel], str, str, str], ...]:
+    """Return every original alias field route, retaining exact class identity."""
+    routes: list[tuple[str, type[BaseModel], str, str, str]] = []
+    for command, root in SCHEMA_REGISTRY.items():
         if not is_exposable_command(command):
             continue
-        for model in models:
-            commands_by_model.setdefault(model, set()).add(command)
-    return {model: tuple(sorted(commands)) for model, commands in commands_by_model.items()}
+        visited: set[tuple[type[BaseModel], str]] = set()
+
+        def visit(
+            model: type[BaseModel],
+            top_field: str,
+            *,
+            command: str = command,
+            root: type[BaseModel] = root,
+            visited: set[tuple[type[BaseModel], str]] = visited,
+        ) -> None:
+            if (model, top_field) in visited:
+                return
+            visited.add((model, top_field))
+            hints = typing.get_type_hints(model, include_extras=True)
+            for field in model.model_fields:
+                annotation = hints.get(field)
+                family = _family_of(annotation)
+                if family is not None:
+                    routes.append((command, model, field, family, top_field))
+                for nested in _models_in(annotation):
+                    visit(nested, field if model is root else top_field)
+
+        visit(root, "<root>")
+    return tuple(routes)
 
 
-def _mcp_model_field_leaves(
-    command: str,
-    model: type[BaseModel],
-    field: str,
-) -> tuple[dict[str, object], ...]:
-    """Return the advertised leaves for one exact model field on one MCP result.
+def _model_definitions(root: type[BaseModel]) -> Mapping[type[BaseModel], str]:
+    """Map exact Pydantic model objects to their generated definition labels."""
+    models: set[type[BaseModel]] = set()
+    _reachable_models(root, models)
+    generated, _ = models_json_schema([(model, "validation") for model in models])
+    refs: dict[type[BaseModel], str] = {}
+    for (model, mode), schema in generated.items():
+        assert mode == "validation"
+        if not isinstance(model, type) or not issubclass(model, BaseModel):
+            continue
+        reference = schema.get("$ref")
+        assert isinstance(reference, str) and reference.startswith("#/$defs/")
+        refs[model] = reference.rsplit("/", 1)[-1]
+    return refs
 
-    The success envelope in :func:`_output_schema_for` carries its registered
-    root inline and nested payload models under ``$defs``.  Looking up the
-    concrete model's own property prevents a matching hex or bucket field
-    elsewhere in the same command from standing in for this field.
-    """
-    output_schema = _output_schema_for(command)
-    definitions_value = output_schema.get("$defs")
-    assert isinstance(definitions_value, Mapping), f"{command} MCP schema has no definitions mapping"
-    definitions = definitions_value
+
+def _verify_thinning(command: str, result_key: str, output_schema: Mapping[str, object]) -> None:
+    """Prove the declared resource-link replacement in the real code paths."""
+    spec = next(spec for spec in THINNED_VERBS[command] if spec.result_key == result_key)
     one_of = output_schema.get("oneOf")
-    assert isinstance(one_of, list) and one_of, f"{command} has no MCP success envelope"
-    success = one_of[0]
-    assert isinstance(success, Mapping), f"{command} has no object-shaped MCP success envelope"
-    properties = success.get("properties")
-    assert isinstance(properties, Mapping), f"{command} MCP success envelope has no properties"
-    result = properties.get("result")
-    assert isinstance(result, Mapping), f"{command} MCP success envelope has no result schema"
+    assert isinstance(one_of, list) and one_of and isinstance(one_of[0], Mapping)
+    properties = one_of[0]["properties"]
+    assert isinstance(properties, Mapping) and isinstance(properties.get("result"), Mapping)
+    result = properties["result"]
+    result_properties = result.get("properties")
+    assert isinstance(result_properties, Mapping)
+    inline_array = result_properties.get(spec.result_key)
+    assert isinstance(inline_array, Mapping) and inline_array == {"type": "array", "maxItems": 0}
+    resource = result_properties.get(spec.ref_key)
+    count = result_properties.get(spec.count_key)
+    assert isinstance(resource, Mapping) and resource.get("type") == "string" and resource.get("minLength") == 1
+    assert isinstance(count, Mapping) and count.get("type") == "integer" and count.get("minimum") == 1
 
-    model_schema: Mapping[object, object]
-    if SCHEMA_REGISTRY[command] is model:
-        model_schema = result
-    else:
-        nested = definitions.get(model.__name__)
-        assert isinstance(nested, Mapping), (
-            f"{command} has no MCP definition for reachable {model.__module__}.{model.__name__}"
-        )
-        model_schema = nested
-    field_schemas = model_schema.get("properties")
-    assert isinstance(field_schemas, Mapping) and field in field_schemas, (
-        f"{command} MCP schema omits {model.__module__}.{model.__name__}.{field}"
+    transformed, links = thin_envelope(
+        command,
+        {"result": {spec.result_key: [{"proof": "row"}], spec.uri_id_key: "proof-identity"}},
     )
-    return tuple(_string_leaves(field_schemas[field], definitions, frozenset(), follow_refs=False))
+    transformed_result = transformed.get("result")
+    assert isinstance(transformed_result, Mapping)
+    assert spec.result_key not in transformed_result
+    assert transformed_result.get(spec.ref_key) == links[0].uri
+    assert transformed_result.get(spec.count_key) == 1
+    assert len(links) == 1 and links[0].count == 1
 
 
 def test_every_mcp_output_schema_advertises_each_enrolled_identifier_field() -> None:
-    """Every reachable identifier field has its literal pin on its actual MCP path.
-
-    This is deliberately per-model-field, rather than a representative command
-    per alias family or a set comparison over a whole result.  An unrelated
-    same-shaped field cannot therefore conceal a missing or loosened bound, and
-    thinned verbs remain covered for every identifier field they still expose.
-    """
-    models: set[type[BaseModel]] = set()
-    for schema in SCHEMA_REGISTRY.values():
-        _reachable_models(schema, models)
-    models_by_key = {(model.__module__, model.__name__): model for model in models}
-    commands_by_model = _mcp_commands_by_reachable_model()
-
+    """Every original route is retained at its output path or proven thinned."""
+    sites = _mcp_identifier_routes()
+    assert sites, "no alias-typed identifier field was discovered on an MCP output schema"
     divergent: list[str] = []
-    for module, cls, field, family, _ in _alias_typed_sites():
-        model = models_by_key.get((module, cls))
-        if model is None:
-            divergent.append(f"registry walk lost {module}.{cls}.{field} [{family}]")
+    verified_thinning: set[tuple[str, str]] = set()
+    for command, model, field, family, top_result_field in sites:
+        thinning = next(
+            (spec for spec in THINNED_VERBS.get(command, ()) if spec.result_key == top_result_field),
+            None,
+        )
+        if thinning is not None:
+            key = (command, thinning.result_key)
+            if key not in verified_thinning:
+                _verify_thinning(command, thinning.result_key, _output_schema_for(command))
+                verified_thinning.add(key)
             continue
-        commands = commands_by_model.get(model, ())
-        if not commands:
-            divergent.append(f"{module}.{cls}.{field} [{family}] has no MCP-exposable command")
-            continue
+        output_schema = _output_schema_for(command)
+        definitions_value = output_schema.get("$defs")
+        definitions = definitions_value if isinstance(definitions_value, Mapping) else {}
+        one_of = output_schema.get("oneOf")
+        assert isinstance(one_of, list) and one_of and isinstance(one_of[0], Mapping)
+        result = one_of[0]["properties"]["result"]
+        assert isinstance(result, Mapping)
+        if model is SCHEMA_REGISTRY[command]:
+            owner_schema = result
+            schema_path = f"oneOf/0/properties/result/properties/{field}"
+        else:
+            definition = _model_definitions(SCHEMA_REGISTRY[command]).get(model)
+            owner_schema = definitions.get(definition) if definition is not None else None
+            schema_path = f"$defs/{definition}/properties/{field}"
+        if getattr(model, "__pydantic_root_model__", False):
+            field_schema = owner_schema
+        else:
+            properties = owner_schema.get("properties") if isinstance(owner_schema, Mapping) else None
+            field_schema = properties.get(field) if isinstance(properties, Mapping) else None
+        leaves = tuple(_string_leaves(field_schema, definitions, frozenset(), follow_refs=True))
         expected = _PINNED_SCHEMAS[family]
-        for command in commands:
-            leaves = _mcp_model_field_leaves(command, model, field)
-            if not leaves:
-                divergent.append(f"{command} omits a string leaf for {module}.{cls}.{field} [{family}]")
-            for leaf in leaves:
-                if leaf != expected:
-                    divergent.append(
-                        f"{command} {module}.{cls}.{field} [{family}] advertises {leaf!r}, pinned {expected!r}",
-                    )
+        if not leaves:
+            divergent.append(f"{command} omits {_model_identity(model)}.{field} [{family}] at {schema_path}")
+        for leaf in leaves:
+            if leaf != expected:
+                divergent.append(
+                    f"{command} {_model_identity(model)}.{field} [{family}] at {schema_path} advertises {leaf!r}, "
+                    f"pinned {expected!r}",
+                )
     assert not divergent, "MCP identifier constraints diverged from the pin:\n" + "\n".join(divergent)
 
 
