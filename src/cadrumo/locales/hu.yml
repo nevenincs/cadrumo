@@ -305,6 +305,15 @@ aggregation:
   grouping:
     errors:
       unsupported_modelo: Nincs regisztrált összesítési szerződés a kért modellhez.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Az euróösszegek nem érhetők el
+        egy olyan számlán, amely átment a hibaszűrésen.
+      perceptor_tax_id_unavailable_after_defect_sweep: A kedvezményezett adóazonosítója
+        nem érhető el egy olyan számlán, amely átment a hibaszűrésen.
+      projection_defects_repeat: A számla-visszatartási vetület ugyanazt a hibát ismétli.
+      projection_outcome_ambiguous: A számla-visszatartási vetület vagy megfigyelést,
+        vagy hibákat hordozhat, sosem mindkettőt és sosem egyiket sem.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: A source_jurisdiction %{source_jurisdiction} külföldi
@@ -327,20 +336,80 @@ aggregation:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
       candidate_outside_period: 'Belső hiba: az IVA-jelölt az aggregálási időszakon
         kívül esik.'
+      differentiated_sector_inactive_for_filing_year: Egy elkülönített szektor inaktív
+        a bevallási évre.
+      differentiated_sector_without_filing_year_entry: Egy elkülönített szektorhoz
+        nincs nyilvántartási tétel a bevallási évre.
+      differentiated_sector_without_provisional_percentage: Egy elkülönített szektorhoz
+        nincs feloldott ideiglenes százalék.
       domestic_identification_on_intra_community_transaction: A spanyol héa-azonosító
         nem érvényes Közösségen belüli ügylethez.
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
+      injected_repositories_missing_bienes_inversion_authority: A beadott áfa-tárolókhoz
+        kifejezett tárgyi eszköz jogosultság szükséges.
+      input_facts_missing_deduction_authority: A levonható áfa tényeihez pontos levonási
+        jogosultság szükséges.
+      investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
+        kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
         ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
         Rögzítse az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
         állapít meg, és az áfa-azonosítás erre nem ad választ.
       missing_counterparty_identification_state: A Közösségen belüli ügylethez meg
         kell adni azt a tagállamot, amelyben a partner héa-azonosítóval rendelkezik.
+      output_facts_carry_deduction_authority: A fizetendő áfa tényei nem hordozhatnak
+        levonási jogosultságot.
+      rectification_consumed_more_than_once: Egy már helyesbített áfa-főkönyvi tény
+        csak egyszer helyesbíthető.
+      sectorized_apportionment_duplicate_sectors: A szektorizált áfa-megosztás ugyanazt
+        a szektort többször deklarálja.
+      sectorized_especial_missing_input_classification: A szektorizált különleges
+        arányosításhoz kifejezett tételbesorolás szükséges.
+      sectorized_input_inactive_sector: Egy szektorizált áfa-tétel inaktív szektorra
+        hivatkozik.
+      sectorized_input_missing_sector_identity: Egy szektorizált áfa-tétel nem hordoz
+        kifejezett szektorazonosítót.
+      sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
+        hivatkozik.
       unsupported_iva_category: 'Belső hiba: nem támogatott IVA-kategória az aggregáláshoz.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: Az arányosítási nyilvántartás
+        ugyanarra az évre egyszerre rögzít választást és visszavonást.
+      prorrata_register_incomplete_current_year_declaration: Az arányosítási nyilvántartásból
+        hiányzik a tárgyévre vonatkozó teljes, kifejezett nyilatkozat.
+      prorrata_revocacion_without_prior_year_especial: A különleges arányosítás visszavonásához
+        az érintett szektorokban nincs előző évi különleges nyilvántartási állapot.
+      prorrata_transition_contradictory_evidence: A különleges arányosítási átmeneti
+        tételek ellentmondanak a bejelentett átmenetnek.
+      prorrata_transition_entry_without_evidence: Egy különleges arányosítási átmeneti
+        tétel nem hordoz átmeneti bizonyítékot.
+      prorrata_transition_evidence_without_declared_transition: A különleges arányosítási
+        átmenet bizonyítéka bejelentett átmenet nélkül érkezett.
+      prorrata_transition_evidence_wrong_filing_year: A különleges arányosítási átmenet
+        nyilvántartási bizonyítéka másik bevallási évhez tartozik.
+      prorrata_transition_missing_register_evidence: A bejelentett különleges arányosítási
+        átmenethez nem tartozik alátámasztó nyilvántartási bizonyíték.
+      prorrata_transition_not_applicable_for_period: A különleges arányosítási átmenet
+        bizonyítéka csak az év utolsó 303-as modelo időszakában alkalmazható.
+      recipient_fact_disagrees_with_ledger_evidence: A pénzforgalmi elszámolású ügyletek
+        címzettjére vonatkozó adat nem egyezik a szállítói rendszerű főkönyvi bizonyítékkal.
+      supplier_regime_aggregation_period_mismatch: Az áfa-összesítés időszaka nem
+        egyezik a kért bevallási időszakkal.
+      supplier_regime_blank_ledger_identity: A szállítói rendszerű érkezés bizonyítéka
+        üres főkönyvi azonosítót tartalmaz.
+      supplier_regime_duplicate_ledger_evidence: A szállítói rendszerű érkezés bizonyítéka
+        ugyanazt a főkönyvi tételt ismétli.
+      supplier_regime_observations_outside_period: Az áfa-összesítés a kért bevallási
+        időszakon kívüli keltézésű megfigyeléseket tartalmaz.
   modelo_bindings:
     errors:
       unsupported_period: Nem támogatott nyomtatvány-időszak a főkönyvi aggregáláshoz.
+  oss_ioss:
+    errors:
+      iva_amount_mismatches_destination_rate: A tárolt áfaösszeg az egy centes tűréshatáron
+        túl eltér a rendeltetési tagállam adókulcsától.
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
@@ -611,6 +680,19 @@ application:
         megelőzi az alkalmazás által támogatott verziót; migráció nélkül nem állítható
         vissza.
   calculations:
+    binding_prefill:
+      errors:
+        observation_merge_key_conflict: 'Eltérő modelo-, év- vagy időszakkulcsú megfigyelések
+          nem vonhatók össze: {primary_modelo} {primary_filing_year} {primary_period}
+          szemben ezzel: {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+        selector_filing_year_delta_type: A nyilvántartás 'filing_year_delta' kötésválasztójának
+          egész számnak vagy számot tartalmazó szövegnek kell lennie; jelenleg {observed_type}
+          típusú. Javítsa a választót a nyilvántartásban.
+        selector_source_periods_member_type: A nyilvántartás 'source_periods' kötésválasztójának
+          minden eleme időszakkód kell legyen. Javítsa a választót a nyilvántartásban.
+        selector_source_periods_type: A nyilvántartás 'source_periods' kötésválasztójának
+          időszakkódnak vagy időszakkódok sorozatának kell lennie; jelenleg {observed_type}
+          típusú. Javítsa a választót a nyilvántartásban.
     errors:
       observation_displaces_official_evidence_app_filing: 'Ez a modelo, ado ev es
         idoszak mar tartalmaz az AEAT-tol rogzitett bizonyitekot ({existing_source_kind}),
@@ -625,15 +707,220 @@ application:
         felulirasat engedelyezo kapcsoloval, ha a felulirast szandekosan vegzi.
     iva_compensation:
       errors:
+        annual_partition_casilla_ids_noncanonical: A Modelo 303 kompenzációs megfigyeléseinek
+          a(z) {revision_id} változatban deklarált casilla-azonosítókat kell használniuk;
+          a(z) {casilla_ids} nincs deklarálva.
         correction_missing: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period};
           a javítás egy meglévő beállítást ír felül, nem hoz létre újat.'
+        history_casilla_undeclared: A(z) {casilla_id} casilla nincs deklarálva a(z)
+          {modelo} modelo {revision_id} változatában, ezért nem rendelhető hozzá jogszabályi
+          hivatkozás. Javítsa a casilla hivatkozását.
+        history_operand_ref_value_arity: A(z) {casilla_id} casilla {operand_ref_count}
+          operandushivatkozást, de {operand_value_count} operandusértéket ad meg,
+          így a képlet eredete hiányos lenne.
+        history_operand_refs_diverge_from_formula: 'A(z) {casilla_id} casilla a(z)
+          {supplied_operand_refs} operandushivatkozásokat adja meg, de a(z) {formula_id}
+          képlet ezt vetíti: {formula_operand_refs}.'
+        history_operand_refs_without_formula: A(z) {casilla_id} casilla operandushivatkozásokat
+          ad meg, de a(z) {modelo} modelo {revision_id} változata nem deklarál hozzá
+          képletet.
+        local_recurrence_modelo_303_only: 'A helyi IVA-kompenzációs ismétlődés csak
+          a Modelo 303 esetén építhető újra; a megadott modelo: {modelo}.'
         modelo_303_only: Az IVA-kompenzációs előzmények csak Modelo 303 megfigyeléseket
           fogadnak el.
         modelo_390_only: Az éves áfa-kompenzációs összesítő csak Modelo 390 megfigyeléseket
           fogad el.
+        observed_casilla_ids_noncanonical: Az IVA-kompenzációs megfigyeléseknek a(z)
+          {modelo} modelo {revision} változatában deklarált casilla-azonosítókat kell
+          használniuk; a(z) {casilla_ids} nincs deklarálva.
+        repository_backend_split: A Modelo 303 megfigyelési tárnak és az IVA-kompenzációs
+          előzménytárnak egyetlen titkosított háttértárat kell megosztania, hogy mindkét
+          írás együtt véglegesüljön.
         seed_conflict: Ehhez az időszakhoz már létezik IVA-kompenzációs állapot; a
           kezdőérték felülírná a tárolt előzményeket.
+    iva_wallet:
+      errors:
+        decision_blocks_calculation: 'A(z) {target_year} {target_period} IVA-tárca
+          döntést blokkolja a következő eltérés: {divergence}. Oldja fel az eltérést
+          a számítás előtt.'
+        decision_no_selected_amount: A(z) {target_year} {target_period} IVA-tárca
+          döntés nem tartalmaz kiválasztott összeget, ezért nem köthető hozzá kompenzációs
+          érték.
+        decision_repository_backend_split: Az IVA-tárca döntéstárnak és a számítási
+          megfigyelési tárnak egyetlen titkosított háttértárat kell megosztania, amikor
+          a döntés megőrzésre kerül.
+        decision_target_mismatch: A tárolt IVA-tárca döntés célja {decision_target_year}
+          {decision_target_period}, a munkaegység viszont {context_filing_year} {context_period}.
+        modelo_303_only: 'Az IVA-kompenzációs tárca egyeztetése csak a Modelo 303
+          esetén alkalmazható; a megadott modelo: {modelo}.'
+    m303_carry:
+      errors:
+        available_compensation_amount_missing: A validált Modelo 303 átviteli boríték
+          nem tartalmaz rendelkezésre álló kompenzációs összeget a(z) {casilla_id}
+          casillában.
+        available_compensation_formula_missing: A(z) {revision_id} változat nem deklarál
+          képletet a(z) {target_casilla_id} casillához, ezért a keletkezett alapú
+          rendelkezésre álló kompenzáció nem hivatkozhat egyre sem.
+        carry_operands_disagree_with_formula: Az átviteli operandusok ({derivation_operands})
+          nem egyeznek a nyilvántartási képlet operandusaival ({registry_operands}).
+          Ezt csak a nyilvántartás javítása oldhatja meg; nincs biztonságos automatikus
+          helyreállítás.
+        declaration_type_code_invalid: A(z) {source_locator} helyen lévő nyilatkozattípus-forrásfejléc
+          a(z) {value} értéket tartalmazza, amely nem eredményrendelkezési kód.
+        declaration_type_code_not_admitted: A(z) {source_locator} helyen lévő nyilatkozattípus-forrásfejléc
+          a(z) {value} kódot tartalmazza, amelyet a Modelo 303 diseño de registros
+          nem enged meg.
+        disposition_resultado_sign_incompatible: A megadott rendelkezés ({disposition})
+          nem választható a(z) {resultado} benyújtott eredményhez. Csak az adózó döntheti
+          el, melyik a helyes; nincs biztonságos automatikus helyreállítás.
+        duplicate_declaration_type_headers: A Modelo 303 átviteli bizonyíték {header_count}
+          darab {header_key} forrásfejlécet tartalmaz; pontosan egy szükséges.
+        envelope_not_normalized: A Modelo 303 átvitel-előzmény már normalizált, a
+          rendelkezést figyelembe vevő rendelkezésre álló és keletkezett párost igényel.
+          Töltse be újra a benyújtott megfigyelést.
+        generated_compensation_amount_missing: A validált Modelo 303 átviteli boríték
+          nem tartalmaz keletkezett kompenzációs összeget a(z) {casilla_id} casillában.
+        incomplete_supported_operands: 'A Modelo 303 átvitel normalizálása nem tudja
+          levezetni a rendelkezésre álló kompenzációt a jelen lévő casillákból: {casilla_ids}.'
+        invalid_registry_observation: 'A Modelo 303 átvitel bemenete nyilvántartási
+          modelo-megfigyelést igényel; a kapott típus: {observed_type}.'
+        local_disposition_header_disagreement: A helyben benyújtott eredményrendelkezés
+          ({typed_disposition}) nem egyezik a nyilatkozattípus-fejléccel ({header_disposition}).
+          Csak az adózó döntheti el, melyiket nyújtották be; nincs biztonságos automatikus
+          helyreállítás.
+        local_filing_disposition_required: A helyi Modelo 303 benyújtás átviteli bizonyítékának
+          tartalmaznia kell a benyújtáskor meghatározott eredményrendelkezést; a(z)
+          {source_kind} bizonyíték egyet sem tartalmaz.
+        local_filing_provenance_required: 'A helyi Modelo 303 benyújtás rendelkezésének
+          meg kell őriznie az app_filing eredetét; jelenleg ez szerepel: {provenance_kind}.'
+        non_m303_envelope: 'A Modelo 303 átvitel-előzmény csak Modelo 303 megfigyeléseket
+          fogad el; a megadott modelo: {modelo}.'
+        official_declaration_type_header_required: A hivatalos Modelo 303 átviteli
+          bizonyítéknak pontosan egy {header_key} forrásfejlécet kell tartalmaznia;
+          a(z) {source_kind} bizonyíték egyet sem tartalmaz.
+        official_disposition_header_disagreement: A tipizált eredményrendelkezés ({typed_disposition})
+          nem egyezik az AEAT nyilatkozattípus-fejlécével ({header_disposition}).
+          Csak az adózó döntheti el, melyiket nyújtották be; nincs biztonságos automatikus
+          helyreállítás.
+        resultado_casilla_required: A Modelo 303 átvitel normalizálásához szükséges
+          a benyújtott resultado casilla ({casilla_id}), amelyet a megfigyelés nem
+          tartalmaz.
+        supplied_available_contradicts_derivation: A megadott rendelkezésre álló kompenzáció
+          ({supplied_available}) ellentmond a(z) {basis} levezetésnek ({derived_available}).
+          Csak az adózó döntheti el, melyik összeget nyújtották be; nincs biztonságos
+          automatikus helyreállítás.
+        supplied_pair_contradicts_derivation: A megadott rendelkezésre álló és keletkezett
+          páros ({supplied_available} és {supplied_generated}) ellentmond a(z) {basis}
+          levezetésnek ({derived_generated}). Csak az adózó döntheti el, mely összegeket
+          nyújtották be; nincs biztonságos automatikus helyreállítás.
+        unsupported_provenance: 'A Modelo 303 átvitel normalizálása csak hivatalos
+          AEAT-bizonyítékot vagy helyi alkalmazásbeli benyújtást fogad el; a bizonyíték
+          ezt tartalmazza: {source_kind}.'
+    maritime_exemption:
+      errors:
+        art_7p_inputs_required: A 7.p) cikk szerinti mentesség alkalmazandó, ezért
+          az éves bér és a jogosult napok száma egyaránt szükséges. Adja meg a hiányzó
+          adatokat.
+        rebeca_input_required: A REBECA jogosultság alkalmazandó, ezért a hajózásból
+          származó bruttó jövedelem szükséges. Adja meg a hiányzó adatot.
+    observations:
+      errors:
+        casilla_ids_noncanonical: A számítási megfigyeléseknek a(z) {modelo} modelo
+          {revision_id} változatában deklarált casilla-azonosítókat kell használniuk;
+          a(z) {casilla_ids} nincs deklarálva.
+        decision_taxpayer_nif_blank: Az egyeztetési döntésen szereplő adózói adóazonosító
+          (NIF) nem lehet üres.
+        filing_year_out_of_range: A megfigyelés benyújtási éve ({filing_year}) a támogatott
+          {minimum}–{maximum} tartományon kívül esik.
+        iva_wallet_target_year_out_of_range: Az IVA-tárca célév ({target_year}) a
+          támogatott {minimum}–{maximum} tartományon kívül esik.
+        member_nif_blank: A csoporttag adóazonosítója (NIF) nem lehet üres, ha kiterjeszti
+          a megfigyelési kulcsot.
+        period_type_invalid: 'A megfigyelési kulcs időszakértéket igényel; a kapott
+          típus: {observed_type}.'
+        registry_snapshot_missing: A casilla-azonosítók nem ellenőrizhetők, mert nem
+          oldható fel nyilvántartási változat a(z) {modelo} modelóhoz, {filing_year}
+          évhez, {period} időszakhoz.
+        taxpayer_nif_blank: Az adózó adóazonosítója (NIF) nem lehet üres, ha az IVA-tárca
+          döntési kulcsát alkotja.
+    row_set:
+      errors:
+        grouping_dispatch_fell_through: 'A(z) {grouping} sorhalmaz-csoportosítás olyan
+          összeállítóra oldódott fel, amely nem futott le. Jelentse ezt: az elosztótábla
+          nem konzisztens.'
+        grouping_has_no_assembler: 'A(z) {grouping} sorhalmaz-csoportosításhoz nincs
+          összeállító ebben az alkalmazásban; az összeállító nélküli csoportosítások:
+          {unassemblable_groupings}.'
+        percepcion_clave_missing: A(z) {row_index}. sor nem ad meg clavét. A percepciónak
+          meg kell adnia az AEAT clavéját a Modelo 190 és 193 diseño de registros
+          2-es típusú rekordja szerint. Adja meg a clavét.
+        percepcion_clave_unsupported: A(z) {row_index}. sor a(z) {clave} AEAT clavét
+          adja meg, amelyet ez az alkalmazás nem támogat.
+        row_assembly_failed: 'A(z) {row_index}. sor nem állítható össze: {validation_error_detail}.
+          Javítsa a sort, majd húzza le újra.'
+        row_index_not_positive: 'A sorhalmaz cellájának sorindexe pozitív egész szám
+          kell legyen; jelenlegi értéke: {row_index}.'
   filing:
+    build_draft:
+      errors:
+        binding_data_type_unsupported: A registry-binding olyan adattípust ad meg,
+          amelyet egyik bemeneti csatorna sem támogat.
+        binding_family_has_no_input_channel: A registry-binding értékcsaládjához nincs
+          bevallási bemeneti csatorna.
+        binding_provenance_missing: A registry-binding nem hivatkozik jogszabályi
+          és forrásalapjára.
+        binding_row_key_not_positive_integer: A binding bemeneti sorkulcsának pozitív
+          egész számnak kell lennie.
+        binding_source_not_typed: A registry-binding típus nélküli forrást ad meg.
+        binding_text_value_invalid: A binding szöveges értéke nem felel meg a registry-ben
+          megadott adattípusnak.
+        binding_value_not_boolean: A binding bemeneti értéke nem felismerhető igen
+          vagy nem érték.
+        binding_value_not_integer: A binding bemeneti értékének egész számnak kell
+          lennie.
+        date_binding_not_iso: A dátum-binding értéke nem ISO 8601 formátumú dátum.
+        findings_under_fail_on_warning: A piszkozat ellenőrzése észrevételeket adott,
+          miközben a figyelmeztetések blokkolónak számítanak.
+        input_key_noncanonical_casilla: Egy bevallási bemeneti kulcs nem kanonikus
+          casilla-hivatkozást használ.
+        input_key_not_string: A bevallási bemeneti kulcsoknak szöveges registry-azonosítóknak
+          kell lenniük.
+        input_key_padded: A bevallási bemeneti kulcsok elején és végén nem állhat
+          szóköz.
+        input_key_unknown: Egy bevallási bemeneti kulcsot a registry-revízió nem deklarál.
+        input_not_decimal: A bevallási bemeneti értéknek tizedes összegnek kell lennie.
+        period_type_invalid: A bevallási időszaknak tipizált időszakértéknek kell
+          lennie.
+        registry_calculation_failed: A registry-számítás nem sikerült ehhez a piszkozathoz.
+        registry_snapshot_unavailable: Ehhez a modelóhoz és időszakhoz nem érhető
+          el registry-pillanatkép.
+        schema_version_snapshot_mismatch: A sémaszolgáltató verziója nem egyezik a
+          registry-pillanatképpel.
+        text_casilla_invalid: A casilla szöveges értéke nem felel meg a registry-ben
+          megadott adattípusnak.
+        text_casilla_not_string: A casilla szöveges bemenetének szöveges értéknek
+          kell lennie.
+    calculate:
+      errors:
+        repair_hints_forbidden: Javítási javaslatok csak akkor fogadhatók el, ha feloldandó
+          blokkolók vannak.
+        repair_hints_required: Javítási javaslatok szükségesek, ha feloldandó blokkolók
+          vannak.
+    complementaria:
+      errors:
+        justificante_csv_absent: A complementaria a benyújtott eredeti bevallás justificante
+          CSV-jét igényli.
+        no_changed_casilla: A complementaria legalább egy módosított casillát igényel.
+        original_draft_addressing_mismatch: Az eredeti bevallás és a tárolt piszkozat
+          eltérő modelót vagy időszakot ad meg.
+        original_draft_snapshot_stale: Az eredeti piszkozat nem az aktív registry-pillanatképből
+          készült.
+        original_submission_csv_blank: Az eredeti bevallásnak hivatalos justificante
+          CSV-t kell tartalmaznia.
+        original_submission_fields_missing: Az eredeti bevallásból kötelező mezők
+          hiányoznak.
+        original_submission_shape_invalid: Az eredeti bevallás nem felel meg az elvárt
+          rekordszerkezetnek.
     errors:
       amendment_not_persisted: nincs mentett módosítás %{amendment_id} azonosítóval
       complementaria_taxpayer_identity_absent: 'a kiegészítő bevallás (complementaria)
@@ -654,6 +941,68 @@ application:
         a(z) %{ejercicio} évhez'
       unexpected_ejercicio: '%{modelo} modell: váratlan %{ejercicio} időszak; négyjegyű
         év szükséges'
+      unknown_severity_threshold: A súlyossági küszöb nem ismert súlyossági szint.
+    export:
+      errors:
+        draft_not_approved: Az exportáláshoz jóváhagyott piszkozat szükséges.
+        draft_snapshot_stale: Az exportáláshoz az aktív registry-pillanatképből készült
+          piszkozat szükséges.
+        layout_not_renderable: Ez a modelo nem tud helyi bevallás-exportfájlt előállítani.
+        post_write_verification_refused: Az írás utáni ellenőrzés elutasította az
+          exportált bevallásfájlt.
+        receipt_artefact_unreadable: Az exportnyugta olyan fájlt nevez meg, amely
+          nem olvasható.
+        receipt_byte_size_mismatch: Az exportált fájl mérete nem egyezik az exportnyugtával.
+        receipt_digest_mismatch: Az exportált fájl ellenőrzőösszege nem egyezik az
+          exportnyugtával.
+        rendered_payload_empty: Az exportelrendezés üres bevallástartalmat állított
+          elő.
+        verify_draft_snapshot_stale: Az ellenőrzéshez az aktív registry-pillanatképből
+          készült piszkozat szükséges.
+    export_parity:
+      errors:
+        aux_block_undeclared: Az exportelrendezés nem tudja kiírni a bevallás kötelező
+          Aux blokkját.
+        casilla_metadata_drift: A casilla számozása vagy segmentója eltér a registry
+          rekordtervétől.
+        rate_boxes_understate_total: A kulcsonkénti rovatok nem fedik le a saját bevallott
+          végösszegüket.
+        record_emit_order_drift: Az export a registry-ben megadott sorrendtől eltérően
+          írná ki a rekordokat.
+        record_emit_order_duplicated: Több exportrekord azonos kiírási sorrendet ad
+          meg, ezért a rekordsorrend nem egyértelmű.
+        required_casillas_omitted: Az export kihagyna olyan kötelező casillákat, amelyeket
+          a hivatalos rekord tartalmaz.
+    import:
+      errors:
+        period_token_undeclared: Az időszakkódot az aktív registry-revízió nem deklarálja.
+        period_token_unrepresentable: Az időszakkód nem képezhető le bevallási időszakra.
+    m303_exonerado_390:
+      errors:
+        record_design_snapshot_mismatch: Az exonerado-390 rekordterv nem egyezik a
+          kiválasztott pillanatképpel.
+        record_design_source_not_snapshot_owned: Az exonerado-390 rekordterv forrása
+          nem a pillanatképhez tartozik.
+    m303_export_applicability:
+      errors:
+        filing_facts_absent: A 303-as modelo exportálásához összeállított bevallási
+          adatok szükségesek.
+        filing_facts_period_mismatch: A 303-as modelo bevallási adatai nem egyeznek
+          az exportidőszakkal.
+        layout_not_snapshot_owned: A 303-as modelo exportelrendezése nem a kiválasztott
+          pillanatképhez tartozik.
+        producer_snapshot_incomplete: A 303-as modelo bevallási előállítói pillanatképe
+          hiányos.
+        producer_snapshot_wrong_modelo: Az előállítói pillanatkép nem a 303-as modelóhoz
+          tartozik.
+        regularisation_result_not_canonical: A 303-as modelo regularizációs eredménye
+          nem a kanonikus vetület.
+        snapshot_period_mismatch: A 303-as modelo registry-pillanatképe nem egyezik
+          az exportidőszakkal.
+    m303_prorrata_activity_rows:
+      errors:
+        activity_rows_incomplete: A 303-as modelo tevékenységenkénti prorrata sorai
+          hiányosak.
     review:
       errors:
         approved_by_blank: A jóváhagyó azonosítója nem lehet üres.
@@ -938,6 +1287,8 @@ application:
       errors:
         bucket_id_blank: A notifications bucket azonosítója nem lehet üres.
         certificado_id_blank: Az értesítés tanúsítványazonosítója nem lehet üres.
+        certificado_not_in_any_snapshot: Egyetlen letöltött értesítési lista sem említi
+          ezt a tanúsítványt. Töltse le előbb az értesítési listát.
         document_conflict: 'Ehhez az értesítéshez már egy másik dokumentum van tárolva;
           semmi sem íródott felül. Eltérés: {diverging_fields}.'
         document_not_found: Egyetlen tárolt dokumentum sem felel meg ennek az értesítésnek.
@@ -1423,10 +1774,6 @@ application:
     explain:
       errors:
         modelo_blank: A modell azonosító nem lehet üres.
-  portals:
-    errors:
-      portal_not_found: A kért AEAT portál nincs regisztrálva. Futtassa a 'aeat app
-        live portals list' parancsot az elérhető portálok megtekintéséhez.
   registry:
     errors:
       citation_not_found: Nem található nyilvántartási hivatkozás a kért jogi referenciához.
@@ -2468,6 +2815,27 @@ cli:
       modelo_help: Nyomtatványkód.
       notifications:
         app_help: Csak olvasható DEHú értesítés-pillanatképek.
+        document:
+          already_in_custody_notice: Ez a dokumentum azonos tartalommal már őrzésben
+            volt ehhez az értesítéshez, ezért semmi sem került újra mentésre, és a
+            letöltés időpontja is változatlan maradt. A visszaadott rekord a korábban
+            tárolt rekord.
+          app_help: Az AEAT által egy értesítés mögött kiszolgált dokumentum letöltése
+            és visszaolvasása.
+          certificado_id_help: Az értesítés AEAT-tanúsítványszáma (número de certificado).
+          comparecencia_notice: 'Ez a dokumentum kizárólag azért került letöltésre,
+            mert az AEAT szerint az adózó az értesítést már elolvasta. Egy olvasatlan
+            értesítés megnyitása maga a comparecencia: ezzel válik jogilag kézbesítetté,
+            és ekkor indulnak a jogorvoslati és fizetési határidők, ezért az olvasatlan
+            értesítést a program elutasítja, és azt az adózónak személyesen kell megnyitnia.'
+          pull_help: Egy már elolvasott értesítés dokumentumának letöltése titkosított
+            őrzésbe.
+          unparsed_notice: 'Ebből a dokumentumból nem sikerült számadatot kiolvasni,
+            ezért csak bájtként őrizzük. Ez nem azt jelenti, hogy a dokumentum nem
+            tartalmaz összegeket: olvassa el maga a tárolt dokumentumot, mielőtt bármit
+            megállapítana a tartalmáról.'
+          view_help: Egy már tárolt értesítési dokumentum és annak kiolvasott adatai,
+            az AEAT megkeresése nélkül.
         latest_help: A legutóbbi DEHú értesítési pillanatkép megjelenítése.
         list_help: Mentett DEHú értesítés-pillanatképek listázása.
         pull_help: Letölti a DEHú értesítéseket és bucket-szintű pillanatképet ment.

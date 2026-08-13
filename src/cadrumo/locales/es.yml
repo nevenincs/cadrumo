@@ -324,6 +324,16 @@ aggregation:
     errors:
       unsupported_modelo: No hay contrato de agregación registrado para el modelo
         solicitado.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Las cifras en euros no están disponibles
+        en una factura que superó el barrido de defectos.
+      perceptor_tax_id_unavailable_after_defect_sweep: El identificador fiscal del
+        perceptor no está disponible en una factura que superó el barrido de defectos.
+      projection_defects_repeat: Una proyección de retención de factura repite el
+        mismo defecto.
+      projection_outcome_ambiguous: Una proyección de retención de factura debe portar
+        o una observación o defectos, nunca ambos ni ninguno.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} es de
@@ -347,10 +357,23 @@ aggregation:
         bucket de agregación solicitado.
       candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
         de agregación.'
+      differentiated_sector_inactive_for_filing_year: Un sector diferenciado está
+        inactivo para el ejercicio.
+      differentiated_sector_without_filing_year_entry: Un sector diferenciado no tiene
+        entrada de registro para el ejercicio.
+      differentiated_sector_without_provisional_percentage: Un sector diferenciado
+        no tiene porcentaje provisional resuelto.
       domestic_identification_on_intra_community_transaction: Una identificación a
         efectos del IVA española no es válida para una operación intracomunitaria.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
+      injected_repositories_missing_bienes_inversion_authority: Los repositorios de
+        IVA inyectados requieren una autoridad explícita de bienes de inversión.
+      input_facts_missing_deduction_authority: Los hechos de IVA soportado requieren
+        una autoridad de deducción exacta.
+      investment_observations_missing_bienes_inversion_authority: Las observaciones
+        de IVA de inversión requieren el registro explícito de bienes de inversión
+        y una autoridad de perfil coincidente.
       missing_counterparty_establishment_on_export: Una exportación está exenta porque
         la operación sale de la Unión, por lo que depende de dónde esté ESTABLECIDA
         la contraparte. Registre el país de la contraparte; un código ausente o no
@@ -359,11 +382,62 @@ aggregation:
       missing_counterparty_identification_state: Una operación intracomunitaria requiere
         el Estado miembro en el que la contraparte está identificada a efectos del
         IVA.
+      output_facts_carry_deduction_authority: Los hechos de IVA repercutido no pueden
+        portar autoridad de deducción.
+      rectification_consumed_more_than_once: Un hecho de IVA ya corregido solo puede
+        rectificarse una vez.
+      sectorized_apportionment_duplicate_sectors: El reparto sectorizado de IVA declara
+        el mismo sector más de una vez.
+      sectorized_especial_missing_input_classification: La prorrata especial sectorizada
+        requiere una clasificación de entrada explícita.
+      sectorized_input_inactive_sector: Una entrada de IVA sectorizada referencia
+        un sector inactivo.
+      sectorized_input_missing_sector_identity: Una entrada de IVA sectorizada no
+        aporta identidad de sector explícita.
+      sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
+        sector desconocido.
       unsupported_iva_category: 'Error interno: categoría IVA no admitida para la
         agregación.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: El registro de prorrata
+        recoge a la vez una opción y una revocación para el mismo ejercicio.
+      prorrata_register_incomplete_current_year_declaration: El registro de prorrata
+        carece de una declaración explícita y completa para el ejercicio en curso.
+      prorrata_revocacion_without_prior_year_especial: La revocación de prorrata especial
+        no tiene estado de registro especial del ejercicio anterior para los sectores
+        afectados.
+      prorrata_transition_contradictory_evidence: Las entradas de transición de prorrata
+        especial contradicen la transición declarada.
+      prorrata_transition_entry_without_evidence: Una entrada de transición de prorrata
+        especial no aporta evidencia de transición.
+      prorrata_transition_evidence_without_declared_transition: Se aportó evidencia
+        de transición de prorrata especial sin una transición declarada.
+      prorrata_transition_evidence_wrong_filing_year: La evidencia de registro de
+        transición de prorrata especial pertenece a otro ejercicio.
+      prorrata_transition_missing_register_evidence: La transición de prorrata especial
+        declarada no tiene evidencia de registro que la respalde.
+      prorrata_transition_not_applicable_for_period: La evidencia de transición de
+        prorrata especial solo aplica en el último periodo del Modelo 303 del ejercicio.
+      recipient_fact_disagrees_with_ledger_evidence: El dato de destinatario de operaciones
+        en criterio de caja no concuerda con su evidencia de apuntes en régimen del
+        proveedor.
+      supplier_regime_aggregation_period_mismatch: El periodo de la agregación de
+        IVA no coincide con el periodo de declaración solicitado.
+      supplier_regime_blank_ledger_identity: La evidencia de llegada en régimen del
+        proveedor contiene una identidad de apunte en blanco.
+      supplier_regime_duplicate_ledger_evidence: La evidencia de llegada en régimen
+        del proveedor repite el mismo apunte.
+      supplier_regime_observations_outside_period: La agregación de IVA contiene observaciones
+        fechadas fuera del periodo de declaración solicitado.
   modelo_bindings:
     errors:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
+  oss_ioss:
+    errors:
+      iva_amount_mismatches_destination_rate: El importe de IVA persistido no concuerda
+        con el tipo del Estado miembro de destino más allá de la tolerancia de un
+        céntimo.
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
@@ -657,6 +731,20 @@ application:
         es anterior a la admitida por esta aplicación; no puede restaurarse sin una
         migración.
   calculations:
+    binding_prefill:
+      errors:
+        observation_merge_key_conflict: 'No se pueden fusionar observaciones con distinta
+          clave de modelo, ejercicio o periodo: {primary_modelo} {primary_filing_year}
+          {primary_period} frente a {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+        selector_filing_year_delta_type: El selector de vinculación del registro 'filing_year_delta'
+          debe ser un número entero o una cadena numérica; contiene {observed_type}.
+          Corrija el selector en el registro.
+        selector_source_periods_member_type: Cada entrada del selector de vinculación
+          del registro 'source_periods' debe ser un código de periodo. Corrija el
+          selector en el registro.
+        selector_source_periods_type: El selector de vinculación del registro 'source_periods'
+          debe ser un código de periodo o una tupla de códigos de periodo; contiene
+          {observed_type}. Corrija el selector en el registro.
     errors:
       observation_displaces_official_evidence_app_filing: 'Este modelo, ejercicio
         y periodo ya contiene evidencia capturada de la AEAT ({existing_source_kind}),
@@ -671,16 +759,224 @@ application:
         con la opcion de sustituir evidencia oficial si la sustitucion es intencionada.
     iva_compensation:
       errors:
+        annual_partition_casilla_ids_noncanonical: Las observaciones de compensación
+          del Modelo 303 deben usar los identificadores de casilla declarados por
+          la revisión {revision_id}; {casilla_ids} no están declarados.
         correction_missing: No existe ningún registro de compensación sembrado para
           %{filing_year}/%{period}; la corrección sobrescribe una siembra existente,
           no la crea.
+        history_casilla_undeclared: La casilla {casilla_id} no está declarada en el
+          modelo {modelo} revisión {revision_id}, por lo que no se le puede adjuntar
+          ninguna referencia legal. Corrija la referencia de la casilla.
+        history_operand_ref_value_arity: La casilla {casilla_id} aporta {operand_ref_count}
+          referencias de operando y {operand_value_count} valores de operando, por
+          lo que su procedencia de fórmula quedaría incompleta.
+        history_operand_refs_diverge_from_formula: La casilla {casilla_id} aporta
+          las referencias de operando {supplied_operand_refs}, pero la fórmula {formula_id}
+          proyecta {formula_operand_refs}.
+        history_operand_refs_without_formula: La casilla {casilla_id} aporta referencias
+          de operando, pero el modelo {modelo} revisión {revision_id} no declara ninguna
+          fórmula para ella.
+        local_recurrence_modelo_303_only: La recurrencia local de compensación de
+          IVA solo se reconstruye para el Modelo 303; se ha indicado el modelo {modelo}.
         modelo_303_only: El historial de compensación de IVA solo acepta observaciones
           del Modelo 303.
         modelo_390_only: El resumen anual de compensación de IVA solo acepta observaciones
           del Modelo 390.
+        observed_casilla_ids_noncanonical: Las observaciones de compensación de IVA
+          deben usar los identificadores de casilla declarados por el modelo {modelo}
+          revisión {revision}; {casilla_ids} no están declarados.
+        repository_backend_split: El almacén de observaciones del Modelo 303 y el
+          del historial de compensación de IVA deben compartir un único backend cifrado
+          para que ambas escrituras se confirmen a la vez.
         seed_conflict: Ya existe un estado de compensación de IVA para este periodo;
           la semilla sobrescribiría el historial almacenado.
+    iva_wallet:
+      errors:
+        decision_blocks_calculation: La decisión de la cartera de IVA para {target_year}
+          {target_period} está bloqueada por la divergencia {divergence}. Resuelva
+          la divergencia antes de calcular.
+        decision_no_selected_amount: La decisión de la cartera de IVA para {target_year}
+          {target_period} no contiene ningún importe seleccionado, por lo que no se
+          puede vincular ningún valor de compensación.
+        decision_repository_backend_split: El almacén de decisiones de la cartera
+          de IVA y el de observaciones de cálculo deben compartir un único backend
+          cifrado cuando la decisión se persiste.
+        decision_target_mismatch: La decisión almacenada de la cartera de IVA apunta
+          a {decision_target_year} {decision_target_period}, pero la unidad de trabajo
+          es {context_filing_year} {context_period}.
+        modelo_303_only: La conciliación de la cartera de compensación de IVA solo
+          se aplica al Modelo 303; se ha indicado el modelo {modelo}.
+    m303_carry:
+      errors:
+        available_compensation_amount_missing: El sobre de arrastre validado del Modelo
+          303 no lleva ningún importe de compensación disponible en la casilla {casilla_id}.
+        available_compensation_formula_missing: La revisión {revision_id} no declara
+          ninguna fórmula para la casilla {target_casilla_id}, por lo que la compensación
+          disponible con base en la generada no puede citar ninguna.
+        carry_operands_disagree_with_formula: Los operandos de arrastre {derivation_operands}
+          no coinciden con los operandos de la fórmula del registro {registry_operands}.
+          Solo una corrección del registro puede resolverlo; no hay recuperación automática
+          segura.
+        declaration_type_code_invalid: La cabecera de origen de tipo de declaración
+          en {source_locator} lleva {value}, que no es un código de disposición de
+          resultado.
+        declaration_type_code_not_admitted: La cabecera de origen de tipo de declaración
+          en {source_locator} lleva {value}, un código que el diseño de registros
+          del Modelo 303 no admite.
+        disposition_resultado_sign_incompatible: La disposición declarada {disposition}
+          no pudo haberse seleccionado para un resultado presentado de {resultado}.
+          Solo el contribuyente puede decidir cuál es correcta; no hay recuperación
+          automática segura.
+        duplicate_declaration_type_headers: La evidencia de arrastre del Modelo 303
+          lleva {header_count} cabeceras de origen {header_key}; se requiere exactamente
+          una.
+        envelope_not_normalized: El historial de arrastre del Modelo 303 requiere
+          un par disponible y generada ya normalizado y consciente de la disposición.
+          Vuelva a ingerir la observación presentada.
+        generated_compensation_amount_missing: El sobre de arrastre validado del Modelo
+          303 no lleva ningún importe de compensación generada en la casilla {casilla_id}.
+        incomplete_supported_operands: 'La normalización del arrastre del Modelo 303
+          no puede derivar la compensación disponible a partir de las casillas presentes:
+          {casilla_ids}.'
+        invalid_registry_observation: La entrada de arrastre del Modelo 303 requiere
+          una observación de modelo del registro; ha recibido {observed_type}.
+        local_disposition_header_disagreement: La disposición de resultado presentada
+          localmente {typed_disposition} no coincide con la cabecera de tipo de declaración
+          {header_disposition}. Solo el contribuyente puede decidir cuál se presentó;
+          no hay recuperación automática segura.
+        local_filing_disposition_required: La evidencia de arrastre de una presentación
+          local del Modelo 303 debe llevar la disposición de resultado determinada
+          en el momento de la presentación; la evidencia {source_kind} no lleva ninguna.
+        local_filing_provenance_required: La disposición de una presentación local
+          del Modelo 303 debe conservar su procedencia app_filing; lleva {provenance_kind}.
+        non_m303_envelope: El historial de arrastre del Modelo 303 solo admite observaciones
+          del Modelo 303; se ha indicado el modelo {modelo}.
+        official_declaration_type_header_required: La evidencia oficial de arrastre
+          del Modelo 303 debe llevar exactamente una cabecera de origen {header_key};
+          la evidencia {source_kind} no lleva ninguna.
+        official_disposition_header_disagreement: La disposición de resultado tipada
+          {typed_disposition} no coincide con la cabecera de tipo de declaración de
+          la AEAT {header_disposition}. Solo el contribuyente puede decidir cuál se
+          presentó; no hay recuperación automática segura.
+        resultado_casilla_required: La normalización del arrastre del Modelo 303 requiere
+          la casilla de resultado presentada {casilla_id}, que la observación no lleva.
+        supplied_available_contradicts_derivation: La compensación disponible aportada
+          {supplied_available} contradice la derivación {basis} {derived_available}.
+          Solo el contribuyente puede decidir qué importe se presentó; no hay recuperación
+          automática segura.
+        supplied_pair_contradicts_derivation: El par disponible y generada aportado
+          {supplied_available} y {supplied_generated} contradice la derivación {basis}
+          {derived_generated}. Solo el contribuyente puede decidir qué importes se
+          presentaron; no hay recuperación automática segura.
+        unsupported_provenance: La normalización del arrastre del Modelo 303 solo
+          admite evidencia oficial de la AEAT o una presentación local de la aplicación;
+          la evidencia lleva {source_kind}.
+    maritime_exemption:
+      errors:
+        art_7p_inputs_required: Se aplica la exención del art. 7.p), por lo que se
+          requieren tanto el salario anual como los días con derecho. Aporte los importes
+          que faltan.
+        rebeca_input_required: Se aplica la elegibilidad REBECA, por lo que se requiere
+          el rendimiento bruto de navegación. Aporte el importe que falta.
+    observations:
+      errors:
+        casilla_ids_noncanonical: Las observaciones de cálculo deben usar los identificadores
+          de casilla declarados por el modelo {modelo} revisión {revision_id}; {casilla_ids}
+          no están declarados.
+        decision_taxpayer_nif_blank: El NIF del contribuyente en la decisión de conciliación
+          no puede estar en blanco.
+        filing_year_out_of_range: El ejercicio de presentación {filing_year} de la
+          observación está fuera del rango admitido {minimum} a {maximum}.
+        iva_wallet_target_year_out_of_range: El ejercicio objetivo {target_year} de
+          la cartera de IVA está fuera del rango admitido {minimum} a {maximum}.
+        member_nif_blank: El NIF del miembro del grupo no puede estar en blanco cuando
+          amplía la clave de observación.
+        period_type_invalid: La clave de observación requiere un valor de periodo;
+          ha recibido {observed_type}.
+        registry_snapshot_missing: No se pueden validar los identificadores de casilla
+          porque no se resuelve ninguna revisión del registro para el modelo {modelo},
+          ejercicio {filing_year}, periodo {period}.
+        taxpayer_nif_blank: El NIF del contribuyente no puede estar en blanco cuando
+          forma la clave de decisión de la cartera de IVA.
+    row_set:
+      errors:
+        grouping_dispatch_fell_through: 'La agrupación de conjunto de filas {grouping}
+          se resolvió a un ensamblador que no se ejecutó. Comuníquelo: la tabla de
+          despacho es inconsistente.'
+        grouping_has_no_assembler: La agrupación de conjunto de filas {grouping} no
+          tiene ensamblador en esta aplicación; las agrupaciones sin uno son {unassemblable_groupings}.
+        percepcion_clave_missing: La fila {row_index} no declara ninguna clave. Una
+          percepción debe indicar su clave de la AEAT, según el diseño de registros
+          de los Modelos 190 y 193, registro de tipo 2. Aporte la clave.
+        percepcion_clave_unsupported: La fila {row_index} declara la clave de la AEAT
+          {clave}, que esta aplicación no admite.
+        row_assembly_failed: 'No se ha podido ensamblar la fila {row_index}: {validation_error_detail}.
+          Corrija la fila y vuelva a hacer el pull.'
+        row_index_not_positive: El índice de fila de la celda del conjunto de filas
+          debe ser un número entero positivo; contiene {row_index}.
   filing:
+    build_draft:
+      errors:
+        binding_data_type_unsupported: El binding del registro declara un tipo de
+          dato que ningún canal de entrada admite.
+        binding_family_has_no_input_channel: La familia de valores del binding del
+          registro no tiene canal de entrada.
+        binding_provenance_missing: El binding del registro no declara su fundamento
+          legal ni sus fuentes.
+        binding_row_key_not_positive_integer: La clave de fila de una entrada de binding
+          debe ser un entero positivo.
+        binding_source_not_typed: El binding del registro declara un origen sin tipar.
+        binding_text_value_invalid: El valor de texto del binding no corresponde al
+          tipo de dato declarado en el registro.
+        binding_value_not_boolean: El valor de entrada del binding no es un sí o no
+          reconocido.
+        binding_value_not_integer: El valor de entrada del binding debe ser un número
+          entero.
+        date_binding_not_iso: El valor del binding de fecha no es una fecha ISO 8601.
+        findings_under_fail_on_warning: La validación del borrador produjo avisos
+          y los avisos se tratan como bloqueantes.
+        input_key_noncanonical_casilla: Una clave de entrada usa una referencia de
+          casilla no canónica.
+        input_key_not_string: Las claves de entrada deben ser identificadores de registro
+          en texto.
+        input_key_padded: Las claves de entrada no deben llevar espacios al principio
+          ni al final.
+        input_key_unknown: Una clave de entrada no está declarada por la revisión
+          del registro.
+        input_not_decimal: El valor de entrada debe ser un importe decimal.
+        period_type_invalid: El periodo de declaración debe ser un valor de periodo
+          tipado.
+        registry_calculation_failed: El cálculo del registro falló para este borrador.
+        registry_snapshot_unavailable: No hay snapshot de registro disponible para
+          este modelo y periodo.
+        schema_version_snapshot_mismatch: La versión del proveedor de esquema no coincide
+          con el snapshot del registro.
+        text_casilla_invalid: El valor de texto de la casilla no corresponde al tipo
+          de dato declarado en el registro.
+        text_casilla_not_string: La entrada de texto de la casilla debe ser un valor
+          de texto.
+    calculate:
+      errors:
+        repair_hints_forbidden: Las indicaciones de corrección solo se aceptan cuando
+          hay bloqueos que resolver.
+        repair_hints_required: Se requieren indicaciones de corrección cuando hay
+          bloqueos que resolver.
+    complementaria:
+      errors:
+        justificante_csv_absent: La complementaria requiere el CSV del justificante
+          de la declaración original.
+        no_changed_casilla: La complementaria requiere al menos una casilla modificada.
+        original_draft_addressing_mismatch: La declaración original y el borrador
+          guardado declaran distinto modelo o periodo.
+        original_draft_snapshot_stale: El borrador original no se construyó con el
+          snapshot de registro activo.
+        original_submission_csv_blank: La declaración original debe llevar un CSV
+          de justificante oficial.
+        original_submission_fields_missing: A la declaración original le faltan campos
+          obligatorios.
+        original_submission_shape_invalid: La declaración original no corresponde
+          a la forma de registro esperada.
     errors:
       amendment_not_persisted: no hay ninguna rectificación persistida con id %{amendment_id}
       complementaria_taxpayer_identity_absent: 'la complementaria requiere una identidad
@@ -702,6 +998,73 @@ application:
         %{period} para el ejercicio %{ejercicio}'
       unexpected_ejercicio: 'modelo %{modelo}: ejercicio inesperado %{ejercicio};
         se requiere un año de cuatro dígitos'
+      unknown_severity_threshold: El umbral de severidad no es un nivel de severidad
+        conocido.
+    export:
+      errors:
+        draft_not_approved: La exportación requiere un borrador aprobado.
+        draft_snapshot_stale: La exportación requiere un borrador construido con el
+          snapshot de registro activo.
+        layout_not_renderable: Este modelo no puede producir un fichero local de exportación
+          de la declaración.
+        post_write_verification_refused: La verificación posterior a la escritura
+          rechazó el fichero de declaración exportado.
+        receipt_artefact_unreadable: El recibo de exportación nombra un fichero que
+          no se puede leer.
+        receipt_byte_size_mismatch: El tamaño del fichero exportado no coincide con
+          el recibo de exportación.
+        receipt_digest_mismatch: El resumen del fichero exportado no coincide con
+          el recibo de exportación.
+        rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
+          vacío.
+        verify_draft_snapshot_stale: La verificación requiere un borrador construido
+          con el snapshot de registro activo.
+    export_parity:
+      errors:
+        aux_block_undeclared: El diseño de exportación no puede escribir el bloque
+          Aux obligatorio de la declaración.
+        casilla_metadata_drift: La numeración o el segmento de casilla se desvía del
+          diseño de registro del registro.
+        rate_boxes_understate_total: Las casillas por tipo no cubren su propio total
+          declarado.
+        record_emit_order_drift: La exportación emitiría los registros fuera del orden
+          declarado en el registro.
+        record_emit_order_duplicated: Varios registros de exportación comparten orden
+          de emisión, así que la secuencia es ambigua.
+        required_casillas_omitted: La exportación omitiría casillas obligatorias que
+          el registro oficial declara.
+    import:
+      errors:
+        period_token_undeclared: El código de periodo no está declarado por la revisión
+          de registro activa.
+        period_token_unrepresentable: El código de periodo no puede representarse
+          como periodo de declaración.
+    m303_exonerado_390:
+      errors:
+        record_design_snapshot_mismatch: El diseño de registro exonerado-390 no coincide
+          con el snapshot seleccionado.
+        record_design_source_not_snapshot_owned: La fuente del diseño de registro
+          exonerado-390 no pertenece al snapshot.
+    m303_export_applicability:
+      errors:
+        filing_facts_absent: La exportación del modelo 303 requiere los datos de declaración
+          ensamblados.
+        filing_facts_period_mismatch: Los datos de declaración del modelo 303 no coinciden
+          con el periodo de exportación.
+        layout_not_snapshot_owned: El diseño de exportación del modelo 303 no pertenece
+          al snapshot seleccionado.
+        producer_snapshot_incomplete: El snapshot productor de la declaración del
+          modelo 303 está incompleto.
+        producer_snapshot_wrong_modelo: El snapshot productor no corresponde al modelo
+          303.
+        regularisation_result_not_canonical: El resultado de regularización del modelo
+          303 no es la proyección canónica.
+        snapshot_period_mismatch: El snapshot de registro del modelo 303 no coincide
+          con el periodo de exportación.
+    m303_prorrata_activity_rows:
+      errors:
+        activity_rows_incomplete: Las filas de prorrata por actividad del modelo 303
+          están incompletas.
     review:
       errors:
         approved_by_blank: El identificador del aprobador no puede estar vacío.
@@ -1010,6 +1373,8 @@ application:
           vacío.
         certificado_id_blank: El identificador de certificado de la notificación no
           puede estar vacío.
+        certificado_not_in_any_snapshot: Ninguna lista de notificaciones capturada
+          menciona ese certificado. Descargue antes la lista de notificaciones.
         document_conflict: 'Ya hay guardado un documento distinto para esa notificación;
           no se ha sobrescrito nada. Discrepan: {diverging_fields}.'
         document_not_found: Ningún documento guardado corresponde a esa notificación.
@@ -1511,10 +1876,6 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
-  portals:
-    errors:
-      portal_not_found: El portal AEAT solicitado no está registrado. Ejecute 'aeat
-        app live portals list' para ver los portales disponibles.
   registry:
     errors:
       citation_not_found: No se encontró ninguna cita del registro para la referencia
@@ -2565,6 +2926,27 @@ cli:
       modelo_help: Código de modelo
       notifications:
         app_help: Snapshots de notificaciones DEHú de solo lectura
+        document:
+          already_in_custody_notice: Este documento ya estaba en custodia para esa
+            notificación con contenido idéntico, por lo que no se ha vuelto a guardar
+            nada ni se ha actualizado la fecha de descarga. El registro devuelto es
+            el que ya estaba almacenado.
+          app_help: Descarga y consulta el documento que la AEAT ha servido detrás
+            de una notificación.
+          certificado_id_help: Número de certificado de la notificación en la AEAT.
+          comparecencia_notice: Este documento se ha descargado únicamente porque
+            a la AEAT ya le consta que el contribuyente ha leído la notificación.
+            Abrir una notificación no leída es la comparecencia que la da por notificada
+            legalmente e inicia los plazos de recurso y de pago, por lo que una notificación
+            no leída se rechaza y debe abrirla el contribuyente en persona.
+          pull_help: Descarga a custodia cifrada el documento de una notificación
+            ya leída.
+          unparsed_notice: 'No se ha extraído ninguna cifra de este documento, por
+            lo que se conserva únicamente como bytes. Eso no significa que el documento
+            no contenga importes: lea usted mismo el documento almacenado antes de
+            concluir nada sobre su contenido.'
+          view_help: Muestra un documento de notificación ya almacenado y su lectura,
+            sin contactar con la AEAT.
         latest_help: Muestra la instantánea de notificación DEHú más reciente.
         list_help: Lista los snapshots de notificaciones DEHú guardados
         pull_help: Descarga las notificaciones DEHú y guarda una instantánea del bucket.

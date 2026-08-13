@@ -286,6 +286,16 @@ aggregation:
     errors:
       unsupported_modelo: No aggregation contract is registered for the requested
         modelo.
+  invoice_retencion:
+    errors:
+      euro_figures_unavailable_after_defect_sweep: Euro figures are unavailable on
+        an invoice that passed the defect sweep.
+      perceptor_tax_id_unavailable_after_defect_sweep: The perceptor tax identifier
+        is unavailable on an invoice that passed the defect sweep.
+      projection_defects_repeat: An invoice retención projection repeats the same
+        defect.
+      projection_outcome_ambiguous: An invoice retención projection must carry either
+        an observation or defects, never both and never neither.
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: source_jurisdiction %{source_jurisdiction} is foreign-source;
@@ -308,20 +318,80 @@ aggregation:
         aggregation bucket.
       candidate_outside_period: 'Internal error: IVA candidate falls outside the aggregation
         period.'
+      differentiated_sector_inactive_for_filing_year: A differentiated sector is inactive
+        for the filing year.
+      differentiated_sector_without_filing_year_entry: A differentiated sector has
+        no register entry for the filing year.
+      differentiated_sector_without_provisional_percentage: A differentiated sector
+        has no resolved provisional percentage.
       domestic_identification_on_intra_community_transaction: A Spanish VAT identification
         is not valid for an intra-community transaction.
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
+      injected_repositories_missing_bienes_inversion_authority: Injected IVA repositories
+        require an explicit bienes de inversión authority.
+      input_facts_missing_deduction_authority: Input IVA facts require an exact deduction
+        authority.
+      investment_observations_missing_bienes_inversion_authority: Investment IVA observations
+        require the explicit bienes de inversión register and a matching profile authority.
       missing_counterparty_establishment_on_export: An export is exempt because the
         operation leaves the Union, so it turns on where the counterparty is ESTABLISHED.
         Record the counterparty's country; an absent or unassigned code establishes
         nothing, and its VAT identification cannot answer this.
       missing_counterparty_identification_state: An intra-community transaction requires
         the Member State in which the counterparty is VAT-identified.
+      output_facts_carry_deduction_authority: Output IVA facts cannot carry deduction
+        authority.
+      rectification_consumed_more_than_once: A corrected IVA ledger fact may be rectified
+        only once.
+      sectorized_apportionment_duplicate_sectors: The sectorised IVA apportionment
+        declares the same sector more than once.
+      sectorized_especial_missing_input_classification: Sectorised prorrata especial
+        requires an explicit input classification.
+      sectorized_input_inactive_sector: A sectorised IVA input references an inactive
+        sector.
+      sectorized_input_missing_sector_identity: A sectorised IVA input carries no
+        explicit sector identity.
+      sectorized_input_unknown_sector: A sectorised IVA input references an unknown
+        sector.
       unsupported_iva_category: 'Internal error: unsupported IVA category for aggregation.'
+  m303_arrivals:
+    errors:
+      prorrata_register_contradictory_transition_evidence: The prorrata register records
+        both an option and a revocation for the same year.
+      prorrata_register_incomplete_current_year_declaration: The prorrata register
+        lacks a complete explicit declaration for the current filing year.
+      prorrata_revocacion_without_prior_year_especial: Prorrata especial revocation
+        has no prior-year especial register state for the affected sectors.
+      prorrata_transition_contradictory_evidence: Prorrata especial transition entries
+        contradict the declared transition.
+      prorrata_transition_entry_without_evidence: A prorrata especial transition entry
+        carries no transition evidence.
+      prorrata_transition_evidence_without_declared_transition: Prorrata especial
+        transition evidence was supplied without a declared transition.
+      prorrata_transition_evidence_wrong_filing_year: Prorrata especial transition
+        register evidence belongs to another filing year.
+      prorrata_transition_missing_register_evidence: The declared prorrata especial
+        transition has no supporting register evidence.
+      prorrata_transition_not_applicable_for_period: Prorrata especial transition
+        evidence applies only in the final Modelo 303 period of the year.
+      recipient_fact_disagrees_with_ledger_evidence: The recipient-of-cash-accounting
+        fact does not agree with its supplier-regime ledger evidence.
+      supplier_regime_aggregation_period_mismatch: The IVA aggregation period does
+        not match the requested filing period.
+      supplier_regime_blank_ledger_identity: Supplier-regime arrival evidence contains
+        a blank ledger identity.
+      supplier_regime_duplicate_ledger_evidence: Supplier-regime arrival evidence
+        repeats the same ledger entry.
+      supplier_regime_observations_outside_period: The IVA aggregation carries observations
+        dated outside the requested filing period.
   modelo_bindings:
     errors:
       unsupported_period: Unsupported modelo period for ledger aggregation.
+  oss_ioss:
+    errors:
+      iva_amount_mismatches_destination_rate: The persisted IVA amount disagrees with
+        the destination member state rate beyond the one-cent tolerance.
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation
@@ -587,6 +657,20 @@ application:
       unsupported_archive_schema_version: Archive schema version {archive_schema_version}
         predates what this application supports; it cannot be restored without a migration.
   calculations:
+    binding_prefill:
+      errors:
+        observation_merge_key_conflict: 'Observations for different modelo, year or
+          period keys cannot be merged: {primary_modelo} {primary_filing_year} {primary_period}
+          against {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+        selector_filing_year_delta_type: The registry binding selector 'filing_year_delta'
+          must be a whole number or a numeric string; it carries {observed_type}.
+          Correct the binding selector in the registry.
+        selector_source_periods_member_type: Every entry in the registry binding selector
+          'source_periods' must be a period code. Correct the binding selector in
+          the registry.
+        selector_source_periods_type: The registry binding selector 'source_periods'
+          must be a period code or a tuple of period codes; it carries {observed_type}.
+          Correct the binding selector in the registry.
     errors:
       observation_displaces_official_evidence_app_filing: 'This modelo, year and period
         already holds evidence captured from AEAT ({existing_source_kind}), so a locally
@@ -601,13 +685,202 @@ application:
         option if displacing it is intended.
     iva_compensation:
       errors:
+        annual_partition_casilla_ids_noncanonical: Modelo 303 compensation observations
+          must use the casilla identifiers declared by revision {revision_id}; {casilla_ids}
+          are not declared.
         correction_missing: No seeded compensation record exists for %{filing_year}/%{period};
           correction overwrites an existing seed, it does not create one.
+        history_casilla_undeclared: Casilla {casilla_id} is not declared by modelo
+          {modelo} revision {revision_id}, so no legal reference can be attached to
+          it. Correct the casilla reference.
+        history_operand_ref_value_arity: Casilla {casilla_id} supplies {operand_ref_count}
+          operand references but {operand_value_count} operand values, so its formula
+          provenance would be incomplete.
+        history_operand_refs_diverge_from_formula: Casilla {casilla_id} supplies operand
+          references {supplied_operand_refs} but formula {formula_id} projects {formula_operand_refs}.
+        history_operand_refs_without_formula: Casilla {casilla_id} supplies operand
+          references but modelo {modelo} revision {revision_id} declares no formula
+          for it.
+        local_recurrence_modelo_303_only: Local IVA compensation recurrence is reconstructed
+          only for Modelo 303; modelo {modelo} was supplied.
         modelo_303_only: IVA compensation history only accepts Modelo 303 observations.
         modelo_390_only: IVA compensation annual summary only accepts Modelo 390 observations.
+        observed_casilla_ids_noncanonical: IVA compensation observations must use
+          the casilla identifiers declared by modelo {modelo} revision {revision};
+          {casilla_ids} are not declared.
+        repository_backend_split: The Modelo 303 observation store and the IVA compensation
+          history store must share one encrypted backend so both writes settle together.
         seed_conflict: An IVA compensation state already exists for this period; seeding
           would overwrite stored history.
+    iva_wallet:
+      errors:
+        decision_blocks_calculation: The IVA wallet decision for {target_year} {target_period}
+          is blocked by the divergence {divergence}. Resolve the divergence before
+          calculating.
+        decision_no_selected_amount: The IVA wallet decision for {target_year} {target_period}
+          carries no selected amount, so no compensation value can be bound.
+        decision_repository_backend_split: The IVA wallet decision store and the calculation
+          observation store must share one encrypted backend when the decision is
+          persisted.
+        decision_target_mismatch: The stored IVA wallet decision targets {decision_target_year}
+          {decision_target_period} but the work unit is {context_filing_year} {context_period}.
+        modelo_303_only: IVA compensation wallet reconciliation applies only to Modelo
+          303; modelo {modelo} was supplied.
+    m303_carry:
+      errors:
+        available_compensation_amount_missing: The validated Modelo 303 carry envelope
+          carries no available compensation amount in casilla {casilla_id}.
+        available_compensation_formula_missing: Revision {revision_id} declares no
+          formula for casilla {target_casilla_id}, so the generated-basis available
+          compensation cannot cite one.
+        carry_operands_disagree_with_formula: The carry operands {derivation_operands}
+          disagree with the registry formula operands {registry_operands}. Only a
+          registry correction can resolve this; there is no safe automatic recovery.
+        declaration_type_code_invalid: The declaration type source header at {source_locator}
+          carries {value}, which is not a result disposition code.
+        declaration_type_code_not_admitted: The declaration type source header at
+          {source_locator} carries {value}, a code the Modelo 303 diseño de registros
+          does not admit.
+        disposition_resultado_sign_incompatible: The declared disposition {disposition}
+          could not have been selected for a filed resultado of {resultado}. Only
+          the taxpayer can decide which one is correct; there is no safe automatic
+          recovery.
+        duplicate_declaration_type_headers: Modelo 303 carry evidence carries {header_count}
+          {header_key} source headers; exactly one is required.
+        envelope_not_normalized: Modelo 303 carry history requires an already normalised
+          disposition-aware available and generated pair. Re-ingest the filed observation.
+        generated_compensation_amount_missing: The validated Modelo 303 carry envelope
+          carries no generated compensation amount in casilla {casilla_id}.
+        incomplete_supported_operands: 'Modelo 303 carry normalisation cannot derive
+          the available compensation from the casillas present: {casilla_ids}.'
+        invalid_registry_observation: Modelo 303 carry ingress requires a registry
+          modelo observation; it received {observed_type}.
+        local_disposition_header_disagreement: The locally filed result disposition
+          {typed_disposition} disagrees with the declaration type header {header_disposition}.
+          Only the taxpayer can decide which one was filed; there is no safe automatic
+          recovery.
+        local_filing_disposition_required: Local Modelo 303 filing carry evidence
+          must carry the result disposition determined at the filing boundary; the
+          {source_kind} evidence carries none.
+        local_filing_provenance_required: A local Modelo 303 filing disposition must
+          retain its app_filing provenance; it carries {provenance_kind}.
+        non_m303_envelope: Modelo 303 carry history accepts only Modelo 303 observations;
+          modelo {modelo} was supplied.
+        official_declaration_type_header_required: Official Modelo 303 carry evidence
+          must carry exactly one {header_key} source header; the {source_kind} evidence
+          carries none.
+        official_disposition_header_disagreement: The typed result disposition {typed_disposition}
+          disagrees with the AEAT declaration type header {header_disposition}. Only
+          the taxpayer can decide which one was filed; there is no safe automatic
+          recovery.
+        resultado_casilla_required: Modelo 303 carry normalisation requires the filed
+          resultado casilla {casilla_id}, which the observation does not carry.
+        supplied_available_contradicts_derivation: The supplied available compensation
+          {supplied_available} contradicts the {basis} derivation {derived_available}.
+          Only the taxpayer can decide which figure was filed; there is no safe automatic
+          recovery.
+        supplied_pair_contradicts_derivation: The supplied available and generated
+          pair {supplied_available} and {supplied_generated} contradicts the {basis}
+          derivation {derived_generated}. Only the taxpayer can decide which figures
+          were filed; there is no safe automatic recovery.
+        unsupported_provenance: Modelo 303 carry normalisation accepts only official
+          AEAT evidence or a local app filing; the evidence carries {source_kind}.
+    maritime_exemption:
+      errors:
+        art_7p_inputs_required: Art. 7.p) eligibility applies, so both the annual
+          salary and the qualifying days are required. Supply the missing figures.
+        rebeca_input_required: REBECA eligibility applies, so the gross navigation
+          income is required. Supply the missing figure.
+    observations:
+      errors:
+        casilla_ids_noncanonical: Calculation observations must use the casilla identifiers
+          declared by modelo {modelo} revision {revision_id}; {casilla_ids} are not
+          declared.
+        decision_taxpayer_nif_blank: The taxpayer NIF on the reconciliation decision
+          must not be blank.
+        filing_year_out_of_range: The observation filing year {filing_year} is outside
+          the supported range {minimum} to {maximum}.
+        iva_wallet_target_year_out_of_range: The IVA wallet target year {target_year}
+          is outside the supported range {minimum} to {maximum}.
+        member_nif_blank: The grupo member NIF must not be blank when it widens the
+          observation key.
+        period_type_invalid: The observation key requires a period value; it received
+          {observed_type}.
+        registry_snapshot_missing: The casilla identifiers cannot be validated because
+          no registry revision resolves for modelo {modelo}, year {filing_year}, period
+          {period}.
+        taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
+          wallet decision key.
+    row_set:
+      errors:
+        grouping_dispatch_fell_through: 'The row-set grouping {grouping} resolved
+          to an assembler that did not run. Report this: the dispatch table is inconsistent.'
+        grouping_has_no_assembler: The row-set grouping {grouping} has no assembler
+          in this application; the groupings without one are {unassemblable_groupings}.
+        percepcion_clave_missing: Row {row_index} declares no clave. A percepción
+          must state its AEAT clave, per the Modelo 190 and 193 diseño de registros,
+          registro de tipo 2. Supply the clave.
+        percepcion_clave_unsupported: Row {row_index} declares the AEAT clave {clave},
+          which this application does not support.
+        row_assembly_failed: 'Row {row_index} could not be assembled: {validation_error_detail}.
+          Correct the row and pull again.'
+        row_index_not_positive: The row-set cell row index must be a positive whole
+          number; it carries {row_index}.
   filing:
+    build_draft:
+      errors:
+        binding_data_type_unsupported: The registry binding declares a data type no
+          filing input channel supports.
+        binding_family_has_no_input_channel: The registry binding's value family has
+          no filing input channel.
+        binding_provenance_missing: The registry binding is missing its legal and
+          source grounding.
+        binding_row_key_not_positive_integer: A binding input row key must be a positive
+          whole number.
+        binding_source_not_typed: The registry binding declares an untyped source.
+        binding_text_value_invalid: The binding text value does not match its declared
+          registry data type.
+        binding_value_not_boolean: The binding input value is not a recognised yes
+          or no value.
+        binding_value_not_integer: The binding input value must be a whole number.
+        date_binding_not_iso: The date binding value is not an ISO 8601 date.
+        findings_under_fail_on_warning: Draft validation produced findings while warnings
+          are treated as blocking.
+        input_key_noncanonical_casilla: A filing input key uses a non-canonical casilla
+          reference.
+        input_key_not_string: Filing input keys must be text registry identifiers.
+        input_key_padded: Filing input keys must not carry leading or trailing spaces.
+        input_key_unknown: A filing input key is not declared by the registry revision.
+        input_not_decimal: The filing input value must be a decimal amount.
+        period_type_invalid: The filing period must be a typed period value.
+        registry_calculation_failed: The registry calculation failed for this draft.
+        registry_snapshot_unavailable: No registry snapshot is available for this
+          modelo and period.
+        schema_version_snapshot_mismatch: The schema provider version does not match
+          the registry snapshot.
+        text_casilla_invalid: The casilla text value does not match its declared registry
+          data type.
+        text_casilla_not_string: The casilla text input must be a text value.
+    calculate:
+      errors:
+        repair_hints_forbidden: Repair hints are accepted only when blockers must
+          be resolved.
+        repair_hints_required: Repair hints are required when blockers must be resolved.
+    complementaria:
+      errors:
+        justificante_csv_absent: The complementaria requires the original filing's
+          justificante CSV.
+        no_changed_casilla: The complementaria requires at least one changed casilla.
+        original_draft_addressing_mismatch: The original filing and the stored draft
+          declare a different modelo or period.
+        original_draft_snapshot_stale: The original draft was not built from the active
+          registry snapshot.
+        original_submission_csv_blank: The original filing must carry an official
+          justificante CSV.
+        original_submission_fields_missing: The original filing is missing required
+          fields.
+        original_submission_shape_invalid: The original filing does not match the
+          expected record shape.
     errors:
       amendment_not_persisted: no persisted amendment with id %{amendment_id}
       complementaria_taxpayer_identity_absent: 'complementaria requires a declared
@@ -626,6 +899,68 @@ application:
         for ejercicio %{ejercicio}'
       unexpected_ejercicio: 'modelo %{modelo}: unexpected ejercicio %{ejercicio};
         want four-digit year'
+      unknown_severity_threshold: The severity threshold is not a known severity level.
+    export:
+      errors:
+        draft_not_approved: Export requires an approved draft.
+        draft_snapshot_stale: Export requires a draft built from the active registry
+          snapshot.
+        layout_not_renderable: This modelo cannot produce a local declaration export
+          file.
+        post_write_verification_refused: Post-write verification refused the exported
+          declaration file.
+        receipt_artefact_unreadable: The export receipt names a file that cannot be
+          read.
+        receipt_byte_size_mismatch: The exported file's size does not match the export
+          receipt.
+        receipt_digest_mismatch: The exported file's digest does not match the export
+          receipt.
+        rendered_payload_empty: The export layout produced an empty declaration payload.
+        verify_draft_snapshot_stale: Verification requires a draft built from the
+          active registry snapshot.
+    export_parity:
+      errors:
+        aux_block_undeclared: The export layout cannot write the declaration's mandatory
+          Aux block.
+        casilla_metadata_drift: Casilla numbering or segmento drifts from the registry
+          record design.
+        rate_boxes_understate_total: The rate boxes do not account for their own declared
+          total.
+        record_emit_order_drift: The export would emit records out of the registry-declared
+          order.
+        record_emit_order_duplicated: Export records share an emit order, so the record
+          sequence is ambiguous.
+        required_casillas_omitted: The export would omit required casillas the official
+          record files.
+    import:
+      errors:
+        period_token_undeclared: The period token is not declared by the active registry
+          revision.
+        period_token_unrepresentable: The period token cannot be represented as a
+          filing period.
+    m303_exonerado_390:
+      errors:
+        record_design_snapshot_mismatch: The exonerado-390 record design does not
+          match the selected snapshot.
+        record_design_source_not_snapshot_owned: The exonerado-390 record design source
+          is not owned by the snapshot.
+    m303_export_applicability:
+      errors:
+        filing_facts_absent: Modelo 303 export requires assembled filing facts.
+        filing_facts_period_mismatch: The Modelo 303 filing facts do not match the
+          export period.
+        layout_not_snapshot_owned: The Modelo 303 export layout is not owned by the
+          selected snapshot.
+        producer_snapshot_incomplete: The Modelo 303 filing producer snapshot is incomplete.
+        producer_snapshot_wrong_modelo: The producer snapshot does not belong to Modelo
+          303.
+        regularisation_result_not_canonical: The Modelo 303 regularisation result
+          is not the canonical projection.
+        snapshot_period_mismatch: The Modelo 303 registry snapshot does not match
+          the export period.
+    m303_prorrata_activity_rows:
+      errors:
+        activity_rows_incomplete: The Modelo 303 per-activity prorrata rows are incomplete.
     review:
       errors:
         approved_by_blank: The approver identifier must not be blank.
@@ -903,6 +1238,8 @@ application:
       errors:
         bucket_id_blank: Notifications bucket id must not be blank.
         certificado_id_blank: The notification certificado id must not be blank.
+        certificado_not_in_any_snapshot: No captured notification list mentions that
+          certificado. Pull the notification list first.
         document_conflict: 'A different document is already stored for that notification;
           nothing was overwritten. Diverging: {diverging_fields}.'
         document_not_found: No stored document matches that notification. Pull it
@@ -1364,10 +1701,6 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
-  portals:
-    errors:
-      portal_not_found: The requested AEAT portal is not registered. Run 'aeat app
-        live portals list' to see available portals.
   registry:
     errors:
       citation_not_found: No registry citation matched the requested legal reference.
@@ -2353,6 +2686,25 @@ cli:
       modelo_help: Modelo code
       notifications:
         app_help: Read-only DEHú notification snapshots
+        document:
+          already_in_custody_notice: This document was already held for that notification
+            with identical content, so nothing was stored again and the fetch timestamp
+            was left as it was. The record returned is the one already in custody.
+          app_help: Fetch and read back the document AEAT served behind one notification.
+          certificado_id_help: AEAT numero de certificado of the notification.
+          comparecencia_notice: This document was fetched only because AEAT already
+            reports the notification as read by the taxpayer. Opening an unread notification
+            is the comparecencia that makes it legally served and starts its appeal
+            and payment periods, so an unread notification is refused and must be
+            opened by the taxpayer personally.
+          pull_help: Fetch one already-read notification's document into encrypted
+            custody.
+          unparsed_notice: 'No figures were read from this document, so it is held
+            as bytes only. That is not a statement that the document carries no amounts:
+            read the stored document itself before concluding anything about what
+            it says.'
+          view_help: Show one stored notification document and its reading, without
+            contacting AEAT.
         latest_help: Show the most recent DEHU notification snapshot.
         list_help: List saved DEHú notification snapshots
         pull_help: Pull DEHu notifications and persist a bucket-scoped snapshot.
