@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry import (
 
 from ._record_design_ir import (
     RecordDesignIntermediate,
+    RecordDesignIntermediateAuxiliaryEnvelopeHeader,
     RecordDesignIntermediateField,
     RecordDesignIntermediateSheet,
     RecordDesignIntermediateSource,
@@ -108,6 +109,7 @@ class JoinedRecordDesign(_StrictModel):
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...] = ()
     variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...] = ()
+    auxiliary_envelope_headers: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...] = ()
     m303_variable_envelope: JoinedM303VariableEnvelope | None = None
 
     @model_validator(mode="after")
@@ -117,8 +119,14 @@ class JoinedRecordDesign(_StrictModel):
             raise ValueError("joined record-design fields must exactly flatten its records")
         fixed_keys = {(record.parser_sheet.sheet, record.parser_sheet.record_identity) for record in self.records}
         envelope_keys = {(envelope.sheet, envelope.record_identity) for envelope in self.variable_envelopes}
-        if fixed_keys.intersection(envelope_keys):
-            raise ValueError("joined record design cannot classify one identity as fixed and variable")
+        header_keys = {(header.sheet, header.record_identity) for header in self.auxiliary_envelope_headers}
+        has_overlapping_composition_identity = (
+            fixed_keys.intersection(envelope_keys)
+            or fixed_keys.intersection(header_keys)
+            or envelope_keys.intersection(header_keys)
+        )
+        if has_overlapping_composition_identity:
+            raise ValueError("joined record design composition identities must remain disjoint")
         parser_m303_envelopes = tuple(
             envelope for envelope in self.variable_envelopes if envelope.record_identity == "DP30300"
         )
@@ -178,6 +186,7 @@ def join_record_design_semantics(
         fields=tuple(field for record in joined_records for field in record.fields),
         projection_endpoints=snapshot.revision.projection_endpoints,
         variable_envelopes=intermediate.variable_envelopes,
+        auxiliary_envelope_headers=intermediate.auxiliary_envelope_headers,
         m303_variable_envelope=(
             JoinedM303VariableEnvelope(
                 parser_envelope=next(

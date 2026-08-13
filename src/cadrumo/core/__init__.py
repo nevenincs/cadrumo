@@ -250,9 +250,18 @@ from ._optional_extras import (
 from ._orden_anual_html import (
     OrdenAnualHtmlParseError,
     OrdenAnualIvaActivityTable,
+    OrdenAnualIvaAgriculturalIndex,
+    OrdenAnualIvaAgriculturalIngresoACuenta,
+    OrdenAnualIvaAuthority,
+    OrdenAnualIvaAuthorityUnit,
+    OrdenAnualIvaDifficultJustification,
+    OrdenAnualIvaIngresoACuenta,
     OrdenAnualIvaModule,
+    OrdenAnualIvaSeasonalIndex,
+    extract_orden_anual_iva_authority,
     extract_orden_anual_iva_tables,
     orden_anual_iva_activity_anchors,
+    orden_anual_iva_authority_units,
     orden_anual_iva_table_text,
 )
 from ._payment_election import PaymentElection
@@ -398,10 +407,10 @@ from .operations import (
 from .product_identity import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
+    AeatProductSoftwareEvidence,
+    AeatProductSoftwareIdentity,
+    AeatProgramIdentifier,
     IdentityReferent,
-    M303ProductSoftwareEvidence,
-    M303ProductSoftwareIdentity,
-    M303ProgramIdentifier,
     ProductIdentity,
     normalise_product_identity_references,
 )
@@ -523,6 +532,9 @@ __all__: list[str] = [
     "ActionArgumentStatus",
     "ActionConditionality",
     "ActionEvidenceProvenance",
+    "AeatProductSoftwareEvidence",
+    "AeatProductSoftwareIdentity",
+    "AeatProgramIdentifier",
     "AggregationCaptureKind",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
@@ -590,9 +602,6 @@ __all__: list[str] = [
     "M303Exonerado390ActivityField",
     "M303Exonerado390ActivityProjectionRef",
     "M303Exonerado390OperacionesTercerosProjectionRef",
-    "M303ProductSoftwareEvidence",
-    "M303ProductSoftwareIdentity",
-    "M303ProgramIdentifier",
     "M303ProrrataActivityProjectionField",
     "M303ProrrataActivityProjectionRef",
     "M303RegimenSimplificadoActivityField",
@@ -631,7 +640,14 @@ __all__: list[str] = [
     "OptionalExtra",
     "OrdenAnualHtmlParseError",
     "OrdenAnualIvaActivityTable",
+    "OrdenAnualIvaAgriculturalIndex",
+    "OrdenAnualIvaAgriculturalIngresoACuenta",
+    "OrdenAnualIvaAuthority",
+    "OrdenAnualIvaAuthorityUnit",
+    "OrdenAnualIvaDifficultJustification",
+    "OrdenAnualIvaIngresoACuenta",
     "OrdenAnualIvaModule",
+    "OrdenAnualIvaSeasonalIndex",
     "PassphraseStrength",
     "PaymentElection",
     "Period",
@@ -702,6 +718,7 @@ __all__: list[str] = [
     "elided_prose",
     "exclusive_file_lock",
     "expected_floor",
+    "extract_orden_anual_iva_authority",
     "extract_orden_anual_iva_tables",
     "extracted_unit_count",
     "filing_projection_ref_casilla_id",
@@ -730,6 +747,7 @@ __all__: list[str] = [
     "optional_extra_available",
     "optional_extra_for_module",
     "orden_anual_iva_activity_anchors",
+    "orden_anual_iva_authority_units",
     "orden_anual_iva_table_text",
     "parse_toml_text",
     "permitted_amendment_kind_values",
@@ -776,7 +794,10 @@ __all__: list[str] = [
 ]
 
 
-def __getattr__(name: str) -> object:
+_LAZY_ATTRIBUTE_MISSING = object()
+
+
+def _resolve_aggregation_attribute(name: str) -> object:
     if name == "OBSERVATION_BACKED_BINDING_SOURCE_KINDS":
         from .aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 
@@ -793,6 +814,10 @@ def __getattr__(name: str) -> object:
         from .aggregation import IntracomOperationType
 
         return IntracomOperationType
+    return _LAZY_ATTRIBUTE_MISSING
+
+
+def _resolve_storage_attribute(name: str) -> object:
     if name == "exclusive_file_lock":
         from .locks import exclusive_file_lock
 
@@ -809,10 +834,18 @@ def __getattr__(name: str) -> object:
         from ._pid_liveness import pid_is_alive
 
         return pid_is_alive
+    return _LAZY_ATTRIBUTE_MISSING
+
+
+def _resolve_lockfile_attribute(name: str) -> object:
     if name in ("LOCKFILE_UNLINK_RETRY_SECONDS", "unlink_lockfile"):
         from . import _lockfile_unlink
 
         return getattr(_lockfile_unlink, name)
+    return _LAZY_ATTRIBUTE_MISSING
+
+
+def _resolve_foreign_asset_attribute(name: str) -> object:
     if name in (
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
@@ -823,6 +856,10 @@ def __getattr__(name: str) -> object:
         from . import _foreign_asset_obligation
 
         return getattr(_foreign_asset_obligation, name)
+    return _LAZY_ATTRIBUTE_MISSING
+
+
+def _resolve_bucket_pointer_attribute(name: str) -> object:
     if name == "BucketPointer":
         from ._bucket_pointer import BucketPointer
 
@@ -841,4 +878,18 @@ def __getattr__(name: str) -> object:
         from . import _bucket_pointer_io
 
         return getattr(_bucket_pointer_io, name)
+    return _LAZY_ATTRIBUTE_MISSING
+
+
+def __getattr__(name: str) -> object:
+    for resolver in (
+        _resolve_aggregation_attribute,
+        _resolve_storage_attribute,
+        _resolve_lockfile_attribute,
+        _resolve_foreign_asset_attribute,
+        _resolve_bucket_pointer_attribute,
+    ):
+        resolved = resolver(name)
+        if resolved is not _LAZY_ATTRIBUTE_MISSING:
+            return resolved
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

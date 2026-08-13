@@ -49,6 +49,9 @@ from ._record_design_coverage import (
     derive_diseno_coverage_casillas,
 )
 from ._record_design_schema import (
+    RecordDesignAuxiliaryEnvelopeHeader,
+    RecordDesignAuxiliaryEnvelopeHeaderField,
+    RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
     RecordDesignField,
     RecordDesignRelativeSuffixMarker,
@@ -337,11 +340,17 @@ def _extract_sheet_rows(
             f"but parsed fields fill {terminal_extent}",
         )
     variable_envelope = _variable_envelope(sheet_name, parsed_rows, terminal_extent)
+    auxiliary_envelope_header = (
+        None
+        if variable_envelope is not None
+        else _auxiliary_envelope_header(sheet_name, parsed_rows.fields, parsed_rows.total_positions, terminal_extent)
+    )
     return RecordDesignSheet(
         name=sheet_name,
         fields=tuple(parsed_rows.fields),
         total_positions=parsed_rows.total_positions,
         variable_envelope=variable_envelope,
+        auxiliary_envelope_header=auxiliary_envelope_header,
     )
 
 
@@ -558,6 +567,38 @@ def _variable_envelope(
         closing=closing,
         variable_total=variable_total,
     )
+
+
+def _auxiliary_envelope_header(
+    sheet_name: str,
+    fields: list[RecordDesignField],
+    declared_total: int | None,
+    terminal_extent: int | None,
+) -> RecordDesignAuxiliaryEnvelopeHeader | None:
+    """Recognise only the exact total-less Modelo 390 page-zero source shape.
+
+    Fixed sheets otherwise remain unchanged. A no-total 328-byte sheet is not
+    permitted to acquire a fixed-record total from terminal extent; only an
+    exact thirteen-field M390 header receives this distinct classification.
+    """
+    if (
+        declared_total is not None
+        or terminal_extent != 328
+        or len(fields) != len(RecordDesignAuxiliaryEnvelopeHeaderRole)
+    ):
+        return None
+    try:
+        return RecordDesignAuxiliaryEnvelopeHeader(
+            sheet=sheet_name,
+            record_identity=sheet_name,
+            fields=tuple(
+                RecordDesignAuxiliaryEnvelopeHeaderField(role=role, field=field)
+                for role, field in zip(RecordDesignAuxiliaryEnvelopeHeaderRole, fields, strict=True)
+            ),
+            emitted_extent=terminal_extent,
+        )
+    except ValueError:
+        return None
 
 
 def _require_valid_variable_envelope_markers(sheet_name: str, parsed_rows: _WorkbookSheetRows) -> None:

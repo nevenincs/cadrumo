@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.core import M303ProductSoftwareEvidence, M303ProductSoftwareIdentity, Period
+from cadrumo.core import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity, Period
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import RegistryValidationError, load_catalogue_file
 
@@ -91,12 +91,12 @@ def _semantic_for(
     )
 
 
-def _product_identity() -> M303ProductSoftwareIdentity:
-    return M303ProductSoftwareIdentity(
+def _product_identity() -> AeatProductSoftwareIdentity:
+    return AeatProductSoftwareIdentity(
         program_identifier="C303",
         developer_tax_id="Y0000001S",
         evidence=(
-            M303ProductSoftwareEvidence(
+            AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:c303",
                 digest="a" * 64,
             ),

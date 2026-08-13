@@ -15,8 +15,8 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core import (
+    AeatProductSoftwareIdentity,
     CasillaId,
-    M303ProductSoftwareIdentity,
     Period,
     StandardPeriodCode,
     content_hash_hex,
@@ -182,7 +182,7 @@ class M303EnvelopeProvenance(_StrictModel):
     body_member_digests: tuple[M303EnvelopeMemberDigest, ...] = Field(min_length=1)
     payload_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     total_length: int = Field(gt=0)
-    product_software_identity: M303ProductSoftwareIdentity
+    product_software_identity: AeatProductSoftwareIdentity
     closer_derivation: str = Field(pattern=r"^m303-relative-closer-v1$")
     total_derivation: str = Field(pattern=r"^m303-emitted-byte-total-v1$")
 
@@ -243,7 +243,7 @@ def render_m303_variable_envelope_bytes(
     envelope: RecordDesignIntermediateVariableEnvelope,
     *,
     source: RecordDesignIntermediateSource,
-    product_software_identity: M303ProductSoftwareIdentity,
+    product_software_identity: AeatProductSoftwareIdentity,
     filing_period: Period,
     body_members: tuple[M303EnvelopeBodyMember, ...],
 ) -> M303EnvelopeBytes:
@@ -407,7 +407,7 @@ def _render_prefix_part(
     role: M303EnvelopePrefixRole,
     parser_field: RecordDesignIntermediateField,
     *,
-    product_software_identity: M303ProductSoftwareIdentity,
+    product_software_identity: AeatProductSoftwareIdentity,
     filing_period: Period,
 ) -> bytes:
     values: dict[M303EnvelopePrefixRole, str] = {

@@ -17,7 +17,7 @@ from typing import Final, Literal, cast
 import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core import M303ProductSoftwareIdentity
+from cadrumo.core import AeatProductSoftwareIdentity
 from cadrumo.domain.calculations.registry import (
     ENCODING_ALIAS_MAP,
     CasillaFieldKind,
@@ -150,7 +150,7 @@ def render_complete_export_tree(
     transport_profile: ExportTreeTransportProfile,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
     m303_envelope_input: M303EnvelopeGenerationInput | None = None,
 ) -> RenderedExportTree:
     """Render one whole generated ``export/`` tree from its three authorities.
@@ -377,7 +377,7 @@ def _render_m303_variable_envelope(
     records: tuple[ExportRecordDefinition, ...],
     *,
     joined: JoinedRecordDesign,
-    product_software_identity: M303ProductSoftwareIdentity | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
     generation_input: M303EnvelopeGenerationInput | None,
 ) -> M303EnvelopeBytes:
     """Compose DP30300 from the canonical record payload writer in memory only."""

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core import M303ProductSoftwareEvidence, M303ProductSoftwareIdentity, Period
+from cadrumo.core import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity, Period
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
     ExportEncoding,
@@ -274,6 +274,9 @@ def test_real_m303_envelope_with_explicit_product_authority_reaches_generation(
             ),
         },
     )
+    focused_snapshot = snapshot.model_copy(
+        update={"revision": snapshot.revision.model_copy(update={"projection_endpoints": ()})},
+    )
     envelope = parsed.variable_envelopes[0]
     closing = envelope.closing
     assert isinstance(closing, RecordDesignIntermediateRelativeSuffixMarker)
@@ -349,7 +352,7 @@ def test_real_m303_envelope_with_explicit_product_authority_reaches_generation(
             ),
         },
     )
-    joined = join_record_design_semantics(semantic_map, focused, snapshot)
+    joined = join_record_design_semantics(semantic_map, focused, focused_snapshot)
     render_tree = partial(
         render_complete_export_tree,
         revision_id=snapshot.revision.id,
@@ -387,11 +390,11 @@ def test_real_m303_envelope_with_explicit_product_authority_reaches_generation(
             ),
             entries=(),
         ),
-        product_software_identity=M303ProductSoftwareIdentity(
+        product_software_identity=AeatProductSoftwareIdentity(
             program_identifier="C303",
             developer_tax_id="Y0000001S",
             evidence=(
-                M303ProductSoftwareEvidence(
+                AeatProductSoftwareEvidence(
                     reference="aeat-software-registration:c303",
                     digest="a" * 64,
                 ),

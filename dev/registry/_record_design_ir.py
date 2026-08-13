@@ -14,9 +14,11 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry import (
+    RecordDesignAuxiliaryEnvelopeHeader,
+    RecordDesignAuxiliaryEnvelopeHeaderRole,
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
     RecordDesignSheet,
@@ -32,6 +34,8 @@ from cadrumo.domain.calculations.registry import (
 __all__ = [
     "RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION",
     "RecordDesignIntermediate",
+    "RecordDesignIntermediateAuxiliaryEnvelopeHeader",
+    "RecordDesignIntermediateAuxiliaryEnvelopeHeaderField",
     "RecordDesignIntermediateCompositeRelativeClosing",
     "RecordDesignIntermediateField",
     "RecordDesignIntermediateRelativeSuffixMarker",
@@ -43,7 +47,7 @@ __all__ = [
 ]
 
 
-RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 3
+RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION: Final[int] = 4
 """Schema version for the parser-owned intermediate representation.
 
 The provenance contract records this value beside every generated revision. A
@@ -90,6 +94,77 @@ class RecordDesignIntermediateField(_StrictModel):
     normalized_description: str = Field(min_length=1)
     validation: str | None = None
     content: str | None = None
+
+
+class RecordDesignIntermediateAuxiliaryEnvelopeHeaderField(_StrictModel):
+    """One source-anchored role in the fixed Modelo 390 auxiliary header."""
+
+    role: RecordDesignAuxiliaryEnvelopeHeaderRole
+    parser_field: RecordDesignIntermediateField
+
+
+class RecordDesignIntermediateAuxiliaryEnvelopeHeader(_StrictModel):
+    """A total-less source-proved M390 header outside fixed-record generation."""
+
+    sheet: str = Field(min_length=1)
+    record_identity: str = Field(min_length=1)
+    fields: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeaderField, ...] = Field(min_length=13, max_length=13)
+    emitted_extent: Literal[328]
+
+    @model_validator(mode="after")
+    def _require_exact_m390_header_shape(self) -> RecordDesignIntermediateAuxiliaryEnvelopeHeader:
+        expected_roles = tuple(RecordDesignAuxiliaryEnvelopeHeaderRole)
+        if tuple(item.role for item in self.fields) != expected_roles:
+            msg = "Modelo 390 auxiliary header roles must retain official source order"
+            raise ValueError(msg)
+
+        source_fields = self.source_fields
+        expected_lengths = (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
+        if tuple(field.length for field in source_fields) != expected_lengths:
+            msg = "Modelo 390 auxiliary header field widths must retain official anchors"
+            raise ValueError(msg)
+        if tuple(field.offset for field in source_fields) != (1, 3, 6, 7, 11, 13, 18, 23, 93, 97, 101, 110, 323):
+            msg = "Modelo 390 auxiliary header offsets must retain official anchors"
+            raise ValueError(msg)
+        if tuple(field.source_row for field in source_fields) != tuple(range(6, 19)):
+            msg = "Modelo 390 auxiliary header source rows must retain official anchors"
+            raise ValueError(msg)
+        if tuple(field.source_cell for field in source_fields) != tuple(f"A{row}" for row in range(6, 19)):
+            msg = "Modelo 390 auxiliary header source cells must retain official anchors"
+            raise ValueError(msg)
+        if tuple(field.ordinal for field in source_fields) != tuple(range(1, 14)):
+            msg = "Modelo 390 auxiliary header ordinals must retain official anchors"
+            raise ValueError(msg)
+        expected_contents = (
+            'Constante "<T"',
+            'Constante "390"',
+            'Constante "0"',
+            "Nota 2",
+            '"0A"',
+            '"0000>"',
+            '"<AUX>"',
+            "BLANCOS",
+            "Nota 1",
+            "BLANCOS",
+            "Nota 1",
+            "BLANCOS",
+            '"</AUX>"',
+        )
+        if tuple(field.content for field in source_fields) != expected_contents:
+            msg = "Modelo 390 auxiliary header literals must retain official anchors"
+            raise ValueError(msg)
+        if any(field.sheet != self.sheet or field.record_identity != self.record_identity for field in source_fields):
+            msg = "Modelo 390 auxiliary header anchors must belong to one source sheet"
+            raise ValueError(msg)
+        if tuple(field.offset + field.length - 1 for field in source_fields)[-1] != self.emitted_extent:
+            msg = "Modelo 390 auxiliary header extent must end at byte 328"
+            raise ValueError(msg)
+        return self
+
+    @property
+    def source_fields(self) -> tuple[RecordDesignIntermediateField, ...]:
+        """Return header fields in exact source order."""
+        return tuple(item.parser_field for item in self.fields)
 
 
 class RecordDesignIntermediateSheet(_StrictModel):
@@ -167,6 +242,21 @@ class RecordDesignIntermediate(_StrictModel):
     source: RecordDesignIntermediateSource
     sheets: tuple[RecordDesignIntermediateSheet, ...] = Field(min_length=1)
     variable_envelopes: tuple[RecordDesignIntermediateVariableEnvelope, ...] = ()
+    auxiliary_envelope_headers: tuple[RecordDesignIntermediateAuxiliaryEnvelopeHeader, ...] = ()
+
+    @model_validator(mode="after")
+    def _require_disjoint_record_composition_roles(self) -> RecordDesignIntermediate:
+        fixed = {sheet.record_identity for sheet in self.sheets}
+        variable = {envelope.record_identity for envelope in self.variable_envelopes}
+        headers = {header.record_identity for header in self.auxiliary_envelope_headers}
+        composition_lengths = (len(self.sheets), len(self.variable_envelopes), len(self.auxiliary_envelope_headers))
+        if (len(fixed), len(variable), len(headers)) != composition_lengths:
+            msg = "record design composition identities must each be unique"
+            raise ValueError(msg)
+        if fixed & variable or fixed & headers or variable & headers:
+            msg = "fixed records, variable envelopes, and auxiliary headers must be disjoint"
+            raise ValueError(msg)
+        return self
 
 
 def load_record_design_intermediate(
@@ -215,17 +305,23 @@ def _build_record_design_intermediate(
     sheets = tuple(
         _intermediate_sheet(sheet, workbook_format=workbook_format)
         for sheet in parsed_sheets
-        if sheet.variable_envelope is None
+        if sheet.variable_envelope is None and sheet.auxiliary_envelope_header is None
     )
     variable_envelopes = tuple(
         _intermediate_variable_envelope(sheet.variable_envelope, workbook_format=workbook_format)
         for sheet in parsed_sheets
         if sheet.variable_envelope is not None
     )
+    auxiliary_envelope_headers = tuple(
+        _intermediate_auxiliary_envelope_header(sheet.auxiliary_envelope_header, workbook_format=workbook_format)
+        for sheet in parsed_sheets
+        if sheet.auxiliary_envelope_header is not None
+    )
     return RecordDesignIntermediate(
         source=source_anchor,
         sheets=sheets,
         variable_envelopes=variable_envelopes,
+        auxiliary_envelope_headers=auxiliary_envelope_headers,
     )
 
 
@@ -316,6 +412,38 @@ def _intermediate_variable_envelope(
         total_source_cell=_source_cell(envelope.variable_total.row, workbook_format),
         total_label=envelope.variable_total.label,
         total_length=envelope.variable_total.length,
+    )
+
+
+def _intermediate_auxiliary_envelope_header(
+    header: RecordDesignAuxiliaryEnvelopeHeader,
+    *,
+    workbook_format: RecordDesignWorkbookFormat,
+) -> RecordDesignIntermediateAuxiliaryEnvelopeHeader:
+    """Project the parser-owned total-less header without inventing a total."""
+    return RecordDesignIntermediateAuxiliaryEnvelopeHeader(
+        sheet=header.sheet,
+        record_identity=header.record_identity,
+        fields=tuple(
+            RecordDesignIntermediateAuxiliaryEnvelopeHeaderField(
+                role=item.role,
+                parser_field=RecordDesignIntermediateField(
+                    sheet=header.sheet,
+                    record_identity=header.record_identity,
+                    source_row=item.field.row,
+                    source_cell=_source_cell(item.field.row, workbook_format),
+                    ordinal=item.field.ordinal,
+                    offset=item.field.offset,
+                    length=item.field.length,
+                    aeat_type=item.field.type_code,
+                    normalized_description=item.field.description,
+                    validation=item.field.validation,
+                    content=item.field.content,
+                ),
+            )
+            for item in header.fields
+        ),
+        emitted_extent=header.emitted_extent,
     )
 
 
