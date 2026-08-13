@@ -841,7 +841,9 @@ PRORRATA_SECTORAL_SEPARATION_SPREAD_PP: Final[Decimal] = Decimal("50")
 #: Días NATURALES, not hábiles — weekends, holidays and August count, so a
 #: días-hábiles reading would compute a later lapse date than the law allows and
 #: understate urgency to the taxpayer. The clock runs from the puesta a disposición,
-#: never from access.
+#: never from access. The provision is enrolled in the legal catalogue as
+#: ``ley-39-2015:art-43.2``, and the quoted clause above is that entry's own
+#: corpus text rather than a restatement of it.
 DEHU_RECHAZO_TACITO_DIAS_NATURALES: Final[int] = 10
 
 
