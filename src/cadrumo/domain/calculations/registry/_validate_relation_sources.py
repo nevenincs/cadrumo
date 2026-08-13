@@ -20,7 +20,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 
 from ....core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS, BindingSourceKind
-from ._bindings_previous_filing import is_direct_previous_filing_binding
+from ._bindings_previous_filing import _is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
 from ._ids import ModeloId, RelationId
 from ._iva_wallet_relation_targets import (
@@ -377,7 +377,7 @@ def _validate_slot_binding_source(
         relation_id for relation_id, target_binding in wallet_relation_targets if target_binding == binding.id
     }
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
-    if is_previous_filing and not wallet_relation_ids and not is_direct_previous_filing_binding(binding):
+    if is_previous_filing and not wallet_relation_ids and not _is_direct_previous_filing_binding(binding):
         failures.append(
             f"{binding_scope} declares source 'previous_filing' with a non-direct selector "
             f"(no period/source_periods/offset anchor); a relation-materialisation slot must "

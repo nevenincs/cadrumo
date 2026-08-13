@@ -44,7 +44,7 @@ import pytest
 from .....core import BindingSourceKind
 from .._authority import bundled_authority
 from .._binding_selector_utils import selector_as_dict
-from .._bindings_previous_filing import is_direct_previous_filing_binding
+from .._bindings_previous_filing import _is_direct_previous_filing_binding
 from .._schema import DataBindingDefinition, ModeloRevision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -187,7 +187,7 @@ def _scan() -> _ScanResult:
                 cross_modelo_sources[(owning_modelo, str(revision_id), str(binding.id))] = source_modelo
                 if _classify(binding, owning_modelo=owning_modelo, revision_id=str(revision_id)) == _UNOWNED:
                     unowned.append(locator)
-                if not is_direct_previous_filing_binding(binding):
+                if not _is_direct_previous_filing_binding(binding):
                     non_direct_selectors.append(locator)
                 if str(binding.id) in targets:
                     also_relation_targets.append(locator)

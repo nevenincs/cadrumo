@@ -1251,8 +1251,6 @@ def _modelo_202_first_period_previous_payment_defaults(
     }
 
 
-activity_start_date_for_bucket = _activity_start_date_for_bucket
-
 __all__ = [
     "RelationPrefillSourceResolver",
     "relation_prefill_period_zero_default_binding_ids",

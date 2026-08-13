@@ -34,9 +34,7 @@ from ...iva_compensation import (
 )
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
-from ._bindings_previous_filing import (
-    PreviousModeloSelector as _PreviousModeloSelector,
-)
+from ._bindings_previous_filing import _PreviousModeloSelector
 from ._bindings_previous_filing import (
     previous_filing_observation_requirements,
     previous_filing_source_reference,
