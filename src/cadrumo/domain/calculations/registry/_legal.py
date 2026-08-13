@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 from ....core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
@@ -117,6 +117,45 @@ def legal_reference_quotes_corpus(
     if not quotation.strip():
         return False
     return normalise_corpus_text(quotation) in _legal_corpus_text(source_root, reference)
+
+
+def assert_legal_ref_ids_resolve(
+    ref_ids: Iterable[str],
+    *,
+    legal: Mapping[str, LegalReference],
+    subject: str,
+) -> None:
+    """Refuse any of ``ref_ids`` that is absent from the legal catalogue.
+
+    A caller outside the registry tree -- a calculation advisory declaring a
+    provision it asserts about itself, rather than one read off a casilla or
+    binding already grounded by the registry -- has no structural guarantee
+    its declared ids are real. This is the check a prose-only message could
+    never carry: every id is resolved against the same ``legal`` mapping
+    registry build already validates, so a renumbered or retired provision
+    reds here instead of surviving silently in a string.
+
+    ``subject`` names what declared ``ref_ids``, folded into the failure
+    message so a refusal names its origin without the caller re-deriving it
+    from a stack trace.
+
+    Args:
+        ref_ids: The declared legal-catalogue ids to resolve. Order and
+            duplicates are irrelevant to the check.
+        legal: The legal catalogue to resolve against, keyed by id -- the same
+            mapping :func:`verify_legal_catalogue` validates.
+        subject: A short description of what declared ``ref_ids`` (e.g. an
+            advisory's ``reason`` or module name), named in the failure.
+
+    Raises:
+        RegistryValidationError: If any id in ``ref_ids`` is absent from
+            ``legal``.
+    """
+    missing = sorted({ref_id for ref_id in ref_ids if ref_id not in legal})
+    if missing:
+        raise RegistryValidationError(
+            f"{subject} declares legal ref id(s) absent from the legal catalogue: {missing!r}",
+        )
 
 
 def verify_legal_catalogue(
