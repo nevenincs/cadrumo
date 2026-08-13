@@ -72,7 +72,7 @@ entries as **empty drafts**, and retire vanished entries as **tombstones** with
 render in the glossary and shipped search): a tax, modelo, casilla, régimen,
 period, legal concept, or operator workflow noun. A concept naming search,
 calculation or registry **machinery** is `deprecated` with a `scope_note`
-(resolvable for the developer RAG, excluded from the glossary) — never
+(excluded from the glossary) — never
 `retired` (asserts a successor a mis-enrolment lacks), never deleted.
 
 ## Shipped search artefacts are licence-clean

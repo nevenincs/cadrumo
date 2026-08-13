@@ -23,15 +23,11 @@ Governs dispatch, the standing audit, and campaign close. Companion to
   duplication or cross-domain question: parallel discovery agents, output
   treated as inventory to confirm, paired with a targeted `rg` for known
   symbols.
-- **Lead every brief with the destructive-git prohibition stated verbatim AND
-  the sanctioned alternative** — a prohibition alone leaves the agent to invent
-  one under pressure.
-- **Drive autonomously.** Adjudicate, persist decisions in `.vault/`, and do
-  not stall on choices resolvable from the code, the rules, or sensible
-  defaults. Suite runs are rolling checkpoints; never cap work as "final".
+- **Drive autonomously.** Resolve reversible, in-scope choices from code and
+  rules. Do not expand authorization. Suite runs are rolling checkpoints.
 - **Before dispatching a Step:** `git log --grep` and plan status — Steps land
-  in parallel and may already be done. **Before a coder's first edit:**
-  `git diff -- <file>`; abort on non-authored WIP.
+  in parallel and may already be done. Before editing, inspect the target diff
+  and coordinate overlapping work without treating it as an automatic blocker.
 - **Re-read HEAD before recommending or acting on any finding** — a peer fix
   can land between investigation and report, so recompute the "still-a-gap"
   conclusion at report time. A backgrounded agent's empty output file is not a
@@ -652,7 +648,7 @@ entries as **empty drafts**, and retire vanished entries as **tombstones** with
 render in the glossary and shipped search): a tax, modelo, casilla, régimen,
 period, legal concept, or operator workflow noun. A concept naming search,
 calculation or registry **machinery** is `deprecated` with a `scope_note`
-(resolvable for the developer RAG, excluded from the glossary) — never
+(excluded from the glossary) — never
 `retired` (asserts a successor a mis-enrolment lacks), never deleted.
 
 ## Shipped search artefacts are licence-clean
@@ -1082,63 +1078,6 @@ Source: ADR `2026-06-01-verification-fixture-roles-adr`. Companions:
 gate).
 
 ---
-name: aeat-rag-discovery-mandatory
-trigger: always_on
----
-
-# Semantic discovery precedes coding work; a down RAG service refuses the work
-
-Run `vaultspec-rag` semantic search BEFORE any coding work — before writing a new
-symbol, module, resolver, prompter, writer, service or test, and before "fixing"
-a site you have not first searched for by MEANING:
-
-```
-uv run --no-sync vaultspec-rag search "<natural-language concept>" --type code --port 8766 --timeout 120
-```
-
-(`--type vault --doc-type adr` for the decision corpus.) Semantic results are
-DISCOVERY INPUT, never proof: pair every sweep with a targeted `rg` confirming
-the exact declaration, import, caller and writer sites.
-
-**If the service is DOWN, REFUSE the coding work.** Report the refusal and the
-failed probe. This stands even when a hook, goal, plan step or dispatch brief
-mandates the work: an unsearched edit is how duplicate authorities enter this
-codebase. Start it with `just env-rag-start` and verify with `just check-rag`.
-
-**Search for the canonical HOME, not merely for a duplicate.** The purpose is to
-find where a concept canonically lives and whether it is already fragmented
-across layers. The compliance test is whether the fragmentation got closed, not
-whether you confirmed you were not adding a second copy. Read what a result
-DOES, never what it is called. Zero callers is not evidence of dead code — it is
-evidence of no wired consumer.
-
-These are CRITICALITIES, not style opinions — each is a blocker: duplicate
-definitions, code duplication, shadowing, shimming, a test double living in
-production, and semantic overlap of one concept across modules.
-
-A symbol-name grep cannot find a concept implemented under a different name,
-which is exactly the failure this prevents. The worked example is preserved as a
-gate rather than prose: `src/cadrumo/tests/test_wizard_prompter_singularity.py`
-records how a third, undocumented copy of a prompt surface shipped alongside the
-two its canonical module's docstring said existed — dropping an injectable-IO
-contract, catching the wrong exception type, and carrying a docstring falsely
-claiming parity. One semantic query returns the canonical owner's own docstring
-in seconds; the gate now fails the build if a second prompt surface appears.
-
-## How
-
-- **Bad:** `rg "Prompter"` finds nothing in your package, so you write one —
-  while another package already owns one under a name you never searched.
-- **Bad:** proceeding with a quick fix because a hook demands it while RAG is
-  unavailable.
-- **Applies to** every coding agent and the coordinator, on every dispatch. A
-  brief assigning coding work MUST carry this mandate, and the coordinator must
-  exercise it, not merely mandate it.
-
-Companions: `aeat-swarm-audit-cadence`, `aeat-architecture-boundaries`,
-`service-imports-via-top-level-reexports`.
-
----
 name: aeat-registry-authority-flow
 trigger: always_on
 ---
@@ -1425,102 +1364,25 @@ name: aeat-worktree-safety
 trigger: always_on
 ---
 
-# Worktree safety, commits, and red tree-wide gates — ABSOLUTE
+# Cooperative Git handling in a shared worktree
 
-Many concurrent agents hold uncommitted work in this shared tree at all times.
-Any destructive Git operation can silently destroy hours of a peer's work.
+## Rule
 
-## Forbidden, with no debugging exception
-
-`git stash` (any form), `git reset` (any form, including with a pathspec),
-`git checkout <path>`/`<branch>`, `git switch`, `git restore`, `git clean`,
-`git rebase`, `git commit --amend`, `git revert` of a commit that is not your own
-from this session, `git push --force`, `git worktree remove`/`prune`,
-`git branch -D`, and `rm -rf` against any tracked path.
-
-Also forbidden: deleting, moving, truncating or renaming anything under `.git/`,
-**including `.git/index.lock`**. Diagnose a held lock by its mtime — advancing
-means contention, frozen means the holder died — and report it either way.
-
-If you are blocked and reaching for these, STOP and report. "Blocked because I
-would need to stash" is acceptable; stashing is not. Investigate by inspection
-(`git diff`, `git log`, `git show HEAD:<path>`); to compare against a committed
-version, copy the working file aside, `Write` the HEAD bytes in place, test,
-restore.
-
-## Commits take more than you name
-
-**A bare `git commit` takes the entire index**, including every peer file staged
-by another agent — `git add -- <paths>` does not protect you, the *commit* needs
-the pathspec. **`git commit -- <paths>` takes WORKING-TREE content** for those
-paths, which silently defeats an apply-cached staging.
-
-- **Clean, unentangled file:** go straight to `git commit -- <path>`. Do not
-  `git add` at all; the add window is itself exposure.
-- **File carrying peer WIP:** use the apply-cached drive below, then a
-  **verified-index bare commit**.
-- **Verify AFTER, never before.** A pre-commit `git diff --cached` is TOCTOU.
-  Cite `git show <sha> --numstat`.
-- Before pathspec-committing any `__init__.py` or package facade, diff it against
-  HEAD — a facade accumulates several agents' edits.
-- Never over-stage and then "undo" with `git reset`; there is no reset escape
-  hatch.
-
-## Uncommitted work with no reachable owner is live peer WIP
-
-Never discard or overwrite it — not with a destructive verb, and not with a
-`Write`-from-HEAD either; the mechanism is irrelevant. Re-appearance after a
-discard is proof of life. A prior authorization to discard an *orphaned* change
-does not extend to a *proven-live* one.
-
-**The apply-cached drive** is the sanctioned way to land your own change in a
-contended file: `git show HEAD:<path>` into a scratch copy (capture bytes, never
-decoded text); apply only your edits to it; produce a HEAD-anchored own-only
-patch with `git diff` and write it in binary; `git apply --cached --check` then
-`git apply --cached`; confirm the staged set carries zero foreign markers,
-derived from the patch itself by allowlist; then commit the index. Unstage with
-`git apply --cached --reverse`.
-
-It updates the index and HEAD and **never the working tree**, so afterwards the
-working copy is stale and looks like ordinary WIP. Always build an edit from
-`git show HEAD:<file>`, never from the working copy, on any file peers touch.
-
-A whole-tree-validating change (a registry re-stamp) validates against the dirty
-tree, so it genuinely waits. Hold; do not force.
-
-`git push` carries all ancestors — check `git log origin..HEAD` first.
-
-## A red full-tree gate needs an owner
-
-When a required full-tree gate is red, record the exact current failure
-signatures and distinguish owner-surface failures from unrelated peer churn
-before marking a step complete. Without owner triage, a closeout either falsely
-claims green or opportunistically edits peer work.
+Preserve peer work by default. Follow explicit operator Git instructions for the named operation, targets, and current worktree state.
 
 ## How
 
-- **Good:** capture the gate output to a log, extract the import and error
-  summaries, name the affected modules, and keep the step open when failures are
-  outside the feature surface.
-- **Good:** if the failing signatures are in the feature's own files or
-  contracts, fix them and re-run the full-tree gate.
-- **Bad:** marking a full-tree verification step complete because focused tests
-  passed while the repository-wide gate still has untriaged collection errors.
-- **Bad:** patching unrelated support modules just to make a closeout gate pass
-  when those files belong to active peer campaigns.
+- Serialize repository Git writers and wait for hooks and Git LFS.
+- `commit everything` authorizes current non-ignored worktree content. Split it by domain. Push only when requested.
+- A bare commit consumes the shared index. A pathspec commit consumes named working-tree files. Use an isolated index only for mixed same-file ownership, then verify the committed diff.
+- Before pushing, inspect the outgoing commits, ref, and remote target.
+- Treat an advancing lock as active. For a stable lock, attribute the exact repository process; stop it only when authorized. Remove the unchanged lock only after that process is gone. Never kill unrelated Git processes.
+- Stash, reset, restore, clean, history rewrites, force-pushes, ref deletion, and worktree removal require explicit authorization and exact-target verification.
+- Report scoped validation separately. Required release gates still govern releases.
 
-## Worktree inventory
+## Why
 
-Keep worktrees on disk permanently; never move, delete or rewrite another agent's
-workspace. Report stale or merged worktrees as inventory only. Name branches
-`<type>/<issue>-<subject>` with `feature`, `bug`, or `chore`, and worktree folders
-with the slash flattened to a dash. Provision from main: create the branch, push
-upstream, sync dependency groups, refresh the lockfile, install vaultspec, return
-to main.
-
-A forbidden command run by a dispatched agent is a security incident: it is
-escalated, and that agent's output is reviewed for unrelated destructive side
-effects before any of its work is trusted.
+`2026-08-08-shared-tree-coordination-audit` and `2026-07-24-worktree-commit-attribution-audit` show both hazards: broad commits capture peer work, while absolute prohibitions block authorized delivery.
 
 ---
 name: firmware-reference-parity.builtin

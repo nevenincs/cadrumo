@@ -14,7 +14,6 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-locales-cli.md
 @.codex/rules/aeat-naming.md
 @.codex/rules/aeat-quality-gates.md
-@.codex/rules/aeat-rag-discovery-mandatory.md
 @.codex/rules/aeat-registry-authority-flow.md
 @.codex/rules/aeat-registry-bindings.md
 @.codex/rules/aeat-vaultspec-centralisation.md

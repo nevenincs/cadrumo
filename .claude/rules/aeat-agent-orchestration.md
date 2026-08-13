@@ -18,15 +18,11 @@ Governs dispatch, the standing audit, and campaign close. Companion to
   duplication or cross-domain question: parallel discovery agents, output
   treated as inventory to confirm, paired with a targeted `rg` for known
   symbols.
-- **Lead every brief with the destructive-git prohibition stated verbatim AND
-  the sanctioned alternative** — a prohibition alone leaves the agent to invent
-  one under pressure.
-- **Drive autonomously.** Adjudicate, persist decisions in `.vault/`, and do
-  not stall on choices resolvable from the code, the rules, or sensible
-  defaults. Suite runs are rolling checkpoints; never cap work as "final".
+- **Drive autonomously.** Resolve reversible, in-scope choices from code and
+  rules. Do not expand authorization. Suite runs are rolling checkpoints.
 - **Before dispatching a Step:** `git log --grep` and plan status — Steps land
-  in parallel and may already be done. **Before a coder's first edit:**
-  `git diff -- <file>`; abort on non-authored WIP.
+  in parallel and may already be done. Before editing, inspect the target diff
+  and coordinate overlapping work without treating it as an automatic blocker.
 - **Re-read HEAD before recommending or acting on any finding** — a peer fix
   can land between investigation and report, so recompute the "still-a-gap"
   conclusion at report time. A backgrounded agent's empty output file is not a
