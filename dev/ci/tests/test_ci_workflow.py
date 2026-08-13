@@ -74,6 +74,11 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # paths, because the justfile is the sole declaration site for every `dev/`
     # lane; the substance of the invocation is pinned in the recipe, below.
     assert "just test-dev-ci" in static_commands
+    # The four cross-layer conformance gates (rule-surface, status-frontend,
+    # self-referential-string, suggestion-command) run per-push here, via the
+    # `test-per-push-integration-gates` recipe -- previously reachable by no
+    # automatically-triggered workflow at all.
+    assert "just test-per-push-integration-gates" in static_commands
 
     unit = document["jobs"]["cadrumo-unit"]
     unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
@@ -144,6 +149,42 @@ def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> 
         "test_workbook_parity.py no longer carries external_tool, so nothing holds it out of the "
         "unit lane; either restore the marker or give the lane an explicit exclusion"
     )
+
+
+def test_the_per_push_integration_gates_recipe_carries_the_substance_the_workflow_delegates() -> None:
+    """The four named gates, not just any `integration`-marked test, must be named.
+
+    Same rationale as the two recipe-substance pins above: the workflow names a
+    recipe, so the recipe -- not the workflow line -- is where the path-set and
+    marker-expression pin has to bite.
+    """
+    recipe = next(
+        (
+            line
+            for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
+            if line.startswith("test-per-push-integration-gates:")
+        ),
+        None,
+    )
+    assert recipe is not None, "no justfile recipe line named test-per-push-integration-gates"
+
+    body = next(
+        (
+            line
+            for line in _JUSTFILE.read_text(encoding="utf-8").splitlines()
+            if "test_rule_surface_conformance.py" in line
+        ),
+        None,
+    )
+    assert body is not None, "no justfile line carries the recipe body; the delegated lane has no home"
+    assert "not serial and not perf and not external_tool and not os_keychain and not resident_service" in body
+    for target in (
+        "src/cadrumo/agent/tests/test_rule_surface_conformance.py",
+        "src/cadrumo/entrypoints/cli/_config/tests/test_status_frontend_gate.py",
+        "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
+        "src/cadrumo/entrypoints/cli/tests/test_suggestion_command_conformance.py",
+    ):
+        assert target in body, f"the delegated lane no longer names {target}"
 
 
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
