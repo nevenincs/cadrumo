@@ -46,7 +46,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Final, Literal
 
 from pydantic import BaseModel, Field
@@ -55,6 +55,7 @@ from ....core import STRICT_FROZEN_CONFIG
 from ....core.decimal import is_aeat_printed_money
 from ....core.i18n import tr
 from ....core.identity import AeatCertificadoId, AeatClaveLiquidacion
+from ..pdf import parse_spanish_decimal
 from ._errors import SancionArithmeticError, SancionParseError
 
 _CENT: Final = Decimal("0.01")
@@ -301,25 +302,40 @@ def _strip_leaders(raw: str) -> str:
 
 
 def _parse_money(raw: str) -> Decimal:
-    """Parse one AEAT money token, refusing anything that is not the exact shape."""
+    """Parse one AEAT money token, refusing anything that is not the exact shape.
+
+    The shape check and the conversion are deliberately separate concerns. The
+    anchored check is this reader's own strictness and stays here; turning a
+    conforming Spanish-printed token into a :class:`~decimal.Decimal` is the
+    project's one separator convention, so it is delegated rather than
+    hand-rolled. Reversing that split -- delegating the check too -- would be a
+    silent relaxation: the shared parser accepts ``1.843`` as US-style
+    ``Decimal('1.843')``, which is exactly the reading the check exists to
+    refuse.
+    """
     cleaned = _CURRENCY_SUFFIX_RE.sub("", _strip_leaders(raw)).strip()
     if not is_aeat_printed_money(cleaned):
         raise SancionParseError(f"not an AEAT money shape: {raw!r}", malformed=("amount",))
-    try:
-        return Decimal(cleaned.replace(".", "").replace(",", ".")).quantize(_CENT)
-    except InvalidOperation as exc:  # pragma: no cover - shape check precedes this
-        raise SancionParseError(f"money token failed decimal conversion: {raw!r}", malformed=("amount",)) from exc
+    parsed = parse_spanish_decimal(cleaned)
+    if parsed is None:  # pragma: no cover - the anchored shape check precedes this
+        raise SancionParseError(f"money token failed decimal conversion: {raw!r}", malformed=("amount",))
+    return parsed.quantize(_CENT)
 
 
 def _parse_percentage(raw: str) -> Decimal:
-    """Parse one AEAT percentage token as printed (``50,00 %`` is ``50.00``)."""
+    """Parse one AEAT percentage token as printed (``50,00 %`` is ``50.00``).
+
+    Same split as :func:`_parse_money`: the anchored percentage shape is
+    checked here, the comma-decimal conversion is delegated. The shape forbids
+    a dot outright, so no thousands-versus-decimal reading arises.
+    """
     cleaned = _PERCENT_SUFFIX_RE.sub("", _strip_leaders(raw)).strip()
     if not _STRICT_PERCENTAGE_RE.match(cleaned):
         raise SancionParseError(f"not an AEAT percentage shape: {raw!r}", malformed=("percentage",))
-    try:
-        return Decimal(cleaned.replace(",", "."))
-    except InvalidOperation as exc:  # pragma: no cover - shape check precedes this
-        raise SancionParseError(f"percentage token failed decimal conversion: {raw!r}", malformed=("percentage",)) from exc
+    parsed = parse_spanish_decimal(cleaned)
+    if parsed is None:  # pragma: no cover - the anchored shape check precedes this
+        raise SancionParseError(f"percentage token failed decimal conversion: {raw!r}", malformed=("percentage",))
+    return parsed
 
 
 def _text_parser(field: str) -> Callable[[str], object]:
