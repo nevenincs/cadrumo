@@ -19,9 +19,20 @@ from pathlib import Path
 
 import pytest
 
+from dev.corpus.fetch_boe_normative import (
+    ArticleRedaction,
+    NormativeAcquisitionError,
+    article_block_title,
+    article_redaction_markup,
+    assert_serves_the_article_in_force,
+)
+
 from ..legal_excerpt_vintage_screen import (
     Finding,
+    OracleKind,
     Verdict,
+    _is_vintaged,
+    article_payloads,
     candidate_keys,
     clause_chunks,
     norm_root,
@@ -177,10 +188,10 @@ def test_the_screen_reconciles_over_the_real_corpus() -> None:
     reads. Proved against the bundled corpus so a shape nobody anticipated
     cannot slip through as a silent omission.
     """
-    findings, population = screen(_REPO_ROOT)
-    assert population > 0
-    assert len(findings) == population
-    assert "COUNTS DO NOT RECONCILE" not in summarise(findings, population)
+    result = screen(_REPO_ROOT)
+    assert result.population > 0
+    assert len(result.findings) == result.population
+    assert "COUNTS DO NOT RECONCILE" not in summarise(list(result.findings), result.population)
 
 
 def test_the_octiesdecies_control_reaches_its_own_anchor_and_matches() -> None:
@@ -192,8 +203,7 @@ def test_the_octiesdecies_control_reaches_its_own_anchor_and_matches() -> None:
     operative sentence. A failure here means either the derivation regressed or
     the bundled article genuinely changed -- both worth stopping for.
     """
-    findings, _ = screen(_REPO_ROOT)
-    finding = next(item for item in findings if item.entry_id == "ley-37-1992:art-163-octiesdecies")
+    finding = next(item for item in screen(_REPO_ROOT).findings if item.entry_id == "ley-37-1992:art-163-octiesdecies")
     assert finding.resolved_anchor == "#a163octiesdecies"
     assert finding.verdict is Verdict.MATCHES
     assert finding.opening_sentence_matches
@@ -208,8 +218,155 @@ def test_the_art_81_control_still_comes_out_divergent() -> None:
     that turned the octiesdecies family green while also turning this green
     would be agreeing with everything rather than measuring anything.
     """
-    findings, _ = screen(_REPO_ROOT)
-    finding = next(item for item in findings if item.entry_id == "ley-35-2006:art-81")
+    finding = next(item for item in screen(_REPO_ROOT).findings if item.entry_id == "ley-35-2006:art-81")
     assert finding.verdict in {Verdict.DIVERGES_GATE_FIRES, Verdict.DIVERGES_GATE_GREEN}
     assert finding.clauses_absent > 0
     assert finding.identity_confirmed
+
+
+def test_a_norm_named_after_its_own_year_is_not_a_declared_vintage() -> None:
+    """The false-clean-verdict guard, and the reason it exists.
+
+    ``vintaged`` asserts that divergence from current text is CORRECT by
+    design, so a wrong one excuses real staleness. Almost every norm carries
+    its enactment year in its name, and reading a trailing year as a vintage
+    suffix called 29 bare-norm excerpts vintaged the moment the population
+    widened. A vintage year FOLLOWS a citation token; a norm year does not.
+    """
+    assert _is_vintaged("ley-35-2006-art-52-2015")
+    assert _is_vintaged("ley-58-2003-da-18-2021")
+    assert not _is_vintaged("orden-hac-590-2021")
+    assert not _is_vintaged("trlirnr-rdleg-5-2004")
+    assert not _is_vintaged("ley-12-2002")
+
+
+def test_the_article_payload_population_is_reached_through_its_own_oracle() -> None:
+    """Corpus-pinned control: the newly reachable population is really measured.
+
+    These entries cite an excerpt whose norm ships no whole-norm consolidation,
+    so before the article payloads were bundled they had no oracle at all --
+    and before the population boundary was split on unit count they were not
+    even counted. A regression here means either the second oracle stopped
+    resolving or the boundary silently swallowed them again.
+    """
+    findings = screen(_REPO_ROOT).findings
+    reached = [item for item in findings if item.oracle_kind is OracleKind.ARTICLE_REDACTION]
+    assert len(reached) > 20
+    assert all(item.clauses_total > 0 for item in reached)
+    dividends = next(item for item in reached if item.entry_id == "convenio-es-de-2011:art-10")
+    assert dividends.identity_confirmed
+    assert dividends.opening_sentence_matches
+    assert dividends.resolved_anchor == "#a10"
+
+
+def test_the_catalogue_anchor_is_reported_when_it_disagrees_with_boe() -> None:
+    """BOE's block id is positional; matching on the catalogue anchor mis-pairs.
+
+    Article 10 of the Spain-Netherlands convention lives at block ``a1-2`` and
+    article 11 of the Spain-Morocco convention at ``ar-10``. An instrument
+    keyed on the catalogue's own anchor would have compared each against a
+    different provision and reported the difference as supersession.
+    """
+    findings = screen(_REPO_ROOT).findings
+    netherlands = next(item for item in findings if item.entry_id == "convenio-es-nl-1971:art-10")
+    assert netherlands.boe_block == "a1-2"
+    assert netherlands.anchor_names_another_block
+    morocco = next(item for item in findings if item.entry_id == "convenio-es-ma-1978:art-11")
+    assert morocco.boe_block == "ar-10"
+    assert morocco.anchor_names_another_block
+    # The same provision spelled two ways is a disagreement and NOT a hazard;
+    # collapsing the two would make the reported list unactionable.
+    germany = next(item for item in findings if item.entry_id == "convenio-es-de-2011:art-10")
+    assert germany.anchor_disagrees
+    assert not germany.anchor_names_another_block
+
+
+def test_the_entries_citing_their_whole_norm_are_counted_not_skipped() -> None:
+    """The population boundary must state its exclusion, not perform it silently.
+
+    An entry citing its norm's whole consolidated file has no excerpt to
+    compare and is out of scope. An excerpt whose norm ships no consolidation
+    looks identical at that test and is squarely IN scope; 97 such entries left
+    the population before it was counted.
+    """
+    result = screen(_REPO_ROOT)
+    assert result.cites_consolidated_norm > 0
+    assert len(result.findings) == result.population
+    single_unit_excerpts = [item for item in result.findings if item.oracle_kind is not OracleKind.CONSOLIDATED_NORM]
+    assert single_unit_excerpts, "the recovered subpopulation must be present in the findings, not skipped"
+
+
+def test_a_redaction_is_sliced_by_identity_and_never_by_position() -> None:
+    """Order is the trap: this endpoint emits oldest first, ``act.php`` newest first."""
+    payload = (
+        "<response><status><code>200</code><text>ok</text></status><data>"
+        '<bloque id="a9" tipo="precepto" titulo="Artículo 9">'
+        '<version id_norma="BOE-A-1990-1" fecha_publicacion="19900101" fecha_vigencia="19900101">'
+        "<p>el tipo sera del 3 por 100.</p></version>"
+        '<version id_norma="BOE-A-2020-2" fecha_publicacion="20200101" fecha_vigencia="20200101">'
+        "<p>el tipo sera del 21 por 100.</p></version>"
+        "</bloque></data></response>"
+    )
+    in_force = assert_serves_the_article_in_force(payload, document_id="BOE-A-1990-1", block="a9")
+    assert in_force.vigencia == "20200101"
+    assert "21 por 100" in article_redaction_markup(payload, in_force)
+    assert "3 por 100" not in article_redaction_markup(payload, in_force)
+    superseded = ArticleRedaction(amending_norm="BOE-A-1990-1", vigencia="19900101")
+    assert "3 por 100" in article_redaction_markup(payload, superseded)
+    assert article_block_title(payload) == "Artículo 9"
+
+
+def test_the_take_the_first_redaction_error_would_show_here_as_a_false_clean() -> None:
+    """Corpus-pinned control on the redaction the screen reads.
+
+    ``ley-19-1991:art-30`` (cuota íntegra del Impuesto sobre el Patrimonio) is
+    served by a payload carrying several redactions oldest first. Measured
+    against the ORIGINAL 1991 redaction the excerpt comes out ``matches`` --
+    a full false clean verdict on a provision whose scale has been rewritten
+    repeatedly. Measured against the redaction in force it diverges. A failure
+    here means the screen started reading a redaction that is not the one in
+    force, which is the single defect that would invert its conclusions.
+    """
+    finding = next(item for item in screen(_REPO_ROOT).findings if item.entry_id == "ley-19-1991:art-30")
+    assert finding.oracle_kind is OracleKind.ARTICLE_REDACTION
+    assert finding.verdict is not Verdict.MATCHES
+    assert finding.clauses_absent > 0
+
+
+def test_a_tied_redaction_date_refuses_rather_than_picking() -> None:
+    """Art. 91 of LIVA carries two redactions dated 19950120, at 3 % and 4 %.
+
+    An arbitrary pick between them can return the SUPERSEDED rate, which is the
+    exact defect the article endpoint was reached for. The refusal is what makes
+    ``oracle_indeterminate`` a real verdict rather than a decorative one.
+    """
+    payload = (
+        "<response><status><code>200</code><text>ok</text></status><data>"
+        '<bloque id="a91" tipo="precepto" titulo="Artículo 91">'
+        '<version id_norma="BOE-A-1994-1" fecha_publicacion="19941230" fecha_vigencia="19950120">'
+        "<p>el tipo sera del 3 por 100.</p></version>"
+        '<version id_norma="BOE-A-1995-2" fecha_publicacion="19951230" fecha_vigencia="19950120">'
+        "<p>el tipo sera del 4 por 100.</p></version>"
+        "</bloque></data></response>"
+    )
+    with pytest.raises(NormativeAcquisitionError, match="share the latest fecha_vigencia"):
+        assert_serves_the_article_in_force(payload, document_id="BOE-A-1994-1", block="a91")
+
+
+def test_every_bundled_article_payload_states_one_redaction_in_force() -> None:
+    """Every payload the screen reads must reduce to exactly one text in force.
+
+    Read off the bundled corpus rather than a fixture: a payload that ties, or
+    whose block id drifts from its filename, would otherwise be discovered as a
+    silent ``oracle_indeterminate`` in a published split.
+    """
+    corpus = _REPO_ROOT / "src/cadrumo/_data/corpus/normatives/html"
+    payloads = article_payloads(corpus)
+    assert payloads
+    for document_id, items in payloads.items():
+        for item in items:
+            markup = item.path.read_text(encoding="utf-8")
+            in_force = assert_serves_the_article_in_force(markup, document_id=document_id, block=item.block)
+            assert in_force.vigencia
+            assert item.title
+            assert article_redaction_markup(markup, in_force).strip()
