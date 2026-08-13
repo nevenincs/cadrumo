@@ -136,7 +136,7 @@ _TUI_SYMBOL_DISPOSITIONS: Final[dict[tuple[str, str], TuiMigrationDisposition]] 
     )
 }
 
-_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256: Final[str] = "af0f314fcc15fa1b677c29ba372fe805fb2bd12a7964a88e6186a6b5dd3176fd"
+_ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256: Final[str] = "4eda54f61f2d91912366af74bc8684732afce84ed2fb4e45c11c19ff28ee549f"
 _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256: Final[str] = "ff45a174acd6c53d0f6265770462d9b28b65b03dd72127f8a9e64de0a63b7ebe"
 
 
@@ -1560,7 +1560,9 @@ def _literal_dunder_all(tree: ast.Module) -> tuple[str, ...]:
 def _legacy_tui_modules(*, legacy_root: Path, src_root: Path) -> dict[str, tuple[Path, ast.Module]]:
     """Load every production module in the legacy TUI package."""
     modules: dict[str, tuple[Path, ast.Module]] = {}
-    for path in sorted(legacy_root.glob("*.py")):
+    for path in sorted(legacy_root.rglob("*.py")):
+        if "tests" in path.relative_to(legacy_root).parts:
+            continue
         try:
             tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
         except (OSError, SyntaxError, UnicodeDecodeError) as error:
@@ -1641,7 +1643,7 @@ def _parse_tui_manifest_consumer(path: Path, *, repo_root: Path) -> ast.Module:
 
 def _tui_migration_identity_sha256(rows: Iterable[TuiMigrationRow]) -> str:
     """Hash exact semantic identities and dispositions, excluding volatile locators."""
-    identities_and_dispositions = {
+    identities_and_dispositions = [
             (
                 str(row.kind),
                 row.legacy_module,
@@ -1654,7 +1656,7 @@ def _tui_migration_identity_sha256(rows: Iterable[TuiMigrationRow]) -> str:
                 row.state,
             )
             for row in rows
-        }
+        ]
     ordered_identities = sorted(
         identities_and_dispositions,
         key=lambda row: tuple("" if part is None else part for part in row),
@@ -1679,7 +1681,7 @@ def _require_accepted_tui_migration_identities(
 
 def _qualified_tui_references(tree: ast.Module) -> tuple[tuple[int, str, str | None], ...]:
     """Return fully-qualified legacy-TUI references embedded in Python strings."""
-    found: set[tuple[int, str, str | None]] = set()
+    found: list[tuple[int, str, str | None]] = []
     prefix = LEGACY_TUI_PACKAGE + "."
     for node in ast.walk(tree):
         if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
@@ -1701,7 +1703,7 @@ def _qualified_tui_references(tree: ast.Module) -> tuple[tuple[int, str, str | N
                 elif parts:
                     symbol = parts[0]
             locator_line = node.lineno + text[:start].count("\n")
-            found.add((locator_line, module, symbol))
+            found.append((locator_line, module, symbol))
             offset = start + len(prefix)
     return tuple(sorted(found))
 
@@ -1773,11 +1775,9 @@ def generate_tui_migration_manifest(
         scan_root = src_root if src_root in path.parents else repo_root
         tree = _parse_tui_manifest_consumer(path, repo_root=repo_root)
         sites = walk_module_imports(path, src_root=scan_root)
-        imported_lines: set[int] = set()
         for site in sites:
             if not (site.target_mod == LEGACY_TUI_PACKAGE or site.target_mod.startswith(LEGACY_TUI_PACKAGE + ".")):
                 continue
-            imported_lines.add(site.lineno)
             imported = site.imported_names or [None]
             for symbol in imported:
                 source_module = (
@@ -1801,8 +1801,6 @@ def generate_tui_migration_manifest(
                     )
                 )
         for lineno, referenced_module, symbol in _qualified_tui_references(tree):
-            if lineno in imported_lines:
-                continue
             if referenced_module not in modules:
                 raise TuiMigrationManifestError(f"reference resolves to unknown legacy TUI module: {referenced_module}")
             disposition = _tui_disposition(referenced_module, symbol, origins=origins)
