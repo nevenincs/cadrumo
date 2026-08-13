@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:040ceb346089ecf68fe147383000e515f2135892b13fd3d1e75c741f80780117'
+body_hash: 'sha256:bf1bdf1e32c2693ac6145deaa7baa3d6a51415a206e58500a6cf1a34feefc7ba'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -44,6 +44,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S70]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S75]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S81]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S82]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-modelo-200-partition-adr]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-plan]]'
@@ -103,6 +104,7 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S70` - Record in the campaign audit document that Modelo 200 filing years 2022 and 2023 sit inside the prescripcion window while no registry revision claims them, so they refuse today as a coverage gap rather than as a mis-write, and state that this campaign deliberately does not close that gap because its standing goal is that no filing year is written at wrong offsets rather than that every reachable year is served
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S75` - Decide whether the ambiguous-revision refusal's localised sentence should name the filing year, deferred deliberately rather than overlooked - the year already reaches the operator through structured context and the raiser-supplied suggestion so the omission costs clarity rather than actionability, while changing the text means the four locale catalogues which currently carry several agents' uncommitted translations, so the trade was judged not worth it for information already delivered
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S81` - Report to the Modelo 720 owner that its 2013-y-siguientes revision claims filing year 2012 while its only declared layout design applies from 2013, a one-year underhang rather than the multi-year drift this campaign addresses - either the period selector reaches a year before AEAT published a record design for the modelo, or the source catalogue's applies_from is a year conservative, and deciding which needs someone who knows the modelo's first filing year rather than an outside guess. Outside this campaign's scope and reported for the same reason the Modelo 123 finding was: scope governs what is changed, not what is reported
+- `2026-08-08-aeat-design-relayout-boundary-W05-P11-S82` - Build the identity-pattern canary the 2026-05-30 security audit recommended and nobody built, reusing the sanitiser's existing residual-identity detection rather than a second copy - pattern plus the project's own control-letter checksum via validate_identity, findings that never carry the matched text, and path-scoped exclusions with a stated reason each rather than any value allowlist since an allowlist would itself carry the identifier. Census measured first across 40325 text files: 2247 checksum-valid occurrences in 778 files, 33 distinct values, split 1922 in tests, 272 in vault, 15 in docs, 15 in eleven production-source files, 12 in locales - so pattern plus checksum alone is unusable as a gate and the fixture convention is undocumented
 
 ### plan
 
