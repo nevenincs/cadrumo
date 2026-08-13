@@ -42,7 +42,8 @@ from sphinx.errors import SphinxError
 
 from cadrumo.core.observability import GOLDEN_MASK_FIELDS, differing_paths
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs.sequences import (
+
+from ..sequences import (
     ParsedSequence,
     SequenceGolden,
     SequenceTranscript,
@@ -56,7 +57,7 @@ from dev.docs.sequences import (
     parse_sequence,
     refresh_sequences,
 )
-from dev.docs.sequences.__main__ import main as sequences_cli_main
+from ..sequences.__main__ import main as sequences_cli_main
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

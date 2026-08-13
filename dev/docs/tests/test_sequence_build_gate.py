@@ -24,8 +24,9 @@ import pytest
 from sphinx.application import Sphinx
 
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs.cli_tree import default_cli_tree_path
-from dev.docs.sequence_build_gate import (
+
+from ..cli_tree import default_cli_tree_path
+from ..sequence_build_gate import (
     check_sequence_goldens,
     emit_cli_tree,
     should_check_sequences,

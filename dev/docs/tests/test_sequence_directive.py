@@ -29,13 +29,14 @@ import pytest
 from sphinx.application import Sphinx
 
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs.sequence_directive import (
+
+from ..sequence_directive import (
     build_sequence_payload,
     parse_shells,
     render_sequence_html,
     wrap_token_lines,
 )
-from dev.docs.sequences import (
+from ..sequences import (
     FrameKind,
     GoldenFrame,
     ParsedSequence,

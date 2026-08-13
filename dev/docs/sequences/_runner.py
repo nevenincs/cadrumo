@@ -284,6 +284,18 @@ class _PageSeedState:
     captures: tuple[CapturedValue, ...]
 
 
+def _seed_execution_signature(frames: tuple[SequenceFrame, ...]) -> tuple[str, ...]:
+    """Return the narration-independent executable identity of one seed."""
+    return tuple(
+        json.dumps(
+            frame.model_dump(exclude={"source", "line_number", "step_description"}, mode="json"),
+            sort_keys=True,
+            separators=(",", ":"),
+        )
+        for frame in frames
+    )
+
+
 def default_fixtures_root() -> Path:
     """Return the committed ``docs/_sequences/fixtures/`` synthetic-input tree.
 
@@ -1177,6 +1189,7 @@ def _execute_page_in_root(
     """
     transcripts: list[SequenceTranscript] = []
     page_seeds: dict[str, _PageSeedState] = {}
+    page_seed_signatures: dict[tuple[str, ...], tuple[str, _PageSeedState]] = {}
     with sequence_sandbox(
         sequence_id=label,
         sandbox_root=sandbox_root,
@@ -1194,6 +1207,7 @@ def _execute_page_in_root(
             )
             body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
             reused_seed_executions: tuple[FrameExecution, ...] = ()
+            seed_signature = _seed_execution_signature(seed_frames)
 
             if sequence.seed is not None and not seed_frames:
                 detail = (
@@ -1204,13 +1218,29 @@ def _execute_page_in_root(
                 warnings.warn(detail, UserWarning, stacklevel=2)
                 raise SequenceExecutionError(sequence.sequence_id, detail)
 
-            if sequence.seed is not None and sequence.seed in page_seeds:
+            if sequence.seed is not None and sequence.seed not in page_seeds and seed_signature in page_seed_signatures:
+                prior_identity, prior = page_seed_signatures[seed_signature]
+                warnings.warn(
+                    f"page {label!r} sequence {sequence.sequence_id!r} seed {sequence.seed!r} "
+                    f"is execution-equivalent to already-run seed {prior_identity!r}; reused its "
+                    "once-per-page state and immutable captures instead of replaying side effects",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                page_seeds[sequence.seed] = _PageSeedState(
+                    frames=seed_frames,
+                    executions=prior.executions,
+                    captures=prior.captures,
+                )
+                captures.update({item.name: item.value for item in prior.captures})
+                reused_seed_executions = prior.executions
+            elif sequence.seed is not None and sequence.seed in page_seeds:
                 prior = page_seeds[sequence.seed]
                 if prior.frames != seed_frames:
                     detail = (
                         f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
                         f"{sequence.seed!r} with a divergent definition; give the changed recipe "
-                        "a new seed identity or make every use byte-equivalent"
+                        "a new seed identity or make every use structurally equivalent"
                     )
                     warnings.warn(detail, UserWarning, stacklevel=2)
                     raise SequenceExecutionError(sequence.sequence_id, detail)
@@ -1239,11 +1269,13 @@ def _execute_page_in_root(
                     for frame_index, frame in enumerate(seed_frames)
                 )
                 seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
-                page_seeds[sequence.seed] = _PageSeedState(
+                state = _PageSeedState(
                     frames=seed_frames,
                     executions=seed_executions,
                     captures=seed_captures,
                 )
+                page_seeds[sequence.seed] = state
+                page_seed_signatures[seed_signature] = (sequence.seed, state)
                 reused_seed_executions = seed_executions
 
             body_start = len(seed_frames)

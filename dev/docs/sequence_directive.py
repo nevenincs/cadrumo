@@ -34,8 +34,8 @@ from docutils.parsers.rst import Directive, directives
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
-    from dev.docs.cli_tree import CliTree
-    from dev.docs.sequences import CommandToken, GoldenFrame, ParsedSequence, SequenceFrame, SequenceGolden
+    from .cli_tree import CliTree
+    from .sequences import CommandToken, GoldenFrame, ParsedSequence, SequenceFrame, SequenceGolden
 
 __all__ = [
     "CliSequenceDirective",
@@ -134,7 +134,7 @@ def _first_sentence(text: str) -> str:
 @cache
 def _cli_tree() -> CliTree:
     """Build and cache the in-process ``cli-tree.json`` projection for header fallback."""
-    from dev.docs.cli_tree import build_cli_tree
+    from .cli_tree import build_cli_tree
 
     return build_cli_tree()
 
@@ -146,7 +146,7 @@ def _leaf_help_summary(tokens: tuple[CommandToken, ...]) -> str:
     still reads as an instruction; when no leaf help resolves in the projection,
     the bare command path is the last resort.
     """
-    from dev.docs.cli_tree import resolve_command_path
+    from .cli_tree import resolve_command_path
 
     verb_kinds = {"executable", "group", "leaf"}
     verb_paths = [token.command_path for token in tokens if token.kind.value in verb_kinds and token.command_path]
@@ -235,7 +235,7 @@ def _frame_payload(
     display-only, so it carries no output, no stderr, and no exit code (output is
     never fabricated).
     """
-    from dev.docs.sequences import tokenise_command
+    from .sequences import tokenise_command
 
     tokens = tokenise_command(parsed_frame.argv)
     token_dicts = [token.model_dump(mode="json") for token in tokens]
@@ -445,7 +445,7 @@ class CliSequenceDirective(Directive):
         """Parse the body, render from the committed golden, and emit the frames + payload."""
         from pathlib import Path
 
-        from dev.docs.sequences import (
+        from .sequences import (
             SequenceEngineError,
             parse_sequence,
             read_golden,
