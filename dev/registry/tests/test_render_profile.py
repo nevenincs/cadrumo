@@ -130,6 +130,8 @@ def _joined(intermediate: RecordDesignIntermediate | None = None) -> JoinedRecor
         {
             "modelo": "200",
             "design_epoch": "2025",
+            "source_ref": parsed.source.source_ref,
+            "source_sha256": parsed.source.source_sha256,
             "records": (
                 {
                     "sheet": sheet.sheet,

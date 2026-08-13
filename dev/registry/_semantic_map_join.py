@@ -15,7 +15,6 @@ from cadrumo.domain.calculations.registry import (
     ModeloId,
     ProjectionEndpointDeclaration,
     RegistrySnapshot,
-    RegistryValidationError,
     RevisionId,
 )
 
@@ -154,11 +153,6 @@ def join_record_design_semantics(
         snapshot,
         anomaly_exceptions=anomaly_exceptions,
     )
-    if intermediate.source.source_ref not in snapshot.revision.source_refs:
-        raise RegistryValidationError(
-            f"parser intermediate source {intermediate.source.source_ref!r} is not an authority of selected "
-            f"revision {snapshot.revision.id!r}",
-        )
     entries_by_anchor = {_semantic_anchor_key(entry.anchor): entry for entry in semantic_map.entries}
     records_by_anchor = {_semantic_record_key(record): record for record in semantic_map.records}
     joined_records = tuple(

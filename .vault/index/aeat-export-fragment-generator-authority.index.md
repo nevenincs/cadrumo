@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#aeat-export-fragment-generator-authority'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:8af7f739efdd8b723a07a15dfe06ca6edf80b0397bb12129658e122deafb8c09'
+body_hash: 'sha256:9f88e015b589f3848874c6d366d42b40c514de0a4f3d42504108607c1e49422a'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -55,6 +55,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S64]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -110,11 +111,13 @@ related:
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s59-annual-orden-authority-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s60-producer-projection-address-review-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-dp30302-projection-declaration-deficit-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit]]'
+  - '[[2026-08-13-aeat-export-fragment-generator-authority-s64-source-pinned-semantic-map-authority-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -177,11 +180,13 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-11-aeat-export-fragment-generator-authority-s58-filing-evidence-audit` - `aeat-export-fragment-generator-authority` audit: `S58 immutable M303 filing evidence review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s59-annual-orden-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S59 annual Orden authority formal review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s60-producer-projection-address-review-audit` - `aeat-export-fragment-generator-authority` audit: `S60 producer and projection address formal review`
+- `2026-08-12-aeat-export-fragment-generator-authority-dp30302-projection-declaration-deficit-audit` - `aeat-export-fragment-generator-authority` audit: `dp30302 projection declaration deficit`
 - `2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `parallel campaign merge reconciliation`
 - `2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S57 Typed Filing Projection Authority Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit` - `aeat-export-fragment-generator-authority` audit: `S60 Producer and Projection Address Closure Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s61-dp30300-variable-envelope-audit` - `aeat-export-fragment-generator-authority` audit: `S61 DP30300 Variable Envelope Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S62 Projection Declaration Authority Audit`
+- `2026-08-13-aeat-export-fragment-generator-authority-s64-source-pinned-semantic-map-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S64 Source-Pinned Semantic Map Authority Audit`
 
 ### exec
 
@@ -232,6 +237,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61` - Define and implement one typed DP30300 variable-envelope semantic and composition authority for all thirteen prefix fields, the Variable body, relative closer, and derived total across the five Modelo 303 epochs, resolving program identifier and developer tax identity from explicit product authority, carrying the contract through semantic-map provenance and generation, and deleting the blanket generator refusal without literals, aliases, defaults, or inferred producer identities
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with classify_official_boxes, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S64` - Require every persisted semantic map and fragment set to carry one exact source_ref and source_sha256 identity, validate that identity against the parser intermediate and selected revision source membership, bind it into provenance, and hard-refuse design-epoch-only maps, implicit source selection, alternate anchor catalogues, coordinate-bearing projection declarations, legacy-layout reads, and heuristic mapping compatibility before S19 authoring begins
 
 ### plan
 

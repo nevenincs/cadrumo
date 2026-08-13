@@ -3,8 +3,8 @@ tags:
   - '#plan'
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
-modified: '2026-08-12'
-body_hash: 'sha256:404c584ad42caba90238f6385617d26ad7ff019a79247b0e692e13ce8f2f1a27'
+modified: '2026-08-13'
+body_hash: 'sha256:d84275c0a3bf8a564d7d117e81127c4153a9988a827f2534c499b7e239596ed3'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -87,6 +87,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -117,6 +118,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [x] `W04.P07.S60` - Close the S19-exposed producer and projection-address gaps by adding the distinct taxpayer tax-id producer and replacing activity-specific DP30302 module identities with exact annual-Orden module ordinals, with no alias or compatibility reader; `src/cadrumo/core/; src/cadrumo/application/filing/; src/cadrumo/domain/calculations/registry/`.
 - [x] `W04.P07.S61` - Define and implement one typed DP30300 variable-envelope semantic and composition authority for all thirteen prefix fields, the Variable body, relative closer, and derived total across the five Modelo 303 epochs, resolving program identifier and developer tax identity from explicit product authority, carrying the contract through semantic-map provenance and generation, and deleting the blanket generator refusal without literals, aliases, defaults, or inferred producer identities; `src/cadrumo/core/; src/cadrumo/domain/calculations/registry/; dev/registry/; dev/registry/tests/`.
 - [x] `W04.P07.S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with clasificar_casillas_oficiales, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback; `src/cadrumo/domain/calculations/registry/; src/cadrumo/_data/registry/aeat/modelos/303/revisions/; dev/registry/`.
+- [x] `W04.P07.S64` - Require every persisted semantic map and fragment set to carry one exact source_ref and source_sha256 identity, validate that identity against the parser intermediate and selected revision source membership, bind it into provenance, and hard-refuse design-epoch-only maps, implicit source selection, alternate anchor catalogues, coordinate-bearing projection declarations, legacy-layout reads, and heuristic mapping compatibility before S19 authoring begins; `dev/registry/_semantic_map.py; dev/registry/_semantic_map_loader.py; dev/registry/_semantic_map_validation.py; dev/registry/_semantic_map_join.py; dev/registry/_provenance_manifest.py; dev/registry/tests/`.
 - [ ] `W04.P07.S19` - Author and review semantic maps and source-bound render profiles for the five required Modelo 303 design epochs after S60, S61, and S62 land, exact-bijecting every fixed-record and DP30300 prefix anchor to its one canonical typed authority, producing the reviewed five-epoch artifacts consumed by S52, and depending additionally on casilla-schema S14 and S15 before S52; `dev/registry/mappings/modelo_303/; dev/registry/render_profiles/modelo_303/`.
 - [ ] `W04.P07.S52` - Run an exact-anchor M303 canonical-home census across all five hash-pinned binaries and selected snapshots, requiring 406/406/426/429/430 parser fields each to classify exactly once, every casilla/binding/profile/draft/header/computed target to resolve to its one canonical producer, every source-declared constant/reserve to classify literally, zero unsupported-as-filler fields, zero duplicate or fuzzy numeric joins, zero undeclared official numbered boxes, and zero redeclared selectors or capabilities. Import and use the casilla-schema `clasificar_casillas_oficiales` authority rather than re-unioning export mechanisms; `dev/registry/tests/; src/cadrumo/domain/calculations/registry/tests/`.
 - [x] `W04.P07.S53` - Define and prove one parser-owned typed composite relative-closing contract for Modelo 220's exact six-row *** sequence after the Variable body and before the explicit Variable total, preserving every source row, ordinal, length, and content without concatenation, name selection, or extent inference, threading the typed composition through the intermediate representation and fixed-generation refusal boundary, and proving every pinned Modelo 220 binary plus malformed, incomplete, reordered, duplicate, and ambiguous variants; `src/cadrumo/domain/calculations/registry/; dev/registry/`.
