@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:268561267d8529378704500d989f1c3f8c682aa313ff5a17d17ac465c8c67525'
+body_hash: 'sha256:f14dde566b79490c0ddb761d5966f23c03e1821d1c0aaadc6e9f565a838f52b7'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -88,6 +88,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S60]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S61]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S67]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S72]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S73]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S74]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S76]]'
@@ -332,6 +333,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S36` - Migrate authentication and session recovery predicates and actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S39` - Migrate deadline recovery commands and overdue continuations
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S40` - Migrate live-read recovery producers with explicit safety dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S72` - Migrate calculation recovery producers to typed conditions and canonical actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S92` - Replace overview renderer action producers and co-located renderers with the shared resolved action projection
 
 ### plan

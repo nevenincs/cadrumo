@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:68292c6bb2f3cd73363b0718fa2ad5cfc53c252ed6a69cbd9ecd6ccf4b17e76d'
+body_hash: 'sha256:21e42b36896ad11eb4c1164128910c8c085e8284fb925a147cddc2fd8e3fe406'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -156,6 +156,32 @@ close this permanently: the gate goes green and the next commit written with
 absolute imports reopens it. Durable closure needs the violation caught at write
 time — the same lesson the root cause already taught, since the 62-file cluster
 entered through a relocation that never re-ran the gate.
+
+THAT WRITE-TIME REMEDY IS RETRACTED BY OPERATOR RULING, and the retraction matters
+more than the observation it corrects, because acting on the paragraph above would
+do active harm. The commit-time enforcement stage does not merely happen to be
+missing in this tree: it is deliberately uninstalled and stays that way until the
+project settles. A commit-stage autofixing hook destroys work in a shared worktree
+where many agents hold uncommitted changes concurrently, which is the same hazard
+that governs autofixers and destructive git verbs here. Restoring it to close a
+lint backlog would trade a cosmetic red for silent, unattributable loss of peers'
+work. The measurement behind the paragraph above stands — no commit-stage hook is
+installed, the hooks path resolves to a directory holding only post-stage hooks, and
+every gate declared in the hook configuration is therefore inert — but the
+conclusion drawn from it does not. Absence here is a decision, not a defect.
+
+DURABLE CLOSURE IS THEREFORE AUTHOR DISCIPLINE PLUS A GREEN FULL-TREE RUN, not an
+enforcement mechanism. A relocation re-runs the gate before committing. That is
+precisely the discipline whose omission produced the 62-file cluster, so the root
+cause and the remedy meet in the same place, and the remedy is a habit rather than a
+hook.
+
+A CONSEQUENCE WORTH INHERITING: zero is not a stable state for this gate in this
+tree, and cannot be made one. A reader who finds the count non-zero after it was
+reported green should read that as the expected behaviour of an unenforced gate
+under concurrent authorship, never as evidence that someone failed to finish the
+sweep. This does not soften any row's condition — the condition remains the
+condition — it explains why the condition oscillates.
 
 THE CLUSTER HAS A SINGLE ROOT CAUSE, and it is a process gap rather than a design
 one. The sixty-two-file group entered in one commit, a registry relocation retiring

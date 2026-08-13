@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:278638fe92a11c2392b5bec1942117057fbd6b411b8aff48db0bfd3e7dfe3f71'
+body_hash: 'sha256:7141c5540430069afb289b4061c6a7a562f966ccbb67b667a2cf4c8ce23b29a2'
 related:
   - '[[2026-08-07-dehu-notification-legal-effect-P01-S01]]'
   - '[[2026-08-07-dehu-notification-legal-effect-P01-S02]]'
@@ -20,6 +20,8 @@ related:
   - '[[2026-08-07-dehu-notification-legal-effect-P03-S08]]'
   - '[[2026-08-07-dehu-notification-legal-effect-P04-S09]]'
   - '[[2026-08-07-dehu-notification-legal-effect-P04-summary]]'
+  - '[[2026-08-07-dehu-notification-legal-effect-P05-S12]]'
+  - '[[2026-08-07-dehu-notification-legal-effect-P05-S13]]'
   - '[[2026-08-07-dehu-notification-legal-effect-adr]]'
   - '[[2026-08-07-dehu-notification-legal-effect-plan]]'
   - '[[2026-08-07-dehu-notification-legal-effect-reference]]'
@@ -54,6 +56,8 @@ Auto-generated index of all documents tagged with `#dehu-notification-legal-effe
 - `2026-08-07-dehu-notification-legal-effect-P03-S08` - Extend the overview CLI Notice composer to include deemed-served notifications in a warning-severity Notice carrying the P01.S03 legal catalogue entry id and the affected certificado ids on Notice.context, add the new locale keys through python -m dev.locales set with real es, en, ca and hu strings for every key, and run the locale scaffold check
 - `2026-08-07-dehu-notification-legal-effect-P04-S09` - Run the targeted suites sequentially, core tests, the registry legal and catalogue tests, application overview tests and entrypoints cli tests, plus vaultspec-core vault check all and the locales scaffold --check gate, capture full output to a log file per aeat-local-execution, and triage any red signature as owner-surface or unrelated peer churn before closing this Step
 - `2026-08-07-dehu-notification-legal-effect-P04-summary` - `dehu-notification-legal-effect` `P04` summary
+- `2026-08-07-dehu-notification-legal-effect-P05-S12` - Prove the canonical DEHu route and remote-operation guard permit only authenticated read-only notification fetches and refuse acknowledge, mark-read, comparecer, submit, present, and every other AEAT mutation before transport.
+- `2026-08-07-dehu-notification-legal-effect-P05-S13` - Verify active-profile and authenticated-session preconditions with sanctioned read-only diagnostics, record only presence and readiness facts, and stop for the operator if login, certificate, or Cl@ve interaction is required.
 
 ### plan
 

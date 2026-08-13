@@ -4,16 +4,20 @@ tags:
   - '#synced-history-consumption'
 date: '2026-08-08'
 modified: '2026-08-13'
-body_hash: 'sha256:327451b9a39d12803d9e81dbd127a748c0946ce1b724aabf1f1ec9732c1db6fa'
+body_hash: 'sha256:46c239f1da81f8881d11d2ee1a4296fde53b69cfef920ad8ec8eab0a075ebed1'
 tier: L2
 related:
   - '[[2026-08-08-synced-history-consumption-research]]'
   - '[[2026-08-08-synced-history-consumption-adr]]'
 ---
 
+<!-- RETIRED: S36 -->
+
 # `synced-history-consumption` plan
 
 ## Description
+
+P03 is a prerequisite to accepting the remaining P02.S18 generated-proof gate: the independently measured timeout is caused by repeated live operator-surface reconciliation during one `overview status` invocation, not by a dependency-treatment or golden defect. This phase preserves the canonical typed-action, notice, and sequence contracts while making the gate deterministic enough to prove them.
 
 ## Steps
 
@@ -62,6 +66,21 @@ Decide which pulled facts are calculation inputs, which are reconciliation targe
 - [x] `P02.S34` - Reconcile two honest counts of the tolerance inventory, then measure whether the one-cent tolerance is ONE comparison primitive or several, and only then judge each site. Two independent measurements disagree - lead-live-sync counted ELEVEN and gatekeeper counted EIGHT partitioned registry-side from application-side. The direction of that difference is now known and must not be mis-stated again - the ELEVEN is the WIDER set, taken by a tree-wide search of production Python excluding tests for tolerance-named assignments and parameter defaults carrying a money value, and the verification-expectation surface where the min-strictest folding lives is a SMALL PART of it rather than a separate population. Exact membership of the eleven so nobody re-derives it - application/aggregation/_retencion_rate_advisory.py:189, application/aggregation/_retenciones.py:380, application/aggregation/_oss_ioss.py:123, application/modelo/_verification_predicates.py:192, application/modelo/_reconcile_casilla.py:98 now fixed, application/ledger/_evidence_advisory.py:53, domain/calculations/registry/_withholding_bindings.py:494, domain/calculations/registry/_invoice_bindings.py:734, domain/invoices/_service.py:37, and domain/invoices/_models.py at 68 and 70. Deliberately EXCLUDED from that count and correctly so - the float layout tolerances in adapters/inbound/declaracion/_parser.py are geometry rather than money, domain/transactions/_llm.py:177 is a confidence-sum epsilon rather than money, and registry schema tolerance FIELDS together with all registry TOML values are data declarations that constitute the authority rather than instances of the defect. The likely site of the gap is that if gatekeeper classes the four domain/invoices and domain/calculations/registry binding sites as registry-side, that alone is most of the difference and BOTH counts are correct over their own stated scope. EVIDENCE ON THE COMPUTATIONAL-VERSUS-REGULATORY QUESTION, measured by lead-live-sync and landed at f907b137f4 - the registry publishes tolerance per verification expectation and folds it min-strictest, and the bundled values VARY by modelo, with 303 folding to exact equality, 720 and 184 and 190 to 0.00, and 131 and 117 and 123 and 187 and 188 and 714 to 0.01. That demonstrates ONE of the eleven, the reconcile comparison, was shadowing a varying registry-published regulatory value. It does NOT settle the question for the other ten, which were not tested for that property, and several plainly lack it - invoice line arithmetic and OSS and IOSS reconstruction are internal consistency checks against the application's own derivation with no AEAT-published threshold to shadow, so cent-slack is very likely the correct reading for some of them. Record this as cutting against a blanket computational reading, never as settling it. Second, three parity suites for modelo 349 operador totals and modelo 193 retenciones totals and modelo 190 withholding totals each assert a one-cent boundary against what each calls the comparison primitive, and whether that names one shared primitive or three parallel ones is unmeasured. Third, judge each site individually. Mechanically collapsing them onto one shared constant is FORBIDDEN, because a site whose one cent is a pure arithmetic rounding guard is correct with a local literal while a site shadowing a registry-published regulatory parameter must read the authority instead, and those remedies are opposite so a uniform sweep gets one of them wrong by construction. Treat the eleven as INVENTORY and not as a duplication cluster, because no substitutability filter has been run across them. Gate - the two counts are reconciled against their stated scopes, the primitive count is measured, each site carries a per-site verdict of rounding-guard or authority-shadowing, and every remedy follows from its own site's verdict; `src/cadrumo/application/aggregation, src/cadrumo/application/ledger, src/cadrumo/application/modelo, src/cadrumo/domain/calculations/registry, src/cadrumo/domain/invoices`.
 - [x] `P02.S35` - Ground Modelo 353 group-regime carry treatment in the legal catalogue before declaring it. Add only corpus-grounded legal entries for LIVA arts. 163 quinquies, sexies and nonies, with their reviewed provenance, then declare the Modelo 322 source classification from those entries. Gate: the legal refs resolve against official corpus text, each 353 carry has its declared treatment, and the loaded registry validates.; `src/cadrumo/_data/registry/aeat/legal, src/cadrumo/_data/registry/aeat/modelos/353`.
 
+### Phase `P03` - Performance-sweep and deterministic closure
+
+Remove the independently measured operator-surface action-resolution bottleneck before accepting the synced-history sequence gate, then establish bounded progress diagnostics and complete the full closure matrix without weakening typed action or notice contracts.
+
+- [x] `P03.S37` - Measure the real overview-status notice-action path, inventory each invocation's reconciliation and MCP descriptor construction, and set a regression bound from the sequence sandbox.; `src/cadrumo/entrypoints/cli/_common.py, src/cadrumo/entrypoints/cli/_overview_rendering.py, src/cadrumo/entrypoints/cli/tests, dev/docs/sequences/tests`.
+- [x] `P03.S38` - Implement invocation-scoped operator-surface reconciliation reuse at the canonical CLI action-resolution boundary without process-global caching or weaker typed actions and notices.; `src/cadrumo/entrypoints/cli/_common.py, src/cadrumo/entrypoints/cli/tests`.
+- [ ] `P03.S39` - Prove repeated overview notices retain their exact text, envelope, action, and provenance while one invocation performs bounded live descriptor and reconciliation construction.; `src/cadrumo/entrypoints/cli/tests, src/cadrumo/application/operator_surface/tests`.
+- [ ] `P03.S40` - Add bounded canonical sequence-runner progress and timeout diagnostics that identify page, sequence, and frame without changing golden or sequence semantics.; `dev/docs/sequences, dev/docs/sequences/tests`.
+- [ ] `P03.S41` - Rerun the fourteen affected isolated sequence goldens and five owning-page coherence gates after the performance and diagnostic proofs pass, preserving CLI-owned goldens.; `docs/_sequences, docs/how-to, dev/docs/sequences`.
+- [ ] `P03.S42` - Close P02.S18, P03, and the plan only after every current-tree gate and matching execution record passes, then scaffold the required phase summary through VaultSpec.; `.vault/exec, .vault/plan`.
+
 ## Parallelization
 
+The ordered dependency is P03.S37 -> P03.S38 -> P03.S39 -> P03.S40 -> P03.S41 -> P03.S42. P03.S38 is reserved for the later Sol implementation owner and may begin only once P03.S37 establishes the real invocation baseline. P03.S39 proves S38's equivalence and construction bound; P03.S40 then adds runner diagnostics before P03.S41 reruns the generated proof. Only P03.S42 may close P02.S18, P03, or the plan, and only after the full current-tree evidence and matching execution records exist.
+
 ## Verification
+
+P03.S37 records real sequence-sandbox timing plus descriptor and reconciliation counts. P03.S38-S39 must preserve exact notice text, action identity, envelope, and provenance while bounding live construction to one invocation-scoped reconciliation. P03.S40 must identify page, sequence, and frame before a bounded timeout. P03.S41 proves all fourteen isolated sequences and their five owning-page coherence gates. P03.S42 repeats registry verification, the zero-undeclared probe, approved focused suites, Ruff, feature-scoped vault check, and plan check before any closure or phase-summary scaffold.

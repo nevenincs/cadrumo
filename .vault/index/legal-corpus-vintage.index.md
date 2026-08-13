@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:3ba8a658b850c2d7f8a121ba027463ce222ff0cb022de34ef16c01cc42027b1f'
+body_hash: 'sha256:e6376e9e8b5406aae112829b29a92d7dea2a07bce988463a96c897f2ec95b44d'
 related:
   - '[[2026-08-10-legal-corpus-vintage-P01-S01]]'
   - '[[2026-08-10-legal-corpus-vintage-P01-S02]]'
@@ -15,6 +15,7 @@ related:
   - '[[2026-08-10-legal-corpus-vintage-P03-S05]]'
   - '[[2026-08-10-legal-corpus-vintage-P03-S06]]'
   - '[[2026-08-10-legal-corpus-vintage-P03-S07]]'
+  - '[[2026-08-10-legal-corpus-vintage-P03-S14]]'
   - '[[2026-08-10-legal-corpus-vintage-adr]]'
   - '[[2026-08-10-legal-corpus-vintage-plan]]'
   - '[[2026-08-10-legal-corpus-vintage-reference]]'
@@ -44,6 +45,7 @@ Auto-generated index of all documents tagged with `#legal-corpus-vintage`.
 - `2026-08-10-legal-corpus-vintage-P03-S05` - Acquire the redaction history for the 157 excerpt-backed entries that have no bundled consolidated counterpart, through dev/corpus/fetch_boe_normative.py and never by hand. Three traps are already measured and must be carried: act.php lists versions NEWEST first while the open-data article endpoint concatenates them OLDEST first, so a take-the-last rule is right for one and bundles repealed law for the other
 - `2026-08-10-legal-corpus-vintage-P03-S06` - Re-run the clause-level divergence measurement over the newly reachable entries and report the split, without proposing a remedy. The disconfirming observation: if the newly measured population's catch rate differs materially from the 3-of-72 already measured, the 104 comparable entries were not representative and the ADR's premise needs re-examining rather than extending
 - `2026-08-10-legal-corpus-vintage-P03-S07` - RESOLVED BY MEASUREMENT. Fix the anchor derivation generally, re-run over the full eligible population, and correct every coverage statement published against the wrong denominator
+- `2026-08-10-legal-corpus-vintage-P03-S14` - Refuse the version pile structurally, rather than resting on nothing pointing at it yet. The 58 acquired article payloads carry BOE's full redaction history by design, but the extractor folds every version into ONE undelimited unit with no fecha_vigencia attribution, and boe-a-1991-14392-a30-redacciones is ten versions in a single 15.8k-character unit. Any corpus_ref resolving there fuses repealed and current law, and a required_text presence check passes on REPEALED text, which is the trap the grounding rule states verbatim and the trap the S05 row names in its own heading. S06 handled it for the screen by reading the raw payload and reducing to the redaction in force, but the committed DATA is still a pile. Either split the article-endpoint extraction one unit per version carrying its fecha_vigencia, or refuse at registry build any corpus_ref resolving to a redacciones sidecar. Prove the refusal bites by breaking it on purpose from outside the repo
 
 ### plan
 

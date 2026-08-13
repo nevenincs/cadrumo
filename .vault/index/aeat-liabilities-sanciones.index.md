@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:ca6a3e73799705ae57da55715c03b23920dbba180de07d18645c0434af1777e8'
+body_hash: 'sha256:ca37917c4b0e17511a43f7f3608fb4d41918174aea255788ff2bba09763d7382'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -31,11 +31,18 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P06-S21]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P06-S22]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P07-S23]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P08-S24]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S25]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S26]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S27]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S28]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P08-S29]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P09-S30]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P09-S31]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P09-S32]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P09-S33]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P09-S34]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P09-S35]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
@@ -83,11 +90,18 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 - `2026-08-07-aeat-liabilities-sanciones-P06-S20` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 178 through 212 are all present in the bundled consolidated Ley 58/2003 and in its sidecar. Author the legal-catalogue entry for the regimen sancionador focused on the arts. 191-197 pecuniaria proporcional bands, pointing corpus_ref at the bundled consolidated file. Every band percentage is cross-checked against live BOE by the reviewer before stamping
 - `2026-08-07-aeat-liabilities-sanciones-P06-S21` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 65 and 82 are present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for aplazamiento y fraccionamiento del pago and its garantias, pointing corpus_ref at the bundled consolidated file. Any interest rate the entry carries is cross-checked against live BOE by the reviewer before stamping
 - `2026-08-07-aeat-liabilities-sanciones-P06-S22` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 163 and 167 through 173 are all present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for the procedimiento de apremio, providencia and embargo, pointing corpus_ref at the bundled consolidated file, verified by the legal-entry evidence gate
+- `2026-08-07-aeat-liabilities-sanciones-P08-S24` - Add the LIVE_NOTIFICATION_DOCUMENT_NAMESPACE bucket-scoped namespace constant for the document manifest beside LIVE_DEUDAS_SNAPSHOT_NAMESPACE, verified by the existing namespace-uniqueness gate over the storage namespace constants
 - `2026-08-07-aeat-liabilities-sanciones-P08-S25` - Add the frozen PersistedNotificationDocument model carrying certificado_id, the AttachmentStore attachment id, pdf_sha256, source_url and fetched_at under STRICT config, exposing NO filesystem path field of any kind, verified by a model validation unit test asserting the field set and that no field name or value carries a path
 - `2026-08-07-aeat-liabilities-sanciones-P08-S26` - Add NotificationDocumentService storing the fetched bytes through the encrypted content-addressed AttachmentStore resolved the way application/ledger/_actions_common.py resolves it, delegating to that single-writer primitive rather than re-implementing its write path, verified by a unit test asserting the store receives the bytes and the service opens no second write path
 - `2026-08-07-aeat-liabilities-sanciones-P08-S27` - Make a re-store of an already-persisted certificado id a content-addressed no-op returning the existing record with no second attachment write and no re-stamped fetched_at, and refuse with an instructive localised conflict when the same certificado id arrives with a different pdf_sha256, verified by an idempotency test covering the no-op, the field-complete match and the divergent-digest refusal
 - `2026-08-07-aeat-liabilities-sanciones-P08-S28` - Write the strict roundtrip test against a real SecureObjectRepository, real key provider, real SQLite engine and real AttachmentStore, populating every defaultable field non-default and asserting strict pydantic equality, then the anti-tautology proof deleting a persisted field on disk and asserting reload refusal
 - `2026-08-07-aeat-liabilities-sanciones-P08-S29` - Write the custody gate proving a full fetch-and-store cycle writes the PDF bytes to no filesystem path: run the service against a temporary profile root, assert every file created is an encrypted store artefact and that the plaintext PDF magic bytes appear nowhere on disk, then the mutation proof writing the bytes to a temp file and confirming the gate reds
+- `2026-08-07-aeat-liabilities-sanciones-P09-S30` - Add the frozen sancion/liquidacion parse record with Spanish-stemmed fields mirroring the printed labels (clave_liquidacion, referencia, nif, base_sancion, porcentaje_minimo, sancion_resultante, reduccion_conformidad, reduccion_pronto_pago, diferencia), each distinguishing an absent label from a matched zero, verified by a model unit test asserting a matched-zero and an unmatched field are not equal. DELIVERED as SancionLiquidacion rather than the row's original SancionDocumentoParse name, and the absent-versus-zero distinction is carried by Decimal | None on the optional fields rather than a per-field matched flag: a required field cannot express absence at all and refuses instead, so the flag would have been dead weight on every field that has one. Coverage is equivalent, not narrower - the regression pins that the arithmetic cannot recover the distinction, so only the record carries it
+- `2026-08-07-aeat-liabilities-sanciones-P09-S31` - Reconcile the sancion amount pattern against the tree's two existing amount authorities rather than adding a third: _STRICT_AEAT_MONEY_RE is byte-identical in the IVA compensation wallet parser and the sancion parser with no shared home, which is true duplication, while SPANISH_AMOUNT_GROUP is constraint-shape-divergent (unanchored capture group, NBSP-tolerant) and is NOT substitutable for the anchored house pattern. Give the house pattern one canonical home consumed by both callers, verified by a duplication gate asserting the literal appears exactly once in the tree
+- `2026-08-07-aeat-liabilities-sanciones-P09-S32` - Write parse_sancion_documento running the label dispatch over text lifted by the existing extract_pages_text_from_bytes and converting captured amounts with the existing parse_spanish_decimal, adding no second PDF text extractor and no second decimal parser, verified by a parse unit test over a synthetic specimen reproducing the observed label set
+- `2026-08-07-aeat-liabilities-sanciones-P09-S33` - Establish whether the AEAT text layer emits the UNE 82100 NBSP or narrow-NBSP thousands separator and admit them in the anchored house pattern. RESOLVED on the empirical finding the tree already carried at adapters/inbound/pdf/_label_regex.py, which records NBSP and narrow-NBSP grouping as observed AEAT rendering and ASCII space as never emitted. Both forms were refused by the sancion reader, so a genuine AEAT document would have been refused outright. The separator taxonomy now has one source consumed by all three grammars, ASCII space stays refused, and _strip_leaders no longer destroys the separator ahead of the check. Verified by a regression pinning the accepted and refused separator forms with a mutation proof, landed in the tree's existing tests/test_sancion_parser.py rather than the row's originally-named test_sancion_parse.py, which would have been a near-duplicate file
+- `2026-08-07-aeat-liabilities-sanciones-P09-S34` - Make a document in which no label matches report explicitly unparsed and refuse to return a record of zeroes or a clean empty result, verified by a regression feeding an unrelated PDF and asserting the refusal, paired with the standing lesson that this reader has twice returned a silent zero against populated data
+- `2026-08-07-aeat-liabilities-sanciones-P09-S35` - Confirm the notificacion package facade exports the sancion parse entry point and its typed record for the application layer, and that the PDF-bytes-to-text step reuses the canonical extract_pages_text_from_bytes rather than introducing a second extractor, verified by the import hygiene gate and a check that no second pdfplumber call site is added
 
 ### plan
 
