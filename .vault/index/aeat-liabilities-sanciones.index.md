@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#aeat-liabilities-sanciones'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:d1f7aa44425f45166ef0c1a8a19d6d143cf8361e3fc32dd114ba3306c112d1ac'
+body_hash: 'sha256:a85aa542f0d7d75419d69a58ba1f77e53851220c27b5dbf8659561e4b5a19d65'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -35,6 +35,7 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
   - '[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]'
+  - '[[2026-08-13-aeat-liabilities-sanciones-notification-documents-adr]]'
 ---
 
 # `aeat-liabilities-sanciones` feature index
@@ -46,6 +47,7 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 ### adr
 
 - `2026-08-07-aeat-liabilities-sanciones-adr` - `aeat-liabilities-sanciones` adr: `Deudas y sanciones: read-only liability register, never a calculation input` | (**status:** `accepted`)
+- `2026-08-13-aeat-liabilities-sanciones-notification-documents-adr` - `aeat-liabilities-sanciones` adr: `Notification documents: fetch, encrypt, parse deterministically` | (**status:** `accepted`)
 
 ### audit
 
