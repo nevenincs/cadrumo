@@ -333,15 +333,27 @@ def iva_rate_percentage(rate: IvaRate, on_date: date | None = None) -> Decimal |
         # a guessed value rather than an authored, corpus-backed one.
         if not rate_table_covers(EUMemberState.ES, effective_date, kind):
             raise IvaRateNotFoundError(
-                f"no IVA rate is on record for {effective_date.isoformat()}: the rate registry "
-                f"carries no {kind.value!r} rate for Spain on that date, so IVA rate slot "
-                f"{rate.name} ({fraction * Decimal('100')}%) cannot be confirmed. Other tiers may "
-                "reach that date; this is a limit of the bundled registry, not a statement that "
-                "the rate was unlawful.",
+                translated_message="errors.iva.rate_registry_coverage_gap",
+                context={
+                    "iva_rate_slot": rate.name,
+                    "rate_pct": str(fraction * Decimal("100")),
+                    "rate_kind": kind.value,
+                    "member_state": EUMemberState.ES.value,
+                    "on_date": effective_date.isoformat(),
+                    "rate_registry_covers_date": False,
+                },
             )
         raise IvaRateNotFoundError(
-            f"IVA rate slot {rate.name} ({fraction * Decimal('100')}%) was not in force for "
-            f"kind={kind.value!r} in Spain on {effective_date.isoformat()}",
+            translated_message="errors.iva.rate_slot_not_in_force",
+            context={
+                "iva_rate_slot": rate.name,
+                "rate_pct": str(fraction * Decimal("100")),
+                "rate_kind": kind.value,
+                "member_state": EUMemberState.ES.value,
+                "on_date": effective_date.isoformat(),
+                "rate_registry_covers_date": True,
+                "rate_in_force": False,
+            },
         )
     return fraction
 

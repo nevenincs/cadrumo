@@ -6850,6 +6850,20 @@ errors:
       emès un senyal de cancel·lació.'
     internal_workflow_unhandled: 'Error intern: una etapa del flux de treball ha llançat
       una excepció no controlada.'
+  iva:
+    category_has_no_legal_basis: Aquesta categoria d'IVA no té base legal al catàleg
+      i no es pot citar.
+    citation_legal_reference_absent: La referència legal de la citació no consta al
+      catàleg legal del registre.
+    cite_requires_catalogue_or_date: Citar una categoria d'IVA requereix un catàleg
+      explícit o una data d'efecte.
+    rate_member_state_unregistered: El registre de tipus d'IVA no conté cap tipus
+      per a l'estat membre sol·licitat.
+    rate_registry_coverage_gap: El registre de tipus d'IVA inclòs no arriba a aquesta
+      data per a aquest tram, de manera que el tipus no es pot confirmar. És un límit
+      de la nostra cobertura, no una afirmació que el tipus fos il·legal.
+    rate_slot_not_in_force: Aquest tipus d'IVA no estava en vigor per al seu tram
+      a Espanya en la data de l'operació.
   locked:
     locked_access_gate_live_submit_forbidden: L'enviament en viu a l'AEAT està permanentment
       prohibit. Aquesta aplicació construeix, valida i exporta declaracions; la presentació

@@ -43,7 +43,15 @@ def lookup_rate(
     """
     rates = load_iva_rate_table().get(member_state)
     if not rates:
-        raise IvaRateNotFoundError(f"no rates registered for member_state={member_state.value!r}")
+        raise IvaRateNotFoundError(
+            translated_message="errors.iva.rate_member_state_unregistered",
+            context={
+                "member_state": member_state.value,
+                "member_state_registered": False,
+                "rate_kind": kind.value,
+                "on_date": on_date.isoformat(),
+            },
+        )
     for rate in rates:
         if rate.kind is not kind:
             continue
@@ -60,7 +68,13 @@ def lookup_rate(
             continue
         return rate
     raise IvaRateNotFoundError(
-        f"no rate for member_state={member_state.value!r} kind={kind.value!r} on_date={on_date.isoformat()}",
+        translated_message="errors.error.error_financial_iva_rate_not_found",
+        context={
+            "member_state": member_state.value,
+            "member_state_registered": True,
+            "rate_kind": kind.value,
+            "on_date": on_date.isoformat(),
+        },
     )
 
 
@@ -178,7 +192,10 @@ def cite(
         IvaCatalogueError: If both ``catalogue`` and ``on`` are ``None``.
     """
     if catalogue is None and on is None:
-        raise IvaCatalogueError("cite requires either an explicit catalogue or an effective date")
+        raise IvaCatalogueError(
+            translated_message="errors.iva.cite_requires_catalogue_or_date",
+            context={"catalogue_supplied": False, "effective_date_supplied": False},
+        )
     if on is None:
         assert catalogue is not None
         return _render_citation(category, catalogue)
@@ -188,10 +205,14 @@ def cite(
 def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     regulation = catalogue.get(category)
     if regulation is None:
-        raise IvaCategoryNotFoundError(f"IVA category {category.value!r} not found in catalogue")
+        raise IvaCategoryNotFoundError(
+            translated_message="errors.error.error_financial_iva_category_not_found",
+            context={"iva_category": category.value, "category_in_catalogue": False},
+        )
     if not regulation.citations:
         raise IvaCatalogueError(
-            f"IVA category {category.value!r} carries no legal basis (legal_basis_exempt) and cannot be cited",
+            translated_message="errors.iva.category_has_no_legal_basis",
+            context={"iva_category": category.value, "citation_count": 0},
         )
     citation = regulation.citations[0]
     from ...core.resources import resources
@@ -199,7 +220,12 @@ def _render_citation(category: IvaCategory, catalogue: IvaCatalogue) -> str:
     reference = resources().modelos.authority.catalogues.legal.get(citation.legal_reference)
     if reference is None:
         raise IvaCatalogueError(
-            f"citation legal_reference {citation.legal_reference!r} is absent from the registry legal catalogue",
+            translated_message="errors.iva.citation_legal_reference_absent",
+            context={
+                "iva_category": category.value,
+                "legal_reference": citation.legal_reference,
+                "legal_reference_in_catalogue": False,
+            },
         )
     article = f"Art. {reference.article}" if reference.article is not None else citation.legal_reference
     return f"{reference.document_id}, {article}: {citation.quoted_text}"

@@ -6418,6 +6418,20 @@ errors:
       signal.'
     internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
       exception.'
+  iva:
+    category_has_no_legal_basis: That IVA category carries no legal basis in the catalogue
+      and cannot be cited.
+    citation_legal_reference_absent: The citation's legal reference is absent from
+      the registry legal catalogue.
+    cite_requires_catalogue_or_date: Citing an IVA category requires either an explicit
+      catalogue or an effective date.
+    rate_member_state_unregistered: The IVA rate registry carries no rates for the
+      requested member state.
+    rate_registry_coverage_gap: The bundled IVA rate registry does not reach that
+      date for that rate tier, so the rate cannot be confirmed. This is a limit of
+      our coverage, not a statement that the rate was unlawful.
+    rate_slot_not_in_force: That IVA rate was not in force for its rate tier in Spain
+      on the operation date.
   locked:
     locked_access_gate_live_submit_forbidden: Live submission to the AEAT is permanently
       forbidden. This application builds, validates and exports filings; the filing

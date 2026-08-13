@@ -6729,6 +6729,20 @@ errors:
       jelet adott ki.'
     internal_workflow_unhandled: 'Belső hiba: egy munkafolyamat-szakasz kezeletlen
       kivételt dobott.'
+  iva:
+    category_has_no_legal_basis: Ennek az IVA-kategóriának nincs jogalapja a katalógusban,
+      ezért nem hivatkozható.
+    citation_legal_reference_absent: A hivatkozás jogszabályi utalása hiányzik a nyilvántartás
+      jogi katalógusából.
+    cite_requires_catalogue_or_date: Egy IVA-kategória hivatkozásához kifejezett katalógus
+      vagy hatálybalépési dátum szükséges.
+    rate_member_state_unregistered: Az IVA-kulcsnyilvántartás nem tartalmaz kulcsot
+      a kért tagállamhoz.
+    rate_registry_coverage_gap: A csomagolt IVA-kulcsnyilvántartás nem terjed ki erre
+      a dátumra ennél a kulcssávnál, ezért a kulcs nem erősíthető meg. Ez a lefedettségünk
+      korlátja, nem pedig annak kijelentése, hogy a kulcs jogellenes lett volna.
+    rate_slot_not_in_force: Ez az IVA-kulcs a művelet napján Spanyolországban nem
+      volt hatályban az adott kulcssávra.
   locked:
     locked_access_gate_live_submit_forbidden: Az élő benyújtás az AEAT-hoz véglegesen
       tiltott. Ez az alkalmazás bevallásokat épít, érvényesít és exportál; a benyújtást
