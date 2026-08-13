@@ -30,11 +30,16 @@ payroll), so the fixed rate could previously go unverified: an administrador row
 carrying, say, the ordinary empleado rate would fold into the trabajo block and
 file silently. This module surfaces that as a non-blocking
 :class:`~._source_mesh.CalculationSourceDiagnostic` on the calculate path,
-grounded in the statutory :class:`~core.aggregation.WorkIncomeRetencionTreatment`
-descriptor (``no-silent-under-declaration``). Because the engine cannot always
-know the paying entity's INCN, a row whose effective rate matches EITHER statutory
-figure (35 % or 19 %) is treated as conforming; only a row consistent with neither
-raises the advisory, so a legitimate reduced-rate filing never false-fires.
+grounded in the registry-backed
+:func:`~domain.transactions.load_administrador_retencion_rates` rate set
+(``no-silent-under-declaration``). :class:`~core.aggregation.WorkIncomeRetencionTreatment`
+carries only the STRUCTURAL fact that this scheme follows a fixed procedure;
+the rate figures themselves are regulatory data read from the registry, never a
+literal in this or the core layer (``aeat-registry-authority-flow``). Because
+the engine cannot always know the paying entity's INCN, a row whose effective
+rate matches EITHER statutory figure (35 % or 19 %) is treated as conforming;
+only a row consistent with neither raises the advisory, so a legitimate
+reduced-rate filing never false-fires.
 
 Inferred actividad-económica retención (ISSUED side)
 ----------------------------------------------------
@@ -129,6 +134,8 @@ from ...core.aggregation import (
 from ...core.money import CENT
 from ...domain.calculations.registry import LegalRefId
 from ...domain.transactions import (
+    administrador_retencion_legal_refs,
+    load_administrador_retencion_rates,
     professional_activity_retencion_rates,
     rirpf_art95_retencion_legal_refs,
     statutory_activity_retencion_rates,
@@ -198,7 +205,6 @@ def _conforms_to_fixed_rate(base: Decimal, amount: Decimal, rate: Decimal) -> bo
     return abs(amount - expected) <= CENT
 
 
-
 @cache
 def _art95_refs() -> tuple[LegalRefId, ...]:
     """Return the art. 95 grounding, resolved once per process.
@@ -208,6 +214,17 @@ def _art95_refs() -> tuple[LegalRefId, ...]:
     make a disclosure cost a registry load on a path that runs per row.
     """
     return tuple(rirpf_art95_retencion_legal_refs())
+
+
+@cache
+def _administrador_refs() -> tuple[LegalRefId, ...]:
+    """Return the LIRPF art. 101.2 administrador grounding, resolved once per process.
+
+    Same rationale as :func:`_art95_refs`: every administrador diagnostic in
+    this module cites the same set, so resolving it once per process keeps a
+    disclosure from costing a registry load per row.
+    """
+    return tuple(administrador_retencion_legal_refs())
 
 
 def administrador_retencion_rate_advisory_observations(
@@ -232,10 +249,11 @@ def administrador_retencion_rate_advisory_observations(
         A tuple of non-blocking rate-mismatch diagnostics, in input order.
     """
     treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
-    if treatment is None or treatment.fixed_rate is None or treatment.fixed_reduced_rate is None:
+    if treatment is None or not treatment.is_fixed_rate:
         return ()
-    general_rate = treatment.fixed_rate
-    reduced_rate = treatment.fixed_reduced_rate
+    rates = load_administrador_retencion_rates()
+    general_rate = rates.general_rate
+    reduced_rate = rates.reduced_rate
     diagnostics: list[CalculationSourceDiagnostic] = []
     for observation in observations:
         if observation.scheme is not RetencionScheme.WORK_INCOME_DIRECTOR:
@@ -258,14 +276,15 @@ def administrador_retencion_rate_advisory_observations(
                     f"Administrador/consejero retención for perceptor {observation.perceptor_nif!r} "
                     f"(base {base}, withheld {amount}) matches neither the LIRPF art. 101.2 fixed "
                     f"rate of {general_rate} nor the reduced {reduced_rate} for entities with net "
-                    f"turnover below 100.000 EUR; confirm the applied withholding rate before filing."
+                    f"turnover below {rates.reduced_incn_threshold_eur} EUR; confirm the applied "
+                    f"withholding rate before filing."
                 ),
-                # Read off the treatment this advisory already resolved rather
-                # than restated here. The message names the article for a human;
-                # this is the field a machine consumer routes on, and it moves
-                # with the registry instead of asserting what the law says from
-                # a literal in this layer.
-                legal_refs=tuple(treatment.legal_refs),
+                # Read off the registry-backed rate set this advisory already
+                # resolved rather than restated here. The message names the
+                # article for a human; this is the field a machine consumer
+                # routes on, and it moves with the registry instead of
+                # asserting what the law says from a literal in this layer.
+                legal_refs=_administrador_refs(),
             ),
         )
     return tuple(diagnostics)

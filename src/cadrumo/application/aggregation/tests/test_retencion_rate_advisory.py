@@ -131,14 +131,17 @@ def test_the_art95_grounding_is_read_from_the_registry_parameters() -> None:
     assert _art95_refs() == ("rd-439-2007:art-95",)
 
 
-def test_the_administrador_grounding_is_read_from_its_treatment() -> None:
-    """Both provisions the message names arrive as refs, not just as prose."""
-    from ....core.aggregation import RetencionScheme, work_income_retencion_treatment
+def test_the_administrador_grounding_is_read_from_the_registry() -> None:
+    """Both provisions the message names arrive as refs, not just as prose.
 
-    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
+    Read from the registry-backed parameter set
+    (``domain.transactions.administrador_retencion_legal_refs``), not from
+    ``WorkIncomeRetencionTreatment`` -- that ``core`` descriptor carries only
+    the structural fixed-vs-progressive fact, never the grounding refs.
+    """
+    from .._retencion_rate_advisory import _administrador_refs
 
-    assert treatment is not None
-    assert set(treatment.legal_refs) == {"ley-35-2006:art-101", "rd-439-2007:art-80"}
+    assert set(_administrador_refs()) == {"ley-35-2006:art-101", "rd-439-2007:art-80"}
 
 
 def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
@@ -148,19 +151,15 @@ def test_every_cited_provision_exists_in_the_legal_catalogue() -> None:
     provision nothing can confirm -- which is the failure this row exists to
     close, one indirection further along.
     """
-    from ....core.aggregation import RetencionScheme, work_income_retencion_treatment
     from ....core.resources import bundled_path
-    from .._retencion_rate_advisory import _art95_refs
-
-    treatment = work_income_retencion_treatment(RetencionScheme.WORK_INCOME_DIRECTOR)
-    assert treatment is not None
+    from .._retencion_rate_advisory import _administrador_refs, _art95_refs
 
     # Through the shipped resolver rather than a hand-counted relative path,
     # which is off by one the moment this file moves.
     legal_root = bundled_path("registry", "aeat") / "legal"
     declared = "".join(path.read_text(encoding="utf-8") for path in legal_root.glob("*.toml"))
 
-    for reference in (*_art95_refs(), *treatment.legal_refs):
+    for reference in (*_art95_refs(), *_administrador_refs()):
         assert f'[legal."{reference}"]' in declared, (
             f"{reference} is cited by an advisory but not defined in the legal catalogue"
         )
