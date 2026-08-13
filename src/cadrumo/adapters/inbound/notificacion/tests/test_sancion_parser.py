@@ -173,6 +173,64 @@ Diferencia .......... 774,29 euros
     assert record.importe_a_ingresar == Decimal("774.29")
 
 
+@pytest.mark.parametrize(
+    ("separator", "name"),
+    [
+        (".", "full stop"),
+        ("\u00a0", "non-breaking space"),
+        ("\u202f", "narrow no-break space"),
+    ],
+)
+def test_every_thousands_separator_aeat_actually_prints_is_read(separator: str, name: str) -> None:
+    """AEAT groups thousands with a dot, an NBSP or a narrow NBSP, and all three read.
+
+    Per UNE 82100 these are the three code points AEAT prints between thousand
+    groups. The reader once accepted only the dot, so a genuine document
+    rendered with either space form was refused outright — a safe direction,
+    but a refusal on a real act the taxpayer has to answer.
+    """
+    text = f"""Clave de liquidación: A2860024500012345
+Referencia: 2024/0001234
+N.I.F.: 12345678Z
+Base sobre la que se liquida la sanción 3{separator}687,12euros
+Porcentaje mínimo de sanción 50,00%
+Sanción resultante 1{separator}843,56euros
+Importe a ingresar 1{separator}843,56euros
+"""
+    record = _parse(text)
+
+    assert record.base_sancion == Decimal("3687.12"), name
+    assert record.sancion_resultante == Decimal("1843.56"), name
+
+
+@pytest.mark.parametrize(
+    ("printed", "why"),
+    [
+        ("1 234,56", "an ASCII space is AEAT's COLUMN separator, never a thousands separator"),
+        ("1\t234,56", "a tab is column whitespace for the same reason"),
+        ("1.843", "a whole-euro rendering has no evidence for 1843 over 1.843"),
+        ("1\u00a0843", "an NBSP-grouped whole euro is still a whole euro: the tail is what refuses"),
+        ("3.687,1", "a one-digit tail is not AEAT's two-decimal convention"),
+        ("3.687,123", "and neither is a three-digit one"),
+    ],
+)
+def test_a_separator_or_tail_aeat_does_not_print_refuses(printed: str, why: str) -> None:
+    """Widening the accepted separators must not widen anything else.
+
+    The ASCII-space cases are the load-bearing half. AEAT separates COLUMNS
+    with ordinary whitespace, so a grammar that accepted it could bridge the
+    gap between a label and its value and read two adjacent printed numbers as
+    one figure. The whole-euro cases pin the refusal the anchored shape exists
+    for, in both the dot and the space rendering.
+    """
+    text = FLAT_LAYOUT.replace("Sanción resultante 1.843,56euros", f"Sanción resultante {printed}euros")
+
+    with pytest.raises(SancionParseError) as excinfo:
+        _parse(text)
+
+    assert "sancion_resultante" in excinfo.value.malformed + excinfo.value.missing, why
+
+
 def test_a_label_reprinted_with_the_same_value_is_a_repeat_not_an_ambiguity() -> None:
     """AEAT reprints labels in headers and summary blocks; identical values collapse."""
     record = _parse(FLAT_LAYOUT + "\nSanción resultante 1.843,56euros\nN.I.F.: 12345678Z\n")

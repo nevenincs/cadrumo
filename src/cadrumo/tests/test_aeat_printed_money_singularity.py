@@ -43,11 +43,14 @@ going vacuous rather than going red.
 
 from __future__ import annotations
 
+import re
+
 import pytest
 
 from ..adapters.inbound.notificacion import _sancion
+from ..adapters.inbound.pdf import SPANISH_AMOUNT_GROUP
 from ..adapters.outbound.aeat.sede import _iva_compensation_wallet_parsing
-from ..core.decimal import is_aeat_printed_money
+from ..core.decimal import AEAT_THOUSANDS_SEPARATORS, is_aeat_printed_money
 from ._inventory import aeat_relative, production_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -127,6 +130,40 @@ def test_every_consumer_resolves_to_the_one_grammar_object() -> None:
     assert _iva_compensation_wallet_parsing.is_aeat_printed_money is is_aeat_printed_money
 
 
+@pytest.mark.parametrize("separator", list(AEAT_THOUSANDS_SEPARATORS))
+def test_both_grammars_read_the_same_thousands_separators(separator: str) -> None:
+    """The anchored grammar and the unanchored capture group must not diverge here.
+
+    They differ on anchoring by design. They must NOT differ on which code
+    points AEAT prints between thousand groups: a separator one accepts and the
+    other rejects means the same printed document reads as two different
+    figures depending on which surface received it.
+
+    Sharing :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS` is what makes that
+    true structurally; this asserts the sharing actually reaches the compiled
+    behaviour rather than merely the source.
+    """
+    printed = f"1{separator}234,56"
+
+    assert is_aeat_printed_money(printed), f"anchored grammar rejects {printed!r}"
+    match = re.fullmatch(SPANISH_AMOUNT_GROUP, printed)
+    assert match is not None and match.group(1) == printed, f"capture group rejects {printed!r}"
+
+
+@pytest.mark.parametrize("separator", [" ", "\t"])
+def test_neither_grammar_treats_column_whitespace_as_a_thousands_separator(separator: str) -> None:
+    """ASCII space and tab separate AEAT's COLUMNS, so neither may group thousands.
+
+    This is the half that must never be widened. A grammar that grouped across
+    ordinary whitespace could bridge a label-to-value gap and fuse two adjacent
+    printed numbers into one figure.
+    """
+    printed = f"1{separator}234,56"
+
+    assert not is_aeat_printed_money(printed)
+    assert re.fullmatch(SPANISH_AMOUNT_GROUP, printed) is None
+
+
 @pytest.mark.parametrize(
     "printed",
     [
@@ -151,6 +188,7 @@ def test_the_canonical_grammar_accepts_aeat_printed_amounts(printed: str) -> Non
         "3.687,123",
         "total 3.687,12 euros",
         "3.687,12euros",
+        "3.687,12\n",
         "",
         "-",
     ],
@@ -160,5 +198,9 @@ def test_the_canonical_grammar_refuses_anything_that_is_not_the_shape(refused: s
 
     ``1.843`` is the case the whole grammar exists for: read permissively it is
     either ``1843`` or ``1.843``, and the token holds no evidence to choose by.
+
+    The trailing-newline case pins the ``fullmatch`` the grammar is evaluated
+    with: ``$`` alone also matches immediately before a final newline, so a
+    ``match`` would call ``"3.687,12\\n"`` a well-formed amount.
     """
     assert not is_aeat_printed_money(refused)

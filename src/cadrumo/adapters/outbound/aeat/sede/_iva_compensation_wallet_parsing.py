@@ -578,7 +578,12 @@ def _parse_spanish_decimal(value: str) -> Decimal:
     decimals would have been silently reinterpreted as a thousands-grouped
     integer instead of surfacing as the shape change it would actually be.
     """
-    cleaned = value.replace("\xa0", " ").strip()
+    # Trim the ends only. Folding an interior non-breaking space to an ASCII
+    # space would destroy the thousands separator AEAT prints per UNE 82100 and
+    # send a genuine cell to the shape refusal below; ``str.strip`` removes NBSP
+    # and narrow NBSP at the ends anyway, and the scrub after the shape check
+    # removes any that survive into the conversion.
+    cleaned = value.strip()
     if not cleaned:
         raise SedeParseError(
             "IVA wallet amount cell is empty",

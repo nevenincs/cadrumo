@@ -297,8 +297,21 @@ would turn ``.843,56`` into a confident ``843,56``.
 
 
 def _strip_leaders(raw: str) -> str:
-    """Remove tabulation filler and separator punctuation ahead of a printed value."""
-    return _DOT_LEADER_RE.sub("", raw.replace("\xa0", " ").strip()).strip()
+    r"""Remove tabulation filler and separator punctuation ahead of a printed value.
+
+    Whitespace is trimmed from the ENDS and never rewritten inside the token.
+    This function used to fold every non-breaking space to an ASCII space
+    first, which destroyed the thousands separator AEAT actually prints: a
+    genuine ``1\xa0234,56`` reached the anchored shape check as ``1 234,56``,
+    and the check refuses that because an ASCII space is AEAT's column
+    separator, not a thousands separator. The document was real and the reader
+    rejected it.
+
+    Nothing is lost by leaving the interior alone. ``str.strip`` already
+    removes NBSP and narrow NBSP at the ends -- both answer ``str.isspace`` --
+    and ``\s`` in the dot-leader pattern matches them too.
+    """
+    return _DOT_LEADER_RE.sub("", raw.strip()).strip()
 
 
 def _parse_money(raw: str) -> Decimal:

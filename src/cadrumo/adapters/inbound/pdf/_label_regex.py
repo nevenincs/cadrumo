@@ -21,23 +21,19 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 from ....core import CasillaId
-from ....core.decimal import normalize_decimal_separators
+from ....core.decimal import AEAT_THOUSANDS_SEPARATORS, normalize_decimal_separators
 
-# AEAT per UNE 82100 uses a non-breaking space (U+00A0)
-# or narrow no-break space (U+202F) as the thousands separator —
-# NEVER a regular ASCII space (which is reserved for column
-# separation). The primitive tolerates those two specific
-# code-points between thousand groups via an explicit class.
+# The thousands-separator class is NOT declared here: it is
+# :data:`~core.decimal.AEAT_THOUSANDS_SEPARATORS`, shared with the anchored
+# grammar in that module so the two cannot disagree on which code points AEAT
+# prints. Per UNE 82100 those are ``.``, U+00A0 NBSP and U+202F narrow NBSP --
+# never a plain ASCII space or tab, which are AEAT's column separators. That
+# exclusion is what keeps this pattern from crossing a label-to-value gap.
 #
-# Narrow/non-breaking space characters do NOT collide with column
-# whitespace: the regex uses NBSP and narrow NBSP only (not ASCII
-# space/tab), so it stays bounded to the printed amount and cannot
-# cross label-to-value gaps that use ASCII space or tab separators.
-#
-# group was ``(?:\.[0-9]{3})*`` which caused an AEAT
-# amount formatted with a non-breaking space ("1\xa0234,56") to be
-# silently captured as "234,56" — a 1000x underreport.
-SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[.  ][0-9]{3})*,[0-9]{2})"
+# The group was once ``(?:\.[0-9]{3})*``, which caused an AEAT amount formatted
+# with a non-breaking space ("1 234,56") to be silently captured as
+# "234,56" -- a 1000x underreport.
+SPANISH_AMOUNT_GROUP = r"(-?[0-9]{1,3}(?:[" + re.escape(AEAT_THOUSANDS_SEPARATORS) + r"][0-9]{3})*,[0-9]{2})"
 """Capture group for AEAT-printed monetary amounts (Spanish locale).
 
 Matches optional sign, 1-3 leading digits, zero or more groups of
