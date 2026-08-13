@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:10457e4de6a7eb3c083a14c87c1ddfd18d99451851582970c9ffb64708ef1575'
+body_hash: 'sha256:ee5d2b6e549758023ed8490c65223a58e0b249098061815c155b4bba50aa6a11'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -170,7 +170,7 @@ Steps and shipped without `AeatCsv`, so the dependency no longer exists and
 `W02.P02` should run first.
 
 - [x] `W02.P03.S13` - Record the canonical CSV shape ruled by the ADR amendment of 2026-08-10, superseding this row's prior instruction to record that no empirical replay was possible. That instruction rested on a falsified premise and the evidence exists in three independent forms. First, three real AEAT-issued CSVs captured from live Sede sessions and byte-identical across two capture rounds (FNBB57PE9KZ5TN4R, MZRSYDRL5JMPJPRT, TUD4V9XAUV7QJ8QV), each exactly 16 uppercase alphanumeric characters. Second, 34 distinct CSV tokens across the 60 committed parser-anchor fixture PDFs, every one 16 uppercase alphanumeric. Third, a default-lane regression at adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py lines 244-249 that already asserts isalnum and isupper and a length between 8 and 24 on every parsed fixture. Adopt core/_aeat_csv.py's 8-32 uppercase-alphanumeric contract as canonical and retire JustificanteCsv's 4-64-no-pattern bound rather than keeping it as a second opinion. State in the Step record that the 8-24 assertion already running is strictly inside 8-32, so the retype tightens the field without being able to break the parse path; `src/cadrumo/domain/justificante/`.
-- [ ] `W02.P03.S14` - enumerate every secure-object storage key derived from the CSV value, starting from `extract_identifier` in the justificante persistence adapter, informing (not gating, per the schema-rewrite authorisation) the key-composition redesign in `W08`; `src/cadrumo/adapters/persistence/profile/justificante.py`.
+- [x] `W02.P03.S14` - enumerate every secure-object storage key derived from the CSV value, starting from `extract_identifier` in the justificante persistence adapter, informing (not gating, per the schema-rewrite authorisation) the key-composition redesign in `W08`; `src/cadrumo/adapters/persistence/profile/justificante.py`.
 - [ ] `W02.P03.S15` - declare `AeatCsv` in `core/identity/` at the shape decided in `W02.P03.S13`; `src/cadrumo/core/identity/__init__.py`.
 - [ ] `W02.P03.S16` - retype `JustificanteRef.csv` onto `AeatCsv`, removing its now-redundant field validator; `src/cadrumo/adapters/outbound/aeat/sede/_schema.py`.
 - [ ] `W02.P03.S17` - Retype Justificante.csv onto AeatCsv, deleting the JustificanteCsv alias outright rather than re-pointing it, and delete its docstring claim that the receipt domain owns the bound because it owns the artefact the value is read from. That sentence asserts the ownership the 2026-08-10 ADR amendment overturns, and leaving it standing over a retyped alias leaves source prose describing the rejected design where the next reader meets it first; `src/cadrumo/domain/justificante/_schema.py`.
