@@ -27,14 +27,14 @@ from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev.docs.download_matrix import claimed_channels, load_descriptor
-from dev.release._asset_transport import (
+from ..docs.download_matrix import claimed_channels, load_descriptor
+from ._asset_transport import (
     EvidenceLane,
     download_release_assets,
     evidence_tag,
     resolve_gh,
 )
-from dev.release.release_candidate import (
+from .release_candidate import (
     ReleaseCandidateError,
     load_soak_window,
     publish_candidate,

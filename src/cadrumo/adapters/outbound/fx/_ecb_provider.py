@@ -236,7 +236,10 @@ def _https_fetch(url: str) -> str:
     # URL is constrained to the canonical ECB Data Portal HTTPS host above.
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:  # nosemgrep
-            return response.read().decode(UTF_8_ENCODING)
+            payload = response.read()
+            if not isinstance(payload, bytes):
+                raise ExchangeRateProviderError("ECB euro reference-rate response was not bytes")
+            return payload.decode(UTF_8_ENCODING)
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         msg = f"ECB euro reference-rate lookup failed for {url!r}: {exc}"
         raise ExchangeRateProviderError(msg) from exc

@@ -524,7 +524,7 @@ def _readiness_outcome(readiness: ProjectionModeloReadiness | None) -> Quickfile
 def _is_blocking(finding: object) -> bool:
     """Return True when a verification finding carries BLOCKING severity."""
     severity = getattr(finding, "severity", None)
-    return getattr(severity, "value", None) == "blocking"
+    return bool(getattr(severity, "value", None) == "blocking")
 
 
 __all__ = [

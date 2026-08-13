@@ -34,10 +34,10 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from dev.packaging._command import CommandResult
-from dev.packaging._hashing import sha256_path
-from dev.packaging.cohort_manifest import LoadedReleaseCohort
-from dev.packaging.evidence import (
+from ._command import CommandResult
+from ._hashing import sha256_path
+from .cohort_manifest import LoadedReleaseCohort
+from .evidence import (
     AcquisitionIdentity,
     ClientIdentity,
     CommandTranscript,
@@ -51,11 +51,11 @@ from dev.packaging.evidence import (
     current_runtime_identity,
     write_distribution_evidence,
 )
-from dev.packaging.evidence_scrub import scrub_distribution_evidence
-from dev.packaging.installed_tax_oracle import InstalledTaxEvidence
+from .evidence_scrub import scrub_distribution_evidence
+from .installed_tax_oracle import InstalledTaxEvidence
 
 if TYPE_CHECKING:
-    from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence
+    from .installed_mcp_oracle import InstalledMcpEvidence
 
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
@@ -497,7 +497,7 @@ def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
     The ``mcp`` import is deferred so this module stays importable without the
     ``mcp`` dependency for the pure build path.
     """
-    from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
+    from .installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 
     _require_isolation_fields(
         data,
@@ -558,7 +558,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     """Emit a flat record from oracle-evidence JSON a lane already produced."""
-    from dev.packaging.cohort_manifest import load_release_cohort
+    from .cohort_manifest import load_release_cohort
 
     args = _parser().parse_args(argv)
     tax_evidence = _tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding=_UTF_8)))

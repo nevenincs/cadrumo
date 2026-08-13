@@ -18,8 +18,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 class _InvocationResult(Protocol):
-    exit_code: int
-    output: str
+    @property
+    def exit_code(self) -> int: ...
+
+    @property
+    def output(self) -> str: ...
 
 
 def _assert_two_invocations_reuse_only_their_own_reconciliation(

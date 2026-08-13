@@ -171,7 +171,10 @@ def _parameter_hint(exc: BaseException) -> str | None:
 def _first_quoted(detail: str) -> str | None:
     """Return the first single-quoted token in ``detail``, if any."""
     match = _FIRST_QUOTED_RE.search(detail)
-    return match.group(1) if match is not None else None
+    if match is None:
+        return None
+    quoted = match.group(1)
+    return quoted if isinstance(quoted, str) else None
 
 
 def _localise_parse_failure(exc: BaseException, detail: str, locale: str) -> tuple[str, dict[str, str]] | None:

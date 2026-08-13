@@ -26,8 +26,9 @@ import pytest
 from cadrumo.core import Modelo
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
-from dev.docs.terminology._casilla_projection import CasillaProjectionStats
-from dev.docs.terminology._search_record import CasillaSearchRecord
+
+from .._casilla_projection import CasillaProjectionStats
+from .._search_record import CasillaSearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -37,7 +38,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage)
 @pytest.fixture(scope="module")
 def full_projection() -> tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats]:
     """Project the full registry once for the module (the bounded full run)."""
-    from dev.docs.terminology._casilla_projection import project_casilla_search_records
+    from .._casilla_projection import project_casilla_search_records
 
     return project_casilla_search_records()
 
@@ -82,7 +83,7 @@ def test_m303_emits_every_distinct_casilla_id() -> None:
     never lose an identity. The identity set across all M303 revisions equals
     the projected record identity set.
     """
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from .._casilla_projection import project_modelo_casillas
 
     authority = bundled_authority()
     definition = authority.modelo(Modelo.M303.value)
@@ -137,7 +138,7 @@ def test_record_carries_contributing_revisions_latest_first() -> None:
     revision the identity appeared in, ordered latest-first, so the chosen
     label's provenance is traceable.
     """
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from .._casilla_projection import project_modelo_casillas
 
     records = project_modelo_casillas(Modelo.M303)
     # At least one M303 identity appears in more than one revision.
@@ -193,7 +194,7 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
     modelo is M303, its ``casilla_id`` matches the registry casilla, and its es
     description is the registry ``label`` verbatim.
     """
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from .._casilla_projection import project_modelo_casillas
 
     authority = bundled_authority()
     definition = authority.modelo(Modelo.M303.value)
@@ -219,8 +220,8 @@ def test_m303_record_has_correct_identity_and_spanish_label() -> None:
 
 def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -> None:
     """Modelo 121 keeps its canonical casilla id separate from its display number."""
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
-    from dev.docs.terminology._unified_record import to_search_record
+    from .._casilla_projection import project_modelo_casillas
+    from .._unified_record import to_search_record
 
     authority = bundled_authority()
     assert isinstance(authority, ValidatedRegistryAuthority)
@@ -246,7 +247,7 @@ def test_m121_projection_preserves_canonical_id_distinct_from_display_number() -
 
 def test_segmented_modelo_200_projection_uses_canonical_casilla_id() -> None:
     """Segment-qualified M200 casillas project by ``casilla.id``, not by bare number."""
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from .._casilla_projection import project_modelo_casillas
 
     records = project_modelo_casillas(Modelo.M200)
     by_id = {record.casilla_id: record for record in records}  # type: ignore[attr-defined]
@@ -265,7 +266,7 @@ def test_m303_has_multilingual_casilla_labels() -> None:
     en / ca / hu descriptions alongside the es invariant -- proving the
     multilingual path (conforming to the official casilla descriptions).
     """
-    from dev.docs.terminology._casilla_projection import project_modelo_casillas
+    from .._casilla_projection import project_modelo_casillas
 
     records = project_modelo_casillas(Modelo.M303)
     multilingual = [record for record in records if len(record.descriptions) > 1]  # type: ignore[attr-defined]
@@ -307,7 +308,7 @@ def test_full_projection_completes_within_a_bounded_time() -> None:
     guards against a regression to a per-casilla snapshot reload (the O(n^2)
     hazard) without being flaky on a slow CI box.
     """
-    from dev.docs.terminology._casilla_projection import project_casilla_search_records
+    from .._casilla_projection import project_casilla_search_records
 
     start = time.perf_counter()
     records, stats = project_casilla_search_records()

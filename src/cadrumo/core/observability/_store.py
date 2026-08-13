@@ -21,7 +21,7 @@ import json
 import re
 import shutil
 import threading
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Never
@@ -318,11 +318,18 @@ def load_envelope_document(
         raise RunTraceValidationError(
             f"envelope.json for run {run_id!r} is not valid JSON: {exc}",
         ) from exc
-    if not isinstance(parsed, dict):
+    if not isinstance(parsed, Mapping):
         raise RunTraceValidationError(
             f"envelope.json for run {run_id!r} must be a JSON object, got {type(parsed).__name__}",
         )
-    return parsed
+    document: dict[str, object] = {}
+    for key, value in parsed.items():
+        if not isinstance(key, str):
+            raise RunTraceValidationError(
+                f"envelope.json for run {run_id!r} contains a non-string object key",
+            )
+        document[key] = value
+    return document
 
 
 def save_events_append(

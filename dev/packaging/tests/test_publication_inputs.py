@@ -16,8 +16,9 @@ from typing import Final
 import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
-from dev.packaging.publication_inputs import (
+
+from ...docs.download_matrix import Availability, DownloadDescriptor, claimed_channels, load_descriptor
+from ..publication_inputs import (
     COHORT_INPUT,
     EMIT_REAL_CLIENT_EVIDENCE_COMMAND,
     LANE_WORKFLOW_BY_CHANNEL,

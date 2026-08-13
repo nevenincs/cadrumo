@@ -35,7 +35,7 @@ from ...iva_compensation import (
 from ._binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
 from ._binding_selector_utils import selector_against_model, selector_as_dict
 from ._bindings_previous_filing import (
-    _PreviousModeloSelector,
+    PreviousModeloSelector,
     previous_filing_observation_requirements,
     previous_filing_source_reference,
     resolve_previous_filing_binding_values,
@@ -1046,7 +1046,7 @@ class _ManualInputSelector(BaseModel):
 
 
 _BINDING_SELECTOR_REGISTRY: dict[BindingSourceKind, type[BaseModel]] = {
-    BindingSourceKind.PREVIOUS_FILING: _PreviousModeloSelector,
+    BindingSourceKind.PREVIOUS_FILING: PreviousModeloSelector,
     BindingSourceKind.RELATION_PREFILL: _RelationPrefillSelector,
     BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION: _IvaCompensationAnnualPartitionSelector,
     BindingSourceKind.PRORRATA_REGULARIZACION: _ProrrataRegularizacionSelector,

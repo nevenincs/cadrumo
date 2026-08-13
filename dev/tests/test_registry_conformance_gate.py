@@ -42,7 +42,7 @@ from typing import Final
 
 import pytest
 
-from dev.registry.conformance.manager import baseline_path
+from ..registry.conformance.manager import baseline_path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

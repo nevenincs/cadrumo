@@ -44,7 +44,12 @@ def _iter_field_annotations(model: type[BaseModel]) -> Iterator[tuple[str, objec
     ``root`` field in ``model_fields``, so one path covers both.
     """
     for name, info in model.model_fields.items():
-        yield name, info.annotation
+        if not isinstance(name, str):
+            raise TypeError("pydantic field names must be strings")
+        annotation = info.annotation
+        if not isinstance(annotation, object):
+            raise TypeError("pydantic field annotations must be objects")
+        yield name, annotation
 
 
 def _walk(annotation: object, seen: set[object], trail: str, findings: list[str]) -> None:

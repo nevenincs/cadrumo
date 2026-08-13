@@ -27,7 +27,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
         import sys
         from pathlib import Path
 
-        from dev.packaging._smoke_common import isolated_product_env
+        from .._smoke_common import isolated_product_env
 
         isolated = Path(sys.argv[1])
         env = isolated_product_env(isolated)

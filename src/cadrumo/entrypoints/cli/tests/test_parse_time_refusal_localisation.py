@@ -16,10 +16,9 @@ never a hardcoded prose string.
 
 from __future__ import annotations
 
-import json
-
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
 
@@ -36,9 +35,7 @@ def _error_document(output: str) -> dict[str, object]:
     for line in output.splitlines():
         candidate = line.strip()
         if candidate.startswith("{"):
-            parsed = json.loads(candidate)
-            assert isinstance(parsed, dict)
-            return parsed
+            return STR_KEYED_MAPPING_ADAPTER.validate_json(candidate)
     raise AssertionError(f"no JSON document found in output:\n{output}")
 
 

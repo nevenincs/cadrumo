@@ -99,7 +99,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from functools import partial
 from pathlib import Path
 from typing import Literal
 
@@ -358,18 +357,19 @@ def _compare_dictionary_layout(
 ) -> DictionaryLayoutCasillaComparison:
     """Measure one layout, keeping unsupported and unavailable sources visible."""
     source_ref = None if layout.dictionary_source_ref is None else str(layout.dictionary_source_ref)
-    # Bound as a partial rather than splatted from a dict: the shared fields stay
-    # declared once, and every call below is still checkable against the model.
-    measured = partial(
-        DictionaryLayoutCasillaComparison,
-        layout_id=str(layout.id),
-        layout_format=layout.format.value,
-        registry_casilla_count=len(registry_ids),
-        registry_internal_only_count=registry_internal_only_count,
-        printed_form_membership=printed_form_status,
-        xsd_only_attributes=xsd_status,
-        dictionary_source_ref=source_ref,
-    )
+    base: dict[str, object] = {
+        "layout_id": str(layout.id),
+        "layout_format": layout.format.value,
+        "registry_casilla_count": len(registry_ids),
+        "registry_internal_only_count": registry_internal_only_count,
+        "printed_form_membership": printed_form_status,
+        "xsd_only_attributes": xsd_status,
+        "dictionary_source_ref": source_ref,
+    }
+
+    def measured(**fields: object) -> DictionaryLayoutCasillaComparison:
+        return DictionaryLayoutCasillaComparison.model_validate({**base, **fields})
+
     if layout.format is not _ExportLayoutFormat.XML_DICTIONARY:
         return measured(
             identity_measurement="unsupported",
@@ -761,7 +761,7 @@ class RegistryConformanceProfile(ConformanceModel):
         holds reads as a real zero rather than as an absent key a renderer would
         silently omit.
         """
-        counts = dict.fromkeys(_RevisionReviewStatus, 0)
+        counts: dict[_RevisionReviewStatus, int] = {status: 0 for status in _RevisionReviewStatus}
         for row in self.rows:
             counts[row.governance.review_status] += 1
         return counts

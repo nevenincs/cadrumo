@@ -499,7 +499,7 @@ def _page_lengths(path: Path) -> tuple[str, ...]:
     derivative = path.with_name(path.name + ".extracted.md")
     if not derivative.is_file():
         return ()
-    return tuple(_PAGE_TOTAL.findall(derivative.read_text(encoding="utf-8", errors="replace")))
+    return tuple(str(total) for total in _PAGE_TOTAL.findall(derivative.read_text(encoding="utf-8", errors="replace")))
 
 
 def _occupancy(path: Path) -> dict[tuple[str, int], bool]:

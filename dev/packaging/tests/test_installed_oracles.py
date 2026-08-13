@@ -25,7 +25,8 @@ from typing import IO, Any, cast
 import pytest
 
 from cadrumo.agent import materialise_marketplace
-from dev.packaging._smoke_common import (
+
+from .._smoke_common import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,
@@ -33,9 +34,9 @@ from dev.packaging._smoke_common import (
     venv_bin_dir,
     venv_python_path,
 )
-from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
-from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
-from dev.packaging.python_cohort import PythonCohort, load_python_cohort
+from ..installed_mcp_oracle import run_installed_mcp_oracle
+from ..installed_tax_oracle import run_installed_tax_oracle
+from ..python_cohort import PythonCohort, load_python_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
@@ -477,15 +478,15 @@ def test_real_client_emission_cli_mints_a_sanctioned_record(
     """
     from datetime import UTC, datetime
 
-    from dev.packaging import emit_real_client_evidence
-    from dev.packaging.cohort_manifest import (
+    from .. import emit_real_client_evidence
+    from ..cohort_manifest import (
         REQUIRED_ARTIFACT_KINDS,
         BuildIdentity,
         SourceIdentity,
         create_manifest,
         write_manifest,
     )
-    from dev.packaging.evidence import DistributionEvidence, EvidenceStatus
+    from ..evidence import DistributionEvidence, EvidenceStatus
 
     cohort_dir = tmp_path / "release-cohort"
     cohort_dir.mkdir()
@@ -606,8 +607,8 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     as ``cadrumo``, and a clean exit (a killed server would be non-zero and could
     never sit in a passing distribution-evidence record).
     """
-    from dev.packaging._acquire_common import capture_owned_server_launch
-    from dev.packaging.installed_mcp_oracle import isolated_mcp_environment
+    from .._acquire_common import capture_owned_server_launch
+    from ..installed_mcp_oracle import isolated_mcp_environment
 
     work = installed_cohort.work_dir / "owned-launch-capture"
     work.mkdir()

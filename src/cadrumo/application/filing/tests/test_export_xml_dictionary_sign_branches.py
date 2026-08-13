@@ -40,16 +40,18 @@ _NON_NEGATIVE_BRANCH = "TCPP112"
 _NEGATIVE_BRANCH = "TCNN112"
 
 
-def _dictionary_entries():
+def _dictionary_entries() -> tuple[XmlDictionaryEntry, ...]:
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     modelo = next(item for item in modelos if item.id == "100")
     revision = modelo.revisions["2024"]
     layout = next(item for item in revision.export_layouts if item.format == "xml_dictionary")
-    return xml_dictionary_entries(layout, source_root=bundled_path(), sources=catalogues.sources)
+    return tuple(xml_dictionary_entries(layout, source_root=bundled_path(), sources=catalogues.sources))
 
 
 def _branch_entries() -> dict[str, XmlDictionaryEntry]:
-    entries = {entry.field_id: entry for entry in _dictionary_entries() if entry.casilla_id == _SIGN_BRANCH_CASILLA}
+    entries: dict[str, XmlDictionaryEntry] = {
+        entry.field_id: entry for entry in _dictionary_entries() if entry.casilla_id == _SIGN_BRANCH_CASILLA
+    }
     assert set(entries) == {_NON_NEGATIVE_BRANCH, _NEGATIVE_BRANCH}, (
         f"casilla {_SIGN_BRANCH_CASILLA} no longer declares exactly the two known branches: {sorted(entries)}"
     )

@@ -1186,7 +1186,10 @@ def _lazy_loader(module_name: str, group_label: str) -> Callable[[], typer.Typer
             module = import_module(module_name, __name__)  # nosemgrep
         except ModuleNotFoundError as error:
             return _surface_for_import_failure(group_label, error)
-        return module.app
+        app = getattr(module, "app", None)
+        if not isinstance(app, typer.Typer):
+            raise RuntimeError(f"lazy CLI module {module_name!r} does not expose a Typer app")
+        return app
 
     return _factory
 

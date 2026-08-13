@@ -133,7 +133,9 @@ def _legal_refs_of(parameter_id: str) -> tuple[str, ...]:
         # than one told without the article.
         return ()
     parameter = parameters.get(parameter_id)
-    return tuple(getattr(parameter, "legal_refs", ()) or ())
+    if parameter is None:
+        return ()
+    return tuple(parameter.legal_refs)
 
 
 @lru_cache(maxsize=1)

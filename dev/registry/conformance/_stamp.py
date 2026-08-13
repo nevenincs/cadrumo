@@ -181,13 +181,14 @@ from __future__ import annotations
 
 import re
 import tomllib
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, TypeGuard
 
-from cadrumo.core import RevisionReviewStatus
+from cadrumo.core import RevisionReviewStatus, to_str_keyed_dict
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources import bundled_path
 from cadrumo.domain.calculations.registry import (
@@ -231,6 +232,9 @@ class StampableReviewStatus(StrEnum):
 
     PENDING_REVIEW = "pending_review"
     AGENT_REVIEWED = "agent_reviewed"
+
+
+type ReviewStatusInput = StampableReviewStatus | RevisionReviewStatus | str
 
 
 #: Emit order for the governance scalars, chosen so a manifest reads
@@ -422,7 +426,7 @@ def stamp_revision(
     *,
     engineered_by: str | None = None,
     clear_engineered_by: bool = False,
-    review_status: StampableReviewStatus | None = None,
+    review_status: ReviewStatusInput | None = None,
     reviewed_by: str | None = None,
     reviewed_at: date | None = None,
     registry_root: Path,
@@ -537,7 +541,7 @@ def stamp_revision(
     )
 
 
-def _stampable_status(value: StampableReviewStatus | None) -> StampableReviewStatus | None:
+def _stampable_status(value: ReviewStatusInput | None) -> StampableReviewStatus | None:
     """Coerce a requested review status into the vocabulary this CLI may WRITE.
 
     The first statement of :func:`stamp_revision`, because it is the one
@@ -809,23 +813,38 @@ def _declared_governance(manifest: Path, text: str, revision: str) -> _Stamp:
         parsed = tomllib.loads(text)
     except tomllib.TOMLDecodeError as exc:
         raise StampError(f"{manifest}: revision manifest is not valid TOML: {exc}") from exc
-    revisions = parsed.get("revisions")
-    if not isinstance(revisions, dict) or revision not in revisions:
+    revisions_raw = parsed.get("revisions")
+    if not _is_object_mapping(revisions_raw):
+        raise StampError(f'{manifest}: manifest declares no [revisions."{revision}"] table')
+    revisions = to_str_keyed_dict(
+        revisions_raw,
+        error_factory=lambda message: StampError(f"{manifest}: {message}"),
+    )
+    if revision not in revisions:
         raise StampError(f'{manifest}: manifest declares no [revisions."{revision}"] table')
     if len(revisions) != 1:
         raise StampError(
             f"{manifest}: manifest declares {len(revisions)} revision tables; the fragmented layout "
             "requires exactly one so the stamp has a single unambiguous home",
         )
-    table = revisions[revision]
-    if not isinstance(table, dict):
+    table_raw = revisions[revision]
+    if not _is_object_mapping(table_raw):
         raise StampError(f'{manifest}: [revisions."{revision}"] is not a table')
+    table = to_str_keyed_dict(
+        table_raw,
+        error_factory=lambda message: StampError(f"{manifest}: {message}"),
+    )
     return _Stamp(
         engineered_by=_declared_text(manifest, table, "engineered_by"),
         review_status=_declared_text(manifest, table, "review_status"),
         reviewed_by=_declared_text(manifest, table, "reviewed_by"),
         reviewed_at=_declared_date(manifest, table),
     )
+
+
+def _is_object_mapping(value: object) -> TypeGuard[Mapping[object, object]]:
+    """Narrow an unparameterized TOML table to object entries."""
+    return isinstance(value, Mapping)
 
 
 def _declared_text(manifest: Path, table: dict[str, object], key: str) -> str | None:

@@ -44,6 +44,10 @@ def path_typed_settings_fields(model: type[BaseModel]) -> frozenset[str]:
     Returns:
         The discovered field names.
     """
-    return frozenset(
-        name for name, field_info in model.model_fields.items() if annotation_mentions_path(field_info.annotation)
-    )
+    names: set[str] = set()
+    for name, field_info in model.model_fields.items():
+        if not isinstance(name, str):
+            raise TypeError("pydantic field names must be strings")
+        if annotation_mentions_path(field_info.annotation):
+            names.add(name)
+    return frozenset(names)

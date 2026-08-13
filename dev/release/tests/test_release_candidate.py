@@ -18,8 +18,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from dev.release import release_candidate
-from dev.release.release_candidate import (
+from .. import release_candidate
+from ..release_candidate import (
     ReleaseCandidate,
     ReleaseCandidateError,
     SoakWindow,

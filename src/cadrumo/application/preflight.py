@@ -582,9 +582,11 @@ def _representative_filing_context(revision: object) -> tuple[int | None, str | 
     if selector is None:
         return None, None
     years = getattr(selector, "years", ()) or ()
-    filing_year = years[0] if years else getattr(selector, "year_from", None)
+    raw_filing_year = years[0] if years else getattr(selector, "year_from", None)
+    filing_year = raw_filing_year if isinstance(raw_filing_year, int) else None
     periods = getattr(selector, "periods", ()) or ()
-    period = periods[0] if periods else None
+    raw_period = periods[0] if periods else None
+    period = raw_period if isinstance(raw_period, str) else None
     return filing_year, period
 
 

@@ -176,7 +176,11 @@ def _store_prior_303_compensation(
     )
 
 
-def _work_unit_repositories():
+def _work_unit_repositories() -> tuple[
+    WorkUnitCatalogueRepository,
+    CalculationRevisionCatalogueRepository,
+    BucketEventHistoryRepository,
+]:
     return (
         WorkUnitCatalogueRepository(),
         CalculationRevisionCatalogueRepository(),

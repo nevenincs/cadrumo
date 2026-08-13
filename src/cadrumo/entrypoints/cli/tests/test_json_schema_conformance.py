@@ -28,7 +28,6 @@ published operator contract.
 from __future__ import annotations
 
 import ast
-import json
 import subprocess
 import sys
 import textwrap
@@ -39,7 +38,7 @@ from typing import Any, Protocol, TypeGuard, cast, get_args
 import click
 import pytest
 import typer
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 from typer.main import get_command as _typer_get_command
 
 # ``config.profile.create`` / ``config.profile.edit`` register in
@@ -53,7 +52,7 @@ from ....application.ledger import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
 )
-from ....core import PRODUCT_IDENTITY
+from ....core import PRODUCT_IDENTITY, STR_KEYED_MAPPING_ADAPTER
 from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
 from ...schema_surface import (
     GROUP_CALLBACK_SCHEMA_KEYS,
@@ -1143,8 +1142,9 @@ def _profile_schema_keys_in_fresh_process(
         None,
     )
     assert line is not None, f"probe emitted no RESULT line:\n{completed.stdout}\n{completed.stderr}"
-    payload = json.loads(line.removeprefix("RESULT "))
-    return frozenset(payload["present"]), bool(payload["wizard_before_walk"])
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_json(line.removeprefix("RESULT "))
+    present = TypeAdapter(frozenset[str]).validate_python(payload["present"])
+    return present, bool(payload["wizard_before_walk"])
 
 
 def test_wizard_profile_schemas_reach_the_manifest_from_their_canonical_owner(tmp_path: Path) -> None:

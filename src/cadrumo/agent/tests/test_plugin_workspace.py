@@ -46,7 +46,11 @@ def _agent_frontmatter(path: Path) -> dict[str, object]:
     _, block, _ = text.split("---\n", 2)
     loaded = yaml.safe_load(block)
     assert isinstance(loaded, dict), f"{path.name} frontmatter is not a mapping"
-    return loaded
+    frontmatter: dict[str, object] = {}
+    for key, value in loaded.items():
+        assert isinstance(key, str), f"{path.name} frontmatter has a non-string key"
+        frontmatter[key] = value
+    return frontmatter
 
 
 def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:

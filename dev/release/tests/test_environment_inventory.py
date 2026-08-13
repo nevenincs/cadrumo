@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.release import environment_inventory
+from .. import environment_inventory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

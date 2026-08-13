@@ -7,7 +7,7 @@ from dataclasses import asdict
 
 import pytest
 
-from dev.quality.cli_action_census import (
+from ..quality.cli_action_census import (
     COMMAND_LITERAL_ALIAS,
     CandidateRecord,
     DiscoveryKind,

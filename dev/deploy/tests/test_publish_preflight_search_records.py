@@ -27,16 +27,17 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.deploy.docs_static_site import (
+
+from ...docs.pagefind_index import (
+    DECIDED_INJECTED_RECORD_KINDS,
+    build_search_index,
+    injected_record_kinds_in_index,
+)
+from ..docs_static_site import (
     _language_site_url,
     _localized_languages,
     _require_search_index,
     _validate_language_roots,
-)
-from dev.docs.pagefind_index import (
-    DECIDED_INJECTED_RECORD_KINDS,
-    build_search_index,
-    injected_record_kinds_in_index,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -209,7 +210,7 @@ def test_decided_kinds_match_the_canonical_enum() -> None:
     imports the terminology package lazily. This is what keeps that spelling
     honest: rename or remove a member and this fails.
     """
-    from dev.docs.terminology import SearchRecordKind
+    from ...docs.terminology import SearchRecordKind
 
     assert {kind.value for kind in SearchRecordKind} >= DECIDED_INJECTED_RECORD_KINDS
     assert SearchRecordKind.PAGE.value not in DECIDED_INJECTED_RECORD_KINDS, (

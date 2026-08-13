@@ -80,7 +80,13 @@ def _add_evidence(tmp_path: Path, lines: tuple[str, ...], *, filename: str) -> s
     pdf.write_bytes(_text_pdf_bytes(lines))
     added = _invoke(["--format", "json", "app", "ledger", "evidence", "add", str(pdf), "--supplier", "Acme SL"])
     assert added.exit_code == 0, added.output
-    return json.loads(added.output)["result"]["evidence_id"]
+    payload = json.loads(added.output)
+    assert isinstance(payload, dict), added.output
+    body = payload.get("result")
+    assert isinstance(body, dict), added.output
+    evidence_id = body.get("evidence_id")
+    assert isinstance(evidence_id, str), added.output
+    return evidence_id
 
 
 def test_an_invoice_reading_back_the_filers_own_nif_is_refused(tmp_path: Path) -> None:

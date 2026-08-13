@@ -240,7 +240,7 @@ def _declared_field_names(record: type[BaseModel] | None) -> frozenset[str]:
     a programmer's identifier, not a tax identifier, an amount or a name.
     """
     if record is None:
-        return frozenset()
+        return frozenset[str]()
     names: set[str] = set()
     seen: set[type] = set()
 
@@ -884,7 +884,8 @@ def _callback_name(callback: Callable[..., object] | None) -> str:
         return "<unknown>"
     if inspect.isfunction(callback):
         return callback.__name__
-    return callback.__class__.__name__
+    class_name = callback.__class__.__name__
+    return class_name if isinstance(class_name, str) else "<unknown>"
 
 
 def _is_memoised_wrapper(obj: object) -> TypeGuard[Callable[..., object]]:

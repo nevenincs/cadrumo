@@ -253,14 +253,18 @@ def _readable_units(sidecar_path: Path) -> list[tuple[str, str, str]]:
 def _unit_fields(raw_unit: object) -> tuple[str, str, str]:
     if not isinstance(raw_unit, dict):
         return "", "", ""
-    raw_anchor = raw_unit.get("anchor")
-    raw_title = raw_unit.get("title")
-    raw_text = raw_unit.get("text")
     return (
-        raw_anchor if isinstance(raw_anchor, str) else "",
-        raw_title if isinstance(raw_title, str) else "",
-        raw_text.strip() if isinstance(raw_text, str) else "",
+        _unit_text(raw_unit.get("anchor")),
+        _unit_text(raw_unit.get("title")),
+        _unit_text(raw_unit.get("text"), strip=True),
     )
+
+
+def _unit_text(value: object, *, strip: bool = False) -> str:
+    """Read one sidecar text field without leaking the decoder's unknown type."""
+    if not isinstance(value, str):
+        return ""
+    return value.strip() if strip else value
 
 
 def _render_unit(title: str, text: str, *, include_title: bool) -> str:
@@ -272,7 +276,13 @@ def _render_unit(title: str, text: str, *, include_title: bool) -> str:
 def _single_unit_covers_subsection(unit_anchor: str, requested_anchor: str) -> bool:
     declared = _ARTICLE_BASE_ANCHOR_RE.fullmatch(normalise_corpus_text(unit_anchor).lstrip("#"))
     requested = _ARTICLE_SUBSECTION_ANCHOR_RE.match(normalise_corpus_text(requested_anchor).lstrip("#"))
-    return declared is not None and requested is not None and declared.group(1) == requested.group(1)
+    if declared is None or requested is None:
+        return False
+    declared_number = declared.group(1)
+    requested_number = requested.group(1)
+    return (
+        isinstance(declared_number, str) and isinstance(requested_number, str) and declared_number == requested_number
+    )
 
 
 #: Two notations for the same article anchor coexist in the corpus: the
@@ -343,17 +353,21 @@ def _article_number_matches_anchor(title_key: str, target: str) -> bool:
     """Match the shared canonical article number after all stricter routes fail."""
     anchor_article = _ARTICLE_ANCHOR_RE.match(target)
     title_article = _ARTICLE_TITLE_RE.match(title_key)
-    return (
-        anchor_article is not None and title_article is not None and anchor_article.group(1) == title_article.group(1)
-    )
+    if anchor_article is None or title_article is None:
+        return False
+    anchor_number = anchor_article.group(1)
+    title_number = title_article.group(1)
+    return isinstance(anchor_number, str) and isinstance(title_number, str) and anchor_number == title_number
 
 
 def _is_exact_article_title_match(title_key: str, expanded_anchor: str) -> bool:
     anchor_article = _ARTICLE_TITLE_RE.match(expanded_anchor)
     title_article = _ARTICLE_TITLE_RE.match(title_key)
-    return (
-        anchor_article is not None and title_article is not None and anchor_article.group(1) == title_article.group(1)
-    )
+    if anchor_article is None or title_article is None:
+        return False
+    anchor_number = anchor_article.group(1)
+    title_number = title_article.group(1)
+    return isinstance(anchor_number, str) and isinstance(title_number, str) and anchor_number == title_number
 
 
 def _title_heading_matches_anchor(title: str, target: str) -> bool:

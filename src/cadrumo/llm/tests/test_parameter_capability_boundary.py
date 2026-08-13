@@ -61,7 +61,7 @@ class _RefusesTemperature(_ProviderAdapter):
 
     @override
     def unsupported_parameters(self, model: str) -> frozenset[str]:
-        return frozenset({"temperature"}) if model == "picky-model" else frozenset()
+        return frozenset({"temperature"}) if model == "picky-model" else frozenset[str]()
 
     @override
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:  # pragma: no cover - never called

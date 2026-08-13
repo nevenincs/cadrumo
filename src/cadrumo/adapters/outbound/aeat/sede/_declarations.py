@@ -323,14 +323,15 @@ def filed_register_modelo_options(html: str) -> tuple[str, ...]:
             changed the option shape, and reporting it as "nothing offered"
             would turn a shape change into a silently empty history.
     """
-    codes = tuple(
-        dict.fromkeys(
-            match.group("modelo")
-            for text in _combobox_option_texts(html)
-            for match in (_MODELO_OPTION_RE.match(text),)
-            if match is not None
-        ),
-    )
+    codes_list: list[str] = []
+    for text in _combobox_option_texts(html):
+        match = _MODELO_OPTION_RE.match(text)
+        if match is None:
+            continue
+        modelo = match.group("modelo")
+        if isinstance(modelo, str):
+            codes_list.append(modelo)
+    codes = tuple(dict.fromkeys(codes_list))
     if not codes:
         raise SedeParseError(
             "declaraciones register rendered no modelo-shaped combobox option; "

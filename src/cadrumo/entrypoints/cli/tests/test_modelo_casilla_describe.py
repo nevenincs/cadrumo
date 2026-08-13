@@ -15,6 +15,7 @@ import json
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -27,7 +28,7 @@ def _envelope_result(args: list[str]) -> dict[str, object]:
     assert envelope["command"] == "modelo.casilla"
     result = envelope["result"]
     assert isinstance(result, dict)
-    return result
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(result)
 
 
 def test_casilla_describe_surfaces_grounding_for_bound_casilla() -> None:

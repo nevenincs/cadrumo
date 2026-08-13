@@ -305,8 +305,8 @@ def _m190_fixture_detail_observation() -> tuple[str, str, Decimal, Decimal]:
     assert clave_match is not None, "M190 fixture detail page did not expose clave G/01 grounding"
     assert amount_match is not None, "M190 fixture detail page did not expose the perception/retention amount row"
     return (
-        identity_match.group("nif"),
-        clave_match.group("clave"),
+        str(identity_match.group("nif")),
+        str(clave_match.group("clave")),
         _spanish_decimal(amount_match.group("percepcion")),
         _spanish_decimal(amount_match.group("retencion")),
     )

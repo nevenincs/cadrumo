@@ -511,6 +511,7 @@ def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
     error = excinfo.value
     assert error.field_id == "absent-year"
     assert error.reason == "fixed_width_value"
+    assert error.context is not None
     assert error.context["export_field_id"] == "absent-year"
     assert error.translated_message == "errors.fail.fixed_width_record_render"
     assert get_registered_error_code(error).code == "FAIL_FIXED_WIDTH_RECORD_RENDER"

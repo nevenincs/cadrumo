@@ -115,7 +115,7 @@ def module_names(path: Path) -> frozenset[str]:
     try:
         tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"), filename=str(path))
     except (OSError, SyntaxError):
-        return frozenset()
+        return frozenset[str]()
     names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
@@ -147,10 +147,14 @@ def _literal_names(node: ast.expr) -> set[str]:
 def _dotted_first_party_targets(text: str) -> Iterator[tuple[int, str, str]]:
     """Yield ``(line, role, target)`` for every dotted first-party role."""
     for match in _ROLE.finditer(text):
-        target = match.group("target").lstrip("~!").strip()
+        role = match.group("role")
+        target = match.group("target")
+        assert isinstance(role, str)
+        assert isinstance(target, str)
+        target = target.lstrip("~!").strip()
         if "." not in target or target.split(".")[0] not in _first_party_roots():
             continue
-        yield text[: match.start()].count("\n") + 1, match.group("role"), target
+        yield text[: match.start()].count("\n") + 1, role, target
 
 
 def cross_reference_defect(role: str, target: str) -> str | None:

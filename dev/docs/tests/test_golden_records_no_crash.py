@@ -31,7 +31,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.sequences import (
+from ..sequences import (
     FrameKind,
     default_docs_root,
     discover_sequences,

@@ -638,7 +638,7 @@ def test_workflow_row_count_prose_matches_the_full_distribution_set() -> None:
     the rows the claimed channels own. Anchoring this prose on the required set
     would make it drift every time a channel flips to available.
     """
-    from dev.release.readiness import ALL_DISTRIBUTION_ROWS
+    from ..readiness import ALL_DISTRIBUTION_ROWS
 
     assert len(ALL_DISTRIBUTION_ROWS) == 11
     text = _WORKFLOW.read_text(encoding="utf-8")
@@ -657,8 +657,8 @@ def test_required_rows_derive_from_claimed_channels_and_never_collapse_to_nothin
     channel marked available would require nothing, and the readiness gate would
     pass while measuring nothing at all.
     """
-    from dev.docs.download_matrix import ChannelTier, load_descriptor
-    from dev.release.readiness import ALL_DISTRIBUTION_ROWS, REQUIRED_DISTRIBUTION_ROWS
+    from ...docs.download_matrix import ChannelTier, load_descriptor
+    from ..readiness import ALL_DISTRIBUTION_ROWS, REQUIRED_DISTRIBUTION_ROWS
 
     assert frozenset(REQUIRED_DISTRIBUTION_ROWS) <= frozenset(ALL_DISTRIBUTION_ROWS)
     registry_rows = frozenset(

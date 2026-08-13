@@ -80,10 +80,12 @@ class StandardPeriodCode(StrEnum):
     DEC = "12"
 
 
-_STANDARD_PERIOD_SET = frozenset(StandardPeriodCode)
-_EXTENDED_PERIOD_SET = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
+_STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
+_EXTENDED_PERIOD_SET: frozenset[str] = frozenset(("EXT-1T", "EXT-2T", "EXT-3T", "EXT-4T"))
 _AD_HOC_PERIOD = "AD-HOC"
-_ADMINISTRATIVE_PERIOD_SET = frozenset(("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"))
+_ADMINISTRATIVE_PERIOD_SET: frozenset[str] = frozenset(
+    ("ALTA", "MODIFICACION", "BAJA", "COMUNICACION", "VARIACION"),
+)
 #: The symbolic token a registry ``period_selector`` declares to COVER the
 #: concrete event periods (``EVENT-1``, ``EVENT-2``, ...) an operator scope may
 #: carry — see the shared-matcher rationale in the registry's ``select_revision``.

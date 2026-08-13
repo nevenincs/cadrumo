@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from .. import PeriodSelector, RegistrySnapshotRef
-from .._bindings_previous_filing import _PreviousModeloSelector
+from .._bindings_previous_filing import PreviousModeloSelector
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -23,7 +23,7 @@ def test_registry_period_boundaries_normalize_administrative_tokens() -> None:
         year_from=2025,
         periods=("alta", "modificacion", "baja", "comunicacion", "variacion"),
     )
-    previous_filing = _PreviousModeloSelector(source_modelo="036", period="modificacion")
+    previous_filing = PreviousModeloSelector(source_modelo="036", period="modificacion")
 
     assert snapshot.period == "ALTA"
     assert selector.periods == ("alta", "modificacion", "baja", "comunicacion", "variacion")
@@ -43,4 +43,4 @@ def test_registry_period_boundaries_refuse_unknown_or_display_tokens(invalid_per
     with pytest.raises(ValidationError):
         PeriodSelector(years=(2025,), periods=(invalid_period,))
     with pytest.raises(ValidationError):
-        _PreviousModeloSelector(source_modelo="303", period=invalid_period)
+        PreviousModeloSelector(source_modelo="303", period=invalid_period)

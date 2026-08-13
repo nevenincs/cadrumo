@@ -195,9 +195,11 @@ def _extract_module_row(row: Tag, *, source_label: str) -> OrdenAnualIvaModule:
 def _activity_heading_from_text(text: str) -> tuple[str | None, str | None]:
     activity_match = _ACTIVITY_HEADING_RE.search(text)
     iae_match = _IAE_HEADING_RE.search(text)
+    activity = activity_match.group(1) if activity_match is not None else None
+    iae = iae_match.group(1) if iae_match is not None else None
     return (
-        activity_match.group(1).strip() if activity_match is not None else None,
-        iae_match.group(1).strip() if iae_match is not None else None,
+        activity.strip() if isinstance(activity, str) else None,
+        iae.strip() if isinstance(iae, str) else None,
     )
 
 

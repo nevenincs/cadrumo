@@ -61,7 +61,13 @@ def _import_bbva() -> None:
 def _active_row_count() -> int:
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return json.loads(listed.output)["result"]["total"]
+    payload = json.loads(listed.output)
+    assert isinstance(payload, dict), listed.output
+    body = payload.get("result")
+    assert isinstance(body, dict), listed.output
+    total = body.get("total")
+    assert isinstance(total, int), listed.output
+    return total
 
 
 def test_ledger_exports_xlsx_workbook_carrying_every_row(tmp_path: Path) -> None:

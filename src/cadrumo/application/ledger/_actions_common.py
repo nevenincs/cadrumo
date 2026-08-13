@@ -15,6 +15,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from pydantic import TypeAdapter
+
 from ...core.decimal import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import now
@@ -188,10 +190,7 @@ def _required_patched[T](
     value = getattr(patch, field)
     if value is None:
         raise TransactionValidationError(f"manual ledger patch {field} must not be null")
-    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED:
-    # getattr returns Any but the caller binds the result to a generic T
-    # via the fallback parameter.
-    return value
+    return _typed_patch_value(patch, field, value, fallback)
 
 
 def _optional_patched[T](
@@ -206,10 +205,13 @@ def _optional_patched[T](
     """
     if field not in patch_fields:
         return fallback
-    # TYPE-IGNORE-RATIONALE-GENERIC-GETATTR-BOUNDED:
-    # getattr returns Any but the caller binds the result to a generic T
-    # via the fallback parameter.
-    return getattr(patch, field)
+    return _typed_patch_value(patch, field, getattr(patch, field), fallback)
+
+
+def _typed_patch_value[T](patch: ManualLedgerTransactionPatch, field: str, value: object, expected: T) -> T:
+    """Validate a dynamic patch field through its declared Pydantic type."""
+    adapter: TypeAdapter[T] = TypeAdapter(ManualLedgerTransactionPatch.model_fields[field].annotation)
+    return adapter.validate_python(value)
 
 
 def _blocking_modelo_references(
@@ -437,6 +439,20 @@ def _verify_evidence_references(
         _verify_attachment_references(command, transaction_id=transaction_id, attachment_store=attachment_store)
 
 
+def resolve_attachment_store(
+    attachment_store: _AttachmentStoreProtocol | None,
+) -> _AttachmentStoreProtocol:
+    """Resolve the shared attachment-store port for ledger action helpers.
+
+    The concrete fallback belongs to the persistence adapter. Keeping this
+    construction helper with the other shared ledger action infrastructure
+    prevents individual action modules from each reaching into storage.
+    """
+    from ...adapters.persistence.storage import resolve_attachment_store
+
+    return resolve_attachment_store(attachment_store)
+
+
 def purchase_invoice_evidence_records(bucket_id: str) -> tuple[PurchaseInvoiceEvidence, ...]:
     """Return the bucket's registered ``PurchaseInvoiceEvidence`` records.
 
@@ -516,8 +532,6 @@ def _verify_attachment_references(
     attachment_store: _AttachmentStoreProtocol | None,
 ) -> None:
     """Verify every declared attachment manifest exists, lives in the bucket, and is link-compatible."""
-    from ...adapters.persistence.storage import resolve_attachment_store
-
     store = resolve_attachment_store(attachment_store)
     for attachment_id in command.attachment_ids:
         _verify_single_attachment(

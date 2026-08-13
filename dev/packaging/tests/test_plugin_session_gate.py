@@ -16,7 +16,7 @@ import json
 
 import pytest
 
-from dev.packaging.smoke_plugin_install import _CLIENT_TOOL_NAME, _tool_result_verdict
+from ..smoke_plugin_install import _CLIENT_TOOL_NAME, _tool_result_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

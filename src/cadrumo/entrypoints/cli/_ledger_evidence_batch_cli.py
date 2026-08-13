@@ -152,14 +152,26 @@ def _refusal_projection(verdict: PreconditionVerdict | None) -> dict[str, object
 
 def _item_payload(item: BatchItemResult) -> dict[str, object]:
     """Return one item row on the wire, with its verdict resolved into two fields."""
-    dumped = item.model_dump(mode="json", exclude={"refusal_verdict"})
+    dumped = _string_keyed_payload(item.model_dump(mode="json", exclude={"refusal_verdict"}))
     return {**dumped, **_refusal_projection(item.refusal_verdict)}
 
 
 def _unresolved_payload(source: UnresolvedBatchSource) -> dict[str, object]:
     """Return one unreadable-source row on the wire, with its verdict resolved."""
-    dumped = source.model_dump(mode="json", exclude={"refusal_verdict"})
+    dumped = _string_keyed_payload(source.model_dump(mode="json", exclude={"refusal_verdict"}))
     return {**dumped, **_refusal_projection(source.refusal_verdict)}
+
+
+def _string_keyed_payload(value: object) -> dict[str, object]:
+    """Validate a JSON model dump's mapping shape at the CLI boundary."""
+    if not isinstance(value, dict):
+        raise TypeError("CLI payload dump must be a mapping")
+    payload: dict[str, object] = {}
+    for key, item in value.items():
+        if not isinstance(key, str):
+            raise TypeError("CLI payload keys must be text")
+        payload[key] = item
+    return payload
 
 
 def _batch_payload(run: BatchRunResult, *, bucket_id: str, direction: InvoiceKind) -> EvidenceBatchResult:

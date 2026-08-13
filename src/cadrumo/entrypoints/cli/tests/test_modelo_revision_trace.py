@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _create_profile, _invoke
 from ._modelo_work_ux_support import _isolated_cli_backend as _isolated_cli_backend
@@ -49,7 +50,9 @@ def _calculate_m130_draft() -> str:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    work_unit_id = _payload(created.output)["work_unit_id"]
+    created_payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(created.output))
+    work_unit_id = created_payload["work_unit_id"]
+    assert isinstance(work_unit_id, str)
 
     seed_m130_income_transaction(amount=Decimal("12000.00"), filing_year=_FILING_YEAR, source_key="trace")
     seed_m130_expense_transaction(amount=Decimal("4000.00"), filing_year=_FILING_YEAR, source_key="trace")
@@ -65,9 +68,12 @@ def _calculate_m130_draft() -> str:
         ],
     )  # fmt: skip
     assert calculated.exit_code == 0, calculated.output
-    payload = _payload(calculated.output)
-    assert payload["casilla_values"]["07"] == "1600.00", payload["casilla_values"]
-    return payload["calculation_revision_id"]
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(calculated.output))
+    casilla_values = STR_KEYED_MAPPING_ADAPTER.validate_python(payload["casilla_values"])
+    assert casilla_values["07"] == "1600.00", casilla_values
+    revision_id = payload["calculation_revision_id"]
+    assert isinstance(revision_id, str)
+    return revision_id
 
 
 def test_work_revision_renders_inline_formula_trace_for_computed_casilla(

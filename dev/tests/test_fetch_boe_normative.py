@@ -24,7 +24,7 @@ from typing import Final
 import httpx
 import pytest
 
-from dev.corpus.fetch_boe_normative import (
+from ..corpus.fetch_boe_normative import (
     NormativeAcquisitionError,
     assert_boe_holds_no_consolidated_text,
     assert_served_by_the_requested_endpoint,

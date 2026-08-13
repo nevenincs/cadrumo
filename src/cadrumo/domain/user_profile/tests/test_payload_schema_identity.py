@@ -101,10 +101,15 @@ def _snapshot_payload(**overrides: object) -> dict[str, object]:
     over the overridden metadata leaves the identity claim as the one thing
     wrong with the payload.
     """
-    payload = UserProfileSnapshot.from_profile(
+    raw_payload = UserProfileSnapshot.from_profile(
         _record(),
         snapshot_id=new_profile_snapshot_id(_PROFILE_ID),
     ).model_dump()
+    assert isinstance(raw_payload, dict)
+    payload: dict[str, object] = {}
+    for key, value in raw_payload.items():
+        assert isinstance(key, str)
+        payload[key] = value
     payload.update(overrides)
     payload["canonical_hash"] = _derive_canonical_hash(
         schema_id=str(payload["schema_id"]),

@@ -368,6 +368,13 @@ class StorageCategory(StrEnum):
     BUCKET_OUTPUT_LANGUAGE_HINT = "bucket.output-language-hint"
     BUCKET_KEYSTORE = "bucket.keystore"
 
+    # ── Fixed layout: current-format profile capsule ───────────────────────
+    PROFILE_CAPSULE_CUSTODY = "profile-capsule.custody"
+    PROFILE_CAPSULE_PASSWORD_ENVELOPE = "profile-capsule.password-envelope"  # noqa: S105 - taxonomy label, not a credential
+    PROFILE_CAPSULE_RECOVERY_ENVELOPE = "profile-capsule.recovery-envelope"
+    PROFILE_CAPSULE_DATA = "profile-capsule.data"
+    PROFILE_CAPSULE_COMMIT = "profile-capsule.commit"
+
     # ── Fixed layout: per-keystore ──────────────────────────────────────────
     KEYSTORE_BUCKET_DEK = "keystore.bucket-dek"
     KEYSTORE_PROFILE_SESSION = "keystore.profile-session"

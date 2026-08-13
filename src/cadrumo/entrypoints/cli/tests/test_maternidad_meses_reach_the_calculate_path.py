@@ -38,6 +38,7 @@ from pathlib import Path
 import pytest
 
 from ....application.user_profile import UserProfileLifecycleRepository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.modelo_cli import create_modelo_work_unit_via_cli
@@ -154,7 +155,10 @@ def _casilla_0611(output: str) -> Decimal:
 def _casilla_0611_observation(output: str) -> dict[str, object]:
     """Return 0611's persisted, registry-grounded calculation observation."""
     observations = _payload(output)["observations"]
-    return next(observation for observation in observations if observation["casilla_id"] == _MATERNIDAD_CASILLA_ID)
+    observation = next(
+        observation for observation in observations if observation["casilla_id"] == _MATERNIDAD_CASILLA_ID
+    )
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(observation)
 
 
 def _advisory_kinds(output: str) -> set[str]:

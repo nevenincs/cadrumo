@@ -231,7 +231,9 @@ def _infer_modelo_from_category(category_path: tuple[str, ...]) -> str | None:
     for label in reversed(category_path):
         match = _MODELO_IN_LABEL.search(label)
         if match is not None:
-            return match.group("modelo")
+            modelo = match.group("modelo")
+            if isinstance(modelo, str):
+                return modelo
     return None
 
 

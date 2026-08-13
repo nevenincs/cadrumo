@@ -24,7 +24,7 @@ from typing import Any, Final
 import pytest
 import yaml
 
-from dev.ci.runner_queue_watchdog import (
+from ..runner_queue_watchdog import (
     JobView,
     _epoch_of,
     classify,

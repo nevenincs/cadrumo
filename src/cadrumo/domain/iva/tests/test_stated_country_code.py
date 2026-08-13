@@ -44,9 +44,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def _bundled() -> dict[str, object]:
-    return tomllib.loads(
+    raw_payload = tomllib.loads(
         bundled_path("registry", "aeat", "iva", "country_names.toml").read_text(encoding="utf-8"),
     )
+    payload: dict[str, object] = {}
+    for key, value in raw_payload.items():
+        assert isinstance(key, str)
+        payload[key] = value
+    return payload
 
 
 def _bundled_country_records() -> list[Mapping[str, object]]:

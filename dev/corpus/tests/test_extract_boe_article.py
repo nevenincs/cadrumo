@@ -19,9 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.preprocess import PreprocessOutput
-from dev.docs.preprocess._html import build_outputs
-
+from ...docs.preprocess import PreprocessOutput
+from ...docs.preprocess._html import build_outputs
 from ..extract_boe_article import (
     _DIV_OPEN_OR_CLOSE,
     ArticleExtractionError,

@@ -95,11 +95,13 @@ def _json_run(args: list[str], *, expected_exit: int) -> dict[str, object]:
     result = _invoke(["--format", "json", *args])
     assert result.exit_code == expected_exit, result.output
     payload = json.loads(result.output)
+    assert isinstance(payload, dict), result.output
     assert payload["command"] == "ledger.evidence.batch"
     body = payload["result"]
     assert isinstance(body, dict)
-    body["__notices__"] = payload["notices"]
-    return body
+    typed_body: dict[str, object] = {str(key): value for key, value in body.items()}
+    typed_body["__notices__"] = payload["notices"]
+    return typed_body
 
 
 def _rows(payload: Mapping[str, object]) -> list[dict[str, object]]:

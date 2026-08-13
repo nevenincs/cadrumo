@@ -50,7 +50,9 @@ def _import_one_transaction(tmp_path: Path) -> str:
     assert listed.exit_code == 0, listed.output
     rows = unwrap_cli_result(listed)["rows"]
     assert rows, listed.output
-    return rows[0]["transaction_id"]
+    raw_id = rows[0].get("transaction_id")
+    assert isinstance(raw_id, str), listed.output
+    return raw_id
 
 
 def _rows() -> list[dict[str, Any]]:

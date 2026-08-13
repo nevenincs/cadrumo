@@ -41,7 +41,12 @@ def spanish_stemmer() -> SpanishStemmer:
 
 def spanish_word_tokens(text: str) -> tuple[str, ...]:
     """Return lowercase Unicode word tokens from ``text`` in source order."""
-    return tuple(_WORD_RE.findall(text.lower()))
+    tokens: list[str] = []
+    for token in _WORD_RE.findall(text.lower()):
+        if not isinstance(token, str):
+            raise TypeError("the word tokenizer returned a non-string token")
+        tokens.append(token)
+    return tuple(tokens)
 
 
 def stem_spanish_terms(stemmer: SpanishStemmer, terms: Iterable[str]) -> tuple[str, ...]:
@@ -49,7 +54,12 @@ def stem_spanish_terms(stemmer: SpanishStemmer, terms: Iterable[str]) -> tuple[s
     words = list(terms)
     if not words:
         return ()
-    return tuple(stemmer.stemWords(words))
+    stemmed: list[str] = []
+    for word in stemmer.stemWords(words):
+        if not isinstance(word, str):
+            raise TypeError("the Spanish stemmer returned a non-string token")
+        stemmed.append(word)
+    return tuple(stemmed)
 
 
 def stem_spanish_text(stemmer: SpanishStemmer, text: str) -> str:

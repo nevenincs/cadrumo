@@ -7161,6 +7161,7 @@ errors:
       del bucket activo. Es posible que la recuperación no se haya configurado nunca.
     fail_storage_persistence: Se produjo un error de persistencia en el almacenamiento
       seguro.
+    fail_storage_profile_custody: No se ha podido completar la custodia del perfil.
     fail_storage_repository: Una operación de repositorio falló.
     fail_storage_repository_setup: Error al inicializar el repositorio de almacenamiento.
     fail_storage_secret_not_found: No se encontró ningún secreto para la clave solicitada.
@@ -7315,6 +7316,8 @@ errors:
       seguro.
     integrity_storage_path_containment: Una ruta calculada se sale del directorio
       raíz configurado.
+    integrity_storage_profile_custody_record: El registro de custodia del perfil no
+      es válido o ha sido alterado.
     integrity_storage_retention_policy: Los metadatos de retención de un registro
       infringen la política de su clasificación.
     integrity_storage_secure_object_batch_size: El tamaño de lote de iteración de
@@ -7762,6 +7765,9 @@ errors:
       Ejecuta `aeat config login NAME` y vuelve a intentarlo.
     refused_storage_passphrase_too_short: La frase de contraseña es demasiado corta.
       Debe tener al menos 8 caracteres.
+    refused_storage_profile_custody: Esta operación de custodia del perfil está rechazada.
+    refused_storage_profile_custody_password: Esta contraseña no se puede representar
+      de forma segura para la custodia del perfil.
     refused_storage_reclaim: 'Se rechaza liberar esta área de almacenamiento: su ciclo
       de vida declarado conserva su contenido.'
     refused_storage_reclaim_unconfirmed: Liberar un área de almacenamiento elimina

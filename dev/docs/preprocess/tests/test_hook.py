@@ -25,7 +25,7 @@ from typing import cast
 
 import pytest
 
-from dev.docs.preprocess.hook import (
+from ..hook import (
     UPSTREAM_SCHEMA_VERSION,
     adapt_outputs,
     build_for_source,
@@ -83,10 +83,10 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
     family that owns its suffix, so an extractor bump invalidates the
     upstream preprocess cache instead of serving stale extractions.
     """
-    from dev.docs.preprocess._html import HTML_EXTRACTOR_VERSION
-    from dev.docs.preprocess._pdf import PDF_EXTRACTOR_VERSION
-    from dev.docs.preprocess._terminology import TERMINOLOGY_EXTRACTOR_VERSION
-    from dev.docs.preprocess._workbook import WORKBOOK_EXTRACTOR_VERSION
+    from .._html import HTML_EXTRACTOR_VERSION
+    from .._pdf import PDF_EXTRACTOR_VERSION
+    from .._terminology import TERMINOLOGY_EXTRACTOR_VERSION
+    from .._workbook import WORKBOOK_EXTRACTOR_VERSION
 
     owning_version = {
         ".html": HTML_EXTRACTOR_VERSION,
@@ -113,7 +113,7 @@ def test_every_rule_pattern_matches_committed_sources() -> None:
 
 def test_terminology_concept_rule_emits_the_source_path_and_kind() -> None:
     """The explicit route feeds a real Handbook fragment without retargeting it."""
-    from dev.docs.preprocess._terminology import TERMINOLOGY_EXTRACTOR_ID
+    from .._terminology import TERMINOLOGY_EXTRACTOR_ID
 
     source = _TERMINOLOGY / "prorrata-especial.toml"
     outputs = build_for_source(source, repo_root=_REPO_ROOT)

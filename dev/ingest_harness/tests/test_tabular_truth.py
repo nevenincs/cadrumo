@@ -23,7 +23,8 @@ import pytest
 
 from cadrumo.core import FieldRole
 from cadrumo.core.tabular import normalize_tabular_bytes
-from dev.ingest_harness import (
+
+from .. import (
     CORPUS_ROOT,
     TABULAR_COLUMN_ROLE_TRUTH,
     TabularTruthError,

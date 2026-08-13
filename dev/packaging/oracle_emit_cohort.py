@@ -21,16 +21,16 @@ import subprocess
 from pathlib import Path
 from typing import Final
 
-from dev.packaging._acquire_common import (
+from ._acquire_common import (
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
     run_installed_behavior_oracles,
     venv_executable,
 )
-from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.distribution_evidence_emit import emit_installed_oracle_evidence
-from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
-from dev.packaging.python_cohort import load_python_cohort
+from .cohort_manifest import load_release_cohort
+from .distribution_evidence_emit import emit_installed_oracle_evidence
+from .evidence import AcquisitionIdentity, DestinationIdentity
+from .python_cohort import load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")

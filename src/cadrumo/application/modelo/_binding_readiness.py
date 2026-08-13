@@ -83,7 +83,7 @@ def profile_resolvable_binding_ids(
         )
     )
     if resolved_period is None:
-        return frozenset()
+        return frozenset[str]()
     try:
         snapshot = authority.snapshot(
             modelo,
@@ -101,7 +101,7 @@ def profile_resolvable_binding_ids(
             type(exc).__name__,
             exc,
         )
-        return frozenset()
+        return frozenset[str]()
     if revision_id is not None and snapshot.revision.id != revision_id:
         _log.debug(
             "binding-readiness: law-determined revision %s does not match supplied revision_id %s "
@@ -112,7 +112,7 @@ def profile_resolvable_binding_ids(
             filing_year,
             resolved_period,
         )
-        return frozenset()
+        return frozenset[str]()
     try:
         result = resolve_profile_sourced_bindings(snapshot, bucket_id=bucket_id)
     except ProfileNotFoundError as exc:
@@ -125,7 +125,7 @@ def profile_resolvable_binding_ids(
             type(exc).__name__,
             exc,
         )
-        return frozenset()
+        return frozenset[str]()
     return frozenset(str(binding_id) for binding_id in profile_resolved_binding_ids(result))
 
 

@@ -8,9 +8,11 @@ import pytest
 from typer.testing import CliRunner
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.terminology._sweep import enumerate_query_vocabulary
-from dev.docs.terminology._synonym_cli import app
-from dev.docs.terminology._synonym_mining import (
+
+from ...terminology_handbook import load_terminology_handbook
+from .._sweep import enumerate_query_vocabulary
+from .._synonym_cli import app
+from .._synonym_mining import (
     RatificationAction,
     RatificationStatus,
     SynonymCandidateEntry,
@@ -20,8 +22,6 @@ from dev.docs.terminology._synonym_mining import (
     mine_synonym_candidates,
     validate_ratification_queue,
 )
-
-from ...terminology_handbook import load_terminology_handbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

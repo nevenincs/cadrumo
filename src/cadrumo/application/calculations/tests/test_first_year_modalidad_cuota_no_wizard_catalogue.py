@@ -3,7 +3,7 @@
 Companion to ``application/modelo/tests/test_modelo_200_first_year_cuota_e2e.py``
 (which exercises the CLI path WITH the wizard ``SETUP_FLOW`` catalogue registered).
 That path could not, before #30, surface the failure mode: the engine's first-year
-derivation (``_first_year_modalidad_cuota_no_m202`` / ``_activity_start_date_for_bucket``)
+derivation (``_first_year_modalidad_cuota_no_m202`` / ``activity_start_date_for_bucket``)
 re-built the profile through ``taxpayer_profile_from_mapping`` -> ``get_setup_flow()``
 and SILENTLY swallowed ``WizardCatalogueNotRegisteredError``, so in any process that
 computes an M200 without registering the catalogue (a non-CLI calc entrypoint) the
@@ -58,7 +58,7 @@ except WizardCatalogueNotRegisteredError:
     print("CATALOGUE:UNREGISTERED")
 
 from cadrumo.application.calculations._relation_prefill import (
-    _activity_start_date_for_bucket,
+    activity_start_date_for_bucket,
     _first_year_modalidad_cuota_no_m202,
 )
 from cadrumo.core import Period
@@ -105,7 +105,7 @@ with isolated_runtime_profile(tmp_path=tmp, bucket_id=_BUCKET) as profile:
 
     # The decoupled helpers must resolve off the projection with NO catalogue.
     print("FIRST_YEAR:" + str(_first_year_modalidad_cuota_no_m202(_BUCKET, filing_year=2025)))
-    print("ACTIVITY_START:" + str(_activity_start_date_for_bucket(_BUCKET)))
+    print("ACTIVITY_START:" + str(activity_start_date_for_bucket(_BUCKET)))
 
     secure_objects = profile.repository
     wu_repo = WorkUnitCatalogueRepository(objects=secure_objects)

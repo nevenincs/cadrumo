@@ -83,7 +83,15 @@ def _canonical_branch_payload(
         branch = resolve_branch()
         attempted.append(branch.__name__)
         try:
-            return branch.model_validate_json(serialized).model_dump(mode="json")
+            dumped = branch.model_validate_json(serialized).model_dump(mode="json")
+            if not isinstance(dumped, dict):
+                raise ValueError("canonical root branch did not produce a mapping")
+            payload: dict[str, object] = {}
+            for key, item in dumped.items():
+                if not isinstance(key, str):
+                    raise ValueError("canonical root branch produced a non-text key")
+                payload[key] = item
+            return payload
         except ValueError:
             continue
     expected = ", ".join(attempted)

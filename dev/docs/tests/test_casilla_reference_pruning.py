@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.casilla_reference import generate_casilla_reference
+from ..casilla_reference import generate_casilla_reference
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -28,7 +28,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 def _generated_casilla_dir(docs_root: Path) -> Path:
     """Return the directory the generator materialises its pages into."""
-    from dev.docs.terminology._casilla_anchor import CASILLA_REFERENCE_DIR
+    from ..terminology._casilla_anchor import CASILLA_REFERENCE_DIR
 
     return docs_root / CASILLA_REFERENCE_DIR
 

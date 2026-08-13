@@ -42,7 +42,7 @@ import platform
 import re
 from typing import TYPE_CHECKING, Final
 
-from dev.packaging.evidence import (
+from .evidence import (
     DistributionEvidence,
     EvidenceIdentityPayload,
     evidence_identifier,

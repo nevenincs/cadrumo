@@ -26,23 +26,25 @@ from typing import Final
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+if not __package__:
+    __package__ = "dev.packaging"
 
-from dev.packaging._acquire_common import (  # noqa: E402
+from ._acquire_common import (  # noqa: E402
     AcquisitionError,
     capture_owned_server_launch,
     require_command_succeeded,
 )
-from dev.packaging._command import CommandResult, run_command  # noqa: E402
-from dev.packaging.cohort_manifest import load_release_cohort  # noqa: E402
-from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
-from dev.packaging.evidence import (  # noqa: E402
+from ._command import CommandResult, run_command  # noqa: E402
+from .cohort_manifest import load_release_cohort  # noqa: E402
+from .distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
+from .evidence import (  # noqa: E402
     AcquisitionIdentity,
     ClientIdentity,
     DestinationIdentity,
 )
-from dev.packaging.installed_mcp_oracle import isolated_mcp_environment  # noqa: E402
-from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
-from dev.packaging.smoke_plugin_install import (  # noqa: E402
+from .installed_mcp_oracle import isolated_mcp_environment  # noqa: E402
+from .python_cohort import load_python_cohort  # noqa: E402
+from .smoke_plugin_install import (  # noqa: E402
     _PLUGIN_ID,
     _installed_plugin,
     _resolve_server,
@@ -189,7 +191,7 @@ def run_claude_plugin_acquisition(
     # The plugin's acquisition surface is the MCP server launched via uvx, not a
     # standalone aeat CLI, so behaviour is proven by the MCP oracle alone; the
     # tax oracle needs a direct CLI executable the plugin does not expose.
-    from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
+    from .installed_mcp_oracle import run_installed_mcp_oracle
 
     mcp_evidence = run_installed_mcp_oracle(
         uvx,

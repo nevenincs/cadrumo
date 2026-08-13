@@ -25,7 +25,6 @@ already created; renaming it to a fictional segment breaks that handoff.
 
 from __future__ import annotations
 
-import json
 import os
 import re
 from collections.abc import Iterator
@@ -35,6 +34,7 @@ from typing import Final
 import pytest
 
 from ....application.modelo import M145CommunicationRecordState, read_m145_communication_record
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from .envelope_helpers import unwrap_schema_envelope
@@ -161,20 +161,21 @@ def _invoke(args: list[str]):
 def _create_record_id() -> str:
     result = _invoke(["--format", "json", *_CREATE_ARGS])
     assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
-    return payload["record"]["communication_record_id"]
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(unwrap_schema_envelope(result.output))
+    record = STR_KEYED_MAPPING_ADAPTER.validate_python(payload["record"])
+    communication_record_id = record["communication_record_id"]
+    assert isinstance(communication_record_id, str)
+    return communication_record_id
 
 
 def _unwrap_error_envelope(output: str) -> dict[str, object]:
-    payload = json.loads(output)
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_json(output)
     assert payload["status"] == "error"
     # The error spine now names the failing command (byte-identical to the
     # command= its success envelope emits); null only before a command resolves.
     assert isinstance(payload["command"], str) and payload["command"], payload["command"]
     assert payload["notices"] == []
-    error = payload["error"]
-    assert isinstance(error, dict)
-    return error
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(payload["error"])
 
 
 def _help_words(output: str) -> set[str]:

@@ -23,8 +23,8 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from dev.docs.cli_reference import _reference_subprocess_environment
-from dev.docs.cli_tree import (
+from ..cli_reference import _reference_subprocess_environment
+from ..cli_tree import (
     CLI_TREE_STATIC_RELPATH,
     CliCommandNode,
     CliTree,

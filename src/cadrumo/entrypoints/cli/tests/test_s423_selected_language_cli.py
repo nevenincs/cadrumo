@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 import re
 import subprocess
@@ -11,6 +10,8 @@ import textwrap
 from pathlib import Path
 
 import pytest
+
+from ....core import STR_KEYED_MAPPING_ADAPTER
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -109,7 +110,7 @@ def _persisted_report(storage_root: Path, verification_report_id: str) -> dict[s
         timeout=120,
     )
     assert result.returncode == 0, _combined_output(result)
-    return json.loads(result.stdout)
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(result.stdout)
 
 
 def _create_modelo_revision(
@@ -188,7 +189,9 @@ def _create_modelo_revision(
     assert calculated.returncode == 0, calculation_output
     revision_match = re.search(r"calculation_revision_id\t([0-9a-f]{64})", calculation_output)
     assert revision_match is not None, calculation_output
-    return revision_match.group(1)
+    revision_id = revision_match.group(1)
+    assert isinstance(revision_id, str)
+    return revision_id
 
 
 @pytest.mark.parametrize(

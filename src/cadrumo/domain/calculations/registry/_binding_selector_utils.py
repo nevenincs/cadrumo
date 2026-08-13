@@ -8,6 +8,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.aggregation import BindingSourceKind
 from ._errors import RegistryValidationError
 from ._schema import DataBindingDefinition, OneBasedExportOffset
@@ -187,7 +188,9 @@ def selector_as_dict(binding: DataBindingDefinition) -> dict[str, object]:
     """Return a plain selector mapping without injected source metadata."""
     selector = binding.selector
     if isinstance(selector, BaseModel):
-        return selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True)
+        return STR_KEYED_MAPPING_ADAPTER.validate_python(
+            selector.model_dump(exclude={"source"}, exclude_none=True, exclude_unset=True),
+        )
     return {key: value for key, value in selector.items() if key != "source"}
 
 

@@ -30,13 +30,15 @@ from typing import Final
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
+if not __package__:
+    __package__ = "dev.packaging"
 
-from dev.packaging import desktop_capture as dc  # noqa: E402
-from dev.packaging._acquire_common import capture_owned_server_launch  # noqa: E402
-from dev.packaging.cohort_manifest import load_release_cohort  # noqa: E402
-from dev.packaging.distribution_evidence_emit import emit_client_evidence  # noqa: E402
-from dev.packaging.evidence import AcquisitionIdentity, ClientIdentity, DestinationIdentity  # noqa: E402
-from dev.packaging.installed_mcp_oracle import isolated_mcp_environment, run_installed_mcp_oracle  # noqa: E402
+from . import desktop_capture as dc  # noqa: E402
+from ._acquire_common import capture_owned_server_launch  # noqa: E402
+from .cohort_manifest import load_release_cohort  # noqa: E402
+from .distribution_evidence_emit import emit_client_evidence  # noqa: E402
+from .evidence import AcquisitionIdentity, ClientIdentity, DestinationIdentity  # noqa: E402
+from .installed_mcp_oracle import isolated_mcp_environment, run_installed_mcp_oracle  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _MCP_LOG_GLOB: Final[str] = "logs/mcp-server-*adrumo*.log"

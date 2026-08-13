@@ -73,7 +73,7 @@ def gate_build_jobs() -> str:
         The ``-j`` value string to hand to ``sphinx-build``.
     """
     if "CADRUMO_DOCS_JOBS" in os.environ:
-        from dev.docs.build import docs_build_jobs
+        from ..build import docs_build_jobs
 
         return docs_build_jobs(os.environ)
     return _GATE_BUILD_JOBS_DEFAULT

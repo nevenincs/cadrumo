@@ -38,7 +38,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from dev.quality.import_hygiene_scan import dunder_all_assignment_value
+from .import_hygiene_scan import dunder_all_assignment_value
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 PKG_PREFIX = "src/cadrumo"

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import json
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
@@ -23,7 +22,7 @@ from PIL import Image
 
 from ....adapters.inbound.einvoice import EInvoiceXmlParseError, parse_einvoice_document
 from ....adapters.inbound.pdf import extract_pages_text_from_bytes
-from ....core import STRUCTURED_DOCUMENT_SHAPES, DocumentShape
+from ....core import STR_KEYED_MAPPING_ADAPTER, STRUCTURED_DOCUMENT_SHAPES, DocumentShape
 from ....llm import LLMPdfRasterisationError, rasterise_pdf_pages_to_base64_png
 from ....tests.fixtures import (
     FIXTURE_PROVENANCE_REAL,
@@ -122,7 +121,7 @@ def _corpus_fixtures() -> list[Path]:
 def _sidecar_of(fixture: Path) -> dict[str, object]:
     sidecar = fixture.with_suffix(fixture.suffix + ".provenance.json")
     assert sidecar.exists(), f"missing provenance sidecar for {fixture.name}"
-    return json.loads(sidecar.read_text(encoding="utf-8"))
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(sidecar.read_text(encoding="utf-8"))
 
 
 def _readable_producer(fixture: Path) -> str | None:

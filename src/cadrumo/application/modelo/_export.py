@@ -46,13 +46,11 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from ...adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import (
     ActionEvidenceProvenance,
@@ -104,6 +102,7 @@ from ..aggregation import (
     resolve_m303_prorrata_transition_arrival,
     resolve_m303_supplier_regime_arrival,
 )
+from ..bienes_inversion import BienesInversionIvaRegisterRepository
 from ..calculations import (
     CalculationObservationRepository,
     CrossPeriodExpectedMemberSet,
@@ -134,6 +133,7 @@ from ..filing import (
     resolve_m303_filing_facts,
 )
 from ..filing.runtime import RegistrySchemaAccessor
+from ..prorrata_register import ProrrataRegisterRepository
 from ._action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,

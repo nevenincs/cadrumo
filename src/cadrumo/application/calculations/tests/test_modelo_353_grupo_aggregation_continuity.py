@@ -1,7 +1,7 @@
 """E2E continuity: Modelo 353 grupo-entidades monthly aggregation of member 322s.
 
 Exercises the LANDED A2 ``per_grupo_member`` cross-member aggregation (contract):
-``_PreviousModeloSelector`` ``grouping = "per_grupo_member"`` axis, the opt-in
+``PreviousModeloSelector`` ``grouping = "per_grupo_member"`` axis, the opt-in
 enumerate-then-sum resolver branch, the three ``modelo-353-prev-322-*``
 bindings, and the member-NIF-widened observation storage
 (:func:`save_observation` ``member_nif=...``). Distinct members' 322 filings

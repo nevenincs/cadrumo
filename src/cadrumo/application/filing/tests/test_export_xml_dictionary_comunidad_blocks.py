@@ -169,7 +169,7 @@ def test_restoring_all_write_fails_the_single_block_assertion() -> None:
     entries = _entries()
 
     def all_write(_entries: object, _values: object) -> frozenset[str]:
-        return frozenset()
+        return frozenset[str]()
 
     unfiled = all_write(entries, {})
     written: set[str] = set()

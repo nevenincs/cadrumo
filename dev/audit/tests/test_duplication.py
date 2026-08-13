@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.duplication import (
+from ..duplication import (
     CloneGroup,
     DuplicationOutcome,
     DuplicationResult,
@@ -30,7 +30,6 @@ from dev.audit.duplication import (
     render_console_report,
     run_duplication_scan,
 )
-
 from ._duplication_support import (
     _REPO_ROOT,
     _recorded_dispositions,

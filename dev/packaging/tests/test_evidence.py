@@ -12,11 +12,11 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from dev.packaging._command import run_command
-from dev.packaging._hashing import sha256_path
-from dev.packaging._proof_ledger import record_proof, reset_proof_ledger
-from dev.packaging._smoke_common import write_smoke_manifest
-from dev.packaging.cohort_manifest import (
+from .._command import run_command
+from .._hashing import sha256_path
+from .._proof_ledger import record_proof, reset_proof_ledger
+from .._smoke_common import write_smoke_manifest
+from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     SourceIdentity,
@@ -24,7 +24,7 @@ from dev.packaging.cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
-from dev.packaging.evidence import (
+from ..evidence import (
     AcquisitionIdentity,
     ClientIdentity,
     CommandTranscript,

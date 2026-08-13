@@ -54,7 +54,7 @@ from ....application.modelo import (
 )
 from ....application.user_profile import profile_create_storage_span, profile_storage_session, set_active_fields
 from ....application.workflow import workflow_state_repository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId, Period, validated_casilla_id
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
@@ -70,6 +70,12 @@ _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+def _payload_string(output: str, key: str) -> str:
+    value = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(output))[key]
+    assert isinstance(value, str)
+    return value
 
 
 def _active_registry_revision_id(*, modelo: str, filing_year: int, period: str) -> str:
@@ -165,7 +171,7 @@ def _sign(tmp_path: Path, package_path: Path) -> tuple[Path, str]:
         ],
     )
     assert result.exit_code == 0, result.output
-    return signature_path, _payload(result.output)["signer_public_key_hex"]
+    return signature_path, _payload_string(result.output, "signer_public_key_hex")
 
 
 def _counter_sign(tmp_path: Path, package_path: Path, signature_path: Path) -> tuple[Path, str]:
@@ -187,7 +193,7 @@ def _counter_sign(tmp_path: Path, package_path: Path, signature_path: Path) -> t
         ],
     )
     assert result.exit_code == 0, result.output
-    return receipt_path, _payload(result.output)["counter_signer_public_key_hex"]
+    return receipt_path, _payload_string(result.output, "counter_signer_public_key_hex")
 
 
 def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(tmp_path: Path) -> None:

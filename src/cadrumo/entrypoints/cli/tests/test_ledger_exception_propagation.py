@@ -47,7 +47,7 @@ def _error_document(output: str) -> dict[str, object]:
         if line.startswith("{"):
             document = json.loads(line)
             assert isinstance(document, dict)
-            return document
+            return {str(key): value for key, value in document.items()}
     raise AssertionError("the CLI emitted no JSON error document")
 
 

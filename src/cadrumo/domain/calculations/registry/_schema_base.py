@@ -129,7 +129,7 @@ def manifest_only_fields(model: type[BaseModel]) -> frozenset[str]:
     marker - including one added by a subclass - enrols itself without any
     second list being edited.
     """
-    return frozenset(
+    return frozenset[str](
         name
         for name, field in model.model_fields.items()
         if any(isinstance(meta, ManifestOnlyMarker) for meta in field.metadata)
@@ -143,7 +143,7 @@ def governance_stamp_fields(model: type[BaseModel]) -> frozenset[str]:
     field pinned to the manifest for legal-grounding reasons is not part of the
     provenance claim and must not be written or read as one.
     """
-    return frozenset(
+    return frozenset[str](
         name
         for name, field in model.model_fields.items()
         if any(isinstance(meta, GovernanceStampMarker) for meta in field.metadata)

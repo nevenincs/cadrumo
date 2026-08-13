@@ -40,7 +40,7 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....application.flows import FlowAnswerError, FlowPage, run_scripted_flow
 from ....application.modelo import get_filing_record
 from ....application.user_profile import profile_storage_session
-from ....core import Period, resolve_active_bucket_id
+from ....core import STR_KEYED_MAPPING_ADAPTER, Period, resolve_active_bucket_id
 from ....core.flows import FlowMode
 from ....core.resources import resources
 from ....domain.justificante import Justificante
@@ -114,6 +114,12 @@ _AMEND_PARITY_SPINE = (
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
+
+
+def _payload_string(output: str, key: str) -> str:
+    value = STR_KEYED_MAPPING_ADAPTER.validate_python(_payload(output))[key]
+    assert isinstance(value, str)
+    return value
 
 
 def _casilla_observation(revision_payload, casilla_id: str):
@@ -190,7 +196,7 @@ def _import_external_baseline(
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return _payload(result.output)["filing_record_id"]
+    return _payload_string(result.output, "filing_record_id")
 
 
 def _import_external_m303_baseline(
@@ -211,7 +217,7 @@ def _import_external_m303_baseline(
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    return _payload(result.output)["filing_record_id"]
+    return _payload_string(result.output, "filing_record_id")
 
 
 def _scripted_amend(
@@ -275,10 +281,11 @@ def _scripted_amend(
                 mode=FlowMode.CREATE,
             )
             assert corrections_projection.submit_eligible
-            overrides = {
-                row.casilla_id: (corrections_state.answers.get(_value_page_id(row.casilla_id)) or "").strip()
-                for row in selected
-            }
+            overrides: dict[str, str] = {}
+            for row in selected:
+                casilla_id = row.casilla_id
+                assert isinstance(casilla_id, str)
+                overrides[casilla_id] = (corrections_state.answers.get(_value_page_id(casilla_id)) or "").strip()
             derived_kind = (corrections_state.answers.get(_KIND_PAGE_ID) or "").strip()
             derived_reason = (corrections_state.answers.get(_REASON_PAGE_ID) or "").strip()
             return overrides, derived_kind, derived_reason

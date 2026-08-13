@@ -323,7 +323,8 @@ def resolve_region_category_profiles(
         profile mapping; empty until a territorial regime is enrolled.
     """
     del profile_year
-    return MappingProxyType({})
+    empty: dict[CCAA, Mapping[SpendingCategory, CategoryProfile]] = {}
+    return MappingProxyType(empty)
 
 
 def select_deductibility_profile(

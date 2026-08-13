@@ -258,9 +258,9 @@ def _declared_literals(node: ast.AnnAssign) -> frozenset[str]:
     """Return the string literals inside ``frozenset({...})``, or empty if the shape does not match."""
     call = node.value
     if not (isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == "frozenset"):
-        return frozenset()
+        return frozenset[str]()
     if not call.args or not isinstance(call.args[0], ast.Set):
-        return frozenset()
+        return frozenset[str]()
     return frozenset(
         element.value
         for element in call.args[0].elts

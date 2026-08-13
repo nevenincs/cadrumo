@@ -37,7 +37,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.inbound.einvoice import parse_einvoice_document
+from ....adapters.inbound.einvoice import ParsedEInvoice, parse_einvoice_document
 from ....domain.invoices import InvoiceClass
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -50,7 +50,7 @@ _CORRECTED_NUMBER = "0028"
 _OWN_NUMBER = "0031"
 
 
-def _parsed() -> object:
+def _parsed() -> ParsedEInvoice:
     return parse_einvoice_document(_RECTIFICATIVA.read_bytes())
 
 

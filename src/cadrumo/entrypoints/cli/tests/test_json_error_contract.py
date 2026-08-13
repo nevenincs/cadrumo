@@ -36,7 +36,6 @@ diagnostic-log location, not an injected value.
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -49,6 +48,7 @@ import pytest
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -83,9 +83,7 @@ def _error_document(output: str) -> dict[str, object]:
     for line in output.splitlines():
         candidate = line.strip()
         if candidate.startswith("{"):
-            parsed = json.loads(candidate)
-            assert isinstance(parsed, dict)
-            return parsed
+            return STR_KEYED_MAPPING_ADAPTER.validate_json(candidate)
     raise AssertionError(f"no JSON document found in output:\n{output}")
 
 

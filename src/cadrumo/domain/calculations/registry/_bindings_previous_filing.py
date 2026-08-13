@@ -126,7 +126,7 @@ def previous_filing_observation_requirements(
     for binding in revision.bindings:
         if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
-        if not _is_direct_previous_filing_binding(binding):
+        if not is_direct_previous_filing_binding(binding):
             continue
         selector = _previous_filing_selector(binding)
         for period_year_delta, required_period in selector.required_period_anchors_for_target(period):
@@ -160,7 +160,7 @@ def previous_filing_observation_requirements(
 
 def _optional_source_casilla_ids(
     binding: DataBindingDefinition,
-    selector: _PreviousModeloSelector,
+    selector: PreviousModeloSelector,
 ) -> frozenset[CasillaId]:
     """Return the source casillas a prior observation may legitimately omit.
 
@@ -177,16 +177,16 @@ def _optional_source_casilla_ids(
     Every other op keeps every source casilla required (empty optional set).
     """
     if binding_aggregation_op(binding) != BindingAggregationOp.PRIOR_PAGOS_FRACCIONADOS:
-        return frozenset()
+        return frozenset[CasillaId]()
     source_ids = _previous_filing_source_ids(selector)
     if len(source_ids) != 2:
-        return frozenset()
+        return frozenset[CasillaId]()
     return frozenset({source_ids[1]})
 
 
 def _observed_casilla_values(
     binding: DataBindingDefinition,
-    selector: _PreviousModeloSelector,
+    selector: PreviousModeloSelector,
     match: _RegistryModeloObservationLike,
     expected_year: int,
     required_period: str,
@@ -240,7 +240,7 @@ class _PreviousFilingObservationAbsentError(Exception):
 
 def _resolve_anchor_values(
     binding: DataBindingDefinition,
-    selector: _PreviousModeloSelector,
+    selector: PreviousModeloSelector,
     available: tuple[_RegistryModeloObservationLike, ...],
     *,
     expected_year: int,
@@ -346,7 +346,7 @@ def resolve_previous_filing_binding_values(
             continue
         if binding.source != BindingSourceKind.PREVIOUS_FILING:
             continue
-        if not _is_direct_previous_filing_binding(binding):
+        if not is_direct_previous_filing_binding(binding):
             continue
         values = _resolve_binding_values(
             binding,
@@ -380,12 +380,12 @@ def _anchor_strictly_before_activity_start(
     return filing_period.end_date < activity_start_date
 
 
-def _zero_values_for_scoped_out_binding(selector: _PreviousModeloSelector) -> list[Decimal]:
+def _zero_values_for_scoped_out_binding(selector: PreviousModeloSelector) -> list[Decimal]:
     """Return a neutral zero vector matching the binding's source-casilla shape."""
     return [Decimal("0")] * max(1, len(_previous_filing_source_ids(selector)))
 
 
-class _PreviousModeloSelector(BaseModel):
+class PreviousModeloSelector(BaseModel):
     """Typed selector model for a ``previous_filing`` binding declaration.
 
     Parsed from
@@ -461,7 +461,7 @@ class _PreviousModeloSelector(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def _validate_period_selector(self) -> _PreviousModeloSelector:
+    def _validate_period_selector(self) -> PreviousModeloSelector:
         if self.prior_quarter_expanding_span and (
             self.period is not None or self.source_periods or self.source_period_offset_from_target is not None
         ):
@@ -493,7 +493,7 @@ class _PreviousModeloSelector(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def _validate_source_spec(self) -> _PreviousModeloSelector:
+    def _validate_source_spec(self) -> PreviousModeloSelector:
         if self.source_casilla_ids and self.source_casilla_id is not None:
             raise RegistryValidationError(
                 "previous-filing selector cannot declare both source_casilla_ids and source_casilla_id",
@@ -501,10 +501,10 @@ class _PreviousModeloSelector(BaseModel):
         return self
 
 
-def _previous_filing_selector(binding: DataBindingDefinition) -> _PreviousModeloSelector:
+def _previous_filing_selector(binding: DataBindingDefinition) -> PreviousModeloSelector:
     selector = _selector_as_dict(binding)
     try:
-        return _PreviousModeloSelector.model_validate(selector)
+        return PreviousModeloSelector.model_validate(selector)
     except ValueError as exc:
         hint = ""
         if "source_casillas" in selector:
@@ -545,7 +545,7 @@ def _validate_previous_filing_invariants(binding: DataBindingDefinition) -> None
         raise RegistryValidationError(
             f"binding {binding.id!r} uses unsupported previous-filing aggregation {op.value!r}",
         )
-    if not _is_direct_previous_filing_binding(binding):
+    if not is_direct_previous_filing_binding(binding):
         return
     selector = _previous_filing_selector(binding)
     source_ids = _previous_filing_source_ids(selector)
@@ -564,18 +564,18 @@ def validate_previous_filing_binding(binding: DataBindingDefinition) -> list[str
     """Validate a previous_filing binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector shape against
-    :class:`_PreviousModeloSelector` and lifts the previous-filing op/source
+    :class:`PreviousModeloSelector` and lifts the previous-filing op/source
     invariants for a
     :class:`~cadrumo.domain.calculations.registry.DataBindingDefinition` to build
     time, preserving the underlying pydantic field error.
     """
-    failures = selector_against_model(binding, _PreviousModeloSelector)
+    failures = selector_against_model(binding, PreviousModeloSelector)
     if failures:
         return failures
     return invariant_diagnostics(binding, "previous-filing", _validate_previous_filing_invariants)
 
 
-def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
+def is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     selector = _selector_as_dict(binding)
     if selector.get("source_casilla_ids"):
         return True
@@ -584,7 +584,7 @@ def _is_direct_previous_filing_binding(binding: DataBindingDefinition) -> bool:
     return any(key in selector for key in ("period", "source_periods", "source_period_offset_from_target"))
 
 
-def _previous_filing_source_ids(selector: _PreviousModeloSelector) -> tuple[CasillaId, ...]:
+def _previous_filing_source_ids(selector: PreviousModeloSelector) -> tuple[CasillaId, ...]:
     if selector.source_casilla_ids:
         return selector.source_casilla_ids
     if selector.source_casilla_id is not None:

@@ -55,7 +55,7 @@ from typing import Final
 
 from packaging.version import InvalidVersion, Version
 
-from dev.release.burned_versions import burn_reason, is_burned
+from .burned_versions import burn_reason, is_burned
 
 _UTF_8: Final[str] = "utf-8"
 _PROBE_TIMEOUT_S: Final[int] = 20

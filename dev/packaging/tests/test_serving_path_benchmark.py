@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.packaging.serving_path_benchmark import (
+from ..serving_path_benchmark import (
     _ENVIRONMENT_IDENTITY,
     ServingPathEvidence,
     assert_acceptance,

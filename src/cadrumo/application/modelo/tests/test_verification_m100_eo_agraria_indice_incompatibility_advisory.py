@@ -44,6 +44,7 @@ import pytest
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path
 from ....domain.calculations.registry import (
+    ModeloRevision,
     VerificationPredicateDefinition,
     load_modelo_path,
 )
@@ -126,7 +127,7 @@ _FORESTAL_OTHER_LETRA_CASILLAS = (
 
 
 @cache
-def _m100_2025_revision():
+def _m100_2025_revision() -> ModeloRevision:
     modelo = load_modelo_path(bundled_path("registry", "aeat", "modelos", "100"))
     return modelo.revisions["2025"]
 

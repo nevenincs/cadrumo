@@ -24,6 +24,7 @@ from click.testing import Result
 
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
@@ -37,6 +38,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+def _json_object(value: object) -> dict[str, object]:
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 @pytest.fixture(autouse=True)
@@ -63,14 +68,28 @@ def _import_one_transaction(tmp_path: Path) -> str:
     assert result.exit_code == 0, result.output
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return _json_result(listed)["rows"][0]["transaction_id"]
+    payload = _json_object(_json_result(listed))
+    rows = payload["rows"]
+    assert isinstance(rows, list) and rows
+    row = _json_object(rows[0])
+    transaction_id = row["transaction_id"]
+    assert isinstance(transaction_id, str)
+    return transaction_id
 
 
 def _row_by_id(transaction_id: str) -> dict[str, object]:
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    rows = _json_result(listed)["rows"]
-    return {r["transaction_id"]: r for r in rows}[transaction_id]
+    payload = _json_object(_json_result(listed))
+    rows = payload["rows"]
+    assert isinstance(rows, list)
+    by_id: dict[str, dict[str, object]] = {}
+    for raw_row in rows:
+        row = _json_object(raw_row)
+        row_id = row["transaction_id"]
+        assert isinstance(row_id, str)
+        by_id[row_id] = row
+    return by_id[transaction_id]
 
 
 def test_saturate_without_llm_is_refused(tmp_path: Path) -> None:

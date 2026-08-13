@@ -29,6 +29,7 @@ import re
 import tomllib
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -64,7 +65,7 @@ def _legal_entry(toml_relative: str, article_id: str) -> dict[str, str | list[st
     path = bundled_path("registry", "aeat", "legal") / toml_relative
     with path.open("rb") as handle:
         data = tomllib.load(handle)
-    return data["legal"][article_id]
+    return cast(dict[str, str | list[str]], data["legal"][article_id])
 
 
 # ---------------------------------------------------------------------------

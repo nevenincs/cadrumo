@@ -79,9 +79,14 @@ def _declared_previous_filing_binding_ids() -> frozenset[BindingId]:
     A hardcoded id list would keep passing after a registry rename while silently
     testing nothing, and would pin a count this gate must not depend on.
     """
-    return frozenset(
-        binding.id for binding in _m130_snapshot().revision.bindings if str(binding.source) == "previous_filing"
-    )
+    binding_ids: set[BindingId] = set()
+    for binding in _m130_snapshot().revision.bindings:
+        if str(binding.source) != "previous_filing":
+            continue
+        binding_id = binding.id
+        assert isinstance(binding_id, str)
+        binding_ids.add(binding_id)
+    return frozenset(binding_ids)
 
 
 def _resolve(secure_objects: SecureObjectRepository):

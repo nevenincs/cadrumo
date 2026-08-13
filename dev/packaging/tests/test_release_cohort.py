@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.release_cohort import build_release_cohort, deterministic_zip_tree
+from ..release_cohort import build_release_cohort, deterministic_zip_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

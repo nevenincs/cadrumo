@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
-from dev.packaging._smoke_common import (
+from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from .._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
@@ -24,9 +24,9 @@ from dev.packaging._smoke_common import (
     run_checked,
     tracked_source_data_paths,
 )
-from dev.packaging.python_cohort import load_python_cohort
-from dev.packaging.smoke_core import _assert_complete_wheel_cohort
-from dev.packaging.smoke_sdist_core import _assert_sdist_contains_expected_data
+from ..python_cohort import load_python_cohort
+from ..smoke_core import _assert_complete_wheel_cohort
+from ..smoke_sdist_core import _assert_sdist_contains_expected_data
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

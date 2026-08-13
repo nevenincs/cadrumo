@@ -7111,6 +7111,7 @@ errors:
       del bucket actiu. És possible que la recuperació no s'hagi configurat mai.
     fail_storage_persistence: S'ha produït un error de persistència en l'emmagatzematge
       segur.
+    fail_storage_profile_custody: No s'ha pogut completar la custòdia del perfil.
     fail_storage_repository: Una operació de repositori ha fallat.
     fail_storage_repository_setup: Error en inicialitzar el repositori d'emmagatzematge.
     fail_storage_secret_not_found: No s'ha trobat cap secret per a la clau sol·licitada.
@@ -7269,6 +7270,8 @@ errors:
       segur.
     integrity_storage_path_containment: Una ruta calculada se surt del directori arrel
       configurat.
+    integrity_storage_profile_custody_record: El registre de custòdia del perfil no
+      és vàlid o ha estat alterat.
     integrity_storage_retention_policy: Les metadades de retenció d'un registre infringeixen
       la política de la seva classificació.
     integrity_storage_secure_object_batch_size: La mida del lot d'iteració d'objectes
@@ -7714,6 +7717,10 @@ errors:
       activa. Executa `aeat config login NAME` i torna-ho a provar.
     refused_storage_passphrase_too_short: La frase de contrasenya és massa curta.
       Ha de tenir com a mínim 8 caràcters.
+    refused_storage_profile_custody: Aquesta operació de custòdia del perfil està
+      rebutjada.
+    refused_storage_profile_custody_password: Aquesta contrasenya no es pot representar
+      de manera segura per a la custòdia del perfil.
     refused_storage_reclaim: 'Es rebutja alliberar aquesta àrea d''emmagatzematge:
       el seu cicle de vida declarat conserva el contingut.'
     refused_storage_reclaim_unconfirmed: Alliberar una àrea d'emmagatzematge elimina

@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.verify_distribution_identity import (
+from ..verify_distribution_identity import (
     ModelFacingDescriptionCheck,
     _labeled_product_description,
     _model_facing_failure_lines,

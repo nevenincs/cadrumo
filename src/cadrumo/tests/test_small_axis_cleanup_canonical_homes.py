@@ -163,7 +163,8 @@ def test_financial_provider_init_subclass_rejects_missing_verification_source() 
 
             @override
             def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:  # pragma: no cover
-                return iter([])
+                empty_rows: tuple[ParsedLedgerRow, ...] = ()
+                return iter(empty_rows)
 
             @override
             def validate_source(self, path: Path) -> ProviderValidation:  # pragma: no cover
@@ -193,7 +194,8 @@ def test_financial_provider_init_subclass_rejects_no_corpus_without_provisional(
 
             @override
             def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:  # pragma: no cover
-                return iter([])
+                empty_rows: tuple[ParsedLedgerRow, ...] = ()
+                return iter(empty_rows)
 
             @override
             def validate_source(self, path: Path) -> ProviderValidation:  # pragma: no cover
@@ -220,7 +222,8 @@ def test_financial_provider_init_subclass_accepts_valid_provider() -> None:
 
         @override
         def ingest(self, path: Path) -> Iterator[ParsedLedgerRow]:  # pragma: no cover
-            return iter([])
+            empty_rows: tuple[ParsedLedgerRow, ...] = ()
+            return iter(empty_rows)
 
         @override
         def validate_source(self, path: Path) -> ProviderValidation:  # pragma: no cover

@@ -43,7 +43,7 @@ from click.testing import Result
 from ....application.ledger import FILER_POSTCODE_FACT_PATH
 from ....application.user_profile import set_active_fields
 from ....application.workflow import workflow_state_repository
-from ....core import IvaCategoryOutcome
+from ....core import STR_KEYED_MAPPING_ADAPTER, IvaCategoryOutcome
 from ....domain.iva import IvaCategory
 from ....domain.user_profile import UserProfileFact
 from ._ledger_ux_support import _invoke, _open_ledger_ux_session
@@ -171,9 +171,7 @@ def _confirmed(tmp_path: Path, document: str, *, name: str) -> dict[str, object]
     """Add one structured document as evidence and confirm it, returning the envelope."""
     confirmed = _confirm_raw(tmp_path, document, name=name)
     assert confirmed.exit_code == 0, confirmed.output
-    payload = json.loads(confirmed.output)
-    assert isinstance(payload, dict)
-    return payload
+    return STR_KEYED_MAPPING_ADAPTER.validate_json(confirmed.output)
 
 
 def _redacted(tax_id: str) -> str:
@@ -216,7 +214,7 @@ def _context(notice: dict[str, object]) -> dict[str, object]:
     """Return one notice's context, asserting the envelope actually carried one."""
     context = notice["context"]
     assert isinstance(context, dict), notice
-    return context
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(context)
 
 
 def _codes(envelope: dict[str, object]) -> set[str]:

@@ -230,10 +230,10 @@ def _role_descriptions() -> Mapping[str, str]:
     try:
         source = inspect.getsource(FieldRole)
     except (OSError, TypeError):  # source unavailable: tokens alone still make a valid prompt
-        return {}
+        return dict[str, str]()
     class_definition = ast.parse(textwrap.dedent(source)).body[0]
     if not isinstance(class_definition, ast.ClassDef):
-        return {}
+        return dict[str, str]()
     descriptions: dict[str, str] = {}
     pending_token: str | None = None
     for node in class_definition.body:

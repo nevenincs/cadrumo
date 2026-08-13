@@ -661,7 +661,7 @@ def _pre_activity_scoped_binding_ids(
 ) -> frozenset[BindingId]:
     """Binding ids whose every required previous-filing source period is pre-activity."""
     if activity_start_date is None:
-        return frozenset()
+        return frozenset[BindingId]()
     requirements_by_binding: dict[BindingId, list[RegistryFoldRequirement]] = {}
     for requirement in previous_filing_observation_requirements(
         snapshot.revision,

@@ -40,10 +40,9 @@ def profile_rows(name: str) -> dict[str, str]:
 
 def _filing_identity_defaults(name: str, options: tuple[str, ...]) -> tuple[str, ...]:
     option_set = set(options)
+    defaults: list[str] = []
     if "--entity-type" not in option_set:
-        defaults: list[str] = ["--entity-type", "natural_person"]
-    else:
-        defaults = []
+        defaults.extend(("--entity-type", "natural_person"))
     entity_type = _option_value(options, "--entity-type") or "natural_person"
     if entity_type == "legal_entity":
         if "--legal-name" not in option_set:

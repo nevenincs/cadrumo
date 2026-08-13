@@ -21,7 +21,7 @@ async def _opened_real_session(name: str) -> tuple[DefaultBrowserSession, int]:
         Settings(),
         Profile(name=name, locale="es-ES", timezone_id="Europe/Madrid"),
     )
-    driver_pid = session._playwright._impl_obj._connection._transport._proc.pid
+    driver_pid = int(session._playwright._impl_obj._connection._transport._proc.pid)
     context = await session.create_context()
     page = await context.new_page()
     await page.goto(f"data:text/html,<title>{name}</title>")

@@ -29,8 +29,9 @@ from cadrumo.domain.calculations.registry import (
     build_snapshot,
 )
 from cadrumo.domain.calculations.registry.tests._registry_schema_support import _committed_modelo
-from dev.registry._parity_tapes import ParityScenario
-from dev.registry._workbook_parity import (
+
+from .._parity_tapes import ParityScenario
+from .._workbook_parity import (
     SyntheticInputSet,
     SyntheticInputValue,
     WorkbookCellRef,

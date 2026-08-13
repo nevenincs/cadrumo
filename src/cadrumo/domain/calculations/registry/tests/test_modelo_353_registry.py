@@ -9,7 +9,7 @@ import pytest
 from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
-from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot, previous_filing_source_reference
 from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
@@ -145,7 +145,8 @@ def test_modelo_353_declares_322_group_settlement_treatment() -> None:
     m322_carry_ids = {
         binding.id
         for binding in revision.bindings
-        if binding.source == "previous_filing" and binding.selector.source_modelo == classification.source_modelo
+        if binding.source == "previous_filing"
+        and previous_filing_source_reference(binding).source_modelo == classification.source_modelo
     }
     assert m322_carry_ids == {
         "modelo-353-prev-322-cuota-devengada-total",

@@ -71,7 +71,12 @@ from ..filing_evidence import FilingEvidenceReference
 from ..iva import M303RegimenSimplificadoScopeDecision, RegimenSimplificadoFilingRows
 from ._errors import ModeloError, ModeloValidationError
 from ._ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
-from ._row_models import ModeloDetailRow
+from ._row_models import (
+    Modelo210AgrupacionRentaRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    ModeloDetailRow,
+)
 
 
 class CalculationRevisionState(StrEnum):
@@ -319,7 +324,11 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
         return dict(sorted(d.items()))
 
     def _row_identity_key(row: ModeloDetailRow) -> str:
-        return getattr(row, "source_id", None) or getattr(row, "nif", None) or getattr(row, "nif_comunitario", "")
+        if isinstance(row, Modelo210AgrupacionRentaRow):
+            return row.source_id
+        if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):
+            return row.nif_comunitario
+        return row.nif
 
     return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _row_identity_key(r)))]
 
@@ -970,7 +979,8 @@ class CalculationRevision(BaseModel):
     @classmethod
     def _normalise_row_binding_values(cls, value: object) -> Mapping[BindingId, Mapping[str, str]]:
         if value is None:
-            return {}
+            empty: dict[BindingId, Mapping[str, str]] = {}
+            return empty
         if not isinstance(value, Mapping):
             raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
         raw_mapping = TypeAdapter(dict[object, object]).validate_python(value)

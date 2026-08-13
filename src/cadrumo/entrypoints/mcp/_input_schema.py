@@ -331,7 +331,10 @@ def _secondary_flag(parameter: ClickParameter) -> str:
     is what lets a client turn a default-on flag OFF through the MCP surface.
     """
     secondary = tuple(getattr(parameter, "secondary_opts", ()) or ())
-    return next((opt for opt in secondary if opt.startswith("--")), "")
+    for option in secondary:
+        if isinstance(option, str) and option.startswith("--"):
+            return option
+    return ""
 
 
 def _json_safe_default(value: object) -> bool | int | float | str | list[Any] | None:
@@ -476,6 +479,17 @@ def _resolve_command(
                     attempted_cli_path=attempted_path,
                     resolved_cli_path=tuple(resolved),
                     reason=f"resolving {token!r}: command segment not found",
+                ),
+            )
+        if not isinstance(child, ClickCommand):
+            return (
+                None,
+                tuple(resolved),
+                VerbLeafResolutionFailure(
+                    subject_leaf_key=command_key,
+                    attempted_cli_path=attempted_path,
+                    resolved_cli_path=tuple(resolved),
+                    reason=f"resolving {token!r}: command segment is not a click command",
                 ),
             )
         resolved.append(str(child.name))

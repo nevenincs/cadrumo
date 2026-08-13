@@ -42,7 +42,8 @@ async def active_verified_session(
         operation=operation,
         target_url=target_url,
     )
-    return result.session, settings
+    session: AeatSession = result.session
+    return session, settings
 
 
 __all__ = ["active_verified_session"]

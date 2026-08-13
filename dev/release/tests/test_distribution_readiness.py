@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._hashing import sha256_path
-from dev.packaging.cohort_manifest import (
+from ...packaging._hashing import sha256_path
+from ...packaging.cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     BuildIdentity,
     SourceIdentity,
@@ -20,7 +20,7 @@ from dev.packaging.cohort_manifest import (
     load_release_cohort,
     write_manifest,
 )
-from dev.packaging.evidence import (
+from ...packaging.evidence import (
     AcquisitionIdentity,
     ClientIdentity,
     CommandTranscript,
@@ -34,7 +34,7 @@ from dev.packaging.evidence import (
     current_runtime_identity,
     write_distribution_evidence,
 )
-from dev.release.readiness import check_distribution_evidence_set
+from ..readiness import check_distribution_evidence_set
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

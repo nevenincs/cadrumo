@@ -412,7 +412,7 @@ def _normalise_path(path: tuple[str, ...]) -> str:
     Reuses the CLI-reference normaliser so the ``registry_key`` field
     matches the key the schema-conformance gates use.
     """
-    from dev.docs.cli_reference import _normalise_command_path
+    from ..cli_reference import _normalise_command_path
 
     return _normalise_command_path(path)
 

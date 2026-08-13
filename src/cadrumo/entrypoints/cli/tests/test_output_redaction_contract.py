@@ -7,6 +7,7 @@ import typer
 from typer.core import TyperGroup
 
 from ....application.operator_surface import RootLandingReport
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
 )
@@ -29,12 +30,14 @@ def _context(format_name: str) -> typer.Context:
 
 
 def _payload() -> dict[str, object]:
-    return RootLandingReport(
-        profile_selected=True,
-        active_profile=_PROFILE_ID,
-        command="aeat config profile create NAME",
-        message="Create a profile before starting tax work.",
-    ).model_dump(mode="json")
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(
+        RootLandingReport(
+            profile_selected=True,
+            active_profile=_PROFILE_ID,
+            command="aeat config profile create NAME",
+            message="Create a profile before starting tax work.",
+        ).model_dump(mode="json"),
+    )
 
 
 def _lines() -> tuple[str, ...]:

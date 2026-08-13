@@ -268,7 +268,7 @@ _M111_NO_RETENCIONES_LEGAL_REFS: tuple[LegalRefId, ...] = (
 def _zero_value_previous_filing_binding_ids(target: CalculationRevision | None) -> frozenset[str]:
     """Return whitelisted previous-filing binding ids explicitly supplied as zero."""
     if target is None:
-        return frozenset()
+        return frozenset[str]()
     binding_ids: set[str] = set()
     for binding_id, raw_value in target.binding_overrides.items():
         if not _M100_ZERO_VALUE_PREVIOUS_FILING_BINDING_RE.fullmatch(str(binding_id)):

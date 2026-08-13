@@ -2197,10 +2197,11 @@ def _fields_a_reconfirm_would_change(candidate: Invoice, stored: Invoice) -> tup
     """
     compared = candidate.model_dump(mode="json")
     against = stored.model_dump(mode="json")
+    field_names = tuple(str(name) for name in Invoice.model_fields)
     return tuple(
         sorted(
             name
-            for name in Invoice.model_fields
+            for name in field_names
             if name not in _INVOICE_FIELDS_A_CONFIRM_DOES_NOT_AUTHOR and compared.get(name) != against.get(name)
         ),
     )

@@ -20,13 +20,14 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry import ValidatedRegistryAuthority, bundled_authority
-from dev.docs.casilla_reference import CasillaReferenceResult, render_casilla_reference
-from dev.docs.terminology._casilla_anchor import casilla_page_anchor, casilla_reference_target
-from dev.docs.terminology._casilla_projection import CasillaProjectionStats, project_casilla_search_records
-from dev.docs.terminology._coverage import CasillaCoverageKind, compute_casilla_coverage_census
-from dev.docs.terminology._resolution import ChunkHit, GroundingSurface, ResolvedTarget, TargetResolver
-from dev.docs.terminology._search_record import CasillaSearchRecord
-from dev.docs.terminology._unified_record import to_search_record
+
+from ..casilla_reference import CasillaReferenceResult, render_casilla_reference
+from ..terminology._casilla_anchor import casilla_page_anchor, casilla_reference_target
+from ..terminology._casilla_projection import CasillaProjectionStats, project_casilla_search_records
+from ..terminology._coverage import CasillaCoverageKind, compute_casilla_coverage_census
+from ..terminology._resolution import ChunkHit, GroundingSurface, ResolvedTarget, TargetResolver
+from ..terminology._search_record import CasillaSearchRecord
+from ..terminology._unified_record import to_search_record
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

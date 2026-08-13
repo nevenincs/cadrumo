@@ -10,6 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core import (
+    STR_KEYED_MAPPING_ADAPTER,
     FilingProducerKey,
     Modelo,
     PaymentElection,
@@ -181,7 +182,7 @@ def _m303_filing_facts_payload(
     bienes_register: BienesInversionIvaRegister,
     regularisation_result: RegistroRegularizacionResult,
 ) -> dict[str, object]:
-    payload = _m303_filing_facts().model_dump()
+    payload = STR_KEYED_MAPPING_ADAPTER.validate_python(_m303_filing_facts().model_dump())
     payload["bienes_register"] = bienes_register.model_dump()
     payload["regularisation_result"] = regularisation_result.model_dump()
     return payload

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.python_cohort import load_python_cohort, source_snapshot_drift
+from ..python_cohort import load_python_cohort, source_snapshot_drift
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

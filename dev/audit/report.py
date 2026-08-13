@@ -71,13 +71,19 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev.audit.complexity import (
+from ..quality.import_hygiene_scan import (
+    PKG_ROOT,
+    discover_facades,
+    find_multi_sourced_symbols,
+    walk_module_imports,
+)
+from .complexity import (
     _BASELINE_PATH as _COMPLEXITY_BASELINE_PATH,
 )
-from dev.audit.complexity import (
+from .complexity import (
     Baseline as ComplexityBaseline,
 )
-from dev.audit.complexity import (
+from .complexity import (
     _classify_cc,
     _classify_cog,
     _classify_mi,
@@ -85,17 +91,11 @@ from dev.audit.complexity import (
     collect_cog,
     collect_mi,
 )
-from dev.audit.complexity import (
+from .complexity import (
     load_baseline as load_complexity_baseline,
 )
-from dev.audit.complexity_allowlist import load_allowlist as load_complexity_allowlist
-from dev.audit.duplication import DuplicationOutcome, run_duplication_scan
-from dev.quality.import_hygiene_scan import (
-    PKG_ROOT,
-    discover_facades,
-    find_multi_sourced_symbols,
-    walk_module_imports,
-)
+from .complexity_allowlist import load_allowlist as load_complexity_allowlist
+from .duplication import DuplicationOutcome, run_duplication_scan
 
 _UTF_8: Final[str] = "utf-8"
 _IMPORT_HYGIENE_BASELINE_PATH: Final[Path] = (

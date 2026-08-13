@@ -36,17 +36,17 @@ from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
 
-from dev.packaging._command import CommandResult, run_command
-from dev.packaging._distribution_limits import PYPI_FILE_CAP_BYTES
-from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging._proof_ledger import (
+from ._command import CommandResult, run_command
+from ._distribution_limits import PYPI_FILE_CAP_BYTES
+from ._distribution_names import normalise_distribution_name
+from ._proof_ledger import (
     ProofContractError,
     record_proof,
     recorded_proofs,
     reset_proof_ledger,
 )
-from dev.packaging.evidence import PackagingSmokeManifest
-from dev.packaging.python_cohort import digest_install_target
+from .evidence import PackagingSmokeManifest
+from .python_cohort import digest_install_target
 
 __all__ = [
     "TRACKED_DATA_ROOTS",

@@ -15,9 +15,9 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
-from dev.packaging._command import CommandResult
-from dev.packaging._hashing import sha256_path
-from dev.packaging.cohort_manifest import (
+from ._command import CommandResult
+from ._hashing import sha256_path
+from .cohort_manifest import (
     ArtifactRecord,
     LoadedReleaseCohort,
     SourceIdentity,

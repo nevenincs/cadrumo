@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.release.readiness import check_generated_surface_versions
+from ..readiness import check_generated_surface_versions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

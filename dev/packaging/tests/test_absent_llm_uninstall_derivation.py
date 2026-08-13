@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.smoke_absent_llm import (
+from ..smoke_absent_llm import (
     _EXTRA,
     _INFERENCE_SURFACES,
     _assert_the_driver_reaches_every_guarded_surface,

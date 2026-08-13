@@ -626,7 +626,7 @@ def declaration_line_indices(lines: Sequence[str], lineno: int) -> frozenset[int
     """
     index = lineno - 1
     if index < 0 or index >= len(lines):
-        return frozenset()
+        return frozenset[int]()
     covered = {index}
     scan = index - 1
     while scan >= 0:

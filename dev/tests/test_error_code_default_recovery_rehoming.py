@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.quality.error_code_default_recovery_rehoming import (
+from ..quality.error_code_default_recovery_rehoming import (
     DEFAULT_REHOMING_LEDGER_PATH,
     DispositionKind,
     FingerprintOwnership,
@@ -18,7 +18,7 @@ from dev.quality.error_code_default_recovery_rehoming import (
     load_rehoming_ledger,
     validate_rehoming_ledger,
 )
-from dev.quality.error_code_default_suggestion_preimage_ledger import (
+from ..quality.error_code_default_suggestion_preimage_ledger import (
     load_preimage_ledger,
     validate_preimage_ledger,
 )

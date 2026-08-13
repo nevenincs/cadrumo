@@ -27,7 +27,7 @@ from mcp.client.stdio import stdio_client
 from mcp.types import CallToolResult, TextResourceContents
 from pydantic import AnyUrl
 
-from dev.packaging.installed_tax_oracle import (
+from .installed_tax_oracle import (
     BINDINGS,
     CASILLAS,
     EXPECTED_NOTICE_CODES,

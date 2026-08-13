@@ -20,7 +20,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal, cast
 
-from dev.quality.error_code_default_suggestion_preimage_ledger import (
+from .error_code_default_suggestion_preimage_ledger import (
     SOURCE_COMMIT,
     ErrorCodeDefaultPreimageError,
     ErrorCodeDefaultPreimageRecord,

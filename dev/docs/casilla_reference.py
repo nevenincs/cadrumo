@@ -67,7 +67,13 @@ from .terminology._casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anc
 
 if TYPE_CHECKING:
     from cadrumo.core.external_constants import OutputLanguage
-    from cadrumo.domain.calculations.registry import CasillaConstraints, ValidatedRegistryAuthority
+    from cadrumo.domain.calculations.registry import (
+        CasillaConstraints,
+        CasillaDefinition,
+        FormulaDefinition,
+        ModeloDefinition,
+        ValidatedRegistryAuthority,
+    )
 
     from .legal_reference import LegalProvisionRecord
 
@@ -302,8 +308,14 @@ def display_locale_keys() -> tuple[str, ...]:
 
     from .legal_reference import load_legal_provisions
 
-    def _literal_values(model: type, field: str) -> tuple[str, ...]:
-        return tuple(str(value) for value in get_args(model.model_fields[field].annotation))
+    def _literal_values(
+        model: type[CasillaDefinition | ModeloDefinition | CasillaConstraints],
+        field: str,
+    ) -> tuple[str, ...]:
+        field_info = model.model_fields.get(field)
+        if field_info is None:
+            return ()
+        return tuple(str(value) for value in get_args(field_info.annotation))
 
     keys: list[str] = [f"{_DISPLAY_PREFIX}.{suffix}" for suffix in _UNENUMERATED_DISPLAY_KEYS]
     for member in InputKind:
@@ -534,7 +546,10 @@ def compile_schema(
     modelos = {modelo.id: modelo for modelo in resolved.modelos}
 
     facts: dict[tuple[str, str], CasillaFacts] = {}
-    revision_cache: dict[tuple[str, str], tuple[dict[str, object], dict[str, object], dict[str, str]]] = {}
+    revision_cache: dict[
+        tuple[str, str],
+        tuple[Mapping[str, CasillaDefinition], Mapping[str, FormulaDefinition], Mapping[str, str]],
+    ] = {}
 
     for record in records:
         modelo = modelos.get(record.modelo.value)
@@ -548,7 +563,7 @@ def compile_schema(
         cached = revision_cache.get(key)
         if cached is None:
             casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
-            formulas: dict[str, object] = {}
+            formulas: dict[str, FormulaDefinition] = {}
             for formula in revision.formulas:
                 formulas[str(formula.target_casilla_id)] = formula
             sources = {str(binding.id): str(binding.source) for binding in revision.bindings}
@@ -590,7 +605,7 @@ def compile_schema(
 def _compile_modelo_overviews(
     modelo_ids: set[str],
     language: OutputLanguage,
-    modelos: Mapping[str, object],
+    modelos: Mapping[str, ModeloDefinition],
 ) -> dict[str, ModeloOverview]:
     """Compile each modelo's identity, cadence, grounding and curated definition."""
     definitions = _handbook_definitions(language)
@@ -600,12 +615,12 @@ def _compile_modelo_overviews(
         if modelo is None:
             continue
         overviews[modelo_id] = ModeloOverview(
-            title=modelo.get_title(language.value),  # type: ignore[attr-defined]
-            official_name=modelo.get_official_name(language.value),  # type: ignore[attr-defined]
+            title=modelo.get_title(language.value),
+            official_name=modelo.get_official_name(language.value),
             definition=definitions.get(modelo_id),
-            tax_domain=str(modelo.tax_domain),  # type: ignore[attr-defined]
-            cadence=str(modelo.cadence),  # type: ignore[attr-defined]
-            legal_refs=tuple(str(ref) for ref in modelo.legal_refs),  # type: ignore[attr-defined]
+            tax_domain=str(modelo.tax_domain),
+            cadence=str(modelo.cadence),
+            legal_refs=tuple(str(ref) for ref in modelo.legal_refs),
         )
     return overviews
 
@@ -688,7 +703,7 @@ def _fill_explanation(
         lines.append(f'<span class="casilla-fill__detail">{html.escape(detail)}</span>')
 
     if facts is not None and facts.formula_inputs:
-        references = []
+        references: list[str] = []
         for casilla_id in facts.formula_inputs:
             number = numbers_by_id.get(casilla_id)
             anchor = casilla_page_anchor(record.modelo, casilla_id)

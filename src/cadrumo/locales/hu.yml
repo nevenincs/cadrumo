@@ -6976,6 +6976,7 @@ errors:
     fail_storage_bucket_recovery_unavailable: Az aktív bucket helyreállítási csomagja
       nem tölthető be. Előfordulhat, hogy a helyreállítás sohasem volt regisztrálva.
     fail_storage_persistence: Perzisztenciahiba történt a biztonságos tárolóban.
+    fail_storage_profile_custody: A profilőrzés nem fejezhető be.
     fail_storage_repository: Egy adattár-művelet meghiúsult.
     fail_storage_repository_setup: Egy repository alosztályból hiányzik egy szükséges
       osztályattribútum, így nem hozható létre példány.
@@ -7124,6 +7125,7 @@ errors:
     integrity_storage_nonce_collision: Nonce-ütközés észlelve a biztonságos tárolóban.
     integrity_storage_path_containment: Egy számított útvonal kiszökik a konfigurált
       gyökérkönyvtárból.
+    integrity_storage_profile_custody_record: A profilőrzési rekord hibás vagy módosították.
     integrity_storage_retention_policy: Egy rekord megőrzési metaadatai sértik az
       osztályozási szabályzatot.
     integrity_storage_secure_object_batch_size: 'A biztonságos objektum iterációs
@@ -7550,6 +7552,9 @@ errors:
       szükséges. Futtassa az `aeat config login NÉV` parancsot, majd próbálja újra.
     refused_storage_passphrase_too_short: A jelmondat túl rövid. Legalább 8 karakterből
       kell állnia.
+    refused_storage_profile_custody: Ez a profilőrzési művelet elutasítva.
+    refused_storage_profile_custody_password: Ez a jelszó nem ábrázolható biztonságosan
+      a profilőrzéshez.
     refused_storage_reclaim: 'A tárolóterület felszabadítása elutasítva: a deklarált
       életciklusa megőrzi a tartalmát.'
     refused_storage_reclaim_unconfirmed: Egy tárolóterület felszabadítása adatokat

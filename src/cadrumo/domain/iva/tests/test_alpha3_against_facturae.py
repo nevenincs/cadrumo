@@ -64,12 +64,29 @@ _PUBLISHED_CODE_COUNT = 235
 
 def _facturae_codes() -> frozenset[str]:
     payload = json.loads(Path(bundled_path(*_ENUMERATION)).read_text(encoding="utf-8"))
-    return frozenset(payload["codes"])
+    assert isinstance(payload, dict)
+    raw_codes = payload.get("codes")
+    assert isinstance(raw_codes, list)
+    codes: list[str] = []
+    for code in raw_codes:
+        assert isinstance(code, str)
+        codes.append(code)
+    return frozenset(codes)
 
 
 def _vocabulary() -> list[dict[str, object]]:
     payload = tomllib.loads(Path(bundled_path("registry", "aeat", "iva", "country_names.toml")).read_text("utf-8"))
-    return list(payload["country"])
+    raw_country = payload.get("country")
+    assert isinstance(raw_country, list)
+    rows: list[dict[str, object]] = []
+    for raw_row in raw_country:
+        assert isinstance(raw_row, dict)
+        row: dict[str, object] = {}
+        for key, value in raw_row.items():
+            assert isinstance(key, str)
+            row[key] = value
+        rows.append(row)
+    return rows
 
 
 def test_the_bundled_extract_carries_its_provenance() -> None:

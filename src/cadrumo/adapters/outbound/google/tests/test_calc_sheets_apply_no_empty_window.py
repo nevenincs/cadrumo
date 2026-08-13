@@ -49,13 +49,22 @@ def _m130_plan():
 
 def _payload(plan) -> list[dict[str, object]]:
     """The exact payload the adapter hands to ``values.batchUpdate``."""
-    return (
+    raw_payload = (
         _build_value_data(plan.value_cells)
         + _build_guide_value_data(plan)
         + _build_row_set_header_data(plan.row_sets)
         + _build_evidence_value_data(plan)
         + _build_formula_data(plan.formula_cells)
     )
+    payload: list[dict[str, object]] = []
+    for item in raw_payload:
+        assert isinstance(item, dict)
+        normalized: dict[str, object] = {}
+        for key, value in item.items():
+            assert isinstance(key, str)
+            normalized[key] = value
+        payload.append(normalized)
+    return payload
 
 
 def test_occupied_ranges_keep_only_sorted_managed_positive_grids() -> None:

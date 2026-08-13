@@ -50,7 +50,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Final
 
-from dev.packaging._command import run_command
+from ..packaging._command import run_command
 
 _GH_TIMEOUT_SECONDS: Final[float] = 60.0
 _DEFAULT_REPO_SLUG: Final[str] = "nevenincs/cadrumo"

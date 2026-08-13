@@ -24,7 +24,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.env_scope import scoped_env_var
-from dev.release import run_resolution as rr
+
+from .. import run_resolution as rr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -17,8 +17,8 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
-from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging._smoke_common import (
+from ._distribution_names import normalise_distribution_name
+from ._smoke_common import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
@@ -37,7 +37,6 @@ from dev.packaging._smoke_common import (
     wheel_metadata,
     write_smoke_manifest,
 )
-
 from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import (
     COHORT_STAMPED_WHEEL_DATA_PATHS,

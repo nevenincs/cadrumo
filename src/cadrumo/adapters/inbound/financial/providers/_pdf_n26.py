@@ -338,7 +338,10 @@ def _extract_statement_number(lines: Sequence[str]) -> str | None:
     for line in lines:
         match = _STATEMENT_NUMBER_RE.search(line)
         if match is not None:
-            return match.group("number")
+            number = match.group("number")
+            if isinstance(number, str):
+                return number
+            raise InvalidFinancialSourceError("statement number match did not contain text")
     return None
 
 

@@ -22,16 +22,17 @@ import shutil
 from pathlib import Path
 
 import pytest
-from dev.deploy.docs_static_site import (
+
+from ...docs.pagefind_index import build_search_index
+from ..docs_static_site import (
     _assert_served_index_matches_build,
     _localized_languages,
     _verify_published_search_index,
 )
-from dev.deploy.frontend_static_site import (
+from ..frontend_static_site import (
     _referenced_asset_names,
     _verify_published_landing_page,
 )
-from dev.docs.pagefind_index import build_search_index
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 

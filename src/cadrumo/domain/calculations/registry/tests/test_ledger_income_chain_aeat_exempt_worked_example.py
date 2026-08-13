@@ -105,6 +105,7 @@ from ._registry_schema_support import _committed_modelo
 from ._scenarios import (
     RegistryCalculationScenario,
     RegistryScenarioExpectedOutput,
+    RegistryScenarioRunReport,
     assert_registry_scenario_matches,
     run_registry_calculation_scenario,
 )
@@ -366,7 +367,7 @@ def _scenario(
     )
 
 
-def _run(scenario: RegistryCalculationScenario):
+def _run(scenario: RegistryCalculationScenario) -> RegistryScenarioRunReport:
     return run_registry_calculation_scenario(
         scenario,
         registry_root=bundled_path("registry", "aeat"),

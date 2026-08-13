@@ -50,10 +50,27 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     listed = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
     payload = json.loads(listed.output)
-    rows = payload.get("result", payload).get("rows", [])
+    assert isinstance(payload, dict), listed.output
+    result = payload.get("result", payload)
+    assert isinstance(result, dict), listed.output
+    raw_rows = result.get("rows", [])
+    assert isinstance(raw_rows, list), listed.output
+    rows: list[dict[str, object]] = []
+    for raw_row in raw_rows:
+        assert isinstance(raw_row, dict), listed.output
+        rows.append({str(key): value for key, value in raw_row.items()})
     assert len(rows) >= 2, listed.output
-    rows_sorted = sorted(rows, key=lambda r: (r.get("date", ""), r.get("transaction_id", "")))
-    return rows_sorted[0]["transaction_id"], rows_sorted[1]["transaction_id"]
+    rows_sorted = sorted(
+        rows,
+        key=lambda row: (
+            row.get("date") if isinstance(row.get("date"), str) else "",
+            row.get("transaction_id") if isinstance(row.get("transaction_id"), str) else "",
+        ),
+    )
+    first_id = rows_sorted[0].get("transaction_id")
+    second_id = rows_sorted[1].get("transaction_id")
+    assert isinstance(first_id, str) and isinstance(second_id, str), listed.output
+    return first_id, second_id
 
 
 def _list_transactions() -> list[dict[str, Any]]:

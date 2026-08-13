@@ -20,8 +20,9 @@ from typing import Final
 from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
-from dev.docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
-from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+
+from ..docs.i18n import DEFAULT_SITE_LANGUAGE, DEFAULT_SOURCE_LANGUAGE, SITE_ROOT_LANGUAGES
+from ..docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
 CANONICAL_SITE_DOMAIN = "cadrumo.neve.md"
@@ -290,7 +291,7 @@ def _require_search_index(site_root: Path, *, root_label: str) -> None:
     -- the same artefact scan the CI parity gate performs, in one place so the
     publish preflight and the gate cannot drift apart.
     """
-    from dev.docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS, injected_record_kinds_in_index
+    from ..docs.pagefind_index import DECIDED_INJECTED_RECORD_KINDS, injected_record_kinds_in_index
 
     index_chunks = [
         chunk for chunk in (site_root / "pagefind" / "index").rglob("*.pf_index") if chunk.stat().st_size > 0

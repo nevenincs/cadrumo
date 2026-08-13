@@ -15,8 +15,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.python_cohort import PythonCohort
-from dev.release.promote_python_cohort import assert_pypi_destinations_absent
+from ...packaging.python_cohort import PythonCohort
+from ..promote_python_cohort import assert_pypi_destinations_absent
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 

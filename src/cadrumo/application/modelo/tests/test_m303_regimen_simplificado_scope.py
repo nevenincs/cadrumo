@@ -117,10 +117,10 @@ def test_secure_profile_without_iva_composition_blocks_m303_scope_resolution(tmp
 
 
 def test_raw_unknown_composition_is_refused() -> None:
-    raw_composition: object = "unrecognised"
+    raw_composition = "unrecognised"
 
     with pytest.raises(ModeloProfileReadinessError) as raised_2:
-        m303_regimen_simplificado_scope_for_composition(raw_composition)  # type: ignore[arg-type]
+        m303_regimen_simplificado_scope_for_composition(raw_composition)
 
     failure_2 = raised_2.value.precondition_failure
     assert failure_2 is not None, "the refusal must carry its declared precondition failure"

@@ -777,7 +777,7 @@ class SheetExportMetadata(BaseModel):
 
     @field_serializer("period", mode="plain")
     def _serialize_period(self, value: Period) -> dict[str, object]:
-        return value.model_dump()
+        return {"filing_year": value.filing_year, "code": value.code}
 
 
 class SheetExportPlan(BaseModel):

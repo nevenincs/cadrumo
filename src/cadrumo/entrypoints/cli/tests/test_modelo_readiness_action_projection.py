@@ -36,8 +36,13 @@ def test_binding_readiness_locale_projection_resolves_every_key_in_every_catalog
         for locale in ("ca", "en", "es", "hu"):
             assert tr(key, locale=locale, default=sentinel) != sentinel
 
-    with pytest.raises(TypeError):
-        CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS[BindingSourceKind.PROFILE] = "forbidden"  # type: ignore[index]
+    with pytest.raises((AttributeError, TypeError)):
+        setter = object.__getattribute__(
+            CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS,
+            "__setitem__",
+        )
+        assert callable(setter)
+        setter(BindingSourceKind.PROFILE, "forbidden")
 
 
 @pytest.mark.parametrize(

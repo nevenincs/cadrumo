@@ -444,7 +444,7 @@ async def _snapshot_html(page: object) -> str:
 
     content = getattr(page, "content", None)
     wait_for_load_state = getattr(page, "wait_for_load_state", None)
-    if content is None:
+    if content is None or not callable(content):
         raise SedeNavigationError("page does not expose content(); cannot snapshot HTML")
     last_exc: BaseException | None = None
     for _ in range(8):
@@ -457,7 +457,10 @@ async def _snapshot_html(page: object) -> str:
                     wait_exc,
                 )
         try:
-            return await content()
+            html = await content()
+            if isinstance(html, str):
+                return html
+            raise SedeNavigationError("page content() returned a non-text payload; cannot snapshot HTML")
         except PlaywrightError as exc:
             last_exc = exc
             await _asyncio.sleep(0.5)

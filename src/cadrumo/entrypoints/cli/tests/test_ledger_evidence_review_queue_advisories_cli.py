@@ -186,7 +186,7 @@ def _listed(*args: str) -> dict[str, object]:
     assert result.exit_code == 0, result.output
     payload = json.loads(result.output)
     assert isinstance(payload, dict)
-    return payload
+    return {str(key): value for key, value in payload.items()}
 
 
 def _rows(envelope: dict[str, object]) -> dict[str, dict[str, object]]:

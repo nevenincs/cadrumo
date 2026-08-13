@@ -10,6 +10,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from click.testing import Result
 
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER
 from ._cli_surface_support import (
@@ -36,6 +37,12 @@ def _json_object(value: object) -> dict[str, object]:
     return {str(key): item for key, item in value.items()}
 
 
+def _exit_code(result: Result) -> int:
+    """Read the captured Click result's exit code at the test boundary."""
+
+    return result.exit_code
+
+
 def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: str) -> dict[str, object]:
     result = _invoke(
         [
@@ -57,7 +64,7 @@ def _create_manual_ledger_row(description: str, *, amount: str = "25.00", key: s
         ],
     )
     assert result.exit_code == 0, result.output
-    return _json(result)
+    return _json_object(_json(result))
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,7 +174,7 @@ def _ledger_lifecycle_attach(*, purchase_invoice_evidence_id: str) -> dict[str, 
         ],
     )
     assert attached.exit_code == 0, attached.output
-    return _json(attached)
+    return _json_object(_json(attached))
 
 
 def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) -> dict[str, object]:
@@ -187,7 +194,7 @@ def _ledger_lifecycle_lifecycle_transition(verb: str, *, reason: str, key: str) 
         ],
     )
     assert result.exit_code == 0, result.output
-    return _json(result)
+    return _json_object(_json(result))
 
 
 def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object]]:
@@ -202,7 +209,7 @@ def _ledger_lifecycle_remove() -> tuple[dict[str, object], int, dict[str, object
         ["--format", "json", "app", "ledger", "remove", str(remove_row["transaction_id"]), "--yes"],
     )
     assert confirmed.exit_code == 0, confirmed.output
-    return _json(dry), refused.exit_code, _json(confirmed)
+    return _json_object(_json(dry)), _exit_code(refused), _json_object(_json(confirmed))
 
 
 def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
@@ -223,7 +230,7 @@ def _ledger_lifecycle_export(tmp_path: Path) -> tuple[dict[str, object], Path]:
         ],
     )
     assert exported.exit_code == 0, exported.output
-    return _json(exported), export_path
+    return _json_object(_json(exported)), export_path
 
 
 def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]]:
@@ -233,7 +240,7 @@ def _ledger_lifecycle_reset() -> tuple[dict[str, object], int, dict[str, object]
     refused = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup"])
     confirmed = _invoke(["--format", "json", "app", "ledger", "reset", "--reason", "test cleanup", "--yes"])
     assert confirmed.exit_code == 0, confirmed.output
-    return _json(dry), refused.exit_code, _json(confirmed)
+    return _json_object(_json(dry)), _exit_code(refused), _json_object(_json(confirmed))
 
 
 def test_app_ledger_lifecycle_round_trip_exercises_mutating_surfaces(

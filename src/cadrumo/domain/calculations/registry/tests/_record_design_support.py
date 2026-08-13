@@ -27,7 +27,7 @@ from .._record_design import (
     extract_record_design_pdf,
     extract_record_design_pdf_bytes,
 )
-from .._schema import DataBindingDefinition
+from .._schema import DataBindingDefinition, ModeloDefinition, RegistryCatalogues
 
 __all__ = [
     "_MODELO_131_CURRENT",
@@ -61,7 +61,7 @@ _RECORD_DESIGN_ROOT = bundled_path("corpus", "aeat_official", "disenos_registro"
 
 
 @cache
-def _committed_registry_tree():
+def _committed_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     return load_registry_tree(bundled_path("registry", "aeat"))
 
 

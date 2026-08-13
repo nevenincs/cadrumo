@@ -34,7 +34,7 @@ settings initialization.
 from __future__ import annotations
 
 import io
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -178,10 +178,16 @@ def _is_owned_drive_match(entry: dict[str, Any], *, prefix: str, object_key_hmac
     name = str(entry.get("name", ""))
     if not (name.startswith(f"{prefix}--") and name.endswith(_FILE_EXTENSION)):
         return False
-    app_properties = entry.get("appProperties") or {}
+    app_properties = entry.get("appProperties")
+    if not isinstance(app_properties, Mapping):
+        return False
+    ownership = app_properties.get(_OWNERSHIP_KEY)
+    stored_hmac = app_properties.get("object_key_hmac")
     return (
-        app_properties.get(_OWNERSHIP_KEY) == _OWNERSHIP_VALUE
-        and app_properties.get("object_key_hmac") == object_key_hmac
+        isinstance(ownership, str)
+        and ownership == _OWNERSHIP_VALUE
+        and isinstance(stored_hmac, str)
+        and stored_hmac == object_key_hmac
     )
 
 

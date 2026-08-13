@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import pytest
 
-from dev.identity.identifier_noun_census import (
+from ..identity.identifier_noun_census import (
     NOUN_VOCABULARY,
     SUFFIX_HEURISTIC,
     NounCandidate,

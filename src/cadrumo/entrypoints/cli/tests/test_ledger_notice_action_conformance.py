@@ -106,6 +106,13 @@ def _message_expressions(tree: ast.Module, expression: ast.expr) -> Iterator[ast
         yield candidate
 
 
+def _caught_names(handler: ast.ExceptHandler) -> set[str]:
+    """Return names in an exception handler's optional type expression."""
+    if handler.type is None:
+        return set()
+    return {item.id for item in ast.walk(handler.type) if isinstance(item, ast.Name)}
+
+
 def _iter_locale_leaves(node: LocaleNode, prefix: str = "") -> Iterator[tuple[str, str]]:
     if isinstance(node, dict):
         for key, child in node.items():
@@ -239,11 +246,9 @@ def test_pull_folder_does_not_flatten_typed_storage_errors() -> None:
     """The shared boundary, not the ledger callback, projects storage refusals."""
     tree = ast.parse(inspect.getsource(_ledger_lifecycle_cli))
     caught_names = {
-        item.id
+        name
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler))
-        if handler.type is not None
-        for item in ast.walk(handler.type)
-        if isinstance(item, ast.Name)
+        for name in _caught_names(handler)
     }
     assert "OutboundStorageError" not in caught_names
 
@@ -281,9 +286,7 @@ def test_typed_ledger_errors_are_not_flattened_by_local_catches() -> None:
     for module in _LEDGER_NOTICE_MODULES:
         tree = ast.parse(inspect.getsource(module))
         for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
-            caught = {
-                name.id for name in ast.walk(handler.type) if handler.type is not None and isinstance(name, ast.Name)
-            }
+            caught = _caught_names(handler)
             if not caught.intersection(_TYPED_LEDGER_ERROR_NAMES):
                 continue
             for call in (node for node in ast.walk(handler) if isinstance(node, ast.Call)):
@@ -332,7 +335,7 @@ def test_ledger_import_does_not_aggregate_typed_refusals_into_prose() -> None:
     observed_names = {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
     assert observed_names.isdisjoint(forbidden_names)
     for handler in (node for node in ast.walk(tree) if isinstance(node, ast.ExceptHandler)):
-        caught = {node.id for node in ast.walk(handler.type) if handler.type is not None and isinstance(node, ast.Name)}
+        caught = _caught_names(handler)
         assert "CadrumoError" not in caught
 
 

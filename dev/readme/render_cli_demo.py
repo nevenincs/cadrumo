@@ -13,12 +13,13 @@ from functools import cache
 from hashlib import sha256
 from typing import Final
 
-from dev.readme.prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 from PIL import Image, ImageDraw, ImageFont
 
 from cadrumo.application.filing import build_runtime_schema_provider
 from cadrumo.core import Period
 from cadrumo.domain.calculations.registry import parse_export_payload
+
+from .prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 
 _UTF_8: Final[str] = "utf-8"
 

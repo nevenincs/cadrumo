@@ -139,10 +139,10 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             selector = self._clave_surface().verification_code_selector
             try:
                 await wait_for(selector, timeout=int(self._settings.cadrumo_browser_selector_probe_timeout_ms))
-                raw = await text_content(selector)
+                raw: object = await text_content(selector)
             except (PlaywrightTimeoutError, PlaywrightError):
                 raw = None
-            if raw is not None and raw.strip():
+            if isinstance(raw, str) and raw.strip():
                 return raw.strip()
 
         content = getattr(page, "content", None)

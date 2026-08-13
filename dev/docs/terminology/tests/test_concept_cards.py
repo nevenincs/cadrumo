@@ -21,13 +21,13 @@ import pytest
 
 from cadrumo.core import ConceptLifecycle
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.terminology._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 from ...terminology_handbook import (
     TermStatus,
     load_terminology_handbook,
     terminology_concepts_dir,
 )
+from .._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -37,7 +37,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage)
 @pytest.fixture(scope="module")
 def projection() -> tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats]:
     """Project the real bundled Handbook into cards once for the module."""
-    from dev.docs.terminology._concept_cards import project_concept_cards
+    from .._concept_cards import project_concept_cards
 
     return project_concept_cards()
 
@@ -209,7 +209,7 @@ def test_legal_link_resolution_reports_a_missing_ref() -> None:
     only the resolved one. If this test ever passes with both links present,
     the resolver is silently inventing targets.
     """
-    from dev.docs.terminology._concept_cards import project_concept_cards
+    from .._concept_cards import project_concept_cards
 
     handbook = load_terminology_handbook(terminology_concepts_dir())
 

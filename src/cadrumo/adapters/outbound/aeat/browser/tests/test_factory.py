@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 def _descendant_pids(pid: int) -> tuple[int, ...]:
     try:
         process = psutil.Process(pid)
-        return tuple(child.pid for child in process.children(recursive=True) if child.is_running())
+        return tuple(int(child.pid) for child in process.children(recursive=True) if child.is_running())
     except psutil.NoSuchProcess:
         return ()
 

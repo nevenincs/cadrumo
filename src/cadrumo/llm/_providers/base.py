@@ -134,7 +134,7 @@ class _ProviderAdapter(ABC):
         merely a different temperature.
         """
         del model
-        return frozenset()
+        return frozenset[str]()
 
     @abstractmethod
     async def complete(self, request: ProviderRequest) -> ProviderCompletion:

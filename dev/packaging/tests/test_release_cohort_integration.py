@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.cohort_manifest import REQUIRED_ARTIFACT_KINDS
-from dev.packaging.release_cohort import build_release_cohort
+from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
+from ..release_cohort import build_release_cohort
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

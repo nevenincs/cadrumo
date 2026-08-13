@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from babel.messages.pofile import read_po
 
-from dev.docs.i18n import TARGET_LANGUAGES, extract_pot, user_scope_source_pages
+from ..i18n import TARGET_LANGUAGES, extract_pot, user_scope_source_pages
 
 #: The 1800 s ceiling matches every sibling Sphinx-shelling docs gate. It is not
 #: a speed budget: the project-wide 300 s per-test ceiling exists to fail a

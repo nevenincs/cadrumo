@@ -309,10 +309,10 @@ def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket
     """
     candidates = _economic_activity_conditional_source_modelos(snapshot)
     if not candidates:
-        return frozenset()
+        return frozenset[str]()
     values = _profile_path_values_for_bucket(bucket_id)
     if values is None:
-        return frozenset()
+        return frozenset[str]()
 
     has_economic_activity = _contains_profile_token(
         values.get("taxpayer_type.irpf_income_categories"),
@@ -321,14 +321,14 @@ def _not_applicable_source_modelos_for_bucket(snapshot: RegistrySnapshot, bucket
     if has_economic_activity is False:
         return candidates
     if has_economic_activity is None:
-        return frozenset()
+        return frozenset[str]()
 
     estimation_regime = str(values.get("irpf.estimation_regime") or "").strip()
     if estimation_regime in _DIRECT_ESTIMATION_REGIMES:
         return candidates & frozenset({str(Modelo.M131)})
     if estimation_regime == "objetiva":
         return candidates & frozenset({str(Modelo.M130)})
-    return frozenset()
+    return frozenset[str]()
 
 
 def _parse_canonical_iso_date(raw: str | None) -> date | None:
@@ -395,7 +395,7 @@ def _first_year_modalidad_cuota_no_m202(bucket_id: str, *, filing_year: int) -> 
     return activity_start_date.year >= filing_year
 
 
-def _activity_start_date_for_bucket(bucket_id: str) -> date | None:
+def activity_start_date_for_bucket(bucket_id: str) -> date | None:
     """Operator-declared activity-start date for ``bucket_id``, or ``None``.
 
     Reads ``censo.activity_start_date`` off the WIZARD-FREE profile projection
@@ -558,7 +558,7 @@ def resolve_relations_from_local_store(
 
         active_bucket_id = resolve_active_bucket_id()
         if active_bucket_id is not None:
-            activity_start_date = _activity_start_date_for_bucket(active_bucket_id)
+            activity_start_date = activity_start_date_for_bucket(active_bucket_id)
     if m111_no_retenciones_periods is None:
         from ...core import resolve_active_bucket_id
 
@@ -1082,7 +1082,7 @@ class RelationPrefillSourceResolver:
         # are scoped out of the relation fold so their absence does not unresolve
         # the whole fold. Derived once from the bucket profile and shared by the
         # resolution and the diagnostic so both see the same scoped requirement set.
-        activity_start_date = _activity_start_date_for_bucket(str(context.bucket_id))
+        activity_start_date = activity_start_date_for_bucket(str(context.bucket_id))
         m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(str(context.bucket_id))
         not_applicable_source_modelos = _not_applicable_source_modelos_for_bucket(snapshot, str(context.bucket_id))
         try:
@@ -1215,7 +1215,7 @@ def relation_prefill_period_zero_default_binding_ids(
     (``aeat-calculation-aggregation``).
     """
     if modelo != Modelo.M202.value:
-        return frozenset()
+        return frozenset[BindingId]()
     relations_by_target = relations_by_target_binding(revision)
     zero_defaulted: set[BindingId] = set()
     for binding in revision.bindings:

@@ -91,7 +91,15 @@ def _dispatch_leaves(expression: object) -> list[object]:
 
 def _get_dispatch_table(dispatch_leaf: object) -> dict[str, str] | None:
     """Safely extract dispatch_table from a dispatch leaf node."""
-    return getattr(dispatch_leaf, "dispatch_table", None)
+    raw_table = getattr(dispatch_leaf, "dispatch_table", None)
+    if not isinstance(raw_table, dict):
+        return None
+    table: dict[str, str] = {}
+    for key, value in raw_table.items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            return None
+        table[key] = value
+    return table
 
 
 def _committed_modelo_100() -> ModeloDefinition:

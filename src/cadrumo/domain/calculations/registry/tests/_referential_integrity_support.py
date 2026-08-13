@@ -200,7 +200,6 @@ def _minimal_application_link(
         "calculation",
         "filing",
         "review",
-        "verification",
         "approval",
         "reconciliation",
         "export",

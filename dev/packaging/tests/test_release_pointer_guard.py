@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging.release_pointer_guard import (
+from ..release_pointer_guard import (
     BackwardBumpError,
     PointerFormat,
     assert_forward_bump,

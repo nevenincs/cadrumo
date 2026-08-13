@@ -50,7 +50,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import BindingSourceKind, CasillaId, Modelo, Period, validated_casilla_id
 from ....core.resources import resources
-from ....domain.calculations.registry import InputKind, selector_as_dict
+from ....domain.calculations.registry import DataBindingDefinition, InputKind, selector_as_dict
 from ....domain.deadlines import FiscalResidency, IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
@@ -104,6 +104,14 @@ _ACCOUNT_CLAVE = "C"
 _SECURITY_CLAVE = "V"
 
 _REDECLARATION_LOCALE_KEY = "application.modelo.findings.foreign_asset_redeclaration"
+
+
+def _source_casilla_id(binding: DataBindingDefinition) -> CasillaId:
+    """Validate the selector value before using it as a typed casilla key."""
+    return validated_casilla_id(
+        selector_as_dict(binding)["source_casilla_id"],
+        surface="test_modelo_720_redeclaration_e2e.source_casilla_id",
+    )
 
 
 @contextmanager
@@ -250,7 +258,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
         period=_PERIOD,
     )
     expected_binding_values_n1 = {
-        binding.id: prior_observation.casilla_values[selector_as_dict(binding)["source_casilla_id"]]
+        binding.id: prior_observation.casilla_values[_source_casilla_id(binding)]
         for binding in snapshot_n1.revision.bindings
         if binding.source is BindingSourceKind.PREVIOUS_FILING
     }
@@ -327,7 +335,7 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
     )
     projected_by_casilla = {item.casilla_id: item for item in projected.observations}
     expected_source_casillas = {
-        selector_as_dict(binding)["source_casilla_id"]
+        _source_casilla_id(binding)
         for binding in snapshot_n1.revision.bindings
         if binding.id in expected_binding_values_n1
     }

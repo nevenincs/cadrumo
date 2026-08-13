@@ -58,7 +58,7 @@ _RESULT_MODELS: tuple[type[BaseModel], ...] = (
 
 
 def _instant_fields(model: type[BaseModel]) -> tuple[str, ...]:
-    return tuple(name for name in model.model_fields if name in {"occurred_at", "created_at"})
+    return tuple(str(name) for name in model.model_fields if name in {"occurred_at", "created_at"})
 
 
 @pytest.mark.parametrize("model", _RESULT_MODELS, ids=[m.__name__ for m in _RESULT_MODELS])

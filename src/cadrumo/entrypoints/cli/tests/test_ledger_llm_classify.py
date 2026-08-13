@@ -56,7 +56,9 @@ def _import_one_transaction(tmp_path: Path) -> str:
     assert listed.exit_code == 0, listed.output
     rows = _json_result(listed)["rows"]
     assert rows, listed.output
-    return rows[0]["transaction_id"]
+    raw_id = rows[0].get("transaction_id")
+    assert isinstance(raw_id, str), listed.output
+    return raw_id
 
 
 def _row_by_id(transaction_id: str) -> dict[str, Any]:

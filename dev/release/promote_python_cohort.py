@@ -7,15 +7,15 @@ import json
 from pathlib import Path
 from typing import Any, Final, cast
 
-from dev.packaging.installed_tax_oracle import (
+from ..packaging.installed_tax_oracle import (
     EXPECTED_FORMULA,
     EXPECTED_LEGAL_REF,
     EXPECTED_SOURCE_REF,
     EXPECTED_VALUE,
     TARGET_CASILLA,
 )
-from dev.packaging.python_cohort import PythonCohort, load_python_cohort
-from dev.release.version_identity import VersionIdentityError, pypi_projects_owning
+from ..packaging.python_cohort import PythonCohort, load_python_cohort
+from .version_identity import VersionIdentityError, pypi_projects_owning
 
 _UTF_8: Final[str] = "utf-8"
 _PYPI_PROJECTS: Final[tuple[str, ...]] = (

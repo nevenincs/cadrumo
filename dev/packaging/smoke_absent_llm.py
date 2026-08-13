@@ -35,8 +35,8 @@ from typing import Final
 
 from packaging.requirements import Requirement
 
-from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging._smoke_common import (
+from ._distribution_names import normalise_distribution_name
+from ._smoke_common import (
     assert_cadrumo_version_output,
     assert_wheel_metadata_matches_pyproject,
     clean_product_env,
@@ -53,7 +53,6 @@ from dev.packaging._smoke_common import (
     wheel_metadata,
     write_smoke_manifest,
 )
-
 from .python_cohort import (
     PythonCohort,
     assert_installed_cohort,

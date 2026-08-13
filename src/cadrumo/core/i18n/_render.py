@@ -384,7 +384,7 @@ def extract_placeholders(value: str) -> frozenset[str]:
     Returns:
         The unique placeholder names used by either interpolation pass.
     """
-    names = {match.group("name") for match in _PLACEHOLDER_RE.finditer(value)}
+    names = {_match_group_text(match, "name") for match in _PLACEHOLDER_RE.finditer(value)}
     without_percent_tokens = _PLACEHOLDER_RE.sub(lambda match: " " * len(match.group(0)), value)
     names.update(_extract_format_placeholder_roots(without_percent_tokens))
     return frozenset(names)
@@ -403,6 +403,13 @@ def _extract_format_placeholder_roots(value: str) -> frozenset[str]:
     return frozenset(_recover_format_placeholder_roots(value))
 
 
+def _match_group_text(match: re.Match[str], name: str) -> str:
+    """Return a regex capture after enforcing the text-node invariant."""
+    value = match.group(name)
+    assert isinstance(value, str)
+    return value
+
+
 def _parse_format_placeholder_roots(value: str) -> set[str] | None:
     """Parse one valid format fragment, or return ``None`` when malformed."""
     try:
@@ -415,7 +422,7 @@ def _parse_format_placeholder_roots(value: str) -> set[str] | None:
         if field_name is not None:
             root = _FORMAT_FIELD_ROOT_RE.match(field_name)
             if root is not None:
-                names.add(root.group("name"))
+                names.add(_match_group_text(root, "name"))
         if format_spec:
             nested = _parse_format_placeholder_roots(format_spec)
             if nested is None:
@@ -608,7 +615,8 @@ def _lookup_translation(locale: str, translation_key: str, *, default: object | 
             exc_info=True,
         )
         _ensure_initialised()
-        rendered = i18n.t(translation_key, locale=locale)
+        fallback = i18n.t(translation_key, locale=locale)
+        rendered = fallback if isinstance(fallback, str) else None
     # A value equal to its own key is the scaffold placeholder for "declared
     # but not translated yet", so it is a miss just as an absent key is.
     if rendered is None or rendered == translation_key:
@@ -666,7 +674,7 @@ def _interpolate_with_status(
     """Interpolate a value and report whether the format pass completed."""
 
     def _replace(match: re.Match[str]) -> str:
-        name = match.group("name")
+        name = _match_group_text(match, "name")
         if name not in values:
             return match.group(0)
         return str(values[name])

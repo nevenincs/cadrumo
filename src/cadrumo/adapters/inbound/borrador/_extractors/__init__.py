@@ -33,7 +33,7 @@ from .modelo_100_summary_v2025 import Modelo100ObservedV2025Extractor as _Modelo
 # is unchanged in the covered parser evidence.
 # Separate entries allow callers to pass año_override=2021..2025 without
 # BorradorParseError while reusing the same implementation.
-_REGISTRY_BY_AÑO: dict[int, type] = {
+_REGISTRY_BY_AÑO: dict[int, type[_Modelo100ObservedV2025Extractor]] = {
     2021: _Modelo100ObservedV2025Extractor,
     2022: _Modelo100ObservedV2025Extractor,
     2023: _Modelo100ObservedV2025Extractor,

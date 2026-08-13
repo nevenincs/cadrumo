@@ -22,7 +22,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final, cast
 
-from dev.quality.cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
+from .cli_action_census import REPO_ROOT, SOURCE_ROOT, CandidateRecord, census
 
 __all__ = [
     "DEFAULT_DISPOSITIONS_PATH",

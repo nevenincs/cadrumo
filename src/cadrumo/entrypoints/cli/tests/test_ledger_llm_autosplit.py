@@ -17,6 +17,7 @@ from click.testing import Result
 from ....application.ledger import reject_llm_suggestion
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....core.config import override_settings
 from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
@@ -34,6 +35,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+def _json_object(value: object) -> dict[str, object]:
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(value)
 
 
 @pytest.fixture(autouse=True)
@@ -60,7 +65,11 @@ def _import_one_transaction(tmp_path: Path) -> str:
     assert result.exit_code == 0, result.output
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return _json_result(listed)["rows"][0]["transaction_id"]
+    rows = _json_object(_json_result(listed))["rows"]
+    assert isinstance(rows, list) and rows
+    transaction_id = _json_object(rows[0])["transaction_id"]
+    assert isinstance(transaction_id, str)
+    return transaction_id
 
 
 def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
@@ -75,7 +84,13 @@ def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
     assert imported.exit_code == 0, imported.output
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    transaction_ids = tuple(row["transaction_id"] for row in _json_result(listed)["rows"])
+    rows = _json_object(_json_result(listed))["rows"]
+    assert isinstance(rows, list)
+    transaction_ids: list[str] = []
+    for row in rows:
+        transaction_id = _json_object(row)["transaction_id"]
+        assert isinstance(transaction_id, str)
+        transaction_ids.append(transaction_id)
     assert len(transaction_ids) == 2
     return transaction_ids[0], transaction_ids[1]
 

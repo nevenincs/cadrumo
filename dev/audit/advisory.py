@@ -56,10 +56,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from dev.audit.checkout_drift import growth_against_ceiling, load_ceiling, measure
-from dev.audit.dead_code import DeadCodeOutcome, run_dead_code_scan
-from dev.audit.report import DimensionReport, Status, audit_complexity, audit_duplication
-from dev.audit.security import SecurityOutcome, run_security_scan
+from .checkout_drift import growth_against_ceiling, load_ceiling, measure
+from .dead_code import DeadCodeOutcome, run_dead_code_scan
+from .report import DimensionReport, Status, audit_complexity, audit_duplication
+from .security import SecurityOutcome, run_security_scan
 
 _UTF_8: Final[str] = "utf-8"
 _TEXT_CAP: Final[int] = 8

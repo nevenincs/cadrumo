@@ -22,7 +22,7 @@ def parse_m111_no_retenciones_periods(raw: str | None) -> frozenset[tuple[int, s
     treating an unclear declaration as no-obligation evidence.
     """
     if raw is None:
-        return frozenset()
+        return frozenset[tuple[int, str]]()
     periods: set[tuple[int, str]] = set()
     for token in re.split(r"[,;\s]+", raw.strip().upper()):
         if not token:
@@ -43,7 +43,7 @@ def parse_m111_no_retenciones_periods(raw: str | None) -> frozenset[tuple[int, s
 def m111_no_retenciones_periods_from_profile_values(values: Mapping[str, str] | None) -> frozenset[tuple[int, str]]:
     """Return attested M111 no-retenciones periods from a profile projection."""
     if values is None:
-        return frozenset()
+        return frozenset[tuple[int, str]]()
     return parse_m111_no_retenciones_periods(values.get(M111_NO_RETENCIONES_PROFILE_PATH))
 
 
@@ -58,7 +58,7 @@ def m111_no_retenciones_periods_for_bucket(bucket_id: str) -> frozenset[tuple[in
     try:
         aggregate = ProfileRepository().load(bucket_id)
     except ProfileNotFoundError:
-        return frozenset()
+        return frozenset[tuple[int, str]]()
     return m111_no_retenciones_periods_from_profile_values(record_to_path_values(aggregate.record))
 
 

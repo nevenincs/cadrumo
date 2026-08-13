@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.docs.tests._sphinx_build_harness import (
+from ._sphinx_build_harness import (
     copy_docs_source,
     gate_build_env,
     run_nitpicky_dummy_build,

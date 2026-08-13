@@ -35,6 +35,7 @@ from ...domain.modelos import (
     Modelo184MemberRow,
     ModeloVerificationFinding,
     VerificationReport,
+    WorkUnit,
 )
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._common import resolve_cli_precondition_action
@@ -277,7 +278,7 @@ def _visible_calculation_observations(rev):
     )
 
 
-def _effective_work_unit_state(unit) -> str:
+def _effective_work_unit_state(unit: WorkUnit) -> str:
     state = unit.state.value
     if state == "descartado":
         return state

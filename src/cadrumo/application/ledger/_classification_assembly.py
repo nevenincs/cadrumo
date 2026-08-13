@@ -547,8 +547,10 @@ def _facts_consumed(
             try:
                 consumed |= probe(status, kind)
             except Exception:  # reason: an unclassifiable probe establishes no branch's needs.
-                return frozenset(PartyFact)
-    return frozenset(consumed)
+                all_party_facts: frozenset[PartyFact] = frozenset(member for member in PartyFact)
+                return all_party_facts
+    result: frozenset[PartyFact] = frozenset(consumed)
+    return result
 
 
 class DeclaredFact[T](BaseModel):

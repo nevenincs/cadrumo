@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from dev.audit.security import (
+from ..security import (
     _PYTHON_LEGACY_COMPATIBILITY_RULE_IDS,
     SecurityOutcome,
     SecurityResult,

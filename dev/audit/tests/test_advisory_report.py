@@ -18,7 +18,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.advisory import (
+from ..advisory import (
     AdvisoryDimension,
     _overall,
     _total_findings,
@@ -26,7 +26,7 @@ from dev.audit.advisory import (
     render_text,
     to_json,
 )
-from dev.audit.report import DimensionReport, Status
+from ..report import DimensionReport, Status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

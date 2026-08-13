@@ -67,9 +67,11 @@ def test_a_colliding_version_is_refused_rather_than_folded_in() -> None:
     # Both versions travel as facts, which is what lets a caller see which
     # revision it would have overwritten without parsing a sentence.
     error = raised.value
-    assert error.context["recorded_payload_version"] == 1
-    assert error.context["offered_payload_version"] == 2
-    assert error.context["payload_versions_agree"] is False
+    context = error.context
+    assert context is not None
+    assert context["recorded_payload_version"] == 1
+    assert context["offered_payload_version"] == 2
+    assert context["payload_versions_agree"] is False
     assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
 
 

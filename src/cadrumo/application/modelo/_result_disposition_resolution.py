@@ -271,12 +271,15 @@ def _result_disposition_values_for_revision(
     )
     result_ids = result_disposition_casilla_ids(str(work_unit.modelo))
     if result_ids is None:
-        return {}
-    return {
-        casilla_id: revision.casilla_values[casilla_id]
-        for casilla_id in result_ids
-        if casilla_id in revision.casilla_values
-    }
+        empty_result: dict[CasillaId, Decimal] = {}
+        return empty_result
+    result_values: dict[CasillaId, Decimal] = {}
+    for casilla_id in result_ids:
+        if casilla_id not in revision.casilla_values:
+            continue
+        value: Decimal = revision.casilla_values[casilla_id]
+        result_values[casilla_id] = value
+    return result_values
 
 
 def _reject_non_revision_casilla_values(

@@ -24,6 +24,7 @@ from .. import (
     ModeloRevision,
     RegistryCatalogues,
     RegistryLoadError,
+    RegistrySnapshot,
     RegistryValidationError,
     RegistryValidator,
     SupportRemovalDecisionDefinition,
@@ -74,7 +75,7 @@ def _committed_modelo(modelo_id: str) -> tuple[ModeloDefinition, RegistryCatalog
 
 
 @cache
-def _committed_snapshot(modelo_id: str, filing_year: int, period: str):
+def _committed_snapshot(modelo_id: str, filing_year: int, period: str) -> RegistrySnapshot:
     if modelo_id == "303":
         # M303 snapshots include the compiled annual-Orden authority.  The
         # production access point is the only source of that cross-cutting

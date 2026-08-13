@@ -463,7 +463,7 @@ run([sys.executable, "-m", "playwright", "install", "--with-deps", "chromium"], 
 
 from cadrumo.adapters.outbound.aeat.browser import default_browser_session_factory
 from cadrumo.core.config import load_settings
-from dev.packaging._proof_ledger import record_proof
+from ._proof_ledger import record_proof
 
 
 class Handler(BaseHTTPRequestHandler):

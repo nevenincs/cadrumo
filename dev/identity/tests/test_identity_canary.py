@@ -42,8 +42,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.sanitizer import ResidualKind
-
+from ...sanitizer import ResidualKind
 from .._tree_scan import (
     BLOCKING_KINDS,
     BLOCKING_TRACKING,

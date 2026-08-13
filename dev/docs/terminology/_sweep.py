@@ -51,7 +51,7 @@ from ._unified_record import SearchRecord
 from ._wrangle import STRONG_SIGNAL_SCORE_FLOOR, WrangledResult, read_clusters, wrangle
 
 if TYPE_CHECKING:
-    from dev.docs.pagefind_inject import SearchRecordProjection
+    from ..pagefind_inject import SearchRecordProjection
 
 # Dev tooling runs from a source checkout by definition, so it owns its own
 # repo-root anchor. Production code has no repository concept and must never
@@ -435,7 +435,7 @@ def _reindex_before_sweep(repo_root: Path, *, port: int) -> str:
     """
     import subprocess
 
-    from dev.docs.preprocess._reindex import ReindexError, run_incremental_reindex
+    from ..preprocess._reindex import ReindexError, run_incremental_reindex
 
     try:
         stdout = run_incremental_reindex(repo_root, port=port, timeout_s=120.0)
@@ -515,7 +515,7 @@ def run_sweep(
     # otherwise TargetResolver would independently repeat the four
     # language-pinned CLI subprocess walks before this function materialised
     # the same records for target filtering.
-    from dev.docs.pagefind_inject import materialise_search_records
+    from ..pagefind_inject import materialise_search_records
 
     projection = search_record_projection if search_record_projection is not None else materialise_search_records(root)
     target_resolver = resolver if resolver is not None else TargetResolver(search_record_projection=projection)

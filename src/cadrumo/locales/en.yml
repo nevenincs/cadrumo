@@ -6653,6 +6653,7 @@ errors:
     fail_storage_bucket_recovery_unavailable: The recovery wrap for the active bucket
       could not be loaded. Recovery may never have been enrolled.
     fail_storage_persistence: A persistence error occurred in the secure store.
+    fail_storage_profile_custody: Profile custody could not be completed.
     fail_storage_repository: A repository operation failed.
     fail_storage_repository_setup: A repository subclass is missing a required class
       attribute and cannot be instantiated.
@@ -6795,6 +6796,8 @@ errors:
       store.
     integrity_storage_path_containment: A computed path escapes the configured root
       directory.
+    integrity_storage_profile_custody_record: The profile custody record is malformed
+      or has been altered.
     integrity_storage_retention_policy: A record's retention metadata violates its
       classification policy.
     integrity_storage_secure_object_batch_size: Secure-object iteration batch size
@@ -7214,6 +7217,9 @@ errors:
       Run `aeat config login NAME` and try again.
     refused_storage_passphrase_too_short: The passphrase is too short. It must be
       at least 8 characters long.
+    refused_storage_profile_custody: This profile custody operation is refused.
+    refused_storage_profile_custody_password: This password cannot be represented
+      safely for profile custody.
     refused_storage_reclaim: 'Reclaiming this storage area is refused: its declared
       lifecycle keeps its contents.'
     refused_storage_reclaim_unconfirmed: Reclaiming a storage area deletes data and

@@ -37,7 +37,15 @@ def _invoke(args: Sequence[str]) -> Result:
 
 
 def _rules() -> list[dict[str, object]]:
-    return json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))["rules"]
+    loaded = json.loads((_CORPUS / "ground-truth.manifest.json").read_text(encoding="utf-8"))
+    assert isinstance(loaded, dict)
+    raw_rules = loaded.get("rules")
+    assert isinstance(raw_rules, list)
+    rules: list[dict[str, object]] = []
+    for raw_rule in raw_rules:
+        assert isinstance(raw_rule, dict)
+        rules.append({str(key): value for key, value in raw_rule.items()})
+    return rules
 
 
 def _match(description: str, rules: list[dict[str, object]]) -> dict[str, object] | None:

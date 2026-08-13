@@ -14,13 +14,13 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._proof_ledger import (
+from .._proof_ledger import (
     ProofContractError,
     record_proof,
     recorded_proofs,
     reset_proof_ledger,
 )
-from dev.packaging._smoke_common import write_smoke_manifest
+from .._smoke_common import write_smoke_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -23,9 +23,11 @@ _SOURCE_ROOT = _REPO_ROOT / "src"
 for _import_root in (str(_REPO_ROOT), str(_SOURCE_ROOT)):
     if _import_root not in sys.path:
         sys.path.insert(0, _import_root)
+if not __package__:
+    __package__ = "dev.packaging"
 
-from dev.packaging._hashing import sha256_path  # noqa: E402
-from dev.packaging.cohort_manifest import (  # noqa: E402
+from ._hashing import sha256_path  # noqa: E402
+from .cohort_manifest import (  # noqa: E402
     ArtifactKind,
     BuildIdentity,
     LoadedReleaseCohort,
@@ -34,7 +36,7 @@ from dev.packaging.cohort_manifest import (  # noqa: E402
     load_release_cohort,
     write_manifest,
 )
-from dev.packaging.python_cohort import (  # noqa: E402
+from .python_cohort import (  # noqa: E402
     PythonCohort,
     build_python_cohort,
     source_snapshot_drift,
@@ -119,7 +121,7 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     if destination.exists():
         raise FileExistsError(destination)
     shutil.copytree(cohort.directory, destination)
-    from dev.packaging.python_cohort import load_python_cohort
+    from .python_cohort import load_python_cohort
 
     return load_python_cohort(destination)
 

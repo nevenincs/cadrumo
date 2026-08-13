@@ -364,7 +364,9 @@ def _m145_communication_record_ambiguous_prefix(
     )
 
 
-def _m145_communication_record_repository(bucket_id: BucketId):
+def _m145_communication_record_repository(
+    bucket_id: BucketId,
+) -> SecureSnapshotRepository[M145CommunicationRecord]:
     # The repository class is adapter-side and imports nothing from
     # application, so it needs no deferral. The error class still does: it is
     # owned by application.live, which depends transitively on this package.

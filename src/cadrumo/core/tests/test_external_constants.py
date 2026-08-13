@@ -49,7 +49,12 @@ def _registry_toml_payload() -> dict[str, object]:
     """Return the bundled ``external_constants.toml`` parsed to a mapping."""
 
     toml_path = Path(__file__).parents[1] / "external_constants.toml"
-    return tomllib.loads(toml_path.read_text(encoding="utf-8"))
+    loaded = tomllib.loads(toml_path.read_text(encoding="utf-8"))
+    payload: dict[str, object] = {}
+    for key, value in loaded.items():
+        assert isinstance(key, str), "TOML table keys must be strings"
+        payload[key] = value
+    return payload
 
 
 def _aeat_section(payload: dict[str, object]) -> dict[str, object]:

@@ -274,9 +274,13 @@ def overview_status(
         def _draft_matches(draft_period: object) -> bool:
             # Drafts persist typed periods; compare their separate filing-year
             # and registry-token fields to the operator's ``--year``/``--period`` pair.
+            filing_year = getattr(draft_period, "filing_year", None)
+            registry_token = getattr(draft_period, "registry_token", None)
             return (
-                getattr(draft_period, "filing_year", None) == wanted[0]
-                and getattr(draft_period, "registry_token", None) == wanted[1]
+                isinstance(filing_year, int)
+                and filing_year == wanted[0]
+                and isinstance(registry_token, str)
+                and registry_token == wanted[1]
             )
 
         per_modelo_drafts = [d for d in drafts if _draft_matches(d.period)]

@@ -18,8 +18,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.advisory import audit_checkout_drift, audit_dead_code
-from dev.audit.report import Status
+from ..advisory import audit_checkout_drift, audit_dead_code
+from ..report import Status
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 

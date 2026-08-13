@@ -56,6 +56,7 @@ def test_snapshot_normalises_a_case_variant_period_to_the_declared_token() -> No
     snapshot = _committed_snapshot("100", 2025, "0a")
 
     assert snapshot.period == "0A"
+    assert snapshot.filing_period is not None
     assert snapshot.filing_period.code == snapshot.period
     assert snapshot.revision.id == _committed_snapshot("100", 2025, "0A").revision.id
 

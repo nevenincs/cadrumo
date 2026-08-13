@@ -80,7 +80,7 @@ def is_credential_shaped(value: str) -> bool:
 
 def credential_shaped_input_values(html: str) -> tuple[str, ...]:
     """Return every ``<input>`` value in ``html`` that is credential-shaped."""
-    return tuple(value for value in _INPUT_VALUE.findall(html) if is_credential_shaped(value))
+    return tuple(value for value in (str(item) for item in _INPUT_VALUE.findall(html)) if is_credential_shaped(value))
 
 
 def scan_fixture_root(root: Path) -> tuple[str, ...]:

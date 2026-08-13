@@ -18,6 +18,7 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....core import (
+    STR_KEYED_MAPPING_ADAPTER,
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
@@ -49,7 +50,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 def _prorrata_list() -> dict[str, object]:
     result = _invoke(["--format", "json", "app", "ledger", "prorrata", "list"])
     assert result.exit_code == 0, result.output
-    return _json(result)
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(_json(result))
 
 
 def _prorrata_entries() -> list[dict[str, object]]:

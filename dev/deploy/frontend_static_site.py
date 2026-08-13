@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Final
 
-from dev.deploy.docs_static_site import (
+from .docs_static_site import (
     _CI_MARKERS,
     CANONICAL_DOCS_BASE_URL,
     CANONICAL_SITE_DOMAIN,

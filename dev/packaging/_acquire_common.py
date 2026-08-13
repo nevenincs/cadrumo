@@ -28,14 +28,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
 
-from dev.packaging._hashing import sha256_path
-from dev.packaging.cohort_manifest import LoadedReleaseCohort
-from dev.packaging.evidence import CommandTranscript
-from dev.packaging.python_cohort import PythonCohort
+from ._hashing import sha256_path
+from .cohort_manifest import LoadedReleaseCohort
+from .evidence import CommandTranscript
+from .python_cohort import PythonCohort
 
 if TYPE_CHECKING:
-    from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence
-    from dev.packaging.installed_tax_oracle import InstalledTaxEvidence
+    from .installed_mcp_oracle import InstalledMcpEvidence
+    from .installed_tax_oracle import InstalledTaxEvidence
 
 _UTF_8: Final[str] = "utf-8"
 
@@ -490,8 +490,8 @@ def run_installed_behavior_oracles(
     Raises:
         AcquisitionError: If either oracle fails to reproduce the target value.
     """
-    from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle
-    from dev.packaging.installed_tax_oracle import run_installed_tax_oracle
+    from .installed_mcp_oracle import run_installed_mcp_oracle
+    from .installed_tax_oracle import run_installed_tax_oracle
 
     tax_evidence = run_installed_tax_oracle(
         cli,

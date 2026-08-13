@@ -188,7 +188,10 @@ def _require_match(pattern: re.Pattern[str], text: str, field: str) -> str:
     match = pattern.search(text)
     if match is None:
         raise BorradorParseError(f"could not locate required field: {field}")
-    return match.group(1).strip()
+    captured = match.group(1)
+    if not isinstance(captured, str):
+        raise BorradorParseError(f"required field {field} did not contain text")
+    return captured.strip()
 
 
 __all__ = ["Modelo100ObservedV2025Extractor"]

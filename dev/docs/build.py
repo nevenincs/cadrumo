@@ -19,16 +19,19 @@ _UTF_8: Final[str] = "utf-8"
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
     sys.path.insert(0, str(_ROOT_FOR_DIRECT_INVOCATION))
+if not __package__:
+    __package__ = "dev.docs"
 
 from cadrumo.core.external_constants import OutputLanguage
-from dev.docs.apidocs import ApiStubManager
-from dev.docs.cli_reference import generate_cli_reference
-from dev.docs.download_matrix import descriptor_path as _download_descriptor_path
-from dev.docs.download_matrix import inject_download_matrix
+
+from .apidocs import ApiStubManager
+from .cli_reference import generate_cli_reference
+from .download_matrix import descriptor_path as _download_descriptor_path
+from .download_matrix import inject_download_matrix
 
 if TYPE_CHECKING:
-    from dev.docs.pagefind_index import InjectCallback
-    from dev.docs.pagefind_inject import InjectionStats
+    from .pagefind_index import InjectCallback
+    from .pagefind_inject import InjectionStats
 
 DOC_SUFFIXES = {".md", ".rst"}
 PY_SUFFIX = ".py"
@@ -575,7 +578,7 @@ def resolve_record_injector(
     Returns:
         The injection callback, or ``None`` under the ``pages`` contract.
     """
-    from dev.docs.pagefind_inject import build_record_injector
+    from .pagefind_inject import build_record_injector
 
     if pagefind_index_mode(env) == "pages":
         return None
@@ -803,7 +806,7 @@ def compile_search_index(
             a small real injector without paying the full materialisation cost.
     """
     ensure_isolated_storage_root()
-    from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
+    from .pagefind_index import PagefindUnavailableError, build_search_index
 
     captured: list[InjectionStats] = []
     if injector is not None:

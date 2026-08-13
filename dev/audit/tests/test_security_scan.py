@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from dev.audit.security import SecurityOutcome, run_security_scan
+from ..security import SecurityOutcome, run_security_scan
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 

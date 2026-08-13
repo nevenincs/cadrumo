@@ -44,7 +44,7 @@ from typing import TypeGuard
 
 from pydantic import Field
 
-from ....core import CasillaId
+from ....core import STR_KEYED_MAPPING_ADAPTER, CasillaId
 from ....core.aggregation import BindingSourceKind
 from ._bindings import casillas_by_binding
 from ._ids import BindingId
@@ -159,7 +159,7 @@ def _iva_selector_axes(binding: DataBindingDefinition) -> Mapping[str, object]:
     otherwise split one partition into two groups, silencing the gate for
     exactly the return it exists to catch.
     """
-    return iva_ledger_selector(binding).model_dump()
+    return STR_KEYED_MAPPING_ADAPTER.validate_python(iva_ledger_selector(binding).model_dump())
 
 
 def _partition_for_rate_box_group(

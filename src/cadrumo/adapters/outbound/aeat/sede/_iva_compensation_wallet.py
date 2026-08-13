@@ -13,6 +13,7 @@ and are re-imported here so the public read surface is unchanged.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
@@ -692,15 +693,15 @@ async def _submit_wallet_execute_gate_if_present(
 
 async def _wait_for_wallet_execute_initial_shape(
     *,
-    content,
+    content: Callable[[], Awaitable[object]],
     expected_path: str,
     timeout_ms: int,
 ) -> tuple[str, str]:
     deadline = now().timestamp() + timeout_ms / 1000
-    last_html = await content()
+    last_html = await _read_wallet_html(content)
     last_status = _wallet_execute_gate_status(last_html, expected_path=expected_path)
     while now().timestamp() < deadline:
-        html = await content()
+        html = await _read_wallet_html(content)
         status = _wallet_execute_gate_status(html, expected_path=expected_path)
         last_html = html
         last_status = status
@@ -719,14 +720,14 @@ async def _wait_for_wallet_execute_initial_shape(
 async def _wait_for_wallet_execute_terminal_shape(
     page: Page,
     *,
-    content,
+    content: Callable[[], Awaitable[object]],
     expected_path: str,
     timeout_ms: int,
 ) -> str:
     deadline = now().timestamp() + timeout_ms / 1000
-    last_html = await content()
+    last_html = await _read_wallet_html(content)
     while now().timestamp() < deadline:
-        html = await content()
+        html = await _read_wallet_html(content)
         last_html = html
         if _has_wallet_table(html) or _looks_like_executed_empty_wallet_page(parse_html(html)):
             return html
@@ -734,6 +735,17 @@ async def _wait_for_wallet_execute_terminal_shape(
             return html
         await asyncio.sleep(0.5)
     return last_html
+
+
+async def _read_wallet_html(content: Callable[[], Awaitable[object]]) -> str:
+    """Read a page snapshot and refuse a browser backend's non-text payload."""
+    html = await content()
+    if not isinstance(html, str):
+        raise SedeNavigationError(
+            "Playwright page content() returned a non-text payload; cannot inspect AEAT wallet",
+            failure_mode=SedeFailureMode.BROWSER_BACKEND_FAILED,
+        )
+    return html
 
 
 async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:

@@ -719,21 +719,35 @@ def _relation_input_guidance_lines(rows) -> tuple[str, ...]:
 def _profile_resolved_binding_ids(report, *, as_of: date | None) -> frozenset[str]:
     filing_year = getattr(report, "filing_year", None)
     if filing_year is None:
-        return frozenset()
+        return frozenset[str]()
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return frozenset()
+        return frozenset[str]()
     try:
-        return profile_resolvable_binding_ids(
-            modelo=str(report.code),
-            bucket_id=bucket_id,
-            filing_year=int(filing_year),
-            period=getattr(report, "filing_period", None),
-            as_of=as_of,
-            revision_id=str(report.revision),
+        return _text_frozenset(
+            profile_resolvable_binding_ids(
+                modelo=str(report.code),
+                bucket_id=bucket_id,
+                filing_year=int(filing_year),
+                period=getattr(report, "filing_period", None),
+                as_of=as_of,
+                revision_id=str(report.revision),
+            ),
         )
     except (RegistrySnapshotError, RegistryValidationError, ProfileNotFoundError):
-        return frozenset()
+        return frozenset[str]()
+
+
+def _text_frozenset(value: object) -> frozenset[str]:
+    """Validate the application binding-id collection at the CLI boundary."""
+    if not isinstance(value, (set, frozenset, tuple, list)):
+        raise TypeError("binding-id projection must be a collection")
+    values: set[str] = set()
+    for item in value:
+        if not isinstance(item, str):
+            raise TypeError("binding-id projection must contain text")
+        values.add(item)
+    return frozenset(values)
 
 
 def _bindings_report_for_target(

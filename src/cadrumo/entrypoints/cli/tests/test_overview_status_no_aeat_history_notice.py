@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from ....core import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ._profile_cli_support import create_quiet_profile as _create_profile
@@ -49,7 +50,7 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 def _status_notices() -> list[dict[str, object]]:
     result = invoke_cached_cli(["--format", "json", "app", "overview", "status"])
     assert result.exit_code == 0, result.output
-    return unwrap_envelope_notices(result.output)
+    return [STR_KEYED_MAPPING_ADAPTER.validate_python(notice) for notice in unwrap_envelope_notices(result.output)]
 
 
 def _history_notice(notices: list[dict[str, object]]) -> dict[str, object]:
