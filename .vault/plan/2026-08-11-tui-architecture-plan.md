@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:19d108a06883df4208210b57fae8c2327c8edbef95f8b4ef123960b3c0c306eb'
+body_hash: 'sha256:65e3fe29856387ace452192cbebe327e3f94e8c00c21a1bf4adf155e3518e445'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -37,7 +37,7 @@ Create an exact migration census and enforce the final hexagonal and TUI depende
 
 - [x] `W01.P01.S01` - Generate the exact legacy TUI migration manifest with module, symbol, consumer, owner lane, replacement, and deletion proof; `dev/quality/import_hygiene_scan.py`.
 - [x] `W01.P01.S02` - Enforce the hexagonal TUI boundary, launcher-only adapter wiring, and backend prohibition contracts; `.importlinter`.
-- [ ] `W01.P01.S03` - Reject static, dynamic, type-only, re-export, registration, Textual-location, and private-facade bypasses; `src/cadrumo/tests/test_import_hygiene_gate.py`.
+- [x] `W01.P01.S03` - Reject static, dynamic, type-only, re-export, registration, Textual-location, and private-facade bypasses; `src/cadrumo/tests/test_import_hygiene_gate.py`.
 - [ ] `W01.P01.S04` - Reconcile accepted wizard and profile-bundle composition clauses with the dedicated TUI entrypoint; `.vault/adr`.
 - [ ] `W01.P01.S05` - Prove the generated migration manifest matches direct source discovery and admits no new identity; `src/cadrumo/tests/test_tui_migration_manifest.py`.
 

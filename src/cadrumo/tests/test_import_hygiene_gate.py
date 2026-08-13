@@ -88,15 +88,22 @@ from typing import Final, TypedDict
 
 import pytest
 from dev.quality.import_hygiene_scan import (
+    _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256,
+    CANONICAL_TUI_PACKAGE,
     PKG_ROOT,
+    TuiBoundaryViolationKind,
     discover_facades,
     find_dev_tooling_import_violations,
     find_multi_sourced_symbols,
     find_private_import_violations,
     find_shim_modules,
+    find_tui_boundary_violations,
     find_underscore_in_all_violations,
+    generate_tui_migration_manifest,
     is_shipped_module,
     iter_dynamic_import_targets,
+    tui_textual_edge_sha256,
+    tui_textual_edges,
     walk_module_imports,
     wheel_exclude_globs,
 )
@@ -745,3 +752,134 @@ def test_the_shipped_boundary_is_read_from_the_packaging_config() -> None:
     assert is_shipped_module(PKG_ROOT / "core" / "config.py", exclude_globs=globs) is True
     assert is_shipped_module(PKG_ROOT / "tests" / "test_x.py", exclude_globs=globs) is False
     assert is_shipped_module(PKG_ROOT / "entrypoints" / "cli" / "tests" / "test_x.py", exclude_globs=globs) is False
+
+
+def _scan_planted_tui_boundary(tmp_path: Path, dotted_rel: str, body: str):
+    planted = _plant_module(tmp_path, dotted_rel, body)
+    return find_tui_boundary_violations([planted], src_root=tmp_path)
+
+
+def test_tui_boundary_is_clean_against_the_accepted_legacy_census() -> None:
+    generate_tui_migration_manifest()
+    source_files = sorted(PKG_ROOT.rglob("*.py"))
+    dev_files = sorted(path for path in (REPO_ROOT / "dev").rglob("*.py") if "tests" not in path.parts)
+    accepted_edges = tui_textual_edges(source_files, src_root=REPO_ROOT / "src") | tui_textual_edges(
+        dev_files, src_root=REPO_ROOT
+    )
+    assert tui_textual_edge_sha256(accepted_edges) == _ACCEPTED_TUI_TEXTUAL_EDGE_SHA256
+
+    violations = [
+        *find_tui_boundary_violations(
+            source_files,
+            src_root=REPO_ROOT / "src",
+            accepted_textual_edges=accepted_edges,
+        ),
+        *find_tui_boundary_violations(
+            dev_files,
+            src_root=REPO_ROOT,
+            accepted_textual_edges=accepted_edges,
+        ),
+    ]
+
+    assert violations == []
+
+
+@pytest.mark.parametrize(
+    ("dotted_rel", "body", "expected_kind"),
+    (
+        (
+            "cadrumo/application/static_tui.py",
+            f"from {CANONICAL_TUI_PACKAGE} import launcher\n",
+            TuiBoundaryViolationKind.STATIC_IMPORT,
+        ),
+        (
+            "cadrumo/application/type_tui.py",
+            f"from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    from {CANONICAL_TUI_PACKAGE} import App\n",
+            TuiBoundaryViolationKind.TYPE_ONLY_IMPORT,
+        ),
+        (
+            "cadrumo/application/__init__.py",
+            f"from {CANONICAL_TUI_PACKAGE} import App\n__all__ = ['App']\n",
+            TuiBoundaryViolationKind.REEXPORT,
+        ),
+        (
+            "cadrumo/application/dynamic_tui.py",
+            f"import importlib\nimportlib.import_module('{CANONICAL_TUI_PACKAGE}.launcher')\n",
+            TuiBoundaryViolationKind.DYNAMIC_IMPORT,
+        ),
+        (
+            "cadrumo/application/annotated_tui.py",
+            f"def consume(value: '{CANONICAL_TUI_PACKAGE}.App') -> None:\n    pass\n",
+            TuiBoundaryViolationKind.ANNOTATION,
+        ),
+        (
+            "cadrumo/application/annotated_alias_tui.py",
+            "import cadrumo as root\ndef consume(value: root.entrypoints.tui.App) -> None:\n    pass\n",
+            TuiBoundaryViolationKind.ANNOTATION,
+        ),
+        (
+            "cadrumo/application/registered_tui.py",
+            f"registry.add('{CANONICAL_TUI_PACKAGE}.launcher:main')\n",
+            TuiBoundaryViolationKind.REGISTRATION,
+        ),
+        (
+            "cadrumo/application/registered_alias_tui.py",
+            "container.provide(cadrumo.entrypoints.tui.launcher)\n",
+            TuiBoundaryViolationKind.REGISTRATION,
+        ),
+        (
+            "cadrumo/application/textual_screen.py",
+            "from textual.screen import Screen\n",
+            TuiBoundaryViolationKind.TEXTUAL_LOCATION,
+        ),
+        (
+            "dev/tui/unaccepted_surface.py",
+            "from textual.screen import Screen\n",
+            TuiBoundaryViolationKind.TEXTUAL_LOCATION,
+        ),
+        (
+            "cadrumo/adapters/inbound/tui/_unaccepted_surface.py",
+            "from textual.screen import Screen\n",
+            TuiBoundaryViolationKind.TEXTUAL_LOCATION,
+        ),
+        (
+            "cadrumo/entrypoints/tui/app.py",
+            "from cadrumo.application.operations._registry import definitions\n",
+            TuiBoundaryViolationKind.PRIVATE_FACADE,
+        ),
+        (
+            "cadrumo/entrypoints/tui/app.py",
+            "from cadrumo.application.operations import _registry\n",
+            TuiBoundaryViolationKind.PRIVATE_FACADE,
+        ),
+        (
+            "cadrumo/entrypoints/tui/app.py",
+            "import importlib\nimportlib.import_module('cadrumo.application.operations._registry')\n",
+            TuiBoundaryViolationKind.PRIVATE_FACADE,
+        ),
+    ),
+)
+def test_tui_boundary_rejects_each_ast_bypass(
+    tmp_path: Path,
+    dotted_rel: str,
+    body: str,
+    expected_kind: TuiBoundaryViolationKind,
+) -> None:
+    violations = _scan_planted_tui_boundary(tmp_path, dotted_rel, body)
+
+    assert [violation.kind for violation in violations] == [expected_kind]
+
+
+def test_accepted_textual_consumer_cannot_add_a_new_textual_edge(tmp_path: Path) -> None:
+    planted = _plant_module(
+        tmp_path,
+        "cadrumo/application/accepted_textual.py",
+        "from textual.app import App\nfrom textual.containers import Container\n",
+    )
+    accepted = frozenset({("cadrumo.application.accepted_textual", "textual.app")})
+
+    violations = find_tui_boundary_violations([planted], src_root=tmp_path, accepted_textual_edges=accepted)
+
+    assert [(violation.target, violation.kind) for violation in violations] == [
+        ("textual.containers", TuiBoundaryViolationKind.TEXTUAL_LOCATION)
+    ]
