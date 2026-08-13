@@ -160,7 +160,10 @@ from ._protocols import (
 )
 from ._raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ._retencion_parameters import (
+    AdministradorRetencionRates,
     RirpfArt95RetencionRates,
+    administrador_retencion_legal_refs,
+    load_administrador_retencion_rates,
     load_retencion_actividades_rates,
     maximum_supported_activity_retencion_rate,
     professional_activity_retencion_rates,
@@ -223,6 +226,7 @@ __all__ = [
     "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
+    "AdministradorRetencionRates",
     "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",
@@ -272,6 +276,7 @@ __all__ = [
     "TransactionNotFoundError",
     "TransactionPersistenceError",
     "TransactionValidationError",
+    "administrador_retencion_legal_refs",
     "build_split_prompt",
     "catalogue",
     "counts_toward_volumen_de_ingresos",
@@ -290,6 +295,7 @@ __all__ = [
     "is_classified",
     "ledger_irpf_category_catalogue",
     "link_invoice",
+    "load_administrador_retencion_rates",
     "load_retencion_actividades_rates",
     "load_tipo_actividad_selectors",
     "maximum_supported_activity_retencion_rate",

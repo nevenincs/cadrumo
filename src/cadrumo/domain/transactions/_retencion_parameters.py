@@ -1,29 +1,40 @@
-"""Registry-backed loader for the RIRPF art. 95 retención rates.
+"""Registry-backed loaders for RIRPF/LIRPF retención rate parameters.
 
-The rates that RD 439/2007 (RIRPF) art. 95 fixes for rendimientos de actividades
-económicas — 15 % general and 7 % inicio-de-actividades for actividades
-profesionales (apartado 1), plus the sectoral 2 % agrícola/ganadera plus its 1 %
-engorde de porcino y avicultura carve-out (apartado 4), 2 % forestal (apartado 5)
-and 1 % estimación objetiva (apartado 6.1.º) — are regulatory values, so they live in
+Two independent rate families live here, one per module. RD 439/2007 (RIRPF)
+art. 95 fixes rates for rendimientos de actividades económicas — 15 % general
+and 7 % inicio-de-actividades for actividades profesionales (apartado 1), plus
+the sectoral 2 % agrícola/ganadera plus its 1 % engorde de porcino y avicultura
+carve-out (apartado 4), 2 % forestal (apartado 5) and 1 % estimación objetiva
+(apartado 6.1.º). LIRPF art. 101.2, developed by RIRPF art. 80.1.3.º, fixes the
+administrador/consejero rate: 35 % general, dropping to 19 % when the paying
+entity's importe neto de la cifra de negocios is below 100.000 euros. Both are
+regulatory values, so they live in the registry catalogue —
 ``registry/aeat/legal/irpf-retencion-actividades.toml`` under
-``[parameters."rirpf-art-95:*"]`` entries with their BOE citation and review
-metadata, and Python consumers read them from here. They were previously a
-bare ``Decimal("0.15")`` literal in :mod:`domain.transactions._models`, where
-neither the figure nor its legal basis was auditable.
+``[parameters."rirpf-art-95:*"]``, and
+``registry/aeat/legal/irpf-retencion-administradores.toml`` under
+``[parameters."lirpf-art-101:*"]`` — with their BOE citation and review
+metadata, and Python consumers read them from here rather than from a bare
+``Decimal(...)`` literal, where neither the figure nor its legal basis was
+auditable.
 
-The loader follows the idiom of
+The loaders follow the idiom of
 :mod:`domain.iva._recargo_equivalencia`: the registry parameter catalogue is
 read through the cycle-safe ``load_legal_parameters_only`` entry point rather
 than by a direct ``tomllib`` load, and the result is a frozen pydantic record.
-The read is memoised because the withheld-amount inference that consumes the
-maximum-rate bound runs per transaction on the ledger hot path.
+The reads are memoised because the withheld-amount inference that consumes the
+art. 95 maximum-rate bound runs per transaction on the ledger hot path, and the
+administrador rate set is read once per statutory-rate advisory pass over a
+Modelo 111 catalogue.
 
-What these rates are *for*: :attr:`RirpfArt95RetencionRates.general_rate` is the
-upper bound on a **bounded inference**, not a rate the system ever applies. A
-retención is declared by the operator or inferred as invoice gross minus cash
-and then capped; no path may invert a rate to reconstruct a base from cash,
-because selecting the applicable rate for a row is a per-row legal fact the
-system cannot determine.
+What the art. 95 rates are *for*: :attr:`RirpfArt95RetencionRates.general_rate`
+is the upper bound on a **bounded inference**, not a rate the system ever
+applies. A retención is declared by the operator or inferred as invoice gross
+minus cash and then capped; no path may invert a rate to reconstruct a base
+from cash, because selecting the applicable rate for a row is a per-row legal
+fact the system cannot determine. The administrador rates, by contrast, ARE
+applied directly: an administrador/consejero row's withheld amount is compared
+against ``base * general_rate`` and ``base * reduced_rate`` to confirm it
+matches one of the two statutory figures.
 
 See Also:
     :mod:`domain.iva._components`
@@ -248,32 +259,126 @@ def maximum_supported_activity_retencion_rate() -> Decimal:
     return load_retencion_actividades_rates().general_rate
 
 
+class AdministradorRetencionRates(BaseModel):
+    """Frozen record of the LIRPF art. 101.2 administrador/consejero rates.
+
+    Attributes:
+        general_rate: 35 % fixed rate on rendimientos del trabajo perceived by
+            administradores y miembros de consejos de administración, de las
+            juntas que hagan sus veces, y demás miembros de otros órganos
+            representativos (LIRPF art. 101.2 primer inciso; RIRPF art.
+            80.1.3.º primer párrafo).
+        reduced_rate: 19 % rate that replaces :attr:`general_rate` when the
+            paying entity's importe neto de la cifra de negocios is below
+            :attr:`reduced_incn_threshold_eur` (LIRPF art. 101.2 segundo
+            inciso; RIRPF art. 80.1.3.º segundo párrafo).
+        reduced_incn_threshold_eur: The INCN ceiling, in euros, strictly below
+            which :attr:`reduced_rate` applies instead of :attr:`general_rate`.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    general_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    reduced_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
+    reduced_incn_threshold_eur: Decimal = Field(gt=Decimal("0"))
+
+
+_ADMINISTRADOR_GENERAL_PARAM_ID: Final[str] = "lirpf-art-101:retencion-administrador-general"
+_ADMINISTRADOR_REDUCIDA_PARAM_ID: Final[str] = "lirpf-art-101:retencion-administrador-reducida"
+_ADMINISTRADOR_INCN_UMBRAL_PARAM_ID: Final[str] = "lirpf-art-101:retencion-administrador-incn-umbral-eur"
+
+#: Every administrador parameter this module resolves. Declared once so the
+#: rate loader and the grounding lookup below cannot drift, for the same
+#: reason :data:`_ART95_PARAMETER_IDS` is declared once.
+_ADMINISTRADOR_PARAMETER_IDS: Final[tuple[str, ...]] = (
+    _ADMINISTRADOR_GENERAL_PARAM_ID,
+    _ADMINISTRADOR_REDUCIDA_PARAM_ID,
+    _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID,
+)
+
+
+@lru_cache(maxsize=1)
+def load_administrador_retencion_rates() -> AdministradorRetencionRates:
+    """Return the LIRPF art. 101.2 administrador retención rates from the registry.
+
+    Returns:
+        An :class:`AdministradorRetencionRates` record with every rate value.
+
+    Raises:
+        TransactionValidationError: If any expected parameter id is absent,
+            carries no string value, or does not parse as a ``Decimal``, or if
+            the registry parameter catalogue cannot be loaded.
+    """
+    # Imported inside the function for the same reason the sibling art. 95
+    # loader does: the full registry import path reaches back into the domain
+    # packages this module belongs to, and a module-level import would close
+    # that cycle.
+    from ..calculations.registry import RegistryError, load_legal_parameters_only
+
+    try:
+        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
+    except RegistryError as exc:
+        raise TransactionValidationError(
+            f"failed to load the LIRPF art. 101.2 administrador retención parameters: {exc}",
+        ) from exc
+    return AdministradorRetencionRates(
+        general_rate=_decimal_parameter(parameters, _ADMINISTRADOR_GENERAL_PARAM_ID),
+        reduced_rate=_decimal_parameter(parameters, _ADMINISTRADOR_REDUCIDA_PARAM_ID),
+        reduced_incn_threshold_eur=_decimal_parameter(parameters, _ADMINISTRADOR_INCN_UMBRAL_PARAM_ID),
+    )
+
+
+def administrador_retencion_legal_refs() -> tuple[str, ...]:
+    """Return the registry legal references grounding the administrador rate set.
+
+    Read off the parameters this module already resolves rather than restated
+    here, for the same reason :func:`rirpf_art95_retencion_legal_refs` states:
+    an advisory that names an article from a Python literal asserts law the
+    registry cannot confirm it still says, while one carrying the parameter's
+    own refs moves with the registry.
+
+    Returns:
+        The distinct reference ids, in first-seen order so the sequence is
+        stable for an operator comparing two runs.
+    """
+    seen: list[str] = []
+    for parameter_id in _ADMINISTRADOR_PARAMETER_IDS:
+        for reference in _legal_refs_of(parameter_id):
+            if reference not in seen:
+                seen.append(reference)
+    return tuple(seen)
+
+
 def _decimal_parameter(parameters: Mapping[str, object], parameter_id: str) -> Decimal:
-    """Read one registry parameter as a ``Decimal``."""
+    """Read one registry parameter as a ``Decimal``, shared by every rate family in this module."""
     try:
         parameter = parameters[parameter_id]
     except KeyError as exc:
         raise TransactionValidationError(
-            f"the legal-parameter catalogue is missing RIRPF art. 95 parameter {parameter_id!r}",
+            f"the legal-parameter catalogue is missing retención parameter {parameter_id!r}",
         ) from exc
     value = getattr(parameter, "value", None)
     if not isinstance(value, str):
         raise TransactionValidationError(
-            f"RIRPF art. 95 parameter {parameter_id!r} has no string value",
+            f"retención parameter {parameter_id!r} has no string value",
         )
     try:
         return Decimal(value)
     except ArithmeticError as exc:
         raise TransactionValidationError(
-            f"RIRPF art. 95 parameter {parameter_id!r} value {value!r} is not a Decimal",
+            f"retención parameter {parameter_id!r} value {value!r} is not a Decimal",
         ) from exc
 
 
 __all__ = [
+    "AdministradorRetencionRates",
     "RirpfArt95RetencionRates",
+    "administrador_retencion_legal_refs",
+    "load_administrador_retencion_rates",
     "load_retencion_actividades_rates",
     "maximum_supported_activity_retencion_rate",
     "professional_activity_retencion_rates",
+    "rirpf_art95_retencion_legal_refs",
     "sectoral_activity_retencion_rates",
     "statutory_activity_retencion_rates",
 ]
