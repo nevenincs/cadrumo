@@ -4,7 +4,7 @@ tags:
   - '#registry-suite-red-at-head'
 date: '2026-08-13'
 modified: '2026-08-13'
-body_hash: 'sha256:fa0e9b1a04b7b2287520810178ac72a0c2c9b1bb4dd56b64026ee557706f2f77'
+body_hash: 'sha256:0886e2eb406cf9eaeaf45037127f65a15d4a58c2bf0299c6ec6d7a5fb9c333a4'
 tier: L2
 related:
   - '[[2026-08-13-registry-suite-red-at-head-audit]]'
@@ -65,7 +65,7 @@ Three surfaces currently mislead: the relation consistency check fails on its ow
 - [x] `P01.S01` - Apply the year delta in the relation consistency check by consuming the anchor helper instead of the period-only wrapper; `src/cadrumo/domain/calculations/registry/tests/test_relation_consistency.py`.
 - [x] `P01.S02` - Assert offset-derived source periods against the union of candidate revisions for the resolved source year, copying the existing correct shape at src/cadrumo/application/calculations/_cross_period_clean_state.py lines 167-171 rather than inventing one; `src/cadrumo/domain/calculations/registry/tests/test_relation_consistency.py`.
 - [x] `P01.S03` - Add a property guard asserting every declared-category base-only flow value stays outside the deduction-authority refusal trigger set; `src/cadrumo/application/aggregation/tests/`.
-- [ ] `P01.S04` - Widen the registry verify verb to cover relation offset periods and export-layout population, or make it enumerate the invariant families it does not check; `src/cadrumo/entrypoints/cli/`.
+- [x] `P01.S04` - Widen the registry verify verb to cover relation offset periods and export-layout population, or make it enumerate the invariant families it does not check; `src/cadrumo/entrypoints/cli/`.
 
 ### Phase `P02` - Un-blind the AEAT-grounded oracles
 
