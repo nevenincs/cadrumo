@@ -56,7 +56,11 @@ from ...adapters.outbound.aeat.sede import (
     fetch_notification_document,
 )
 from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from ...adapters.persistence.storage import LIVE_NOTIFICATION_DOCUMENT_NAMESPACE, secure_object_repository_for_bucket
+from ...adapters.persistence.storage import (
+    LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
+    resolve_attachment_store,
+    secure_object_repository_for_bucket,
+)
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
 from ...core.identity import AeatCertificadoId, BucketId
@@ -210,14 +214,6 @@ class NotificationDocumentService:
         self._settings = settings or load_settings()
         self._attachment_store = attachment_store
 
-    def _store(self) -> AttachmentStoreProtocol:
-        """Return the injected byte-custody store, or the encrypted default."""
-        if self._attachment_store is not None:
-            return self._attachment_store
-        from ...adapters.persistence.storage import AttachmentStore
-
-        return AttachmentStore()
-
     def persist_document(
         self,
         *,
@@ -259,7 +255,7 @@ class NotificationDocumentService:
             )
 
         attachment = add_attachment(
-            self._store(),
+            resolve_attachment_store(self._attachment_store),
             content=AttachmentBytesContent(data=document.pdf_bytes),
             request=AttachmentIngestionRequest(
                 kind=AttachmentKind.AEAT_NOTIFICATION_PDF,

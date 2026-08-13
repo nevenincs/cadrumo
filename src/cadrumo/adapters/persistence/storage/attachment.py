@@ -41,6 +41,7 @@ from ....domain.attachments import (
     Attachment,
     AttachmentNotFoundError,
     AttachmentPersistenceError,
+    AttachmentStoreProtocol,
     AttachmentValidationError,
     is_link_only_mime_type,
 )
@@ -574,4 +575,29 @@ class AttachmentStore(BaseModel):
         yield from sorted(manifests, key=lambda attachment: attachment.attachment_id)
 
 
-__all__ = ["AttachmentStore"]
+def resolve_attachment_store(store: AttachmentStoreProtocol | None) -> AttachmentStoreProtocol:
+    """Return the injected byte-custody port, or construct the default concrete store.
+
+    Every service that accepts an optional
+    :class:`~domain.attachments.AttachmentStoreProtocol` so a test can inject a
+    real store into an isolated profile needs the same fallback, and that
+    fallback names a concrete adapter. Resolving it here -- in the module that
+    owns :class:`AttachmentStore` -- keeps the construction to one site. A copy
+    per consuming package looks harmless while the constructor takes no
+    arguments and drifts the moment it takes one; two such copies had already
+    appeared, in the ledger action services and in the live notification
+    custody service, and neither package owns the class.
+
+    Args:
+        store: The caller's injected port, or ``None`` to take the default.
+
+    Returns:
+        ``store`` unchanged when one was injected, otherwise a new
+        :class:`AttachmentStore` bound to the active bucket's runtime.
+    """
+    if store is not None:
+        return store
+    return AttachmentStore()
+
+
+__all__ = ["AttachmentStore", "resolve_attachment_store"]

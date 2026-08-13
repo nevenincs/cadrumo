@@ -37,7 +37,10 @@ The public surface is grouped by contract:
 - Runtime and custody boundary — :class:`StorageRuntime`,
   :class:`StorageRuntimeReadiness`, runtime repository factories,
   :func:`activate_session`, :func:`get_active_master_key`,
-  :func:`activate_master_key_provider`, and :func:`get_master_key_provider`.
+  :func:`activate_master_key_provider`, :func:`get_master_key_provider`, and
+  :func:`resolve_attachment_store`, the one place a caller holding an optional
+  injected :class:`~domain.attachments.AttachmentStoreProtocol` turns it into a
+  concrete :class:`AttachmentStore`.
 - Recovery and rotation — :class:`RecoveryRecord`, :class:`MintedRecovery`,
   BIP-39 recovery helpers, :class:`RotationPlanEntry`,
   :class:`RotationSummary`, and master-key / blob-store rotation functions.
@@ -205,7 +208,7 @@ from ._storage_path_definitions import (
     STORAGE_PATH_DEFINITIONS,
     StoragePathDefinition,
 )
-from .attachment import AttachmentStore, unwrap_blob_payload
+from .attachment import AttachmentStore, resolve_attachment_store, unwrap_blob_payload
 from .blob_store import (
     BlobManifest,
     BlobReference,
@@ -585,6 +588,7 @@ __all__ = [
     "redact_structured",
     "reencrypt_envelope_file",
     "refuse_unsecured_with_real_nif",
+    "resolve_attachment_store",
     "rotate_blob_stores",
     "rotate_master_key",
     "safe_repository_id",
