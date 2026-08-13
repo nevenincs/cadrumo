@@ -37,6 +37,7 @@ if TYPE_CHECKING:
     from .sql.secure_objects import SecureObjectRepository
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ....core.identity import BucketId
 
 _SYNTHETIC_SESSION_BUCKET_IDS = frozenset({"ephemeral"})
 
@@ -98,7 +99,7 @@ class StorageRuntime(BaseModel):
     route_attached_to_active_bucket: bool
     route_has_database_path: bool
     storage_root: Path = Field(exclude=True, repr=False)
-    bucket_id: str = Field(default="", exclude=True, repr=False)
+    bucket_id: BucketId | None = Field(default=None, exclude=True, repr=False)
     active_session: StorageRuntimeSession | None
     readiness: StorageRuntimeReadiness
 
@@ -117,6 +118,8 @@ class StorageRuntime(BaseModel):
 
         active = current_active_bucket_session()
         assert active is not None
+        bucket_id = self.bucket_id
+        assert bucket_id is not None
         # The active bucket session owns the engine lifecycle: acquire the
         # engine through it so the handle is registered on the session and
         # disposed on session close/switch, rather than left to a caller.
@@ -130,7 +133,7 @@ class StorageRuntime(BaseModel):
         engine = active.acquire_engine(
             lambda: Settings(
                 cadrumo_local_storage_root=self.storage_root,
-                cadrumo_active_profile=self.bucket_id,
+                cadrumo_active_profile=bucket_id,
             ),
         )
         return SecureObjectRepository(
@@ -152,7 +155,10 @@ class StorageRuntime(BaseModel):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_EXPIRED)
         if active.unsecured_backend:
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.UNSECURED_BACKEND)
-        if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(active, self.bucket_id):
+        bucket_id = self.bucket_id
+        if bucket_id is None:
+            raise runtime_not_ready_error(StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)
+        if active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS and not session_serves_bucket(active, bucket_id):
             raise runtime_not_ready_error(StorageRuntimeReadinessCode.SESSION_CHANGED)
 
 
@@ -258,7 +264,7 @@ def inspect_storage_runtime(
         route_attached_to_active_bucket=route.kind is StorageRouteKind.ACTIVE_BUCKET_DATABASE,
         route_has_database_path=route.database_path is not None,
         storage_root=resolved.cadrumo_local_storage_root,
-        bucket_id=route.bucket_id if ready else "",
+        bucket_id=route.bucket_id if ready else None,
         active_session=session,
         readiness=StorageRuntimeReadiness(
             ready=ready,

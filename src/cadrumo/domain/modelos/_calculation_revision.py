@@ -57,7 +57,7 @@ from ...core import (
 )
 from ...core.aggregation import BindingSourceKind
 from ...core.hashing import content_hash_hex
-from ...core.identity import CalculationRevisionId, FilingRecordId, WorkUnitId
+from ...core.identity import CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.time import validate_utc_aware
 from .._identifiers import canonical_decimal_string as _canonical_decimal
 from ..calculations.registry import (
@@ -726,7 +726,7 @@ class CalculationRevision(BaseModel):
     source_transaction_ids: tuple[CalculationRevisionId, ...] = Field(default_factory=tuple)
     m210_official_tipo_renta_code: str | None = Field(default=None, min_length=2, max_length=2)
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None
-    borrador_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    borrador_snapshot_id: SnapshotId | None = None
     bindings_sourced_from_borrador: tuple[BindingId, ...] = Field(default_factory=tuple)
     casilla_values: Mapping[CasillaId, Decimal] = Field(default_factory=dict)
     # Typed envelope carrying formula provenance for every computed
