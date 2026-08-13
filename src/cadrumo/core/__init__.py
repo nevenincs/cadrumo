@@ -384,6 +384,17 @@ from .manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
 )
+from .operations import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+    OperationEventKind,
+    OperationInteractionKind,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from .product_identity import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
@@ -606,6 +617,15 @@ __all__: list[str] = [
     "ObjetoTributario",
     "ObservedHeaderFact",
     "OfficialTipoRentaCode",
+    "OperationCancellation",
+    "OperationClosePolicy",
+    "OperationDeadline",
+    "OperationDurability",
+    "OperationEffect",
+    "OperationEventKind",
+    "OperationInteractionKind",
+    "OperationLifecycle",
+    "OperationTerminalCondition",
     "OperatorActionAxis",
     "OperatorProgress",
     "OptionalExtra",
