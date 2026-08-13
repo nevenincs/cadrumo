@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#unstructured-document-ingestion'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:081f6f36895c038772c5585c9fb5171adc67cb20b3936517506902077c20729f'
+body_hash: 'sha256:35611da81cbbf191abe68d28c644d6ecfc420ea2c6c95f6c37b955cc127c013c'
 related:
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S01]]'
   - '[[2026-08-07-unstructured-document-ingestion-W01-P01-S02]]'
@@ -288,6 +288,7 @@ related:
   - '[[2026-08-07-unstructured-document-ingestion-plan]]'
   - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
   - '[[2026-08-08-unstructured-document-ingestion-pilot-abstention-signal-audit]]'
+  - '[[2026-08-13-unstructured-document-ingestion-record-gap-close-audit]]'
 ---
 
 # `unstructured-document-ingestion` feature index
@@ -306,6 +307,7 @@ Auto-generated index of all documents tagged with `#unstructured-document-ingest
 
 - `2026-08-07-unstructured-document-ingestion-confirm-boundary-under-declaration-audit` - `unstructured-document-ingestion` audit: `Confirm-boundary under-declaration sweep`
 - `2026-08-08-unstructured-document-ingestion-pilot-abstention-signal-audit` - `unstructured-document-ingestion` audit: `pilot abstention signal`
+- `2026-08-13-unstructured-document-ingestion-record-gap-close-audit` - `unstructured-document-ingestion` audit: `thirty-four closed steps with no execution record`
 
 ### exec
 
