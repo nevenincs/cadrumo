@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:db4b9183be7943e84275696add7bb45d958f6c5cd49a20d000ffd30e13e6f4d1'
+body_hash: 'sha256:7387aa42a988a2432b1d05acfaeaf7336cc5218b67b3b4e47f8ffc099ffa0ab8'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -56,6 +56,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S64]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S66]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -240,6 +241,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S61` - Define and implement one typed DP30300 variable-envelope semantic and composition authority for all thirteen prefix fields, the Variable body, relative closer, and derived total across the five Modelo 303 epochs, resolving program identifier and developer tax identity from explicit product authority, carrying the contract through semantic-map provenance and generation, and deleting the blanket generator refusal without literals, aliases, defaults, or inferred producer identities
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with classify_official_boxes, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S64` - Require every persisted semantic map and fragment set to carry one exact source_ref and source_sha256 identity, validate that identity against the parser intermediate and selected revision source membership, bind it into provenance, and hard-refuse design-epoch-only maps, implicit source selection, alternate anchor catalogues, coordinate-bearing projection declarations, legacy-layout reads, and heuristic mapping compatibility before S19 authoring begins
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S66` - Bundle and adjudicate the official DANA primary authorities required by S65 by acquiring RDL 6/2024 article 1 and its mutable municipal annex, RDL 7/2024 article 11.2 and final provision 14, and the BOE-A-2024-24097 correction provenance, pinning exact official bytes and hashes, authoring canonical legal/source references for the affected geography and the 25 percent 2024 annual simplified-regime IVA reduction, and refusing timeless geography, inferred applicability, missing correction provenance, or invented identifiers
 
 ### plan
 
