@@ -3,10 +3,10 @@ generated: true
 tags:
   - '#index'
   - '#cli-action-envelope-hardening'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:5b71216edc89b2bf8ad5d7c85a69aa89975f34f81dbaf10795b58b058be85750'
+body_hash: 'sha256:b67a93329f846f921b639dabfbe7d8d2395db631b1edc1ef04075f3356139615'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -74,7 +74,9 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S112]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S113]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S114]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S115]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S117]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S36]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S38]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S41]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S59]]'
@@ -317,6 +319,8 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S83` - Migrate authorization-domain recovery producers to typed conditions and canonical actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope producers and failure boundaries with typed, locale-neutral outcomes.
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S36` - Migrate authentication and session recovery predicates and actions
 
 ### plan
 
