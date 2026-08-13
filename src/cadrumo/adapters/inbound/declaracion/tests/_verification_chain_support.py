@@ -8,8 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
+from .....application.modelo import resolve_available_bound_inputs_by_casilla_id
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
