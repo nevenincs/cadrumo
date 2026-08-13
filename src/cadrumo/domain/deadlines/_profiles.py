@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
+from enum import StrEnum
 from typing import TypedDict
 
 from ...core import Modelo, Period
@@ -288,13 +289,28 @@ def _parse_optional_bool(raw: str | None) -> bool | None:
     return _parse_bool(raw)
 
 
+def _accepted(enum: type[StrEnum]) -> str:
+    """Render a closed value set for a refusal, derived from the enum itself.
+
+    Derived rather than hand-listed so a new member cannot ship while the
+    refusal keeps naming the old set, which would send an operator looking
+    for a value the code already accepts.
+    """
+    return ", ".join(sorted(member.value for member in enum))
+
+
 def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
     if not raw.strip():
-        raise ProfileError("tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA")
+        raise ProfileError(
+            f"tax_residence.jurisdiction_scope must be explicitly declared for Modelo IVA; "
+            f"accepted values: {_accepted(M303TaxTerritory)}",
+        )
     try:
         return M303TaxTerritory(raw)
     except ValueError as exc:
-        raise ProfileError(f"unsupported tax_residence.jurisdiction_scope {raw!r}") from exc
+        raise ProfileError(
+            f"unsupported tax_residence.jurisdiction_scope {raw!r}; accepted values: {_accepted(M303TaxTerritory)}",
+        ) from exc
 
 
 _MODELO_IVA_PROFILE_PATHS = frozenset(
@@ -317,7 +333,7 @@ _MODELO_IVA_PROFILE_PATHS = frozenset(
 
 def _required_iva_bool(value: object, *, path: str) -> bool:
     if not isinstance(value, bool):
-        raise ProfileError(f"{path} must be an explicit boolean")
+        raise ProfileError(f"{path} must be explicitly declared as yes or no; it is currently undeclared")
     return value
 
 
@@ -326,12 +342,16 @@ def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswer
     if not any(canonical.get(path, "").strip() for path in _MODELO_IVA_PROFILE_PATHS):
         return None
     if not typed.iva_m303_regime_composition:
-        raise ProfileError("iva.m303_regime_composition must be explicitly declared for Modelo IVA")
+        raise ProfileError(
+            f"iva.m303_regime_composition must be explicitly declared for Modelo IVA; "
+            f"accepted values: {_accepted(M303RegimeComposition)}",
+        )
     try:
         composition = M303RegimeComposition(typed.iva_m303_regime_composition)
     except ValueError as exc:
         raise ProfileError(
-            f"unsupported iva.m303_regime_composition {typed.iva_m303_regime_composition!r}",
+            f"unsupported iva.m303_regime_composition {typed.iva_m303_regime_composition!r}; "
+            f"accepted values: {_accepted(M303RegimeComposition)}",
         ) from exc
     return ModeloIVAProfile(
         tax_territory=_resolve_m303_tax_territory(typed.tax_residence_jurisdiction_scope),
