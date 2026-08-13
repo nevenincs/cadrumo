@@ -1,17 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#profile-login-session'
+  - "#adr"
+  - "#profile-login-session"
 date: '2026-07-24'
-modified: '2026-08-04'
-body_hash: 'sha256:37a532f9185c57a0f1cb72b2221badd497a9ac7ead475f6a740fb389afb1bfc5'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
-  - '[[2026-07-24-profile-login-session-research]]'
+  - "[[2026-07-24-profile-login-session-research]]"
+superseded_by: '2026-08-13-profile-session-lifecycle-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:df885f5ad1e1ad16a96658ad88274364af9400cedb2f595ce828faae84062c1c'
 ---
-# `profile-login-session` adr: `canonical profile login/logout with persisted session custody` | (**status:** `accepted`)
+# `profile-login-session` adr: `canonical profile login/logout with persisted session custody` | (**status:** `superseded`)
 
 ## Problem Statement
 

@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#auth-cert-recovery-custody'
+  - "#adr"
+  - "#auth-cert-recovery-custody"
 date: '2026-07-25'
-modified: '2026-07-25'
-body_hash: 'sha256:edebf18a76f2aed576288e3d1481e07ac7c6735364e55186bccd5caefa8a018a'
 related:
   - "[[2026-07-25-auth-cert-recovery-custody-p04-door-safety-review-audit]]"
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
   - "[[2026-07-17-auth-cert-recovery-custody-adr]]"
+superseded_by: '2026-08-13-auth-certificate-lifecycle-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:15025e383f45846149c38a82ea002492ad807fc66471465ad91093a614bf165f'
 ---
-
-# `auth-cert-recovery-custody` adr: `custody door secret channels and throttle posture` | (**status:** `accepted`)
+# `auth-cert-recovery-custody` adr: `custody door secret channels and throttle posture` | (**status:** `superseded`)
 
 ## Problem Statement
 

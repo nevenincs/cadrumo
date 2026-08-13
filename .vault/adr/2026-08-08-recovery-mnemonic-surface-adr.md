@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#recovery-mnemonic-surface'
+  - "#adr"
+  - "#recovery-mnemonic-surface"
 date: '2026-08-08'
-modified: '2026-08-08'
-body_schema: 'body-v1'
-body_hash: 'sha256:1412465359b0ba9e3ba5e80849a6ae97adb89d61c125ca712079496c9de97c29'
 related:
-  - '[[2026-08-08-recovery-mnemonic-surface-reference]]'
-  - '[[2026-07-25-auth-cert-recovery-custody-adr]]'
+  - "[[2026-08-08-recovery-mnemonic-surface-reference]]"
+  - "[[2026-07-25-auth-cert-recovery-custody-adr]]"
+superseded_by: '2026-08-13-recovery-mnemonic-presentation-successor-adr'
+modified: '2026-08-13'
+body_schema: 'body-v1'
+body_hash: 'sha256:5fee129104625ff2ce9b2d31213425b90b9e5dff8448e6aef68d76f3f14db1d9'
 ---
-
-# `recovery-mnemonic-surface` adr: `The TUI may collect a mnemonic but must never display one` | (**status:** `accepted`)
+# `recovery-mnemonic-surface` adr: `The TUI may collect a mnemonic but must never display one` | (**status:** `superseded`)
 
 ## Problem Statement
 

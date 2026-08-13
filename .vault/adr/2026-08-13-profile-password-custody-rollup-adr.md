@@ -1,15 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#profile-password-custody'
+  - "#adr"
+  - "#profile-password-custody"
 date: '2026-08-13'
-modified: '2026-08-13'
-body_schema: 'body-v1'
-body_hash: 'sha256:949494485930a0b5c122ec25580bc0f187c1ea27bb630dd40a84ed953dcb0c6c'
 related:
   - "[[2026-08-13-profile-password-custody-research]]"
+supersedes:
+  - '2026-05-14-secure-backend-passkey-custody-adr'
+  - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
+modified: '2026-08-13'
+body_schema: 'body-v1'
+body_hash: 'sha256:66fa32033755bab1b2a282497e46b3d25e6192930d5408cb0561a7f72161d4f0'
 ---
-
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
 ## Problem Statement

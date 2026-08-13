@@ -1,18 +1,19 @@
 ---
 tags:
-  - '#adr'
-  - '#auth-cert-recovery-custody'
+  - "#adr"
+  - "#auth-cert-recovery-custody"
 date: '2026-07-17'
-modified: '2026-07-17'
-body_hash: 'sha256:92176e720a0e5140ff790fa2a71f26dc6a87b5ca9de4b464828bc887d4a9e409'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-adr]]"
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
-  - '[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]'
-  - '[[2026-07-15-cli-authority-verb-conformance-research]]'
-  - '[[2026-07-15-cli-authority-verb-conformance-reference]]'
+  - "[[2026-07-16-cli-authority-verb-conformance-duplication-authority-audit]]"
+  - "[[2026-07-15-cli-authority-verb-conformance-research]]"
+  - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
+superseded_by: '2026-08-13-auth-certificate-lifecycle-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:4d46b508eae4180455e6c163742e6ad6c0992d09f18c181ee0100b9fdc1e9cb6'
 ---
-# `auth-cert-recovery-custody` adr: `auth-cert-recovery-custody rescope grounding` | (**status:** `accepted`)
+# `auth-cert-recovery-custody` adr: `auth-cert-recovery-custody rescope grounding` | (**status:** `superseded`)
 
 ## Problem Statement
 

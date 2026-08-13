@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#profile-bucket-lifecycle'
+  - "#adr"
+  - "#profile-bucket-lifecycle"
 date: '2026-05-14'
-modified: '2026-07-17'
-body_hash: 'sha256:3142bd255a512fe553fc691ca794cb1d049c359befde108c7f154846be40ae54'
 related:
-  - '[[2026-05-14-secure-backend-passkey-safety-research]]'
-  - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
-  - '[[2026-06-04-profile-bucket-lifecycle-research]]'
+  - "[[2026-05-14-secure-backend-passkey-safety-research]]"
+  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
+  - "[[2026-06-04-profile-bucket-lifecycle-research]]"
+superseded_by: '2026-08-13-profile-bucket-lifecycle-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:28f0e25bdd81592c66b1d49a70951f5525b6453acbb421ee401486b666798997'
 ---
-
-# `profile-bucket-lifecycle` adr: profile + bucket + vault lifecycle | (**status:** `accepted`)
+# `profile-bucket-lifecycle` adr: profile + bucket + vault lifecycle | (**status:** `superseded`)
 
 ## Problem Statement
 

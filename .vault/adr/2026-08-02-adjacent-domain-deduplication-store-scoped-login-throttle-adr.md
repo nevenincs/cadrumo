@@ -1,16 +1,16 @@
 ---
 tags:
-  - '#adr'
-  - '#adjacent-domain-deduplication'
+  - "#adr"
+  - "#adjacent-domain-deduplication"
 date: '2026-08-02'
-modified: '2026-08-02'
-body_schema: 'body-v1'
-body_hash: 'sha256:798daad5141670135a08d3be93af36ea4adeeecaab5108fba720adb884b1f7e9'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-fleet-burndown-findings-audit]]"
+superseded_by: '2026-08-13-profile-password-custody-rollup-adr'
+modified: '2026-08-13'
+body_schema: 'body-v1'
+body_hash: 'sha256:e26d605c7d24eec9a9980b6fb9dd23b6c4df7593e91946e866a77c205c0de6f1'
 ---
-
-# `adjacent-domain-deduplication` adr: `store-scoped failed-attempt budget for the store passphrase` | (**status:** `accepted`)
+# `adjacent-domain-deduplication` adr: `store-scoped failed-attempt budget for the store passphrase` | (**status:** `superseded`)
 
 ## Problem Statement
 

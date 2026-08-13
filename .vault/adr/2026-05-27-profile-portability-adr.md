@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#cross-domain-continuity'
+  - "#adr"
+  - "#cross-domain-continuity"
 date: '2026-05-27'
-modified: '2026-07-17'
-body_hash: 'sha256:0ba5c768161e3cd449bc560dfe2fc86956c9517aa392d908ce769216383a4e54'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-adr]]"
   - "[[2026-05-29-cross-domain-continuity-audit]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
-  - '[[2026-06-04-cross-domain-continuity-research]]'
+  - "[[2026-06-04-cross-domain-continuity-research]]"
+superseded_by: '2026-08-13-profile-portability-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:20602369814d77fedaa680d4120072e7686d7851dc43d47786e4b49b83cece80'
 ---
-
-# `cross-domain-continuity` adr: `profile-portability` | (**status:** `accepted`)
+# `cross-domain-continuity` adr: `profile-portability` | (**status:** `superseded`)
 
 Status becomes `accepted` when S104-S109 land and the roundtrip test (S107)
 passes. Supersedes the deferred bundle-content decision in the 2026-05-18

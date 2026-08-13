@@ -1,10 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#profile-lifecycle-disaster'
+  - "#adr"
+  - "#profile-lifecycle-disaster"
 date: '2026-05-19'
-modified: '2026-07-17'
-body_hash: 'sha256:a5a3e7d035606eb216121cee10707f536f3ac188f222c4b270d00a045094fcfb'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-axis-a-session-activation-research]]"
   - "[[2026-05-19-profile-lifecycle-disaster-research]]"
@@ -16,9 +14,11 @@ related:
   - "[[2026-05-19-operator-blind-dual-testimony-audit]]"
   - "[[2026-05-19-operator-blind-fumbler-testimony-audit]]"
   - "[[2026-05-19-operator-testimonial-audit]]"
+superseded_by: '2026-08-13-profile-disaster-operations-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:79990f3063e70d8d305b4752592689d239000b66afd09275bc94b34567e592ec'
 ---
-
-# `profile-lifecycle-disaster` adr: session-activation wiring, state-model collapse, atomic create | (**status:** `accepted`)
+# `profile-lifecycle-disaster` adr: session-activation wiring, state-model collapse, atomic create | (**status:** `superseded`)
 
 ## Problem Statement
 

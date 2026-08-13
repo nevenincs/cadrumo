@@ -1,10 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-authority-verb-conformance'
+  - "#adr"
+  - "#cli-authority-verb-conformance"
 date: '2026-07-15'
-modified: '2026-07-24'
-body_hash: 'sha256:f9ae92690ba0bee5a13c31161fdfe6534870110d248c69bca610d1af6cac06ee'
 related:
   - "[[2026-07-15-cli-authority-verb-conformance-research]]"
   - "[[2026-07-15-cli-authority-verb-conformance-reference]]"
@@ -13,10 +11,12 @@ related:
   - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
   - "[[2026-05-21-profile-state-aggregate-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr]]"
-  - '[[2026-07-24-profile-login-session-adr]]'
+  - "[[2026-07-24-profile-login-session-adr]]"
+superseded_by: '2026-08-13-cli-action-envelope-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:3719ec63451cacae223d3b13302c23f6d2316f98dc2a87fe02f4071ea951b4d0'
 ---
-
-# `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `accepted`)
+# `cli-authority-verb-conformance` adr: `Single backend authorities and cost-aware CLI verbs` | (**status:** `superseded`)
 
 ## Amendment note (2026-07-24)
 

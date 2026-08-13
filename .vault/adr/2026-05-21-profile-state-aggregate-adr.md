@@ -1,19 +1,19 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-workflow-redesign'
+  - "#adr"
+  - "#cli-workflow-redesign"
 date: '2026-05-21'
-modified: '2026-07-17'
-body_hash: 'sha256:810fc8180ca1e703cbcab7962fdb93850150d8d86011007da284f28209c02538'
 related:
   - "[[2026-05-20-cli-state-architecture-research]]"
   - "[[2026-05-21-profile-uuid-identity-adr]]"
   - "[[2026-05-21-state-read-projection-adr]]"
   - "[[2026-05-21-cli-testimonial-reference]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
+superseded_by: '2026-08-13-profile-state-aggregate-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:91a2a7f8970a5eba4ec2cfaba24bf70655e7ec81939d2a5001ab5b17d7047daf'
 ---
-
-# `cli-workflow-redesign` adr: `Profile state is one aggregate, owned by one repository, written through a cross-store unit-of-work` | (**status:** `accepted`)
+# `cli-workflow-redesign` adr: `Profile state is one aggregate, owned by one repository, written through a cross-store unit-of-work` | (**status:** `superseded`)
 
 ## Problem Statement
 

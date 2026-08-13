@@ -1,17 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#bucket-sealed-archive'
+  - "#adr"
+  - "#bucket-sealed-archive"
 date: '2026-06-03'
-modified: '2026-07-17'
-body_hash: 'sha256:847e09932b9e1c43494413f6bfaceb8b19694d1cf46d3e3d1d01429018ab0d12'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
-  - '[[2026-06-04-bucket-sealed-archive-research]]'
+  - "[[2026-06-04-bucket-sealed-archive-research]]"
+superseded_by: '2026-08-13-sealed-archive-transport-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:096d06abe0ff20ae6f8dcfa7413d6bc3ba006d5487f9916f6f9460e80fda002c'
 ---
-
-# `bucket-sealed-archive` adr: `Sealed-archive format for bucket export/import` | (**status:** `accepted`)
+# `bucket-sealed-archive` adr: `Sealed-archive format for bucket export/import` | (**status:** `superseded`)
 
 ## Problem Statement
 

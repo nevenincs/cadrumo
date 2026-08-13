@@ -6,10 +6,11 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:8695d59c3a62e625398760f93b53d81410534158c490986782cb1dea5e2ae3b0'
+body_hash: 'sha256:b0b729a44e238deee8944c9e5c7e72023284e3eb7f6d58238eb3a20eb642769f'
 related:
   - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
   - '[[2026-06-04-profile-bucket-lifecycle-research]]'
+  - '[[2026-08-13-profile-bucket-lifecycle-successor-adr]]'
 ---
 
 # `profile-bucket-lifecycle` feature index
@@ -21,6 +22,7 @@ Auto-generated index of all documents tagged with `#profile-bucket-lifecycle`.
 ### adr
 
 - `2026-05-14-profile-bucket-lifecycle-adr` - `profile-bucket-lifecycle` adr: profile + bucket + vault lifecycle | (**status:** `accepted`)
+- `2026-08-13-profile-bucket-lifecycle-adr` - `profile-bucket-lifecycle` adr: `current-format profile capsule lifecycle` | (**status:** `accepted`)
 
 ### research
 

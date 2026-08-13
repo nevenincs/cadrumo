@@ -1,23 +1,24 @@
 ---
 tags:
-  - '#adr'
-  - '#secure-storage-production-hardening'
+  - "#adr"
+  - "#secure-storage-production-hardening"
 date: '2026-05-22'
-modified: '2026-07-17'
-body_hash: 'sha256:cb136a541d2c44210065d8a2092f0ab5a12fd2ad5760c886c5e56d30055ebbf8'
 related:
-  - '[[2026-05-22-secure-storage-production-hardening-architecture-research]]'
-  - '[[2026-05-22-secure-storage-api-review-audit]]'
-  - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
-  - '[[2026-05-06-secure-persistence-enforcement-adr]]'
-  - '[[2026-05-14-profile-bucket-lifecycle-adr]]'
-  - '[[2026-05-21-profile-uuid-identity-adr]]'
-  - '[[2026-05-21-profile-state-aggregate-adr]]'
-  - '[[2026-05-21-state-read-projection-adr]]'
-  - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
-  - '[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]'
+  - "[[2026-05-22-secure-storage-production-hardening-architecture-research]]"
+  - "[[2026-05-22-secure-storage-api-review-audit]]"
+  - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
+  - "[[2026-05-06-secure-persistence-enforcement-adr]]"
+  - "[[2026-05-14-profile-bucket-lifecycle-adr]]"
+  - "[[2026-05-21-profile-uuid-identity-adr]]"
+  - "[[2026-05-21-profile-state-aggregate-adr]]"
+  - "[[2026-05-21-state-read-projection-adr]]"
+  - "[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]"
+  - "[[2026-06-06-secure-storage-production-hardening-w13-p27-s397-persona-finding-requirements-research]]"
+superseded_by: '2026-08-13-secure-storage-hardening-successor-adr'
+modified: '2026-08-13'
+body_hash: 'sha256:e159d24958678a22fd7cf8144d66f0e842584b7879f1bdc9e853aa6201189aaa'
 ---
-# `secure-storage-production-hardening` adr: `canonical SecureStorage architecture for adverse production operation` | (**status:** `accepted`)
+# `secure-storage-production-hardening` adr: `canonical SecureStorage architecture for adverse production operation` | (**status:** `superseded`)
 
 ## Problem Statement
 
