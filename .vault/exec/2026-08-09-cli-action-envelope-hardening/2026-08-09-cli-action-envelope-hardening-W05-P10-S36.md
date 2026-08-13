@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:c836f41645a73f02fb2df5e936b9d6f563f07cb067ba2226e65a6e5ca0275eca'
+body_hash: 'sha256:72dff1d7e2e8b03f4385befb77024baafc5cd7012f4bf608efafb2d7c234cda1'
 step_id: 'S36'
 related:
   - "[[2026-08-09-cli-action-envelope-hardening-plan]]"
@@ -26,7 +26,7 @@ related:
 
 ## Outcome
 
-- Eleven registered-error constructions authored a sentence at the raise site. Every one of them belongs to an error whose registered code already declares a message key, and message resolution prefers that key, so none of the prose was ever shown through the normal operator path. It was not harmless: the exception's own rendered text prefers the positional argument, so the English reached tracebacks, logs and every boundary that renders the exception directly, in every locale, while a key-and-context assertion stayed green. That is the defect this Step existed to remove, and the package now has zero such constructions.
+- Twelve registered-error constructions authored a sentence at the raise site. Every one of them belongs to an error whose registered code already declares a message key, and message resolution prefers that key, so none of the prose was ever shown through the normal operator path. It was not harmless: the exception's own rendered text prefers the positional argument, so the English reached tracebacks, logs and every boundary that renders the exception directly, in every locale, while a key-and-context assertion stayed green. That is the defect this Step existed to remove, and the package now has zero such constructions.
 - The confirmed whole-tree finding against the represented-party refusal is cleared. Its owner-closed error named a downstream reference Step, but the cause was the constructor in this package: the ledger validator demands an open owner for every site of a qualname while any site of that qualname still authors a message, so an unmigrated producer here reported as a defect against a closed Step elsewhere. Measured before and after against the same tree, that error is gone.
 - Six structural rejections of a persisted diagnostic payload were distinguishable only by their sentences. They now share the one registered key and carry a validation_rule fact naming the check that failed, so the distinction survives as machine data a consumer can route on rather than prose a consumer would have to parse.
 - The failed-live-assertion refusal previously built its diagnostic by flattening status, error text, landing host and path, and a cookie presence flag into one English-labelled string. It is now a fact mapping. The landing URL stays decomposed into host and path rather than carried whole, so a redirect query string, which is where AEAT carries session material, cannot enter the refusal; the cookie is still reported only as a presence flag. No credential, token, certificate secret or tax identifier enters any fact added here.
@@ -43,4 +43,5 @@ related:
 - No locale key was added or changed. All four keys the migrated producers now render through were already registered in all four catalogues, so the contended catalogue files were never opened. The locale drift gate is red, but on peer work: the four catalogues carry uncommitted edits this Step did not make, and every key the gate names belongs to other surfaces.
 - The box is deliberately left unchecked, for the coordinator to adjudicate. Code review has not been run against this change.
 - Two builtin-exception guards in the package still carry English text, and were left alone. They are internal programming invariants with no registered code and therefore no message key, so they carry none of the key-hiding defect this Step removes.
+- The commit message for the source change says eleven migrated producers. The correct count is twelve, verified against the landed diff. The undercount came from an initial scan that looked only at raise statements and so missed a producer that is constructed and returned rather than raised, in the repository hook that relabels a storage row-identity refusal. That site was found by a second scan over every registered-error construction and is migrated in the same commit; only the message text is wrong, not the change. The message is left as landed rather than rewritten, and the correction is recorded here.
 - No carry-forward.
