@@ -6,12 +6,13 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:1dbf179658e1a56113611aed67a28c74e14cacc90013a72fb0035ec4779d2c63'
+body_hash: 'sha256:1560c0896e4b2e4cce3a5d0d0221766be9e04ec05555038f647154cb7cdfb01d'
 related:
   - '[[2026-08-10-legal-corpus-vintage-P01-S01]]'
   - '[[2026-08-10-legal-corpus-vintage-P01-S02]]'
   - '[[2026-08-10-legal-corpus-vintage-P02-S03]]'
   - '[[2026-08-10-legal-corpus-vintage-P02-S04]]'
+  - '[[2026-08-10-legal-corpus-vintage-P03-S05]]'
   - '[[2026-08-10-legal-corpus-vintage-P03-S07]]'
   - '[[2026-08-10-legal-corpus-vintage-adr]]'
   - '[[2026-08-10-legal-corpus-vintage-plan]]'
@@ -34,6 +35,7 @@ Auto-generated index of all documents tagged with `#legal-corpus-vintage`.
 - `2026-08-10-legal-corpus-vintage-P01-S02` - Prove the new clause bites and prove it does not over-reach in the same row. The refusal must fire on a document containing a forbidden phrase, and the CONTROL that decides closure is that every one of the 606 existing entries still loads unchanged, with the deliberately vintaged excerpts named explicitly because they legitimately contain text current law does not. Do not close on the refusal firing
 - `2026-08-10-legal-corpus-vintage-P02-S03` - Author the forbidden-text clause for ley-35-2006 art-81 in the same change as the corpus_ref repoint the sibling audit prepared, naming the repealed cotizaciones ceiling as text the cited document must not contain. This is the operator-stamped entry, so the authoring is prepared and the stamp is not an agent act
 - `2026-08-10-legal-corpus-vintage-P02-S04` - AUTHORING ONLY, and the two halves diverge. Prepare the forbidden-text clause for ley-37-1992 art-122 as a candidate diff in the exec record and do NOT write it into the live registry file
+- `2026-08-10-legal-corpus-vintage-P03-S05` - Acquire the redaction history for the 157 excerpt-backed entries that have no bundled consolidated counterpart, through dev/corpus/fetch_boe_normative.py and never by hand. Three traps are already measured and must be carried: act.php lists versions NEWEST first while the open-data article endpoint concatenates them OLDEST first, so a take-the-last rule is right for one and bundles repealed law for the other
 - `2026-08-10-legal-corpus-vintage-P03-S07` - RESOLVED BY MEASUREMENT. Fix the anchor derivation generally, re-run over the full eligible population, and correct every coverage statement published against the wrong denominator
 
 ### plan
