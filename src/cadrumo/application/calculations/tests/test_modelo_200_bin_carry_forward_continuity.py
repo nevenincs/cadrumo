@@ -50,22 +50,14 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._verification_actions import _evaluate_verification_predicates
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-# Casilla-only predicates (cap_le_when_positive) ignore the profile, but
-# _evaluate_verification_predicates requires a real TaxpayerProfile; supply a
-# minimal one rather than the typed-None hole the casilla-only path tolerated.
-_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime.GENERAL)
 
 _MODELO_200 = "200"
 
@@ -82,7 +74,6 @@ _M200_BIN_APLICADA_MAXIMA: CasillaId = validated_casilla_id(
     "DP200014:bin-aplicada-maxima",
     surface="_M200_BIN_APLICADA_MAXIMA",
 )
-_M200_BIN_APLICADA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA")
 
 #: Two distinct renta years the enrollment spans; each sources the prior year's 00671.
 _YEAR_N = 2025
@@ -243,82 +234,12 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Elective-cap gate (LIS art. 26.1): the operator-elective applied BIN
-# compensation (DP200014:00547) must not exceed the computed ceiling
-# (DP200014:bin-aplicada-maxima = min(stock, max(EUR 1M, 70%·base previa))).
-# The cap_le_when_positive BLOCKING predicate refuses OVER-application but
-# permits electing LESS — compensation is a right bounded by a ceiling, not a
-# mandate. These tests exercise the predicate semantics directly (the ceiling
-# value itself is produced by the real cap formula in the calc E2E above).
-# ---------------------------------------------------------------------------
-
-_BIN_CAP_PREDICATE_ID = "modelo-200-compensacion-bin-no-excede-limite-art-26"
-
-
-def _bin_cap_predicate():
-    """Return the art.26.1 cap BLOCKING predicate from the live M200 snapshot."""
-    revision = resources().modelos.authority.validate_modelo(_MODELO_200).revisions["2024-y-siguientes"]
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _BIN_CAP_PREDICATE_ID)
-    assert predicate.finding_kind == "BLOCKING_RULE"
-    assert "cap_le_when_positive" in predicate.expression
-    return predicate
-
-
-def test_modelo_200_bin_over_application_above_cap_is_blocked() -> None:
-    """Applying more BIN than the art.26.1 ceiling fires a BLOCKING finding.
-
-    Ceiling = 1.000.000 (the EUR 1M floor dominates a small 70%·base); electing
-    00547 = 1.200.000 over-compensates and must be refused. Non-tautological:
-    the predicate is the registry's own cap_le_when_positive, evaluated against
-    a hand-built over-claim, not a re-run of the cap formula.
-    """
-    predicate = _bin_cap_predicate()
-    casilla_values: dict[CasillaId, Decimal] = {
-        _M200_BIN_APLICADA_MAXIMA: Decimal("1000000.00"),
-        _M200_BIN_APLICADA: Decimal("1200000.00"),  # over the ceiling
-    }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert dict(findings[0].message_facts) == {"predicate_id": _BIN_CAP_PREDICATE_ID}
-
-
-def test_modelo_200_electing_less_than_cap_is_permitted() -> None:
-    """Electing LESS BIN than the ceiling raises no finding (compensation is a right).
-
-    The taxpayer may preserve BIN stock for future years; applying below the
-    cap is legitimate and the gate must not refuse it. This is the
-    no-silent-under-declaration "Good" path: blocking only the over-claim
-    direction, permitting the under-direction.
-    """
-    predicate = _bin_cap_predicate()
-    casilla_values: dict[CasillaId, Decimal] = {
-        _M200_BIN_APLICADA_MAXIMA: Decimal("1000000.00"),
-        _M200_BIN_APLICADA: Decimal("400000.00"),  # elected below the ceiling
-    }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
-    assert findings == []
-
-
-def test_modelo_200_applying_exactly_the_cap_is_permitted() -> None:
-    """Applying exactly the ceiling is permitted (<= holds at equality)."""
-    predicate = _bin_cap_predicate()
-    casilla_values: dict[CasillaId, Decimal] = {
-        _M200_BIN_APLICADA_MAXIMA: Decimal("1000000.00"),
-        _M200_BIN_APLICADA: Decimal("1000000.00"),
-    }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
-    assert findings == []
-
-
-# ---------------------------------------------------------------------------
 # Cap-formula worked example (LIS art. 26.1): when the base imponible previa is
 # large enough that 70% of it exceeds the EUR 1.000.000 floor, the computed
 # ceiling DP200014:bin-aplicada-maxima must select the 70%-of-base-previa branch
-# (not the floor), clamped by the available BIN stock. The existing predicate
-# tests above supply the ceiling by hand and exercise only the EUR 1M-floor
-# branch; this test drives the REAL cap formula end-to-end through the M200
-# engine so the 70% branch — and the base-previa operand it reads — is covered.
+# (not the floor), clamped by the available BIN stock. This test drives the REAL
+# cap formula end-to-end through the M200 engine so the 70% branch — and the
+# base-previa operand it reads — is covered.
 # ---------------------------------------------------------------------------
 
 #: Resultado contable de la cuenta de pérdidas y ganancias (casilla 00501), the

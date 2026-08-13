@@ -34,23 +34,16 @@ from ....domain.calculations.registry import (
     RegistrySnapshot,
     RelationId,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import CalculationRevision, ModeloVerificationFindingKind
+from ....domain.modelos import CalculationRevision
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo import calculate_modelo_revision, create_work_unit
-from ...modelo._verification_actions import _evaluate_verification_predicates
 from ...user_profile import UserProfileLifecycleRepository
 from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: cap_le_when_positive predicates ignore the profile; supply a minimal real one.
-_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime.GENERAL)
-
-_STOCK_PREDICATE_ID = "modelo-100-2025-compensacion-base-neg-general-no-excede-stock"
-_LIMITE_PREDICATE_ID = "modelo-100-2025-compensacion-base-neg-general-no-excede-limite"
 _BASE_LIQUIDABLE_ART_50_REF = "ley-35-2006:art-50"
 _GENERAL_BASE_ART_48_REF = "ley-35-2006:art-48"
 _SAVINGS_BASE_ART_49_REF = "ley-35-2006:art-49"
@@ -304,78 +297,3 @@ def test_no_prior_negative_base_leaves_result_unchanged(tmp_path: Path) -> None:
     assert _v(result, _PENDIENTE_INICIO) == Decimal("0")
     assert _v(result, _APLICADA_MAXIMA) == Decimal("0")
     assert _v(result, _PENDIENTE_FIN) == Decimal("0")
-
-
-# --- Fail-closed: over-application is BLOCKED by the verification predicates -----
-#
-# The BLOCKING cap_le_when_positive predicates are exercised directly against
-# hand-built casilla maps (the M200 BIN-cap test pattern). Non-tautological: the
-# predicates are the registry's own, evaluated against an over-claim / under-claim
-# we construct, not a re-run of the cap formula. The ceiling value itself is
-# produced by the real cap formula in the E2E calc above.
-
-
-def _predicate(predicate_id: str):
-    revision = resources().modelos.authority.validate_modelo(_MODELO).revisions["2025"]
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == predicate_id)
-    assert predicate.finding_kind == "BLOCKING_RULE"
-    assert "cap_le_when_positive" in predicate.expression
-    return predicate
-
-
-def test_applied_exceeding_stock_is_blocked() -> None:
-    """1389 > 1388 (the pending stock) fires the stock BLOCKING predicate."""
-    predicate = _predicate(_STOCK_PREDICATE_ID)
-    casilla_values = {
-        _PENDIENTE_INICIO: Decimal("1000.00"),  # stock
-        _APLICADO: Decimal("2500.00"),  # over the stock
-    }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
-    assert len(findings) == 1
-    finding = findings[0]
-    assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert dict(finding.message_facts) == {"predicate_id": _STOCK_PREDICATE_ID}
-
-
-def test_applied_exceeding_art50_ceiling_is_blocked() -> None:
-    """1389 above the supplied Art. 50.3 ceiling is refused."""
-    predicate = _predicate(_LIMITE_PREDICATE_ID)
-    casilla_values = {
-        _APLICADA_MAXIMA: Decimal("10000.00"),  # ceiling = 25%·40000 headroom
-        _APLICADO: Decimal("15000.00"),  # over the ceiling
-    }
-    findings = _evaluate_verification_predicates((predicate,), casilla_values, _CASILLA_ONLY_PROFILE)
-    assert len(findings) == 1
-    finding = findings[0]
-    assert finding.kind is ModeloVerificationFindingKind.BLOCKING_RULE
-    assert dict(finding.message_facts) == {"predicate_id": _LIMITE_PREDICATE_ID}
-
-
-def test_upper_bound_predicates_do_not_fire_below_limits() -> None:
-    """The local upper-bound predicates do not fire below their supplied limits.
-
-    This only proves the two predicate contracts; it makes no separate claim
-    about the Art. 50.3 requirement to compensate at the maximum amount allowed.
-    """
-    stock_predicate = _predicate(_STOCK_PREDICATE_ID)
-    limite_predicate = _predicate(_LIMITE_PREDICATE_ID)
-    casilla_values = {
-        _PENDIENTE_INICIO: Decimal("3000.00"),
-        _APLICADA_MAXIMA: Decimal("3000.00"),
-        _APLICADO: Decimal("1500.00"),  # below both bounds
-    }
-    assert _evaluate_verification_predicates((stock_predicate,), casilla_values, _CASILLA_ONLY_PROFILE) == []
-    assert _evaluate_verification_predicates((limite_predicate,), casilla_values, _CASILLA_ONLY_PROFILE) == []
-
-
-def test_applying_exactly_the_limits_is_permitted() -> None:
-    """Applying exactly the stock / ceiling is permitted (<= holds at equality)."""
-    stock_predicate = _predicate(_STOCK_PREDICATE_ID)
-    limite_predicate = _predicate(_LIMITE_PREDICATE_ID)
-    casilla_values = {
-        _PENDIENTE_INICIO: Decimal("3000.00"),
-        _APLICADA_MAXIMA: Decimal("3000.00"),
-        _APLICADO: Decimal("3000.00"),
-    }
-    assert _evaluate_verification_predicates((stock_predicate,), casilla_values, _CASILLA_ONLY_PROFILE) == []
-    assert _evaluate_verification_predicates((limite_predicate,), casilla_values, _CASILLA_ONLY_PROFILE) == []

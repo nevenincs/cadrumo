@@ -335,33 +335,6 @@
         "reason": "The test asserts which exception type the sede boundary raises on a malformed observed casilla, which is the behaviour under test rather than an incidental detail. The sede facade exports the observed-value records but not this error type, so the class is reachable only from its defining module. Promotion is a live candidate the next time that facade is touched: an error an application-layer caller must catch is arguably part of the boundary contract."
       },
       {
-        "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_100_base_negativa_general_compensation.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.modelo._verification_actions",
-        "imported_names": [
-          "_evaluate_verification_predicates"
-        ],
-        "reason": "White-box test of the private verification-predicate evaluator against BIN carry-forward continuity scenarios. Internal formula-evaluation primitive backing verify_modelo_revision, not a standalone public entry point."
-      },
-      {
-        "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.modelo._verification_actions",
-        "imported_names": [
-          "_evaluate_verification_predicates"
-        ],
-        "reason": "Same private verification-predicate evaluator reach as test_modelo_100_base_negativa_general_compensation.py; a second continuity-scenario suite exercising the same internal primitive."
-      },
-      {
-        "importer_path": "src/cadrumo/application/calculations/tests/test_modelo_200_dotaciones_deterioro_carry_continuity.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.application.modelo._verification_actions",
-        "imported_names": [
-          "_evaluate_verification_predicates"
-        ],
-        "reason": "Same private verification-predicate evaluator reach as the sibling M100/M200 continuity suites; a third continuity-scenario suite exercising the same internal primitive."
-      },
-      {
         "importer_path": "src/cadrumo/application/calculations/tests/test_observations_repository_roundtrip.py",
         "occurrence": 1,
         "target_mod": "cadrumo.adapters.persistence.storage.sql._secure_object_crypto",
