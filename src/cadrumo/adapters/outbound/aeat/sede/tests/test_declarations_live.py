@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import pytest
 
+from ......core import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
 from .._declarations import Declaracion, capture_declaration, walk_declarations_register
 from .._errors import SedeError
@@ -125,9 +126,6 @@ async def test_capture_declaration_returns_pdf_bytes() -> None:
     assert capture.pdf_bytes.startswith(b"%PDF-")  # PDF magic header
     assert capture.pdf_sha256  # populated
     assert len(capture.pdf_sha256) == 64  # sha256 hex digest
-    assert capture.ref.csv  # non-empty
-    # The CSV passed our shape regex during extraction; sanity-check
-    # the round-trip carries the same value through the SedeCapture.
-    assert 8 <= len(capture.ref.csv) <= 24
-    assert capture.ref.csv.isupper()
-    assert capture.ref.csv.replace("0", "").replace("1", "").isalnum()
+    # The CSV passed canonical validation during extraction; verify the
+    # round-trip carries that same canonical shape through SedeCapture.
+    assert is_aeat_csv(capture.ref.csv)

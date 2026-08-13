@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter, ValidationError
 
-from .....core import Period
+from .....core import Period, is_aeat_csv
 from .....domain.justificante import (
     Justificante,
     JustificanteCsvNotFoundError,
@@ -250,9 +250,8 @@ class TestRealCorpusParses:
         assert record.tax_id == expected_tax_id, (
             f"tax_id mismatch for {fixture}: got {record.tax_id}, sidecar declares {expected_tax_id}"
         )
-        # CSV shape always conforms to AEAT's 8-24 uppercase alphanum.
-        assert record.csv.isalnum() and record.csv.isupper()
-        assert 8 <= len(record.csv) <= 24, f"csv shape failure for {fixture}: got {record.csv!r}"
+        # CSV shape always conforms to AEAT's canonical contract.
+        assert is_aeat_csv(record.csv), f"csv shape failure for {fixture}: got {record.csv!r}"
         # presented_at must be a real datetime — surfaces any
         # timestamp-extraction drift across the corpus's three
         # layouts (Spanish modern, Spanish column-split, English).

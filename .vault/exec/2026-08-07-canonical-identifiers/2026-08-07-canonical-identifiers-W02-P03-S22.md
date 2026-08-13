@@ -5,17 +5,19 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:845b71ebe8d182698f0cf636f9da8b6618ed88339525caa36c91349e7c7d04d5'
+body_hash: 'sha256:2edd980fd9cf3b6fd67858c318996841da6a6e8dffe9bfb263211841f6578a88'
 step_id: 'S22'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
 ---
 
-# Add a shape-conformance regression over the adopted 8-32 CSV bound pinning its accept and refuse boundaries explicitly, and correct this row's prior claim that the parser-anchor fixtures carry no CSV token. They do. All 60 carry one, 34 distinct, every one 16 uppercase alphanumeric, drawn into the page body by the fixture generators and recorded in each sidecar's replacements_applied list. Construct the boundary value set from the decided bound, covering the shortest and longest accepted forms and the nearest refused ones on each side of both the length and the character-class axis. Keep the existing corpus sidecar roundtrip regression running unchanged alongside it and treat it as this row's control rather than as background. It is the measurement that the legitimate population still passes, and this row does not close until it is green across all 60 fixtures. State in the Step record which claim each instrument proves, shape conformance by the boundary set and artefact fidelity by the fixture replay
+# Add a shape-conformance regression over the adopted 8-32 CSV bound pinning its accept and refuse boundaries explicitly, and correct this row's prior claim that the parser-anchor fixtures carry no CSV token. They do. All 60 carry one, 34 distinct, every one 16 uppercase alphanumeric, drawn into the page body by the fixture generators and recorded in each sidecar's replacements_applied list. Construct the boundary value set from the decided bound, covering the shortest and longest accepted forms and the nearest refused ones on each side of both the length and the character-class axis. Keep the corpus sidecar roundtrip replay's corpus inputs and artefact-fidelity behaviour unchanged alongside it, while replacing duplicate local shape checks with the direct canonical predicate, and treat it as this row's control rather than as background. It is the measurement that the legitimate population still passes, and this row does not close until it is green across all 60 fixtures. State in the Step record which claim each instrument proves, shape conformance by the boundary set and artefact fidelity by the fixture replay
 
 ## Scope
 
 - `src/cadrumo/domain/justificante/tests/`
+- `src/cadrumo/adapters/inbound/justificante/tests/`
+- `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_live.py`
 
 ## Description
 
@@ -29,7 +31,9 @@ related:
   out-of-range width.
 - Pin the decided bound itself as values, so a widening is a reviewed edit
   rather than something the tree's constant-derived tests absorb silently.
-- Run the corpus sidecar roundtrip regression unchanged as this row's control.
+- Run the corpus sidecar roundtrip replay unchanged in its corpus inputs and
+  artefact-fidelity behaviour, while correcting its stale local range assertion
+  to call the direct canonical predicate.
 
 ## Outcome
 
@@ -81,14 +85,18 @@ those constants move. This module asserts the constants equal eight and
 thirty-two as values, and writes each boundary token out in full, guarded by a
 test confirming each literal is the width its name claims.
 
-**The control.** The corpus sidecar roundtrip regression was run unchanged —
-confirmed unmodified in the working tree — and is green: **sixty
-fixture-parameterised cases pass**, plus the pair-count guard, sixty-one items
-in total. This row does not close without that measurement and it holds.
+**The control.** The corpus sidecar roundtrip replay retained its corpus inputs
+and artefact-fidelity behaviour and is green: **sixty fixture-parameterised
+cases pass**, plus the pair-count guard, sixty-one items in total. Its stale
+local eight-to-twenty-four assertion was corrected to call the direct canonical
+predicate, so the control now agrees with the adopted eight-to-thirty-two
+contract without changing what it replays or proves. This row does not close
+without that measurement and it holds.
 
-**Both instruments bite.** Proven from throwaway pytest plugins outside the
-repository tree loaded via `PYTHONPATH`; no tracked file was edited. Loosening
-the bound in-process to the retired four-to-sixty-four no-pattern shape — the
+**Both instruments bite.** The temporary bite proof ran from throwaway pytest
+plugins outside the repository tree loaded via `PYTHONPATH`; it did not alter
+tracked production or test code for the proof itself. Loosening the bound
+in-process to the retired four-to-sixty-four no-pattern shape — the
 predicate's pattern swapped, the published constants lowered, the model field
 retyped without pattern or normaliser — reds twenty-six of the thirty-nine
 cases, including the bound pin itself failing on `assert 4 == 8`, every refused
