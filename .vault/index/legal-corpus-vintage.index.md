@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:8a2e565d25309d833c4e9bf7eb37ea0e53717e68d34179060b3d8ed62972971c'
+body_hash: 'sha256:3ba8a658b850c2d7f8a121ba027463ce222ff0cb022de34ef16c01cc42027b1f'
 related:
   - '[[2026-08-10-legal-corpus-vintage-P01-S01]]'
   - '[[2026-08-10-legal-corpus-vintage-P01-S02]]'
@@ -18,6 +18,7 @@ related:
   - '[[2026-08-10-legal-corpus-vintage-adr]]'
   - '[[2026-08-10-legal-corpus-vintage-plan]]'
   - '[[2026-08-10-legal-corpus-vintage-reference]]'
+  - '[[2026-08-13-legal-corpus-vintage-vintage-screen-review-audit]]'
 ---
 
 # `legal-corpus-vintage` feature index
@@ -29,6 +30,10 @@ Auto-generated index of all documents tagged with `#legal-corpus-vintage`.
 ### adr
 
 - `2026-08-10-legal-corpus-vintage-adr` - `legal-corpus-vintage` adr: `What a corpus excerpt gate must be able to say` | (**status:** `proposed`)
+
+### audit
+
+- `2026-08-13-legal-corpus-vintage-vintage-screen-review-audit` - `legal-corpus-vintage` audit: `excerpt vintage screen and redaction-history acquisition`
 
 ### exec
 
