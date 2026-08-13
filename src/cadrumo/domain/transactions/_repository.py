@@ -28,6 +28,15 @@ from ...core.identity import BucketId
 from ._errors import LedgerStorageError
 from ._models import BucketTransactionRef
 
+#: Registered locale key for every key-derivation refusal in this module.
+#: Read from the class's own bound :class:`~core.errors.ErrorCode` rather than
+#: restated as a literal, so the raise sites and the error registry cannot
+#: drift apart. The refusals below carry this key plus locale-neutral facts and
+#: author no sentence: ``str(exc)`` prefers a positional argument over the key,
+#: so an authored sentence passed alongside it would keep reaching tracebacks,
+#: logs and every direct rendering in every locale.
+_LEDGER_STORAGE_MESSAGE_KEY = LedgerStorageError.code.message_key
+
 
 def transaction_index_object_key(bucket_id: str) -> str:
     """Return the per-bucket transaction-membership-index secure-object key.
@@ -39,8 +48,12 @@ def transaction_index_object_key(bucket_id: str) -> str:
     trimmed = bucket_id.strip()
     if not trimmed:
         raise LedgerStorageError(
-            "bucket_id must not be blank",
-            context={"repository": "transaction_catalogue", "operation": "index_object_key"},
+            translated_message=_LEDGER_STORAGE_MESSAGE_KEY,
+            context={
+                "repository": "transaction_catalogue",
+                "operation": "index_object_key",
+                "blank_field": "bucket_id",
+            },
         )
     return f"transaction-index:{trimmed}"
 
@@ -57,14 +70,22 @@ def transaction_object_key(bucket_id: str, transaction_id: str) -> str:
     trimmed = bucket_id.strip()
     if not trimmed:
         raise LedgerStorageError(
-            "bucket_id must not be blank",
-            context={"repository": "transaction_catalogue", "operation": "object_key"},
+            translated_message=_LEDGER_STORAGE_MESSAGE_KEY,
+            context={
+                "repository": "transaction_catalogue",
+                "operation": "object_key",
+                "blank_field": "bucket_id",
+            },
         )
     tx = transaction_id.strip()
     if not tx:
         raise LedgerStorageError(
-            "transaction_id must not be blank",
-            context={"repository": "transaction_catalogue", "operation": "object_key"},
+            translated_message=_LEDGER_STORAGE_MESSAGE_KEY,
+            context={
+                "repository": "transaction_catalogue",
+                "operation": "object_key",
+                "blank_field": "transaction_id",
+            },
         )
     return f"transaction:{trimmed}:{tx}"
 

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 from pydantic import ValidationError
 
-from ...core.errors import CadrumoError
+from ...core.errors import CadrumoError, get_registered_error_code
 
 
 class TransactionError(CadrumoError):
@@ -60,13 +60,23 @@ class LedgerStorageError(TransactionPersistenceError):
         message: str | None = None,
         *,
         context: Mapping[str, object] | None = None,
-        translated_message: str = "errors.fail.fail_financial_ledger_storage",
+        translated_message: str | None = None,
     ) -> None:
-        """Initialise a financial-ledger storage failure with structured metadata."""
+        """Initialise a financial-ledger storage failure with structured metadata.
+
+        ``translated_message`` falls back to the *constructed* class's own
+        registered key, not to a literal spelled here. A literal default is
+        inherited verbatim by every subclass, so a bare
+        :class:`LedgerNoActiveBucketError` rendered this class's
+        ``FAIL_FINANCIAL_LEDGER_STORAGE`` key in place of its own registered
+        ``REFUSED_FINANCIAL_LEDGER_NO_ACTIVE_BUCKET`` key -- an authored value
+        silently displacing the registry's. Resolving through the registry
+        keeps each subclass on its own key and cannot drift from it.
+        """
         super().__init__(
             message,
             context=context,
-            translated_message=translated_message,
+            translated_message=translated_message or get_registered_error_code(type(self)).message_key,
         )
 
 
