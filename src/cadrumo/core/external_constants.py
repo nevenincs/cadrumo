@@ -115,6 +115,7 @@ class AeatSedePaths(_Frozen):
     cotejo_document: str
     notifications_summary: str
     notifications_query: str
+    notifications_detail: str
     certificate_selector: str
     r210_simulator_open_ajax: str
     borrador_100_detail_template: str
@@ -261,12 +262,14 @@ class AeatNotificationsQuery(_Frozen):
         date_format: ``strftime`` pattern AEAT accepts for the filter dates.
         tipo_consulta_all: Filter value selecting every notification kind.
         leida_all: Filter value selecting both read and unread rows.
+        detail_view_action: Action token returning the notification PDF.
     """
 
     lookback_years: int = Field(ge=1, le=50)
     date_format: str
     tipo_consulta_all: str
     leida_all: str
+    detail_view_action: str
 
 
 class AeatOracles(_Frozen):

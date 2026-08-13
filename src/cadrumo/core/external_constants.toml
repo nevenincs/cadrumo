@@ -40,6 +40,7 @@ irpf_expediente_detail_year_suffix = "RVlt"
 notificaciones = "/wlpl/TC-UTIL/NOT-L/Notificacion"
 iva_compensation_wallet = "/wlpl/DAI3-RUTI/CarteraCuotas"
 censal_datos = "/wlpl/BUGC-JDIT/MdcAcceso"
+notifications_detail = "/wlpl/GNNO-JDIT/DetalleSede"
 deudas_consulta = "/wlpl/SRVO-JDIT/ConsultaDdas"
 deudas_pagar_todas = "/wlpl/SRVO-JDIT/PagarTodas"
 
@@ -171,6 +172,14 @@ date_format = "%d-%m-%Y"
 # notificada/no-notificada axis nor the read/unread axis narrows the result.
 tipo_consulta_all = ""
 leida_all = ""
+# The detail page's "Ver notificación" action, which returns the notification
+# PDF. For a notification ALREADY read this redisplays it and changes nothing.
+# For an unread one the same action is the comparecencia -- the moment the
+# notification is legally served -- and AEAT requires the taxpayer's signature
+# for it. This application never drives that: the reader admits the action only
+# for a row AEAT already reports as read. See the fail-closed predicate in the
+# notifications adapter.
+detail_view_action = "vernotif"
 
 [aeat.live_safety]
 auth_browser_action_patterns = [
