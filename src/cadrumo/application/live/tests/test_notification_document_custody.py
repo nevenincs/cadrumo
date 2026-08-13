@@ -64,6 +64,9 @@ from ._notification_document_support import (
     DETAIL_URL as _DETAIL_URL,
 )
 from ._notification_document_support import (
+    SANCION_TEXT_LINES,
+)
+from ._notification_document_support import (
     read_row as _read_row,
 )
 from ._notification_document_support import (
@@ -409,7 +412,10 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
 
     The custody guarantee is the whole point of this path, so it is asserted
     against the real file rather than assumed from the namespace's declared
-    sensitivity class.
+    sensitivity class. A single file is not the whole custody guarantee — see
+    :func:`test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document`
+    below for the full-tree sweep — but the database file is where every byte
+    this service writes ultimately lands, so it stays pinned here too.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = NotificationDocumentService()
@@ -421,3 +427,41 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
         assert b"3687.12" not in raw
         assert record.document_sha256.encode("ascii") not in raw
         assert b"%PDF" not in raw
+
+
+def test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document(tmp_path: Path) -> None:
+    """The custody guarantee holds across the ENTIRE on-disk footprint, not one file.
+
+    A single-file scan of the database misses a WAL or journal sidecar, the
+    keystore's wrapped-DEK artefact, and the secret-store files this same
+    fetch-and-store cycle writes — any one of which could carry a leak the
+    database-file check alone would never see. This walks EVERY file under the
+    temporary profile root and keys the assertion on the property that makes a
+    file an encrypted store artefact rather than a plaintext one: it contains
+    neither the PDF magic header nor any of the served document's own
+    distinctive plaintext literals. No file count or filename is hardcoded —
+    a store artefact this cycle has not been taught to write yet is covered
+    the same way as one it already writes.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        service = NotificationDocumentService()
+        document = _document()
+        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document)
+
+        files = [path for path in tmp_path.rglob("*") if path.is_file()]
+        # Anti-vacuity: the walk must find the real artefacts this cycle
+        # writes (the database plus at least its keystore and secret-store
+        # siblings), never an accidentally empty or single-file tree.
+        assert profile.paths.database_file in files
+        assert len(files) >= 3
+
+        forbidden = (
+            document.pdf_bytes,
+            b"%PDF",
+            record.document_sha256.encode("ascii"),
+            *(line.encode("utf-8") for line in SANCION_TEXT_LINES),
+        )
+        for path in files:
+            raw = path.read_bytes()
+            for needle in forbidden:
+                assert needle not in raw, f"{path.relative_to(tmp_path)} carries a plaintext leak: {needle!r}"
