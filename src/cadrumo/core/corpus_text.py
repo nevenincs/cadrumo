@@ -6,13 +6,20 @@ import html
 import json
 import re
 from pathlib import Path
-from typing import Final
+from typing import Final, NamedTuple
 
 from .errors import CoreError
 from .external_constants import UTF_8_ENCODING
 from .text_fold import fold_diacritics
 
-__all__ = ["CorpusAnchorResolutionError", "normalise_corpus_text", "resolve_anchored_extracted_unit"]
+__all__ = [
+    "CorpusAnchorResolutionError",
+    "CorpusRedactionMark",
+    "corpus_redaction_marks",
+    "extracted_unit_count",
+    "normalise_corpus_text",
+    "resolve_anchored_extracted_unit",
+]
 
 _HTML_TAG_RE = re.compile(r"<[a-zA-Z!/?][^<>\s]{0,200}>")
 _WHITESPACE_RE = re.compile(r"\s+")
@@ -98,6 +105,92 @@ def normalise_corpus_text(text: str) -> str:
     return _WHITESPACE_RE.sub(" ", without_marks).strip().casefold()
 
 
+class CorpusRedactionMark(NamedTuple):
+    """One dated redaction a consolidated BOE payload declares, and where it sits.
+
+    ``amending_norm`` is the norm that PRODUCED this redaction rather than the
+    norm being read, so most marks in a much-amended article name a different
+    document than the one requested. ``vigencia`` is the ``fecha_vigencia``
+    attribute as published, ``YYYYMMDD``; it orders redactions and is NOT the
+    effective date a citation should quote.
+
+    ``tag_start`` is the offset of the ``<version>`` opening tag and
+    ``body_start`` the offset just past it, so a caller can slice exactly one
+    redaction out of a payload that concatenates them all.
+    """
+
+    amending_norm: str
+    vigencia: str
+    tag_start: int
+    body_start: int
+
+
+#: Each redaction of an article, tagged with the norm that produced it and the
+#: date it took effect. The single pattern for this markup in the tree: the
+#: maintainer-side acquirer and the registry's build-time refusal both read it
+#: through :func:`corpus_redaction_marks` rather than carrying a copy, so the
+#: two cannot drift into disagreeing about what a redaction boundary is.
+_REDACTION_MARK_RE: Final = re.compile(
+    r"<version\b[^>]*\bid_norma=\"(?P<amending_norm>BOE-[A-Z]-\d{4}-\d+)\""
+    r"[^>]*\bfecha_vigencia=\"(?P<vigencia>\d{8})\"[^>]*>",
+    re.IGNORECASE,
+)
+
+
+def corpus_redaction_marks(payload: str) -> tuple[CorpusRedactionMark, ...]:
+    """Return every dated redaction ``payload`` declares, in document order.
+
+    Order is reported but deliberately not meaningful. BOE's open-data article
+    endpoint concatenates redactions oldest first while the consolidated
+    ``act.php`` view lists its version selector newest first, so any consumer
+    that inferred "current" from position would be right about one source and
+    silently bundle repealed law from the other. Selection therefore reads the
+    ``fecha_vigencia`` attribute, and this function only enumerates.
+
+    A payload with no such markup -- a consolidated whole-document page, an
+    as-published single-document view, a hand-sliced article -- yields an empty
+    tuple, which is the honest answer for a document that declares no redaction
+    history rather than a claim that it holds only one redaction.
+
+    Args:
+        payload: The decoded corpus document.
+
+    Returns:
+        One :class:`CorpusRedactionMark` per ``<version>`` element carrying both
+        an ``id_norma`` and a ``fecha_vigencia``.
+    """
+    return tuple(
+        CorpusRedactionMark(
+            amending_norm=match.group("amending_norm"),
+            vigencia=match.group("vigencia"),
+            tag_start=match.start(),
+            body_start=match.end(),
+        )
+        for match in _REDACTION_MARK_RE.finditer(payload)
+    )
+
+
+def extracted_unit_count(sidecar_path: Path) -> int:
+    """Return how many readable units an extracted corpus sidecar carries.
+
+    Counts exactly the units :func:`resolve_anchored_extracted_unit` would
+    consider -- those carrying non-empty text -- so a caller reasoning about how
+    a sidecar partitions its source document reasons about the same partition
+    the resolver selects from.
+
+    Args:
+        sidecar_path: Path to the ``.extracted.json`` artefact.
+
+    Returns:
+        The number of units carrying non-empty text.
+
+    Raises:
+        CorpusAnchorResolutionError: If the sidecar cannot be read or declares
+            no units list.
+    """
+    return len(_readable_units(sidecar_path))
+
+
 def resolve_anchored_extracted_unit(
     sidecar_path: Path,
     *,
@@ -118,15 +211,7 @@ def resolve_anchored_extracted_unit(
     target = _canonical_anchor(anchor)
     if not target:
         raise CorpusAnchorResolutionError("anchor must be non-empty")
-    try:
-        payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise CorpusAnchorResolutionError(f"cannot read extracted sidecar {sidecar_path}") from exc
-    raw_units = payload.get("units")
-    if not isinstance(raw_units, list):
-        raise CorpusAnchorResolutionError(f"extracted sidecar {sidecar_path} has no units list")
-    units = [_unit_fields(raw_unit) for raw_unit in raw_units]
-    units = [(unit_anchor, title, text) for unit_anchor, title, text in units if text]
+    units = _readable_units(sidecar_path)
     if not units:
         raise CorpusAnchorResolutionError(f"extracted sidecar {sidecar_path} has no readable units")
 
@@ -150,6 +235,19 @@ def resolve_anchored_extracted_unit(
     if len(structural) > 1:
         raise CorpusAnchorResolutionError(f"anchor {anchor!r} is ambiguous in {sidecar_path}")
     raise CorpusAnchorResolutionError(f"anchor {anchor!r} is missing from {sidecar_path}")
+
+
+def _readable_units(sidecar_path: Path) -> list[tuple[str, str, str]]:
+    """Return the ``(anchor, title, text)`` triples of every unit carrying text."""
+    try:
+        payload = json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CorpusAnchorResolutionError(f"cannot read extracted sidecar {sidecar_path}") from exc
+    raw_units = payload.get("units")
+    if not isinstance(raw_units, list):
+        raise CorpusAnchorResolutionError(f"extracted sidecar {sidecar_path} has no units list")
+    units = [_unit_fields(raw_unit) for raw_unit in raw_units]
+    return [(unit_anchor, title, text) for unit_anchor, title, text in units if text]
 
 
 def _unit_fields(raw_unit: object) -> tuple[str, str, str]:

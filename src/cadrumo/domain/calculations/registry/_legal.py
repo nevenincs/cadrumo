@@ -6,7 +6,13 @@ import hashlib
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 
-from ....core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
+from ....core import (
+    CorpusAnchorResolutionError,
+    corpus_redaction_marks,
+    extracted_unit_count,
+    normalise_corpus_text,
+    resolve_anchored_extracted_unit,
+)
 from ._citation_blocklist import CitationSource, find_known_bad
 from ._errors import RegistryValidationError
 from ._schema import LegalReference
@@ -201,6 +207,110 @@ def _sidecar_content_digest(sidecar: Path, reference: LegalReference) -> str:
     return hashlib.blake2b(data, digest_size=16).hexdigest()
 
 
+def _assert_redactions_are_not_fused(
+    document: Path,
+    sidecar: Path,
+    reference: LegalReference,
+    *,
+    path_text: str,
+) -> None:
+    """Refuse a citation whose evidence fuses repealed law with the law in force.
+
+    BOE's open-data article endpoint concatenates EVERY historical redaction of
+    an article into one response, correctly and by design -- that history is why
+    the endpoint is worth reading. The bundled extractor then folds the whole
+    response into a single undelimited unit carrying no ``fecha_vigencia``
+    attribution, so the text a ``required_text`` clause is checked against is
+    ten successive statements of the same provision run together. A phrase that
+    exists ONLY in a redaction repealed decades ago is then *present*, the
+    presence check passes, and the entry reads as grounded in current law while
+    its evidence is a pile. That is the failure a presence-only gate cannot
+    see from the inside, so it is refused from the outside instead.
+
+    Detection is STRUCTURAL rather than by filename. The redaction-history
+    captures happen to share a ``-redacciones`` stem, but that is an authoring
+    convention a later acquisition can sidestep without meaning to -- and the
+    live catalogue already proved it, citing a two-redaction article capture
+    under an ordinary ``-art-N`` name. The durable signal is the shape: the
+    cited document itself declares more than one dated redaction. A document
+    declaring none or one -- a consolidated page, an as-published view, a
+    hand-sliced article, an article never amended -- is untouched.
+
+    The refusal is on the redaction count alone rather than on a unit-count
+    comparison, and that is fail-closed on purpose. "Fewer units than
+    redactions" proves fusion by pigeonhole, but its converse proves nothing: a
+    sidecar can carry more units than the document has redactions and still run
+    two of them together, because the extractor splits on article headings and
+    knows nothing about redaction boundaries. Nothing in the sidecar schema says
+    which redaction a unit holds, so no sidecar shape available today can
+    establish separation, and a check that accepted one would be granting on a
+    signal it does not have. The unit count is measured and reported because it
+    quantifies the collapse for whoever reads the failure; it does not decide
+    it.
+
+    CONSIDERED AND DEFERRED: splitting the article-endpoint extraction into one
+    unit per ``<version>``, each carrying its own ``fecha_vigencia``, so the
+    committed data stops being a pile rather than merely being unusable as
+    evidence. It is the larger and better remedy and it is deferred rather than
+    rejected: it reshapes shared production extraction output that several
+    concurrent efforts consume, and choosing the per-redaction unit identity,
+    anchor grammar and attribution field is architecturally significant enough
+    to warrant its own decision record. This refusal does not preclude it. When
+    that attribution exists, this check gains an acceptance clause reading it;
+    until then no such clause is written, because a branch no committed sidecar
+    can reach is a branch no test can honestly exercise.
+
+    A sidecar with no source document beside it is out of scope rather than
+    fail-closed, and the distinction is deliberate. The sidecar is what the app
+    reads as evidence and its presence is already required above; the source
+    document is not, and making it required here would smuggle a separate
+    integrity rule in under this one. A sidecar standing alone carries no
+    redaction markup to read, so there is nothing for this check to decide.
+    Every document the committed catalogue cites does exist, and the gate
+    asserts that over the whole population, so the skip swallows nothing real.
+    A document that is PRESENT but unreadable is a different matter and
+    refuses: then the markup exists and could not be examined.
+
+    Args:
+        document: The corpus document the reference cites.
+        sidecar: Its resolved ``.extracted.json`` artefact.
+        reference: The legal reference being verified, named in the failure.
+        path_text: The reference's own corpus path, quoted back to the author.
+
+    Raises:
+        RegistryValidationError: If the document is present but cannot be read,
+            or if it declares more than one dated redaction of the provision.
+    """
+    if not document.is_file():
+        return
+    try:
+        payload = document.read_text(encoding="utf-8", errors="replace")
+    except OSError as exc:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} corpus document {path_text!r} could not be read, so it "
+            f"cannot be shown to carry a single redaction of the provision: {exc}",
+        ) from exc
+    marks = corpus_redaction_marks(payload)
+    if len(marks) < 2:
+        return
+    try:
+        units = extracted_unit_count(sidecar)
+    except CorpusAnchorResolutionError as exc:
+        raise RegistryValidationError(
+            f"legal reference {reference.id!r} extracted corpus sidecar could not be counted: {exc}",
+        ) from exc
+    vigencias = ", ".join(mark.vigencia for mark in marks)
+    raise RegistryValidationError(
+        f"legal reference {reference.id!r} cites {path_text!r}, which declares {len(marks)} dated "
+        f"redactions of the provision ({vigencias}) collapsed into {units} extracted unit(s), so the "
+        f"text this entry is checked against fuses repealed law with the law in force. A required-text "
+        f"presence check against fused evidence passes on REPEALED text, which is exactly what the "
+        f"clause exists to prevent. Cite a consolidated current-text document for this provision "
+        f"instead, or reduce the capture to the redaction in force -- the maximum fecha_vigencia, "
+        f"refusing a tie -- through the corpus acquirer's own redaction-in-force rule before citing it.",
+    )
+
+
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     path_text, _, anchor = reference.corpus_ref.partition("#")
     path = (source_root / path_text).resolve()
@@ -222,6 +332,7 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} missing extracted corpus sidecar {path_text!r}",
         )
+    _assert_redactions_are_not_fused(path, resolved_sidecar, reference, path_text=path_text)
     stat = resolved_sidecar.stat()
     # A sidecar holds many extracted units.  The selected unit is therefore
     # part of the cache identity; caching only by sidecar would let the first

@@ -368,7 +368,14 @@ from .compatibility_lifecycle import (
     unfloored_durable_formats,
     unknown_floor_keys,
 )
-from .corpus_text import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
+from .corpus_text import (
+    CorpusAnchorResolutionError,
+    CorpusRedactionMark,
+    corpus_redaction_marks,
+    extracted_unit_count,
+    normalise_corpus_text,
+    resolve_anchored_extracted_unit,
+)
 from .external_constants import M347_THRESHOLD_EUR
 from .hashing import content_hash_hex, sha256_hex
 from .manual_corpus_sidecar import (
@@ -524,6 +531,7 @@ __all__: list[str] = [
     "ContentionCause",
     "ConvenioOverrideKind",
     "CorpusAnchorResolutionError",
+    "CorpusRedactionMark",
     "CounterpartyTaxablePersonStatus",
     "DeclaracionIdioma",
     "DeploymentLicencePosture",
@@ -666,6 +674,7 @@ __all__: list[str] = [
     "clear_pointer",
     "compile_filing_projection_ref",
     "content_hash_hex",
+    "corpus_redaction_marks",
     "default_model_runtime_id",
     "derive_result_disposition",
     "detect_image_media_type",
@@ -674,6 +683,7 @@ __all__: list[str] = [
     "exclusive_file_lock",
     "expected_floor",
     "extract_orden_anual_iva_tables",
+    "extracted_unit_count",
     "filing_projection_ref_casilla_id",
     "fold_diacritics",
     "fold_printed_phrase",
