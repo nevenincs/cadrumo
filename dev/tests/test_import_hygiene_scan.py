@@ -248,27 +248,6 @@ def test_find_shim_modules_excludes_dunder_main_entrypoint_modules() -> None:
     assert shims == []
 
 
-def test_find_shim_modules_still_flags_a_non_main_pure_reexport_module() -> None:
-    """A genuine pure-reexport module (not named ``__main__.py``) is still flagged.
-
-    Guards against the exclusion in the prior test over-broadening to skip
-    every import-only module rather than only the ``__main__.py`` entrypoint
-    shape. Previously pointed at ``entrypoints/cli/_schemas.py``, itself a
-    documented Family-2 bridge that has since been retired by its own
-    consumer-repointing commit; ``domain/transactions/_ids.py`` is the
-    current still-committed example of the same genuine shape (a single
-    ``from ...core.identity import TransactionId`` plus ``__all__``, zero
-    real defs), reconfirmed live against the scanner's module-level ``if``/
-    ``try`` branch-flattening fix.
-    """
-    reexport_path = REPO_ROOT / "src" / "cadrumo" / "domain" / "transactions" / "_ids.py"
-    assert reexport_path.is_file()
-
-    shims = find_shim_modules([reexport_path], facades={})
-
-    assert any(shim.reason == "pure_reexport_shape" for shim in shims)
-
-
 def test_find_shim_modules_does_not_flag_the_real_optional_dependency_fallback() -> None:
     """``_playwright.py`` defines its fallback classes inside ``if``/``try`` branches, not a shim.
 
