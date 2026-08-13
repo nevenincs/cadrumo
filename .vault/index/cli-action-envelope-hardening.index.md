@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:f7146dc793e3d6118ad290d6d929af68a08db8cb85a55d67506c6ef21a0338d7'
+body_hash: 'sha256:268561267d8529378704500d989f1c3f8c682aa313ff5a17d17ac465c8c67525'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -64,8 +64,10 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S96]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S97]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P08-S99]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S31]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S32]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S33]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S34]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S35]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P09-S66]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S108]]'
@@ -97,6 +99,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S85]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S89]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S90]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S92]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S94]]'
   - '[[2026-08-09-cli-action-envelope-hardening-adr]]'
   - '[[2026-08-09-cli-action-envelope-hardening-plan]]'
@@ -323,10 +326,13 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S85` - Migrate taxpayer-domain recovery producers to typed conditions and canonical actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S94` - Update LLM action-envelope producers and failure boundaries with typed, locale-neutral outcomes.
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S31` - Migrate overview next-step producers and blank-state advisories to typed actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P09-S34` - Render overview text and JSON from one typed action projection
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S36` - Migrate authentication and session recovery predicates and actions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S39` - Migrate deadline recovery commands and overdue continuations
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S40` - Migrate live-read recovery producers with explicit safety dispositions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S92` - Replace overview renderer action producers and co-located renderers with the shared resolved action projection
 
 ### plan
 
