@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c1b2db7279cfae6e6dc88724fddee0e3faa5d2141d9ccbbc3926644310c7d91'
+body_hash: 'sha256:871a540fef4b805d8b51e3323945cd9561352a72a64977afbe01b88ad030653b'
 related:
   - '[[2026-08-07-canonical-identifiers-W01-P01-S01]]'
   - '[[2026-08-07-canonical-identifiers-W01-P01-S02]]'
@@ -23,6 +23,18 @@ related:
   - '[[2026-08-07-canonical-identifiers-W02-P02-S11]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S12]]'
   - '[[2026-08-07-canonical-identifiers-W02-P02-S65]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S13]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S14]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S15]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S16]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S17]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S18]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S19]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S20]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S21]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S22]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S23]]'
+  - '[[2026-08-07-canonical-identifiers-W02-P03-S67]]'
   - '[[2026-08-07-canonical-identifiers-W03-P04-S64]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S29]]'
   - '[[2026-08-07-canonical-identifiers-W04-P06-S30]]'
@@ -51,6 +63,7 @@ related:
   - '[[2026-08-07-canonical-identifiers-W07-P11-S48]]'
   - '[[2026-08-07-canonical-identifiers-W07-P11-S49]]'
   - '[[2026-08-07-canonical-identifiers-W07-P11-S50]]'
+  - '[[2026-08-07-canonical-identifiers-W08-P12-S51]]'
   - '[[2026-08-07-canonical-identifiers-adr]]'
   - '[[2026-08-07-canonical-identifiers-plan]]'
   - '[[2026-08-07-canonical-identifiers-reference]]'
@@ -59,6 +72,9 @@ related:
   - '[[2026-08-10-canonical-identifiers-revision-id-adjudication-reference]]'
   - '[[2026-08-13-canonical-identifiers-s10-provenance-roundtrip-audit]]'
   - '[[2026-08-13-canonical-identifiers-s11-contract-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s13-csv-closure-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s14-storage-key-audit]]'
+  - '[[2026-08-13-canonical-identifiers-s15-canonical-csv-audit]]'
 ---
 
 # `canonical-identifiers` feature index
@@ -76,6 +92,9 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 
 - `2026-08-13-canonical-identifiers-s10-provenance-roundtrip-audit` - `canonical-identifiers` audit: `s10 provenance roundtrip`
 - `2026-08-13-canonical-identifiers-s11-contract-audit` - `canonical-identifiers` audit: `s11 contract`
+- `2026-08-13-canonical-identifiers-s13-csv-closure-audit` - `canonical-identifiers` audit: `s13 csv closure`
+- `2026-08-13-canonical-identifiers-s14-storage-key-audit` - `canonical-identifiers` audit: `S14 storage-key audit`
+- `2026-08-13-canonical-identifiers-s15-canonical-csv-audit` - `canonical-identifiers` audit: `S15 canonical CSV review`
 
 ### exec
 
@@ -100,6 +119,18 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 - `2026-08-07-canonical-identifiers-W02-P02-S11` - retype `ExpedienteDeclarationPayload.expediente_id` from unconstrained bare `str` onto `AeatExpedienteId`, closing the fourth (loosest) divergence sighted on the operator-facing wire contract
 - `2026-08-07-canonical-identifiers-W02-P02-S12` - add a golden-schema pinning test capturing `ExpedienteDeclarationPayload`'s advertised `model_json_schema()` before and after `W02.P02.S11`, so the CLI/MCP contract change is a visible reviewed diff rather than a silent constraint shift
 - `2026-08-07-canonical-identifiers-W02-P02-S65` - Measure the legitimate population before closing the discriminated-pair rows, and treat this row rather than the new refusal as their close condition. Load and construct through the wallet-balance projection, the binding-prefill resolver and the M303 carry-ingress path and confirm every legitimate row still constructs and still loads. Assert against the NEW provenance field, never against status. This row previously admitted a vacuous pass: with status still carrying provenance an implementer could satisfy the clause below by reading provenance off status, which is a control passing against the wrong field. So it now carries a second assertion only the ruled design can satisfy, that status is None on every non-AEAT path. The disconfirming observation stands: if any of those three paths carries a row whose provenance is not one of the five enum members, the enum is incomplete and S09 must be reopened rather than the row forced into an approximate member. Record the count of rows exercised per path, because a control exercising zero rows reads identically to one that passes
+- `2026-08-07-canonical-identifiers-W02-P03-S13` - Record the canonical CSV shape ruled by the ADR amendment of 2026-08-10, superseding this row's prior instruction to record that no empirical replay was possible. That instruction rested on a falsified premise and the evidence exists in three independent forms. First, three real AEAT-issued CSVs captured from live Sede sessions and byte-identical across two capture rounds (FNBB57PE9KZ5TN4R, MZRSYDRL5JMPJPRT, TUD4V9XAUV7QJ8QV), each exactly 16 uppercase alphanumeric characters. Second, 34 distinct CSV tokens across the 60 committed parser-anchor fixture PDFs, every one 16 uppercase alphanumeric. Third, a default-lane regression at adapters/inbound/justificante/tests/test_corpus_sidecar_roundtrip.py lines 244-249 that already asserts isalnum and isupper and a length between 8 and 24 on every parsed fixture. Adopt core/_aeat_csv.py's 8-32 uppercase-alphanumeric contract as canonical and retire JustificanteCsv's 4-64-no-pattern bound rather than keeping it as a second opinion. State in the Step record that the 8-24 assertion already running is strictly inside 8-32, so the retype tightens the field without being able to break the parse path
+- `2026-08-07-canonical-identifiers-W02-P03-S14` - enumerate every secure-object storage key derived from the CSV value, starting from `extract_identifier` in the justificante persistence adapter, informing (not gating, per the schema-rewrite authorisation) the key-composition redesign in `W08`
+- `2026-08-07-canonical-identifiers-W02-P03-S15` - declare `AeatCsv` in `core/identity/` at the shape decided in `W02.P03.S13`
+- `2026-08-07-canonical-identifiers-W02-P03-S16` - retype `JustificanteRef.csv` onto `AeatCsv`, removing its now-redundant field validator
+- `2026-08-07-canonical-identifiers-W02-P03-S17` - Retype Justificante.csv onto AeatCsv, deleting the JustificanteCsv alias outright rather than re-pointing it, and delete its docstring claim that the receipt domain owns the bound because it owns the artefact the value is read from. That sentence asserts the ownership the 2026-08-10 ADR amendment overturns, and leaving it standing over a retyped alias leaves source prose describing the rejected design where the next reader meets it first
+- `2026-08-07-canonical-identifiers-W02-P03-S18` - retype the two bare-`str` CSV fields onto `AeatCsv`
+- `2026-08-07-canonical-identifiers-W02-P03-S19` - retype the bare-`str` CSV field onto `AeatCsv`
+- `2026-08-07-canonical-identifiers-W02-P03-S20` - unify CSV normalisation to one form across the verify adapter and the calendar-evidence consumer, matching whichever form `W02.P03.S13` proved correct
+- `2026-08-07-canonical-identifiers-W02-P03-S21` - add a strict roundtrip test for `Justificante` populating every defaultable field non-default, plus an anti-tautology proof corrupting the persisted CSV value and asserting refusal
+- `2026-08-07-canonical-identifiers-W02-P03-S22` - Add a shape-conformance regression over the adopted 8-32 CSV bound pinning its accept and refuse boundaries explicitly, and correct this row's prior claim that the parser-anchor fixtures carry no CSV token. They do. All 60 carry one, 34 distinct, every one 16 uppercase alphanumeric, drawn into the page body by the fixture generators and recorded in each sidecar's replacements_applied list. Construct the boundary value set from the decided bound, covering the shortest and longest accepted forms and the nearest refused ones on each side of both the length and the character-class axis. Keep the existing corpus sidecar roundtrip regression running unchanged alongside it and treat it as this row's control rather than as background. It is the measurement that the legitimate population still passes, and this row does not close until it is green across all 60 fixtures. State in the Step record which claim each instrument proves, shape conformance by the boundary set and artefact fidelity by the fixture replay
+- `2026-08-07-canonical-identifiers-W02-P03-S23` - Retype extract_csv_from_url's return annotation from bare str to AeatCsv, resolving this row's OBSOLETE AS WRITTEN state on measurement rather than deleting it. The row assumed the sibling justificante-identity-matching plan would hand off a new persisted cotejo-derived CSV field. It did not. Its chosen Option 4 recovers the CSV non-persistingly from FiledDeclaracionArtefact.source_url through extract_csv_from_url, so there is no new field, but there is a real successor target. That function already shape-validates its result with is_aeat_csv, the exact canonical contract AeatCsv carries, so the retype documents an invariant the function already enforces rather than adding a constraint. Confirm all four consumers still type-check
+- `2026-08-07-canonical-identifiers-W02-P03-S67` - Retype the SIX further CSV-carrying fields the original rows did not name, on the same adopted bound. THE MEASUREMENT THIS PHASE WAS PLANNED AGAINST WAS INCOMPLETE and this row states the corrected one rather than leaving a reader to re-derive it. The reference and the phase rows both describe three divergent validation strengths across six sites. Re-measured at HEAD immediately before building, the concept spans roughly twelve sites and FIVE strengths -- the documented 8-32 contract inline at four sites, bare str or None at four, the retired 4-64 alias at two, plus TWO strengths named nowhere in the reference or in the phase rows. Those two are verified_justificante_csv at application/overview/_calendar_models.py lines 168 and 329 carrying min_length=1 and max_length=64, and original_csv at domain/filing/_amendment.py line 83 carrying a bare min_length=1. The remaining unnamed sites are justificante_csv at application/filing/_complementaria.py line 66 and verified_justificante_csv at entrypoints/cli/_overview_payloads.py lines 154 and 203, both entirely unconstrained. Rowed as a sibling rather than folded into the phase, because doubling a batch after its rows are written is how scope stops being reviewable, and because a concept-shaped gap left behind a row-shaped close is what this plan already had to correct once in its opening Wave. NOTE that domain/submission/_models.py line 194 is deliberately NOT in this row -- it consumes the JustificanteCsv alias directly, so it must land in whichever commit retires that alias or the retirement is a break rather than a deferral
 - `2026-08-07-canonical-identifiers-W03-P04-S64` - Decide whether resolve_identifier_namespace is enrolled or dropped, and record the outcome before S24 executes. Search production for a site holding an AEAT identifier value whose namespace is UNKNOWN at the point of use. A semantic sweep run for the 2026-08-10 ADR amendment found none, returning only the enum's own module, its own test and an in-flight census tool. The disconfirming observation that decides this row: a genuine consumer holds a value whose namespace cannot be read off its own field type. If every candidate turns out to hold a value whose namespace is already fixed by its field type, record that the resolver is DROPPED and retire IdentifierNamespace with it rather than leaving an exported concept nothing uses. Do not manufacture a caller to justify the symbol
 - `2026-08-07-canonical-identifiers-W04-P06-S29` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/ledger/`
 - `2026-08-07-canonical-identifiers-W04-P06-S30` - retype classified transaction-id pydantic model fields onto `TransactionId` in `application/aggregation/`
@@ -122,6 +153,7 @@ Auto-generated index of all documents tagged with `#canonical-identifiers`.
 - `2026-08-07-canonical-identifiers-W06-P10-S46` - counterparty-facing tax identity: `supplier_tax_id`, `customer_tax_id`, `party_tax_id`, `donor_tax_id` onto `TaxIdIdentityToken`
 - `2026-08-07-canonical-identifiers-W06-P10-S47` - a roundtrip regression proving a non-Spanish-shaped counterparty tax id validates under `TaxIdIdentityToken`
 - `2026-08-07-canonical-identifiers-W06-P10-S63` - cross-field tax-identity consistency audit for every model `W06.P10.S46` retyped
+- `2026-08-07-canonical-identifiers-W08-P12-S51` - decide, and record the reason, whether every PII-shaped fold-in in `object_key_grammar` (`{member_nif}`, `{perceptor_nif}`, `{perceptor_tax_id}`) is pre-hashed uniformly or intentionally left raw beneath the outer `HashedLookup` HMAC, given the column is deterministically hashed either way
 
 ### plan
 
