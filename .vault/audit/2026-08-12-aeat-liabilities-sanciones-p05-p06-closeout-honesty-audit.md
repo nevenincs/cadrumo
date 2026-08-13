@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-12'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:b33daf443eaea8cea7c32b468b61ac317c5829be4d377c2dc7ea6f096b32f1c2'
+body_hash: 'sha256:e6e9be3b3dbf9f7e0a3cfa986cdae0042c43accdc54b9c9e7586fca415c11fd0'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-plan]]"
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
@@ -355,6 +355,36 @@ diagnosis was inferred from a table count without ever driving the parser; the
 second drove the real parser against both live surfaces and isolated the column.
 Inference about why a parser returned nothing is worth very little next to
 running it.
+
+### FINDING-7 residual, now closed
+
+The correction above left one item open: the summary listed three unread items
+while the query surface's default search returned one, and whether that default
+was date-bounded or state-bounded was not established.
+
+It was date-bounded. AEAT's notifications search defaults `fecha desde` to one
+month before today, and the reader sent no range — so it was asking "what
+arrived this month" and reporting the answer as the register. Reading the form's
+own field defaults showed the window directly rather than inferring it.
+
+The reader now states its window: a configured lookback from today, with both
+the tipo-consulta and leida filters set to Todos so neither axis narrows the
+result. Verified live — `row_count` 1 to 10, and all three unread items the
+summary lists are present in the ten, confirmed by counting rows whose `leida`
+is not true.
+
+The filters go as GET parameters. The form declares `method="post"`, but the
+servlet honours the same fields on a query string, so the reader stays a pure
+navigation and needed no read-POST allowance added to its guard policy — a
+narrower change than the deudas surface required.
+
+Taken with the column fix, this notifications reader has now failed twice in the
+same direction: once returning zero rows and once returning a tenth of them,
+both silently, both because the surface answered a question narrower than the
+one intended. Neither failure raised anything. A reader over a register whose
+contents carry legal deadlines should treat an implausibly small result as
+suspect rather than as an answer; that is a design note this feature's owner
+should weigh, and it is not addressed here.
 
 ## Verdict
 
