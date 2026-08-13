@@ -99,7 +99,7 @@ class SancionLiquidacion(BaseModel):
         objeto_tributario: Which LGT object this act is, classified from the
             document's own heading vocabulary.
         base_sancion: ``Base sobre la que se liquida la sanción``.
-        porcentaje_sancion: ``Porcentaje mínimo de sanción``, as printed (a
+        porcentaje_minimo: ``Porcentaje mínimo de sanción``, as printed (a
             percentage, so ``50,00 %`` is ``Decimal("50.00")`` and never
             ``0.5``).
         sancion_resultante: ``Sanción resultante``, before any reducción.
@@ -127,7 +127,7 @@ class SancionLiquidacion(BaseModel):
     nif: str = Field(min_length=8, max_length=16)
     objeto_tributario: Literal["sancion", "liquidacion"]
     base_sancion: Decimal
-    porcentaje_sancion: Decimal
+    porcentaje_minimo: Decimal
     sancion_resultante: Decimal
     reduccion_conformidad: Decimal | None = None
     reduccion_pronto_pago: Decimal | None = None
@@ -155,7 +155,7 @@ _MONEY_LABELS: Final[Mapping[str, tuple[str, ...]]] = {
     "importe_a_ingresar": ("importe a ingresar",),
 }
 _PERCENT_LABELS: Final[Mapping[str, tuple[str, ...]]] = {
-    "porcentaje_sancion": ("porcentaje minimo de sancion", "porcentaje de sancion"),
+    "porcentaje_minimo": ("porcentaje minimo de sancion", "porcentaje de sancion"),
 }
 _TEXT_LABELS: Final[Mapping[str, tuple[str, ...]]] = {
     "clave_liquidacion": ("clave de liquidacion:",),
@@ -167,7 +167,7 @@ _REQUIRED_FIELDS: Final = (
     "referencia",
     "nif",
     "base_sancion",
-    "porcentaje_sancion",
+    "porcentaje_minimo",
     "sancion_resultante",
 )
 _TEXT_VALIDATORS: Final[Mapping[str, re.Pattern[str]]] = {
@@ -448,7 +448,7 @@ def parse_sancion_document(
         nif=str(values["nif"]),
         objeto_tributario=_classify_objeto(_normalise(text)),
         base_sancion=_as_decimal(values["base_sancion"]),
-        porcentaje_sancion=_as_decimal(values["porcentaje_sancion"]),
+        porcentaje_minimo=_as_decimal(values["porcentaje_minimo"]),
         sancion_resultante=_as_decimal(values["sancion_resultante"]),
         reduccion_conformidad=_optional_decimal(values.get("reduccion_conformidad")),
         reduccion_pronto_pago=_optional_decimal(values.get("reduccion_pronto_pago")),
@@ -486,14 +486,14 @@ def _assert_printed_lines_reconcile(record: SancionLiquidacion) -> None:
     the cent. A wider tolerance would start absorbing real mis-bindings, which
     is the entire failure this refuses.
     """
-    expected_sancion = (record.base_sancion * record.porcentaje_sancion / Decimal("100")).quantize(
+    expected_sancion = (record.base_sancion * record.porcentaje_minimo / Decimal("100")).quantize(
         _CENT,
         rounding=ROUND_HALF_UP,
     )
     if abs(expected_sancion - record.sancion_resultante) > _CENT:
         raise SancionArithmeticError(
             "AEAT sanción document does not reconcile: base times porcentaje does not reproduce the printed "
-            f"sanción resultante. base={record.base_sancion} porcentaje={record.porcentaje_sancion} "
+            f"sanción resultante. base={record.base_sancion} porcentaje={record.porcentaje_minimo} "
             f"printed={record.sancion_resultante} derived={expected_sancion}",
             translated_message=tr("adapters.notificacion.errors.sancion_does_not_reconcile"),
             context={

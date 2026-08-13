@@ -17,7 +17,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.adapters.inbound.notificacion import (
+from .. import (
     SancionArithmeticError,
     SancionLiquidacion,
     SancionParseError,
@@ -78,7 +78,7 @@ def test_flat_layout_reads_every_printed_figure() -> None:
     assert record.nif == "12345678Z"
     assert record.objeto_tributario == "sancion"
     assert record.base_sancion == Decimal("3687.12")
-    assert record.porcentaje_sancion == Decimal("50.00")
+    assert record.porcentaje_minimo == Decimal("50.00")
     assert record.sancion_resultante == Decimal("1843.56")
     assert record.reduccion_conformidad == Decimal("553.07")
     assert record.reduccion_pronto_pago == Decimal("516.20")
@@ -122,6 +122,38 @@ Importe a ingresar 500,00euros
     assert record.importe_a_ingresar == Decimal("500.00")
 
 
+def test_a_reduccion_granted_at_zero_reads_as_zero_and_not_as_ungranted() -> None:
+    """A printed ``0,00`` reducción is a granted zero, distinct from an absent line.
+
+    The two are arithmetically indistinguishable — both subtract nothing — so
+    nothing downstream of the arithmetic can tell them apart. Only the record
+    can, and only if the reader keeps them apart: AEAT granting a reducción and
+    quantifying it at zero is a different fact from AEAT granting none, and it
+    is the fact an appeal turns on. Collapsing the granted zero to ``None``
+    would erase a decision AEAT actually printed.
+    """
+    head = """Clave de liquidación: A2860024500012345
+Referencia: 2024/0001234
+N.I.F.: 12345678Z
+Base sobre la que se liquida la sanción 1.000,00euros
+Porcentaje mínimo de sanción 50,00%
+Sanción resultante 500,00euros
+"""
+    granted_at_zero = _parse(f"{head}Reducción del 30% 0,00euros\nImporte a ingresar 500,00euros\n")
+    ungranted = _parse(f"{head}Importe a ingresar 500,00euros\n")
+
+    assert granted_at_zero.reduccion_conformidad == Decimal("0.00")
+    assert ungranted.reduccion_conformidad is None
+    # The distinction survives as a record-level difference, not merely as a
+    # difference in spelling: a reader that returned None for the printed 0,00
+    # would make these two readings compare equal.
+    assert granted_at_zero.reduccion_conformidad != ungranted.reduccion_conformidad
+    # ...while the arithmetic they drive is identical, which is exactly why the
+    # payable cannot be used to recover the distinction.
+    assert granted_at_zero.reducciones_total == ungranted.reducciones_total == Decimal("0.00")
+    assert granted_at_zero.importe_a_ingresar == ungranted.importe_a_ingresar == Decimal("500.00")
+
+
 def test_accent_free_and_loosely_spaced_rendering_reads_identically() -> None:
     """AEAT's accent-free, dot-leader template is the same document to this reader."""
     text = """Clave de liquidacion:   A2860024500012345
@@ -137,7 +169,7 @@ Diferencia .......... 774,29 euros
     record = _parse(text)
 
     assert record.base_sancion == Decimal("3687.12")
-    assert record.porcentaje_sancion == Decimal("50.00")
+    assert record.porcentaje_minimo == Decimal("50.00")
     assert record.importe_a_ingresar == Decimal("774.29")
 
 
