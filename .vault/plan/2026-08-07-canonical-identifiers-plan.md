@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:0b489fdd2fa68e47a7dbf568265f2e041dea1d5f3349868e7f56a2bea701cc0a'
+body_hash: 'sha256:84b538f1c83a673762262abb693feae4e502694dcf09e9018e984d2d3b123454'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -340,7 +340,7 @@ gaps explicit rather than implied-complete.
 
 - [x] `W09.P14.S58` - author the identifier-enrollment ratchet test asserting every production pydantic field whose name matches the namespace vocabulary carries a `core.identity` namespace alias rather than bare `str`, with `Declaracion.estado`, `Deuda.situacion`, and the three free-text sub-populations from `W07.P11.S48` as named, documented exclusions; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
 - [x] `W09.P14.S59` - prove the gate's bite: add a throwaway bare-`str` field named to match the namespace vocabulary on a scratch model outside `src`, confirm the gate reds, then remove it and confirm the gate is green again; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
-- [ ] `W09.P14.S60` - record NRC, fixed-width fichero-BOE tax-id width (owned by the separate Modelo 200 misattribution ADR), registry TOML id-shaped values (no measured denominator), and any second-pass finding from `W07.P11.S49` not triaged into an enrolled namespace as explicit deferred follow-ups in this plan's Verification section, each with a named next reference rather than a silent close; `.vault/plan/2026-08-07-canonical-identifiers-plan.md`.
+- [x] `W09.P14.S60` - record NRC, fixed-width fichero-BOE tax-id width (owned by the separate Modelo 200 misattribution ADR), registry TOML id-shaped values (no measured denominator), and any second-pass finding from `W07.P11.S49` not triaged into an enrolled namespace as explicit deferred follow-ups in this plan's Verification section, each with a named next reference rather than a silent close; `.vault/plan/2026-08-07-canonical-identifiers-plan.md`.
 
 ## Parallelization
 
@@ -441,13 +441,35 @@ The plan is complete when every Step above is closed (`- [x]`) and:
   filesystem-level delete.
 
 **Explicitly deferred, not covered by this plan's completion** (recorded
-per `W09.P14.S60`): NRC capture and persistence (no existing field to
-retype); fixed-width fichero-BOE tax-id width (owned by the separate
-Modelo 200 misattribution ADR, must not be touched here); registry TOML
-id-shaped values (architecturally clean per the wire census, but no
-measured denominator equivalent to the Python count); any second-pass
-sweep finding (`W07.P11.S49`) not triaged to a disposition by
-`W07.P11.S50`. `W03.P04` resolved the resolver proposal by deletion: neither
+per `W09.P14.S60`):
+
+- **NRC capture and persistence.** The official receipt reference
+  `2026-04-24-aeat-verify-reference` records that a receipt can print an NRC,
+  but this tree has no production capture or persistence field to retype. The
+  next reference is the proposed `2026-08-13-nrc-capture-persistence-adr` grounded in an
+  AEAT receipt specimen and the receipt parse path; it must establish the
+  production owner and an authoritative denominator before proposing an alias.
+- **Fixed-width fichero-BOE tax identity.** This campaign must not change a
+  fichero slot merely because it contains a tax-shaped value. The accepted
+  `2026-08-07-m200-export-nif-misbinding-adr` owns the known Modelo 200
+  misbinding, retains AEAT's 15-byte foreign-TIN width, and explicitly leaves
+  the broader other-attribute / other-modelo semantic sweep unswept. That ADR
+  and its follow-up row are the next reference; no Python identity count proves
+  this export-layout population complete.
+- **Registry TOML id-shaped values.** `W08.P13.S55` measured registered wire
+  schemas through runtime declarations, not registry TOML, and no equivalent
+  loaded-registry census has measured a TOML denominator. The next reference is
+  the proposed `2026-08-13-registry-toml-identifier-census-reference` that loads `ValidatedRegistryAuthority` snapshots
+  and records its denominator before any taxonomy claim is made; filesystem
+  counts and filename grep are not substitutes.
+- **Second-pass noun-census findings.** `W07.P11.S49` is a candidate census,
+  not an enrollment denominator; `W07.P11.S50` disposes its 101 records by
+  exhaustive class and hands the ten bare modelo-identifier fields to the
+  modelo-enum rule/gate. Any later S49-like finding remains open until a named
+  disposition record equivalent to `W07.P11.S50` assigns it to an existing
+  authority, a new authority, or a stated non-identifier exclusion.
+
+`W03.P04` resolved the resolver proposal by deletion: neither
 `resolve_identifier_namespace` nor `IdentifierNamespace` remains. A future
 plan may propose a new resolver only with a named production consumer; it may
 not treat the retired surface as available.
