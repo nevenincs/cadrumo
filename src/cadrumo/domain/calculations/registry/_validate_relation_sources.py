@@ -28,7 +28,7 @@ from ._iva_wallet_relation_targets import (
     iva_wallet_owned_relation_targets_for_revision,
 )
 from ._period_offset_math import apply_period_offset
-from ._relations import derive_offset_source_period
+from ._relations import _derive_offset_source_period
 from ._schema import (
     DataBindingDefinition,
     ModeloDefinition,
@@ -404,7 +404,7 @@ def _relation_source_periods_for_validation(relation: RelationDefinition) -> tup
     failures: list[str] = []
     for target_period in relation.target_periods:
         try:
-            source_period = derive_offset_source_period(relation, target_period=target_period)
+            source_period = _derive_offset_source_period(relation, target_period=target_period)
         except RegistryValidationError as exc:
             failures.append(str(exc))
             continue

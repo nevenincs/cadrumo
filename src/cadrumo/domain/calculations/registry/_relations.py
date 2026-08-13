@@ -383,6 +383,3 @@ def _derive_offset_source_anchor(relation: RelationDefinition, *, target_period:
             f"relation {relation.id!r} source_period_offset_from_target "
             f"cannot interpret target period {target_period!r}",
         ) from exc
-
-
-derive_offset_source_period = _derive_offset_source_period
