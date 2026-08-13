@@ -80,23 +80,25 @@ from ._censal_datos import (
     parse_censal_datos,
 )
 from ._declarations import (
-    Declaracion,
     DeclaracionesRegisterSession,
     capture_declaration,
     capture_filed_declaration_observation,
     capture_previous_filing_observations,
     capture_relation_source_observations,
     discover_filed_declaration_availability,
-    non_numeric_observed_casillas,
     open_declarations_register,
-    registry_observation_from_filed_declaration,
-    resolve_previous_filing_bindings_from_filed_declarations,
-    resolve_relation_values_from_filed_declarations,
     shared_playwright,
     walk_declarations_register,
 )
-from ._declarations_observations import observed_casillas_from_submitted_file
+from ._declarations_observations import (
+    non_numeric_observed_casillas,
+    observed_casillas_from_submitted_file,
+    registry_observation_from_filed_declaration,
+    resolve_previous_filing_bindings_from_filed_declarations,
+    resolve_relation_values_from_filed_declarations,
+)
 from ._declarations_remote import extract_csv_from_url
+from ._declarations_schema import Declaracion
 from ._deudas import (
     DEUDAS_READ_SURFACE,
     Deuda,
@@ -198,6 +200,7 @@ __all__ = [
     "SedeNavigationError",
     "SedeParseError",
     "assert_deudas_landing",
+    "assert_notification_content_readable",
     "capture_declaration",
     "capture_filed_declaration_observation",
     "capture_justificante",
@@ -211,7 +214,6 @@ __all__ = [
     "extract_renta_web_open_summary_value",
     "fetch_censal_datos",
     "fetch_iva_compensation_wallet",
-    "assert_notification_content_readable",
     "fetch_notification_document",
     "fetch_notifications_query",
     "fetch_notifications_summary",

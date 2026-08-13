@@ -44,15 +44,15 @@ from .._declarations import (
     _select_combobox_value,
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
-    registry_observation_from_filed_declaration,
 )
 from .._declarations import (
     _select_authoritative_declaration as _select_authoritative_declaration_production,
 )
-from .._declarations import (
+from .._declarations_observations import registry_observation_from_filed_declaration
+from .._declarations_observations import (
     resolve_previous_filing_bindings_from_filed_declarations as _resolve_previous_filing_bindings,
 )
-from .._declarations import (
+from .._declarations_observations import (
     resolve_relation_values_from_filed_declarations as _resolve_relation_values,
 )
 from .._observation_store import FiledDeclaracionObservationStore
