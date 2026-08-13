@@ -11,6 +11,7 @@ from ......domain.calculations.registry import (
     previous_filing_source_reference,
 )
 from .._declarations_observations import (
+    _observed_header_facts_from_submitted_file,
     _submitted_file_coverage_for_casillas,
     non_numeric_observed_casillas,
 )
@@ -145,6 +146,114 @@ class TestSubmittedFileObservation:
                 "19": Decimal("15"),
             },
         )
+
+    def test_low_numbered_identifiers_survive_submitted_file_capture(self) -> None:
+        """A low-numbered NIF and a 01-09 province survive the real Sede capture path.
+
+        Modelo 180's declarante and perceptor NIF header slots, and the
+        perceptor's own NIF, legal-representative NIF, provincia,
+        inmueble-provincia, inmueble-codigo-municipio and
+        inmueble-codigo-postal casillas all declared ``padding =
+        "left_zero"`` even though every one of them always exactly fills
+        its slot: a NIF is nine fixed alphanumeric characters, a province
+        code is a fixed two digits from a closed 01-52 table, an INE
+        municipality code and a Spanish postal code are both fixed
+        five-digit province-prefixed identifiers. ``left_zero``'s parse
+        side (``_unpad``) strips leading "0" characters unconditionally,
+        so a genuinely low-numbered value -- a DNI issued under
+        00100000, a taxpayer in provinces 01-09 -- silently lost its
+        leading digits the moment a previously-filed declaration was
+        captured through this exact production path and persisted as an
+        :class:`ObservedCasillaValue`/:class:`ObservedHeaderFact`. This
+        test fails before the ``padding = "none"`` fix and passes after.
+        """
+        snapshot = _modelo_snapshot("180", filing_year=2026, period="0A")
+        declarante_fields: dict[tuple[int, int], str] = {
+            (1, 1): "1",
+            (2, 4): "180",
+            (5, 8): "2026",
+            (9, 17): "00011111Z",
+            (136, 144): "000000001",
+            (145, 160): " " + "100050".zfill(15),
+            (161, 175): "19010".zfill(15),
+        }
+        perceptor_fields: dict[tuple[int, int], str] = {
+            (1, 1): "2",
+            (2, 4): "180",
+            (5, 8): "2026",
+            (9, 17): "00011111Z",
+            (18, 26): "00098765Z",
+            (27, 35): "00087654X",
+            (36, 75): "ARRENDADOR EJEMPLO".ljust(40),
+            (76, 77): "01",
+            (78, 78): "1",
+            (79, 92): "N" + "2500".zfill(13),
+            (93, 96): "0000",
+            (97, 109): "475".zfill(13),
+            (110, 113): "2025",
+            (114, 114): "1",
+            (115, 134): "1234567VK4713C0001XY",
+            (135, 139): "CL".ljust(5),
+            (140, 189): "CALLE MAYOR".ljust(50),
+            (190, 192): "NUM",
+            (193, 197): "12".ljust(5),
+            (198, 200): "BIS",
+            (201, 203): "A".ljust(3),
+            (204, 206): "1".ljust(3),
+            (207, 209): "2".ljust(3),
+            (210, 212): "03".ljust(3),
+            (213, 215): "B".ljust(3),
+            (216, 255): "EDIFICIO CENTRAL".ljust(40),
+            (256, 285): "MADRID".ljust(30),
+            (286, 315): "MADRID".ljust(30),
+            (316, 320): "01001",
+            (321, 322): "01",
+            (323, 327): "01001",
+        }
+
+        def _record(length: int, fields: dict[tuple[int, int], str]) -> str:
+            buffer = [" "] * length
+            for (start, end), value in fields.items():
+                buffer[start - 1 : end] = value
+            return "".join(buffer)
+
+        body = (_record(500, declarante_fields) + _record(500, perceptor_fields)).encode("latin-1")
+        declaration = Declaracion(
+            modelo="180",
+            ejercicio=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            expediente_id="202610013522223B",
+            estado="ALTA",
+            presented_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+            justificante_link_text="Ver",
+            archive_link_text="Ver",
+        )
+        artefact = FiledDeclaracionArtefact(
+            kind="submitted_file",
+            source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+            content_type="application/octet-stream",
+            byte_count=len(body),
+            sha256=hashlib.sha256(body).hexdigest(),
+            captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+        )
+
+        observed_casillas = _observed_casillas_from_submitted_file(
+            snapshot=snapshot,
+            declaration=declaration,
+            body=body,
+            artefact=artefact,
+        )
+        observed_by_casilla = {item.casilla_id: item.value for item in observed_casillas}
+        assert observed_by_casilla["perc.nif"] == "00098765Z"
+        assert observed_by_casilla["perc.nif-representante-legal"] == "00087654X"
+        assert observed_by_casilla["perc.provincia"] == "01"
+        assert observed_by_casilla["perc.inmueble-provincia"] == "01"
+        assert observed_by_casilla["perc.inmueble-codigo-municipio"] == "01001"
+        assert observed_by_casilla["perc.inmueble-codigo-postal"] == "01001"
+
+        header_facts = _observed_header_facts_from_submitted_file(snapshot=snapshot, body=body)
+        presenter_tax_id_values = {fact.value for fact in header_facts if fact.header_key == "presenter.tax_id"}
+        assert presenter_tax_id_values == {"00011111Z"}
 
     def test_modelo_130_redacted_submitted_file_matches_registry_calculation(self) -> None:
         snapshot = _modelo_130_snapshot()
