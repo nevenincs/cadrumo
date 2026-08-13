@@ -433,7 +433,12 @@ def resolve_notification_row(*, bucket_id: str, certificado_id: str):
     )
 
 
-async def pull_notification_document(*, bucket_id: str, certificado_id: str):
+async def pull_notification_document(
+    *,
+    bucket_id: str,
+    certificado_id: str,
+    service: NotificationDocumentService,
+):
     """Fetch one already-read notification's document and take encrypted custody.
 
     The one application-layer door onto a notification's content. It gates
@@ -446,6 +451,8 @@ async def pull_notification_document(*, bucket_id: str, certificado_id: str):
     Args:
         bucket_id: The active profile bucket taking custody.
         certificado_id: AEAT's número de certificado for the notification.
+        service: Composed notification-document use case supplied by the
+            entrypoint.
 
     Returns:
         The ``NotificationDocumentCustody`` outcome: the persisted record, and
@@ -455,11 +462,9 @@ async def pull_notification_document(*, bucket_id: str, certificado_id: str):
         SedeNavigationError: When the notification is not already read.
         LiveApplicationInputError: When no captured snapshot mentions it.
     """
-    from ._notification_documents import NotificationDocumentService
-
     row = resolve_notification_row(bucket_id=bucket_id, certificado_id=certificado_id)
-    session, settings = await _active_verified_session()
-    return await NotificationDocumentService(settings=settings).pull_document(
+    session, _settings = await _active_verified_session()
+    return await service.pull_document(
         bucket_id=bucket_id,
         session=session,
         row=row,

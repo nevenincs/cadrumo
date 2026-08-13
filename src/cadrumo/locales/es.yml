@@ -2939,12 +2939,18 @@ cli:
             Abrir una notificación no leída es la comparecencia que la da por notificada
             legalmente e inicia los plazos de recurso y de pago, por lo que una notificación
             no leída se rechaza y debe abrirla el contribuyente en persona.
+          history_help: Listar las cifras declaradas en cada documento de notificación
+            guardado, sin calcular un total.
+          history_notice: 'Este historial registra las cifras que la AEAT notificó
+            en documentos individuales. No es un saldo pagadero ni el registro de
+            recaudación que leen los comandos de deudas: esta vista no acredita el
+            pago, recurso, reducción ni sustitución.'
           pull_help: Descarga a custodia cifrada el documento de una notificación
             ya leída.
-          unparsed_notice: 'No se ha extraído ninguna cifra de este documento, por
-            lo que se conserva únicamente como bytes. Eso no significa que el documento
-            no contenga importes: lea usted mismo el documento almacenado antes de
-            concluir nada sobre su contenido.'
+          unparsed_notice: No se leyeron cifras de este documento, por lo que solo
+            se custodia como bytes. Eso no significa que no contenga importes. Consulta
+            la notificación original, ya abierta, en la sede de la AEAT; este comando
+            no muestra ni exporta los bytes cifrados del PDF.
           view_help: Muestra un documento de notificación ya almacenado y su lectura,
             sin contactar con la AEAT.
         latest_help: Muestra la instantánea de notificación DEHú más reciente.

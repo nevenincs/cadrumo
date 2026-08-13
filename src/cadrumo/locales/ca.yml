@@ -2924,12 +2924,18 @@ cli:
             una notificació no llegida és la compareixença que la dóna per notificada
             legalment i inicia els terminis de recurs i de pagament, per això una
             notificació no llegida es rebutja i l'ha d'obrir el contribuent en persona.
+          history_help: Llista les xifres declarades en cada document de notificació
+            desat, sense calcular cap total.
+          history_notice: 'Aquest historial registra les xifres que l''AEAT va notificar
+            en documents individuals. No és un saldo pagable ni el registre de recaptació
+            que llegeixen les ordres de deutes: aquesta vista no acredita el pagament,
+            recurs, reducció ni substitució.'
           pull_help: Descarrega a custòdia xifrada el document d'una notificació ja
             llegida.
-          unparsed_notice: 'No s''ha extret cap xifra d''aquest document, per la qual
-            cosa es conserva únicament com a bytes. Això no vol dir que el document
-            no contingui imports: llegiu vós mateix el document emmagatzemat abans
-            de concloure res sobre el seu contingut.'
+          unparsed_notice: No s'han llegit xifres d'aquest document, de manera que
+            només es custodia com a bytes. Això no significa que no contingui imports.
+            Consulta la notificació original, ja oberta, a la seu de l'AEAT; aquesta
+            ordre no mostra ni exporta els bytes xifrats del PDF.
           view_help: Mostra un document de notificació ja emmagatzemat i la seva lectura,
             sense contactar amb l'AEAT.
         latest_help: Mostra la instantània de notificació DEHú més recent.

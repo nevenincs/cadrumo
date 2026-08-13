@@ -2697,12 +2697,18 @@ cli:
             is the comparecencia that makes it legally served and starts its appeal
             and payment periods, so an unread notification is refused and must be
             opened by the taxpayer personally.
+          history_help: List each stored notification document's reported figures,
+            without computing a total.
+          history_notice: 'This history records figures AEAT served in individual
+            notification documents. It is not a payable balance or the collection
+            register read by the debt commands: this view does not establish payment,
+            appeal, reduction, or supersession.'
           pull_help: Fetch one already-read notification's document into encrypted
             custody.
-          unparsed_notice: 'No figures were read from this document, so it is held
-            as bytes only. That is not a statement that the document carries no amounts:
-            read the stored document itself before concluding anything about what
-            it says.'
+          unparsed_notice: No figures were read from this document, so it is held
+            as bytes only. That does not mean it carries no amounts. Consult the original,
+            already-opened notification in the AEAT sede; this command does not render
+            or export the encrypted PDF bytes.
           view_help: Show one stored notification document and its reading, without
             contacting AEAT.
         latest_help: Show the most recent DEHU notification snapshot.

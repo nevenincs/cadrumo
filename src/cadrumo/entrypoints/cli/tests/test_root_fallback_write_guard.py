@@ -621,6 +621,8 @@ _REVIEWED_NON_MUTATING_APP_LEAVES: frozenset[str] = frozenset(
         "app live notifications latest",
         "app live notifications list",
         "app live notifications view",
+        "app live notifications document history",
+        "app live notifications document view",
         "app live verify latest",
         "app live verify list",
         "app live verify view",

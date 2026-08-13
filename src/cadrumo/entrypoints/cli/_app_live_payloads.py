@@ -752,6 +752,23 @@ class NotificationDocumentViewResult(NotificationDocumentPayload):
     """
 
 
+class NotificationDocumentHistoryEntry(OutputSchema):
+    """One parsed document in custody, with only its own reported figures."""
+
+    certificado_id: AeatCertificadoId
+    fetched_at: datetime
+    sancion: SancionReadingPayload
+
+
+@register_schema("app.live.notifications.document.history")
+class NotificationDocumentHistoryResult(OutputSchema):
+    """Parsed notification documents held by this profile, without a total."""
+
+    bucket_id: BucketId
+    count: int = Field(ge=0)
+    documents: list[NotificationDocumentHistoryEntry]
+
+
 # ---------------------------------------------------------------------------
 # Portals leaves (local catalogue)
 # ---------------------------------------------------------------------------

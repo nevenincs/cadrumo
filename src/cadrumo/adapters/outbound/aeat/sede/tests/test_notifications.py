@@ -7,6 +7,7 @@ actual column shape AEAT serves.
 
 from __future__ import annotations
 
+from typing import cast
 from urllib.parse import urlsplit
 
 import pytest
@@ -19,6 +20,7 @@ from ......domain.calculations.registry import (
     assert_remote_operation_allowed,
 )
 from ......tests import FIXTURES_DIR
+from ...auth import AeatSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from .._errors import SedeNavigationError
 from .._notifications import (
@@ -570,7 +572,7 @@ class TestNotificationContentIsGatedOnAlreadyRead:
         from .._notifications import fetch_notification_document
 
         with pytest.raises(SedeNavigationError):
-            await fetch_notification_document(_ExplodingSession(), _row(leida=None))
+            await fetch_notification_document(cast(AeatSession, _ExplodingSession()), _row(leida=None))
 
     def test_the_post_allowance_is_scoped_to_the_detail_endpoint_alone(self) -> None:
         """The transport allowance must not widen beyond the one endpoint."""

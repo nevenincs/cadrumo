@@ -5,13 +5,14 @@ from __future__ import annotations
 from collections.abc import Iterator, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from click.testing import Result
 from pydantic import ValidationError
 
 from ....adapters.outbound.aeat.sede import NotificationDocument, RemoteNotification
-from ....application.live import NotificationDocumentService
+from ....application.live.tests._notification_document_support import build_service, sancion_pdf_bytes, served_document
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import require_active_bucket_id
@@ -89,6 +90,18 @@ _CERT = "2699101808461"
 _DETAIL_URL = "https://www6.agenciatributaria.gob.es/wlpl/GNNO-JDIT/DetalleSede?ncc=2699101808461"
 
 
+class _NotificationDocumentShared(TypedDict):
+    """Common typed fields passed to notification document payload models."""
+
+    bucket_id: str
+    certificado_id: str
+    attachment_id: str
+    document_sha256: str
+    byte_size: int
+    source_url: str
+    fetched_at: datetime
+
+
 def _read_row() -> RemoteNotification:
     """Build the notification row AEAT already reports as read."""
     return RemoteNotification(
@@ -116,7 +129,7 @@ def _take_custody_of_an_unreadable_document() -> str:
     """
     data = b"%PDF-1.4 this carries no extractable text layer"
     bucket_id = require_active_bucket_id()
-    NotificationDocumentService().persist_document(
+    build_service(bucket_id=bucket_id).persist_document(
         bucket_id=bucket_id,
         row=_read_row(),
         document=NotificationDocument(
@@ -135,6 +148,7 @@ def test_document_subgroup_offers_only_the_contract_named_verbs() -> None:
     assert result.exit_code == 0, result.output
     assert "pull" in result.output
     assert "view" in result.output
+    assert "history" in result.output
     for forbidden in ("capture", "refresh", "fetch", "download", "sync"):
         assert forbidden not in result.output, forbidden
 
@@ -197,7 +211,7 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
     """
     from .._app_live_payloads import NotificationDocumentPullResult, NotificationDocumentViewResult
 
-    shared: dict[str, object] = {
+    shared: _NotificationDocumentShared = {
         "bucket_id": "00000000-0000-4000-8000-000000000000",
         "certificado_id": _CERT,
         "attachment_id": "a" * 64,
@@ -220,3 +234,52 @@ def test_a_document_payload_cannot_claim_a_reading_it_does_not_carry() -> None:
     )
     assert refused.already_in_custody is True
     assert refused.mode == "read"
+
+
+def test_document_history_lists_two_parsed_documents_without_a_total() -> None:
+    bucket_id = require_active_bucket_id()
+    service = build_service(bucket_id=bucket_id)
+    for certificado_id in ("2699101808461", "2699101808462"):
+        service.persist_document(
+            bucket_id=bucket_id,
+            row=_read_row().model_copy(update={"certificado_id": certificado_id}),
+            document=served_document(certificado_id=certificado_id, data=sancion_pdf_bytes()),
+        )
+
+    emitted = invoke_cached_cli(["--format", "json", "app", "live", "notifications", "document", "history"])
+
+    assert emitted.exit_code == 0, emitted.output
+    result = unwrap_cli_result(emitted)
+    assert result["count"] == 2
+    assert {row["certificado_id"] for row in result["documents"]} == {"2699101808461", "2699101808462"}
+    assert not any("total" in key.casefold() or "balance" in key.casefold() for key in result)
+    notices = unwrap_envelope_notices(emitted.output)
+    history = [notice for notice in notices if notice["code"] == "live.notifications.document.history_not_balance"]
+    assert len(history) == 1
+    assert history[0]["context"] == {"document_count": "2", "total_computed": "false"}
+
+    text = _invoke_notifications(["document", "history"])
+    assert text.exit_code == 0, text.output
+    for field in (
+        "clave_liquidacion",
+        "referencia",
+        "objeto_tributario",
+        "base_sancion",
+        "porcentaje_minimo",
+        "sancion_resultante",
+        "reduccion_conformidad",
+        "reduccion_pronto_pago",
+        "diferencia",
+        "importe_a_ingresar",
+    ):
+        assert f"{field}\t" in text.output
+
+
+def test_empty_document_history_still_carries_the_no_balance_notice() -> None:
+    emitted = invoke_cached_cli(["--format", "json", "app", "live", "notifications", "document", "history"])
+    assert emitted.exit_code == 0, emitted.output
+    assert unwrap_cli_result(emitted)["documents"] == []
+    assert any(
+        notice["code"] == "live.notifications.document.history_not_balance"
+        for notice in unwrap_envelope_notices(emitted.output)
+    )

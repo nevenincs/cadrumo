@@ -15,12 +15,32 @@ from typing import TYPE_CHECKING
 
 from sqlalchemy import select
 
-from ....adapters.outbound.aeat.sede import NotificationDocument, RemoteNotification
+from ....adapters.inbound.notificacion import NotificationDocumentReader
+from ....adapters.outbound.aeat.sede import (
+    NotificationDocument,
+    RemoteNotification,
+    assert_notification_content_readable,
+    fetch_notification_document,
+)
+from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from ....adapters.persistence.storage import (
+    LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
+    AttachmentStore,
+    secure_object_repository_for_bucket,
+)
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....adapters.persistence.storage.sql.session import session_scope
+from ....application.live import (
+    LiveApplicationInputError,
+    NotificationDocumentNotFoundError,
+    NotificationDocumentRecord,
+    NotificationDocumentService,
+    notification_document_object_key,
+)
+from ....core.config import load_settings
 from ....core.hashing import sha256_hex
+from ....domain.attachments import AttachmentStoreProtocol
 from ....tests.secure_sql import TestRuntimeProfile
-from .._notification_documents import notification_document_object_key
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
@@ -120,6 +140,43 @@ def served_document(
         pdf_bytes=payload,
         pdf_sha256=sha256_hex(payload),
         source_url=source_url,
+    )
+
+
+def build_service(
+    *,
+    bucket_id: str = BUCKET_ID,
+    attachment_store: AttachmentStoreProtocol | None = None,
+) -> NotificationDocumentService:
+    """Compose the service with real storage, sede and reader adapters."""
+    settings = load_settings()
+
+    def repository_factory(resolved_bucket_id: str) -> SecureSnapshotRepository[NotificationDocumentRecord]:
+        return SecureSnapshotRepository(
+            bucket_id=resolved_bucket_id,
+            payload_model=NotificationDocumentRecord,
+            namespace_definition=LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
+            object_key=notification_document_object_key,
+            not_found_factory=lambda certificado_id: NotificationDocumentNotFoundError(
+                translated_message="application.live.notifications.errors.document_not_found",
+                context={"certificado_id": certificado_id},
+            ),
+            ambiguous_prefix_factory=lambda certificado_id, full_ids: NotificationDocumentNotFoundError(
+                translated_message="application.live.notifications.errors.document_prefix_ambiguous",
+                context={"certificado_id": certificado_id, "match_count": len(full_ids)},
+            ),
+            domain_label="notification-document",
+            input_error_cls=LiveApplicationInputError,
+            objects=secure_object_repository_for_bucket(resolved_bucket_id, settings),
+        )
+
+    return NotificationDocumentService(
+        settings=settings,
+        attachment_store=(attachment_store if attachment_store is not None else AttachmentStore(bucket_id=bucket_id)),
+        repository_factory=repository_factory,
+        content_guard=assert_notification_content_readable,
+        document_fetcher=fetch_notification_document,
+        document_reader=NotificationDocumentReader(),
     )
 
 

@@ -17,12 +17,8 @@ from decimal import Decimal
 
 import pytest
 
-from .. import (
-    SancionArithmeticError,
-    SancionLiquidacion,
-    SancionParseError,
-    parse_sancion_document,
-)
+from .....domain.notifications import SancionLiquidacion
+from .. import SancionArithmeticError, SancionParseError, parse_sancion_document
 
 pytestmark = [
     pytest.mark.unit,

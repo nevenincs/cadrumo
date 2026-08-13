@@ -58,7 +58,29 @@ snapshot in the active profile.
 
 ---
 
-## 2. Declaration history (expedientes)
+## 2. Read documents from notifications you already opened
+
+Read a notification document only after you have personally opened that
+notification in the AEAT sede. Opening an unread electronic notification is a
+legally consequential act: it serves the notification and starts its appeal and
+payment periods. The tool therefore refuses to pull a document unless AEAT
+already reports its notification as read. Open an unread notification yourself
+when you decide that those periods should begin.
+
+Pull one eligible document into encrypted local custody, view a stored document
+without contacting AEAT, or list the figures reported by each parsed document:
+
+```{cli-sequence} check-notifications-documents
+```
+
+Treat history as a document record, not as a balance. It does not total the
+figures, state what is currently payable, or replace the recaudación register
+shown by the `aeat app live deudas` commands. A document alone does not establish
+whether its amount was paid, appealed, reduced, or superseded.
+
+---
+
+## 3. Declaration history (expedientes)
 
 Expedientes are the official AEAT record of your past declarations: each
 filed return for each modelo and year, with its status and filing date.
@@ -74,7 +96,7 @@ dates, and links to justificantes), and latest shows the most recent snapshot.
 
 ---
 
-## 3. Filed declaration detail
+## 4. Filed declaration detail
 
 Download the box-by-box values from a return you have already filed with AEAT.
 
@@ -91,7 +113,7 @@ needs).
 
 ---
 
-## 4. NIF and EU VAT verification
+## 5. NIF and EU VAT verification
 
 Verify whether a NIF is registered for intra-EU VAT purposes (the VIES
 register), or check a Spanish NIF in the Spanish ROI register.
@@ -108,7 +130,7 @@ latest observation for a NIF.
 
 ---
 
-## 5. Official AEAT portal catalogue
+## 6. Official AEAT portal catalogue
 
 The card shows the portal-catalogue reads. `portals list` shows the official
 AEAT online portals the tool knows about and their authentication requirements;
@@ -122,7 +144,7 @@ they are mutually exclusive. `portals view` opens one portal's details.
 
 ---
 
-## 6. Borrador (draft Modelo 100)
+## 7. Borrador (draft Modelo 100)
 
 The borrador is the pre-calculated Modelo 100 IRPF draft that AEAT makes
 available to wage earners. The card shows the borrador reads: list shows the
@@ -134,7 +156,7 @@ active draft for a filing year.
 
 ---
 
-## 7. IVA compensation balance
+## 8. IVA compensation balance
 
 Your IVA compensation balance (saldo a compensar) is the amount of overpaid
 IVA from prior quarters that can be deducted from future Modelo 303 filings.

@@ -2828,12 +2828,18 @@ cli:
             értesítés megnyitása maga a comparecencia: ezzel válik jogilag kézbesítetté,
             és ekkor indulnak a jogorvoslati és fizetési határidők, ezért az olvasatlan
             értesítést a program elutasítja, és azt az adózónak személyesen kell megnyitnia.'
+          history_help: Sorolja fel az egyes tárolt értesítési dokumentumokban közölt
+            összegeket összesítés nélkül.
+          history_notice: 'Ez az előzmény az AEAT által az egyes értesítési dokumentumokban
+            közölt adatokat rögzíti. Nem fizetendő egyenleg és nem a tartozásparancsok
+            által olvasott behajtási nyilvántartás: ez a nézet nem igazolja a fizetést,
+            jogorvoslatot, csökkentést vagy felváltást.'
           pull_help: Egy már elolvasott értesítés dokumentumának letöltése titkosított
             őrzésbe.
-          unparsed_notice: 'Ebből a dokumentumból nem sikerült számadatot kiolvasni,
-            ezért csak bájtként őrizzük. Ez nem azt jelenti, hogy a dokumentum nem
-            tartalmaz összegeket: olvassa el maga a tárolt dokumentumot, mielőtt bármit
-            megállapítana a tartalmáról.'
+          unparsed_notice: A dokumentumból nem sikerült összegeket kiolvasni, ezért
+            csak bájtként van megőrizve. Ez nem jelenti azt, hogy nem tartalmaz összegeket.
+            Tekintse meg az eredeti, már megnyitott értesítést az AEAT ügyfélkapuján;
+            ez a parancs nem jeleníti meg és nem exportálja a titkosított PDF bájtjait.
           view_help: Egy már tárolt értesítési dokumentum és annak kiolvasott adatai,
             az AEAT megkeresése nélkül.
         latest_help: A legutóbbi DEHú értesítési pillanatkép megjelenítése.

@@ -23,20 +23,36 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Sequence
-from typing import TYPE_CHECKING, Annotated
+from datetime import datetime
+from typing import TYPE_CHECKING, Annotated, Literal, TypedDict
 
 import typer
 
+from ...adapters.inbound.notificacion import NotificationDocumentReader
+from ...adapters.outbound.aeat.sede import assert_notification_content_readable, fetch_notification_document
+from ...adapters.persistence.profile.snapshots import SecureSnapshotRepository
+from ...adapters.persistence.storage import (
+    LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
+    AttachmentStore,
+    secure_object_repository_for_bucket,
+)
 from ...application.live import (
+    LiveApplicationInputError,
+    NotificationDocumentNotFoundError,
+    NotificationDocumentRecord,
     NotificationDocumentService,
     NotificationsService,
     capture_notifications,
+    notification_document_object_key,
     pull_notification_document,
 )
+from ...core.config import Settings, load_settings
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import resolve_active_bucket, run_auth_preflight
 from ._app_live_payloads import (
+    NotificationDocumentHistoryEntry,
+    NotificationDocumentHistoryResult,
     NotificationDocumentPullResult,
     NotificationDocumentViewResult,
     NotificationRowPayload,
@@ -50,8 +66,7 @@ from ._app_live_payloads import (
 from ._common import _emit_envelope, notice_lines
 
 if TYPE_CHECKING:
-    from ...adapters.inbound.notificacion import SancionLiquidacion
-    from ...application.live import NotificationDocumentRecord
+    from ...domain.notifications import SancionLiquidacion
 
 _active_bucket_id: Callable[[], str] | None = None
 _auth_preflight: Callable[[], None] | None = None
@@ -72,6 +87,38 @@ def register_notifications_commands(
 
 def _bucket_id() -> str:
     return resolve_active_bucket(_active_bucket_id, family="notifications")
+
+
+def _notification_document_service(settings: Settings) -> NotificationDocumentService:
+    """Compose the notification-document use case with its real adapters."""
+
+    def repository_factory(bucket_id: str) -> SecureSnapshotRepository[NotificationDocumentRecord]:
+        return SecureSnapshotRepository(
+            bucket_id=bucket_id,
+            payload_model=NotificationDocumentRecord,
+            namespace_definition=LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
+            object_key=notification_document_object_key,
+            not_found_factory=lambda certificado_id: NotificationDocumentNotFoundError(
+                translated_message="application.live.notifications.errors.document_not_found",
+                context={"certificado_id": certificado_id},
+            ),
+            ambiguous_prefix_factory=lambda certificado_id, full_ids: NotificationDocumentNotFoundError(
+                translated_message="application.live.notifications.errors.document_prefix_ambiguous",
+                context={"certificado_id": certificado_id, "match_count": len(full_ids)},
+            ),
+            domain_label="notification-document",
+            input_error_cls=LiveApplicationInputError,
+            objects=secure_object_repository_for_bucket(bucket_id, settings),
+        )
+
+    return NotificationDocumentService(
+        settings=settings,
+        attachment_store=AttachmentStore(),
+        repository_factory=repository_factory,
+        content_guard=assert_notification_content_readable,
+        document_fetcher=fetch_notification_document,
+        document_reader=NotificationDocumentReader(),
+    )
 
 
 notifications_app = typer.Typer(
@@ -281,7 +328,26 @@ def _sancion_payload(sancion: SancionLiquidacion) -> SancionReadingPayload:
     )
 
 
-def _document_payload_fields(bucket_id: str, record: NotificationDocumentRecord) -> dict[str, object]:
+class _NotificationDocumentPayloadFields(TypedDict):
+    """Precisely typed shared fields passed to the two document payloads."""
+
+    bucket_id: str
+    certificado_id: str
+    attachment_id: str
+    document_sha256: str
+    byte_size: int
+    source_url: str
+    fetched_at: datetime
+    sancion_parsed: bool
+    sancion: SancionReadingPayload | None
+    parse_refusal: str | None
+    mode: Literal["read"]
+
+
+def _document_payload_fields(
+    bucket_id: str,
+    record: NotificationDocumentRecord,
+) -> _NotificationDocumentPayloadFields:
     """Build the fields both document leaves share, from the one stored record."""
     return {
         "bucket_id": bucket_id,
@@ -294,6 +360,7 @@ def _document_payload_fields(bucket_id: str, record: NotificationDocumentRecord)
         "sancion_parsed": record.sancion is not None,
         "sancion": None if record.sancion is None else _sancion_payload(record.sancion),
         "parse_refusal": record.parse_refusal,
+        "mode": "read",
     }
 
 
@@ -390,7 +457,8 @@ def _unparsed_document_notice(record: NotificationDocumentRecord) -> Notice | No
             default=(
                 "No figures were read from this document, so it is held as bytes only. That is not a statement "
                 "that the document carries no amounts: read the stored document itself before concluding "
-                "anything about what it says."
+                "anything about what it says. Consult the original, already-opened notification in the AEAT "
+                "sede; this command does not render or export the encrypted PDF bytes."
             ),
         ),
         context={"certificado_id": str(record.certificado_id), "parse_refusal": record.parse_refusal},
@@ -434,7 +502,14 @@ def notifications_document_pull(
     """
     bucket_id = _bucket_id()
     run_auth_preflight(_auth_preflight, family="notifications")
-    custody = asyncio.run(pull_notification_document(bucket_id=bucket_id, certificado_id=certificado_id))
+    service = _notification_document_service(load_settings())
+    custody = asyncio.run(
+        pull_notification_document(
+            bucket_id=bucket_id,
+            certificado_id=certificado_id,
+            service=service,
+        )
+    )
     record = custody.record
     result = NotificationDocumentPullResult(
         already_in_custody=custody.already_in_custody,
@@ -484,13 +559,88 @@ def notifications_document_view(
     the act that serves a notification. It runs with no AEAT session at all.
     """
     bucket_id = _bucket_id()
-    record = NotificationDocumentService().show(bucket_id=bucket_id, certificado_id=certificado_id)
+    record = _notification_document_service(load_settings()).show(
+        bucket_id=bucket_id,
+        certificado_id=certificado_id,
+    )
     result = NotificationDocumentViewResult(**_document_payload_fields(bucket_id, record))
     notices = _document_notices(record, notices=())
     lines = [*_document_lines(bucket_id, record), *notice_lines(notices)]
     _emit_envelope(
         ctx,
         command="app.live.notifications.document.view",
+        result=result,
+        lines=lines,
+        notices=notices,
+    )
+
+
+def _history_notice(*, count: int) -> Notice:
+    """Bound the history to what each served document actually reports."""
+    return Notice(
+        severity=NoticeSeverity.INFO,
+        code="live.notifications.document.history_not_balance",
+        message=tr(
+            "cli.app.live.notifications.document.history_notice",
+            default=(
+                "This history records figures AEAT served in individual notification documents. It is not a "
+                "payable balance or the recaudacion register read by the deudas commands: payment, appeal, "
+                "reduction and supersession are not established by this view."
+            ),
+        ),
+        context={"document_count": str(count), "total_computed": "false"},
+    )
+
+
+@document_app.command(
+    "history",
+    help=tr(
+        "cli.app.live.notifications.document.history_help",
+        default="List each stored notification document's reported figures, without computing a total.",
+    ),
+)
+def notifications_document_history(ctx: typer.Context) -> None:
+    """List parsed documents in encrypted custody without asserting a balance."""
+    bucket_id = _bucket_id()
+    records = tuple(
+        record
+        for record in _notification_document_service(load_settings()).list_documents(bucket_id=bucket_id)
+        if record.sancion is not None
+    )
+    documents = [
+        NotificationDocumentHistoryEntry(
+            certificado_id=str(record.certificado_id),
+            fetched_at=record.fetched_at,
+            sancion=_sancion_payload(record.sancion),
+        )
+        for record in records
+        if record.sancion is not None
+    ]
+    result = NotificationDocumentHistoryResult(bucket_id=bucket_id, count=len(documents), documents=documents)
+    notices = [_history_notice(count=len(documents))]
+    lines = [f"bucket\t{bucket_id}", f"count\t{len(documents)}"]
+    for document in documents:
+        reading = document.sancion
+        lines.extend(
+            (
+                f"certificado_id\t{document.certificado_id}",
+                f"fetched_at\t{document.fetched_at.isoformat()}",
+                f"clave_liquidacion\t{reading.clave_liquidacion}",
+                f"referencia\t{reading.referencia}",
+                f"objeto_tributario\t{reading.objeto_tributario}",
+                f"base_sancion\t{reading.base_sancion}",
+                f"porcentaje_minimo\t{reading.porcentaje_minimo}",
+                f"sancion_resultante\t{reading.sancion_resultante}",
+                f"reduccion_conformidad\t{reading.reduccion_conformidad}",
+                f"reduccion_pronto_pago\t{reading.reduccion_pronto_pago}",
+                f"diferencia\t{reading.diferencia}",
+                f"importe_a_ingresar\t{reading.importe_a_ingresar}",
+            ),
+        )
+    lines.extend(notice_lines(notices))
+    _emit_envelope(
+        ctx,
+        command="app.live.notifications.document.history",
         result=result,
         lines=lines,
         notices=notices,
