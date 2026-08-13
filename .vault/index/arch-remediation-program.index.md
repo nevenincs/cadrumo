@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-program'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:f9ca16add8d1581b667ca778c817fe821b163522b899cd68e029ad76cdecef91'
 related:

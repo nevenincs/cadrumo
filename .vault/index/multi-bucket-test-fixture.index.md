@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multi-bucket-test-fixture'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:806328863db012d7b6c50113c256d8b14aae18575ab29ae39217035375f32c5f'
 related:

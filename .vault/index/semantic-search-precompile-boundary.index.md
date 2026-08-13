@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#semantic-search-precompile-boundary'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:d1e9c8e42ae45a6c1c34f3313fd47b8f03d94db51b061c938e03d6bde849c6db'
 related:

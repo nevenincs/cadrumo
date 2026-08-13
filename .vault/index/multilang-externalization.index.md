@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#multilang-externalization'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:5f14b07d4a1b243de721eb6f132b2a9a30d0778784030b21dd86a5923207d847'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness-operability-followup'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:cf8615257abaf61199135a99c7bb58b6623f51236538652f22fc834c3adad777'
 related:

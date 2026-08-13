@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-fixtures'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:dfb1b2095db7f052643466ccb34b7d84061df676b89ba304f291dd673b23b9f7'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-terminology-search'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:ec788430adb6cc1935afaf952df8ef3b4abdcc39b498f527b0298df664c1deef'
 related:

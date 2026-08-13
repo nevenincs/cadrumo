@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#quadlingual-i18n-ccaa'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:c3f776136dc2c6bfc94cf1c50822005a6afaa6d2d8b049352dc5568620181772'
 related:

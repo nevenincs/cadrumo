@@ -4,12 +4,14 @@ tags:
   - '#advisory-grounding'
 date: '2026-08-10'
 modified: '2026-08-13'
-body_hash: 'sha256:655b8f67ad24e91e5ee645c5479184fb0f476ef8fcaadc388c2d2b20895a30bf'
+body_hash: 'sha256:8c463879bee102de3781b0e1721a4e16553cea5ef7d36a5e4d4a5a35a402b4f5'
 tier: L2
 related:
   - '[[2026-08-10-advisory-grounding-adr]]'
   - '[[2026-08-10-advisory-grounding-reference]]'
 ---
+
+<!-- RETIRED: S08 -->
 
 # `advisory-grounding` plan
 
@@ -38,6 +40,8 @@ Thread a registry object into the five modules that hold none, as its own change
 - [x] `P03.S05` - Thread a registry object into the five modules that hold none, as its own change rather than inside a citation change. The invoice-devengo advisory, the retencion-rate advisory, the invoice source resolver and the prior-payment advisory hold no revision, snapshot or casilla definition anywhere. Every provision they cite has a catalogue entry, so this is threading rather than grounding. The disconfirming observation: if threading a revision into any of these modules would invert a dependency direction the architecture forbids, stop and report rather than route around it, because that would mean the advisory belongs at a different layer; `src/cadrumo/application/aggregation/, src/cadrumo/application/invoices/`.
 - [x] `P03.S06` - Read the twelve modules that assert no provision in either form and record, per module, whether that silence is proper. Nothing measured so far says they are proper and nothing contradicts it, so this row exists to convert an untested assumption into a stated finding. A diagnostic about wiring rather than law correctly carries no provision. The disconfirming observation: any module found asserting a regulatory claim through a channel the earlier regex could not see, such as a formatted or multi-line message, belongs in the P02 population and this row must say so rather than close on the count; `src/cadrumo/application/`.
 - [x] `P03.S07` - Author the LegalParameter fix for the standing rule violation P03.S05 surfaced rather than merely flagged: the administrador/consejero retencion rate figures (35 percent, 19 percent, the 100.000 EUR INCN threshold) were typed Python literals in core/aggregation.py carrying a legal_refs citation that read as verified without being registry-sourced, which is more dangerous than no citation at all. Ground the three figures against LIRPF art. 101.2 and RIRPF art. 80.1.3.o, author them as registry LegalParameter entries, migrate them out of core/aggregation.py into a registry-backed loader mirroring the sibling RIRPF art. 95 rate set already established in this module, and thread the loader into the advisory in place of the literal-backed treatment field; `src/cadrumo/core/aggregation.py, src/cadrumo/domain/transactions/_retencion_parameters.py, src/cadrumo/application/aggregation/_retencion_rate_advisory.py, src/cadrumo/_data/registry/aeat/legal/irpf-retencion-administradores.toml`.
+- [x] `P03.S09` - Ground the two P03.S06 escalated findings this campaign can adjudicate now. The three LIRPF DT 12a.4 sites in the calculate-input module (_dt12_window_decision's two diagnostics, _dt12_parcial_guidance_advisory) declare asserted_legal_refs against ley-35-2006:dt-12, which resolves cleanly with no gate, same as the sibling _dt12_advisory.py sites already cite it. The recargo-rate-mismatch diagnostic in the modelo-bindings module declares asserted_legal_refs against ley-37-1992:art-161, the recargo de equivalencia provision this project already has a standing rule about. No casilla is in reach for either population, so asserted_legal_refs is the fit, matching the P03.S05 population shape; `src/cadrumo/application/modelo/_calculate_input.py, src/cadrumo/application/aggregation/_modelo_bindings.py`.
+- [x] `P03.S10` - Record the four LIRPF art. 81.1 maternidad sites in the calculate-input module (_maternidad_ceilings_unresolved_advisory, _maternidad_cotizaciones_ceiling_advisory, _maternidad_ambiguous_relacion_advisory, _maternidad_meses_withheld_advisory) as excluded from this campaign's grounding population rather than grounded or silently dropped. They hit the identical two-vintage-excerpt wall the P02.S03 hard gate already excludes four other sites over: ley-35-2006:art-81-1 has no catalogue entry of its own, only the whole-article ley-35-2006:art-81, which still cites the two-vintage excerpt awaiting an operator stamp under the legal-corpus-vintage plan. Adding a finer article-81-1 entry or repointing art-81 is a corpus-vintage decision, not an advisory-grounding one, so it is rowed against that campaign with this measurement attached rather than smuggled into this sweep. Re-open these four sites once that repoint lands; `src/cadrumo/application/modelo/_calculate_input.py`.
 
 ## Parallelization
 

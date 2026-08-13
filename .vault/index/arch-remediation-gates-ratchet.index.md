@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-gates-ratchet'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:766ceca5aec008e6c4bbb8b3a2d85374bd1088391d9f6d2c64181321c971c36e'
 related:

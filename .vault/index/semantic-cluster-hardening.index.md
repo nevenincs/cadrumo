@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#semantic-cluster-hardening'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:5f70450a9feecbfe3ad70f4bebf88400346c83ca1c1a0452eddf069207c12d4d'
 related:

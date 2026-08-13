@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness-content-review'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:45b3e1a3c8eb801508edd58fb54d4a5f845cf85b5f3248dbe6c1ed3a5f12f542'
 related:

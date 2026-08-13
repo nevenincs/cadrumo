@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-parity-rollup'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:fb4d6711d30c5e17a20a582df4fa18fa43f139a4485458cb35e2c5ce1ee71202'
 related:

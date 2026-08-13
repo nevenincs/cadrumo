@@ -3,12 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#facturae-invoice-class'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:4efb3e05976a7a97e0abdc9982e9d7b94187208b01a57f9292289594952819ba'
+body_hash: 'sha256:1e886fd915a00ac328eb19fca3f178ac38fd2bfb6ec0141725011ddb09f20710'
 related:
   - '[[2026-08-12-facturae-invoice-class-reference]]'
+  - '[[2026-08-13-facturae-invoice-class-adr]]'
+  - '[[2026-08-13-facturae-invoice-class-plan]]'
 ---
 
 # `facturae-invoice-class` feature index
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#facturae-invoice-class`.
 
 ## Documents
+
+### adr
+
+- `2026-08-13-facturae-invoice-class-adr` - `facturae-invoice-class` adr: `the declared code grounds the class, and the two axes it carries are not collapsed` | (**status:** `accepted`)
+
+### plan
+
+- `2026-08-13-facturae-invoice-class-plan` - `facturae-invoice-class` plan
 
 ### reference
 

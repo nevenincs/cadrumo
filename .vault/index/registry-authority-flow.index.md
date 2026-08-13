@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-authority-flow'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:17d6d5d7f6eb5c7c8d60daae9b9fd886f96d10418f66945a86f20e502465fbde'
 related:

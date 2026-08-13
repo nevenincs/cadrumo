@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#censal-sync-control'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:6aa45bdc4748cd88b3b42a380e6941054c3d267625741d2e133d353cb4533c49'
 related:

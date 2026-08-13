@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-test-decomposition'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:eb468a1f93224d177044c94238f013d86b799cc1c030cf5fb34cdb2488b064bc'
 related:

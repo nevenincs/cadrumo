@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#integration-fixture-drift'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:4130c7e9ef96d4257b62129f976ec15b6310f16f75b53d78facbbc661924ffaf'
 related:

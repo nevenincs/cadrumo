@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-compensation-chain'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:b72e968759cbb236bb098b23ae746bbabc17c45d649dd0c4c92877ce17afd738'
 related:

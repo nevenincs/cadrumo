@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-parity-gate'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:3234e07fe47cf64b647372c65bd0007f52ef117ab44ceaca480e55433734dd1f'
 related:

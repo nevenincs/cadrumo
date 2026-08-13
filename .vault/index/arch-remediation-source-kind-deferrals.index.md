@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-source-kind-deferrals'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:7a55ffee8037a1dafe88aed163f9523a9352a5884c2d26265ab5a88b653bf70b'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-brand'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:7f67dcce28f76117642a318fdc33d7a5f36bea8ef27c8e58a6b86e7766515186'
 related:

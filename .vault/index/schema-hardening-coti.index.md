@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-hardening-coti'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:9661f2929974589bf77b3dc765d1f4c88ce4317554e15da61e47d7f2b0f314bf'
 related:

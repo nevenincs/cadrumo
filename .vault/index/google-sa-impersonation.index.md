@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-sa-impersonation'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:64635f8c819bda289eb832325b2c02f886db69a41ab6f1f228af47f54b9bc6f8'
 related:

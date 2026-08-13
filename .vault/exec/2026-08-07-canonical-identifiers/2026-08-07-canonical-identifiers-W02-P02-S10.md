@@ -42,4 +42,3 @@ only validated an in-memory model dump. This Step replaces that insufficient
 proof with the production read path. W02.P02.S65 remains open as the separate
 legitimate-population control required before the discriminated-pair release
 condition is met.
-

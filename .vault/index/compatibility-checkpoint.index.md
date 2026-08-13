@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#compatibility-checkpoint'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:0e0e91d77e138cbfe0858b774c7693b20920759d789620a38b772108d76bad84'
 related:

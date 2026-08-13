@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#domain-boundary-audit'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:b91472c85bd0bcfed97d08e56cd5b1a31f57acc3b5baba07e978003af7a60ccc'
 related:

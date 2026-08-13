@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-casilla-identity'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:5a48101741bb1dfbe405abbc2f665c09ec8c6d0fe5228a74ac10d38e203bdcbb'
 related:

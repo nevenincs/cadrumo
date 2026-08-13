@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m036-lifecycle-verbs'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:9e09767d6fcb2fd6d5a6f3e73277f63cd61f1bbcd06f42bf9ede50b449488661'
 related:

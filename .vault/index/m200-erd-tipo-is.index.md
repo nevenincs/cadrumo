@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m200-erd-tipo-is'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:1bbaacb23106337eb659b3a544b120bfcd2614281cf5ef009349fd5a427ac2a7'
 related:

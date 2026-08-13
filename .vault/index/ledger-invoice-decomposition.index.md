@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-invoice-decomposition'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:6df0e3d03c9f2ec10f255eca7153bb4b663e4ca58ee90ff74f36e5fb46ed6f2d'
 related:

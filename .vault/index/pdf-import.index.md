@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pdf-import'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:b18c4b09e45827d583ccd596310e92a3a98df43164ff9183a9b146340ea1f0ec'
 related:

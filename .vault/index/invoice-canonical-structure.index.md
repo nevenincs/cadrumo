@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#invoice-canonical-structure'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:14fd47418d0689ca1715b9aadf247c289d5ba2de859be58edc962c3bd4f03d34'
 related:

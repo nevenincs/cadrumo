@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign-epic'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:9a4718b39515b07dd687d455f42366773e0538a78f4f0f7b047ea0c4232b8374'
 related:

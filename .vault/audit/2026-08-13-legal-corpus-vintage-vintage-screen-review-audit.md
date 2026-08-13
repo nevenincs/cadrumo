@@ -5,25 +5,20 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:82c9bde8d0ee506cf9022eedd99e877ffd62e174ab79ed5a9895dba970686ab9'
+body_hash: 'sha256:1ae566f5373b53552d9a4bb694b6dbbaf9050565ce1c65a2fd3923cc87dfd194'
 related:
   - "[[2026-08-10-legal-corpus-vintage-plan]]"
   - "[[2026-08-10-legal-corpus-vintage-adr]]"
   - "[[2026-08-10-legal-corpus-vintage-reference]]"
 ---
 
-
-
 # `legal-corpus-vintage` audit: `excerpt vintage screen and redaction-history acquisition`
 
 ## Scope
 
-
 ## Findings
 
-
 ## Recommendations
-
 
 ## Context
 

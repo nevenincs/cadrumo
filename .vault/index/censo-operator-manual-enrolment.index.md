@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#censo-operator-manual-enrolment'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:9c917803d39e2a0aba40340619d671636c2b3ac61d3df056001b4005128a1a97'
 related:

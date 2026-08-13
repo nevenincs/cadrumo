@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-interface-contract'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:58c6c8c604cf1663a6d133c78b01bc25c32a2ae2ce9e166888517ca227b4d23b'
 related:

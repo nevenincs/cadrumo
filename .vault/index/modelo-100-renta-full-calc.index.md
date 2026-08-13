@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-renta-full-calc'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:2b8dd1dc7db034d31747b8deef5c88814a541176c1fd1b245595f6af0fb8b422'
 related:
