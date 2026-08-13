@@ -38,7 +38,7 @@ from typing import NamedTuple
 
 from ...core import CasillaId, Modelo
 from ...core.decimal import coerce_decimal
-from ...domain.calculations.registry import ModeloRevision
+from ...domain.calculations.registry import LegalRefId, ModeloRevision
 from ...domain.contribuyente import DescendantInfo, RentaFamilyProfile, descendant_list_from_facts
 from ...domain.user_profile import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
@@ -154,7 +154,7 @@ def collect_minimo_descendientes_undeclared_diagnostics(
         # Art. 58.1-eligible, e.g. every child is over 25 and non-discapacitado); a
         # declared zero is not a silent gap.
         return ()
-    return (_undeclared_advisory(estatal_id),)
+    return (_undeclared_advisory(revision, estatal_id),)
 
 
 def _family_profile_from_facts(facts: dict[str, str]) -> RentaFamilyProfile:
@@ -263,7 +263,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     # large household would otherwise turn this advisory into a hard
     # ValidationError -- silencing the disclosure the chosen default rests on,
     # for the filer with the most children at stake.
-    return (_prorrata_inferred_advisory(inferred, estatal_id),)
+    return (_prorrata_inferred_advisory(revision, inferred, estatal_id),)
 
 
 #: How many descendant paths a message names before summarising the rest.
@@ -284,7 +284,24 @@ def _name_indices(indices: list[int]) -> str:
     return f"{shown} and {remainder} more" if remainder > 0 else shown
 
 
-def _undeclared_advisory(casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
+    """Read one casilla's own legal grounding (and its binding's) off ``revision``.
+
+    The casilla-derived path: correct for an advisory whose subject IS the
+    casilla's own computation, never minted here. Mirrors
+    :func:`~application.aggregation._undeclared_activity_advisory._casilla_grounding`;
+    empty when the casilla is absent from the revision or carries no refs of
+    its own, which a caller treats as "nothing to attach" rather than an error.
+    """
+    casilla = next((candidate for candidate in revision.casillas if candidate.id == casilla_id), None)
+    if casilla is None:
+        return ()
+    binding = next((candidate for candidate in revision.bindings if candidate.id == casilla.binding), None)
+    binding_legal = binding.legal_refs if binding is not None else ()
+    return tuple(dict.fromkeys((*casilla.legal_refs, *binding_legal)))
+
+
+def _undeclared_advisory(revision: ModeloRevision, casilla_id: CasillaId) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_UNDECLARED_SOURCE_KIND,
@@ -294,15 +311,20 @@ def _undeclared_advisory(casilla_id: CasillaId) -> CalculationSourceDiagnostic:
             "children or other eligible descendants, the Art. 58 LIRPF allowance is being silently "
             "omitted"
         ),
-        remedy=(
-            "Declare each descendant on the active profile, with its date of birth, "
-            "before filing."
-        ),
+        remedy=("Declare each descendant on the active profile, with its date of birth, before filing."),
         casilla_id=casilla_id,
+        # Casilla-derived: this advisory's subject IS the casilla's own zero, and
+        # its own grounding already carries the Art. 58 allowance the message
+        # names -- nothing finer is asserted here that the casilla ref lacks.
+        legal_refs=_casilla_legal_refs(revision, casilla_id),
     )
 
 
-def _prorrata_inferred_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+def _prorrata_inferred_advisory(
+    revision: ModeloRevision,
+    indices: list[int],
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_PRORRATA_INFERRED_SOURCE_KIND,
@@ -317,10 +339,20 @@ def _prorrata_inferred_advisory(indices: list[int], casilla_id: CasillaId) -> Ca
             "mínimo, or PRORRATA=true to confirm the split."
         ),
         casilla_id=casilla_id,
+        # Casilla-derived, not advisory-asserted: the norma 1ª prorrateo clause is
+        # not a sub-entry of its own -- the catalogue's whole-article
+        # ley-35-2006:art-61 entry already grounds it at exactly this granularity
+        # (its own required_text targets the prorrateo sentence), which is what
+        # the casilla already references. Nothing finer exists to declare.
+        legal_refs=_casilla_legal_refs(revision, casilla_id),
     )
 
 
-def _rentas_undeclared_advisory(indices: list[int], casilla_id: CasillaId) -> CalculationSourceDiagnostic:
+def _rentas_undeclared_advisory(
+    revision: ModeloRevision,
+    indices: list[int],
+    casilla_id: CasillaId,
+) -> CalculationSourceDiagnostic:
     return CalculationSourceDiagnostic(
         reason="source_issue",
         source_kind=_RENTAS_UNDECLARED_SOURCE_KIND,
@@ -335,6 +367,12 @@ def _rentas_undeclared_advisory(indices: list[int], casilla_id: CasillaId) -> Ca
             "answer and silences this advisory."
         ),
         casilla_id=casilla_id,
+        # Advisory-asserted, not casilla-derived: the casilla carries only the
+        # whole-article art-58/art-61 refs, and this message states a claim about
+        # TWO specific sub-clauses (the 58.1 rentas ceiling and the 61 norma 2ª
+        # own-return exclusion) neither of which the casilla's own ref pins at
+        # that granularity.
+        asserted_legal_refs=("ley-35-2006:art-58-1", "ley-35-2006:art-61-norma-2"),
     )
 
 
@@ -515,10 +553,7 @@ def _count_desync_advisory(stored: Decimal, rows: int) -> CalculationSourceDiagn
             "while the mínimo por descendientes casillas are computed from the rows, so the filing "
             "would carry two different answers"
         ),
-        remedy=(
-            "Re-enter the descendants on the active profile, which rewrites the count and "
-            "the rows together."
-        ),
+        remedy=("Re-enter the descendants on the active profile, which rewrites the count and the rows together."),
     )
 
 
@@ -606,7 +641,7 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     ]
     if not undeclared:
         return ()
-    return (_rentas_undeclared_advisory(undeclared, estatal_id),)
+    return (_rentas_undeclared_advisory(revision, undeclared, estatal_id),)
 
 
 def collect_minimo_descendientes_entry_date_missing_diagnostics(

@@ -260,6 +260,11 @@ def collect_prorrata_regularizacion_diagnostics(
                 "si procede una regularización antes de presentar."
             ),
             casilla_id=porcentaje_id,
+            # Advisory-asserted: the message states a claim spanning both art.
+            # 104 (the definitive percentage's own computation) and art. 105
+            # (the Cuatro regularización comparison this advisory is about), and
+            # the casilla_id's own ref carries only art. 104.
+            asserted_legal_refs=("ley-37-1992:art-104", "ley-37-1992:art-105"),
         )
         return (*(missing_carry_diagnostics or (pending_diagnostic,)), *especial_diagnostics)
 
@@ -330,6 +335,12 @@ def _especial_mandatory_diagnostics(
                 reason="prorrata_especial_obligatoria",
                 source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
                 message=notice.message,
+                # Advisory-asserted: this diagnostic holds no casilla (the annual
+                # comparison runs across the whole ejercicio's ledger, not one
+                # revision casilla), and its message -- built by
+                # build_prorrata_especial_mandatory_advisory -- states the art.
+                # 103.Dos.2.º mandatory-especial obligation verbatim.
+                asserted_legal_refs=("ley-37-1992:art-103",),
             ),
         )
 
@@ -351,6 +362,10 @@ def _especial_mandatory_diagnostics(
                 "operaciones del ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial "
                 f"--ejercicio {filing_year}'. Quedan {totals.unclassified_deducible_count} operaciones sin clasificar."
             ),
+            # Advisory-asserted, no casilla here either: the message states both
+            # the art. 103.Dos.2.º mandatory-especial threshold AND the art. 106
+            # per-input classification the prompt asks the operator to perform.
+            asserted_legal_refs=("ley-37-1992:art-103", "ley-37-1992:art-106"),
         ),
     )
 
