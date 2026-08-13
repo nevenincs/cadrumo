@@ -202,6 +202,15 @@ def test_registry_verify_cli_validates_sources_and_catalogues() -> None:
     payload = envelope["result"]
     registry_surfaces = _registry_application_surfaces()
     assert payload["verified"] is True
+    assert payload["verified_invariant_families"] == [
+        "catalogue_and_corpus_integrity",
+        "revision_section_contracts",
+        "relation_source_coordinate_coverage",
+    ]
+    assert payload["unverified_invariant_families"] == [
+        "export_layout_population",
+        "published_design_span_attribution",
+    ]
     assert payload["source_reference_count"] > 0
     assert set(payload["application_link_surfaces"]) == registry_surfaces
     assert payload["relation_count"] > 0

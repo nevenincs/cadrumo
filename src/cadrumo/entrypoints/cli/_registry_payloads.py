@@ -105,6 +105,8 @@ class RegistryInspectResult(OutputSchema):
     modelos: list[str] = []
     revision_details: list[RegistryRevisionDetailPayload] = []
     verified: bool
+    verified_invariant_families: list[str] = []
+    unverified_invariant_families: list[str] = []
 
 
 @register_schema("registry.verify_filed_state")

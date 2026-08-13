@@ -215,6 +215,8 @@ class RegistryTreeReport(BaseModel):
     modelos: tuple[str, ...]
     revision_details: tuple[RegistryRevisionDetailReport, ...]
     verified: bool
+    verified_invariant_families: tuple[str, ...] = ()
+    unverified_invariant_families: tuple[str, ...] = ()
 
 
 class RegistryWorkbookParityDetailReport(BaseModel):
@@ -342,6 +344,18 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         authority=authority,
         verified=True,
         source_root=source_root,
+    ).model_copy(
+        update={
+            "verified_invariant_families": (
+                "catalogue_and_corpus_integrity",
+                "revision_section_contracts",
+                "relation_source_coordinate_coverage",
+            ),
+            "unverified_invariant_families": (
+                "export_layout_population",
+                "published_design_span_attribution",
+            ),
+        },
     )
 
 
