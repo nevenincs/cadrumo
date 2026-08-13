@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:f041e8a2564677c5a280357d618ee8af0cd8fce7cbd2cd4e148b286a4d3a492c'
+body_hash: 'sha256:85b04e14364bcd784868efcfd74161bb1d12c78ace07d68026a5d1cd31f4f57c'
 related:
   - "[[2026-08-11-tui-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -63,14 +63,14 @@ Commit `0c5fb5253d` adds the read-only screen, tests, facade exports, and locale
 5. Do not delete or relocate commit `0c5fb5253d` now. Defer physical relocation to the newly explicit TUI architecture step after casilla S40 closes and the architecture dependency gate opens. If the owner rejects transitional delivery, that is a judgment change to the accepted sequencing and requires an ADR amendment before any plan or code action.
 6. Treat `legacy-tui-placement` in `2026-08-12-casilla-schema-s34-tui-review-audit` as corrected by this audit. Retain its other findings and its overall FAIL until those functional/proof defects are resolved; placement alone is not a valid blocker under the accepted sequence.
 
-## Retirement note, 2026-08-13
+## Disposition, 2026-08-13
 
-The owner ruled that no TUI campaign will land. Three of the six recommendations above, and one finding, are retired by that ruling; the rest stand.
+**Recommendations 3 and 4 are DISCHARGED.** The migration step they called for is inserted in `2026-08-11-tui-architecture-plan` as `W04.P10.S104`, allocated by the plan CLI with no id reused or renumbered, placed in the phase that already owns feature-presentation relocation so it precedes the relocation-parity proof at S59 and therefore precedes migration-manifest closure S88, legacy deletion S89, fixed-point gates S102 and final review S103 by wave order rather than by a prose dependency. It carries the destination, the public-facade constraint, the named-outlier evidence and the no-shim deletion this audit specified. Recommendation 5's deferral now has a dated owner instead of an open-ended one, and the interface ADR's precondition for creating that destination is met: casilla-schema published `ModeloWorkReview` and closed on 2026-08-13.
 
-**Retired: the `plan-gap` finding, and recommendations 3, 4 and 5.** All four are instructions to the `tui-architecture` authority and plan - amend the ADR to make Modelo absorption explicit, insert a migration step before relocation parity and legacy deletion, make it a prerequisite of S88/S89/S102/S103, and defer physical relocation until after casilla S40 opens the dependency gate. None of them has an executing campaign, so they are retired rather than carried as open items that no one owns. Recommendation 3's condition ("with author approval") was never met and is now moot.
+Recommendations 1, 2 and 6 stand as satisfied: S34 and S35 executed and closed in their transitional scope, and `legacy-tui-placement` in the sibling review audit remains corrected by this record.
 
-**Stood down as satisfied: recommendations 1, 2 and 6.** S34 and S35 stayed in place, were executed and closed in their transitional scope, and the `legacy-tui-placement` finding of `2026-08-12-casilla-schema-s34-tui-review-audit` remains corrected by this audit.
+**`plan-gap` stands, discharged by S104 - it is not retired.** `locator-classification` and `decision-versus-code` also stand unchanged and are not superseded. Their reading was correct and remains correct: the placement is transitional, commit `0c5fb5253d` must not survive TUI architecture closure, and S104 is the row that ends it.
 
-**Superseded in premise, retained as history: `locator-classification` and `decision-versus-code`.** Both classified the legacy path as an *intentional transitional source* pending later absorption. The classification was correct when written and is preserved as the record of why the screen shipped there, but its premise no longer holds: the placement is permanent. That is ruled in the amendment to `2026-08-10-casilla-schema-read-model-adr` dated 2026-08-13, which is the authority for the screen's home. The sentence in `decision-versus-code` that commit `0c5fb5253d` "must not survive TUI architecture closure" is void, not pending.
+**A correction, recorded because it was briefly committed.** An earlier note on this document, dated the same day, retired `plan-gap` and recommendations 3 to 5 on the ground that no TUI campaign would execute. That reading of the owner's instruction was wrong and the note has been removed rather than left to contradict this one. Retiring `plan-gap` was the more damaging half of the error: that finding is the only record of WHY the drift existed, so retiring it would have deleted the reason for S104 at the exact moment the row became necessary. A finding that explains a drift outlives the campaign that caused it.
 
 **`authority-ordering` stands unchanged.** Its reasoning - that an audit cannot override an accepted cluster's explicit dependency order - was never contingent on the order being executed.

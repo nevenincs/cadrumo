@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:9885d574ee0e19713f8f57aa0ed1ef1b6e82569755607d907814802d4733bfe8'
+body_hash: 'sha256:fc0678fb3be3d0bd891ed1ea11887a08eb144dae1fe7b4db8b5a94c9eb19ed75'
 step_id: 'S40'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -50,8 +50,12 @@ No alternate index, `commit-tree`, or other plumbing workaround is authorised or
 
 No plan checkbox is treated as a substitute for a commit. No data loss and no destructive Git operation occurred.
 
-**Scope exclusion recorded at close, 2026-08-13.** The owner ruled that no TUI campaign will land. Two records were amended in the same action as this close rather than left to contradict the tree: `2026-08-10-casilla-schema-read-model-adr` now rules the review screen's home at `src/cadrumo/adapters/inbound/tui/` **permanent** rather than transitional, and the retirement note on `2026-08-12-casilla-schema-s34-tui-architecture-curation-audit` retires its `plan-gap` finding and recommendations 3-5, all of which instructed a `tui-architecture` authority that will not execute.
-
-What the standing goal still asks for that this excludes: the canonical frontend-topology consolidation - relocating the screen to `cadrumo.entrypoints.tui.modelo.view` and deleting `cadrumo.adapters.inbound.tui` without a compatibility facade - does not happen. Those are `2026-08-11-tui-architecture-adr` D10/D12 mandates and are now unreachable rather than outstanding. No decision of the four governing casilla-schema ADRs depended on them; the cost is that a Textual screen permanently sits outside the root an accepted ADR designates, which a future frontend effort inherits as pre-existing debt rather than as a scheduled migration row. Whether those two accepted TUI records are themselves retired is a decision for their own authority and is not claimed here.
-
 No checkbox in this plan was treated as a substitute for a commit, in this attempt either.
+
+**The review screen's transitional placement, recorded at close 2026-08-13.** This campaign's W04.P10 delivered the review screen into `src/cadrumo/adapters/inbound/tui/`, which is not where a Textual surface belongs - `2026-08-11-tui-architecture-adr` D10 designates `src/cadrumo/entrypoints/tui/` as the sole production TUI root and D12 requires the legacy inbound package deleted without a compatibility facade. Nothing is excluded from that standing goal, and the placement is transitional, not permanent.
+
+The structural defect was that no row owned the exit: the tui-architecture plan demanded, in its Verification section, that no Textual code live outside `entrypoints/tui`, while no Step in it named this screen. That is how a plan and a tree drift apart with both looking green. `W04.P10.S104` is now inserted in that plan to relocate the screen and its tests to `cadrumo.entrypoints.tui.modelo.view` as a read-only consumer of the public `application.modelo` facade and delete the legacy screen, exports and locale references in the same change. The obligation is carried by a plan row instead of by audit prose.
+
+This does not reopen any Step here. The screen was delivered and closed in its sanctioned transitional scope under S34 and S35, and the closure evidence in the Outcome above is unaffected. A correction is noted for the next reader: an earlier version of this note, committed the same day, recorded the placement as permanent and the topology consolidation as excluded from the standing goal, on a mistaken reading that the TUI campaign had been cancelled. It had not been.
+
+This does not reopen any Step of this campaign. The screen was delivered and closed in its sanctioned transitional scope under S34 and S35; what changed is only that the obligation to move it is now carried by a plan row in the owning campaign instead of by prose in an audit. The closure evidence in the Outcome above is unaffected.
