@@ -292,7 +292,7 @@ def test_seed_iva_compensation_period_raises_localized_conflict_error(tmp_path: 
             )
 
         assert excinfo.value.translated_message == "application.calculations.iva_compensation.errors.seed_conflict"
-        assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_status": "seeded"}
+        assert excinfo.value.context == {"filing_year": 2024, "period": "2T", "existing_provenance": "operator_seed"}
 
 
 def test_iva_compensation_annual_summary_refuses_printed_number_references() -> None:
