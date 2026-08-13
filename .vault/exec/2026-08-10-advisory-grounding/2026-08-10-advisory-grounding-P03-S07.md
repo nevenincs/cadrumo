@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:2c71136331858537dbd3c8ce3c158da3628fca3744c165eb3f3d864ace2e8c98'
+body_hash: 'sha256:4c802831f8f3e3e0f866fa5f4064627282c5ccab31fa68f8f4a306a3937a2323'
 step_id: 'S07'
 related:
   - "[[2026-08-10-advisory-grounding-plan]]"
@@ -37,6 +37,8 @@ The rule violation P03.S05 surfaced — a typed `legal_refs=` citation sitting b
 32 tests green across every touched module and its test suite (`core/tests/test_retencion_treatment.py`, `domain/transactions/tests/test_retencion_parameters.py`, the new `test_administrador_retencion_parameters.py`, `application/aggregation/tests/test_retencion_rate_advisory.py`), plus the registry catalogue-build and legal-grounding gates (34 tests) confirming the new TOML entries validate cleanly. Ruff check/format and the type checker are clean on every touched file. The import-hygiene scan reports zero new cross-package private-import findings for this change. A broader run across `core`, `domain/transactions` and `application/aggregation` tests showed 14 unrelated failures (period-string, hashing, split-lineage, config-reset and source-mesh gates) in files this Step never touched, matching other agents' concurrently dirty working-tree files already visible in `git status` — triaged as peer churn, not owned by this Step, and left untouched.
 
 **Method note.** The same per-function, per-value reachability discipline P03.S05 used to find its fifth module found this fix's correct layer boundary too: `core.aggregation` is imported BY the registry schema, so a value needing the registry cannot live there without inverting that edge — the exact "stop and report rather than route around it" disconfirming observation P03.S05's own row states, applied one level deeper, to where the FIX itself must live rather than only to what it must thread.
+
+**Year-axis check.** Read every historical redaction of both articles (the BOE Legislación Consolidada article endpoint, oldest to newest) rather than assuming the current figures always applied. The rate WAS versioned: from original enactment (2007) through 2014-12-31, both articles fixed a FLAT 35 % on every administrador/consejero rendimiento with NO reduced rate and NO INCN threshold at all — the 19 %/100.000 € pair was introduced by Ley 26/2014 / RD 1003/2014, both effective 2015-01-01, and has stood byte-identical in every redaction since. A single non-year-scoped parameter set is nonetheless the correct shape for this application: Modelo 111's only registered revision is `valid_from 2019-01-01`, four years after the rate change, so no filing year this registry can currently produce a revision for ever saw the pre-2015 flat-35% regime. Documented in the TOML header so a future revision extending coverage before 2019 inherits the finding rather than re-discovering it.
 
 ## Notes
 
