@@ -28,7 +28,7 @@ from ...core import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
-from ...core.identity import CalculationRevisionId, WorkUnitId
+from ...core.identity import AeatCsv, CalculationRevisionId, WorkUnitId
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry import ApplicabilityVerdict, RevisionId
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
@@ -131,7 +131,7 @@ class _CalendarJustificanteStateCarrier(Protocol):
 
     aeat_submission_state: OverviewAeatSubmissionState | None
     justificante_verified: bool | None
-    verified_justificante_csv: str | None
+    verified_justificante_csv: AeatCsv | None
 
 
 class _CalendarJustificanteStateInvariant(BaseModel):
@@ -215,7 +215,7 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     aeat_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
     aeat_evidence_kind: str | None = Field(default=None, min_length=1, max_length=64)
     aeat_evidence_conflict_reference_ids: tuple[str, ...] = Field(default_factory=tuple)
-    verified_justificante_csv: str | None = Field(default=None, min_length=1, max_length=64)
+    verified_justificante_csv: AeatCsv | None = None
     justificante_required: bool = True
     justificante_verified: bool = False
     evidence_source: str | None = Field(default=None, min_length=1, max_length=64)
@@ -338,7 +338,7 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     aeat_submission_state: OverviewAeatSubmissionState | None = None
     aeat_submitted_at: datetime | None = None
     justificante_verified: bool | None = None
-    verified_justificante_csv: str | None = Field(default=None, min_length=1, max_length=64)
+    verified_justificante_csv: AeatCsv | None = None
 
     @model_validator(mode="after")
     def _enforce_notification_service_state_on_message_events(self) -> OverviewCalendarEvent:

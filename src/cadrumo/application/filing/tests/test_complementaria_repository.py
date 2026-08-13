@@ -81,7 +81,7 @@ def _make_amendment(*, amendment_id: str = "amend-001") -> ModeloComplementaria:
     return ModeloComplementaria(
         amendment_id=amendment_id,
         submission_id="sub-abc",
-        original_csv="CSV-ORIG-001",
+        original_csv="CSVORIG0000001",
         original_model="130",
         original_period=_period,
         delta=(
@@ -162,7 +162,7 @@ class TestClassificationGate:
         repo.save(amendment)
         raw = _database_bytes(_active_bucket_runtime.storage_root)
         assert b"secure_objects" in raw
-        assert b"CSV-ORIG-001" not in raw
+        assert b"CSVORIG0000001" not in raw
         assert b"Test correction" not in raw
         assert amendment.amendment_id.encode("utf-8") not in raw
 

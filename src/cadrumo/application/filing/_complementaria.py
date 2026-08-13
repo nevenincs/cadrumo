@@ -34,7 +34,7 @@ from typing import Protocol, runtime_checkable
 from ...adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...core import Period
-from ...core.identity import IdentityError, SubjectTaxId, validate_spanish_tax_id
+from ...core.identity import AeatCsv, IdentityError, SubjectTaxId, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...domain.filing import (
     AmendmentKind,
@@ -75,7 +75,7 @@ class _SubmittedOriginal(Protocol):
     modelo: str
     period: Period
     profile_tax_id: SubjectTaxId
-    justificante_csv: str | None
+    justificante_csv: AeatCsv | None
 
 
 def build_complementaria(

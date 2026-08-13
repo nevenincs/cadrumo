@@ -30,7 +30,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
-from ...core.identity import CalculationRevisionId
+from ...core.identity import AeatCsv, CalculationRevisionId
 from ...core.json_contract import OutputSchema, register_schema
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
@@ -153,7 +153,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     aeat_snapshot_id: str | None = None
     aeat_evidence_kind: str | None = None
     aeat_evidence_conflict_reference_ids: list[str] = []
-    verified_justificante_csv: str | None = None
+    verified_justificante_csv: AeatCsv | None = None
     justificante_required: bool
     justificante_verified: bool
     evidence_source: str | None = None
@@ -202,7 +202,7 @@ class OverviewCalendarEventPayload(OutputSchema):
     )
     aeat_submitted_at: str | None = None
     justificante_verified: bool | None = None
-    verified_justificante_csv: str | None = None
+    verified_justificante_csv: AeatCsv | None = None
 
     @model_validator(mode="after")
     def _require_event_csv_for_verified_justificante(self) -> OverviewCalendarEventPayload:
