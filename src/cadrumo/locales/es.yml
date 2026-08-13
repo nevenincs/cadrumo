@@ -683,6 +683,17 @@ application:
   filing:
     errors:
       amendment_not_persisted: no hay ninguna rectificación persistida con id %{amendment_id}
+      complementaria_taxpayer_identity_absent: 'la complementaria requiere una identidad
+        fiscal declarada: el profile_tax_id de la declaración presentada es %{submitted_tax_id}
+        mientras que el borrador original declara %{draft_tax_id}'
+      complementaria_taxpayer_identity_malformed: 'la complementaria no puede confirmar
+        un único contribuyente: el profile_tax_id %{submitted_tax_id} de la declaración
+        presentada no es un NIF, NIE o CIF válido, y el borrador original declara
+        %{draft_tax_id}'
+      complementaria_taxpayer_identity_mismatch: 'la identidad fiscal de la complementaria
+        diverge: la declaración presentada declara profile_tax_id %{submitted_tax_id}
+        y el borrador original declara %{draft_tax_id}; ambos deben nombrar al mismo
+        contribuyente'
       import_failed: 'no se puede importar el modelo %{modelo}: %{detail}'
       modelo_not_in_registry: el modelo %{modelo} no está presente en el registro
         de cálculo

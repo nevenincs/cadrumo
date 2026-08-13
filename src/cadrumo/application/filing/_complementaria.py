@@ -34,7 +34,7 @@ from typing import Protocol, runtime_checkable
 from ...adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...core import Period
-from ...core.identity import SubjectTaxId
+from ...core.identity import IdentityError, SubjectTaxId, validate_spanish_tax_id
 from ...core.logging import get_logger
 from ...domain.filing import (
     AmendmentKind,
@@ -90,6 +90,7 @@ def build_complementaria(
     original_draft = _load_original_draft(original_submission.draft_id)
     if original_draft.modelo != original_submission.modelo or original_draft.period != original_submission.period:
         raise ModeloBuilderError("original submission and persisted draft disagree on modelo or period")
+    _require_one_taxpayer_identity(original_submission, original_draft)
     _require_original_registry_snapshot(original_draft, schema_provider=schema_provider)
     merged_inputs = _merge_inputs(original_draft, updated_inputs)
     from . import build_draft
@@ -169,6 +170,82 @@ def _load_original_draft(draft_id: str) -> ModeloDraft:
             context={"draft_id": repr(draft_id)},
         )
     return draft
+
+
+def _require_one_taxpayer_identity(
+    original_submission: _SubmittedOriginal,
+    original_draft: ModeloDraft,
+) -> None:
+    """Confirm the submitted filing and the loaded draft name one taxpayer.
+
+    A complementaria declares itself a correction to a specific prior filing,
+    so the submitted record and the :class:`~domain.filing.ModeloDraft` loaded
+    from its ``draft_id`` are two separately sourced statements about ONE
+    taxpayer. Nothing upstream reconciles them.
+    :meth:`~domain.filing.ModeloDraft._enforce_draft_invariants` already refuses
+    a draft whose own two identity axes diverge, but its scope is model-internal
+    and cannot reach across two objects; the submitted side's
+    ``profile_tax_id`` is a ``Protocol`` attribute, which
+    ``@runtime_checkable`` confirms only by name and never by value. So two
+    individually well-formed but DIFFERENT identities pass every existing check,
+    and the amended draft is then rebuilt from the submitted side's identity
+    while its casilla values come from the other taxpayer's draft -- a
+    valid-looking amended return carrying a divergent identity, silently.
+
+    The refusal fires before :func:`_merge_inputs`: a guard placed after the
+    merge has already assembled the divergent object.
+
+    Comparison is on the canonical form
+    :func:`~core.identity.validate_spanish_tax_id` returns, which is the same
+    authority :data:`~core.identity.SubjectTaxId` runs at the pydantic boundary
+    -- not a second normalisation. The two sides do not share that guarantee:
+    the draft's field type has already produced the canonical, checksum-checked
+    form, while the submitted side carries none, so the canonicalisation is
+    applied where the validation is missing and is idempotent where it is not.
+    Routing the submitted side through it closes both directions at once: a
+    malformed identity cannot confirm ownership merely by matching character for
+    character, and one identity written two ways (``12345678-Z`` against
+    ``12345678Z``) is not a second taxpayer. If the draft side were somehow not
+    canonical, the comparison refuses as a divergence -- fail-closed.
+
+    An absent or blank submitted identity refuses rather than passing through:
+    the field is non-optional on both declarations, so absence is corruption of
+    the record, and a pass-through would carry a missing identity into the
+    rebuilt draft's content address.
+
+    Raises:
+        ModeloBuilderError: When the submitted filing declares no taxpayer
+            identity, declares a malformed one, or declares one that is not the
+            original draft's taxpayer.
+    """
+    submitted_declared = original_submission.profile_tax_id
+    draft_identity = original_draft.profile_tax_id
+    if not (submitted_declared or "").strip():
+        raise ModeloBuilderError(
+            "complementaria requires a declared taxpayer identity: the submitted filing's "
+            f"profile_tax_id is {submitted_declared!r} while the original draft declares "
+            f"{draft_identity!r}",
+            translated_message="application.filing.errors.complementaria_taxpayer_identity_absent",
+            context={"submitted_tax_id": repr(submitted_declared), "draft_tax_id": repr(draft_identity)},
+        )
+    try:
+        submitted_identity = validate_spanish_tax_id(submitted_declared)
+    except IdentityError as exc:
+        raise ModeloBuilderError(
+            f"complementaria cannot confirm one taxpayer: the submitted filing's profile_tax_id "
+            f"{submitted_declared!r} is not a valid NIF, NIE or CIF, and the original draft declares "
+            f"{draft_identity!r}",
+            translated_message="application.filing.errors.complementaria_taxpayer_identity_malformed",
+            context={"submitted_tax_id": repr(submitted_declared), "draft_tax_id": repr(draft_identity)},
+        ) from exc
+    if submitted_identity != draft_identity:
+        raise ModeloBuilderError(
+            "complementaria taxpayer identity diverges: the submitted filing declares profile_tax_id "
+            f"{submitted_identity!r} and the original draft declares {draft_identity!r}; "
+            "both must name one taxpayer",
+            translated_message="application.filing.errors.complementaria_taxpayer_identity_mismatch",
+            context={"submitted_tax_id": repr(submitted_identity), "draft_tax_id": repr(draft_identity)},
+        )
 
 
 def _require_original_registry_snapshot(

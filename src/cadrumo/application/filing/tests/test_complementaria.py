@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
 from functools import cache
@@ -92,11 +93,64 @@ def _schema_provider() -> RegistrySchemaAccessor:
     return build_runtime_schema_provider()
 
 
+#: A justificante CSV in the shape ``AeatCsv`` declares: uppercase alphanumerics,
+#: 8 to 32 characters. AEAT's Código Seguro de Verificación carries no separators,
+#: so a hyphenated placeholder is not a CSV the submission record can hold.
+_ORIGINAL_JUSTIFICANTE_CSV = "CSVORIGINAL0001"
+
+#: A checksum-VALID NIE naming somebody other than the drafts built here, whose
+#: identity is ``00000000T``. Validity is load-bearing: the identity guard routes
+#: the submitted side through the shared tax-id authority before comparing, so a
+#: fabricated identifier would refuse as malformed and the divergence assertion
+#: would pass without ever testing that the two sides name DIFFERENT taxpayers.
+_OTHER_TAXPAYER_NIF = "X1234567L"
+
+#: Correctly shaped for a NIF and belonging to nobody: ``00000000`` checks to the
+#: letter ``T``, so this fails the checksum. It is also unequal to the draft's
+#: identity, which is what makes it able to tell the malformed refusal apart from
+#: the divergence refusal — only a guard that validates BEFORE comparing reports
+#: it as malformed.
+_MALFORMED_TAX_ID = "00000000X"
+
+
+@dataclass(frozen=True)
+class _ConformingSubmittedOriginal:
+    """A submitted-filing record carrying the declared structural contract.
+
+    :func:`build_complementaria` declares its input as a ``Protocol``, and
+    ``ModeloPresentado`` — the sole concrete satisfier — validates
+    ``profile_tax_id`` as a ``SubjectTaxId`` at its own model boundary. The
+    absent and malformed identities the guard rules on are therefore
+    unconstructible through that model and reachable only through the contract
+    the function actually declares. This carries real values through that
+    contract; it fakes no behaviour and stands in for no collaborator.
+    """
+
+    submission_id: str
+    draft_id: str
+    modelo: str
+    period: Period
+    profile_tax_id: str
+    justificante_csv: str | None
+
+
+def _conforming_submitted_filing(draft: ModeloDraft, *, profile_tax_id: str) -> _ConformingSubmittedOriginal:
+    return _ConformingSubmittedOriginal(
+        submission_id=make_submission_id("sub-identity", 1),
+        draft_id=draft.draft_id,
+        modelo=draft.modelo,
+        period=draft.period,
+        profile_tax_id=profile_tax_id,
+        justificante_csv=_ORIGINAL_JUSTIFICANTE_CSV,
+    )
+
+
 def _submitted_filing(
     draft: ModeloDraft,
     *,
     submission_id: str = "sub-1",
-    justificante_csv: str | None = "CSV-ORIGINAL",
+    justificante_csv: str | None = _ORIGINAL_JUSTIFICANTE_CSV,
+    profile_tax_id: str | None = None,
 ) -> ModeloPresentado:
     now = datetime(2026, 4, 13, 8, 0, tzinfo=UTC)
     # ``submission_id`` names the case, not the stored identity: the record's
@@ -107,7 +161,7 @@ def _submitted_filing(
         draft_id=draft.draft_id,
         modelo=draft.modelo,
         period=draft.period,
-        profile_tax_id=draft.profile_tax_id,
+        profile_tax_id=draft.profile_tax_id if profile_tax_id is None else profile_tax_id,
         status=SubmissionStatus.PRESENTADA,
         justificante_csv=justificante_csv,
         justificante_pdf_path=None,
@@ -304,6 +358,118 @@ class TestBuildComplementaria:
                     _UNREGISTERED_M037_UPDATE_BASE_CASILLA: Decimal("11000.00"),
                     _UNREGISTERED_M037_UPDATE_CUOTA_CASILLA: Decimal("200.00"),
                 },
+                schema_provider=_schema_provider(),
+                m303_regimen_simplificado_scope=None,
+            )
+        assert _persisted_amendment_ids() == ()
+
+    def test_matching_taxpayer_identity_across_submission_and_draft_builds(self) -> None:
+        """The submitted filing and the draft it amends name one taxpayer, so the build proceeds.
+
+        Paired with the divergence case below: a guard that refuses everything
+        would satisfy that one alone, so the agreeing direction is asserted
+        explicitly and the built amendment is confirmed to carry that one
+        identity through to the rebuilt draft.
+        """
+        original_draft = _registry_draft(
+            inputs={
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("4000"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            },
+        )
+        _persist_original_draft(original_draft)
+        original = _submitted_filing(original_draft, submission_id="sub-identity-ok")
+
+        amendment = build_complementaria(
+            original,
+            {_M130_INGRESOS_CASILLA: Decimal("11000")},
+            schema_provider=_schema_provider(),
+            m303_regimen_simplificado_scope=None,
+        )
+
+        assert original.profile_tax_id == original_draft.profile_tax_id
+        assert amendment.amended_draft.profile_tax_id == original_draft.profile_tax_id
+        assert amendment.amendment_id in _persisted_amendment_ids()
+
+    def test_divergent_taxpayer_identity_refuses_before_the_amendment_is_built(self) -> None:
+        """A submitted filing naming another taxpayer cannot amend this draft.
+
+        Both identities are individually valid, which is the whole point: the
+        draft's own cross-field invariant and the ``SubjectTaxId`` checksum both
+        pass, and only a comparison ACROSS the two separately loaded objects
+        sees the divergence.
+        """
+        original_draft = _registry_draft(
+            inputs={
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("4000"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            },
+        )
+        _persist_original_draft(original_draft)
+        original = _submitted_filing(
+            original_draft,
+            submission_id="sub-identity-diverges",
+            profile_tax_id=_OTHER_TAXPAYER_NIF,
+        )
+
+        with pytest.raises(ModeloBuilderError, match="taxpayer identity diverges") as raised:
+            build_complementaria(
+                original,
+                {_M130_INGRESOS_CASILLA: Decimal("11000")},
+                schema_provider=_schema_provider(),
+                m303_regimen_simplificado_scope=None,
+            )
+
+        message = str(raised.value)
+        assert _OTHER_TAXPAYER_NIF in message
+        assert original_draft.profile_tax_id in message
+        assert _persisted_amendment_ids() == ()
+
+    def test_absent_submitted_taxpayer_identity_refuses_rather_than_passing_through(self) -> None:
+        """A blank declared identity is corruption of a non-optional field, not an exemption."""
+        original_draft = _registry_draft(
+            inputs={
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("4000"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            },
+        )
+        _persist_original_draft(original_draft)
+        original = _conforming_submitted_filing(original_draft, profile_tax_id="   ")
+
+        with pytest.raises(ModeloBuilderError, match="requires a declared taxpayer identity"):
+            build_complementaria(
+                original,
+                {_M130_INGRESOS_CASILLA: Decimal("11000")},
+                schema_provider=_schema_provider(),
+                m303_regimen_simplificado_scope=None,
+            )
+        assert _persisted_amendment_ids() == ()
+
+    def test_malformed_submitted_taxpayer_identity_refuses_as_unconfirmable(self) -> None:
+        """Equality of characters is not the question; naming a taxpayer at all is prior to it.
+
+        Pins the canonicalisation ruling: the submitted side is routed through
+        the shared tax-id authority BEFORE the comparison, so a value that names
+        nobody is reported as malformed rather than as a different taxpayer. A
+        guard that compared the raw strings would report this as a divergence.
+        """
+        original_draft = _registry_draft(
+            inputs={
+                _M130_INGRESOS_CASILLA: Decimal("10000"),
+                _M130_GASTOS_CASILLA: Decimal("4000"),
+                "irpf.previous_year_economic_activity_net_income": Decimal("13000"),
+            },
+        )
+        _persist_original_draft(original_draft)
+        original = _conforming_submitted_filing(original_draft, profile_tax_id=_MALFORMED_TAX_ID)
+
+        with pytest.raises(ModeloBuilderError, match="is not a valid NIF, NIE or CIF"):
+            build_complementaria(
+                original,
+                {_M130_INGRESOS_CASILLA: Decimal("11000")},
                 schema_provider=_schema_provider(),
                 m303_regimen_simplificado_scope=None,
             )
