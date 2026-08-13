@@ -29,6 +29,7 @@ from pydantic import ValidationError
 from .. import (
     CustomerTaxStatus,
     InvoiceKind,
+    IvaArt69DosService,
     IvaCategory,
     IvaInvoiceClassificationCriteria,
     IvaRateKind,
@@ -62,6 +63,7 @@ def _outbound_service(
     customer_residency: IvaTerritorialScope,
     customer_tax_status: CustomerTaxStatus,
     rate_tier: IvaRateKind | None = IvaRateKind.GENERAL,
+    art_69_dos_service: IvaArt69DosService | None = None,
 ) -> IvaInvoiceClassificationCriteria:
     """A mainland issuer's general service, billed outward."""
     return IvaInvoiceClassificationCriteria.model_validate(
@@ -73,6 +75,7 @@ def _outbound_service(
             "kind": TransactionKind.SERVICES_GENERAL,
             "direction": InvoiceKind.ISSUED,
             "rate_tier": rate_tier,
+            "art_69_dos_service": art_69_dos_service,
         },
     )
 
@@ -177,6 +180,127 @@ def test_the_b2c_branch_demands_the_tier_that_selects_its_category() -> None:
             customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
             rate_tier=None,
         )
+
+
+# --------------------------------------------------------------------------
+# Art. 69.Dos: the closed list that lifts a B2C service back out of the TAI.
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("service", list(IvaArt69DosService), ids=lambda item: item.value)
+def test_every_listed_service_to_a_third_country_consumer_leaves_the_tai(
+    service: IvaArt69DosService,
+) -> None:
+    """The exception, per item across the whole enum rather than on a sample.
+
+    Driven from the enum so a member added later is covered without editing this
+    file -- and so a member added WITHOUT the row reading it fails here instead
+    of quietly staying taxed.
+    """
+    result = classify_iva(
+        _outbound_service(
+            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
+            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
+            art_69_dos_service=service,
+        ),
+    )
+
+    assert result.category is IvaCategory.OPERACION_NO_SUJETA
+    assert result.matched_rule_id == "R25_services_outbound_b2c_art_69_dos"
+
+
+@pytest.mark.parametrize(
+    "customer_residency",
+    [IvaTerritorialScope.ES_CANARIAS, IvaTerritorialScope.ES_CEUTA_MELILLA],
+    ids=lambda scope: scope.value,
+)
+@pytest.mark.parametrize("service", list(IvaArt69DosService), ids=lambda item: item.value)
+def test_the_same_listed_service_stays_taxed_for_the_spanish_territories(
+    service: IvaArt69DosService,
+    customer_residency: IvaTerritorialScope,
+) -> None:
+    """The exception's own limit, which is the half most easily lost.
+
+    Canarias, Ceuta and Melilla ARE outside the Comunidad, so a reading that
+    stopped at "fuera de la Comunidad" would except them. Art. 69.Dos names them
+    back out in the same sentence, so every listed service stays realizada en el
+    TAI for those recipients. Same items as the case above, opposite answer.
+    """
+    result = classify_iva(
+        _outbound_service(
+            customer_residency=customer_residency,
+            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
+            art_69_dos_service=service,
+        ),
+    )
+
+    assert result.category in _SUBJECT_AT_A_SPANISH_RATE
+    assert result.category is not IvaCategory.OPERACION_NO_SUJETA
+
+
+def test_an_unstated_item_does_not_lift_the_supply_out_of_the_tai() -> None:
+    """Absence is not evidence, on the axis where reading it as evidence relieves tax.
+
+    Nobody having said which lettered service applies is not a finding that none
+    does. Treating the empty field as "not on the list" would be the correct
+    answer often and a silent relief the rest of the time.
+    """
+    result = classify_iva(
+        _outbound_service(
+            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
+            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
+            art_69_dos_service=None,
+        ),
+    )
+
+    assert result.category is not IvaCategory.OPERACION_NO_SUJETA
+    assert result.category in _SUBJECT_AT_A_SPANISH_RATE
+
+
+def test_the_excepted_branch_is_not_asked_for_a_tier_it_never_uses() -> None:
+    """A supply outside the TAI bears no Spanish rate, so no tier selects it.
+
+    The sibling B2C branch refuses without one. Demanding it here too would ask
+    the operator for a fact the branch they landed on does not read.
+    """
+    result = classify_iva(
+        _outbound_service(
+            customer_residency=IvaTerritorialScope.THIRD_COUNTRY,
+            customer_tax_status=CustomerTaxStatus.B2C_CONSUMER,
+            art_69_dos_service=IvaArt69DosService.ART_69_DOS_C,
+            rate_tier=None,
+        ),
+    )
+
+    assert result.category is IvaCategory.OPERACION_NO_SUJETA
+
+
+@pytest.mark.parametrize("customer_residency", _OUTSIDE_THE_COMUNIDAD, ids=lambda scope: scope.value)
+def test_a_stated_item_moves_nothing_on_the_b2b_limb(
+    customer_residency: IvaTerritorialScope,
+) -> None:
+    """Art. 69.Dos excepts from 69.Uno.2.º, which is the B2C paragraph alone.
+
+    A B2B service was never placed by that paragraph, so a stated item has
+    nothing to except it from. This is where a fix reaching one row too far
+    would show: the B2B answer must be identical with and without the item.
+    """
+    stated = classify_iva(
+        _outbound_service(
+            customer_residency=customer_residency,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+            art_69_dos_service=IvaArt69DosService.ART_69_DOS_D,
+        ),
+    )
+    unstated = classify_iva(
+        _outbound_service(
+            customer_residency=customer_residency,
+            customer_tax_status=CustomerTaxStatus.B2B_IVA_REGISTERED,
+        ),
+    )
+
+    assert stated.category is unstated.category
+    assert stated.matched_rule_id == unstated.matched_rule_id == "R22_services_outbound_b2b"
 
 
 # --------------------------------------------------------------------------

@@ -341,6 +341,89 @@ class IvaExemptionArticle(StrEnum):
     classification slot."""
 
 
+class IvaArt69DosService(StrEnum):
+    """The twelve services Ley 37/1992 art. 69.Dos excepts from the B2C rule.
+
+    Art. 69.Uno.2.º places a service supplied to someone who is not an
+    *empresario o profesional* where the SUPPLIER is established, so a mainland
+    issuer's B2C service is realizada en el TAI. Art. 69.Dos excepts these twelve
+    from that paragraph when the recipient is established outside the Comunidad
+    — and states its own limit in the same sentence: *"salvo en el caso de que
+    dicho destinatario esté establecido o tenga su domicilio o residencia
+    habitual en las Islas Canarias, Ceuta o Melilla"*.
+
+    **The operator states the item; nothing reads it off the invoice.** The list
+    is a closed legal vocabulary fixed by statute, which is what makes it
+    readable at all. Deciding from an invoice's own prose which lettered item it
+    falls under — "asesoría" implies letter d) — would be a model wearing a
+    lookup table: confident on the population it was written against and
+    silently wrong everywhere else. ``None`` means no item was stated, which is
+    not evidence that none applies; the supply then stays taxed here.
+
+    Two members carry an exclusion the statute writes into the letter itself
+    rather than alongside it, and both are load-bearing: letter d) excludes the
+    services art. 70.Uno.1.º reaches, and letter j) excludes any means of
+    transport and containers.
+
+    See Also:
+        :class:`~domain.iva.IvaCategory`
+            The catalogue whose not-subject member a declared item reaches.
+    """
+
+    ART_69_DOS_A = "art_69_dos_a"
+    """Cesiones y concesiones de derechos de autor, patentes, licencias, marcas
+    de fábrica o comerciales y demás derechos de propiedad intelectual o
+    industrial, así como cualesquiera otros derechos similares."""
+
+    ART_69_DOS_B = "art_69_dos_b"
+    """Cesión o concesión de fondos de comercio, de exclusivas de compra o venta
+    o del derecho a ejercer una actividad profesional."""
+
+    ART_69_DOS_C = "art_69_dos_c"
+    """Los de publicidad."""
+
+    ART_69_DOS_D = "art_69_dos_d"
+    """Los de asesoramiento, auditoría, ingeniería, gabinete de estudios,
+    abogacía, consultores, expertos contables o fiscales y otros similares, **con
+    excepción de los comprendidos en el número 1.º del apartado Uno del artículo
+    70** — the land-related services, which that article places where the
+    property is."""
+
+    ART_69_DOS_E = "art_69_dos_e"
+    """Los de tratamiento de datos y el suministro de informaciones, incluidos
+    los procedimientos y experiencias de carácter comercial."""
+
+    ART_69_DOS_F = "art_69_dos_f"
+    """Los de traducción, corrección o composición de textos, así como los
+    prestados por intérpretes."""
+
+    ART_69_DOS_G = "art_69_dos_g"
+    """Los de seguro, reaseguro y capitalización, así como los servicios
+    financieros citados por el art. 20.Uno.16.º y 18.º, incluidos los que no
+    estén exentos, **con excepción del alquiler de cajas de seguridad**."""
+
+    ART_69_DOS_H = "art_69_dos_h"
+    """Los de cesión de personal."""
+
+    ART_69_DOS_I = "art_69_dos_i"
+    """El doblaje de películas."""
+
+    ART_69_DOS_J = "art_69_dos_j"
+    """Los arrendamientos de bienes muebles corporales, **con excepción de los
+    que tengan por objeto cualquier medio de transporte y los contenedores**."""
+
+    ART_69_DOS_K = "art_69_dos_k"
+    """La provisión de acceso a las redes de gas natural situadas en el
+    territorio de la Comunidad o a cualquier red conectada a dichas redes, a la
+    red de electricidad, de calefacción o de refrigeración, y el transporte o
+    distribución a través de dichas redes, así como otros servicios directamente
+    relacionados con los de esta letra."""
+
+    ART_69_DOS_L = "art_69_dos_l"
+    """Las obligaciones de no prestar, total o parcialmente, cualquiera de los
+    servicios enunciados en este apartado."""
+
+
 class EUMemberState(StrEnum):
     """Current EU IVA country prefixes accepted at IVA-facing boundaries.
 

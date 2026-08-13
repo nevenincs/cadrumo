@@ -1,0 +1,47 @@
+{
+  "artefact": "facturae_invoice_class_enumeration",
+  "purpose": "The closed code set Facturae's InvoiceClass element accepts, bundled because a reader cannot decide from an invoice's own prose which class it declares and the codes carry TWO axes at once: original versus copy, and ordinaria versus rectificativa versus recapitulativa. The Spanish regulatory taxonomy this codebase models (RD 1619/2012 art. 6.1.a) is a different vocabulary with a different membership, so the two must not be conflated.",
+  "provenance": {
+    "source_url": "https://www.facturae.gob.es/content/dam/facturae/formato/versiones/Facturaev3_2_2.xml",
+    "schema": "Facturae",
+    "schema_version": "3.2.2",
+    "simple_type": "InvoiceClassType",
+    "retrieved_at": "2026-08-12",
+    "source_sha256": "b4bbcd587f5fb0a8a906336cca09b0a40d06ffaa78c6a62f6e438c4e6ea86e07",
+    "source_bytes": 190062,
+    "source_encoding": "utf-8 with BOM",
+    "extracted_code_count": 6
+  },
+  "codes": [
+    {
+      "code": "OO",
+      "en": "Original Invoice.",
+      "es": "Original."
+    },
+    {
+      "code": "OR",
+      "en": "Corrective.",
+      "es": "Original rectificativa"
+    },
+    {
+      "code": "OC",
+      "en": "Summary.",
+      "es": "Original recapitulativa."
+    },
+    {
+      "code": "CO",
+      "en": "Copy of the Original.",
+      "es": "Copia original."
+    },
+    {
+      "code": "CR",
+      "en": "Copy of the Corrective.",
+      "es": "Copia rectificativa."
+    },
+    {
+      "code": "CC",
+      "en": "Copy of the Summary.",
+      "es": "Copia recapitulativa."
+    }
+  ]
+}

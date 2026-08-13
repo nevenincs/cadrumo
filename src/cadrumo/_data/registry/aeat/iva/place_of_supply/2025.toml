@@ -151,7 +151,14 @@ rule_id = "R24_services_outbound_b2c_at_rate_tier"
 supply_nature = "services"
 legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
 establishing_reference = "ley-37-1992:art-69"
-notes = "Prestación de servicios a quien no es empresario ni profesional, fuera de la Comunidad. El art. 69.Uno.2.º la localiza en sede del prestador, de modo que un emisor establecido en el TAI la realiza aquí y tributa al tipo español. El art. 69.Dos exceptúa una lista cerrada de servicios cuando el destinatario está establecido fuera de la Comunidad, y expresamente NO la exceptúa cuando reside en Canarias, Ceuta o Melilla."
+notes = "Prestación de servicios a quien no es empresario ni profesional, fuera de la Comunidad, que el TAI conserva. El art. 69.Uno.2.º la localiza en sede del prestador, de modo que un emisor establecido en el TAI la realiza aquí y tributa al tipo español. Alcanza también al destinatario en Canarias, Ceuta o Melilla aunque el servicio figure en la lista del art. 69.Dos, porque ese apartado excluye expresamente esos territorios de su propia excepción."
+
+[[place_of_supply_rules]]
+rule_id = "R25_services_outbound_b2c_art_69_dos"
+supply_nature = "services"
+legal_references = ["ley-37-1992:art-69", "ley-37-1992:art-70"]
+establishing_reference = "ley-37-1992:art-69"
+notes = "Servicios enumerados en el art. 69.Dos prestados a quien no es empresario ni profesional establecido en un país tercero. El apartado los exceptúa de la regla del art. 69.Uno.2.º, de modo que no se entienden realizados en el TAI. La lista es cerrada y la declara el operador: deducir de la prosa de la factura a qué letra corresponde el servicio sería inferencia, no lectura."
 
 # ── Territorial, and silent on the nature ────────────────────────────────────
 

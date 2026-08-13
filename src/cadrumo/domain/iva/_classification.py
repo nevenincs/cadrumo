@@ -56,6 +56,7 @@ from ._errors import IvaRateNotFoundError, IvaValidationError
 from ._lookup import lookup_rate
 from ._schema import (
     EUMemberState,
+    IvaArt69DosService,
     IvaCategory,
     IvaExemptionArticle,
     IvaRateKind,
@@ -273,6 +274,7 @@ def domestic_rate_tier_is_required(
     customer_residency: IvaTerritorialScope,
     kind: TransactionKind,
     customer_tax_status: CustomerTaxStatus | None = None,
+    art_69_dos_service: IvaArt69DosService | None = None,
 ) -> bool:
     """Whether this operation reaches a rate-tier branch and so needs a tier.
 
@@ -297,6 +299,9 @@ def domestic_rate_tier_is_required(
         customer_tax_status: The recipient's condition, where it is settled.
             ``None`` means it is still open, and an open status demands the tier
             rather than excusing it.
+        art_69_dos_service: The lettered art. 69.Dos item, where one was stated.
+            A stated item on a third-country recipient lifts the supply out of
+            the TAI, so no Spanish rate applies and no tier is wanted.
 
     Returns:
         ``True`` when a tier must be supplied for the operation to classify.
@@ -305,6 +310,11 @@ def domestic_rate_tier_is_required(
         return False
     if issuer_residency is IvaTerritorialScope.ES_MAINLAND and customer_residency is IvaTerritorialScope.ES_MAINLAND:
         return True
+    if art_69_dos_exception_applies(
+        customer_residency=customer_residency,
+        art_69_dos_service=art_69_dos_service,
+    ):
+        return False
     # Art. 69.Uno.2.º keeps a B2C service in the TAI when the supplier is
     # established here, so it is taxed at a Spanish rate exactly as a domestic
     # supply is -- and picking WHICH domestic category needs the tier just the
@@ -371,6 +381,15 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
         default=None,
         description="Member State of the customer's IVA identification; independent of its establishment.",
     )
+    art_69_dos_service: IvaArt69DosService | None = Field(
+        default=None,
+        description=(
+            "The lettered item of Ley 37/1992 art. 69.Dos this service is, "
+            "stated by the operator. Absent by default, and absence is not "
+            "evidence that no item applies: an unstated service stays taxed in "
+            "the TAI rather than being lifted out of it on a fact nobody gave."
+        ),
+    )
     rate_tier: IvaRateKind | None = Field(
         default=None,
         description=(
@@ -419,6 +438,7 @@ class IvaInvoiceClassificationCriteria(IvaStrictFrozen):
                 customer_residency=self.customer_residency,
                 kind=self.kind,
                 customer_tax_status=self.customer_tax_status,
+                art_69_dos_service=self.art_69_dos_service,
             )
             and self.rate_tier is None
         ):
@@ -817,6 +837,49 @@ def _r22_services_outbound_b2b(criteria: IvaInvoiceClassificationCriteria) -> bo
     )
 
 
+def _is_outbound_b2c_service(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """The shape both art. 69 B2C rows share, before the exception splits them."""
+    return (
+        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
+        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
+        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
+        and criteria.kind is TransactionKind.SERVICES_GENERAL
+        and criteria.direction is InvoiceKind.ISSUED
+    )
+
+
+def art_69_dos_exception_applies(
+    *,
+    customer_residency: IvaTerritorialScope,
+    art_69_dos_service: IvaArt69DosService | None,
+) -> bool:
+    """Whether art. 69.Dos lifts a B2C service out of the TAI.
+
+    The single home of the exception's own two conditions, so the classification
+    rows and the rate-tier demand cannot answer it differently.
+
+    The recipient test is ``THIRD_COUNTRY`` and nothing else, and that is the
+    statute's own arithmetic rather than a simplification: art. 69.Dos excepts a
+    recipient established "fuera de la Comunidad", then limits itself in the same
+    sentence -- "salvo en el caso de que dicho destinatario esté establecido o
+    tenga su domicilio o residencia habitual en las Islas Canarias, Ceuta o
+    Melilla". Those territories are outside the Comunidad and expressly outside
+    the exception, so what remains is a third country.
+
+    An absent item does not satisfy it. Nobody having stated which lettered
+    service applies is not evidence that none does, and reading it that way would
+    lift a supply out of Spanish IVA on a fact nobody supplied.
+
+    Args:
+        customer_residency: Where the recipient is established.
+        art_69_dos_service: The lettered item the operator stated, or ``None``.
+
+    Returns:
+        ``True`` when the supply is not realizada en el TAI under art. 69.Dos.
+    """
+    return art_69_dos_service is not None and customer_residency is IvaTerritorialScope.THIRD_COUNTRY
+
+
 def _r24_services_outbound_b2c(criteria: IvaInvoiceClassificationCriteria) -> bool:
     """Match a B2C services supply the TAI keeps (Art. 69.Uno.2.º).
 
@@ -827,23 +890,32 @@ def _r24_services_outbound_b2c(criteria: IvaInvoiceClassificationCriteria) -> bo
     from ``rate_tier``, exactly as the ES-to-ES default does, because a supply
     located here is taxed here on the same terms.
 
-    **Art. 69.Dos is not modelled, and the omission is toward tax rather than
-    away from it.** That paragraph excepts a closed list of services -- derechos
-    de autor, publicidad, asesoramiento, tratamiento de datos, traducción,
-    seguro, cesión de personal, arrendamiento de bienes muebles and the rest --
-    when the B2C recipient is established outside the Comunidad, and it
-    EXPRESSLY does not except a recipient in Canarias, Ceuta or Melilla.
-    Modelling the list would mean deciding which lettered item an invoice falls
-    under from its own prose, which is the rule-table-as-model this domain
-    refuses. So the list's population classifies as subject and the operator
-    must say otherwise.
+    Everything art. 69.Dos does not except lands here, including a recipient in
+    Canarias, Ceuta or Melilla whose service IS on that list -- the paragraph
+    names those three territories back out of its own exception.
     """
-    return (
-        criteria.issuer_residency is IvaTerritorialScope.ES_MAINLAND
-        and criteria.customer_residency in _OUTSIDE_THE_COMUNIDAD
-        and criteria.customer_tax_status is CustomerTaxStatus.B2C_CONSUMER
-        and criteria.kind is TransactionKind.SERVICES_GENERAL
-        and criteria.direction is InvoiceKind.ISSUED
+    return _is_outbound_b2c_service(criteria) and not art_69_dos_exception_applies(
+        customer_residency=criteria.customer_residency,
+        art_69_dos_service=criteria.art_69_dos_service,
+    )
+
+
+def _r25_services_outbound_b2c_art_69_dos(criteria: IvaInvoiceClassificationCriteria) -> bool:
+    """Match the B2C services art. 69.Dos lifts back out of the TAI.
+
+    Twelve lettered items -- derechos de autor, publicidad, asesoramiento,
+    tratamiento de datos, traducción, seguro, cesión de personal, arrendamiento
+    de bienes muebles corporales and the rest -- excepted from art. 69.Uno.2.º
+    when the recipient is established in a third country.
+
+    **The operator states the item and nothing reads it off the page.** The list
+    is a closed vocabulary the statute fixes, which is the only reason it can be
+    consulted at all. Deciding which letter an invoice falls under from its own
+    prose would be the rule-table-as-model this domain refuses by name.
+    """
+    return _is_outbound_b2c_service(criteria) and art_69_dos_exception_applies(
+        customer_residency=criteria.customer_residency,
+        art_69_dos_service=criteria.art_69_dos_service,
     )
 
 
@@ -1093,6 +1165,13 @@ _CLASSIFICATION_RULES: tuple[_IvaClassificationRule, ...] = (
         "R22_services_outbound_b2b",
         "ES B2B services localised outside the TAI",
         _r22_services_outbound_b2b,
+        IvaCategory.OPERACION_NO_SUJETA,
+        consumes=_ESTABLISHMENT_ONLY,
+    ),
+    _IvaClassificationRule(
+        "R25_services_outbound_b2c_art_69_dos",
+        "ES B2C services art. 69.Dos lifts out of the TAI",
+        _r25_services_outbound_b2c_art_69_dos,
         IvaCategory.OPERACION_NO_SUJETA,
         consumes=_ESTABLISHMENT_ONLY,
     ),

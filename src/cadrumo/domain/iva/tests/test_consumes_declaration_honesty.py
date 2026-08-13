@@ -76,6 +76,10 @@ _FACT_BY_CRITERIA_ATTRIBUTE: dict[str, PartyFact | None] = {
     "kind": None,
     "direction": None,
     "rate_tier": None,
+    # A fact about the SUPPLY, not about a party: which lettered service of
+    # Ley 37/1992 art. 69.Dos it is. A row reading it turns on what was
+    # supplied, so it demands nothing further about who received it.
+    "art_69_dos_service": None,
 }
 
 #: A floor, not a count. The table governs the whole classification surface, so
