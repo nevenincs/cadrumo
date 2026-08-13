@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#shared-tree-coordination'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:c5fe3c7397857f289cad9290561ccea8af5394d50ed2b48a3038470d0afa29ff'
 related:

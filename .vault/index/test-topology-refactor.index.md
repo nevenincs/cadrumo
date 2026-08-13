@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#test-topology-refactor'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:db890738a5ec644f53d17701be08288df93757b877f5f32e063999036bc5d258'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-200-base-determination'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:1ab81df5baa40334574711bbda625b21e58752f1a4689ae84d0ddeccc8ee73b0'
 related:

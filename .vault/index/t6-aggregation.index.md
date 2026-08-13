@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#t6-aggregation'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:92989095a5e5ec83967d72c8cc4811f429b54795bcde3957ec673a7ba17e7dbd'
 related:

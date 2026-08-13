@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-refund-fichero-block'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:9ab2c4a0d3a08d550227123468811e1f2395768c8ef20168271006b0f9b696ed'
 related:

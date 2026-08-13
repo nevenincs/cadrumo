@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-auth-decomposition'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:19b8db38db228ad3c652a3e9d7e042f4fd31e77606517b41bb2cda3810b5e01d'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#envelope-conformance-gate'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:a16d804217512e6472e4cc9bcd416bc13ff33b628c2250bc3feb4f5160ae3ace'
 related:

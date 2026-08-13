@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:ab1c8a575b5fde7052df9cdbf2e7472e758962a3709e62a7e96b7c2084f3b5fc'
+body_hash: 'sha256:069a8cf2e948d76c7afb33adb412615c1bb0e1ee0cefcede98112fffbfa9829b'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
   - "[[2026-08-13-unstructured-document-ingestion-record-gap-close-audit]]"
@@ -71,11 +71,20 @@ it, and this campaign's own history is the proof that it happens.
 
 ## Finding 4 -- the evidence trail has two structural gaps, both recorded
 
-34 of 306 steps carry no execution record, and 18 phases across 10 waves carry no
-phase summary at all. Both are documented in the sibling audit with the reason
-retrospective authoring is refused: a record written now would imply a
-contemporaneous account nobody has, and no later reader could tell it from a real
-one.
+34 of 306 steps closed with no execution record, and 18 phases across 10 waves
+carry no phase summary at all.
+
+**AMENDED 2026-08-13: the 34 records now exist.** They were written at operator
+direction after this review was first taken, and each carries a stamp in its own
+Outcome section declaring it retrospectively reconstructed and NOT a
+contemporaneous account. So the count is closed and the honesty property is
+preserved by the records themselves rather than by their absence.
+
+The phase-summary gap stands. It is not retrospectively authored, and the reason
+is different from the one that applied to the records: a summary synthesises
+records written at the time, and there were none to synthesise. Its absence is
+total rather than partial, which makes it a convention this campaign never
+adopted rather than one that lapsed.
 
 ## Finding 5 -- the deferred set is named, not implied
 

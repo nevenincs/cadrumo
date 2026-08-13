@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:81689819fea9d7afd5022baa64e7b0916e7624e1e70801c7be0d67ab88f5aa60'
+body_hash: 'sha256:5c33603b2d28956e507fdb89964f3b8216eee68e64ed7bd29f358d50ae92c340'
 related:
   - "[[2026-08-07-unstructured-document-ingestion-plan]]"
 ---
@@ -164,16 +164,24 @@ closure was -- is answered here, per row, against HEAD.
 - **No open verification work remains.** Every one of the 34 is classified
   against HEAD, and the six that were unverified at first pass are resolved
   above.
-- The eight Finding 1 rows need no reconstruction. Their account is in the plan
-  verbatim and can be lifted from there if it is ever wanted in the exec trail.
-- **Retrospective step records are deliberately NOT written.** Thirty-four
-  records authored now would each imply a contemporaneous account nobody has,
-  which is a worse artefact than an honest gap: a reader cannot tell a
-  reconstructed record from a written-at-the-time one, and every later reader
-  would treat them alike. The governing rule accepts a close audit in their
-  place, and this is it.
-- The absent phase summaries are recorded as a convention gap, not scheduled for
-  retrospective authoring, for the same reason.
+- **AMENDED 2026-08-13: the 34 records were subsequently written, at operator
+  direction, and this section originally refused them.** The refusal is left
+  standing above rather than deleted, because the reasoning still holds and a
+  reader deserves to see what was traded: a record authored now implies a
+  contemporaneous account nobody has, and no later reader can distinguish a
+  reconstructed record from one written at the time.
+
+  What resolves that objection is not the operator's instruction but the form the
+  records take. Each states **in its own Outcome section** that it was
+  retrospectively reconstructed on 2026-08-13, that it is NOT a contemporaneous
+  account, and that what it records is that the deliverable exists at HEAD and
+  how that was established. A reader cannot mistake one for a written-at-the-time
+  record, because it says so itself.
+- The eight Finding 1 rows point at their own verdict in the plan text, which is
+  where their real account lives.
+- The absent phase summaries are recorded as a convention gap and are NOT
+  retrospectively authored: a summary is a synthesis of records nobody wrote at
+  the time, and there is no equivalent honest form for it.
 - Carried forward to any future campaign on this surface: a row that closes with
   its verdict written into the plan text is the tell that the record was skipped.
   Eight rows here did it, four of them recording a REVERSAL of their own premise

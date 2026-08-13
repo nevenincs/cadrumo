@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#open-work-consolidation'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:1353e9858d44bd52527bf8ab6a23590efdc5f7e9fe110481c71fbdb733cd61ca'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-multiyear-renta-151-beckham'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:0395a9db55bc7fd227794c316b49a83be0dff20d331a7a2b0269dd1dc29563bf'
 related:

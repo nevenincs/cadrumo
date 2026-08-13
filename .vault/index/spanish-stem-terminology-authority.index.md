@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#spanish-stem-terminology-authority'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:862cc260b8b9157e600783e1bb958a2994232c252cb3e67d143b64507452b37a'
 related:

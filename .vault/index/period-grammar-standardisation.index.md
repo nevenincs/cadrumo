@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#period-grammar-standardisation'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:dc56a37cc86955b4915d001a6f461b087ed6d56470489fc4e70dc861c909587b'
 related:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#tui-architecture'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:f319ec10cb62a0ff5ad8e74e702d147d73da79e5225e31cc723fc4691daf5e4d'
 related:

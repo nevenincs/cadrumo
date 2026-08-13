@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-operator-harness'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:d6972117c63377f333c71ff7e00deeb35cb734285283f928ee36bdfa07fcdca2'
 related:

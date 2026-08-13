@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#worktree-commit-attribution'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:b07fba222e469be8e84927d61e478578dfaa83ac83c2fd1524bf3e4a764d0e0a'
 related:

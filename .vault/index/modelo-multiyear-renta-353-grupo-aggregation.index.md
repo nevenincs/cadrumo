@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-multiyear-renta-353-grupo-aggregation'
-date: '2026-08-12'
-modified: '2026-08-12'
+date: '2026-08-13'
+modified: '2026-08-13'
 body_schema: 'body-v1'
 body_hash: 'sha256:8f483707849538c6088692e862de48dae5da5f3ff1a7e7b15b9d0cb8fb2b7b96'
 related:
