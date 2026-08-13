@@ -1,0 +1,1072 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a101" tipo="precepto" titulo="Artículo 101">
+      <version id_norma="BOE-A-2006-20764" fecha_publicacion="20061129" fecha_vigencia="20070101">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. Las retenciones e ingresos a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se fijarán reglamentariamente, tomando como referencia el importe que resultaría de aplicar las tarifas a la base de la retención o ingreso a cuenta.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan.</p>
+        <p class="parrafo">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">El porcentaje de retención o ingreso a cuenta se expresará en números enteros, con redondeo al más próximo.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento. Este porcentaje de retención e ingreso a cuenta se reducirá a la mitad cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 18 por ciento. En el caso de los rendimientos previstos en los párrafos a) y b) del apartado 1 del artículo 25 de esta Ley, la base de retención estará constituida por la contraprestación íntegra, sin que se tenga en consideración, a estos efectos, la exención prevista en la letra y) del artículo 7 de esta Ley.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley, procedentes de sociedades que operen efectiva y materialmente en Ceuta o Melilla y con domicilio y objeto social exclusivo en dichas Ciudades.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 18 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 18 por 100.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 18 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 18 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 18 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 18 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+      </version>
+      <version id_norma="BOE-A-2008-6994" fecha_publicacion="20080422" fecha_vigencia="20080422">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. Las retenciones e ingresos a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se fijarán reglamentariamente, tomando como referencia el importe que resultaría de aplicar las tarifas a la base de la retención o ingreso a cuenta.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan.</p>
+        <p class="parrafo">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Reglamentariamente podrá establecerse que el porcentaje de retención o ingreso a cuenta se exprese en números enteros, con redondeo al más próximo.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento. Este porcentaje de retención e ingreso a cuenta se reducirá a la mitad cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 18 por ciento. En el caso de los rendimientos previstos en los párrafos a) y b) del apartado 1 del artículo 25 de esta Ley, la base de retención estará constituida por la contraprestación íntegra, sin que se tenga en consideración, a estos efectos, la exención prevista en la letra y) del artículo 7 de esta Ley.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley, procedentes de sociedades que operen efectiva y materialmente en Ceuta o Melilla y con domicilio y objeto social exclusivo en dichas Ciudades.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 18 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 18 por 100.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 18 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 18 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 18 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 18 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a>
+</p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2009-20765" fecha_publicacion="20091224" fecha_vigencia="20100113">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. Las retenciones e ingresos a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se fijarán reglamentariamente, tomando como referencia el importe que resultaría de aplicar las tarifas a la base de la retención o ingreso a cuenta.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan.</p>
+        <p class="parrafo">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Reglamentariamente podrá establecerse que el porcentaje de retención o ingreso a cuenta se exprese en números enteros, con redondeo al más próximo.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento. Este porcentaje de retención e ingreso a cuenta se reducirá a la mitad cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento. En el caso de los rendimientos previstos en los párrafos a) y b) del apartado 1 del artículo 25 de esta Ley, la base de retención estará constituida por la contraprestación íntegra, sin que se tenga en consideración, a estos efectos, la exención prevista en la letra y) del artículo 7 de esta Ley.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley, procedentes de sociedades que operen efectiva y materialmente en Ceuta o Melilla y con domicilio y objeto social exclusivo en dichas Ciudades.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a>
+</p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a>
+</p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2012-9364" fecha_publicacion="20120714" fecha_vigencia="20120715">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. Las retenciones e ingresos a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se fijarán reglamentariamente, tomando como referencia el importe que resultaría de aplicar las tarifas a la base de la retención o ingreso a cuenta.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan.</p>
+        <p class="parrafo">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Reglamentariamente podrá establecerse que el porcentaje de retención o ingreso a cuenta se exprese en números enteros, con redondeo al más próximo.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento. Este porcentaje de retención e ingreso a cuenta se reducirá a la mitad cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 19 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote class="noDesde20120901">
+          <p class="parrafo">Atención: esta última actualización del apartado 3 surte efectos desde el 1-9-2012.</p>
+          <p class="cita_con_pleca">Redacción vigente:</p>
+          <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        </blockquote>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento. En el caso de los rendimientos previstos en los párrafos a) y b) del apartado 1 del artículo 25 de esta Ley, la base de retención estará constituida por la contraprestación íntegra, sin que se tenga en consideración, a estos efectos, la exención prevista en la letra y) del artículo 7 de esta Ley.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley, procedentes de sociedades que operen efectiva y materialmente en Ceuta o Melilla y con domicilio y objeto social exclusivo en dichas Ciudades.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 19 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 9 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote class="noDesde20120901">
+          <p class="parrafo">Atención: esta última actualización del apartado 5.a) surte efectos desde el 1-9-2012.</p>
+          <p class="cita_con_pleca">Redacción vigente:</p>
+          <p class="parrafo">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+          <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+          <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        </blockquote>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán a la mitad para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2014-12327" fecha_publicacion="20141128" fecha_vigencia="20150101">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala:</p>
+        <table class="tabla" border="0" summary="Tabla de datos">
+          <tbody>
+            <tr>
+              <th>
+                <p class="cabeza_tabla">Base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Cuota de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Resto base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Tipo aplicable</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Porcentaje</p>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">19,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">2.365,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">7.750,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">24,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">20.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">4.225,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">15.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">30,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">35.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">8.725,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24.800,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">37,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">60.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">17.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">En adelante</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">45,00</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="parrafo_2">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Tratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.</p>
+        <p class="parrafo">No obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán a la mitad cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 18 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley procedentes de las sociedades a que se refiere la letra h) del número 3.º del citado artículo.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 18 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 9 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Asimismo, el porcentaje será el 15 por ciento cuando el volumen de rendimientos íntegros de tales actividades correspondiente al ejercicio inmediato anterior sea inferior a 15.000 euros y represente más del 75 por ciento de la suma de los rendimientos íntegros de actividades económicas y del trabajo obtenidos por el contribuyente en dicho ejercicio.</p>
+        <p class="parrafo">Para la aplicación del tipo de retención previsto en el párrafo anterior, los contribuyentes deberán comunicar al pagador de los rendimientos la concurrencia de dicha circunstancia, quedando obligado el pagador a conservar la comunicación debidamente firmada.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de la transmisión de derechos de suscripción será el 19 por ciento.</p>
+        <blockquote class="20170101">
+          <p class="parrafo">Téngase en cuenta que esta redacción del apartado 6 establecida por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>. entra en vigor el 1 de enero de 2017, según establece la disposición final 6 de la citada Ley.</p>
+          <p class="cita_con_pleca">Redacción anterior:</p>
+          <p class="parrafo">"6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+          <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+          <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100."</p>
+        </blockquote>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán a la mitad para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 1 a 6 por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>.</p>
+          <p class="nota_pie_2">La modificación del apartado 6 entra en vigor el 1 de enero de 2017, según establece la disposición final 6.</p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2015-7765" fecha_publicacion="20150711" fecha_vigencia="20150712">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala:</p>
+        <table class="tabla" border="0" summary="Tabla de datos">
+          <tbody>
+            <tr>
+              <th>
+                <p class="cabeza_tabla">Base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Cuota de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Resto base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Tipo aplicable</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Porcentaje</p>
+              </th>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">19,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">2.365,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">7.750,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">24,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">20.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">4.225,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">15.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">30,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">35.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">8.725,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24.800,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">37,00</p>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <p class="cuerpo_tabla_der">60.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">17.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">En adelante</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_centro">45,00</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="parrafo_2">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Tratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.</p>
+        <p class="parrafo">No obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán a la mitad cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá a la mitad cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley procedentes de las sociedades a que se refiere la letra h) del número 3.º del citado artículo.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán a la mitad cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de la transmisión de derechos de suscripción será el 19 por ciento.</p>
+        <blockquote class="20170101">
+          <p class="parrafo">Téngase en cuenta que esta redacción del apartado 6 establecida por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>. entra en vigor el 1 de enero de 2017, según establece la disposición final 6 de la citada Ley.</p>
+          <p class="cita_con_pleca">Redacción anterior:</p>
+          <p class="parrafo">"6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+          <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+          <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100."</p>
+        </blockquote>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá a la mitad cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán a la mitad para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de enero de 2015, por el art. 1.3 del Real Decreto-ley 9/2015, de 10 de julio. <a class="refPost">Ref. BOE-A-2015-7765</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 1 a 6 por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>.</p>
+          <p class="nota_pie_2">La modificación del apartado 6 entra en vigor el 1 de enero de 2017, según establece la disposición final 6.</p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2018-9268" fecha_publicacion="20180704" fecha_vigencia="20180705">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala:</p>
+        <table class="ning_n_estilo_de_tabla">
+          <colgroup> </colgroup>
+          <thead>
+            <tr class="row_column_32">
+              <th>
+                <p class="cabeza_tabla">Base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Cuota de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Resto base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Tipo aplicable</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Porcentaje</p>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">19,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">2.365,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">7.750,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">20.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">4.225,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">15.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">30,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">35.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">8.725,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24.800,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">37,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">60.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">17.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">En adelante</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">45,00</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="parrafo_2">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Tratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.</p>
+        <p class="parrafo">No obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley procedentes de las sociedades a que se refiere la letra h) del número 3.º del citado artículo.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán en un 60 por ciento cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de la transmisión de derechos de suscripción será el 19 por ciento.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán en un 60 por ciento para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 1 a 5, 8 y 11 por el art. 64 de la Ley 6/2018, de 3 de julio. <a class="refPost">Ref. BOE-A-2018-9268#ar-64</a></p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de enero de 2015, por el art. 1.3 del Real Decreto-ley 9/2015, de 10 de julio. <a class="refPost">Ref. BOE-A-2015-7765</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 1 a 6 por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>.</p>
+          <p class="nota_pie_2">La modificación del apartado 6 entra en vigor el 1 de enero de 2017, según establece la disposición final 6.</p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2018-17990" fecha_publicacion="20181229" fecha_vigencia="20181229">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala:</p>
+        <table class="ning_n_estilo_de_tabla">
+          <colgroup> </colgroup>
+          <thead>
+            <tr class="row_column_32">
+              <th>
+                <p class="cabeza_tabla">Base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Cuota de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Resto base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </th>
+              <th>
+                <p class="cabeza_tabla">Tipo aplicable</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Porcentaje</p>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">19,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">2.365,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">7.750,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">20.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">4.225,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">15.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">30,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">35.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">8.725,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24.800,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">37,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td class="cuerpo_tabla_der">
+                <p class="cuerpo_tabla_der">60.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">17.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">En adelante</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">45,00</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="parrafo_2">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Tratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.</p>
+        <p class="parrafo">No obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento. Dicho porcentaje será el 15 por ciento para los rendimientos del capital mobiliario procedentes de la propiedad intelectual cuando el contribuyente no sea el autor.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley procedentes de las sociedades a que se refiere la letra h) del número 3.º del citado artículo.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán en un 60 por ciento cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de la transmisión de derechos de suscripción será el 19 por ciento.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán en un 60 por ciento para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 4, con efectos desde el 1 de enero de 2019, por el art. 1 del Real Decreto-ley 26/2018, de 28 de diciembre. <a class="refPost">Ref. BOE-A-2018-17990</a></p>
+          <p class="nota_pie">Se modifican los apartados 1 a 5, 8 y 11 por el art. 64 de la Ley 6/2018, de 3 de julio. <a class="refPost">Ref. BOE-A-2018-9268#ar-64</a></p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de enero de 2015, por el art. 1.3 del Real Decreto-ley 9/2015, de 10 de julio. <a class="refPost">Ref. BOE-A-2015-7765</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 1 a 6 por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>.</p>
+          <p class="nota_pie_2">La modificación del apartado 6 entra en vigor el 1 de enero de 2017, según establece la disposición final 6.</p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2020-17339" fecha_publicacion="20201231" fecha_vigencia="20210101">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala:</p>
+        <table class="tabla_b_sica">
+          <colgroup>
+            <col class="row_column_38"/>
+            <col class="row_column_38"/>
+            <col class="row_column_38"/>
+            <col class="row_column_38"/>
+          </colgroup>
+          <thead>
+            <tr class="row_column_31">
+              <td>
+                <p class="cabeza_tabla">Base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </td>
+              <td>
+                <p class="cabeza_tabla">Cuota de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Euros</p>
+              </td>
+              <td>
+                <p class="cabeza_tabla">Resto base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </td>
+              <td>
+                <p class="cabeza_tabla">Tipo aplicable</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Porcentaje</p>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">19,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">2.365,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">7.750,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">20.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">4.225,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">15.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">30,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">35.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">8.725,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24.800,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">37,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">60.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">17.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">240.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">45,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">300.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">125.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">En adelante</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">47,00</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="parrafo_2">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Tratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.</p>
+        <p class="parrafo">No obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento. Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento. Dicho porcentaje será el 15 por ciento para los rendimientos del capital mobiliario procedentes de la propiedad intelectual cuando el contribuyente no sea el autor.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley procedentes de las sociedades a que se refiere la letra h) del número 3.º del citado artículo.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán en un 60 por ciento cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de la transmisión de derechos de suscripción será el 19 por ciento.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán en un 60 por ciento para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde 1 de enero de 2021, por el art. 60 de la Ley 11/2020, de 30 de diciembre. <a class="refPost">Ref. BOE-A-2020-17339#a6-2</a></p>
+          <p class="nota_pie">Se modifica el apartado 4, con efectos desde el 1 de enero de 2019, por el art. 1 del Real Decreto-ley 26/2018, de 28 de diciembre. <a class="refPost">Ref. BOE-A-2018-17990</a></p>
+          <p class="nota_pie">Se modifican los apartados 1 a 5, 8 y 11 por el art. 64 de la Ley 6/2018, de 3 de julio. <a class="refPost">Ref. BOE-A-2018-9268#ar-64</a></p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de enero de 2015, por el art. 1.3 del Real Decreto-ley 9/2015, de 10 de julio. <a class="refPost">Ref. BOE-A-2015-7765</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 1 a 6 por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>.</p>
+          <p class="nota_pie_2">La modificación del apartado 6 entra en vigor el 1 de enero de 2017, según establece la disposición final 6.</p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+      <version id_norma="BOE-A-2022-22128" fecha_publicacion="20221224" fecha_vigencia="20230101">
+        <p class="articulo">Artículo 101. Importe de los pagos a cuenta.</p>
+        <p class="parrafo">1. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de relaciones laborales o estatutarias y de pensiones y haberes pasivos se determinará con arreglo al procedimiento que reglamentariamente se establezca.</p>
+        <p class="parrafo">Para determinar el porcentaje de retención o ingreso a cuenta se podrán tener en consideración las circunstancias personales y familiares y, en su caso, las rentas del cónyuge y las reducciones y deducciones, así como las retribuciones variables previsibles, en los términos que reglamentariamente se establezcan, y se aplicará la siguiente escala:</p>
+        <table class="tabla_b_sica">
+          <colgroup>
+            <col class="row_column_38"/>
+            <col class="row_column_38"/>
+            <col class="row_column_38"/>
+            <col class="row_column_38"/>
+          </colgroup>
+          <thead>
+            <tr class="row_column_31">
+              <td>
+                <p class="cabeza_tabla">Base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </td>
+              <td>
+                <p class="cabeza_tabla">Cuota de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Euros</p>
+              </td>
+              <td>
+                <p class="cabeza_tabla">Resto base para calcular el tipo de retención</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Hasta euros</p>
+              </td>
+              <td>
+                <p class="cabeza_tabla">Tipo aplicable</p>
+                <p class="cabeza_tabla">–</p>
+                <p class="cabeza_tabla">Porcentaje</p>
+              </td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">0,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">19,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">12.450,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">2.365,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">7.750,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">20.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">4.225,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">15.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">30,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">35.200,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">8.725,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">24.800,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">37,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">60.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">17.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">240.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">45,00</p>
+              </td>
+            </tr>
+            <tr class="row_column_4">
+              <td>
+                <p class="cuerpo_tabla_der">300.000,00</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">125.901,50</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">En adelante</p>
+              </td>
+              <td>
+                <p class="cuerpo_tabla_der">47,00</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="parrafo_2">A estos efectos, se presumirán retribuciones variables previsibles, como mínimo, las obtenidas en el año anterior, salvo que concurran circunstancias que permitan acreditar de manera objetiva un importe inferior.</p>
+        <p class="parrafo">Tratándose de atrasos que corresponda imputar a ejercicios anteriores, el porcentaje de retención e ingreso a cuenta será del 15 por ciento, salvo que resulte de aplicación los porcentajes previstos en los apartados 2 y 3 de este artículo.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">2. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo que se perciban por la condición de administradores y miembros de los consejos de administración, de las juntas que hagan sus veces, y demás miembros de otros órganos representativos, será del 35 por ciento.</p>
+        <p class="parrafo">No obstante, en los términos que reglamentariamente se establezcan, cuando los rendimientos procedan de entidades con un importe neto de la cifra de negocios inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será del 19 por ciento.</p>
+        <p class="parrafo">Los porcentajes de retención e ingreso a cuenta previstos en este apartado se reducirán en un 60 por ciento cuando se trate de rendimientos obtenidos en Ceuta o Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">3. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del trabajo derivados de impartir cursos, conferencias, coloquios, seminarios y similares, o derivados de la elaboración de obras literarias, artísticas o científicas, siempre que se ceda el derecho a su explotación, será del 15 por ciento.</p>
+        <p class="parrafo">No obstante lo anterior, el porcentaje de retención sobre los rendimientos del trabajo derivados de la elaboración de obras literarias, artísticas o científicas a que se refiere el párrafo anterior será del 7 por ciento cuando el volumen de tales rendimientos íntegros correspondiente al ejercicio inmediato anterior sea inferior a 15.000 euros y represente más del 75 por ciento de la suma de los rendimientos íntegros de actividades económicas y del trabajo obtenidos por el contribuyente en dicho ejercicio. Para la aplicación de este tipo de retención, los contribuyentes deberán comunicar al pagador de los rendimientos la concurrencia de dichas circunstancias, quedando obligado el pagador a conservar la comunicación debidamente firmada.</p>
+        <p class="parrafo">Estos porcentajes se reducirán en un 60 por ciento cuando se trate de rendimientos del trabajo obtenidos en Ceuta y Melilla que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta ley.</p>
+        <p class="parrafo">4. El porcentaje de retención e ingreso a cuenta sobre los rendimientos del capital mobiliario será del 19 por ciento. Dicho porcentaje será el 15 por ciento para los rendimientos del capital mobiliario procedentes de la propiedad intelectual cuando el contribuyente no sea el autor.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando se trate de rendimientos que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley procedentes de las sociedades a que se refiere la letra h) del número 3.º del citado artículo.</p>
+        <p class="parrafo">5. Los porcentajes de las retenciones e ingresos a cuenta sobre los rendimientos derivados de actividades económicas serán:</p>
+        <p class="parrafo_2">a) El 15 por ciento, en el caso de los rendimientos de actividades profesionales establecidos en vía reglamentaria.</p>
+        <p class="parrafo">No obstante, se aplicará el porcentaje del 7 por ciento sobre los rendimientos de actividades profesionales que se establezcan reglamentariamente.</p>
+        <p class="parrafo">Estos porcentajes se reducirán en un 60 por ciento cuando los rendimientos tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">b) El 2 por ciento en el caso de rendimientos procedentes de actividades agrícolas o ganaderas, salvo en el caso de las actividades ganaderas de engorde de porcino y avicultura, en que se aplicará el 1 por ciento.</p>
+        <p class="parrafo">c) El 2 por ciento en el caso de rendimientos procedentes de actividades forestales.</p>
+        <p class="parrafo">d) El 1 por ciento para otras actividades empresariales que determinen su rendimiento neto por el método de estimación objetiva, en los supuestos y condiciones que reglamentariamente se establezcan.</p>
+        <p class="parrafo_2">6. El porcentaje de pagos a cuenta sobre las ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva será del 19 por ciento.</p>
+        <p class="parrafo">No se aplicará retención cuando no proceda computar la ganancia patrimonial, de acuerdo con lo previsto en el artículo 94.1.a) de esta Ley.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de los aprovechamientos forestales de los vecinos en montes públicos que reglamentariamente se establezcan, será del 19 por 100.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre las ganancias patrimoniales derivadas de la transmisión de derechos de suscripción será el 19 por ciento.</p>
+        <p class="parrafo">7. El porcentaje de retención e ingreso a cuenta sobre los premios que se entreguen como consecuencia de la participación en juegos, concursos, rifas o combinaciones aleatorias, estén o no vinculadas a la oferta, promoción o venta de determinados bienes, productos o servicios, será del 19 por ciento.</p>
+        <p class="parrafo">8. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes del arrendamiento o subarrendamiento de bienes inmuebles urbanos, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">Este porcentaje se reducirá en un 60 por ciento cuando el inmueble esté situado en Ceuta o Melilla en los términos previstos en el artículo 68.4 de esta Ley.</p>
+        <p class="parrafo">9. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad industrial, de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas y del subarrendamiento sobre los bienes anteriores, cualquiera que sea su calificación, será del 19 por ciento.</p>
+        <p class="parrafo">El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la propiedad intelectual, cualquiera que sea su calificación, será del 15 por ciento¸ salvo cuando resulte de aplicación el tipo del 7 por ciento previsto en los apartados 3 y 5 de este artículo. Igualmente, dicho porcentaje será del 7 por ciento cuando se trate de anticipos a cuenta derivados de la cesión de la explotación de derechos de autor que se vayan a devengar a lo largo de varios años.</p>
+        <p class="parrafo">10. El porcentaje de retención e ingreso a cuenta sobre los rendimientos procedentes de la cesión del derecho a la explotación del derecho de imagen, cualquiera que sea su calificación, será el 24 por ciento. El porcentaje de ingreso a cuenta en el supuesto previsto en el artículo 92.8 de esta Ley será del 19 por ciento.</p>
+        <p class="parrafo">11. Los porcentajes de los pagos fraccionados que deban practicar los contribuyentes que ejerzan actividades económicas serán los siguientes:</p>
+        <p class="parrafo_2">a) El 20 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación directa, en cualquiera de sus modalidades.</p>
+        <p class="parrafo">b) El 4 por ciento, cuando se trate de actividades que determinen el rendimiento neto por el método de estimación objetiva. El porcentaje será el 3 por ciento cuando se trate de actividades que tengan sólo una persona asalariada, y el 2 por ciento cuando no se disponga de personal asalariado.</p>
+        <p class="parrafo">c) El 2 por ciento, cuando se trate de actividades agrícolas, ganaderas, forestales o pesqueras, cualquiera que fuese el método de determinación del rendimiento neto.</p>
+        <p class="parrafo_2">Estos porcentajes se reducirán en un 60 por ciento para las actividades económicas que tengan derecho a la deducción en la cuota prevista en el artículo 68.4 de esta Ley.</p>
+        <blockquote>
+          <p class="nota_pie">Se modifican los apartados 3 y 9 por el art. 65 de la Ley 31/2022, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2022-22128#a6-7</a></p>
+          <p class="nota_pie">Se modifica el apartado 1, con efectos desde 1 de enero de 2021, por el art. 60 de la Ley 11/2020, de 30 de diciembre. <a class="refPost">Ref. BOE-A-2020-17339#a6-2</a></p>
+          <p class="nota_pie">Se modifica el apartado 4, con efectos desde el 1 de enero de 2019, por el art. 1 del Real Decreto-ley 26/2018, de 28 de diciembre. <a class="refPost">Ref. BOE-A-2018-17990</a></p>
+          <p class="nota_pie">Se modifican los apartados 1 a 5, 8 y 11 por el art. 64 de la Ley 6/2018, de 3 de julio. <a class="refPost">Ref. BOE-A-2018-9268#ar-64</a></p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de enero de 2015, por el art. 1.3 del Real Decreto-ley 9/2015, de 10 de julio. <a class="refPost">Ref. BOE-A-2015-7765</a>.</p>
+          <p class="nota_pie">Se modifican los apartados 1 a 6 por el art. 1.65 de la Ley 26/2014, de 27 de noviembre. <a class="refPost">Ref. BOE-A-2014-12327</a>.</p>
+          <p class="nota_pie_2">La modificación del apartado 6 entra en vigor el 1 de enero de 2017, según establece la disposición final 6.</p>
+          <p class="nota_pie">Se modifican los apartados 3 y 5.a), con efectos desde el 1 de septiembre de 2012, por el art. 25.2.1 y 2 del Real Decreto-ley 20/2012, de 13 de julio. <a class="refPost">Ref. BOE-A-2012-9364</a>.</p>
+          <p class="nota_pie">Se modifica, con efectos desde el 1 de enero de 2010 por el art. 71 de la Ley 26/2009, de 23 de diciembre. <a class="refPost">Ref. BOE-A-2009-20765</a></p>
+          <p class="nota_pie">Se modifica el apartado 1 por el art. 1.3 del Real Decreto-Ley 2/2008, de 21 de abril. <a class="refPost">Ref. BOE-A-2008-6994</a></p>
+        </blockquote>
+      </version>
+    </bloque>
+  </data>
+</response>
