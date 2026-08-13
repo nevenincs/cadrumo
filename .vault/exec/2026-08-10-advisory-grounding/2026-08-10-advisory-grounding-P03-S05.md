@@ -5,45 +5,11 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:8c684d60e0a03c099ae1052da0945231bd16e34192bbdb9a38ebe46662c99613'
+body_hash: 'sha256:cbf1ff1a2305ad32da3db2ee77fb075f8ae3e22649bb1012e6eb7e48679f1f8c'
 step_id: 'S05'
 related:
   - "[[2026-08-10-advisory-grounding-plan]]"
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace advisory-grounding with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S05 and 2026-08-10-advisory-grounding-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Thread a registry object into the five modules that hold none, as its own change rather than inside a citation change. The invoice-devengo advisory, the retencion-rate advisory, the invoice source resolver and the prior-payment advisory hold no revision, snapshot or casilla definition anywhere. Every provision they cite has a catalogue entry, so this is threading rather than grounding. The disconfirming observation: if threading a revision into any of these modules would invert a dependency direction the architecture forbids, stop and report rather than route around it, because that would mean the advisory belongs at a different layer and ## Scope
-
-- `src/cadrumo/application/aggregation/`
-- `src/cadrumo/application/invoices/` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
 
 # Thread a registry object into the five modules that hold none, as its own change rather than inside a citation change. The invoice-devengo advisory, the retencion-rate advisory, the invoice source resolver and the prior-payment advisory hold no revision, snapshot or casilla definition anywhere. Every provision they cite has a catalogue entry, so this is threading rather than grounding. The disconfirming observation: if threading a revision into any of these modules would invert a dependency direction the architecture forbids, stop and report rather than route around it, because that would mean the advisory belongs at a different layer
 
@@ -66,7 +32,13 @@ related:
 
 Four of the five modules are threaded and grounded: two via the casilla-derived path now available through the shared `casilla_registry_legal_refs` primitive (prior-payment, bienes-inversion), two via `asserted_legal_refs` literals because no casilla is addressable (invoice-devengo, invoice source resolver). 94 tests green across every touched module and its test suite, ruff/format clean on every touched file.
 
-**The fifth (`_retencion_rate_advisory.py`'s administrador/consejero site) is the disconfirming observation, and it is reported rather than routed around.** Its existing `legal_refs=tuple(treatment.legal_refs)` already looks typed and grounded, but `treatment` is `WorkIncomeRetencionTreatment` from `core/aggregation.py` -- a hardcoded Python-literal constant carrying both the citation AND the 35%/19%/100.000€ rate values themselves, not a registry-loaded object. Threading a genuine registry object here is not a parameter-passing fix like the other four: no `LegalParameter` entry for this rate/threshold exists in the registry tree today, so the honest fix is authoring one (moving the rate constants out of `core/` into registry TOML, which `aeat-registry-authority-flow` requires for exactly this shape) -- a legal-authoring decision with its own review weight, not a mechanical thread. Stopped here rather than inventing a shortcut. The module's OTHER two diagnostics (the art. 95 sectoral-rate sites) are unaffected and already read their grounding from a real `LegalParameter` via `rirpf_art95_retencion_legal_refs()` -- found already resolved by measurement, not touched.
+**The fifth (`_retencion_rate_advisory.py`'s administrador/consejero site) is not a mere scope boundary -- it is a standing rule violation on a filing-critical value, and this record names it as one rather than as a decision merely awaiting a legal-authoring call.** `WorkIncomeRetencionTreatment` in `core/aggregation.py` carries the 35%, 19% and 100.000€ figures (LIRPF art. 101.2, RIRPF art. 80.1.3.º) as hardcoded Python literals. `aeat-registry-authority-flow` requires exactly the opposite for this shape: AEAT schema, constants, thresholds and regulatory codes belong in the central config or the registry authoring tree, never inlined as literals in a feature module, because these values are versioned by filing year and revision -- a literal bakes one year's number into the call site, scatters the authority, and drifts silently the moment a revision changes the rate.
+
+The site is MORE dangerous than an ungrounded one, not merely equally so: it already carries a typed `legal_refs=tuple(treatment.legal_refs)`, so it reads as verified to an auditor who sees the citation and moves on -- while the number the citation sits beside is not read from any authority at all. A citation beside a hardcoded literal is worse than no citation, because it converts an ungrounded value into one that presents as checked.
+
+The remedy is authoring a real `LegalParameter` for the three figures against LIRPF art. 101.2 / RIRPF art. 80.1.3.º and migrating the constants out of `core/aggregation.py`, mirroring the pattern `rirpf_art95_retencion_legal_refs()` already establishes for this module's sibling art. 95 sites. Not done in this Step -- landing it here would have bundled a legal-authoring change inside a threading Step, exactly the "own change, not inside a citation change" boundary this row itself draws. Taken up as the next Step instead of routed around. The module's OTHER two diagnostics (the art. 95 sectoral-rate sites) are unaffected and already read their grounding from a real `LegalParameter` via `rirpf_art95_retencion_legal_refs()` -- found already resolved by measurement, not touched.
+
+**Method note, generalised beyond this one finding.** The fifth module (bienes-inversion) and this rule violation were both found by the same discipline: checking registry-object reachability, and now registry-SOURCE authenticity, per FUNCTION and per VALUE rather than trusting a file- or module-level signal. A file that imports `ModeloRevision` somewhere can still hold a function with none in reach; a field that carries a typed `legal_refs=` can still be citing a value nothing loaded. This is the same class of blind spot as a directory-shape glob that misses a modelo stored in the other shape, or a name-keyed census that misses a diagnostic field a different channel populates -- the fix in every case is checking the thing itself, not a proxy for it.
 
 ## Notes
 
