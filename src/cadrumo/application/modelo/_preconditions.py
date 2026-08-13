@@ -287,6 +287,7 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
             "exonerado_390_not_final_period",
             "exonerado_390_observation_value_divergence",
             "exonerado_390_revision_value_divergence",
+            "simplified_calculation_result_divergence",
         )
     ),
     _profile(

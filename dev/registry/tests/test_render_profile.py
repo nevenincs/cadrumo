@@ -491,6 +491,8 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
     (
         ("date_yyyymmdd", "yyyymmdd", 7, 0, (), "exactly 8 integer digits"),
         ("date_yyyymmdd", "yyyymmdd", 8, 1, (), "exactly 8 integer digits"),
+        ("date_ddmmyyyy", "ddmmyyyy", 7, 0, (), "exactly 8 integer digits"),
+        ("date_ddmmyyyy", "ddmmyyyy", 8, 1, (), "exactly 8 integer digits"),
         ("integer", "unsigned-integer", 0, 0, (), "positive integer digits"),
         ("integer", "unsigned-integer", 2, 1, (), "0 decimal digits"),
         ("decimal", "implied-decimal", 2, 0, (), "positive integer and decimal digits"),
@@ -565,6 +567,7 @@ def test_enumeration_domain_uses_semantic_integers_not_padded_wire_spellings() -
         ("integer", ExportValuePolicy.UNSIGNED_INTEGER, 2, 0, (), "integer", "left_zero", None),
         ("percentage_decimal", ExportValuePolicy.IMPLIED_DECIMAL, 3, 2, (), "decimal", "left_zero", None),
         ("date_yyyymmdd", ExportValuePolicy.YYYYMMDD, 8, 0, (), "date", "none", "aaaammdd"),
+        ("date_ddmmyyyy", ExportValuePolicy.DDMMYYYY, 8, 0, (), "date", "none", "ddmmaaaa"),
         ("enumeration", ExportValuePolicy.ENUMERATED_DIGITS, 2, 0, ("1", "3"), "integer", "left_zero", None),
         ("digit_string", ExportValuePolicy.DIGIT_STRING, 4, 0, (), "text", "none", None),
         ("identifier_digits", ExportValuePolicy.IDENTIFIER_DIGITS, 13, 0, (), "text", "none", None),
@@ -840,6 +843,76 @@ def test_real_m200_profile_exactly_covers_source_eligibility_and_excludes_variab
         for rule in profile.singleton_rules
         if rule not in checkbox_rules | year_rules
     )
+
+
+def test_real_m390_2022_profile_exactly_covers_source_eligibility_and_binds_day_first_dates() -> None:
+    """The 2022 M390 profile binds all nine blank numeric fields to its pinned source."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    intermediate = load_record_design_intermediate(
+        source_root,
+        catalogues.sources,
+        source_ref="aeat-dr-390-2022",
+        filing_year=2022,
+        design_epoch="2022",
+    )
+    eligibility = project_render_profile_eligibility(field for sheet in intermediate.sheets for field in sheet.fields)
+    design_identity = RenderProfileDesignIdentity(
+        modelo="390",
+        design_epoch=intermediate.source.design_epoch,
+        source_ref=intermediate.source.source_ref,
+        source_sha256=intermediate.source.source_sha256,
+    )
+    resolved = resolve_record_design_binary(
+        source_root,
+        catalogues.sources,
+        source_ref="aeat-dr-390-2022",
+        filing_year=2022,
+        design_epoch="2022",
+    )
+    profile_directory = Path(__file__).parents[1] / "render_profiles" / "modelo_390" / "2022"
+    profile = load_render_profile(profile_directory)
+    evidence = load_render_profile_source_evidence(resolved.path, profile)
+    validate_render_profile_authority(profile, design_identity, eligibility, evidence)
+
+    eligible_anchors = {
+        RenderProfileAnchor(
+            sheet=field.sheet,
+            source_row=field.source_row,
+            source_cell=field.source_cell,
+            ordinal=field.ordinal,
+            record_identity=field.record_identity,
+        )
+        for field in eligibility.all_fields
+    }
+    governed_anchors = {rule.anchor for rule in profile.singleton_rules}
+    assert len(eligibility.all_fields) == 9
+    assert governed_anchors == eligible_anchors
+
+    day_first_rules = tuple(rule for rule in profile.singleton_rules if rule.semantic_kind == "date_ddmmyyyy")
+    assert {(rule.anchor.sheet, rule.anchor.source_row, rule.value_policy) for rule in day_first_rules} == {
+        ("Pág. 1", 65, ExportValuePolicy.DDMMYYYY),
+        ("Pág. 1", 69, ExportValuePolicy.DDMMYYYY),
+        ("Pág. 1", 73, ExportValuePolicy.DDMMYYYY),
+    }
+    assert all(isinstance(rule.evidence, OfficialSourceEvidence) for rule in day_first_rules)
+    assert {(entry.sheet, entry.cell, entry.normalized_statement) for entry in evidence.entries} == {
+        (
+            "Pág. 1",
+            "E65",
+            "4. Representante - Personas Jurídicas - Represent. 1 - Fecha Poder (DDMMAAAA)",
+        ),
+        (
+            "Pág. 1",
+            "E69",
+            "4. Representante - Personas Jurídicas - Represent. 2 - Fecha Poder (DDMMAAAA)",
+        ),
+        (
+            "Pág. 1",
+            "E73",
+            "4. Representante - Personas Jurídicas - Represent. 3 - Fecha Poder (DDMMAAAA)",
+        ),
+    }
 
 
 def test_real_source_loader_refuses_nonexistent_cell_statement_and_sha_mutations() -> None:

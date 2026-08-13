@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from ..application.calculations import calculate_m303_regimen_simplificado_result
 from ..core import Period
 from ..core.resources import resources
-from ..domain.calculations.registry import resolve_m303_regimen_simplificado_snapshot
+from ..domain.calculations.registry import M303RegimenSimplificadoSnapshot, resolve_m303_regimen_simplificado_snapshot
 from ..domain.filing_evidence import FilingEvidenceReference
 from ..domain.iva import (
     M303RegimenSimplificadoScope,
@@ -13,10 +14,36 @@ from ..domain.iva import (
 )
 from ..domain.modelos import (
     FilingInstanceEvidence,
+    M303DANA2024EligibilityEvidence,
     M303Exonerado390FilingEvidence,
     M303FilingInstanceEvidence,
     M303RegimenSimplificadoFilingEvidence,
 )
+
+
+def regimen_simplificado_filing_evidence(
+    *,
+    period: Period,
+    scope_decision: M303RegimenSimplificadoScopeDecision,
+    rows: RegimenSimplificadoFilingRows,
+    regimen_snapshot: M303RegimenSimplificadoSnapshot,
+    dana_2024_eligibility: M303DANA2024EligibilityEvidence | None,
+) -> M303RegimenSimplificadoFilingEvidence:
+    """Build real calculation-bearing simplified-regime evidence for a test filing."""
+    return M303RegimenSimplificadoFilingEvidence(
+        scope_decision=scope_decision,
+        rows=rows,
+        regimen_snapshot=regimen_snapshot,
+        dana_2024_eligibility=dana_2024_eligibility,
+        calculation_result=calculate_m303_regimen_simplificado_result(
+            period=period,
+            scope_decision=scope_decision,
+            rows=rows,
+            regimen_snapshot=regimen_snapshot,
+            dana_2024_eligibility=dana_2024_eligibility,
+            catalogues=resources().modelos.authority.catalogues,
+        ),
+    )
 
 
 def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingInstanceEvidence:
@@ -42,16 +69,18 @@ def general_m303_filing_evidence(period: Period, *, reference: str) -> FilingIns
                 operaciones_terceros_declarables=None,
                 operaciones_terceros_reference=None,
             ),
-            regimen_simplificado=M303RegimenSimplificadoFilingEvidence(
+            regimen_simplificado=regimen_simplificado_filing_evidence(
+                period=period,
                 scope_decision=scope,
                 rows=RegimenSimplificadoFilingRows(ejercicio=period.filing_year, activities=()),
                 regimen_snapshot=resolve_m303_regimen_simplificado_snapshot(
                     registry_snapshot=snapshot,
                     scope_decision=scope,
                 ),
+                dana_2024_eligibility=None,
             ),
         ),
     )
 
 
-__all__ = ["general_m303_filing_evidence"]
+__all__ = ["general_m303_filing_evidence", "regimen_simplificado_filing_evidence"]

@@ -25,6 +25,12 @@ _M303_SOURCE_EPOCHS = (
     ("aeat-dr-303-2025", 2025, "2025"),
     ("aeat-dr-303-2026", 2026, "2026"),
 )
+_M390_SOURCE_EPOCHS = (
+    ("aeat-dr-390-2022", 2022, "2022"),
+    ("aeat-dr-390-2023", 2023, "2023"),
+    ("aeat-dr-390-2024", 2024, "2024"),
+    ("aeat-dr-390-2025", 2025, "2025"),
+)
 
 
 @pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _M303_SOURCE_EPOCHS)
@@ -46,6 +52,54 @@ def test_resolves_each_explicit_hash_pinned_modelo_303_design_epoch(
     assert resolved.source.id == source_ref
     assert resolved.source.record_design_epoch == design_epoch
     assert hash_file(resolved.path) == (resolved.source.sha256, resolved.source.bytes)
+
+
+@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _M390_SOURCE_EPOCHS)
+def test_resolves_each_explicit_hash_pinned_modelo_390_design_epoch(
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+) -> None:
+    """Each M390 binary selects only through its own epoch-bearing source entry."""
+    sources = _catalogues().sources
+
+    resolved = resolve_record_design_binary(
+        bundled_path(),
+        sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+
+    assert resolved.source.id == source_ref
+    assert resolved.source.record_design_epoch == design_epoch
+    assert hash_file(resolved.path) == (resolved.source.sha256, resolved.source.bytes)
+
+
+def test_rejects_modelo_390_cross_epoch_selection_before_reading_the_binary() -> None:
+    with pytest.raises(RegistryValidationError, match="declares design epoch '2025', not requested '2024'"):
+        resolve_record_design_binary(
+            bundled_path(),
+            _catalogues().sources,
+            source_ref="aeat-dr-390-2025",
+            filing_year=2025,
+            design_epoch="2024",
+        )
+
+
+def test_rejects_modelo_390_hash_drift() -> None:
+    sources = _catalogues().sources
+    source = sources["aeat-dr-390-2025"]
+    drifting_source = SourceReference.model_validate({**source.model_dump(mode="python"), "sha256": "0" * 64})
+
+    with pytest.raises(RegistryValidationError, match="sha256 mismatch"):
+        resolve_record_design_binary(
+            bundled_path(),
+            {str(drifting_source.id): drifting_source},
+            source_ref="aeat-dr-390-2025",
+            filing_year=2025,
+            design_epoch="2025",
+        )
 
 
 def test_verifies_both_explicit_modelo_303_2024_epochs_without_date_only_selection() -> None:

@@ -142,6 +142,10 @@ from ._m303_carry_ingress import (
     normalize_m303_carry_observation_envelope,
     validate_normalized_m303_carry_observation_envelope,
 )
+from ._m303_regimen_simplificado import (
+    M303RegimenSimplificadoCalculationError,
+    calculate_m303_regimen_simplificado_result,
+)
 from ._maritime_exemption_service import MaritimeExemptionResult, resolve_maritime_exemption
 from ._multi_year import (
     EnrollmentEvidence,
@@ -235,6 +239,7 @@ __all__ = [
     "IvaWalletDecisionSourceResolver",
     "LocalIvaCompensationRecurrence",
     "M303CarryIngressError",
+    "M303RegimenSimplificadoCalculationError",
     "MaritimeExemptionResult",
     "NoPriorObligationProvenance",
     "NoPriorObligationProvenanceKind",
@@ -263,6 +268,7 @@ __all__ = [
     "build_prorrata_especial_mandatory_advisory",
     "build_prorrata_missing_provisional_advisory",
     "build_prorrata_regularizacion_advisory",
+    "calculate_m303_regimen_simplificado_result",
     "correct_iva_compensation_period",
     "cross_check_iva_compensation_annual_summary",
     "cross_period_dependency_inventory",

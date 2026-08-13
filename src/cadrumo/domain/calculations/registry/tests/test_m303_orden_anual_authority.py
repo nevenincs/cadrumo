@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from decimal import Decimal
 from hashlib import sha256
 from pathlib import Path
 from shutil import copyfile
@@ -15,38 +16,42 @@ from .....core.resources import bundled_path, resources
 from .....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from .._errors import RegistryLoadError, RegistryValidationError
 from .._loader import load_registry_tree
-from .._m303_orden_anual import (
+from .._m303_orden_manifest import (
     check_m303_annual_orden_manifest,
-    extract_m303_annual_orden_source,
     load_m303_annual_orden_authority,
-    resolve_m303_regimen_simplificado_snapshot,
 )
+from .._m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
+from .._m303_orden_source import extract_m303_annual_orden_source
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.mark.parametrize(
-    ("ejercicio", "source_ref", "expected_digest"),
+    ("ejercicio", "source_ref", "expected_digest", "expected_agricultural_axis_count"),
     (
         (
             2023,
             "boe-orden-hfp-1172-2022-iva-authority",
             "1cab2ef540868ec0d5344d8e801ac6c52b5ee27c1aefb794ca7c0330df693957",
+            16,
         ),
         (
             2024,
             "boe-orden-hfp-1359-2023-iva-authority",
             "e403d33762cc7353ca3f752820df71244291217aeb35309d5e383f166cde49a5",
+            16,
         ),
         (
             2025,
             "boe-orden-hac-1347-2024-iva-authority",
             "fca55fa51ca1b68e4b8098ebfc4749e4d5f9daac880112d35085352df46c8165",
+            17,
         ),
         (
             2026,
             "boe-orden-hac-1425-2025-iva-authority",
             "7762218c63fcc914dfc5ed532d6c0daa3b21f506427c924b93eb2698527d3ac8",
+            17,
         ),
     ),
 )
@@ -54,6 +59,7 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
     ejercicio: int,
     source_ref: str,
     expected_digest: str,
+    expected_agricultural_axis_count: int,
 ) -> None:
     """Each pinned BOE source supplies all 49 tables and 141 module rows."""
     _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -76,6 +82,15 @@ def test_pinned_boe_orden_compiler_extracts_the_complete_annual_iva_catalogue(
         6: 3,
         7: 2,
     }
+    assert len(census.agricultural_indexes) == expected_agricultural_axis_count
+    assert len(census.agricultural_ingresos_a_cuenta) == expected_agricultural_axis_count
+    assert len(census.non_agricultural_ingresos_a_cuenta) == 47
+    assert tuple((item.minimum_days, item.maximum_days, item.coefficient) for item in census.seasonal_indexes) == (
+        (1, 60, Decimal("1.50")),
+        (61, 120, Decimal("1.35")),
+        (121, 180, Decimal("1.25")),
+    )
+    assert census.difficult_justification.percentage == 1
     assert (
         sha256(
             json.dumps(
@@ -239,7 +254,7 @@ def test_pinned_boe_orden_compiler_refuses_duplicate_semantic_table_anchor(tmp_p
         copied_path.with_name(copied_path.name + ".extracted.md"),
     )
 
-    with pytest.raises(RegistryLoadError, match="extra, missing, or cross-year table units"):
+    with pytest.raises(RegistryLoadError, match="extra, missing, or cross-year authority units"):
         extract_m303_annual_orden_source(
             ejercicio=2026,
             source=source,
@@ -295,8 +310,8 @@ def test_generated_directory_refuses_an_extra_toml_file(tmp_path: Path) -> None:
         )
 
 
-def test_generated_annual_orden_legal_ids_are_annex_ii_only() -> None:
-    """The retired, legally incorrect Annex-I identifier has no generated alias."""
+def test_generated_annual_orden_legal_ids_cover_every_compiled_source_axis() -> None:
+    """Every pinned regulatory axis receives its own exact legal provenance."""
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     compilation = load_m303_annual_orden_authority(
         bundled_path("registry", "aeat"),
@@ -305,15 +320,15 @@ def test_generated_annual_orden_legal_ids_are_annex_ii_only() -> None:
         sources=catalogues.sources,
     )
 
-    assert len(compilation.legal) == 196
-    assert all(":anexo-ii-iva:" in legal_ref_id for legal_ref_id in compilation.legal)
-    assert all(":anexo-i-iva:" not in legal_ref_id for legal_ref_id in compilation.legal)
+    assert len(compilation.legal) == 536
+    assert any(":anexo-i-iva-index:" in legal_ref_id for legal_ref_id in compilation.legal)
+    assert any(":anexo-i-iva-ingreso-a-cuenta:" in legal_ref_id for legal_ref_id in compilation.legal)
+    assert any(":anexo-ii-iva-ingreso-a-cuenta:" in legal_ref_id for legal_ref_id in compilation.legal)
+    assert any(":iva-indice-temporada:" in legal_ref_id for legal_ref_id in compilation.legal)
+    assert any(":iva-dificil-justificacion-agricola:" in legal_ref_id for legal_ref_id in compilation.legal)
     for source in compilation.authority.projections:
         corpus_path = bundled_path() / catalogues.sources[source.source_ref].corpus_path
-        assert "#anexo-i-iva-" not in corpus_path.with_name(corpus_path.name + ".extracted.json").read_text(
-            encoding="utf-8",
-        )
-        assert "#anexo-i-iva-" not in corpus_path.with_name(corpus_path.name + ".extracted.md").read_text(
+        assert "#m303-anexo-i-iva-" in corpus_path.with_name(corpus_path.name + ".extracted.json").read_text(
             encoding="utf-8",
         )
 

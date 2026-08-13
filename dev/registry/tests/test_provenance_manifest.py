@@ -430,6 +430,42 @@ def test_loader_semantic_digest_detects_value_policy_change() -> None:
     assert loader_semantic_digest(selected_layout) != loader_semantic_digest(plain_layout)
 
 
+def test_loader_semantic_digest_keeps_day_first_date_policy_and_format_distinct() -> None:
+    """A DDMMAAAA field retains both its policy and its exact wire ordering in provenance."""
+    day_first = ExportFieldDefinition.model_validate(
+        {
+            "id": "power-date",
+            "offset": 1,
+            "length": 8,
+            "kind": "casilla",
+            "casilla_id": "01",
+            "data_type": "date",
+            "required": False,
+            "padding": "none",
+            "justification": "none",
+            "date_format": "ddmmaaaa",
+            "signed": False,
+            "value_policy": ExportValuePolicy.DDMMYYYY,
+            "legal_refs": ("ley-27-2014:art-40",),
+            "source_refs": ("aeat-dr-200-2025",),
+        },
+    )
+    year_first = day_first.model_copy(
+        update={
+            "date_format": "aaaammdd",
+            "value_policy": ExportValuePolicy.YYYYMMDD,
+        },
+    )
+    day_first_layout = _one_field_layout().model_copy(
+        update={"records": (_one_field_layout().records[0].model_copy(update={"fields": (day_first,)}),)},
+    )
+    year_first_layout = day_first_layout.model_copy(
+        update={"records": (day_first_layout.records[0].model_copy(update={"fields": (year_first,)}),)},
+    )
+
+    assert loader_semantic_digest(day_first_layout) != loader_semantic_digest(year_first_layout)
+
+
 def test_loader_semantic_digest_detects_allowed_values_change() -> None:
     """The exact reviewed enumeration domain is loader-visible meaning."""
     constrained = ExportFieldDefinition.model_validate(

@@ -103,6 +103,9 @@ PERSISTED_FORMATS: Final[Mapping[str, PersistedFormatClass]] = {
     # inside are already DURABLE under "secure_object"; the file that carries
     # them is the same durability obligation at the container level.
     "bucket_database_file": PersistedFormatClass.DURABLE,
+    # These transition batches carry authoritative lifecycle and effect facts
+    # after real external actions; they cannot be regenerated safely.
+    "operation_journal": PersistedFormatClass.DURABLE,
     # The secret-store index maps HMAC lookup digests to blob references. It
     # is DURABLE rather than regenerable: the digest is an HMAC of the natural
     # key, and while each stored record still carries that key, no rebuild

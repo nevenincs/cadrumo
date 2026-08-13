@@ -13,7 +13,11 @@ from .. import (
     OperationCapabilities,
     OperationExecutorContext,
     OperationInteractionRequest,
+    OperationLeaseObservation,
+    OperationLeaseObservationDisposition,
+    OperationPersistedSnapshot,
     OperationRegistry,
+    OperationReplayPage,
     OperationRequest,
 )
 from .. import __all__ as public_names
@@ -34,6 +38,10 @@ def test_facade_exports_only_declared_public_generic_symbols() -> None:
 def test_representative_contracts_resolve_from_public_facade() -> None:
     assert OperationCapabilities.__module__.endswith("._capabilities")
     assert OperationRequest.__module__.endswith("._models")
+    assert OperationPersistedSnapshot.__module__.endswith("._journal")
+    assert OperationLeaseObservation.__module__.endswith("._leases")
+    assert OperationLeaseObservationDisposition.__module__.endswith("._leases")
+    assert OperationReplayPage.__module__.endswith("._replay")
     assert "OperationEvent" in public_names
     assert OperationExecutorContext.__module__.endswith("._executor")
     assert OperationInteractionRequest.__module__.endswith("._interactions")
@@ -54,6 +62,8 @@ def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
         "_executor",
         "_interactions",
         "_journal",
+        "_leases",
         "_models",
+        "_replay",
         "_registry",
     }

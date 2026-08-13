@@ -537,6 +537,38 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
+    _location(
+        StorageCategory.OPERATION_JOURNAL,
+        "operation-journals",
+        consumer_module="adapters/persistence/operations/_journal.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
+        StorageCategory.PROFILE_CUSTODY_TRANSACTION_JOURNAL,
+        "profile-custody-transactions",
+        consumer_module="application/user_profile/_custody_transactions.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
+        StorageCategory.PROFILE_CUSTODY_RECEIPT,
+        "profile-custody-receipts",
+        consumer_module="application/user_profile/_custody_transactions.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
+    _location(
+        StorageCategory.PROFILE_CUSTODY_HOLD_EVIDENCE,
+        "profile-custody-holds",
+        consumer_module="application/user_profile/_custody_transactions.py",
+        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
+        grouping=StorageGrouping.STATE,
+        override_policy=StorageOverridePolicy.FIXED,
+    ),
 )
 
 

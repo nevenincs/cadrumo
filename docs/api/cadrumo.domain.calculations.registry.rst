@@ -70,7 +70,15 @@ Submodules
    cadrumo.domain.calculations.registry._loader_cache
    cadrumo.domain.calculations.registry._m303_differentiated_deduction_projection
    cadrumo.domain.calculations.registry._m303_exonerado_390_projection
-   cadrumo.domain.calculations.registry._m303_orden_anual
+   cadrumo.domain.calculations.registry._m303_orden_constants
+   cadrumo.domain.calculations.registry._m303_orden_keys
+   cadrumo.domain.calculations.registry._m303_orden_legal
+   cadrumo.domain.calculations.registry._m303_orden_manifest
+   cadrumo.domain.calculations.registry._m303_orden_projection_compiler
+   cadrumo.domain.calculations.registry._m303_orden_projection_models
+   cadrumo.domain.calculations.registry._m303_orden_raw_models
+   cadrumo.domain.calculations.registry._m303_orden_resolution
+   cadrumo.domain.calculations.registry._m303_orden_source
    cadrumo.domain.calculations.registry._m303_prorrata_activity_projection
    cadrumo.domain.calculations.registry._m303_regimen_simplificado_projection
    cadrumo.domain.calculations.registry._m347_threshold

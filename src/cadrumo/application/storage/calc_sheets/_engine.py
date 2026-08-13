@@ -914,14 +914,9 @@ def _untranslatable_internal_only_casillas(
     AEAT-published Diseño de Registros omits (it carries no ``export_refs`` and
     never reaches a filed casilla — the ``modelo-export-mirrors-official-structure``
     rule binds the workbook to the *official* structure). When such a casilla's
-    formula additionally has no closed-form Sheets translation — the M303
-    régimen-simplificado módulos advisory-support figures resolve through the
-    custom runtime-dispatch ops ``m303_resolve_modulos_iva_cuota_devengada`` /
-    ``m303_resolve_modulos_iva_cuota_minima_pct``, which key a per-epígrafe módulo
-    coefficient table with no spreadsheet equivalent — it cannot be rendered as a
-    live workbook formula at all. It is therefore omitted from the export layout
-    entirely: it is neither an official casilla the workbook must mirror nor a
-    translatable cell.
+    formula has no closed-form Sheets translation, it cannot be rendered as a
+    live workbook formula and is omitted from the export layout entirely: it is
+    neither an official casilla the workbook must mirror nor a translatable cell.
 
     A *translatable* ``internal_only`` casilla (e.g. the Modelo 200
     ``bin-aplicada-maxima`` ceiling, computed from ``min``/``max``/``percent``)
@@ -929,15 +924,12 @@ def _untranslatable_internal_only_casillas(
     ops, not to ``internal_only`` as a whole.
 
     The exclusion is computed to a fixpoint. Excluding a casilla removes its cell
-    from the layout, so an ``internal_only`` casilla that references it (e.g. the
-    M303 ``modulos-iva-cuota-derivada`` ``max`` over ``modulos-iva-cuota-devengada``)
-    becomes untranslatable in turn once the dependency is gone -- it must then be
-    excluded as well, or ``_formula_cells`` would fail translating a leaf reference
-    to a cell the layout no longer carries. Each pass rebuilds the probe layout with
-    the exclusions found so far and re-checks the remaining ``internal_only``
-    casillas until no new one is untranslatable. The custom-runtime M303 módulos ops
-    fail on the unsupported op itself regardless of layout, so the first pass always
-    seeds the chain.
+    from the layout, so an ``internal_only`` casilla that references it can become
+    untranslatable in turn once the dependency is gone -- it must then be excluded
+    as well, or ``_formula_cells`` would fail translating a leaf reference to a cell
+    the layout no longer carries. Each pass rebuilds the probe layout with the
+    exclusions found so far and re-checks the remaining ``internal_only`` casillas
+    until no new one is untranslatable.
     """
     formulas = {formula.id: formula for formula in revision.formulas}
     excluded: set[CasillaId] = set()

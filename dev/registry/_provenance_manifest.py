@@ -15,7 +15,7 @@ from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core import M303ProductSoftwareIdentity, sha256_hex
+from cadrumo.core import AeatProductSoftwareIdentity, sha256_hex
 from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.domain.calculations.registry import (
@@ -465,7 +465,7 @@ def build_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
     m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Assemble provenance only from the exact joined and rendered authorities."""
@@ -513,7 +513,7 @@ def emit_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
     m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Write one complete canonical sibling manifest after a fresh tree renders.
@@ -552,7 +552,7 @@ def verify_export_fragment_provenance_manifest(
     field_derivations: tuple[ExportFieldDerivation, ...],
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: M303ProductSoftwareIdentity | None = None,
+    product_software_identity: AeatProductSoftwareIdentity | None = None,
     m303_variable_envelope: M303EnvelopeBytes | None = None,
 ) -> ExportFragmentProvenanceManifest:
     """Refuse current-authority, file, loader-semantic, or derivation drift."""
@@ -706,7 +706,7 @@ def _validate_generation_scope(
 def _m303_envelope_provenance(
     joined: JoinedRecordDesign,
     *,
-    product_software_identity: M303ProductSoftwareIdentity | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
     rendered_envelope: M303EnvelopeBytes | None,
 ) -> M303EnvelopeProvenance | None:
     """Require explicit product authority exactly when DP30300 is generated."""
@@ -767,7 +767,7 @@ def _require_manifest_matches_current_authorities(
     target: ExportFragmentTarget,
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
-    product_software_identity: M303ProductSoftwareIdentity | None,
+    product_software_identity: AeatProductSoftwareIdentity | None,
     m303_variable_envelope: M303EnvelopeBytes | None,
 ) -> None:
     _validate_generation_scope(

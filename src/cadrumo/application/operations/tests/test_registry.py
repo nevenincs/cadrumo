@@ -208,6 +208,7 @@ def test_registry_resolvers_hydrate_payload_mutations_through_the_registered_mod
 
     resolved = registry.resolve_snapshot_json(mutated)
 
+    assert isinstance(resolved.request.payload, RequestPayload)
     assert resolved.request.payload.value == "changed"
     assert resolved != snapshot()
 
@@ -220,9 +221,7 @@ def test_registry_resolvers_refuse_unknown_definition_identity_and_payload_model
     unknown_request = request().model_dump_json().replace("profile.sync", "profile.unknown")
     unknown_snapshot = raw.replace("profile.sync", "profile.unknown")
     wrong_payload_model = raw.replace('"value":"submitted"', '"reference":"unexpected"')
-    wrong_request_payload_model = request().model_dump_json().replace(
-        '"value":"submitted"', '"reference":"unexpected"'
-    )
+    wrong_request_payload_model = request().model_dump_json().replace('"value":"submitted"', '"reference":"unexpected"')
     mismatched_identity = raw.replace('"definition_id":"profile.sync"', '"definition_id":"auth.login"', 1)
     mismatched_subject = raw.replace('"subject_ref":"profile:active"', '"subject_ref":"profile:other"', 1)
 

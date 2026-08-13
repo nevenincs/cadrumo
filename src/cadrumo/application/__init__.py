@@ -62,3 +62,7 @@ See Also:
         Bucket-scoped transaction lifecycle and ledger preflight facade used by
         modelo calculation readiness.
 """
+
+from ._journal_repository import JournalRepositoryBase
+
+__all__ = ["JournalRepositoryBase"]

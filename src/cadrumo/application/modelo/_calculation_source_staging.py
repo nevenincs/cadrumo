@@ -37,7 +37,6 @@ from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry import (
     BindingId,
     InputKind,
-    M303AnnualOrdenSnapshot,
     ModeloRevision,
     RegistrySnapshot,
     RelationId,
@@ -46,7 +45,6 @@ from ...domain.calculations.registry import (
     initial_value_casilla_ids,
     iva_wallet_owned_binding_ids_for_revision,
 )
-from ...domain.iva import M303RegimenSimplificadoScopeDecision
 from ...domain.modelos import WorkUnit
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ..aggregation import (
@@ -101,15 +99,6 @@ class _ProrrataRegularizacionInputChannels:
     relation_values: Mapping[RelationId, Decimal] | None
 
 
-@dataclass(frozen=True, slots=True)
-class _ProrrataRegularizacionCalculationContext:
-    """Period-sensitive context forwarded to the staged registry pass."""
-
-    filing_period_date: date | None
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None
-    m303_annual_orden: M303AnnualOrdenSnapshot | None
-
-
 _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
     "iva.cuota-deducible-total",
     "iva.prorrata-volumen-con-derecho",
@@ -131,8 +120,6 @@ def resolve_prorrata_regularizacion_sources(
     date_binding_values: Mapping[BindingId, date] | None,
     relation_values: Mapping[RelationId, Decimal] | None,
     filing_period_date: date | None,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
-    m303_annual_orden: M303AnnualOrdenSnapshot | None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     observation_repository: CalculationObservationRepository,
 ) -> CalculationSourceResolution:
@@ -161,10 +148,6 @@ def resolve_prorrata_regularizacion_sources(
             source resolution's relation values.
         filing_period_date: The filing period date used for period-sensitive
             resolution.
-        m303_regimen_simplificado_scope: Closed profile-derived scope passed to
-            any staged Modelo 303 registry calculation.
-        m303_annual_orden: Immutable annual-Orden snapshot passed to the
-            staged Modelo 303 registry calculation.
         prorrata_register_repository: Canonical repository for the work unit's
             prorrata register.
         observation_repository: Canonical repository for the work unit's
@@ -191,11 +174,7 @@ def resolve_prorrata_regularizacion_sources(
             date_binding_values=date_binding_values,
             relation_values=relation_values,
         ),
-        calculation_context=_ProrrataRegularizacionCalculationContext(
-            filing_period_date=filing_period_date,
-            m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-            m303_annual_orden=m303_annual_orden,
-        ),
+        filing_period_date=filing_period_date,
     )
     prorrata_resolution = ProrrataRegularizacionSourceResolver(
         current_year_values=materialised.values,
@@ -220,7 +199,7 @@ def _materialise_prorrata_regularizacion_source_values(
     work_unit: WorkUnit,
     source_resolution: CalculationSourceResolution,
     input_channels: _ProrrataRegularizacionInputChannels,
-    calculation_context: _ProrrataRegularizacionCalculationContext,
+    filing_period_date: date | None,
 ) -> SourceResolutionRegistryValues:
     """Materialise the current-year registry inputs for both staged resolvers."""
     snapshot_revision = registry_snapshot.revision
@@ -259,9 +238,7 @@ def _materialise_prorrata_regularizacion_source_values(
             registry_snapshot=registry_snapshot,
             effective_binding_values=effective_binding_values,
         ),
-        filing_period_date=calculation_context.filing_period_date,
-        m303_regimen_simplificado_scope=calculation_context.m303_regimen_simplificado_scope,
-        m303_annual_orden=calculation_context.m303_annual_orden,
+        filing_period_date=filing_period_date,
     ).select(_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS)
 
 
@@ -320,8 +297,6 @@ def materialise_registry_values_for_source_resolution(
     unresolved_binding_ids: tuple[BindingId, ...] = (),
     staging_binding_defaults: Mapping[BindingId, Decimal] | None = None,
     filing_period_date: date | None = None,
-    m303_regimen_simplificado_scope: M303RegimenSimplificadoScopeDecision | None,
-    m303_annual_orden: M303AnnualOrdenSnapshot | None,
 ) -> SourceResolutionRegistryValues:
     """Run the registry engine without persistence so staged resolvers can read current values.
 
@@ -363,8 +338,6 @@ def materialise_registry_values_for_source_resolution(
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=effective_unresolved_binding_ids,
         date_binding_values=date_binding_values or None,
-        m303_regimen_simplificado_scope=m303_regimen_simplificado_scope,
-        m303_annual_orden=m303_annual_orden,
     )
     return SourceResolutionRegistryValues(
         values=MappingProxyType(dict(engine_result.values)),

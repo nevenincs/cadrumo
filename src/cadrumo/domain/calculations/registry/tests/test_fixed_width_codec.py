@@ -271,6 +271,19 @@ def test_schema_refuses_allowed_values_without_the_enumerated_policy() -> None:
             "20240229",
             "20240229",
         ),
+        (
+            {
+                "length": 8,
+                "data_type": "date",
+                "padding": "none",
+                "justification": "none",
+                "date_format": "ddmmaaaa",
+                "value_policy": ExportValuePolicy.DDMMYYYY,
+            },
+            "29022024",
+            "29022024",
+            "29022024",
+        ),
     ),
 )
 def test_complete_reviewed_policy_set_renders_and_parses_exact_wire_bytes(
@@ -324,6 +337,17 @@ def test_enumeration_is_the_only_policy_that_can_combine_with_allowed_values() -
         ),
         (
             {
+                "length": 8,
+                "data_type": "date",
+                "padding": "none",
+                "justification": "none",
+                "date_format": "ddmmaaaa",
+                "value_policy": ExportValuePolicy.DDMMYYYY,
+            },
+            "29022023",
+        ),
+        (
+            {
                 "length": 4,
                 "data_type": "text",
                 "padding": "none",
@@ -348,6 +372,7 @@ def test_policy_wire_mutations_are_refused_before_generic_parsing(
         {"length": 2, "data_type": "text", "value_policy": ExportValuePolicy.UNSIGNED_INTEGER},
         {"length": 5, "data_type": "integer", "value_policy": ExportValuePolicy.IMPLIED_DECIMAL},
         {"length": 8, "data_type": "integer", "value_policy": ExportValuePolicy.YYYYMMDD},
+        {"length": 8, "data_type": "integer", "value_policy": ExportValuePolicy.DDMMYYYY},
         {"length": 4, "value_policy": ExportValuePolicy.DIGIT_STRING},
         {"length": 13, "value_policy": ExportValuePolicy.IDENTIFIER_DIGITS},
         {"length": 3, "value_policy": ExportValuePolicy.FOUR_DIGIT_YEAR},

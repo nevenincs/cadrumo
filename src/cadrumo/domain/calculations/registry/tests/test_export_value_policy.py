@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -140,6 +141,7 @@ def test_schema_hydrates_only_public_policy_tokens() -> None:
         (ExportValuePolicy.TWO_DIGIT_MONTH, 8, "08"),
         (ExportValuePolicy.TWO_DIGIT_DAY, "9", "09"),
         (ExportValuePolicy.YYYYMMDD, date(2024, 2, 29), "20240229"),
+        (ExportValuePolicy.DDMMYYYY, date(2024, 2, 29), "29022024"),
     ),
 )
 def test_reviewed_singleton_policies_project_exact_semantic_values(
@@ -167,6 +169,7 @@ def test_reviewed_singleton_policies_project_exact_semantic_values(
         (ExportValuePolicy.TWO_DIGIT_MONTH, 13),
         (ExportValuePolicy.TWO_DIGIT_DAY, "00"),
         (ExportValuePolicy.YYYYMMDD, "20230229"),
+        (ExportValuePolicy.DDMMYYYY, "29022023"),
     ),
 )
 def test_reviewed_singleton_policies_refuse_noncanonical_semantic_values(
@@ -235,14 +238,13 @@ def test_parser_accepts_exact_policy_wire_tokens_and_refuses_mutations(
 def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_the_projector() -> None:
     src_root = Path("src/cadrumo")
     owner = src_root / "domain/calculations/registry/_export_value_policy.py"
-    tokens = tuple(policy.value for policy in ExportValuePolicy)
+    tokens = frozenset(policy.value for policy in ExportValuePolicy)
     redeclarations = {
-        path.as_posix(): token
+        path.as_posix(): declared
         for path in src_root.rglob("*.py")
         if path != owner
         if "tests" not in path.parts
-        for token in tokens
-        if token in path.read_text(encoding="utf-8")
+        for declared in _export_policy_declarations(path.read_text(encoding="utf-8"), tokens=tokens)
     }
     assert redeclarations == {}
 
@@ -256,3 +258,57 @@ def test_runtime_policy_tokens_have_one_production_owner_and_consumers_import_th
         source = consumer.read_text(encoding="utf-8")
         assert "render_fixed_width_export_field" in source
         assert "._export_value_policy" not in source
+
+
+def _export_policy_declarations(source: str, *, tokens: frozenset[str]) -> frozenset[str]:
+    """Find policy declarations while excluding non-export parser format labels."""
+    tree = ast.parse(source)
+    declarations: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef) and any(_is_enum_base(base) for base in node.bases):
+            declarations.update(
+                value
+                for statement in node.body
+                if isinstance(statement, ast.Assign)
+                for value in (_string_constant(statement.value),)
+                if value in tokens
+            )
+        if isinstance(node, ast.Call):
+            declarations.update(
+                value
+                for keyword in node.keywords
+                if keyword.arg == "value_policy"
+                for value in (_string_constant(keyword.value),)
+                if value in tokens
+            )
+        if isinstance(node, ast.Dict):
+            declarations.update(
+                value
+                for key, item in zip(node.keys, node.values, strict=True)
+                if _string_constant(key) == "value_policy"
+                for value in (_string_constant(item),)
+                if value in tokens
+            )
+        if isinstance(node, ast.Assign) and any(_is_policy_target(target) for target in node.targets):
+            value = _string_constant(node.value)
+            if value in tokens:
+                declarations.add(value)
+        if isinstance(node, ast.AnnAssign) and _is_policy_target(node.target):
+            value = _string_constant(node.value)
+            if value in tokens:
+                declarations.add(value)
+    return frozenset(declarations)
+
+
+def _is_enum_base(node: ast.expr) -> bool:
+    return (isinstance(node, ast.Name) and node.id in {"Enum", "StrEnum"}) or (
+        isinstance(node, ast.Attribute) and node.attr in {"Enum", "StrEnum"}
+    )
+
+
+def _is_policy_target(node: ast.expr) -> bool:
+    return isinstance(node, ast.Name) and node.id.casefold().endswith("value_policy")
+
+
+def _string_constant(node: ast.expr | None) -> str | None:
+    return node.value if isinstance(node, ast.Constant) and isinstance(node.value, str) else None

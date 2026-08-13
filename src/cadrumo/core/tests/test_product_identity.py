@@ -10,10 +10,10 @@ import pytest
 from .. import (
     AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
+    AeatProductSoftwareEvidence,
+    AeatProductSoftwareIdentity,
+    AeatProgramIdentifier,
     IdentityReferent,
-    M303ProductSoftwareEvidence,
-    M303ProductSoftwareIdentity,
-    M303ProgramIdentifier,
     ProductIdentity,
     normalise_product_identity_references,
 )
@@ -25,9 +25,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _IDENTITY_EXPORTS = frozenset(
     {
         "AEAT_AUTHORITY_SHORT_NAME",
-        "M303ProductSoftwareEvidence",
-        "M303ProductSoftwareIdentity",
-        "M303ProgramIdentifier",
+        "AeatProductSoftwareEvidence",
+        "AeatProductSoftwareIdentity",
+        "AeatProgramIdentifier",
         "PRODUCT_IDENTITY",
         "IdentityReferent",
         "ProductIdentity",
@@ -37,9 +37,9 @@ _IDENTITY_EXPORTS = frozenset(
 
 _CORE_IDENTITY_OBJECTS = {
     "AEAT_AUTHORITY_SHORT_NAME": AEAT_AUTHORITY_SHORT_NAME,
-    "M303ProductSoftwareEvidence": M303ProductSoftwareEvidence,
-    "M303ProductSoftwareIdentity": M303ProductSoftwareIdentity,
-    "M303ProgramIdentifier": M303ProgramIdentifier,
+    "AeatProductSoftwareEvidence": AeatProductSoftwareEvidence,
+    "AeatProductSoftwareIdentity": AeatProductSoftwareIdentity,
+    "AeatProgramIdentifier": AeatProgramIdentifier,
     "PRODUCT_IDENTITY": PRODUCT_IDENTITY,
     "IdentityReferent": IdentityReferent,
     "ProductIdentity": ProductIdentity,
@@ -121,13 +121,13 @@ def test_product_identity_is_immutable() -> None:
     assert PRODUCT_IDENTITY.display_name == "CADRUMO"
 
 
-def test_m303_product_software_identity_requires_exact_values_and_evidence() -> None:
-    """DP30300 cannot reuse a filing participant or an implicit product default."""
-    identity = M303ProductSoftwareIdentity(
+def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> None:
+    """An export header cannot reuse a filing participant or an implicit product default."""
+    identity = AeatProductSoftwareIdentity(
         program_identifier="C303",
         developer_tax_id="Y0000001S",
         evidence=(
-            M303ProductSoftwareEvidence(
+            AeatProductSoftwareEvidence(
                 reference="aeat-software-registration:c303",
                 digest="a" * 64,
             ),
@@ -137,16 +137,20 @@ def test_m303_product_software_identity_requires_exact_values_and_evidence() -> 
     assert identity.program_identifier == "C303"
     assert identity.developer_tax_id == "Y0000001S"
     assert identity.evidence[0].reference == "aeat-software-registration:c303"
-    assert "M303_PRODUCT_SOFTWARE_IDENTITY" not in vars(identity_module)
+    assert not {
+        name
+        for name in vars(identity_module)
+        if name.startswith("M303ProductSoftware") or name == "M303ProgramIdentifier"
+    }
 
     with pytest.raises(ValueError, match="program_identifier"):
-        M303ProductSoftwareIdentity(
+        AeatProductSoftwareIdentity(
             program_identifier="303",
             developer_tax_id="Y0000001S",
             evidence=identity.evidence,
         )
     with pytest.raises(ValueError, match="at least 1 item"):
-        M303ProductSoftwareIdentity(
+        AeatProductSoftwareIdentity(
             program_identifier="C303",
             developer_tax_id="Y0000001S",
             evidence=(),
@@ -197,6 +201,9 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
         "AEAT_CSV_MAX_LENGTH",
         "AEAT_CSV_PATTERN",
         "AEAT_RECORD_BATCH_SHAPES",
+        "AeatProductSoftwareEvidence",
+        "AeatProductSoftwareIdentity",
+        "AeatProgramIdentifier",
     }
     assert {name for name in core_all if name.casefold().startswith("aeat")} == allowed_aeat_names
     assert "__getattr__" not in vars(identity_module)

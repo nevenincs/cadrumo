@@ -41,6 +41,12 @@ _MODELO_220_DESIGNS = (
     ("aeat-dr-220-2024", 2024, "2024"),
     ("aeat-dr-220-2025", 2025, "2025"),
 )
+_MODELO_390_DESIGNS = (
+    ("aeat-dr-390-2022", 2022, "2022"),
+    ("aeat-dr-390-2023", 2023, "2023"),
+    ("aeat-dr-390-2024", 2024, "2024"),
+    ("aeat-dr-390-2025", 2025, "2025"),
+)
 
 
 def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
@@ -360,7 +366,7 @@ def test_intermediate_preserves_each_modelo_220_composite_relative_closing(
     )
 
     assert resolved.source.sha256 == intermediate.source.source_sha256
-    assert RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION == 3
+    assert RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION == 4
     assert len(intermediate.variable_envelopes) == 1
     envelope = intermediate.variable_envelopes[0]
     assert isinstance(parser_envelope.closing, RecordDesignCompositeRelativeClosing)
@@ -400,6 +406,59 @@ def test_intermediate_preserves_each_modelo_220_composite_relative_closing(
         "0A",
         "0000>",
     )
+
+
+@pytest.mark.parametrize(("source_ref", "filing_year", "design_epoch"), _MODELO_390_DESIGNS)
+def test_intermediate_classifies_each_modelo_390_page_zero_as_a_total_less_auxiliary_header(
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+) -> None:
+    """Real M390 page zero is retained once as its 13-anchor non-fixed composition header."""
+    source_root = bundled_path()
+    catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
+    parsed = extract_record_design(
+        resolve_record_design_binary(
+            source_root,
+            catalogues.sources,
+            source_ref=source_ref,
+            filing_year=filing_year,
+            design_epoch=design_epoch,
+        ).path,
+    )
+    intermediate = load_record_design_intermediate(
+        source_root,
+        catalogues.sources,
+        source_ref=source_ref,
+        filing_year=filing_year,
+        design_epoch=design_epoch,
+    )
+
+    page_zero = next(sheet for sheet in parsed if sheet.name == "Pág. 0")
+    assert page_zero.total_positions is None
+    assert len(intermediate.auxiliary_envelope_headers) == 1
+    (header,) = intermediate.auxiliary_envelope_headers
+    assert header.sheet == header.record_identity == page_zero.name
+    assert header.emitted_extent == 328
+    assert len(header.fields) == len(page_zero.fields) == 13
+    assert tuple(field.parser_field.offset for field in header.fields) == (
+        1,
+        3,
+        6,
+        7,
+        11,
+        13,
+        18,
+        23,
+        93,
+        97,
+        101,
+        110,
+        323,
+    )
+    assert tuple(field.parser_field.length for field in header.fields) == (2, 3, 1, 4, 2, 5, 5, 70, 4, 4, 9, 213, 6)
+    assert tuple(field.parser_field.content for field in header.fields)[-1] == '"</AUX>"'
+    assert all(sheet.record_identity != page_zero.name for sheet in intermediate.sheets)
 
 
 @pytest.mark.parametrize(

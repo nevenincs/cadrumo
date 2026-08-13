@@ -40,8 +40,6 @@ reconcile_when_present_casilla_ids = [
     "167",
     "iva.autoconsumo.promotor.cuota",
     "iva.prorrata-porcentaje",
-    "modulos-iva-cuota-derivada",
-    "modulos-iva-cuota-devengada",
 ]
 tolerance = "0.01"
 rounding = "money-2"

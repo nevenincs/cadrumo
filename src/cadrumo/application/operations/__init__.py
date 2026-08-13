@@ -11,6 +11,7 @@ from ...core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from .. import JournalRepositoryBase
 from ._capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -53,18 +54,19 @@ from ._interactions import (
     OperationResponseToken,
 )
 from ._journal import (
-    OperationEventCursor,
     OperationEventStream,
     OperationJournal,
-    OperationLeaseDisposition,
     OperationLeaseRepository,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+from ._leases import (
+    OperationLeaseDisposition,
+    OperationLeaseObservation,
+    OperationLeaseObservationDisposition,
     OperationLeaseResult,
     OperationLeaseToken,
     OperationOwnerLease,
-    OperationReplayLimit,
-    OperationReplayPage,
-    OperationReplayStatus,
-    OperationSecureReferenceStore,
 )
 from ._models import (
     OperationDefinitionId,
@@ -84,8 +86,10 @@ from ._registry import (
     OperationReconciliationPolicy,
     OperationRegistry,
 )
+from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage, OperationReplayStatus
 
 __all__ = [
+    "JournalRepositoryBase",
     "OperationActorReference",
     "OperationApplyResponse",
     "OperationBaselinePolicy",
@@ -123,6 +127,8 @@ __all__ = [
     "OperationInteractionResponse",
     "OperationJournal",
     "OperationLeaseDisposition",
+    "OperationLeaseObservation",
+    "OperationLeaseObservationDisposition",
     "OperationLeaseRepository",
     "OperationLeaseResult",
     "OperationLeaseToken",
@@ -132,6 +138,7 @@ __all__ = [
     "OperationNoticeEvent",
     "OperationOwnedResource",
     "OperationOwnerLease",
+    "OperationPersistedSnapshot",
     "OperationPhaseEvent",
     "OperationProgressEvent",
     "OperationReconciliationPolicy",
