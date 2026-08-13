@@ -68,70 +68,116 @@ class OperationPersistedSnapshot(BaseModel):
     terminal_receipt: OperationTerminalReceipt | None = None
     events: tuple[OperationEvent, ...] = ()
 
+    @property
+    def operation_id(self) -> OperationId:
+        """Return the filename identity consumed by the journal substrate."""
+        return self.identity.operation_id
+
     @model_validator(mode="after")
     def _validate_persisted_snapshot(self) -> OperationPersistedSnapshot:
         validate_utc_aware(self.started_at)
         validate_utc_aware(self.updated_at)
         if self.updated_at < self.started_at:
             raise ValueError("persisted operation snapshot cannot update before it starts")
-        self._validate_terminal_state()
-        self._validate_events()
+        _validate_terminal_state(self)
+        _validate_events(self)
         return self
 
-    def _validate_terminal_state(self) -> None:
-        terminal = self.lifecycle is OperationLifecycle.TERMINAL
-        if terminal != (self.terminal_condition is not None):
-            raise ValueError("terminal lifecycle requires exactly one terminal condition")
-        if terminal != (self.terminal_receipt is not None):
-            raise ValueError("terminal lifecycle requires exactly one terminal receipt")
-        if self.terminal_receipt is None:
-            return
-        receipt = self.terminal_receipt
-        if receipt.identity != self.identity:
-            raise ValueError("terminal receipt identity does not match persisted operation snapshot")
-        if receipt.revision != self.revision:
-            raise ValueError("terminal receipt revision does not match persisted operation snapshot")
-        if receipt.condition is not self.terminal_condition:
-            raise ValueError("terminal receipt condition does not match persisted operation snapshot")
-        if receipt.effect is not self.effect:
-            raise ValueError("terminal receipt effect does not match persisted operation snapshot")
-        if receipt.settled_at != self.updated_at:
-            raise ValueError("terminal receipt settlement time does not match persisted operation snapshot")
 
-    def _validate_events(self) -> None:
-        if not self.events:
-            if self.lifecycle is OperationLifecycle.TERMINAL:
-                raise ValueError("terminal persisted operation snapshot requires one terminal event")
-            if self.phase_code is not None:
-                raise ValueError("persisted snapshot without phase events requires no phase code")
-            return
-        if any(event.identity != self.identity for event in self.events):
-            raise ValueError("journal event identity does not match persisted operation snapshot")
-        if any(event.revision != self.revision for event in self.events):
-            raise ValueError("journal event revision does not match persisted operation snapshot")
-        sequences = tuple(event.sequence for event in self.events)
-        if any(current != previous + 1 for previous, current in pairwise(sequences)):
-            raise ValueError("journal event sequences must be contiguous")
-        if sequences[-1] != self.event_cursor:
-            raise ValueError("persisted event cursor must equal the final journal event sequence")
-        timestamps = tuple(event.timestamp for event in self.events)
-        if any(current < previous for previous, current in pairwise(timestamps)):
-            raise ValueError("journal event timestamps must be nondecreasing")
-        if self.updated_at != timestamps[-1]:
-            raise ValueError("persisted updated time must equal the final journal event timestamp")
-        phase_events = tuple(event for event in self.events if isinstance(event, OperationPhaseEvent))
-        latest_phase_code = phase_events[-1].phase_code if phase_events else None
-        if self.phase_code != latest_phase_code:
-            raise ValueError("persisted phase code must equal the latest journal phase event")
-        terminal_events = tuple(event for event in self.events if isinstance(event, OperationTerminalEvent))
-        if self.lifecycle is not OperationLifecycle.TERMINAL:
-            if terminal_events:
-                raise ValueError("non-terminal persisted operation snapshot forbids terminal events")
-            return
-        if len(terminal_events) != 1 or not isinstance(self.events[-1], OperationTerminalEvent):
-            raise ValueError("terminal persisted operation snapshot requires exactly one final terminal event")
-        if self.events[-1].receipt != self.terminal_receipt:
-            raise ValueError("terminal journal event receipt does not match persisted operation snapshot")
+def _validate_terminal_state(snapshot: OperationPersistedSnapshot) -> None:
+    """Validate lifecycle markers and the optional terminal receipt."""
+    terminal = snapshot.lifecycle is OperationLifecycle.TERMINAL
+    if terminal != (snapshot.terminal_condition is not None):
+        raise ValueError("terminal lifecycle requires exactly one terminal condition")
+    if terminal != (snapshot.terminal_receipt is not None):
+        raise ValueError("terminal lifecycle requires exactly one terminal receipt")
+    if snapshot.terminal_receipt is not None:
+        _validate_terminal_receipt(snapshot)
+
+
+def _validate_terminal_receipt(snapshot: OperationPersistedSnapshot) -> None:
+    """Validate that a terminal receipt agrees with its enclosing snapshot."""
+    receipt = snapshot.terminal_receipt
+    if receipt is None:
+        return
+    if receipt.identity != snapshot.identity:
+        raise ValueError("terminal receipt identity does not match persisted operation snapshot")
+    if receipt.revision != snapshot.revision:
+        raise ValueError("terminal receipt revision does not match persisted operation snapshot")
+    if receipt.condition is not snapshot.terminal_condition:
+        raise ValueError("terminal receipt condition does not match persisted operation snapshot")
+    if receipt.effect is not snapshot.effect:
+        raise ValueError("terminal receipt effect does not match persisted operation snapshot")
+    if receipt.settled_at != snapshot.updated_at:
+        raise ValueError("terminal receipt settlement time does not match persisted operation snapshot")
+
+
+def _validate_events(snapshot: OperationPersistedSnapshot) -> None:
+    """Validate event identity, ordering, derived fields, and terminal shape."""
+    if not snapshot.events:
+        _validate_empty_events(snapshot)
+        return
+    _validate_event_identity_and_revision(snapshot)
+    _validate_event_sequences(snapshot)
+    _validate_event_timeline(snapshot)
+    _validate_phase_code(snapshot)
+    _validate_terminal_events(snapshot)
+
+
+def _validate_empty_events(snapshot: OperationPersistedSnapshot) -> None:
+    """Validate the only legal event-free snapshot states."""
+    if snapshot.lifecycle is OperationLifecycle.TERMINAL:
+        raise ValueError("terminal persisted operation snapshot requires one terminal event")
+    if snapshot.phase_code is not None:
+        raise ValueError("persisted snapshot without phase events requires no phase code")
+
+
+def _validate_event_identity_and_revision(snapshot: OperationPersistedSnapshot) -> None:
+    """Ensure every event belongs to the same operation revision."""
+    if any(event.identity != snapshot.identity for event in snapshot.events):
+        raise ValueError("journal event identity does not match persisted operation snapshot")
+    if any(event.revision != snapshot.revision for event in snapshot.events):
+        raise ValueError("journal event revision does not match persisted operation snapshot")
+
+
+def _validate_event_sequences(snapshot: OperationPersistedSnapshot) -> None:
+    """Ensure event sequence numbers are contiguous and cursor-aligned."""
+    sequences = tuple(event.sequence for event in snapshot.events)
+    if any(current != previous + 1 for previous, current in pairwise(sequences)):
+        raise ValueError("journal event sequences must be contiguous")
+    if sequences[-1] != snapshot.event_cursor:
+        raise ValueError("persisted event cursor must equal the final journal event sequence")
+
+
+def _validate_event_timeline(snapshot: OperationPersistedSnapshot) -> None:
+    """Ensure event timestamps are monotonic and close the snapshot timeline."""
+    timestamps = tuple(event.timestamp for event in snapshot.events)
+    if any(current < previous for previous, current in pairwise(timestamps)):
+        raise ValueError("journal event timestamps must be nondecreasing")
+    if snapshot.updated_at != timestamps[-1]:
+        raise ValueError("persisted updated time must equal the final journal event timestamp")
+
+
+def _validate_phase_code(snapshot: OperationPersistedSnapshot) -> None:
+    """Ensure the snapshot phase mirrors the latest phase event."""
+    phase_events = tuple(event for event in snapshot.events if isinstance(event, OperationPhaseEvent))
+    latest_phase_code = phase_events[-1].phase_code if phase_events else None
+    if snapshot.phase_code != latest_phase_code:
+        raise ValueError("persisted phase code must equal the latest journal phase event")
+
+
+def _validate_terminal_events(snapshot: OperationPersistedSnapshot) -> None:
+    """Ensure terminal events agree with the snapshot lifecycle and receipt."""
+    terminal_events = tuple(event for event in snapshot.events if isinstance(event, OperationTerminalEvent))
+    if snapshot.lifecycle is not OperationLifecycle.TERMINAL:
+        if terminal_events:
+            raise ValueError("non-terminal persisted operation snapshot forbids terminal events")
+        return
+    last_event = snapshot.events[-1]
+    if len(terminal_events) != 1 or not isinstance(last_event, OperationTerminalEvent):
+        raise ValueError("terminal persisted operation snapshot requires exactly one final terminal event")
+    if last_event.receipt != snapshot.terminal_receipt:
+        raise ValueError("terminal journal event receipt does not match persisted operation snapshot")
 
 
 class OperationOwnerLease(BaseModel):
@@ -422,7 +468,9 @@ class OperationSecureReferenceStore(Protocol):
         self,
         reference: ContentDigest,
         operand_type: type[OperandT],
-    ) -> OperandT: ...
+    ) -> OperandT:
+        del operand_type
+        raise NotImplementedError
 
 
 __all__ = [

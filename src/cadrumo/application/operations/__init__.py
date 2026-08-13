@@ -11,6 +11,7 @@ from ...core import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from .. import JournalRepositoryBase
 from ._capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -87,6 +88,7 @@ from ._registry import (
 )
 
 __all__ = [
+    "JournalRepositoryBase",
     "OperationActorReference",
     "OperationApplyResponse",
     "OperationBaselinePolicy",

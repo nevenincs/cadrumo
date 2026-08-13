@@ -358,6 +358,10 @@ class StorageCategory(StrEnum):
     ACTIVE_PROFILE_POINTER = "active-profile-pointer"
     ROOT_FALLBACK_DATABASE = "root-fallback-database"
     CONFIG_RESET_JOURNAL = "config-reset-journal"
+    OPERATION_JOURNAL = "operation-journal"
+    PROFILE_CUSTODY_TRANSACTION_JOURNAL = "profile-custody-transaction-journal"
+    PROFILE_CUSTODY_RECEIPT = "profile-custody-receipt"
+    PROFILE_CUSTODY_HOLD_EVIDENCE = "profile-custody-hold-evidence"
 
     # ── Fixed layout: per-bucket ────────────────────────────────────────────
     BUCKET_DATABASE = "bucket.db"

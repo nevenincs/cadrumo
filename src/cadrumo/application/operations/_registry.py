@@ -32,6 +32,25 @@ class _OperationSnapshotResolutionHeader(BaseModel):
     identity: OperationIdentity
 
 
+def _specialize_request_model(request_type: type[BaseModel]) -> type[OperationRequest[BaseModel]]:
+    """Bind the runtime registry model while erasing only its payload subtype.
+
+    Pydantic's generic ``__class_getitem__`` is the runtime dispatch point for
+    a model class selected from the validated registry. Static typing cannot
+    express a type parameter supplied by a value at runtime, so this boundary
+    cast records the sound part of the contract: the returned class is an
+    ``OperationRequest`` whose payload is at least a ``BaseModel``.
+    """
+    specialized = OperationRequest.__class_getitem__(request_type)
+    return cast(type[OperationRequest[BaseModel]], specialized)
+
+
+def _specialize_snapshot_model(request_type: type[BaseModel]) -> type[OperationSnapshot[BaseModel]]:
+    """Bind the runtime registry model for one persisted snapshot."""
+    specialized = OperationSnapshot.__class_getitem__(request_type)
+    return cast(type[OperationSnapshot[BaseModel]], specialized)
+
+
 class OperationReconciliationPolicy(StrEnum):
     """Closed owner-loss behavior declared by an operation definition."""
 
@@ -136,13 +155,13 @@ class OperationRegistry(BaseModel):
         """Hydrate one request through the concrete model registered for its definition."""
         header = _OperationRequestResolutionHeader.model_validate_json(raw)
         request_type = self.lookup(header.definition_id).request_type
-        return OperationRequest[request_type].model_validate_json(raw)
+        return _specialize_request_model(request_type).model_validate_json(raw)
 
     def resolve_snapshot_json(self, raw: str | bytes) -> OperationSnapshot[BaseModel]:
         """Hydrate one snapshot through the concrete model registered for its definition."""
         header = _OperationSnapshotResolutionHeader.model_validate_json(raw)
         request_type = self.lookup(header.identity.definition_id).request_type
-        return OperationSnapshot[request_type].model_validate_json(raw)
+        return _specialize_snapshot_model(request_type).model_validate_json(raw)
 
 
 __all__ = [

@@ -63,6 +63,7 @@ PROFILE_COMMIT_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_COMMI
 #: and read here, so the on-disk hierarchy has one inventory rather than two
 #: agreeing constants.
 CONFIG_RESET_JOURNAL_DIRNAME = storage_location(StorageCategory.CONFIG_RESET_JOURNAL).subpath
+OPERATION_JOURNAL_DIRNAME = storage_location(StorageCategory.OPERATION_JOURNAL).subpath
 #: The six names below back the parameterised fan-out grammars further down this
 #: module (run-trace, LLM usage/telemetry logs, the token acquisition lock, and
 #: the two cache families). Each was previously hand-typed straight into its
@@ -276,6 +277,15 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         owner="cadrumo.application.config_reset",
         anchor=StoragePathAnchor.STORAGE_ROOT,
         segment=CONFIG_RESET_JOURNAL_DIRNAME,
+    ),
+    StoragePathDefinition(
+        key="operation_journal",
+        kind=StoragePathKind.FILE,
+        grammar=f"<root>/{OPERATION_JOURNAL_DIRNAME}/<operation_id>.json",
+        owner="cadrumo.adapters.persistence.operations",
+        anchor=StoragePathAnchor.STORAGE_ROOT,
+        segment=OPERATION_JOURNAL_DIRNAME,
+        schema_version=1,
     ),
     StoragePathDefinition(
         key="secure_objects_table",

@@ -1,0 +1,209 @@
+"""Real-filesystem contracts for the operation journal adapter."""
+
+from __future__ import annotations
+
+import asyncio
+import json
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
+import pytest
+
+from .....application.operations import (
+    OperationIdentity,
+    OperationOwnerLease,
+    OperationPersistedSnapshot,
+    OperationPhaseEvent,
+    OperationReplayStatus,
+    OperationTerminalEvent,
+    OperationTerminalReceipt,
+)
+from .....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...storage import RepositoryError
+from .._journal import OperationJournalRepository
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_STARTED = datetime(2026, 8, 13, 20, tzinfo=UTC)
+
+
+def _snapshot(*, revision: int, sequence: int) -> OperationPersistedSnapshot:
+    identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
+    updated_at = _STARTED + timedelta(minutes=revision)
+    event = OperationPhaseEvent(
+        identity=identity,
+        revision=revision,
+        sequence=sequence,
+        timestamp=updated_at,
+        code=f"phase.{revision}",
+        phase_code=f"phase.{revision}",
+    )
+    return OperationPersistedSnapshot(
+        identity=identity,
+        request_reference="d" * 64,
+        revision=revision,
+        lifecycle=OperationLifecycle.RUNNING,
+        phase_code=event.phase_code,
+        started_at=_STARTED,
+        updated_at=updated_at,
+        event_cursor=sequence,
+        events=(event,),
+    )
+
+
+def _lease(operation_id: str = "a" * 64) -> OperationOwnerLease:
+    return OperationOwnerLease(
+        operation_id=operation_id,
+        owner_id="b" * 64,
+        token="c" * 64,
+        acquired_at=_STARTED,
+        expires_at=_STARTED + timedelta(hours=1),
+    )
+
+
+def _commit_history(storage_root: Path) -> tuple[OperationJournalRepository, tuple[OperationPersistedSnapshot, ...]]:
+    """Write three real revision transitions with a retained event per revision."""
+    repository = OperationJournalRepository(storage_root=storage_root)
+    snapshots = tuple(_snapshot(revision=revision, sequence=revision + 1) for revision in range(3))
+    for expected_revision, snapshot in zip((0, 0, 1), snapshots, strict=True):
+        asyncio.run(repository.commit(snapshot, expected_revision=expected_revision, lease=_lease()))
+    return repository, snapshots
+
+
+def _terminal_event() -> OperationTerminalEvent:
+    """Build a valid early terminal event used only to corrupt stored history."""
+    identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
+    receipt = OperationTerminalReceipt(
+        identity=identity,
+        revision=0,
+        condition=OperationTerminalCondition.SUCCEEDED,
+        effect=OperationEffect.NONE,
+        settled_at=_STARTED,
+        result_ref="result:complete",
+    )
+    return OperationTerminalEvent(
+        identity=identity,
+        revision=0,
+        sequence=1,
+        timestamp=_STARTED,
+        code="operation.terminal",
+        receipt=receipt,
+    )
+
+
+def test_operation_journal_commits_cas_transitions_and_refuses_mutations(tmp_path: Path) -> None:
+    """The on-disk record advances once and all rejected writes leave it intact."""
+    repository = OperationJournalRepository(storage_root=tmp_path)
+    initial = _snapshot(revision=0, sequence=1)
+    asyncio.run(repository.commit(initial, expected_revision=0, lease=_lease()))
+    path = tmp_path / "operation-journals" / f"{initial.operation_id}.json"
+    original_bytes = path.read_bytes()
+
+    with pytest.raises(RepositoryError, match="successor revision"):
+        asyncio.run(repository.commit(initial, expected_revision=0, lease=_lease()))
+    assert path.read_bytes() == original_bytes
+
+    with pytest.raises(RepositoryError, match="stale"):
+        asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=1, lease=_lease()))
+    assert path.read_bytes() == original_bytes
+
+    with pytest.raises(RepositoryError, match="lease"):
+        asyncio.run(repository.commit(_snapshot(revision=1, sequence=2), expected_revision=0, lease=_lease("e" * 64)))
+    assert path.read_bytes() == original_bytes
+
+    with pytest.raises(RepositoryError, match="cursor"):
+        asyncio.run(repository.commit(_snapshot(revision=1, sequence=3), expected_revision=0, lease=_lease()))
+    assert path.read_bytes() == original_bytes
+
+    successor = _snapshot(revision=1, sequence=2)
+    asyncio.run(repository.commit(successor, expected_revision=0, lease=_lease()))
+    reloaded = OperationJournalRepository(storage_root=tmp_path)
+    assert asyncio.run(reloaded.load(initial.operation_id)) == successor
+    raw = path.read_text(encoding="utf-8")
+    assert '"history"' in raw
+    assert '"sequence": 1' in raw
+    assert '"sequence": 2' in raw
+    assert "operand" not in raw
+
+
+def test_operation_journal_requires_coherent_initial_history(tmp_path: Path) -> None:
+    """Creation permits cursor zero without events or an event history starting at one."""
+    repository = OperationJournalRepository(storage_root=tmp_path)
+    identity = OperationIdentity(operation_id="a" * 64, definition_id="test.operation", subject_ref="subject")
+    empty = OperationPersistedSnapshot(
+        identity=identity,
+        request_reference="d" * 64,
+        revision=0,
+        lifecycle=OperationLifecycle.RUNNING,
+        started_at=_STARTED,
+        updated_at=_STARTED,
+    )
+    asyncio.run(repository.commit(empty, expected_revision=0, lease=_lease()))
+    assert (
+        asyncio.run(repository.read_after(identity.operation_id, 0, limit=1)).status is OperationReplayStatus.CAUGHT_UP
+    )
+
+    malformed_root = tmp_path / "malformed"
+    malformed = OperationJournalRepository(storage_root=malformed_root)
+    with pytest.raises(RepositoryError, match="begin at sequence one"):
+        asyncio.run(malformed.commit(_snapshot(revision=0, sequence=2), expected_revision=0, lease=_lease()))
+
+
+def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_path: Path) -> None:
+    """Retained history supports unknown, page, and caught-up replay without expiry claims."""
+    repository, snapshots = _commit_history(tmp_path)
+    operation_id = snapshots[-1].operation_id
+
+    unknown = asyncio.run(repository.read_after("e" * 64, 0, limit=2))
+    assert unknown.status is OperationReplayStatus.UNKNOWN_OPERATION
+    assert unknown.events == ()
+    assert unknown.next_cursor == 0
+
+    first_page = asyncio.run(repository.read_after(operation_id, 0, limit=2))
+    assert first_page.status is OperationReplayStatus.PAGE
+    assert tuple(event.sequence for event in first_page.events) == (1, 2)
+    assert first_page.next_cursor == 2
+    assert asyncio.run(repository.read_after(operation_id, 0, limit=2)) == first_page
+
+    second_page = asyncio.run(repository.read_after(operation_id, first_page.next_cursor, limit=1))
+    assert second_page.status is OperationReplayStatus.PAGE
+    assert tuple(event.sequence for event in second_page.events) == (3,)
+    assert second_page.next_cursor == 3
+
+    caught_up = asyncio.run(repository.read_after(operation_id, second_page.next_cursor, limit=2))
+    assert caught_up.status is OperationReplayStatus.CAUGHT_UP
+    assert caught_up.events == ()
+    assert caught_up.next_cursor == second_page.next_cursor
+
+
+@pytest.mark.parametrize(
+    "corruption",
+    ("identity", "sequence", "timestamp", "revision", "terminal", "snapshot_tail"),
+)
+def test_operation_journal_refuses_raw_history_corruption(tmp_path: Path, corruption: str) -> None:
+    """A load rejects every cross-revision history invariant broken on disk."""
+    repository, snapshots = _commit_history(tmp_path)
+    path = tmp_path / "operation-journals" / f"{snapshots[-1].operation_id}.json"
+    document = json.loads(path.read_text(encoding="utf-8"))
+    history = document["history"]
+    assert isinstance(history, list)
+
+    match corruption:
+        case "identity":
+            history[-1]["identity"]["subject_ref"] = "other-subject"
+        case "sequence":
+            history[0]["sequence"] = 2
+        case "timestamp":
+            history[0]["timestamp"] = "2026-08-13T20:03:00Z"
+        case "revision":
+            history[1]["revision"] = 2
+        case "terminal":
+            history[0] = _terminal_event().model_dump(mode="json")
+        case "snapshot_tail":
+            history[-1]["code"] = "phase.altered"
+        case _:
+            raise AssertionError(f"unexpected corruption case: {corruption}")
+    path.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(RepositoryError, match="invalid operation journal"):
+        asyncio.run(repository.load(snapshots[-1].operation_id))

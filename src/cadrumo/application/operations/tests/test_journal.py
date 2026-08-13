@@ -238,6 +238,7 @@ def test_persisted_snapshot_binds_event_identity_revision_sequence_and_cursor() 
 def test_persisted_snapshot_binds_event_derived_phase_and_timeline() -> None:
     persisted = _persisted_snapshot()
     first = persisted.events[0]
+    assert isinstance(first, OperationPhaseEvent)
     second = first.model_copy(
         update={
             "sequence": 2,
@@ -292,14 +293,16 @@ def test_persisted_snapshot_binds_event_derived_phase_and_timeline() -> None:
 
 def test_persisted_terminal_snapshot_binds_exact_terminal_event_and_receipt() -> None:
     persisted = _terminal_persisted_snapshot()
+    event = persisted.events[0]
+    assert isinstance(event, OperationTerminalEvent)
 
-    assert persisted.events[0].receipt == persisted.terminal_receipt
+    assert event.receipt == persisted.terminal_receipt
     assert persisted.phase_code is None
     alternate_receipt = persisted.terminal_receipt.model_copy(update={"result_ref": "result:other"})
     for mutation, message in (
         ({"events": ()}, "one terminal event"),
         (
-            {"events": (persisted.events[0].model_copy(update={"receipt": alternate_receipt}),)},
+            {"events": (event.model_copy(update={"receipt": alternate_receipt}),)},
             "terminal journal event receipt",
         ),
         ({"terminal_receipt": alternate_receipt}, "terminal journal event receipt"),
@@ -309,7 +312,6 @@ def test_persisted_terminal_snapshot_binds_exact_terminal_event_and_receipt() ->
         with pytest.raises(ValidationError, match=message):
             OperationPersistedSnapshot.model_validate(changed)
 
-    event = persisted.events[0]
     after_terminal = OperationPhaseEvent(
         identity=event.identity,
         revision=event.revision,
