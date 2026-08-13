@@ -31,10 +31,11 @@ Three ratcheting/pinned checks, backed by the checked-in
   steady state (baseline ``[]``) both
   checks are equivalent to "zero production Family-1 violations".
 - **Family 2 (shim / pure-reexport modules).** The gate asserts the current
-  shim set is EXACTLY the 6 documented bridges named in the baseline -- not a
-  ceiling, an equality. A new undocumented shim fails; a bridge that stops
-  being a shim (a real implementation lands in it) also fails, forcing the
-  baseline to be updated deliberately rather than silently drifting.
+  shim set is EXACTLY the dynamically loaded baseline set -- not a ceiling,
+  an equality. A new undocumented shim fails; a baseline entry that stops
+  being a shim also fails, forcing the baseline to be updated deliberately
+  rather than silently drifting. When the baseline is empty, this is the
+  canonical zero-shim gate without a mirrored count in test prose.
 - **Family 3 (genuine multi-sourced/duplicate symbols).** The gate asserts (a)
   none of the 7 symbols retired from the app-layer umbrella facades have
   reappeared as multi-facade symbols, and (b) every OTHER
@@ -465,12 +466,12 @@ def test_test_debt_occurrence_ordinals_are_dense_and_start_at_one() -> None:
     )
 
 
-def test_family2_shim_modules_are_exactly_the_documented_bridges() -> None:
-    """The Family-2 shim/pure-reexport set must equal the 6 documented bridges exactly.
+def test_family2_shim_modules_are_exactly_the_dynamic_baseline() -> None:
+    """The Family-2 shim/pure-reexport set must equal its loaded baseline exactly.
 
     A new undocumented shim fails (something is bypassing a facade with an
-    ad-hoc re-export module); a bridge silently ceasing to be a shim also
-    fails (the baseline must be updated deliberately, not drift unnoticed).
+    ad-hoc re-export module); a baseline entry silently ceasing to be a shim
+    also fails (the baseline must be updated deliberately, not drift unnoticed).
     """
     baseline = _load_baseline()
     baseline_paths = frozenset(baseline["family2_shim_modules"]["paths"])
