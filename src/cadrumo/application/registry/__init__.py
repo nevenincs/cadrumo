@@ -93,6 +93,7 @@ from ...domain.calculations.registry import (
     resolve_relation_values_from_observations as _resolve_relation_values_from_observations,
 )
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
+from ...domain.calculations.registry import verification_tolerance_or_exact as _verification_tolerance_or_exact
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.period import calculation_filing_date as _calculation_filing_date
 from ._conformance import (
@@ -359,34 +360,6 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     )
 
 
-def _registry_verification_tolerance(snapshot: _RegistrySnapshot) -> Decimal:
-    """Return the registry's own published tolerance for this snapshot.
-
-    The tolerance below which two casilla values are treated as agreeing is a
-    REGULATORY value, versioned by filing year and revision: the registry
-    declares it per verification expectation and folds the STRICTEST across
-    them. Some revisions publish one cent, others publish ``0.00`` and so
-    demand exact equality. Hardcoding a cent here would silently absorb a
-    one-cent under-declaration on every revision of the second kind. Mirrors
-    :func:`application.modelo._pulled_filing_reconcile._registry_reconcile_tolerance`,
-    which resolves the same value for the sibling pulled-filing comparison.
-
-    Returns:
-        The published tolerance, or exact equality (``0``) when the revision
-        declares no verification expectations at all. Exact is the deliberate
-        fallback, decided explicitly on this path rather than inherited: with
-        no published contract there is no authority to widen the comparison,
-        and guessing too strict surfaces as a visible finding while guessing
-        too loose would be a silent omission.
-    """
-    from ...domain.calculations.registry import RegistryValidationError
-
-    try:
-        return snapshot.verification_policy().tolerance
-    except RegistryValidationError:
-        return Decimal("0")
-
-
 def verify_filed_state(
     *,
     observation_path: Path,
@@ -467,7 +440,7 @@ def verify_filed_state(
         calculation,
         registry_observation,
         required_casilla_ids=casilla_ids,
-        tolerance=_registry_verification_tolerance(snapshot),
+        tolerance=_verification_tolerance_or_exact(snapshot),
     )
     return FiledStateVerificationReport(
         observation_path=str(observation_path),

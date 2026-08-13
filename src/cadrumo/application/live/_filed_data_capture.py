@@ -65,6 +65,7 @@ from ...core import (
     require_active_bucket_id,
 )
 from ...core.config import load_settings
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
@@ -74,6 +75,7 @@ from ...domain.calculations.registry import (
     ModeloRevision,
     RegistryModeloObservation,
     ValidatedRegistryAuthority,
+    verification_tolerance_or_exact,
 )
 from ..storage.sync_runs import (
     SyncRunRecordRepositoryProtocol,
@@ -1449,37 +1451,6 @@ def filed_period_selection_rows(
     )
 
 
-def _registry_recapture_tolerance(*, modelo: str, ejercicio: int, period: Period) -> Decimal:
-    """Return the registry-published tolerance for this filing triple, or exact equality.
-
-    Both sides of :func:`casillas_a_recapture_would_change` are AEAT-sourced
-    captures of the SAME underlying filing -- a fresh re-capture against the
-    previously stored one -- so the rounding-artefact rationale that grounds
-    ``detect_casilla_divergences`` and ``compare_calculation_to_filed_observation``
-    applies here too: a tolerance is CORRECT for this comparator's use, unlike
-    the revision-vs-revision delta in ``application/modelo/_projection.py``,
-    whose both sides are the application's own arithmetic and where a tolerance
-    would hide a real change rather than absorb rounding noise. This is a
-    distinct axis from the absence contract documented on the caller, which is
-    what makes this comparator non-substitutable with the other three; the
-    tolerance question is decided separately.
-
-    Falls back to exact equality (``0``) whenever no registry authority resolves
-    for the triple, or the resolved revision declares no verification
-    expectations at all: with no published contract there is no authority to
-    widen the comparison, mirroring
-    :func:`~application.modelo._pulled_filing_reconcile._registry_reconcile_tolerance`'s
-    identical published-tolerance-or-exact-equality contract.
-    """
-    from ...core.errors import CadrumoError
-
-    try:
-        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=ejercicio, period=period.registry_token)
-        return snapshot.verification_policy().tolerance
-    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
-        return Decimal("0")
-
-
 def casillas_a_recapture_would_change(
     fresh: FiledDeclaracionObservation,
     stored: RegistryModeloObservation,
@@ -1511,11 +1482,11 @@ def casillas_a_recapture_would_change(
     Args:
         fresh: The newly captured observation.
         stored: The prior stamped registry observation for the same key.
-        tolerance: Maximum absolute delta that does not count as a change. THE
-            REGISTRY IS THE AUTHORITY FOR THIS VALUE; resolve it with
-            :func:`_registry_recapture_tolerance` and pass it. The default is
-            exact equality, matching the caller's resolved fallback for a
-            triple with no published contract.
+        tolerance: Maximum absolute delta that does not count as a change. The
+            registry owns this value through
+            :func:`~cadrumo.domain.calculations.registry.verification_tolerance_or_exact`.
+            The default is exact equality, matching the caller's resolved
+            fallback for a triple with no published contract.
 
     Returns:
         The changed casilla ids, sorted, so the notice text is deterministic.
@@ -1858,11 +1829,16 @@ def recapture_divergence_notices(
         stored = repo.load_observation(observation.modelo, observation.period)
         if stored is None:
             continue
-        tolerance = _registry_recapture_tolerance(
-            modelo=observation.modelo,
-            ejercicio=observation.ejercicio,
-            period=observation.period,
-        )
+        try:
+            snapshot = resources().modelos.authority.snapshot(
+                observation.modelo,
+                filing_year=observation.ejercicio,
+                period=observation.period.registry_token,
+            )
+        except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
+            tolerance = Decimal("0")
+        else:
+            tolerance = verification_tolerance_or_exact(snapshot)
         changed = casillas_a_recapture_would_change(observation, stored.observation, tolerance=tolerance)
         if not changed:
             continue

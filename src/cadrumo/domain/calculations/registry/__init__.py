@@ -316,6 +316,7 @@ from ._export_parse import (
     xml_dictionary_entries,
 )
 from ._filed_state import RegistryFiledStateComparison, compare_calculation_to_filed_observation
+from ._verification_tolerance import verification_tolerance_or_exact
 from ._formula_runtime import (
     RegistryCalculationEntry,
     RegistryCalculationResult,
@@ -1280,6 +1281,7 @@ __all__ = [
     "validate_text_input_targets",
     "validated_text_input_casilla_ids",
     "verification_predicate_operator_name",
+    "verification_tolerance_or_exact",
     "verify_legal_catalogue",
     "verify_legal_reference",
     "verify_source_catalogue",

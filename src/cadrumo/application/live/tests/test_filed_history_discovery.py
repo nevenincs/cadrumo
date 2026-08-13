@@ -29,13 +29,11 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailabilityReport,
 )
 from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, validated_casilla_id
-from ....core.resources import resources
 from ....domain.deadlines import TaxpayerProfile
 from .._filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,
-    _registry_recapture_tolerance,
     casillas_a_recapture_would_change,
     classify_register_scoping_signal,
     expected_filed_declaration_grid,
@@ -731,35 +729,6 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
         ),
     )
     assert casillas_a_recapture_would_change(_filed_130_observation_for_tests(), stored_without_03) == ()
-
-
-def test_registry_recapture_tolerance_reads_the_published_modelo_130_value() -> None:
-    """The tolerance comes from the registry, not a literal.
-
-    Modelo 130's 2026 1T revision publishes a real one-cent tolerance -- pinned
-    against the LIVE bundled registry rather than a hand-typed expectation, so a
-    future revision change would move this assertion rather than silently
-    de-synchronise it.
-    """
-    published = (
-        resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
-    )
-    assert published == Decimal("0.01"), "test precondition: modelo 130 2026 1T must publish a real, non-zero tolerance"
-
-    resolved = _registry_recapture_tolerance(modelo="130", ejercicio=2026, period=Period.from_year_and_code(2026, "1T"))
-
-    assert resolved == published
-
-
-def test_registry_recapture_tolerance_falls_back_to_exact_equality_when_no_authority_resolves() -> None:
-    """No published contract means no authority to widen the comparison."""
-    resolved = _registry_recapture_tolerance(
-        modelo="not-a-real-modelo",
-        ejercicio=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-    )
-
-    assert resolved == Decimal("0")
 
 
 def test_a_change_within_the_registry_published_tolerance_is_absorbed() -> None:
