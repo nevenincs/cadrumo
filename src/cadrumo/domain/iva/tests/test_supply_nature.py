@@ -58,6 +58,15 @@ _BUNDLED_ROOT = bundled_path()
 _GOODS_WORDS = ("de bienes",)
 _SERVICES_WORDS = ("presten servicios", "prestaciones de servicios", "prestación de servicios")
 
+#: The articles that DEFINE each limb, used to prove the vocabulary above is the
+#: statute's rather than this file's. Their rubrics are "Concepto de entrega de
+#: bienes" and "Concepto de prestación de servicios".
+_GOODS_DEFINITION_REF = "corpus/normatives/html/ley-37-1992.html#a8"
+_SERVICES_DEFINITION_REF = "corpus/normatives/html/ley-37-1992.html#a11"
+
+#: Assimilated exports, bundled as its own file and deliberately not a row.
+_ASSIMILATED_EXPORTS_REF = "corpus/normatives/html/ley-37-1992-art-22.html"
+
 
 def _bundled_text(corpus_ref: str) -> str:
     """Return the cited text, scoped to one article whenever the row names an anchor.
@@ -147,6 +156,60 @@ def test_a_row_claiming_the_wrong_limb_at_its_anchor_is_refused() -> None:
 
     with pytest.raises(AssertionError):
         _assert_row_matches_its_article(wrong)
+
+
+def test_the_limb_vocabulary_is_the_statutes_own_words() -> None:
+    """The tokens the whole check turns on, checked against the law that fixes them.
+
+    Every row above is decided by whether one of these phrases appears in an
+    article's opening, so a token this file invented would decide real rows on a
+    word the statute never uses -- and nothing else in the suite would notice,
+    because every case would agree with the same invention.
+
+    Two claims. Each token occurs verbatim in the bundled IVA law, so none is a
+    paraphrase. And each limb's vocabulary is anchored in the article that
+    DEFINES that limb: art. 8 for *entrega de bienes*, art. 11 for *prestación
+    de servicios*.
+    """
+    whole_law = _bundled_text("corpus/normatives/html/ley-37-1992.html")
+    for word in (*_GOODS_WORDS, *_SERVICES_WORDS):
+        assert word in whole_law, f"{word!r} appears nowhere in the bundled law, so it is this file's word"
+
+    goods_definition = _bundled_text(_GOODS_DEFINITION_REF)
+    services_definition = _bundled_text(_SERVICES_DEFINITION_REF)
+
+    assert any(word in goods_definition for word in _GOODS_WORDS), (
+        "no goods token appears in art. 8, the article that defines the goods limb"
+    )
+    assert any(word in services_definition for word in _SERVICES_WORDS), (
+        "no services token appears in art. 11, the article that defines the services limb"
+    )
+
+
+def test_assimilated_exports_still_cannot_be_read_from_its_own_words() -> None:
+    """Why art. 22 has no row, pinned as a fact about the corpus rather than prose.
+
+    LIVA art. 22 reaches both limbs -- "las entregas, construcciones,
+    transformaciones, reparaciones, mantenimiento, fletamento ... y
+    arrendamiento" is services as much as goods -- but it says so by enumerating
+    operation KINDS rather than by naming either limb, so this check cannot read
+    what it establishes from the article itself. Deciding it needs arts. 8 and
+    11, where the statute defines the two limbs.
+
+    Kept as a case rather than a comment because the claim is falsifiable and
+    the situation can change: if the vocabulary widens or the corpus is
+    re-extracted such that art. 22's opening does name a limb, this reds and the
+    row becomes declarable -- which is a ruling to make, not a check to relax.
+    """
+    opening = _bundled_text(_ASSIMILATED_EXPORTS_REF)[:1200]
+
+    assert not any(word in opening for word in (*_GOODS_WORDS, *_SERVICES_WORDS)), (
+        "art. 22's opening now names a limb, so what it establishes has become readable and the "
+        "table's recorded reason for omitting it no longer holds"
+    )
+    assert "22" not in {citation.article for citation in STATUTORY_CITATIONS}, (
+        "art. 22 has a row while its own words still cannot be read, so the row rests on nothing"
+    )
 
 
 def test_two_anchors_in_one_document_read_as_two_different_articles() -> None:
