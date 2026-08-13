@@ -49,21 +49,12 @@ field tokens are NOT in the derived vocabulary, so adding an alias that named
 one of them would fail the claim and force a re-adjudication rather than
 silently widening the gate.
 
-TWO LEDGERS, DELIBERATELY SEPARATE. :data:`_ADJUDICATED` names sites ruled
-bare-by-design, each with its own reason -- these are decisions, permanent
-until re-decided. :data:`_UNENROLLED_BASELINE` names sites that are simply NOT
-YET ENROLLED. Collapsing the two would make a recorded gap indistinguishable
-from a considered carve-out, which is the precise failure a ratchet exists to
-prevent. Both are keyed by ``(path, model, field)`` and never by line number,
+ONE LEDGER, WITH NO BASELINE. :data:`_ADJUDICATED` names the exceptional sites
+ruled bare-by-design, each with a falsifiable production anchor and a stated
+reason. It is not a backlog: every other bare identifier field fails the
+ratchet immediately. Keys are ``(path, model, field)``, never line numbers,
 because a line number is invalidated by every edit above it and an exemption
 that moves silently is an exemption nobody re-reads.
-
-The baseline's size IS the finding: an enumerated, greppable ledger of open
-work, not an excuse. It is asserted as a SET of identities, never as a count --
-a tally would encode the moment it was written, train the next author to bump a
-constant, and then detect nothing. The gate reds when a NEW bare identifier
-field appears, and reds when a ledger entry has been enrolled but not struck
-from the ledger, so the population can only ratchet down.
 
 KNOWN LIMITS, stated rather than left implied by a green run.
 
@@ -86,10 +77,10 @@ exclusion is anchored: a test asserts every excluded ``short_<x>`` has a sibling
 ``<x>`` field on the same model, so dropping or renaming the full field makes
 the companion's exclusion fail rather than pass vacuously.
 
-The scan reads a PINNED revision rather than the working tree, matching the
-sibling censuses under ``dev/identity/``: this repository is written to by many
-agents at once, and a gate whose subject moves between collection and assertion
-reports a tree nobody can reproduce.
+The scan reads the CURRENT WORKTREE. S58 is a gate for the change being tested,
+so a pinned ``HEAD`` view would allow an uncommitted bare field to evade the
+ratchet. Its source snapshot is collected once per module fixture, yielding a
+reproducible report for that test invocation without using an alternate index.
 
 See Also:
     :mod:`~core.identity`
@@ -102,19 +93,22 @@ import ast
 import re
 import typing
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 import pytest
 from dev.identity.identifier_noun_census import annotation_text, is_bare_str
-from dev.quality.cli_action_census import production_sources
 
 from ..core import identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-#: Scanned at ``HEAD`` rather than the working tree, for the reason the module
-#: docstring states.
-_REVISION: Final[str] = "HEAD"
+#: Production source root in the CURRENT worktree. The parent path calculation
+#: is anchored to this test file rather than the process cwd.
+_SOURCE_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
+
+#: Repository root in the CURRENT worktree, used only to render stable anchors.
+_REPOSITORY_ROOT: Final[Path] = _SOURCE_ROOT.parents[1]
 
 #: The root pydantic base every model in this tree ultimately derives from.
 _MODEL_ROOT: Final[str] = "BaseModel"
@@ -250,6 +244,7 @@ class _Adjudication:
     path: str
     model: str
     field: str
+    group: str
     reason: str
 
     def key(self) -> tuple[str, str, str]:
@@ -265,6 +260,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         path="src/cadrumo/application/auth/_sessions.py",
         model="ClaveAuthFacts",
         field="tax_id",
+        group="raw/prevalidation tax inputs",
         reason=(
             "Auth facts are read from the authenticated session BEFORE the identity is "
             "known to be well-formed; the value is whatever the provider asserted. "
@@ -275,6 +271,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         path="src/cadrumo/application/auth/_sessions.py",
         model="ClaveCredentials",
         field="profile_tax_id",
+        group="raw/prevalidation tax inputs",
         reason=(
             "The credential carries the identifier as SUPPLIED for the login attempt, "
             "not as validated. Refusing a malformed one here would turn a failed "
@@ -285,6 +282,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         path="src/cadrumo/core/setup_answers.py",
         model="SetupAnswers",
         field="tax_id",
+        group="raw/prevalidation tax inputs",
         reason=(
             "Wizard answers are captured before validation runs, so the setup surface "
             "can report a bad identifier as an answerable question rather than crash "
@@ -295,6 +293,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         path="src/cadrumo/core/setup_answers.py",
         model="SetupAnswers",
         field="spouse_tax_id",
+        group="raw/prevalidation tax inputs",
         reason=(
             "As SetupAnswers.tax_id: captured pre-validation, so a placeholder must "
             "survive capture to be corrected in a later answer."
@@ -304,6 +303,7 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         path="src/cadrumo/llm/_invoice_field_grounding.py",
         model="_ExtractedInvoiceFieldClaims",
         field="supplier_tax_id",
+        group="raw/prevalidation tax inputs",
         reason=(
             "An LLM-extracted CLAIM, held verbatim as it appears in the document. "
             "SubjectTaxId canonicalises and uppercases, which broke anchor matching "
@@ -315,332 +315,177 @@ _ADJUDICATED: Final[tuple[_Adjudication, ...]] = (
         path="src/cadrumo/llm/_invoice_field_grounding.py",
         model="_ExtractedInvoiceFieldClaims",
         field="customer_tax_id",
+        group="raw/prevalidation tax inputs",
         reason="As the supplier claim on this model: verbatim extraction, anchor matching.",
     ),
     _Adjudication(
         path="src/cadrumo/llm/_invoice_field_grounding.py",
         model="ExtractedRoleEvidence",
         field="supplier_tax_id",
+        group="raw/prevalidation tax inputs",
         reason="As the claim model: role evidence quotes the extracted text verbatim for anchoring.",
     ),
     _Adjudication(
         path="src/cadrumo/llm/_invoice_field_grounding.py",
         model="ExtractedRoleEvidence",
         field="customer_tax_id",
+        group="raw/prevalidation tax inputs",
         reason="As the claim model: role evidence quotes the extracted text verbatim for anchoring.",
     ),
-)
-
-#: Identifier-named fields that are NOT YET ENROLLED. Every entry is an open
-#: gap, not a carve-out: the concept belongs in a namespace and the field has
-#: simply never been retyped. Kept separate from :data:`_ADJUDICATED` precisely
-#: so a gap can never be mistaken for a decision.
-#:
-#: The ledger may only SHRINK. Enrolling a field and leaving its entry here
-#: fails :func:`test_no_stale_baseline_entry`, so the ratchet cannot be loosened
-#: by inattention; and a new bare field cannot join without an explicit edit a
-#: reviewer sees.
-_UNENROLLED_BASELINE: Final[frozenset[tuple[str, str, str]]] = frozenset(
-    {
-        (
-            "src/cadrumo/adapters/inbound/borrador/_schema.py",
-            "InboundBorradorObservation",
-            "registry_extraction_profile_id",
-        ),
-        ("src/cadrumo/adapters/inbound/borrador/_schema.py", "InboundBorradorObservation", "tax_id"),
-        (
-            "src/cadrumo/adapters/inbound/declaracion/_schema.py",
-            "InboundDeclaracionObservation",
-            "extraction_profile_id",
-        ),
-        ("src/cadrumo/adapters/inbound/declaracion/_schema.py", "InboundDeclaracionObservation", "tax_id"),
-        ("src/cadrumo/adapters/persistence/storage/attachment.py", "AttachmentStore", "bucket_id"),
-        ("src/cadrumo/adapters/persistence/storage/runtime.py", "StorageRuntime", "bucket_id"),
-        ("src/cadrumo/application/_workflow_review_models.py", "InvoiceReviewRecord", "invoice_id"),
-        ("src/cadrumo/application/_workflow_review_models.py", "LedgerReviewRecord", "transaction_id"),
-        ("src/cadrumo/application/aggregation/_invoice_retencion.py", "InvoiceRetencionProjection", "invoice_id"),
-        ("src/cadrumo/application/aggregation/_invoice_retencion.py", "InvoiceRetencionRouteRequest", "invoice_id"),
-        ("src/cadrumo/application/aggregation/_iva_ledger.py", "IvaLedgerAggregationIssue", "transaction_id"),
-        ("src/cadrumo/application/aggregation/_source_mesh.py", "BorradorSourceProvenance", "snapshot_id"),
-        ("src/cadrumo/application/auth/_diagnostics.py", "AuthDiagnosticSummary", "active_profile_id"),
-        ("src/cadrumo/application/auth/_diagnostics.py", "AuthDiagnosticSummary", "active_profile_label"),
-        ("src/cadrumo/application/auth/_operator_results.py", "AuthLogoutResult", "bucket_id"),
-        ("src/cadrumo/application/auth/_operator_results.py", "AuthResetResult", "bucket_id"),
-        ("src/cadrumo/application/auth/_operator_scope.py", "AuthOperationScope", "bucket_id"),
-        ("src/cadrumo/application/calculations/_cross_period_models.py", "CrossPeriodCleanStateVerdict", "bucket_id"),
-        ("src/cadrumo/application/invoices/_linking.py", "InvoiceTransactionLinkResult", "transaction_id"),
-        ("src/cadrumo/application/invoices/_reconciliation.py", "ReconciliationSkippedSuggestion", "transaction_id"),
-        ("src/cadrumo/application/ledger/_confirmation_record.py", "ConfirmationRecordDocument", "bucket_id"),
-        ("src/cadrumo/application/ledger/_confirmation_record.py", "InvoiceConfirmationRecord", "bucket_id"),
-        ("src/cadrumo/application/ledger/_confirmation_record.py", "InvoiceConfirmationRecord", "invoice_id"),
-        ("src/cadrumo/application/ledger/_evidence_draft.py", "CounterpartyDraftSide", "tax_id"),
-        ("src/cadrumo/application/ledger/_extracted_document_cache.py", "ExtractedDocumentCacheDocument", "bucket_id"),
-        ("src/cadrumo/application/ledger/_extraction_draft_store.py", "ExtractionDraftDocument", "bucket_id"),
-        ("src/cadrumo/application/ledger/_llm_review_workflow.py", "InvoiceDraftDeclineResult", "bucket_id"),
-        ("src/cadrumo/application/ledger/_llm_review_workflow.py", "LlmReviewRequest", "bucket_id"),
-        ("src/cadrumo/application/ledger/_models.py", "BulkClassifyFailure", "transaction_id"),
-        ("src/cadrumo/application/ledger/_preflight.py", "LedgerPreflightIssue", "transaction_id"),
-        ("src/cadrumo/application/live/_filed_data.py", "FiledDataListingRow", "expediente_id"),
-        ("src/cadrumo/application/live/_filed_data_capture.py", "FiledPeriodSelectionRow", "winning_expediente_id"),
-        ("src/cadrumo/application/live/_justificante.py", "JustificanteCaptureSnapshot", "expediente_id"),
-        ("src/cadrumo/application/live/_justificante.py", "JustificanteCaptureSnapshot", "snapshot_id"),
-        ("src/cadrumo/application/live/_justificante.py", "JustificanteCaptureSnapshot", "superseded_by_snapshot_id"),
-        ("src/cadrumo/application/live/_justificante.py", "_JustificanteCaptureRequest", "expediente_id"),
-        ("src/cadrumo/application/live/_remote_state_models.py", "ExpedientesBulkCaptureReport", "bucket_id"),
-        ("src/cadrumo/application/live/_remote_state_models.py", "FiledCasillaSkipRow", "expediente_id"),
-        ("src/cadrumo/application/live/_remote_state_models.py", "FiledDataCaptureFailureRow", "expediente_id"),
-        (
-            "src/cadrumo/application/modelo/_borrador_binding.py",
-            "Modelo100BorradorBindingCommand",
-            "borrador_snapshot_id",
-        ),
-        ("src/cadrumo/application/modelo/_quickfile.py", "QuickfileCommand", "bucket_id"),
-        (
-            "src/cadrumo/application/modelo/_review_package_recipient_encryption.py",
-            "RecipientEncryptionKeypair",
-            "bucket_id",
-        ),
-        (
-            "src/cadrumo/application/modelo/_review_package_recipient_encryption.py",
-            "RecipientEncryptionPublicKey",
-            "bucket_id",
-        ),
-        ("src/cadrumo/application/modelo/_review_package_signing.py", "ReviewPackageSigningKeypair", "bucket_id"),
-        ("src/cadrumo/application/modelo/_review_package_signing.py", "ReviewPackageSigningPublicKey", "bucket_id"),
-        ("src/cadrumo/application/modelo/_review_package_signing.py", "SignedReviewPackage", "bucket_id"),
-        ("src/cadrumo/application/modelo/_selectors.py", "ModeloWorkUnitCandidate", "current_filing_record_id"),
-        ("src/cadrumo/application/overview/_calendar_models.py", "OverviewCalendarEvent", "snapshot_id"),
-        ("src/cadrumo/application/overview/_calendar_models.py", "OverviewCalendarFilingEvidence", "aeat_snapshot_id"),
-        (
-            "src/cadrumo/application/overview/_calendar_models.py",
-            "OverviewCalendarFilingEvidence",
-            "local_filing_record_id",
-        ),
-        ("src/cadrumo/application/overview/_pipeline_health.py", "ModeloHealthRow", "work_unit_id"),
-        ("src/cadrumo/application/overview/_pipeline_health.py", "PipelineHealthReport", "bucket_id"),
-        ("src/cadrumo/application/state_projection.py", "ProjectionActiveProfile", "profile_id"),
-        ("src/cadrumo/application/storage/calc_sheets/_records.py", "SheetEvidenceContributorRow", "transaction_id"),
-        ("src/cadrumo/application/storage_management/_models.py", "StorageInventoryReport", "active_bucket_id"),
-        ("src/cadrumo/application/storage_management/_models.py", "StorageInventoryRow", "bucket_id"),
-        ("src/cadrumo/application/user_profile/_bundle_export_contracts.py", "ProfileBundleExportResult", "profile_id"),
-        (
-            "src/cadrumo/application/user_profile/_bundle_export_operation.py",
-            "ProfileBundleExportOperation",
-            "profile_id",
-        ),
-        ("src/cadrumo/application/user_profile/_commands.py", "ProfileSnapshot", "snapshot_id"),
-        ("src/cadrumo/application/user_profile/_commands.py", "ProfileStaleCheckReport", "snapshot_id"),
-        ("src/cadrumo/application/user_profile/_login_session.py", "ProfileLoginOutcome", "bucket_id"),
-        ("src/cadrumo/application/user_profile/_login_session.py", "ProfileLoginOutcome", "closed_previous_bucket_id"),
-        ("src/cadrumo/application/user_profile/_overview.py", "ProfileOverview", "profile_id"),
-        ("src/cadrumo/application/user_profile/_registration.py", "ProfileRegistrationOutcome", "bucket_id"),
-        ("src/cadrumo/application/user_profile/_registration.py", "ProfileRegistrationOutcome", "profile_id"),
-        ("src/cadrumo/application/workflow/_events.py", "WorkflowStateResetFingerprint", "recovered_bucket_id"),
-        ("src/cadrumo/application/workflow/_profile_health.py", "ActiveProfileHealth", "_active_profile_label"),
-        ("src/cadrumo/application/workflow/_resume.py", "WorkflowResumeRunCandidate", "work_unit_id"),
-        ("src/cadrumo/application/workflow/_resume.py", "WorkflowResumeTargetResolution", "work_unit_id"),
-        ("src/cadrumo/core/_config_support.py", "StorageRouteClassification", "bucket_id"),
-        ("src/cadrumo/domain/attachments/_service.py", "AttachmentIngestionRequest", "bucket_id"),
-        (
-            "src/cadrumo/domain/calculations/registry/_counterpart_bindings.py",
-            "CounterpartAggregationObservation",
-            "party_tax_id",
-        ),
-        (
-            "src/cadrumo/domain/calculations/registry/_detail_record_bindings.py",
-            "AtributionMemberObservation",
-            "member_tax_id",
-        ),
-        (
-            "src/cadrumo/domain/calculations/registry/_detail_record_bindings.py",
-            "RefundOperationObservation",
-            "supplier_tax_id",
-        ),
-        (
-            "src/cadrumo/domain/calculations/registry/_detail_record_bindings.py",
-            "RelatedPartyOperationObservation",
-            "counterparty_tax_id",
-        ),
-        ("src/cadrumo/domain/calculations/registry/_donativo_bindings.py", "DonativoDonorObservation", "donor_tax_id"),
-        ("src/cadrumo/domain/calculations/registry/_invoice_bindings.py", "InvoiceObservation", "invoice_id"),
-        ("src/cadrumo/domain/calculations/registry/_invoice_bindings.py", "InvoiceObservation", "party_tax_id"),
-        ("src/cadrumo/domain/evidence_consent/_record.py", "EvidenceConsentLedgerEntry", "profile_bucket_id"),
-        ("src/cadrumo/domain/invoices/_models.py", "Invoice", "counterparty_tax_id"),
-        ("src/cadrumo/domain/invoices/_service.py", "LinkInconsistency", "invoice_id"),
-        ("src/cadrumo/domain/justificante/_schema.py", "Justificante", "tax_id"),
-        ("src/cadrumo/domain/modelos/_calculation_revision.py", "CalculationRevision", "borrador_snapshot_id"),
-        ("src/cadrumo/domain/modelos/_ledger_filing_snapshot.py", "LedgerEvidenceRow", "invoice_id"),
-        ("src/cadrumo/domain/renta/_ledger_expenses.py", "RentaDeductibilityResult", "invoice_id"),
-        ("src/cadrumo/domain/renta/_ledger_expenses.py", "RentaDeductibilityResult", "transaction_id"),
-        ("src/cadrumo/domain/renta/_ledger_expenses.py", "RentaDeductibleExpenseFact", "invoice_id"),
-        ("src/cadrumo/domain/renta/_ledger_expenses.py", "RentaDeductibleExpenseFact", "transaction_id"),
-        ("src/cadrumo/domain/renta/_ledger_expenses.py", "RentaDeductibleExpenseObservation", "invoice_id"),
-        ("src/cadrumo/domain/renta/_ledger_expenses.py", "RentaDeductibleExpenseObservation", "transaction_id"),
-        ("src/cadrumo/domain/retention/_floor.py", "RetentionBlockingRecord", "filing_record_id"),
-        ("src/cadrumo/domain/transactions/_models.py", "OutOfWindowTransactionIndexEntry", "transaction_id"),
-        ("src/cadrumo/domain/transactions/_models.py", "Transaction", "invoice_id"),
-        ("src/cadrumo/domain/transactions/_raw_transaction.py", "RawTransaction", "provider_transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudaRowPayload", "clave_liquidacion"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudaSnapshotSummaryPayload", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudasLatestResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudasLatestResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudasListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudasViewResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "DeudasViewResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedienteSnapshotSummaryPayload", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesCaptureResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesCaptureResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesLatestResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesLatestResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesViewResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "ExpedientesViewResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "FiledCaptureFailurePayload", "expediente_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "FiledListingRowPayload", "expediente_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteCaptureResult", "csv"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteCaptureResult", "expediente_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteCaptureResult", "filing_record_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteCaptureResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteSnapshotSummaryPayload", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteViewResult", "csv"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteViewResult", "expediente_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "JustificanteViewResult", "snapshot_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "NotificationRowPayload", "certificado_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "VerifyLatestResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "VerifyListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_live_payloads.py", "VerifyObservationPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_app_quickfile_payloads.py", "QuickfileResultPayload", "work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_bienes_inversion_payloads.py", "BienesInversionDeclareResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_bienes_inversion_payloads.py", "BienesInversionListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config/_capabilities_payloads.py", "CapabilitiesShowResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config/_capabilities_payloads.py", "CapabilitySetResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config/_check_payloads.py", "ConfigCheckResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_bucket_history_payloads.py", "BucketHistoryResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "AuthLogoutPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "AuthResetPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigProfileArchiveExportResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigProfileExportResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigProfileImportResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigProfileShowResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigProfileSubjectAccessRequestResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigResetTargetPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "ConfigStatusResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "RepairProfileResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "RepairProfileResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_config_payloads.py", "WorkflowFingerprintPayload", "recovered_bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_config_sandbox_payloads.py", "SandboxDiskUsagePayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceConfirmResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceConfirmResult", "counterparty_tax_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceConfirmResult", "invoice_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceConsentListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceConsentRederiveResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceExtractResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceRecordPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceReviewListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "EvidenceReviewShowResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_business_payloads.py", "InventoryListResult", "bucket_id"),
-        (
-            "src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py",
-            "CatalogueInvoiceRecordPayload",
-            "counterparty_tax_id",
-        ),
-        ("src/cadrumo/entrypoints/cli/_ledger_evidence_batch_payloads.py", "EvidenceBatchResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py", "LedgerClassifyLlmRejectResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py", "LedgerClassifyLlmSaturateResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_llm_payloads.py", "LedgerClassifyLlmSuggestResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "BulkClassifyFailurePayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerCheckResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerDocLinkPullFolderResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerHistoryEventPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerHistoryResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerHistoryResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerLinkInconsistencyPayload", "invoice_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerLinkInconsistencyPayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerLinkResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerLinkResult", "invoice_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerLinkResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerListRowPayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerMergeResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerMergeResult", "merged_transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerMergeResult", "parent_transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerPreflightIssuePayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerPreflightResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerRemovalBlockerPayload", "work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerRemoveResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerRemoveResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerResetResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerSplitResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerSplitResult", "parent_transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerTrackResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerTrackingEditPayload", "previous_transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerTrackingPayload", "transaction_id"),
-        (
-            "src/cadrumo/entrypoints/cli/_ledger_payloads.py",
-            "LedgerTransactionParticipationEntryPayload",
-            "filing_record_id",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_ledger_payloads.py",
-            "LedgerTransactionParticipationEntryPayload",
-            "work_unit_id",
-        ),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerTransactionParticipationPayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerViewResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "LedgerViewResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "_LedgerMutationResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_payloads.py", "_LedgerMutationResult", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py", "RatiosEligibleResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py", "RatiosListResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py", "RatiosSetResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py", "RatiosUnsetResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_ratios_payloads.py", "RatiosValidateResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py", "RuleApplyAppliedPayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py", "RuleApplyMatchPayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py", "WorkHistoryResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py", "WorkHistoryResult", "work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads.py", "CrossPeriodDependencyEvidencePayload", "filing_record_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads.py", "LedgerIssuePayload", "transaction_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads.py", "ModeloExportPayload", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads.py", "ModeloExportPayload", "work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads.py", "ModeloReadinessResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads.py", "WorkResumeResult", "work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py", "M036DeclarationRecordResult", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py", "M036DeclarationRowPayload", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py", "M036DeclarationShowResult", "profile_id"),
-        (
-            "src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py",
-            "ModeloReviewPackageSignResult",
-            "bucket_id",
-        ),
-        ("src/cadrumo/entrypoints/cli/_overview_payloads.py", "OverviewCalendarEntryPayload", "local_work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_overview_payloads.py", "OverviewCalendarEventPayload", "snapshot_id"),
-        (
-            "src/cadrumo/entrypoints/cli/_overview_payloads.py",
-            "OverviewCalendarFilingEvidencePayload",
-            "aeat_snapshot_id",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_overview_payloads.py",
-            "OverviewCalendarFilingEvidencePayload",
-            "local_filing_record_id",
-        ),
-        ("src/cadrumo/entrypoints/cli/_overview_payloads.py", "OverviewCalendarProfilePayload", "profile_id"),
-        ("src/cadrumo/entrypoints/cli/_overview_payloads.py", "OverviewPipelineModeloPayload", "work_unit_id"),
-        ("src/cadrumo/entrypoints/cli/_prorrata_register_payloads.py", "ProrrataDeclareSectorResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_prorrata_register_payloads.py", "ProrrataElectResult", "bucket_id"),
-        ("src/cadrumo/entrypoints/cli/_prorrata_register_payloads.py", "ProrrataListResult", "bucket_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMClassificationSuggestion", "transaction_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMSaturatedSuggestion", "transaction_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMSplitApplyResult", "bucket_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMSplitApplyResult", "parent_transaction_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMSplitSuggestion", "transaction_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMSuggestionRejectionResult", "bucket_id"),
-        ("src/cadrumo/llm/_suggestions.py", "LLMSuggestionRejectionResult", "transaction_id"),
-        ("src/cadrumo/llm/_suggestions.py", "OperatorIvaDerivationResult", "transaction_id"),
-    }
+    _Adjudication(
+        path="src/cadrumo/adapters/inbound/borrador/_schema.py",
+        model="InboundBorradorObservation",
+        field="tax_id",
+        group="verbatim external evidence",
+        reason="The parser preserves the filer identifier printed by the PDF; SubjectTaxId would canonicalise or refuse evidence before the extraction can report it.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/adapters/inbound/borrador/_schema.py",
+        model="InboundBorradorObservation",
+        field="registry_extraction_profile_id",
+        group="semantic tail collisions",
+        reason="This names a registry extraction-profile selector, not a user ProfileId; the match comes only from its profile_id suffix.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/adapters/inbound/declaracion/_schema.py",
+        model="InboundDeclaracionObservation",
+        field="tax_id",
+        group="verbatim external evidence",
+        reason="The parser records the tax identifier exactly as the declaration printed it, before identity validation can be a separate diagnostic.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/adapters/inbound/declaracion/_schema.py",
+        model="InboundDeclaracionObservation",
+        field="extraction_profile_id",
+        group="semantic tail collisions",
+        reason="This is an extraction-profile configuration key, not a ProfileId; its trailing profile_id spelling is coincidental.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/aggregation/_iva_ledger.py",
+        model="IvaLedgerAggregationIssue",
+        field="transaction_id",
+        group="mixed-source diagnostic references",
+        reason="An IVA candidate may carry a 1-128-character _LedgerId rather than a catalogued hex-64 TransactionId; constraining the exclusion report would hide the very candidate it must explain.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/auth/_diagnostics.py",
+        model="AuthDiagnosticSummary",
+        field="active_profile_id",
+        group="redacted diagnostic projections",
+        reason="The encrypted-artifact summary projects a redacted diagnostic value, not a profile identity boundary, so ProfileId would assert a value the redactor need not retain.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/auth/_diagnostics.py",
+        model="AuthDiagnosticSummary",
+        field="active_profile_label",
+        group="redacted diagnostic projections",
+        reason="The value is display text in a redacted diagnostic summary, not the ProfileLabel domain field; its name matches only the label vocabulary token.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/ledger/_evidence_draft.py",
+        model="CounterpartyDraftSide",
+        field="tax_id",
+        group="verbatim external evidence",
+        reason="The draft holds the counterparty identifier exactly as a document stated it so later grounding can distinguish evidence from a canonicalised identity.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/ledger/_models.py",
+        model="BulkClassifyFailure",
+        field="transaction_id",
+        group="mixed-source diagnostic references",
+        reason="A file-classification failure must report the supplied row reference even when it is malformed or not yet a catalogue TransactionId.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/modelo/_borrador_binding.py",
+        model="Modelo100BorradorBindingCommand",
+        field="borrador_snapshot_id",
+        group="semantic tail collisions",
+        reason="This selects a borrador snapshot under its own 1-128-character contract, not the hex-64 core SnapshotId namespace.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/user_profile/_commands.py",
+        model="ProfileSnapshot",
+        field="snapshot_id",
+        group="semantic tail collisions",
+        reason="A filing-time profile snapshot has an application-specific 1-128-character identifier, distinct from the content-hash SnapshotId alias.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/application/user_profile/_commands.py",
+        model="ProfileStaleCheckReport",
+        field="snapshot_id",
+        group="semantic tail collisions",
+        reason="The stale-report repeats the ProfileSnapshot identifier, whose 1-128-character contract is not the core content-hash SnapshotId namespace.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/calculations/registry/_invoice_bindings.py",
+        model="InvoiceObservation",
+        field="invoice_id",
+        group="open ledger-source references",
+        reason="Registry invoice observations accept a source-ledger reference up to 128 characters; it is not necessarily the core hex-64 InvoiceId namespace.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/invoices/_service.py",
+        model="LinkInconsistency",
+        field="invoice_id",
+        group="mixed-source diagnostic references",
+        reason="The diagnostic exists to report a dangling Transaction.invoice_id; InvoiceId would reject the unresolved reference before the inconsistency could be shown.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/modelos/_ledger_filing_snapshot.py",
+        model="LedgerEvidenceRow",
+        field="invoice_id",
+        group="open ledger-source references",
+        reason="This persistence projection mirrors Transaction.invoice_id beside distinct purchase-evidence references, preserving its open foreign-key contract rather than asserting InvoiceId.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/renta/_ledger_expenses.py",
+        model="RentaDeductibleExpenseFact",
+        field="invoice_id",
+        group="open ledger-source references",
+        reason="The Renta fact carries the 1-128-character ledger invoice reference, not a validated core InvoiceId.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/renta/_ledger_expenses.py",
+        model="RentaDeductibilityResult",
+        field="invoice_id",
+        group="open ledger-source references",
+        reason="The result preserves the source fact's optional ledger invoice reference for review; it does not construct an InvoiceId.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/renta/_ledger_expenses.py",
+        model="RentaDeductibleExpenseObservation",
+        field="invoice_id",
+        group="open ledger-source references",
+        reason="The binding-ready observation carries through the unvalidated ledger invoice reference so binding can report the actual source fact.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/transactions/_models.py",
+        model="Transaction",
+        field="invoice_id",
+        group="open ledger-source references",
+        reason="Transaction stores an optional reconciliation foreign key that may be dangling until consistency verification; it is deliberately not an InvoiceId boundary.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/domain/transactions/_raw_transaction.py",
+        model="RawTransaction",
+        field="provider_transaction_id",
+        group="verbatim external evidence",
+        reason="This is the bank/feed's native row identifier, preserved verbatim and distinct from the derived core TransactionId hash.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/entrypoints/cli/_ledger_payloads.py",
+        model="BulkClassifyFailurePayload",
+        field="transaction_id",
+        group="mixed-source diagnostic references",
+        reason="The CLI failure payload mirrors the application failure's supplied row reference, which can be malformed or not yet a TransactionId.",
+    ),
+    _Adjudication(
+        path="src/cadrumo/entrypoints/cli/_ledger_payloads.py",
+        model="LedgerLinkInconsistencyPayload",
+        field="invoice_id",
+        group="mixed-source diagnostic references",
+        reason="The CLI mirrors a dangling invoice reference from LinkInconsistency; validating it as InvoiceId would suppress the reported mismatch.",
+    ),
 )
 
 
@@ -702,7 +547,7 @@ class IdentifierField:
     """One identifier-named field on a production model.
 
     Attributes:
-        path: Repository-relative module path at the pinned revision.
+        path: Repository-relative module path in the current worktree.
         line: Line of the field's annotated assignment.
         model: Enclosing model class name.
         field: Field name.
@@ -768,13 +613,19 @@ def _model_class_names(trees: dict[str, ast.Module]) -> frozenset[str]:
     return frozenset(models)
 
 
-def _parsed(sources: tuple[tuple[str, str], ...]) -> dict[str, ast.Module]:
-    """Parse each source, skipping any module that does not parse.
+def _production_sources() -> tuple[tuple[str, str], ...]:
+    """Read current non-test, non-generated production Python sources once."""
+    entries: list[tuple[str, str]] = []
+    for path in sorted(_SOURCE_ROOT.rglob("*.py")):
+        relative = path.relative_to(_REPOSITORY_ROOT).as_posix()
+        if "tests" in path.relative_to(_SOURCE_ROOT).parts or "generated" in path.relative_to(_SOURCE_ROOT).parts:
+            continue
+        entries.append((relative, path.read_text(encoding="utf-8")))
+    return tuple(entries)
 
-    A module that does not parse at the pinned revision contributes neither a
-    field nor a silent skip: it cannot carry one, and counting it either way
-    would misstate the denominator.
-    """
+
+def _parsed(sources: tuple[tuple[str, str], ...]) -> dict[str, ast.Module]:
+    """Parse each production source in the current snapshot."""
     trees: dict[str, ast.Module] = {}
     for path, source in sources:
         try:
@@ -782,6 +633,17 @@ def _parsed(sources: tuple[tuple[str, str], ...]) -> dict[str, ast.Module]:
         except SyntaxError:
             continue
     return trees
+
+
+def _is_private_attr(statement: ast.AnnAssign) -> bool:
+    """Whether ``statement`` is a Pydantic ``PrivateAttr`` rather than a field."""
+    value = statement.value
+    if not isinstance(value, ast.Call):
+        return False
+    function = value.func
+    return (isinstance(function, ast.Name) and function.id == "PrivateAttr") or (
+        isinstance(function, ast.Attribute) and function.attr == "PrivateAttr"
+    )
 
 
 def identifier_fields(sources: tuple[tuple[str, str], ...]) -> tuple[IdentifierField, ...]:
@@ -801,6 +663,8 @@ def identifier_fields(sources: tuple[tuple[str, str], ...]) -> tuple[IdentifierF
                 continue
             for statement in node.body:
                 if not isinstance(statement, ast.AnnAssign) or not isinstance(statement.target, ast.Name):
+                    continue
+                if _is_private_attr(statement):
                     continue
                 name = statement.target.id
                 if name.startswith(_DISPLAY_COMPANION_PREFIX):
@@ -828,11 +692,6 @@ def unenrolled(fields: tuple[IdentifierField, ...]) -> tuple[IdentifierField, ..
     return tuple(item for item in fields if not item.enrolled)
 
 
-def _ledgered() -> frozenset[tuple[str, str, str]]:
-    """Every key answered by either ledger."""
-    return _UNENROLLED_BASELINE | {entry.key() for entry in _ADJUDICATED}
-
-
 def _worklist(lines: tuple[str, ...], header: str) -> str:
     """Render a failure as a worklist, so a red gate is actionable rather than noisy."""
     body = "\n".join(f"  {line}" for line in lines)
@@ -841,8 +700,8 @@ def _worklist(lines: tuple[str, ...], header: str) -> str:
 
 @pytest.fixture(scope="module")
 def production_fields() -> tuple[IdentifierField, ...]:
-    """The identifier-named production model fields at the pinned revision."""
-    return identifier_fields(production_sources(_REVISION))
+    """The current-worktree identifier-named production model fields."""
+    return identifier_fields(_production_sources())
 
 
 def test_vocabulary_derives_from_the_live_alias_family() -> None:
@@ -903,7 +762,7 @@ def test_free_text_anchors_are_still_bare_free_text(production_fields: tuple[Ide
     the candidate set, because these fields deliberately do NOT match the
     vocabulary and so never appear as candidates.
     """
-    trees = _parsed(production_sources(_REVISION))
+    trees = _parsed(_production_sources())
     for path, model, field in _FREE_TEXT_ANCHORS:
         tree = trees.get(path)
         assert tree is not None, f"free-text anchor module {path} no longer exists"
@@ -932,7 +791,7 @@ def test_display_companions_have_a_full_sibling() -> None:
     Scoped to companions whose full sibling name is itself identifier
     vocabulary, so an unrelated ``short_description`` is not swept in.
     """
-    trees = _parsed(production_sources(_REVISION))
+    trees = _parsed(_production_sources())
     models = _model_class_names(trees)
     vocabulary = namespace_vocabulary()
     orphans: list[str] = []
@@ -959,20 +818,20 @@ def test_display_companions_have_a_full_sibling() -> None:
     )
 
 
-def test_no_unenrolled_identifier_field_outside_the_ledgers(
+def test_no_unenrolled_identifier_field_outside_the_adjudications(
     production_fields: tuple[IdentifierField, ...],
 ) -> None:
-    """No identifier-named model field is bare ``str`` unless a ledger names it.
+    """No identifier-named model field is bare ``str`` unless adjudicated.
 
     The ratchet. A new bare identifier field fails here and must either be
     typed or entered in a ledger with a reason -- never silently accepted.
     """
-    ledgered = _ledgered()
-    open_sites = tuple(item for item in unenrolled(production_fields) if item.key() not in ledgered)
+    adjudicated = {entry.key() for entry in _ADJUDICATED}
+    open_sites = tuple(item for item in unenrolled(production_fields) if item.key() not in adjudicated)
     assert not open_sites, _worklist(
         tuple(item.rendered() for item in open_sites),
-        "Identifier-named model fields declared as bare `str` and named by no ledger. "
-        "Type each with its core.identity alias, or record it with a stated reason:",
+        "Identifier-named model fields declared as bare `str` and not adjudicated. "
+        "Type each with its core.identity alias, or record a falsifiable adjudication:",
     )
 
 
@@ -994,35 +853,10 @@ def test_no_stale_adjudication(production_fields: tuple[IdentifierField, ...]) -
 
 def test_every_adjudication_states_a_reason() -> None:
     """An exemption without a stated reason is indistinguishable from an oversight."""
-    silent = tuple(entry for entry in _ADJUDICATED if not entry.reason.strip())
+    silent = tuple(entry for entry in _ADJUDICATED if not entry.group.strip() or not entry.reason.strip())
     assert not silent, _worklist(
         tuple(f"{entry.path} {entry.model}.{entry.field}" for entry in silent),
-        "Adjudicated exemptions with no stated reason:",
-    )
-
-
-def test_no_stale_baseline_entry(production_fields: tuple[IdentifierField, ...]) -> None:
-    """Every baseline entry still names a live bare field, so the ledger only shrinks.
-
-    Enrolling a field is the intended outcome; leaving its entry standing is
-    not. Failing here is the ratchet tightening -- strike the entry in the same
-    change that types the field.
-    """
-    live = {item.key() for item in unenrolled(production_fields)}
-    stale = tuple(sorted(entry for entry in _UNENROLLED_BASELINE if entry not in live))
-    assert not stale, _worklist(
-        tuple(f"{path} {model}.{field}" for path, model, field in stale),
-        "Baseline entries that are no longer bare. The field was enrolled, renamed or "
-        "removed: strike the entry so the ledger keeps shrinking:",
-    )
-
-
-def test_the_two_ledgers_do_not_overlap() -> None:
-    """A site is either a decision or a gap, never recorded as both."""
-    overlap = tuple(sorted(_UNENROLLED_BASELINE & {entry.key() for entry in _ADJUDICATED}))
-    assert not overlap, _worklist(
-        tuple(f"{path} {model}.{field}" for path, model, field in overlap),
-        "Sites recorded in BOTH ledgers. An adjudicated decision must not also be carried as an unenrolled gap:",
+        "Adjudicated exemptions with no group or stated reason:",
     )
 
 
@@ -1051,3 +885,15 @@ def test_detector_reports_a_bare_identifier_field_and_ignores_an_enrolled_one() 
     assert not by_field["expediente_id"].enrolled
     assert by_field["transaction_id"].enrolled
     assert unenrolled(found) == (by_field["expediente_id"],)
+
+
+def test_detector_excludes_pydantic_private_attrs() -> None:
+    """A ``PrivateAttr`` is implementation state, never an operator model field."""
+    source = (
+        "from pydantic import BaseModel, PrivateAttr\n"
+        "class Probe(BaseModel):\n"
+        "    _active_profile_id: str = PrivateAttr(default='')\n"
+        "    transaction_id: str\n"
+    )
+    found = identifier_fields((("src/cadrumo/probe.py", source),))
+    assert [item.field for item in found] == ["transaction_id"]

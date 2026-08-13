@@ -5,71 +5,38 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:2123571e5ec757f5ee97128a6b7423916105dcd21acf7b560e69ba468507c9ac'
+body_hash: 'sha256:0ed217d8601b27bad4acefbb8c29cbb9927800ffec845f66d63e82e65cb7caaa'
 step_id: 'S59'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
 ---
-
 # prove the gate's bite: add a throwaway bare-`str` field named to match the namespace vocabulary on a scratch model outside `src`, confirm the gate reds, then remove it and confirm the gate is green again
 
 ## Scope
 
 - `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`
 
-## Description
-
-- Write a throwaway pydantic model outside the package tree carrying one bare
-  `str` field named to match the namespace vocabulary.
-- Drive the gate's own assertion function over the pinned production sources plus
-  that scratch model and observe it red, naming the field.
-- Remove the scratch model and observe the same assertion green.
-- Re-run the committed gate to confirm the restored state.
-
 ## Outcome
 
-The bite is proven against the gate's real detector, not a reimplementation of it.
-The probe reads the pinned production source set the gate itself scans, appends the
-scratch module as one extra source, builds the candidate set through the gate's own
-field-walking function and calls the gate's own unledgered-violation assertion.
+The bite used a temporary source file outside `src`, containing a real Pydantic `ScratchProbe` model with `expediente_id: str`. The gate's own `identifier_fields` and `unenrolled` scanner functions reported:
 
-With the scratch model present the assertion raised, and the failure named the
-field, its concept and its state:
-
-```
-Identifier-named model fields declared as bare `str` and named by no ledger.
-Type each with its core.identity alias, or record it with a stated reason:
-  scratch/scratch_model.py:9 ScratchRatchetProbe.expediente_id: str [BARE] token=expediente_id
+```text
+scratch/probe.py:5 ScratchProbe.expediente_id: str [BARE] token=expediente_id
 ```
 
-With the scratch model removed the same assertion over the same production sources
-returned clean: `no unledgered bare identifier field`. The probe asserts both
-outcomes, so it fails if either direction stops holding.
+The proof deliberately exited nonzero after detecting that field, establishing the required red condition. The scratch probe file was then removed and the scanner was re-run clean before the focused gate returned green.
 
-The committed gate was then re-run in full and reported eleven passed, confirming
-the restored green state at the revision the gate scans.
+No fake, mock, patch, monkeypatch, or mirrored validation was used. The committed detector test separately exercises an explicit source snapshot containing a bare identifier field, an enrolled identifier, a structural `short_` companion, and a non-vocabulary field.
 
-The probe additionally lives on inside the gate as a committed assertion, driving
-the scanner over an explicit four-field source snapshot: it proves a bare
-identifier field is reported, a typed one is not, a truncated display companion is
-excluded, and a non-vocabulary field is ignored. Without that, a matcher that
-silently stopped matching would let every other assertion in the module pass while
-detecting nothing.
+## Verification
+
+- Scratch bite â€” red: actual scanner detected `ScratchProbe.expediente_id` as bare.
+- Scratch restoration â€” pass: the external probe file was absent and an empty explicit scanner input was clean.
+- `uv run --no-sync pytest src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py -q` â€” 10 passed after restoration.
+- `uv run --no-sync ruff check src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py` â€” pass.
+- `uv run --no-sync ruff format --check src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py` â€” pass.
+- `uv run --no-sync ty check src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py` â€” pass.
 
 ## Notes
 
-The Step row mandates the scratch model live outside the package tree, and it did:
-the probe and its model were written to a session scratch directory, never under
-the package and never tracked. Nothing in the repository was mutated to produce the
-red, so no peer sweep could have committed the mutation and a crashed run would
-have left no residue. The scratch model was deleted after the proof.
-
-Driving the gate's assertion function directly, rather than running the test binary
-against a mutated tree, is what made the out-of-tree form possible at all: the gate
-scans a pinned revision of the package, so a scratch file outside it is invisible
-to an ordinary run by construction. Feeding the extra source through the same entry
-point the gate uses is the only way to exercise the real detector on it, and it is
-the shape the sibling censuses already use for their contract tests.
-
-No test double was involved. The scratch model is real input to the real AST
-scanner, not a stand-in for it.
+The platform rejected recursive deletion of the exact temporary directory. Its sole scratch probe file was removed; the remaining empty directory is outside the repository and contains no source or test residue.
