@@ -143,6 +143,10 @@ def _project_activity_ref(
         if not isinstance(row, ActividadNoAgricolaSimplificado):
             raise RegistryValidationError("IAE-epigraph reference resolved an agricultural row")
         return row.iae_epigrafe
+    if ref.field is M303RegimenSimplificadoActivityField.AUXILIARY_ACTIVITY_INDICATOR:
+        if not isinstance(row, ActividadNoAgricolaSimplificado):
+            raise RegistryValidationError("auxiliary activity indicator reference resolved an agricultural row")
+        return row.auxiliary_activity_indicator
     raise RegistryValidationError(f"unsupported regimen-simplificado activity field {ref.field!r}")
 
 

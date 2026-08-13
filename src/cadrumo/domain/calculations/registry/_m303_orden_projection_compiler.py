@@ -32,6 +32,12 @@ from ._m303_orden_raw_models import M303AnnualOrdenRawActivity, M303AnnualOrdenS
 from ._m303_orden_source import annual_orden_raw_activity_identity
 
 _SLUG_RE = re.compile(r"[^a-z0-9]+")
+_AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY = {
+    ("691.9", "reparacion-de-calzado"): "1",
+    ("691.9", "reparacion-de-otros-bienes-de-consumo-n-c-o-p-excepto-reparacion-de-calzado-restauracion-de-obras-de-arte-muebles-antiguedades-e-instrumentos-musicales"): "2",
+    ("722", "transporte-de-mercancias-por-carretera-excepto-residuos"): "1",
+    ("722", "transporte-de-residuos-por-carretera"): "2",
+}
 
 
 def compile_m303_annual_orden_projection(
@@ -131,12 +137,16 @@ def _compile_actividad_orden_anual(
         )
         for module in raw_activity.modules
     )
+    activity_code = _canonical_activity_code(raw_activity.activity_name)
     return ActividadOrdenAnual(
         orden_id=orden_id,
         ejercicio=ejercicio,
         kind="no_agricola",
-        activity_code=_canonical_activity_code(raw_activity.activity_name),
+        activity_code=activity_code,
         iae_epigrafe=raw_activity.iae_epigrafe,
+        auxiliary_activity_indicator=_AUXILIARY_INDICATOR_BY_IAE_AND_ACTIVITY.get(
+            (raw_activity.iae_epigrafe, activity_code),
+        ),
         modulos=modules,
         cuota_minima_pct=raw_activity.cuota_minima_pct,
         applicable_fact_identities=("cuota-devengada-operaciones-corrientes",),

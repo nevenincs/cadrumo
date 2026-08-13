@@ -66,6 +66,7 @@ class M303RegimenSimplificadoActivityField(StrEnum):
 
     ACTIVITY_CODE = "activity_code"
     IAE_EPIGRAFE = "iae_epigrafe"
+    AUXILIARY_ACTIVITY_INDICATOR = "auxiliary_activity_indicator"
 
 
 class M303RegimenSimplificadoModuleValue(StrEnum):
@@ -116,13 +117,13 @@ class M303RegimenSimplificadoActivityProjectionRef(BaseModel):
 
     @model_validator(mode="after")
     def _cohort_owns_field(self) -> M303RegimenSimplificadoActivityProjectionRef:
-        expected = (
-            M303RegimenSimplificadoActivityField.ACTIVITY_CODE
+        allowed = (
+            {M303RegimenSimplificadoActivityField.ACTIVITY_CODE}
             if self.cohort is M303RegimenSimplificadoCohort.AGRICOLA
-            else M303RegimenSimplificadoActivityField.IAE_EPIGRAFE
+            else {M303RegimenSimplificadoActivityField.IAE_EPIGRAFE, M303RegimenSimplificadoActivityField.AUXILIARY_ACTIVITY_INDICATOR}
         )
-        if self.field is not expected:
-            raise ValueError(f"simplified-regime cohort {self.cohort.value!r} requires field {expected.value!r}")
+        if self.field not in allowed:
+            raise ValueError(f"simplified-regime cohort {self.cohort.value!r} requires field in its owned set; got {self.field.value!r}")
         return self
 
 

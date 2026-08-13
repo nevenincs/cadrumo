@@ -581,6 +581,15 @@ field = "iae_epigrafe"
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
 source_refs = ["aeat-dr-303-2023"]
 [revisions."2023".projection_endpoints.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "no_agricola"
+slot = 1
+field = "auxiliary_activity_indicator"
+
+[[revisions."2023".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[revisions."2023".projection_endpoints.projection_ref]
 projection_kind = "m303_regimen_simplificado_fact"
 cohort = "no_agricola"
 slot = 1
@@ -734,6 +743,15 @@ projection_kind = "m303_regimen_simplificado_activity"
 cohort = "no_agricola"
 slot = 2
 field = "iae_epigrafe"
+
+[[revisions."2023".projection_endpoints]]
+legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2023"]
+[revisions."2023".projection_endpoints.projection_ref]
+projection_kind = "m303_regimen_simplificado_activity"
+cohort = "no_agricola"
+slot = 2
+field = "auxiliary_activity_indicator"
 
 [[revisions."2023".projection_endpoints]]
 legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]

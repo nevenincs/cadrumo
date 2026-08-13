@@ -31,6 +31,7 @@ ActividadOrdenAnualId = Annotated[
 """Canonical identifier for one annual-Orden activity row."""
 
 IaeEpigrafe = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=32)]
+IndicadorAuxiliarActividad = Literal["1", "2"]
 _NonNegative = Annotated[Decimal, Field(ge=Decimal("0"))]
 
 
@@ -61,6 +62,7 @@ class ActividadOrdenAnual(BaseModel):
     kind: Literal["agricola", "no_agricola"]
     activity_code: _Token
     iae_epigrafe: IaeEpigrafe | None = None
+    auxiliary_activity_indicator: IndicadorAuxiliarActividad | None
     modulos: tuple[ModuloOrdenAnual, ...] = ()
     cuota_minima_pct: _NonNegative
     applicable_fact_identities: tuple[_Token, ...] = Field(min_length=1)
@@ -237,6 +239,7 @@ class ActividadNoAgricolaSimplificado(BaseModel):
     ejercicio: int = Field(ge=2000, le=2099)
     activity_id: _Token
     iae_epigrafe: IaeEpigrafe
+    auxiliary_activity_indicator: IndicadorAuxiliarActividad | None
     modulos: tuple[EntradaModuloSimplificado, ...] = Field(min_length=1, max_length=7)
     facts: tuple[HechoActividadSimplificado, ...] = ()
     evidence_reference: FilingEvidenceReference
@@ -336,7 +339,7 @@ def validate_regimen_simplificado_rows(
                 "agricultural annual Orden authority cannot resolve DP30302 activity code: "
                 f"{agricultural_authority.refusal_reason}",
             )
-        _validate_regimen_simplificado_activity(row, by_id, censo_iae_epigraphs)
+        _validate_regimen_simplificado_activity(row, by_id, orden, censo_iae_epigraphs)
 
 
 def _orden_by_id(
@@ -348,6 +351,7 @@ def _orden_by_id(
 def _validate_regimen_simplificado_activity(
     row: RegimenSimplificadoActivity,
     orden_by_id: dict[ActividadOrdenAnualId, ActividadOrdenAnual],
+    orden: tuple[ActividadOrdenAnual, ...],
     censo_iae_epigraphs: frozenset[str],
 ) -> None:
     annual = orden_by_id.get(row.orden_id)
@@ -358,7 +362,7 @@ def _validate_regimen_simplificado_activity(
     if isinstance(row, ActividadAgricolaSimplificado) and row.activity_code != annual.activity_code:
         raise IvaValidationError(f"activity {row.activity_id!r} code conflicts with its annual Orden identity")
     if row.kind == "no_agricola":
-        _validate_non_agricultural_activity(row, annual, censo_iae_epigraphs)
+        _validate_non_agricultural_activity(row, annual, orden, censo_iae_epigraphs)
     if frozenset(fact.identity for fact in row.facts) != frozenset(annual.applicable_fact_identities):
         raise IvaValidationError(
             f"activity {row.activity_id!r} applicable facts do not match the annual Orden",
@@ -368,10 +372,14 @@ def _validate_regimen_simplificado_activity(
 def _validate_non_agricultural_activity(
     row: ActividadNoAgricolaSimplificado,
     annual: ActividadOrdenAnual,
+    orden: tuple[ActividadOrdenAnual, ...],
     censo_iae_epigraphs: frozenset[str],
 ) -> None:
     if row.iae_epigrafe != annual.iae_epigrafe:
         raise IvaValidationError(f"activity {row.activity_id!r} IAE conflicts with its annual Orden identity")
+    resolved = _resolve_non_agricultural_orden_activity(row, orden)
+    if resolved.orden_id != annual.orden_id:
+        raise IvaValidationError(f"activity {row.activity_id!r} Orden identity conflicts with its exact IAE discriminator")
     if row.iae_epigrafe not in censo_iae_epigraphs:
         raise IvaValidationError(f"IAE epigraph {row.iae_epigrafe!r} conflicts with censo")
     actual = tuple(module.module_identity for module in row.modulos)
@@ -380,6 +388,16 @@ def _validate_non_agricultural_activity(
         raise IvaValidationError(
             f"activity {row.activity_id!r} module identities/order do not match the annual Orden",
         )
+
+
+def _resolve_non_agricultural_orden_activity(
+    row: ActividadNoAgricolaSimplificado,
+    orden: tuple[ActividadOrdenAnual, ...],
+) -> ActividadOrdenAnual:
+    candidates = tuple(activity for activity in orden if activity.kind == "no_agricola" and activity.iae_epigrafe == row.iae_epigrafe and activity.auxiliary_activity_indicator == row.auxiliary_activity_indicator)
+    if len(candidates) != 1:
+        raise IvaValidationError(f"activity {row.activity_id!r} does not resolve to exactly one annual Orden activity")
+    return candidates[0]
 
 
 def _require_unique_fact_identities(facts: tuple[HechoActividadSimplificado, ...]) -> None:
@@ -398,6 +416,7 @@ __all__ = [
     "EntradaModuloSimplificado",
     "HechoActividadSimplificado",
     "IaeEpigrafe",
+    "IndicadorAuxiliarActividad",
     "IndiceCuotaDevengadaAgricolaOrdenAnual",
     "IndiceTemporadaOrdenAnual",
     "ModuloOrdenAnual",

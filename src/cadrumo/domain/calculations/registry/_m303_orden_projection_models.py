@@ -134,6 +134,13 @@ class M303AnnualOrdenProjection(RegistryModel):
         ids = tuple(activity.orden_id for activity in self.activities)
         if len(set(ids)) != len(ids):
             raise RegistryValidationError("annual Orden projection contains duplicate orden_id values")
+        by_iae: dict[str, list[str | None]] = {}
+        for activity in self.activities:
+            if activity.kind == "no_agricola" and activity.iae_epigrafe is not None:
+                by_iae.setdefault(activity.iae_epigrafe, []).append(activity.auxiliary_activity_indicator)
+        for indicators in by_iae.values():
+            if len(indicators) > 1 and (None in indicators or len(set(indicators)) != len(indicators)):
+                raise RegistryValidationError("annual Orden projection contains ambiguous non-agricultural activity identities")
         if len(self.non_agricultural_ingresos_a_cuenta) != EXPECTED_NON_AGRICULTURAL_INGRESO_A_CUENTA_COUNT:
             raise RegistryValidationError("annual Orden projection has the wrong IAE ingreso-a-cuenta row count")
         seasonal_shape = tuple(
