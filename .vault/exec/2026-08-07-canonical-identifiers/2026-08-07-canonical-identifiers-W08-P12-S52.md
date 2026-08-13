@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:77a6dc998bbb11e3cca6fda6a7b3516facbf562c4dc57c4fcd5db3eddcaf3894'
+body_hash: 'sha256:87b5635ab1293945e1ba1e21c4237820bbcf43e85b7f750898d2053617b4b843'
 step_id: 'S52'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
@@ -40,11 +40,17 @@ related:
 
 ### The S51 split re-verified at HEAD
 
-Seventy-seven declared grammars, of which the identifier-bearing set matched S51's
-measurement exactly: six already declared a digest, one folded the identifier
-verbatim, and one was pre-hashed in substance while its token named the resulting
-key rather than the derivation. The raw site was the calculation-observations
+Seventy-five namespace definitions carrying seventy-four declared grammars, one
+definition more than S51 measured because a peer added a namespace since. The
+identifier-bearing set was unchanged at seven and matched S51's classification
+exactly: five already declared a digest of a person's identifier and a sixth
+declared one transitively through a decision payload; one was pre-hashed in
+substance while its token named the resulting key rather than the derivation; and
+one folded the identifier verbatim. The raw site was the calculation-observations
 member segment, as recorded. Nothing had moved since the ruling.
+
+After this Step no identifier-bearing grammar folds a raw identifier, and every
+one of them declares its derivation.
 
 ### Two grammars changed, one key shape changed
 
