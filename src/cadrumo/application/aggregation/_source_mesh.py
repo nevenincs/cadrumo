@@ -638,6 +638,29 @@ def out_of_window_summary_source_diagnostic(
     )
 
 
+def casilla_registry_legal_refs(revision: ModeloRevision, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
+    """Return one casilla's own legal grounding, plus its binding's, off ``revision``.
+
+    The CASILLA-DERIVED path shared by every advisory whose subject IS the
+    named casilla's own computation: :attr:`CalculationSourceDiagnostic.legal_refs`
+    is populated by READING this off the registry definitions the caller already
+    resolved, never by restating an article in the caller's own layer. Ordered
+    union, casilla first: the casilla is the subject an operator reads about, and
+    the binding grounds the route the value would have taken.
+
+    Returns an empty tuple when ``casilla_id`` is absent from ``revision`` --
+    the caller's subject casilla is not on this filing, which is a statement
+    about the registry rather than about the taxpayer, or when the casilla
+    carries no grounding of its own.
+    """
+    casilla = next((candidate for candidate in revision.casillas if candidate.id == casilla_id), None)
+    if casilla is None:
+        return ()
+    binding = next((candidate for candidate in revision.bindings if candidate.id == casilla.binding), None)
+    binding_legal = binding.legal_refs if binding is not None else ()
+    return tuple(dict.fromkeys((*casilla.legal_refs, *binding_legal)))
+
+
 class CalculationSourceProvenance(BaseModel):
     """Stable source object provenance produced by a resolver."""
 
