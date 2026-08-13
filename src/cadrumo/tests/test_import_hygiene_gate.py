@@ -81,7 +81,6 @@ straight failure with no allowlist escape hatch.
 
 from __future__ import annotations
 
-import json
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -108,6 +107,7 @@ from dev.quality.import_hygiene_scan import (
     walk_module_imports,
     wheel_exclude_globs,
 )
+from pydantic import TypeAdapter
 
 from ._inventory import REPO_ROOT, repo_relative
 
@@ -189,8 +189,12 @@ class _TestDebtDocument(TypedDict):
     test_only_family1_underscore_reaches: _Family1Section
 
 
+_BASELINE_DOCUMENT_ADAPTER = TypeAdapter(_BaselineDocument)
+_TEST_DEBT_DOCUMENT_ADAPTER = TypeAdapter(_TestDebtDocument)
+
+
 def _load_baseline() -> _BaselineDocument:
-    return json.loads(_BASELINE_PATH.read_text(encoding="utf-8"))
+    return _BASELINE_DOCUMENT_ADAPTER.validate_json(_BASELINE_PATH.read_text(encoding="utf-8"))
 
 
 def _baseline_sites(baseline: _BaselineDocument) -> tuple[_BaselineSite, ...]:
@@ -298,7 +302,7 @@ def test_production_family1_violations_are_exactly_the_named_baseline_set() -> N
 
 
 def _load_test_debt() -> _TestDebtDocument:
-    return json.loads(_TEST_DEBT_PATH.read_text(encoding="utf-8"))
+    return _TEST_DEBT_DOCUMENT_ADAPTER.validate_json(_TEST_DEBT_PATH.read_text(encoding="utf-8"))
 
 
 def _test_debt_sites(test_debt: _TestDebtDocument) -> tuple[_BaselineSite, ...]:

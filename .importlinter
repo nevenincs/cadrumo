@@ -820,7 +820,6 @@ ignore_imports =
     #    the concrete InvoiceCatalogueRepository moved to the persistence
     #    adapter behind InvoiceCatalogueRepositoryProtocol ──
     cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.invoices
-    cadrumo.application.aggregation._renta_ledger -> cadrumo.adapters.persistence.profile.prorrata_register
     cadrumo.application.aggregation._renta_income_ledger -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.filing._review -> cadrumo.adapters.persistence.profile.invoices
     cadrumo.application.invoices._bulk_import -> cadrumo.adapters.persistence.profile.invoices
@@ -915,7 +914,5 @@ ignore_imports =
     #    sec. 538). The storage edge is _prorrata_regularizacion's direct import
     #    of the ClassificationError/DecryptionError/EnvelopeVersionError boundary
     #    exception classes (plain exceptions, no port to invert). ──
-    cadrumo.application.aggregation._iva_ledger -> cadrumo.adapters.persistence.profile.prorrata_register
-    cadrumo.application.calculations._prorrata_regularizacion -> cadrumo.adapters.persistence.profile.prorrata_register
     cadrumo.application.calculations._prorrata_regularizacion -> cadrumo.adapters.persistence.storage
     cadrumo.application.modelo._revision_persistence -> cadrumo.adapters.persistence.profile.prorrata_register
