@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:469659d3b095201af2a51835312dcca4bf6af1b23f28773b6419022cac8b19df'
+body_hash: 'sha256:fe43b133c5db8ad8097251fc92f38ae4ac525365a264d176c526a31678581feb'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -68,7 +68,7 @@ Define registered executors, canonical action joins, resource ownership, and inv
 
 Persist safe lifecycle state and ordered events atomically while keeping confidential operands in encrypted domain storage.
 
-- [ ] `W02.P04.S17` - Define lifecycle journal, ordered event stream, owner lease, compare-and-swap revision, and secure reference ports; `src/cadrumo/application/operations/_journal.py`.
+- [x] `W02.P04.S17` - Define lifecycle journal, ordered event stream, owner lease, compare-and-swap revision, and secure reference ports; `src/cadrumo/application/operations/_journal.py`.
 - [ ] `W02.P04.S18` - Implement the operation lifecycle journal over the existing atomic journal substrate; `src/cadrumo/adapters/persistence/operations/_journal.py`.
 - [ ] `W02.P04.S19` - Implement owner lease acquisition, renewal, conflict refusal, expiry, and takeover evidence; `src/cadrumo/adapters/persistence/operations/_lease.py`.
 - [ ] `W02.P04.S20` - Expose the persistence adapter facade without exporting implementation internals; `src/cadrumo/adapters/persistence/operations/__init__.py`.
