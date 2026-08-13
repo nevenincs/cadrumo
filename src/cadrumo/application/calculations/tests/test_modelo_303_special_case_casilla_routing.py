@@ -38,12 +38,10 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import CasillaId, Period, validated_casilla_id
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienesInversionIvaRegister
-from ....domain.calculations.registry import calculate_registry_snapshot
+from ....domain.calculations.registry import calculate_registry_snapshot, resolve_available_bound_inputs_by_casilla_id
 from ....domain.iva import (
     IvaCategory,
     M303RegimenSimplificadoScope,

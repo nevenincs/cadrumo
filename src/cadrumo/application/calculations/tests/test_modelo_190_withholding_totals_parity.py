@@ -50,8 +50,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import CasillaId, validated_casilla_id
 from ....core.aggregation import RetencionClave
 from ....core.resources import resources
@@ -61,6 +59,7 @@ from ....domain.calculations.registry import (
     calculate_registry_snapshot,
     compute_withholding_totals_parity,
     materialize_relation_binding_values,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_withholding_binding_values,
 )
 from ....tests.secure_sql import isolated_runtime_profile

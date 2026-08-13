@@ -7,8 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.aggregation import RetencionClave
 from .....core.resources import bundled_path
@@ -20,6 +18,7 @@ from .. import (
     build_snapshot,
     calculate_registry_snapshot,
     relation_source_requirements,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
     resolve_withholding_binding_values,
 )

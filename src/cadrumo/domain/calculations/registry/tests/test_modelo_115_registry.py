@@ -7,10 +7,8 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core.resources import bundled_path
-from .. import InputKind, RegistryValidator, build_snapshot
+from .. import InputKind, RegistryValidator, build_snapshot, resolve_available_bound_inputs_by_casilla_id
 from .._formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_modelo
 

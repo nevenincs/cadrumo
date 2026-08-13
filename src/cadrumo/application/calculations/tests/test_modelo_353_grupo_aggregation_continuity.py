@@ -50,8 +50,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from ....core.resources import resources
 from ....domain.calculations.registry import (
@@ -59,6 +57,7 @@ from ....domain.calculations.registry import (
     RegistryCalculationResult,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ....domain.iva import (

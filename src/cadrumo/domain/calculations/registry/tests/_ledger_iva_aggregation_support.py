@@ -7,8 +7,6 @@ from decimal import Decimal
 from functools import lru_cache
 from typing import Final
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....application.calculations import (
     ObservationEnvelopePayload,
     ResultDispositionProjection,
@@ -47,6 +45,7 @@ from .. import (
     RegistryModeloObservation,
     calculate_registry_snapshot,
     materialize_relation_binding_values,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from .._binding_selector_utils import selector_as_dict

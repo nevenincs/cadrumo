@@ -46,8 +46,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId, validated_casilla_id
 from .....core.resources import resources
 from ....iva import (
@@ -57,7 +55,11 @@ from ....iva import (
     ProrrataKind,
     compute_prorrata_general,
 )
-from .. import calculate_registry_snapshot, resolve_ledger_iva_aggregation_binding_values
+from .. import (
+    calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
+    resolve_ledger_iva_aggregation_binding_values,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

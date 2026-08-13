@@ -150,8 +150,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import (
     CasillaId,
     IvaDeductionFactKind,
@@ -171,6 +169,7 @@ from .. import (
     RegistryCalculationResult,
     ValidatedRegistryAuthority,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from ._ledger_iva_aggregation_support import _deduction_provenance

@@ -90,6 +90,7 @@ from ....domain.calculations.registry import (
     InputKind,
     RegistryModeloObservation,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.iva import (
     IvaDeductionClassificationProvenance,
@@ -120,7 +121,6 @@ from ...aggregation import (
 from ...modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
-    resolve_available_bound_inputs_by_casilla_id,
 )
 from ...modelo._binding_resolution import resolve_declaration_period_inputs
 from ...modelo.tests._export_test_support import _general_m303_filing_evidence

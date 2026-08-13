@@ -42,11 +42,13 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from ....core import CasillaId, validated_casilla_id
 from ....core.resources import bundled_path, resources
-from ....domain.calculations.registry import ManualWorkedExamplePayload, calculate_registry_snapshot
+from ....domain.calculations.registry import (
+    ManualWorkedExamplePayload,
+    calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
+)
 from ....domain.iva import (
     InputClassification,
     M303RegimenSimplificadoScope,

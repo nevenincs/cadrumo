@@ -75,6 +75,7 @@ from ...domain.calculations.registry import (
     casillas_by_id,
     iva_wallet_owned_binding_ids_for_revision,
     iva_wallet_owned_relation_targets_for_revision,
+    resolve_available_bound_inputs_by_casilla_id,
     validated_text_input_casilla_ids,
 )
 from ...domain.iva import M303RegimenSimplificadoScopeDecision
@@ -101,7 +102,6 @@ from ._action_errors import (
     ModeloAggregationBindingError,
     ModeloCrossPeriodCleanStateError,
 )
-from ._binding_resolution import resolve_available_bound_inputs_by_casilla_id
 from ._calculation_aggregation_context import load_bucket_aggregation_context as _load_bucket_aggregation_context
 from ._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from ._calculation_helpers import (

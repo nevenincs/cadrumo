@@ -7,8 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import (
     CasillaId,
     IvaDeductionEvidenceAuthority,
@@ -34,6 +32,7 @@ from .. import (
     build_snapshot,
     bundled_authority,
     expression_casilla_refs,
+    resolve_available_bound_inputs_by_casilla_id,
     selector_as_dict,
 )
 from .._bindings import binding_source_casilla_ids, binding_source_modelo

@@ -8,7 +8,6 @@ from decimal import Decimal
 
 import pytest
 
-from .....application.modelo import resolve_available_bound_inputs_by_casilla_id
 from .....core import CasillaId, Period, validated_casilla_id
 from .....core.resources import resources
 from .....domain.calculations.registry import (
@@ -16,6 +15,7 @@ from .....domain.calculations.registry import (
     RegistryValidationError,
     RelationId,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
 )
 from .....domain.calculations.registry import (
     CasillaObservation as CasillaObservation,

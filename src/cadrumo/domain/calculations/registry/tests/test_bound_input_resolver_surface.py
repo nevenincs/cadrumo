@@ -1,4 +1,4 @@
-"""The application projector is the sole living bound-input resolver surface."""
+"""The registry projector is the sole living bound-input resolver surface."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations import registry
-from .. import __all__ as modelo_public_names
+from ... import registry
+from .. import __all__ as registry_public_names
 from .. import resolve_available_bound_inputs_by_casilla_id
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _RESOLVER_SUFFIX = "bound_inputs_by_casilla_id"
 _RETIRED_RESOLVER = "resolve_bound_inputs_by_casilla_id"
@@ -55,9 +55,9 @@ def test_available_bound_input_projector_is_the_sole_resolver_surface() -> None:
     production_paths = _production_python_paths()
 
     assert _resolver_definitions(production_paths) == (
-        ("_binding_resolution.py", "resolve_available_bound_inputs_by_casilla_id"),
+        ("_bindings.py", "resolve_available_bound_inputs_by_casilla_id"),
     )
     assert _retired_imports(production_paths) == ()
-    assert resolve_available_bound_inputs_by_casilla_id.__name__ in modelo_public_names
+    assert resolve_available_bound_inputs_by_casilla_id.__name__ in registry_public_names
     assert _RETIRED_RESOLVER not in vars(registry)
     assert _RETIRED_RESOLVER not in registry.__all__

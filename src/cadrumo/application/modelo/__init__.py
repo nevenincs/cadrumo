@@ -113,7 +113,6 @@ from ._action_errors import (
 )
 from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
-from ._binding_resolution import resolve_available_bound_inputs_by_casilla_id
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -945,7 +944,6 @@ __all__ = [
     "require_profile_ready_for_modelo_work",
     "require_profile_ready_for_work_unit",
     "resolve_active_natural_modelo_work_unit",
-    "resolve_available_bound_inputs_by_casilla_id",
     "resolve_calculation_binding_channels",
     "resolve_casilla_population_scope",
     "resolve_export_identity",

@@ -7,8 +7,6 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId
 from .....core.resources import bundled_path
 from .....tests.registry_observations import registry_grounded_modelo_observation
@@ -17,6 +15,7 @@ from .. import (
     build_snapshot,
     calculate_registry_snapshot,
     relation_source_requirements,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_relation_values_from_observations,
 )
 from ._registry_schema_support import _committed_modelo, _committed_snapshot

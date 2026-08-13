@@ -8,10 +8,11 @@ Profile, backend mesh, borrador, and caller values are normalised as
 the calculation assembly layer overlays them by precedence: profile, backend
 mesh, borrador, and finally caller overrides.
 
-The module also owns the application-specific partial projection from available
-binding values to :class:`~cadrumo.core.CasillaId` inputs. Live calculate paths
-may carry absent optional bindings while still projecting every value that did
-resolve; completeness and unrouted-input concerns remain advisory or verify-gate
+Projecting resolved binding values onto bound
+:class:`~cadrumo.core.CasillaId` inputs is registry-owned rather than an
+application concern: see
+:func:`~cadrumo.domain.calculations.registry.resolve_available_bound_inputs_by_casilla_id`.
+Completeness and unrouted-input concerns remain advisory or verify-gate
 responsibilities rather than a second projection contract.
 
 See Also:
@@ -41,7 +42,6 @@ from ...domain.calculations.registry import (
     casillas_by_id,
     enum_consumed_binding_ids,
     expression_binding_refs,
-    resolve_bound_casilla_binding_value,
 )
 from ...domain.modelos import ModeloError
 from ..aggregation import CalculationSourceResolution
@@ -314,44 +314,6 @@ def _resolve_borrador_bindings_for_calculation(
     )
 
 
-def resolve_available_bound_inputs_by_casilla_id(
-    revision: ModeloRevision,
-    binding_values: Mapping[BindingId, Decimal],
-) -> dict[CasillaId, Decimal]:
-    """Project available binding values into input values keyed by bound ``casilla.id``.
-
-    The :class:`ModeloRevision` supplies the
-    bound casilla-to-binding mapping; only values already present in
-    ``binding_values`` are projected. Missing optional bindings are skipped
-    rather than treated as registry errors, which lets application calculate
-    paths combine partial source mesh output with caller overrides before the
-    engine runs.
-
-    Args:
-        revision: The :class:`ModeloRevision`
-            whose bound casillas are inspected.
-        binding_values: Decimal values keyed by
-            :class:`~cadrumo.domain.calculations.registry.BindingId`.
-
-    Returns:
-        A ``dict`` keyed by
-        :class:`~cadrumo.core.CasillaId` for every bound
-        casilla whose binding value is currently available.
-
-    See Also:
-        :func:`~cadrumo.application.modelo._calculation_resolution.resolve_calculation_inputs`:
-            Uses this partial projection when assembling engine inputs.
-    """
-    resolved: dict[CasillaId, Decimal] = {}
-    for casilla in revision.casillas:
-        if casilla.input_kind != InputKind.BOUND or casilla.binding is None:
-            continue
-        value, _binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
-        if value is not None:
-            resolved[casilla.id] = value
-    return resolved
-
-
 def _lift_previous_filing_casilla_overrides_to_bindings(
     revision: ModeloRevision,
     casilla_inputs: Mapping[CasillaId, Decimal],
@@ -417,7 +379,6 @@ __all__ = [
     "DeclarationPeriodInputs",
     "lift_previous_filing_casilla_overrides_to_bindings",
     "reject_binding_channel_mismatch",
-    "resolve_available_bound_inputs_by_casilla_id",
     "resolve_borrador_source_tier",
     "resolve_declaration_period_inputs",
     "resolve_profile_source_tier",

@@ -10,8 +10,6 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.modelo import resolve_available_bound_inputs_by_casilla_id
-
 from .....core import CasillaId, IvaDeductionEvidenceAuthority, IvaDeductionFactKind, validated_casilla_id
 from .....core.resources import resources
 from ....iva import (
@@ -26,6 +24,7 @@ from .. import (
     ModeloRevision,
     RegistryCalculationResult,
     calculate_registry_snapshot,
+    resolve_available_bound_inputs_by_casilla_id,
     resolve_ledger_iva_aggregation_binding_values,
 )
 from .._binding_selector_utils import selector_as_dict
