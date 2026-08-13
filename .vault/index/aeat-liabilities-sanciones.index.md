@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:a85aa542f0d7d75419d69a58ba1f77e53851220c27b5dbf8659561e4b5a19d65'
+body_hash: 'sha256:21f9f6f92c58e9e16cfb786b611f5c3b5df88127b332e1d8faa997a8c3b3351b'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S01]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P01-S02]]'
@@ -31,6 +31,9 @@ related:
   - '[[2026-08-07-aeat-liabilities-sanciones-P06-S21]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P06-S22]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-P07-S23]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P08-S25]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P08-S26]]'
+  - '[[2026-08-07-aeat-liabilities-sanciones-P08-S27]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-adr]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-plan]]'
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
@@ -78,6 +81,9 @@ Auto-generated index of all documents tagged with `#aeat-liabilities-sanciones`.
 - `2026-08-07-aeat-liabilities-sanciones-P06-S20` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 178 through 212 are all present in the bundled consolidated Ley 58/2003 and in its sidecar. Author the legal-catalogue entry for the regimen sancionador focused on the arts. 191-197 pecuniaria proporcional bands, pointing corpus_ref at the bundled consolidated file. Every band percentage is cross-checked against live BOE by the reviewer before stamping
 - `2026-08-07-aeat-liabilities-sanciones-P06-S21` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 65 and 82 are present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for aplazamiento y fraccionamiento del pago and its garantias, pointing corpus_ref at the bundled consolidated file. Any interest rate the entry carries is cross-checked against live BOE by the reviewer before stamping
 - `2026-08-07-aeat-liabilities-sanciones-P06-S22` - BLOCKED on a named human legal reviewer, never an agent stamp. The corpus half is discharged as of 2026-08-10: arts. 163 and 167 through 173 are all present in the bundled consolidated Ley 58/2003. Author the legal-catalogue entry for the procedimiento de apremio, providencia and embargo, pointing corpus_ref at the bundled consolidated file, verified by the legal-entry evidence gate
+- `2026-08-07-aeat-liabilities-sanciones-P08-S25` - Add the frozen PersistedNotificationDocument model carrying certificado_id, the AttachmentStore attachment id, pdf_sha256, source_url and fetched_at under STRICT config, exposing NO filesystem path field of any kind, verified by a model validation unit test asserting the field set and that no field name or value carries a path
+- `2026-08-07-aeat-liabilities-sanciones-P08-S26` - Add NotificationDocumentService storing the fetched bytes through the encrypted content-addressed AttachmentStore resolved the way application/ledger/_actions_common.py resolves it, delegating to that single-writer primitive rather than re-implementing its write path, verified by a unit test asserting the store receives the bytes and the service opens no second write path
+- `2026-08-07-aeat-liabilities-sanciones-P08-S27` - Make a re-store of an already-persisted certificado id a content-addressed no-op returning the existing record with no second attachment write and no re-stamped fetched_at, and refuse with an instructive localised conflict when the same certificado id arrives with a different pdf_sha256, verified by an idempotency test covering the no-op, the field-complete match and the divergent-digest refusal
 
 ### plan
 
