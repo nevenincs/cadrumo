@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from ......core import CasillaValueKind, validated_casilla_id, validated_casilla_id_map
+from ......core import CasillaValueKind, Period, validated_casilla_id, validated_casilla_id_map
 from ......domain.calculations.registry import (
     previous_filing_source_reference,
 )
@@ -14,6 +14,7 @@ from .._declarations_observations import (
     _observed_header_facts_from_submitted_file,
     _submitted_file_coverage_for_casillas,
     non_numeric_observed_casillas,
+    resolve_previous_filing_bindings_from_filed_declarations,
 )
 from ._declarations_support import (
     _COTEJO_DOCUMENT_URL,
@@ -34,7 +35,6 @@ from ._declarations_support import (
     InputKind,
     ObservedCasillaValue,
     Path,
-    Period,
     RegistryValidationError,
     SedeParseError,
     _assert_read_browser_action,
@@ -55,7 +55,6 @@ from ._declarations_support import (
     parse_export_payload,
     registry_observation_from_filed_declaration,
     resolve_export_layout,
-    resolve_previous_filing_bindings_from_filed_declarations,
 )
 
 pytestmark = [
@@ -319,7 +318,7 @@ class TestSubmittedFileObservation:
                 ),
             ),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
         )
         binding_values["modelo-130-pagos-fraccionados-anteriores"] = prior_payments_value
         binding_values["modelo-130-resultados-negativos-anteriores"] = carry_forward_value
@@ -713,7 +712,7 @@ class TestFiledObservationBindings:
                 ),
             ),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
         )
 
         assert resolved == {
@@ -748,7 +747,7 @@ class TestFiledObservationBindings:
             snapshot.revision,
             (loaded,),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
         )
 
         assert resolved == {
@@ -781,7 +780,7 @@ class TestFiledObservationBindings:
             snapshot.revision,
             (),
             filing_year=2026,
-            period="1T",
+            period=Period.from_year_and_code(2026, "1T"),
         )
 
         assert "irpf.previous_year_economic_activity_net_income" not in resolved

@@ -49,12 +49,6 @@ from .._declarations import (
     _select_authoritative_declaration as _select_authoritative_declaration_production,
 )
 from .._declarations_observations import registry_observation_from_filed_declaration
-from .._declarations_observations import (
-    resolve_previous_filing_bindings_from_filed_declarations as _resolve_previous_filing_bindings,
-)
-from .._declarations_observations import (
-    resolve_relation_values_from_filed_declarations as _resolve_relation_values,
-)
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
@@ -112,8 +106,6 @@ __all__ = [
     "registry_observation_from_filed_declaration",
     "relation_source_requirements",
     "resolve_export_layout",
-    "resolve_previous_filing_bindings_from_filed_declarations",
-    "resolve_relation_values_from_filed_declarations",
     "shared_playwright_runtime",
 ]
 
@@ -226,36 +218,6 @@ def _select_authoritative_declaration(
         ejercicio=ejercicio,
         period_token=_period(ejercicio, period).registry_token,
         context=context,
-    )
-
-
-def resolve_previous_filing_bindings_from_filed_declarations(
-    revision,
-    observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    filing_year: int,
-    period: str | Period,
-) -> dict[str, Decimal]:
-    return _resolve_previous_filing_bindings(
-        revision,
-        observations,
-        filing_year=filing_year,
-        period=_period(filing_year, period),
-    )
-
-
-def resolve_relation_values_from_filed_declarations(
-    revision,
-    observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    filing_year: int,
-    period: str | Period,
-) -> dict[str, Decimal]:
-    return _resolve_relation_values(
-        revision,
-        observations,
-        filing_year=filing_year,
-        period=_period(filing_year, period),
     )
 
 
