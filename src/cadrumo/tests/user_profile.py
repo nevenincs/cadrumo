@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ..application.user_profile import register_active_profile, select_profile, set_active_fields
+from ..application.user_profile import (
+    conditional_profile_missing_required,
+    register_active_profile,
+    select_profile,
+    set_active_fields,
+)
 from ..application.workflow import WorkflowState
 from ..core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI as _PROVENANCE_SOURCE_MANUAL_CLI
 from ..core.hashing import sha256_hex
@@ -20,7 +25,7 @@ from ..domain.user_profile import (
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage import SecureObjectRepository
-    from ..domain.user_profile import ProfileFieldDefinition
+    from ..domain.user_profile import ProfileFieldDefinition, ProfileSchemaDefinition
 
 
 #: Checksum-valid NIF filler, derived through the canonical check-letter table
@@ -191,4 +196,34 @@ def register_minimal_profile(
         return set_active_fields(selected, facts, secure_objects=secure_objects)
 
 
-__all__ = ["register_minimal_profile", "schema_valid_placeholder"]
+def complete_conditional_facts(
+    schema: ProfileSchemaDefinition,
+    facts: Iterable[UserProfileFact],
+) -> tuple[UserProfileFact, ...]:
+    """Append the facts a schema-required set conditionally obliges.
+
+    A builder that walks ``field.required`` produces a profile that is
+    schema-complete and still refused at the ACTIVE promotion, because
+    declaring a schema-required field can itself claim a conditional block.
+    The Modelo IVA block is the case in the tree: ``iva.regime`` is
+    schema-required, and declaring it obliges the M303 composition and four
+    enrolment answers that are each individually optional.
+
+    Driven by :func:`conditional_profile_missing_required` and the schema's
+    own field definitions rather than a hand-listed patch, so a conditional
+    added later is satisfied here without revisiting every builder -- the
+    hand-listed copy is what let the resolver and the readiness surfaces
+    disagree in the first place.
+    """
+    completed = list(facts)
+    fields = {f"{section.key}.{field.key}": field for section in schema.sections for field in section.fields}
+    for _ in range(len(fields) + 1):
+        values = {fact.path: fact.value for fact in completed if fact.value is not None}
+        missing = tuple(path for path in conditional_profile_missing_required(values) if path in fields)
+        if not missing:
+            break
+        completed.extend(UserProfileFact(path=path, value=schema_valid_placeholder(fields[path])) for path in missing)
+    return tuple(completed)
+
+
+__all__ = ["complete_conditional_facts", "register_minimal_profile", "schema_valid_placeholder"]

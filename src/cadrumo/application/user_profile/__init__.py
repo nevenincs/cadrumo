@@ -176,7 +176,12 @@ if TYPE_CHECKING:
         RemoveProfileCommand,
         RenameProfileCommand,
     )
-    from ._completeness import iva_regime_required, missing_required_field_paths, profile_section_rows
+    from ._completeness import (
+        conditional_profile_missing_required,
+        iva_regime_required,
+        missing_required_field_paths,
+        profile_section_rows,
+    )
     from ._cotejo_apply import (
         CENSO_CERTIFICATE_AXIS_PREFIX,
         CENSO_DIVERGENCE_NOTICE_CODE,
@@ -462,7 +467,15 @@ _LAZY_EXPORTS: dict[str, str] = {
             ),
         ),
         ("._filing_baseline", ("missing_filing_baseline_flags",)),
-        ("._completeness", ("iva_regime_required", "missing_required_field_paths", "profile_section_rows")),
+        (
+            "._completeness",
+            (
+                "conditional_profile_missing_required",
+                "iva_regime_required",
+                "missing_required_field_paths",
+                "profile_section_rows",
+            ),
+        ),
         ("._section_rows", ("next_section_row_index", "section_row_facts")),
         ("._keys_validation", ("list_profile_key_records", "validate_profile_values")),
         ("._language_resolver", ("resolve_profile_output_language_hint",)),
@@ -693,6 +706,7 @@ __all__ = [
     "format_profile_preflight_requirement",
     "format_profile_selector_requirements",
     "inspect_recovery_status",
+    "conditional_profile_missing_required",
     "iva_regime_required",
     "list_profile_key_records",
     "login_profile",

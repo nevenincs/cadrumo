@@ -47,7 +47,7 @@ from ....domain.contribuyente import (
 )
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import schema_valid_placeholder
+from ....tests.user_profile import complete_conditional_facts, schema_valid_placeholder
 from ...workflow import WorkflowState
 from .._orchestration import profile_create_storage_span, register_active_profile
 
@@ -83,7 +83,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> list[UserProfileFact]:
         for field in section.fields:
             if field.required:
                 facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
-    return facts
+    return list(complete_conditional_facts(schema, facts))
 
 
 def _fully_populated_child() -> DescendantInfo:

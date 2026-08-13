@@ -20,7 +20,7 @@ from ....core.resources import resources
 from ....domain.buckets import BucketEventType
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import schema_valid_placeholder
+from ....tests.user_profile import complete_conditional_facts, schema_valid_placeholder
 from ...workflow import WorkflowState, workflow_state_repository
 from .. import (
     CensoDivergence,
@@ -55,7 +55,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
         for field in section.fields:
             if field.required:
                 facts.append(UserProfileFact(path=f"{section.key}.{field.key}", value=schema_valid_placeholder(field)))
-    return tuple(facts)
+    return complete_conditional_facts(schema, facts)
 
 
 def _register(schema: ProfileSchemaDefinition, routing_profile_id: str) -> WorkflowState:

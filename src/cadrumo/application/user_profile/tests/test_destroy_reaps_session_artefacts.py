@@ -36,7 +36,7 @@ from ....adapters.persistence.storage.master_key import (
 from ....core.resources import resources
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileError, UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ....tests.user_profile import schema_valid_placeholder
+from ....tests.user_profile import complete_conditional_facts, schema_valid_placeholder
 from ...workflow import WorkflowState
 from .._login_session import login_profile
 from .._orchestration import (
@@ -77,7 +77,7 @@ def _required_facts(schema: ProfileSchemaDefinition) -> tuple[UserProfileFact, .
             for field in section.fields
             if field.required
         )
-    return tuple(facts)
+    return complete_conditional_facts(schema, facts)
 
 
 def _create_and_login(schema: ProfileSchemaDefinition) -> None:
