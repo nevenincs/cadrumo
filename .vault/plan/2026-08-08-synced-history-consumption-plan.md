@@ -4,7 +4,7 @@ tags:
   - '#synced-history-consumption'
 date: '2026-08-08'
 modified: '2026-08-13'
-body_hash: 'sha256:46c239f1da81f8881d11d2ee1a4296fde53b69cfef920ad8ec8eab0a075ebed1'
+body_hash: 'sha256:45bd67af72d37d27f2657b04f44b876e6a27d64a81109bf023f3205b28d8069b'
 tier: L2
 related:
   - '[[2026-08-08-synced-history-consumption-research]]'
@@ -72,7 +72,7 @@ Remove the independently measured operator-surface action-resolution bottleneck 
 
 - [x] `P03.S37` - Measure the real overview-status notice-action path, inventory each invocation's reconciliation and MCP descriptor construction, and set a regression bound from the sequence sandbox.; `src/cadrumo/entrypoints/cli/_common.py, src/cadrumo/entrypoints/cli/_overview_rendering.py, src/cadrumo/entrypoints/cli/tests, dev/docs/sequences/tests`.
 - [x] `P03.S38` - Implement invocation-scoped operator-surface reconciliation reuse at the canonical CLI action-resolution boundary without process-global caching or weaker typed actions and notices.; `src/cadrumo/entrypoints/cli/_common.py, src/cadrumo/entrypoints/cli/tests`.
-- [ ] `P03.S39` - Prove repeated overview notices retain their exact text, envelope, action, and provenance while one invocation performs bounded live descriptor and reconciliation construction.; `src/cadrumo/entrypoints/cli/tests, src/cadrumo/application/operator_surface/tests`.
+- [x] `P03.S39` - Prove repeated overview notices retain their exact text, envelope, action, and provenance while one invocation performs bounded live descriptor and reconciliation construction.; `src/cadrumo/entrypoints/cli/tests, src/cadrumo/application/operator_surface/tests`.
 - [ ] `P03.S40` - Add bounded canonical sequence-runner progress and timeout diagnostics that identify page, sequence, and frame without changing golden or sequence semantics.; `dev/docs/sequences, dev/docs/sequences/tests`.
 - [ ] `P03.S41` - Rerun the fourteen affected isolated sequence goldens and five owning-page coherence gates after the performance and diagnostic proofs pass, preserving CLI-owned goldens.; `docs/_sequences, docs/how-to, dev/docs/sequences`.
 - [ ] `P03.S42` - Close P02.S18, P03, and the plan only after every current-tree gate and matching execution record passes, then scaffold the required phase summary through VaultSpec.; `.vault/exec, .vault/plan`.
