@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:95a4a15beba0ce1753e8078bfbf57bb6412d7298fd7b3376ab06c41359e18a9e'
+body_hash: 'sha256:3f79e929f8115638697b0d16367b8f08d608feae01802fb1467c88c1be4ae151'
 related:
   - "[[2026-08-07-aeat-liabilities-sanciones-adr]]"
   - "[[2026-08-12-aeat-liabilities-sanciones-p05-p06-closeout-honesty-audit]]"
@@ -294,3 +294,59 @@ reconciliation the governing record deferred as its rejected option 2 has real
 data on one side of the comparison for the first time — AEAT's served figures
 against the application's own filed resultados. That remains its own decision
 and is not licensed by this record.
+
+## Amendment (2026-08-13): "no second amount regex" was too absolute, and the real duplication is elsewhere
+
+This record's Considerations argued that `SPANISH_AMOUNT_GROUP` is the canonical
+amount authority and that a second amount regex in this feature would be
+duplicate authority. Checked against what the implementing agent actually
+shipped, that is wrong in one direction and understated in another. Both
+corrections are recorded here rather than quietly dropped.
+
+**Wrong: the two patterns are not substitutable.** The tree already carried a
+second, deliberate amount pattern before this feature existed — an anchored
+`^...$` "house pattern" in the IVA compensation wallet parser that requires a
+figure to BE the money shape end to end rather than merely contain one. The
+sanción parser adopts that pattern, and adopting it is correct: the anchoring is
+a real guard against a template that starts printing whole euros being silently
+reinterpreted as a thousands-grouped integer. `SPANISH_AMOUNT_GROUP` is an
+unanchored capture group designed to be composed into label patterns, so
+substituting it here would LOSE that guard. Applying the substitutability
+pre-filter properly, the canonical group's constraint shape is not a superset of
+the house pattern's, so this is constraint-shape-divergent, not duplication. The
+"never a second amount regex" constraint is narrowed accordingly: it forbids
+inventing a THIRD shape, not reusing an existing sibling authority.
+
+**Understated: there is true duplication, and this record missed it.** The
+anchored house pattern is now declared byte-identically in two modules — the
+wallet parser and the sanción parser — with no shared home. Same constraint
+shape, same literal, two owners: that is the genuine finding, and it is the one
+this record's original wording would have let through while flagging the
+harmless case.
+
+**Opened by this amendment, not deferred:** `P09.S31` is rewritten to give the
+house pattern one canonical home consumed by both callers, gated by a
+duplication check asserting the literal appears exactly once.
+
+## Amendment (2026-08-13): the separator gap, stated at its real severity
+
+Driving the shipped `_parse_money` directly — not reasoning about it — shows it
+accepts `3.687,12euros` and refuses both `1<NBSP>234,56` and
+`1<narrow-NBSP>234,56`. The canonical PDF module documents AEAT as using exactly
+those UNE 82100 separators in PDF text layers, and records a real 1000x
+underreport caused by mishandling them. The house pattern was written for the
+wallet's HTML surface, which never had to face pdfplumber's output, so importing
+it into a PDF-text context carries an untested assumption.
+
+**Stated honestly, because overstating it would be its own defect:** this is a
+robustness gap, not a live silent failure. The failure direction is a refusal,
+which is what this record already requires of an unrecognised document, and no
+observed sanción amount has failed — the observed template groups thousands with
+a dot. What is not established is whether some other template, or a larger
+amount, emits the NBSP form.
+
+**Opened by this amendment, not deferred:** `P09.S33` is rewritten from a
+pre-judged fix into the empirical question it actually is — establish whether
+this surface's text layer emits the NBSP separators, admit them in the anchored
+pattern only if it does, and pin both the accepted and refused forms with a
+mutation proof.
