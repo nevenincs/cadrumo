@@ -192,6 +192,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             bucket_id=bucket_id,
         )
         + collect_bienes_inversion_regularizacion_diagnostics(
+            revision,
             modelo=modelo,
             period_token=period_token,
             filing_year=filing_year,
