@@ -23,7 +23,7 @@ import pytest
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core import Period
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -184,17 +184,9 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
     tautological.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
 
     bucket_id = _BUCKET_ID
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
@@ -239,21 +231,23 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         )
 
         object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            decoded = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(decoded):
             assert "superseded_by_snapshot_id" in decoded["payload"], (
                 "fixture must serialise superseded_by_snapshot_id into the "
                 "envelope payload for this test to be meaningful"
             )
             del decoded["payload"]["superseded_by_snapshot_id"]
-            row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         # With the field absent, the model_validator on
         # Borrador100Snapshot must reject the rehydrated record (the

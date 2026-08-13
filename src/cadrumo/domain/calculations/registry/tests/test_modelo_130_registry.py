@@ -15,6 +15,7 @@ from .. import (
     ModeloDefinition,
     RegistryCatalogues,
     RegistryValidationError,
+    RegistryValidator,
     calculate_registry_snapshot,
     resolve_previous_filing_binding_values,
 )
@@ -190,6 +191,40 @@ def test_modelo_130_validated_snapshot_owns_workflow_surfaces(modelo_130_registr
     }
     assert set(linked_by_surface) >= _REQUIRED_SURFACES
     assert all(link.requires_snapshot for link in linked_by_surface.values())
+
+
+def test_validator_rejects_missing_relationless_direct_settlement_classification(
+    modelo_130_registry: _ModeloFixture,
+) -> None:
+    """The direct same-modelo carries cannot lose their declared settlement treatment."""
+    modelo, catalogues = modelo_130_registry
+    revision = modelo.revisions["2019-y-siguientes"]
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+    construct = next(item for item in revision.constructs if classification.id in item.dependency_classifications)
+    mutated_construct = construct.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in construct.dependency_classifications if item != classification.id
+            ),
+        },
+    )
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                item for item in revision.dependency_classifications if item.id != classification.id
+            ),
+            "constructs": tuple(item if item.id != construct.id else mutated_construct for item in revision.constructs),
+        },
+    )
+    mutated_modelo = modelo.model_copy(
+        update={"revisions": {**modelo.revisions, revision.id: mutated_revision}},
+    )
+
+    with pytest.raises(
+        RegistryValidationError,
+        match=r"previous_filing source modelo '130' has no dependency classification",
+    ):
+        RegistryValidator(catalogues, source_root=bundled_path()).validate_modelo(mutated_modelo)
 
 
 def test_modelo_130_requires_external_previous_year_income_binding_for_minoracion(

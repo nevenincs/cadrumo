@@ -170,6 +170,32 @@ def test_build_withholding_rows_per_perceptor_clave_distinguishes_clave_tuples()
     assert keys == {("12345678A", "A"), ("12345678A", "G")}
 
 
+def test_build_withholding_rows_omits_the_key_for_an_unstated_country() -> None:
+    """Absence propagates as an absent KEY, so a binding needing it refuses.
+
+    The payload carries decimals and strings and cannot hold a null, and the
+    shipped resolver already raises a not-produced error naming the binding when
+    a row_field is missing. So the absence surfaces there -- visibly, with the
+    binding named -- instead of as a silent country nobody stated.
+    """
+
+    def _observation(country: str | None) -> WithholdingObservation:
+        return WithholdingObservation(
+            source_id=f"row-{country}",
+            perceptor_tax_id="12345678A",
+            perceptor_legal_name="Perceptor One",
+            country_code=country,
+            transaction_date=date(2025, 12, 31),
+            clave=RetencionClave.A,
+        )
+
+    stated = _build_withholding_rows("per_perceptor", (_observation("FR"),))[0]
+    unstated = _build_withholding_rows("per_perceptor", (_observation(None),))[0]
+
+    assert stated["country_code"] == "FR"
+    assert "country_code" not in unstated
+
+
 # ---------------------------------------------------------------------------
 # RelatedPartyOperationObservation
 # ---------------------------------------------------------------------------

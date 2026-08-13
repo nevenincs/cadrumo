@@ -393,10 +393,17 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     # Single-filer rows key on (modelo, filing_year, period); a per-grupo-member
-    # filing widens the same key with an optional trailing member NIF so two
+    # filing widens the same key with an optional trailing member segment so two
     # members' filings for one triple persist as distinct rows (the 353<-322
     # per_grupo_member fan-in). Both live in this one namespace.
-    object_key_grammar="{modelo}:{filing_year}:{period}[:{member_nif}]",
+    #
+    # The member segment is a digest of the member's canonical identity token,
+    # never the identifier itself, matching every other identifier-bearing
+    # grammar here. The digest is what makes the segment an IDENTITY rather than
+    # a spelling: a padded or lower-case rendering of one member canonicalises
+    # to the same token and therefore addresses the same row, where a verbatim
+    # segment persisted that member twice.
+    object_key_grammar="{modelo}:{filing_year}:{period}[:{sha256(member_nif)}]",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
@@ -615,7 +622,7 @@ LEDGER_CONFIRMED_COUNTERPARTY_FACTS_NAMESPACE = SecureObjectNamespaceDefinition(
     # outside the encrypted payload.
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{counterparty_key}",
+    object_key_grammar="{sha256(canonical_tax_identifier)}",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )

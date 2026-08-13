@@ -689,12 +689,14 @@ def test_remote_state_guard_allows_authenticated_read_surface_get() -> None:
 
 
 def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() -> None:
+    wallet_path = configured_path("sede_paths", "iva_compensation_wallet")
     policy = RemoteStateGuardPolicy(
         id="wallet-read",
         evidence_tier="official_source_guidance",
         classification="authenticated_read_surface",
         allowed_hosts=(_WWW6_HOST,),
-        allowed_read_post_paths=(configured_path("sede_paths", "iva_compensation_wallet"),),
+        allowed_read_paths=(wallet_path,),
+        allowed_read_post_paths=(wallet_path,),
         synthetic_data_allowed=False,
         requires_authentication=True,
         requires_aeat_authorization=True,
@@ -705,7 +707,7 @@ def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() 
         RemoteOperation(
             kind="http",
             method="POST",
-            url=AnyUrl(aeat_url("www6", configured_path("sede_paths", "iva_compensation_wallet"))),
+            url=AnyUrl(aeat_url("www6", wallet_path)),
         ),
     )
 
@@ -718,6 +720,23 @@ def test_remote_state_guard_allows_declared_authenticated_read_post_path_only() 
                 method="POST",
                 url=AnyUrl(aeat_url("www6", UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY)),
             ),
+        )
+
+
+def test_bounded_read_policy_rejects_a_post_path_outside_its_read_routes() -> None:
+    wallet_path = configured_path("sede_paths", "iva_compensation_wallet")
+
+    with pytest.raises(ValidationError, match="subset of the policy's allowed read paths"):
+        RemoteStateGuardPolicy(
+            id="wallet-read-invalid-post-path",
+            evidence_tier="official_source_guidance",
+            classification="authenticated_read_surface",
+            allowed_hosts=(_WWW6_HOST,),
+            allowed_read_paths=(wallet_path,),
+            allowed_read_post_paths=(UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY,),
+            synthetic_data_allowed=False,
+            requires_authentication=True,
+            requires_aeat_authorization=True,
         )
 
 

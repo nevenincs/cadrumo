@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core import Period
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._models import (
     ModeloPresentado,
     SubmissionAttempt,
@@ -124,17 +124,9 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
     submission roundtrip in the suite is tautological.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
 
     submission_namespace = SubmissionRepository.namespace
 
@@ -143,21 +135,23 @@ def test_submission_dropped_justificante_csv_surfaces_at_load(tmp_path: Path) ->
         repo = SubmissionRepository()
         repo.save(original)
 
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == submission_namespace,
-                SecureObjectRow.object_key == original.submission_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            envelope = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == submission_namespace,
+            SecureObjectRow.object_key == original.submission_id,
+        )
+
+        def mutate(envelope):
             payload = envelope["payload"]
             assert payload.get("justificante_csv"), (
                 "fixture must serialise justificante_csv onto the ACEPTADA record for this proof test to be meaningful"
             )
             payload["justificante_csv"] = None
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         try:
             mutated = repo.load(original.submission_id)
@@ -187,17 +181,9 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
     roundtrip assertion in the suite is tautological.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
 
     submission_namespace = SubmissionRepository.namespace
 
@@ -206,22 +192,24 @@ def test_submission_corrupted_period_surfaces_at_load(tmp_path: Path) -> None:
         repo = SubmissionRepository()
         repo.save(original)
 
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == submission_namespace,
-                SecureObjectRow.object_key == original.submission_id,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            envelope = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == submission_namespace,
+            SecureObjectRow.object_key == original.submission_id,
+        )
+
+        def mutate(envelope):
             payload = envelope["payload"]
             assert isinstance(payload.get("period"), dict), (
                 "fixture must serialise period as a dict for this proof test to be meaningful"
             )
             # Corrupt the period code to an invalid value that will fail Period validation.
             payload["period"]["code"] = "INVALID_CODE_XYZ"
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         try:
             mutated = repo.load(original.submission_id)

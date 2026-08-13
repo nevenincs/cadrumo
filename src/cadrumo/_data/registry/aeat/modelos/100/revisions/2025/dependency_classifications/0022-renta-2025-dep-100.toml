@@ -1,0 +1,7 @@
+[[revisions."2025".dependency_classifications]]
+id = "renta-2025-dep-100"
+source_modelo = "100"
+treatment = "direct_annual_settlement"
+target_constructs = ["renta-anexo-c-base-liquidable-negativa-general", "renta-dependent-modelos"]
+legal_refs = ["ley-35-2006:art-50", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-renta-2025-manual-parte1"]

@@ -22,7 +22,7 @@ from pydantic import ValidationError
 
 from ....adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ....core import CasillaId, Period, StorageCategory, storage_path, validated_casilla_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...calculations.registry import RegistrySnapshotRef
 from .._amendment import (
     AmendmentKind,
@@ -253,16 +253,9 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
     is not actually enforced post-persistence.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
     from ....adapters.persistence.storage import FILING_AMENDMENTS_NAMESPACE
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.session import session_scope
 
@@ -279,18 +272,22 @@ def test_filing_amendment_emptied_delta_surfaces_at_load(
                     f"expected one amendment row, found {len(amendment_rows)} "
                     f"(namespaces: {sorted({r.namespace for r in all_rows})})"
                 )
-                row = amendment_rows[0]
-                _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-                _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-                envelope = _json.loads(_h3_plain.decode("utf-8"))
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == FILING_AMENDMENTS_NAMESPACE.namespace,
+            )
+
+            def mutate(envelope):
                 payload = envelope["payload"]
                 assert payload.get("delta"), (
                     "fixture must serialise a non-empty delta tuple for this proof test to be meaningful"
                 )
                 payload["delta"] = []
-                row.payload = encrypt_secure_object_payload(
-                    _json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad
-                )
+
+            mutate_encrypted_secure_object_json(
+                profile.repository._engine,
+                row_statement=stmt,
+                mutate=mutate,
+            )
 
             with pytest.raises(ValidationError, match="delta"):
                 ModeloAmendmentRepository(bucket_id=_BUCKET_ID).load(original.amendment_id)

@@ -81,6 +81,34 @@ def test_orphans_removed_live_pages_and_specials_kept(tmp_path: Path) -> None:
     assert (html_root / "_modules" / "index.html").exists()
 
 
+def test_localized_site_roots_survive_an_apex_sweep(tmp_path: Path) -> None:
+    """An apex build must not empty the language roots nested inside its own tree.
+
+    The deploy publishes ``/es/``, ``/ca/`` and ``/hu/`` as subdirectories of the
+    same HTML tree the English root occupies, and their pages carry the same
+    docnames one level down. Resolved against ``docs/`` those docnames find
+    nothing, so before the exemption every localized page was an orphan by this
+    function's own test and an apex build deleted all of them -- leaving exactly
+    the residue this campaign spent two sessions mis-diagnosing: a language
+    directory holding asset subdirectories and not one rendered page.
+
+    The assertion is paired with a real orphan in the same tree, so an exemption
+    widened until it swept nothing would fail here rather than pass vacuously.
+    """
+    docs_root, html_root, repo_root = _build_tree(tmp_path)
+    for language in ("es", "ca", "hu"):
+        _write(html_root / language / "index.html")
+        _write(html_root / language / "how-to" / "import-statement.html")
+
+    removed = remove_orphan_pages(docs_root, html_root, repo_root)
+
+    for language in ("es", "ca", "hu"):
+        assert (html_root / language / "index.html").exists(), f"the {language!r} root's index page was swept"
+        assert (html_root / language / "how-to" / "import-statement.html").exists()
+    assert not (html_root / "getting-started.html").exists(), "the exemption swallowed a genuine orphan"
+    assert removed == 3
+
+
 def test_missing_html_root_is_a_noop(tmp_path: Path) -> None:
     """A first build with no prior output removes nothing and does not fail."""
     assert remove_orphan_pages(tmp_path / "docs", tmp_path / "docs" / "_build" / "html", tmp_path) == 0

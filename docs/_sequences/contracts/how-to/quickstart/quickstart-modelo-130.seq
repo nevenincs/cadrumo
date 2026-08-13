@@ -8,9 +8,12 @@ aeat --format json app modelo work calculate {work_unit_id} --binding modelo-130
 @expect result.casilla_values.01 == "1000"
 @expect result.casilla_values.03 == "500.00"
 @expect result.casilla_values.04 == "100.00"
+@step Resolve the seeded deductible expense before attaching its supporting invoice.
+@setup aeat --format json app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key qs-compra
+@capture expense_id result.transaction_id
 @setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0094 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
 @capture evidence_id result.evidence_id
-@setup aeat app ledger attach e28390f0 --purchase-invoice-evidence-id {evidence_id}
+@setup aeat app ledger attach {expense_id} --purchase-invoice-evidence-id {evidence_id}
 @step Verify the draft before exporting.
 @result aeat --format json app modelo work verify {calculation_revision_id}
 @expect result.granted_verificado_completo == true

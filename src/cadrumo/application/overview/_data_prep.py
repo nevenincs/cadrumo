@@ -6,7 +6,8 @@ walks the operator through the data-preparation phase that precedes a modelo
 calculation - import transactions, classify them, attach purchase-invoice
 evidence, register business invoices, resolve ledger readiness gaps, then start
 or resume a modelo work unit - showing each step's current state against the
-active profile bucket and the exact next command to run.
+active profile bucket and, where the continuation is fully determined, the
+catalogue action that advances it.
 
 The builder is READ-ONLY: it inspects the transaction catalogue, the invoice
 catalogue, the purchase-invoice evidence store, the ledger preflight report,
@@ -41,6 +42,8 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ..operator_actions import DeclaredNextAction
+from ._next_actions import declare_next_action
 
 if TYPE_CHECKING:
     from ...application.ledger import LedgerPreflightReport, PurchaseInvoiceEvidence
@@ -88,9 +91,13 @@ class DataPrepStep(BaseModel):
             profile bucket and the requested scope.
         summary: Human-readable progress counter (e.g. "247 transactions
             ingested", "14 unclassified").
-        next_command: The exact next ``aeat`` command to run to advance this
-            step, or resolve its current gap. Always populated so the
-            operator (human or autonomous agent) never has to guess.
+        next_action: The catalogue action that advances this step, carrying
+            every argument this scope already knows, or ``None`` when the
+            continuation depends on operator-supplied input the walkthrough
+            cannot know - which bank statement to import, which document to
+            attach, which invoice to register. A ``None`` here states honestly
+            that no command can be handed over ready to run; it never means the
+            step is finished.
     """
 
     model_config = _STRICT_FROZEN
@@ -98,7 +105,7 @@ class DataPrepStep(BaseModel):
     step_id: DataPrepStepId
     state: DataPrepStepState
     summary: str
-    next_command: str
+    next_action: DeclaredNextAction | None = None
 
 
 class DataPrepWalkthrough(BaseModel):
@@ -168,7 +175,8 @@ def build_data_prep_walkthrough(
 
     Returns:
         A :class:`DataPrepWalkthrough` with one ordered step per data-prep
-        phase and the exact next command for each.
+        phase, each carrying its declared continuation where one is fully
+        determined.
     """
     catalogue = transaction_repository.load()
     all_transactions = tuple(catalogue.transactions.values())
@@ -202,13 +210,11 @@ def _import_step(period: Period, period_transactions: tuple[Transaction, ...]) -
             step_id=DataPrepStepId.IMPORT_TRANSACTIONS,
             state=DataPrepStepState.PENDING,
             summary=f"0 transactions recorded for {period.registry_token} {period.filing_year}.",
-            next_command="aeat app ledger import --file <statement.csv>",
         )
     return DataPrepStep(
         step_id=DataPrepStepId.IMPORT_TRANSACTIONS,
         state=DataPrepStepState.DONE,
         summary=f"{count} transaction(s) recorded for {period.registry_token} {period.filing_year}.",
-        next_command=f"aeat app ledger list --period {period.registry_token} --year {period.filing_year}",
     )
 
 
@@ -218,7 +224,6 @@ def _classify_step(period_transactions: tuple[Transaction, ...]) -> DataPrepStep
             step_id=DataPrepStepId.CLASSIFY_TRANSACTIONS,
             state=DataPrepStepState.PENDING,
             summary="No transactions to classify yet.",
-            next_command="aeat app ledger import --file <statement.csv>",
         )
     unclassified = sum(1 for t in period_transactions if t.business_classification not in _CLASSIFIED_STATES)
     if unclassified == 0:
@@ -226,14 +231,13 @@ def _classify_step(period_transactions: tuple[Transaction, ...]) -> DataPrepStep
             step_id=DataPrepStepId.CLASSIFY_TRANSACTIONS,
             state=DataPrepStepState.DONE,
             summary=f"All {len(period_transactions)} transaction(s) classified.",
-            next_command="aeat app ledger allocate --help",
         )
     state = DataPrepStepState.IN_PROGRESS if unclassified < len(period_transactions) else DataPrepStepState.PENDING
     return DataPrepStep(
         step_id=DataPrepStepId.CLASSIFY_TRANSACTIONS,
         state=state,
         summary=f"{unclassified} of {len(period_transactions)} transaction(s) unclassified.",
-        next_command="aeat app ledger classify --help",
+        next_action=declare_next_action("operator.ledger.classify"),
     )
 
 
@@ -253,7 +257,6 @@ def _evidence_step(
             state=DataPrepStepState.DONE,
             summary=f"{len(evidence_records)} purchase-invoice evidence record(s) registered; "
             "no classified business/mixed expenses require evidence yet.",
-            next_command="aeat app ledger evidence add --help",
         )
     missing = sum(1 for t in expense_rows if t.purchase_invoice_evidence_id is None)
     if missing == 0:
@@ -262,14 +265,12 @@ def _evidence_step(
             state=DataPrepStepState.DONE,
             summary=f"All {len(expense_rows)} business/mixed expense(s) have attached evidence "
             f"({len(evidence_records)} evidence record(s) registered).",
-            next_command="aeat app ledger evidence list",
         )
     state = DataPrepStepState.IN_PROGRESS if missing < len(expense_rows) else DataPrepStepState.PENDING
     return DataPrepStep(
         step_id=DataPrepStepId.ATTACH_EVIDENCE,
         state=state,
         summary=f"{missing} of {len(expense_rows)} business/mixed expense(s) have no attached evidence.",
-        next_command="aeat app ledger evidence add --help",
     )
 
 
@@ -281,13 +282,20 @@ def _invoices_step(period: Period, invoice_catalogue: InvoiceCatalogue) -> DataP
             step_id=DataPrepStepId.REGISTER_INVOICES,
             state=DataPrepStepState.PENDING,
             summary=f"0 business invoice(s) registered for {period.registry_token} {period.filing_year}.",
-            next_command="aeat app ledger invoice add --help",
         )
     return DataPrepStep(
         step_id=DataPrepStepId.REGISTER_INVOICES,
         state=DataPrepStepState.DONE,
         summary=f"{count} business invoice(s) registered for {period.registry_token} {period.filing_year}.",
-        next_command="aeat app ledger invoice list",
+    )
+
+
+def _preflight_action(preflight_report: LedgerPreflightReport) -> DeclaredNextAction:
+    """Declare the readiness re-check bound to the report's own scope."""
+    return declare_next_action(
+        "operator.ledger.preflight",
+        period=preflight_report.period.registry_token,
+        year=preflight_report.period.filing_year,
     )
 
 
@@ -297,7 +305,6 @@ def _readiness_step(preflight_report: LedgerPreflightReport) -> DataPrepStep:
             step_id=DataPrepStepId.RESOLVE_READINESS,
             state=DataPrepStepState.PENDING,
             summary="No transactions checked yet for calculation readiness.",
-            next_command="aeat app ledger import --file <statement.csv>",
         )
     issue_count = len(preflight_report.issues)
     if issue_count == 0:
@@ -305,16 +312,13 @@ def _readiness_step(preflight_report: LedgerPreflightReport) -> DataPrepStep:
             step_id=DataPrepStepId.RESOLVE_READINESS,
             state=DataPrepStepState.DONE,
             summary=f"{preflight_report.checked_transaction_count} transaction(s) checked; no readiness issues.",
-            next_command="aeat app ledger preflight "
-            f"--period {preflight_report.period.registry_token} --year {preflight_report.period.filing_year}",
         )
     return DataPrepStep(
         step_id=DataPrepStepId.RESOLVE_READINESS,
         state=DataPrepStepState.IN_PROGRESS,
         summary=f"{issue_count} readiness issue(s) across "
         f"{preflight_report.checked_transaction_count} checked transaction(s).",
-        next_command="aeat app ledger preflight "
-        f"--period {preflight_report.period.registry_token} --year {preflight_report.period.filing_year}",
+        next_action=_preflight_action(preflight_report),
     )
 
 
@@ -337,15 +341,19 @@ def _work_unit_step(
             step_id=DataPrepStepId.START_MODELO_WORK,
             state=DataPrepStepState.PENDING,
             summary=f"No Modelo {modelo} work unit exists yet for {period.registry_token} {filing_year}.",
-            next_command=f"aeat app modelo work create --modelo {modelo} --year {filing_year} "
-            f"--period {period.registry_token}",
+            next_action=declare_next_action(
+                "operator.modelo.work.create",
+                modelo=modelo,
+                year=filing_year,
+                period=period.registry_token,
+            ),
         )
     unit = matching[0]
     return DataPrepStep(
         step_id=DataPrepStepId.START_MODELO_WORK,
         state=DataPrepStepState.DONE,
         summary=f"Modelo {modelo} work unit '{unit.name}' is in progress.",
-        next_command=f"aeat app modelo work calculate {unit.work_unit_id}",
+        next_action=declare_next_action("operator.modelo.work.calculate", work_unit_id=unit.work_unit_id),
     )
 
 

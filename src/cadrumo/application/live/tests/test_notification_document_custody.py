@@ -8,9 +8,14 @@ false-positive, and this is the path a taxpayer's served sanción travels.
 
 Every defaultable field on the persisted record carries a NON-default value,
 because a save-drops-field / load-re-defaults-field regression is invisible when
-a fixture leaves the default in place. ``mode`` is the sole exception and
-deliberately so: it is a single-value ``Literal`` with no non-default value to
-carry, which is exactly the structural read-only marker it exists to be.
+a fixture leaves the default in place. ``sancion`` and ``parse_refusal`` are
+mutually exclusive by construction — a read either parses into a reading or it
+does not — so no single record can carry both non-default; the sanción
+roundtrip below exercises ``sancion`` and the refusal roundtrip exercises
+``parse_refusal``, and between the two every defaultable field is proven to
+survive at a non-default value at least once. ``mode`` is the sole exception
+and deliberately so: it is a single-value ``Literal`` with no non-default value
+to carry, which is exactly the structural read-only marker it exists to be.
 
 The legal guard is load-bearing here rather than incidental. Driving AEAT's
 content control on an unread notification IS the comparecencia — it makes the
@@ -22,29 +27,25 @@ refused row produces no bytes, no attachment and no record.
 
 from __future__ import annotations
 
-import json as _json
-from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import select
 
 from ....adapters.outbound.aeat.sede import SedeNavigationError
 from ....adapters.persistence.storage import AttachmentStore
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
+from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentKind, load_attachment
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._errors import LiveApplicationInputError
 from .._notification_documents import (
     NotificationDocumentNotFoundError,
     NotificationDocumentService,
+    notification_document_object_key,
 )
 from ._notification_document_support import (
     BUCKET_ID as _BUCKET_ID,
@@ -59,6 +60,12 @@ from ._notification_document_support import (
     DETAIL_URL as _DETAIL_URL,
 )
 from ._notification_document_support import (
+    DOCUMENT_NAMESPACE as _DOCUMENT_NAMESPACE,
+)
+from ._notification_document_support import (
+    SANCION_TEXT_LINES,
+)
+from ._notification_document_support import (
     read_row as _read_row,
 )
 from ._notification_document_support import (
@@ -66,9 +73,6 @@ from ._notification_document_support import (
 )
 from ._notification_document_support import (
     served_document as _document,
-)
-from ._notification_document_support import (
-    stored_document_row,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -262,6 +266,11 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
     The bytes are the authoritative artefact and stay in custody; the operator
     is told plainly that no figures were extracted. A partially-read record
     presenting as complete is the outcome this whole path is built to avoid.
+
+    ``parse_refusal`` is the one field the sanción roundtrip above cannot
+    exercise at a non-default value — it and ``sancion`` are mutually
+    exclusive by construction — so the strict equality check here is what
+    closes that gap across the two records.
     """
     truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
@@ -273,7 +282,9 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
             row=_read_row(),
             document=_document(data=truncated),
         )
+        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
+        assert loaded == record
         assert record.sancion is None
         assert record.parse_refusal is not None
         assert "SancionParseError" in record.parse_refusal
@@ -281,19 +292,6 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
 
 
 # ── Anti-tautology proofs ──────────────────────────────────────────────────
-
-
-def _mutate_stored_payload(
-    profile: TestRuntimeProfile,
-    *,
-    mutate: Callable[[dict[str, Any]], None],
-) -> None:
-    """Decrypt the stored record, apply ``mutate`` to it, and re-encrypt in place."""
-    with stored_document_row(profile) as row:
-        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        decoded = _json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8"))
-        mutate(decoded)
-        row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=aad)
 
 
 def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
@@ -315,7 +313,14 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
             )
             del payload["attachment_id"]  # type: ignore[index]
 
-        _mutate_stored_payload(profile, mutate=_drop)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_drop,
+        )
 
         with pytest.raises(ValidationError, match="attachment_id"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
@@ -336,10 +341,59 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
             assert "importe_a_ingresar" in sancion, "fixture must serialise the payable for this proof to mean anything"
             del sancion["importe_a_ingresar"]
 
-        _mutate_stored_payload(profile, mutate=_drop)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_drop,
+        )
 
         with pytest.raises(ValidationError, match="importe_a_ingresar"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+
+
+def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) -> None:
+    """Anti-tautology proof for the one field with a default to fall back to.
+
+    Every other proof in this module deletes a REQUIRED field and shows the
+    load refuses outright. ``parse_refusal`` is optional, so a dropped key
+    does not raise at all — it silently re-defaults to ``None``. Strict
+    equality against the originally persisted record is what surfaces that
+    instead, which is exactly why the roundtrip above compares the whole
+    record rather than checking individual fields.
+    """
+    truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        service = NotificationDocumentService()
+        persisted = service.persist_document(
+            bucket_id=_BUCKET_ID,
+            row=_read_row(),
+            document=_document(data=truncated),
+        )
+        assert persisted.parse_refusal is not None
+
+        def _drop(decoded: dict[str, Any]) -> None:
+            payload = decoded["payload"]
+            assert "parse_refusal" in payload, (  # type: ignore[operator]
+                "fixture must serialise parse_refusal for this proof to mean anything"
+            )
+            del payload["parse_refusal"]  # type: ignore[index]
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_drop,
+        )
+
+        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+        assert loaded != persisted
+        assert loaded.parse_refusal is None
 
 
 def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
@@ -351,7 +405,14 @@ def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
         def _zero(decoded: dict[str, Any]) -> None:
             decoded["payload"]["byte_size"] = 0  # type: ignore[index]
 
-        _mutate_stored_payload(profile, mutate=_zero)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_zero,
+        )
 
         with pytest.raises(ValidationError, match="byte_size"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
@@ -362,7 +423,10 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
 
     The custody guarantee is the whole point of this path, so it is asserted
     against the real file rather than assumed from the namespace's declared
-    sensitivity class.
+    sensitivity class. A single file is not the whole custody guarantee — see
+    :func:`test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document`
+    below for the full-tree sweep — but the database file is where every byte
+    this service writes ultimately lands, so it stays pinned here too.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         service = NotificationDocumentService()
@@ -374,3 +438,41 @@ def test_the_stored_record_is_not_readable_as_plaintext_on_disk(tmp_path: Path) 
         assert b"3687.12" not in raw
         assert record.document_sha256.encode("ascii") not in raw
         assert b"%PDF" not in raw
+
+
+def test_no_file_anywhere_under_the_profile_root_carries_the_plaintext_document(tmp_path: Path) -> None:
+    """The custody guarantee holds across the ENTIRE on-disk footprint, not one file.
+
+    A single-file scan of the database misses a WAL or journal sidecar, the
+    keystore's wrapped-DEK artefact, and the secret-store files this same
+    fetch-and-store cycle writes — any one of which could carry a leak the
+    database-file check alone would never see. This walks EVERY file under the
+    temporary profile root and keys the assertion on the property that makes a
+    file an encrypted store artefact rather than a plaintext one: it contains
+    neither the PDF magic header nor any of the served document's own
+    distinctive plaintext literals. No file count or filename is hardcoded —
+    a store artefact this cycle has not been taught to write yet is covered
+    the same way as one it already writes.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        service = NotificationDocumentService()
+        document = _document()
+        record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document)
+
+        files = [path for path in tmp_path.rglob("*") if path.is_file()]
+        # Anti-vacuity: the walk must find the real artefacts this cycle
+        # writes (the database plus at least its keystore and secret-store
+        # siblings), never an accidentally empty or single-file tree.
+        assert profile.paths.database_file in files
+        assert len(files) >= 3
+
+        forbidden = (
+            document.pdf_bytes,
+            b"%PDF",
+            record.document_sha256.encode("ascii"),
+            *(line.encode("utf-8") for line in SANCION_TEXT_LINES),
+        )
+        for path in files:
+            raw = path.read_bytes()
+            for needle in forbidden:
+                assert needle not in raw, f"{path.relative_to(tmp_path)} carries a plaintext leak: {needle!r}"

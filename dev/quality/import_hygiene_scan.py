@@ -45,6 +45,7 @@ _UTF_8: Final[str] = "utf-8"
 
 LEGACY_TUI_PACKAGE: Final[str] = "cadrumo.adapters.inbound.tui"
 LEGACY_TUI_ROOT: Final[Path] = PKG_ROOT / "adapters" / "inbound" / "tui"
+CANONICAL_TUI_PACKAGE: Final[str] = "cadrumo.entrypoints.tui"
 
 
 class TuiMigrationRowKind(StrEnum):
@@ -81,42 +82,46 @@ class TuiMigrationRow:
 
 
 _TUI_MODULE_DISPOSITIONS: Final[dict[str, TuiMigrationDisposition]] = {
-    LEGACY_TUI_PACKAGE: TuiMigrationDisposition("integration", "cadrumo.entrypoints.tui"),
-    f"{LEGACY_TUI_PACKAGE}._app": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.flows"),
+    LEGACY_TUI_PACKAGE: TuiMigrationDisposition("integration", CANONICAL_TUI_PACKAGE),
+    f"{LEGACY_TUI_PACKAGE}._app": TuiMigrationDisposition("interface", f"{CANONICAL_TUI_PACKAGE}.flows"),
     f"{LEGACY_TUI_PACKAGE}._confirm_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.components.dialogs"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.components.dialogs"
     ),
     f"{LEGACY_TUI_PACKAGE}._credential_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.secret.credentials"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.secret.credentials"
     ),
     f"{LEGACY_TUI_PACKAGE}._field_edit_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.profile.editor"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.profile.editor"
     ),
     f"{LEGACY_TUI_PACKAGE}._form_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.components.forms"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.components.forms"
     ),
-    f"{LEGACY_TUI_PACKAGE}._login_screen": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.secret.login"),
-    f"{LEGACY_TUI_PACKAGE}._manager_screen": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.profile"),
+    f"{LEGACY_TUI_PACKAGE}._login_screen": TuiMigrationDisposition(
+        "interface", f"{CANONICAL_TUI_PACKAGE}.secret.login"
+    ),
+    f"{LEGACY_TUI_PACKAGE}._manager_screen": TuiMigrationDisposition("interface", f"{CANONICAL_TUI_PACKAGE}.profile"),
     f"{LEGACY_TUI_PACKAGE}._modelo_work_review_screen": TuiMigrationDisposition(
-        "modelo", "cadrumo.entrypoints.tui.modelo.view"
+        "modelo", f"{CANONICAL_TUI_PACKAGE}.modelo.view"
     ),
     f"{LEGACY_TUI_PACKAGE}._question_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.flows.question"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.flows.question"
     ),
     f"{LEGACY_TUI_PACKAGE}._registration_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.secret.registration"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.secret.registration"
     ),
     f"{LEGACY_TUI_PACKAGE}._review_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.flows.review"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.flows.review"
     ),
     f"{LEGACY_TUI_PACKAGE}._select": TuiMigrationDisposition("integration", "installed:cadrumo-tui"),
     f"{LEGACY_TUI_PACKAGE}._status_bar": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.components.status"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.components.status"
     ),
     f"{LEGACY_TUI_PACKAGE}._status_screen": TuiMigrationDisposition(
-        "interface", "cadrumo.entrypoints.tui.profile.status"
+        "interface", f"{CANONICAL_TUI_PACKAGE}.profile.status"
     ),
-    f"{LEGACY_TUI_PACKAGE}._theme": TuiMigrationDisposition("interface", "cadrumo.entrypoints.tui.components.theme"),
+    f"{LEGACY_TUI_PACKAGE}._theme": TuiMigrationDisposition(
+        "interface", f"{CANONICAL_TUI_PACKAGE}.components.theme"
+    ),
 }
 
 _TUI_SYMBOL_DISPOSITIONS: Final[dict[tuple[str, str], TuiMigrationDisposition]] = {
@@ -132,6 +137,7 @@ _TUI_SYMBOL_DISPOSITIONS: Final[dict[tuple[str, str], TuiMigrationDisposition]] 
 }
 
 _ACCEPTED_TUI_MIGRATION_IDENTITY_SHA256: Final[str] = "af0f314fcc15fa1b677c29ba372fe805fb2bd12a7964a88e6186a6b5dd3176fd"
+_ACCEPTED_TUI_TEXTUAL_EDGE_SHA256: Final[str] = "ff45a174acd6c53d0f6265770462d9b28b65b03dd72127f8a9e64de0a63b7ebe"
 
 
 # ---------------------------------------------------------------------------
@@ -456,6 +462,226 @@ def find_private_import_violations(all_sites: list[ImportSite]) -> list[PrivateI
             )
         )
     return violations
+
+
+class TuiBoundaryViolationKind(StrEnum):
+    """Static syntax families that can bypass the dedicated TUI boundary."""
+
+    STATIC_IMPORT = "static_import"
+    TYPE_ONLY_IMPORT = "type_only_import"
+    REEXPORT = "reexport"
+    DYNAMIC_IMPORT = "dynamic_import"
+    ANNOTATION = "annotation"
+    REGISTRATION = "registration"
+    TEXTUAL_LOCATION = "textual_location"
+    PRIVATE_FACADE = "private_facade"
+
+
+@dataclass(frozen=True)
+class TuiBoundaryViolation:
+    """One exact AST reach that violates D11's TUI dependency direction."""
+
+    importer_mod: str
+    importer_path: str
+    lineno: int
+    target: str
+    kind: TuiBoundaryViolationKind
+
+
+def _targets_module(value: str, module: str) -> bool:
+    return value == module or value.startswith(module + ".") or value.startswith(module + ":")
+
+
+def tui_textual_edges(py_files: Iterable[Path], *, src_root: Path = SRC_ROOT) -> frozenset[tuple[str, str]]:
+    """Return exact consumer-to-Textual import edges from the canonical AST walk."""
+    return frozenset(
+        (module_name_for(path, src_root=src_root), site.target_mod)
+        for path in py_files
+        for site in walk_module_imports(path, src_root=src_root)
+        if site.target_mod == "textual" or site.target_mod.startswith("textual.")
+    )
+
+
+def tui_textual_edge_sha256(edges: Iterable[tuple[str, str]]) -> str:
+    """Digest the exact stable Textual edge set; line locations are intentionally excluded."""
+    payload = json.dumps(sorted(set(edges)), ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(payload.encode(_UTF_8)).hexdigest()
+
+
+def _import_aliases(tree: ast.Module) -> dict[str, str]:
+    aliases: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                aliases[alias.asname or alias.name.split(".", 1)[0]] = alias.name
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            for alias in node.names:
+                aliases[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+    return aliases
+
+
+def _expression_reference(node: ast.expr, aliases: dict[str, str]) -> str | None:
+    parts: list[str] = []
+    current: ast.expr = node
+    while isinstance(current, ast.Attribute):
+        parts.append(current.attr)
+        current = current.value
+    if not isinstance(current, ast.Name):
+        return None
+    root = aliases.get(current.id, current.id)
+    return ".".join((root, *reversed(parts)))
+
+
+def _annotation_references(tree: ast.Module, aliases: dict[str, str]) -> tuple[tuple[int, str], ...]:
+    annotations: list[ast.expr] = []
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            annotations.extend(arg.annotation for arg in (*node.args.posonlyargs, *node.args.args) if arg.annotation)
+            annotations.extend(arg.annotation for arg in (*node.args.kwonlyargs,) if arg.annotation)
+            if node.args.vararg and node.args.vararg.annotation:
+                annotations.append(node.args.vararg.annotation)
+            if node.args.kwarg and node.args.kwarg.annotation:
+                annotations.append(node.args.kwarg.annotation)
+            if node.returns:
+                annotations.append(node.returns)
+        elif isinstance(node, ast.AnnAssign):
+            annotations.append(node.annotation)
+    found: set[tuple[int, str]] = set()
+    for annotation in annotations:
+        for node in ast.walk(annotation):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                found.add((node.lineno, node.value))
+            elif isinstance(node, (ast.Name, ast.Attribute)) and (target := _expression_reference(node, aliases)):
+                found.add((node.lineno, target))
+    return tuple(
+        sorted(
+            (line, target)
+            for line, target in found
+            if not any(other_line == line and other.startswith(target + ".") for other_line, other in found)
+        )
+    )
+
+
+def _registration_references(tree: ast.Module, aliases: dict[str, str]) -> tuple[tuple[int, str], ...]:
+    """Return TUI-shaped values passed through any call boundary.
+
+    Registration APIs have no stable verb vocabulary: decorators, registries,
+    plugin managers and dependency containers all accept the same module or
+    object reference under arbitrary method names.  The semantic fact is the
+    TUI reference crossing a call boundary, so resolve every argument rather
+    than maintaining registrar spellings.
+    """
+    found: set[tuple[int, str]] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        called = _called_function_name(node.func)
+        if called in _DYNAMIC_IMPORT_CALLABLES:
+            continue
+        values = [*node.args, *(keyword.value for keyword in node.keywords)]
+        for value in values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                if _targets_module(value.value, CANONICAL_TUI_PACKAGE):
+                    found.add((value.lineno, value.value))
+            elif (target := _expression_reference(value, aliases)) and _targets_module(
+                target, CANONICAL_TUI_PACKAGE
+            ):
+                found.add((value.lineno, target))
+    return tuple(sorted(found))
+
+
+def find_tui_boundary_violations(
+    py_files: Iterable[Path],
+    *,
+    src_root: Path = SRC_ROOT,
+    accepted_textual_edges: frozenset[tuple[str, str]] = frozenset(),
+) -> list[TuiBoundaryViolation]:
+    """Reject every statically visible D11 bypass while the legacy census drains.
+
+    Existing Textual locations are admitted only when their module is either in
+    the legacy TUI package or already present in S01's accepted migration
+    manifest.  This is a join to the canonical migration authority, not a second
+    allowlist; new legacy locations cannot enter without changing that manifest's
+    accepted semantic digest.
+    """
+    violations: list[TuiBoundaryViolation] = []
+    for path in py_files:
+        tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+        aliases = _import_aliases(tree)
+        importer = module_name_for(path, src_root=src_root)
+        relative = path.relative_to(src_root).as_posix()
+        inside_tui = importer == CANONICAL_TUI_PACKAGE or importer.startswith(CANONICAL_TUI_PACKAGE + ".")
+
+        for site in walk_module_imports(path, src_root=src_root):
+            target = site.target_mod
+            if not inside_tui and _targets_module(target, CANONICAL_TUI_PACKAGE):
+                kind = (
+                    TuiBoundaryViolationKind.TYPE_ONLY_IMPORT
+                    if site.in_type_checking
+                    else TuiBoundaryViolationKind.STATIC_IMPORT
+                )
+                if path.name == "__init__.py":
+                    kind = TuiBoundaryViolationKind.REEXPORT
+                violations.append(TuiBoundaryViolation(importer, relative, site.lineno, target, kind))
+            if (
+                inside_tui
+                and target.startswith("cadrumo.")
+                and any(is_underscore_named(name) for name in site.imported_names)
+            ):
+                private_target = next(name for name in site.imported_names if is_underscore_named(name))
+                violations.append(
+                    TuiBoundaryViolation(
+                        importer,
+                        relative,
+                        site.lineno,
+                        f"{target}.{private_target}",
+                        TuiBoundaryViolationKind.PRIVATE_FACADE,
+                    )
+                )
+            if (
+                (target == "textual" or target.startswith("textual."))
+                and not inside_tui
+                and (importer, target) not in accepted_textual_edges
+            ):
+                violations.append(
+                    TuiBoundaryViolation(
+                        importer, relative, site.lineno, target, TuiBoundaryViolationKind.TEXTUAL_LOCATION
+                    )
+                )
+            if inside_tui and target.startswith("cadrumo.") and has_private_component(target):
+                owner = owning_package(target)
+                if importer != owner and not importer.startswith(owner + "."):
+                    violations.append(
+                        TuiBoundaryViolation(
+                            importer, relative, site.lineno, target, TuiBoundaryViolationKind.PRIVATE_FACADE
+                        )
+                    )
+
+        for lineno, target in iter_dynamic_import_targets(path):
+            if not inside_tui and _targets_module(target, CANONICAL_TUI_PACKAGE):
+                violations.append(
+                    TuiBoundaryViolation(importer, relative, lineno, target, TuiBoundaryViolationKind.DYNAMIC_IMPORT)
+                )
+            if inside_tui and target.startswith("cadrumo.") and has_private_component(target):
+                violations.append(
+                    TuiBoundaryViolation(importer, relative, lineno, target, TuiBoundaryViolationKind.PRIVATE_FACADE)
+                )
+
+        for kind, references in (
+            (TuiBoundaryViolationKind.ANNOTATION, _annotation_references(tree, aliases)),
+            (TuiBoundaryViolationKind.REGISTRATION, _registration_references(tree, aliases)),
+        ):
+            for lineno, target in references:
+                if not inside_tui and _targets_module(target, CANONICAL_TUI_PACKAGE):
+                    violations.append(TuiBoundaryViolation(importer, relative, lineno, target, kind))
+                if inside_tui and target.startswith("cadrumo.") and has_private_component(target):
+                    violations.append(
+                        TuiBoundaryViolation(
+                            importer, relative, lineno, target, TuiBoundaryViolationKind.PRIVATE_FACADE
+                        )
+                    )
+
+    return sorted(violations, key=lambda item: (item.importer_path, item.lineno, item.kind, item.target))
 
 
 # ---------------------------------------------------------------------------
@@ -1415,8 +1641,7 @@ def _parse_tui_manifest_consumer(path: Path, *, repo_root: Path) -> ast.Module:
 
 def _tui_migration_identity_sha256(rows: Iterable[TuiMigrationRow]) -> str:
     """Hash exact semantic identities and dispositions, excluding volatile locators."""
-    identities_and_dispositions = sorted(
-        {
+    identities_and_dispositions = {
             (
                 str(row.kind),
                 row.legacy_module,
@@ -1429,10 +1654,12 @@ def _tui_migration_identity_sha256(rows: Iterable[TuiMigrationRow]) -> str:
                 row.state,
             )
             for row in rows
-        },
+        }
+    ordered_identities = sorted(
+        identities_and_dispositions,
         key=lambda row: tuple("" if part is None else part for part in row),
     )
-    payload = json.dumps(identities_and_dispositions, ensure_ascii=False, separators=(",", ":"))
+    payload = json.dumps(ordered_identities, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(payload.encode(_UTF_8)).hexdigest()
 
 

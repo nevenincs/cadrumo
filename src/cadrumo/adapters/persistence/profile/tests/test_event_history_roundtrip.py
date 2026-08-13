@@ -24,7 +24,7 @@ from .....domain.buckets import (
     BucketEventType,
     derive_bucket_event_id,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...storage import Envelope, SensitivityClass
 from ..buckets import (
     _CATALOGUE_VERSION,
@@ -133,17 +133,9 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
     not actually content-addressed.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
-    from ...storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         bucket_id = "b" * 32
@@ -160,21 +152,19 @@ def test_bucket_event_payload_tampering_surfaces_at_load(tmp_path: Path) -> None
         repo = BucketEventHistoryRepository()
         repo.save(catalogue)
 
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _NAMESPACE,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            envelope = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == _NAMESPACE,
+        )
+
+        def mutate(envelope):
             events = envelope["payload"]["events"]
             event_dict = events[event.event_id]
             assert event_dict["payload"]["modelo"] == "303", (
                 "fixture must serialise the modelo payload key as '303' for this proof test to be meaningful"
             )
             event_dict["payload"]["modelo"] = "100"
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(profile.repository._engine, row_statement=stmt, mutate=mutate)
 
         with pytest.raises(BucketEventHistoryPersistenceError) as exc_info:
             repo.load()

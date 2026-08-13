@@ -15,6 +15,33 @@ committed-justificante parse cache, and the shared typed M303
 filing-evidence fixture builder are re-exported here as the canonical
 cross-package import surface for other test modules' structural ratchets
 and cross-layer fixtures.
+
+The rest of the support modules here -- ``secure_sql``, ``cli_runner``,
+``user_profile``, ``registry_observations`` and their two dozen siblings --
+are reached by cross-package consumers through their own submodule path
+(``from cadrumo.tests.secure_sql import ...``), never through this facade.
+That is the deliberate convention of this package, not an oversight waiting
+to be swept: the reach spans well over a thousand import sites, across the
+better part of a thousand test modules and roughly thirty support modules,
+and it is what the tree does uniformly.
+
+The facade-ownership discipline that would otherwise forbid a
+submodule-direct reach governs PRODUCTION packages, where a single canonical
+public surface per package is what keeps a domain boundary auditable. This
+package is wheel-excluded test plumbing consumed only by other tests, and
+re-exporting its modules here would invert the cost rather than pay it:
+``secure_sql`` alone drags the whole ``adapters.persistence.storage`` stack,
+and eagerly binding it would make every module that touches any name on this
+facade -- including the domain-free AST and path inventory most consumers
+actually want -- import it. The submodule path costs nothing and names its
+owner exactly.
+
+The two names in :data:`_LAZY_EXPORTS` are consequently NOT a template.
+Each sits on this facade for its own specific reason, stated in
+``__getattr__`` below, and each is lazy precisely so it does not drag its
+domain surface into an unrelated test's import graph. Two entries are not a
+migration in progress: a new shared helper belongs in a submodule, imported
+by its path, not promoted to a third row here.
 """
 
 from __future__ import annotations

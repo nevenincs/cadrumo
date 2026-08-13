@@ -26,7 +26,7 @@ from pydantic import AnyHttpUrl
 
 from ......core import CasillaId, CasillaValueKind, Period, validated_casilla_id
 from ......core.config import Settings
-from ......tests.secure_sql import isolated_runtime_profile
+from ......tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from .._observation_store import FiledDeclaracionObservationStore
 from .._schema import (
@@ -138,15 +138,8 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
     observation audit trail.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from .....persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from .....persistence.storage.sql import SecureObjectRow
     from .....persistence.storage.sql.session import session_scope
     from .._observation_store import _OBSERVATION_NAMESPACE
@@ -175,16 +168,22 @@ def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
                 f"expected one observation row, found {len(obs_rows)} "
                 f"(namespaces: {sorted({r.namespace for r in all_rows})})"
             )
-            row = obs_rows[0]
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            envelope = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == _OBSERVATION_NAMESPACE,
+        )
+
+        def mutate(envelope):
             payload = envelope["payload"]
             assert payload.get("artefacts"), (
                 "fixture must serialise a non-empty artefacts tuple for this proof test to be meaningful"
             )
             payload["artefacts"] = []
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         from pydantic import ValidationError
 

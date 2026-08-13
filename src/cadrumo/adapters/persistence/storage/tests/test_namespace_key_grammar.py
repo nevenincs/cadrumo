@@ -11,6 +11,7 @@ sitting as stale documentation.
 
 from __future__ import annotations
 
+import hashlib
 import re
 
 import pytest
@@ -23,6 +24,17 @@ from .._namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from ..errors import NamespaceRegistryError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+_MEMBER_ID = "GRUPO-MEMBER-PLACEHOLDER-A"
+"""Obviously-synthetic stand-in for a grupo member identifier.
+
+The key builder normalises and digests whatever it is handed, so the identity
+contract under test is independent of the identifier grammar. Using a token no
+identifier authority would ever issue keeps a realistic tax identifier out of
+the test corpus entirely.
+"""
+
+_OTHER_MEMBER_ID = "GRUPO-MEMBER-PLACEHOLDER-B"
 
 
 def _shape_to_regex(shape: str) -> re.Pattern[str]:
@@ -95,10 +107,14 @@ def test_calculation_observation_grammar_describes_single_and_member_keys() -> N
     period = Period.from_year_and_code(2024, "1T")
 
     single_key = observation_key("353", period)
-    member_key = member_observation_key("353", period, "B12345678")
+    member_key = member_observation_key("353", period, _MEMBER_ID)
 
-    # The member key extends the single-filer key with a trailing NIF segment.
-    assert member_key == f"{single_key}:B12345678"
+    # The member key extends the single-filer key with a trailing digest segment.
+    # The expected digest is computed here from the stdlib over the canonical
+    # token, never read back from the production helper.
+    expected_digest = hashlib.sha256(_MEMBER_ID.encode("utf-8")).hexdigest()
+    assert member_key == f"{single_key}:{expected_digest}"
+    assert _MEMBER_ID not in member_key
 
     assert _matches_any(single_key, shapes)
     assert _matches_any(member_key, shapes)
@@ -107,12 +123,34 @@ def test_calculation_observation_grammar_describes_single_and_member_keys() -> N
     assert not _matches_any("100:2024", shapes)
 
 
+def test_member_segment_addresses_one_identity_across_spellings() -> None:
+    """Two renderings of ONE member token address ONE row; two members do not.
+
+    The member segment is the widening the 353<-322 per_grupo_member fan-in
+    counts over, so its identity contract IS the count's correctness. While the
+    declared value was appended verbatim, a member captured lower-cased in one
+    pull and space-padded in the next persisted as two rows and was enumerated
+    twice.
+    """
+    period = Period.from_year_and_code(2024, "1T")
+    canonical = member_observation_key("353", period, _MEMBER_ID)
+
+    for variant in (_MEMBER_ID.lower(), f"  {_MEMBER_ID}  ", f"{_MEMBER_ID.lower()}\t"):
+        assert member_observation_key("353", period, variant) == canonical
+
+    # ...and a genuinely different member is a genuinely different row.
+    assert member_observation_key("353", period, _OTHER_MEMBER_ID) != canonical
+
+    # The single-filer key is untouched by the widening.
+    assert member_observation_key("353", period, None) == observation_key("353", period)
+
+
 def test_calculation_observation_pre_correction_grammar_rejected_the_member_key() -> None:
     """The retired ``{modelo}:{filing_year}:{period}`` grammar dropped the member row."""
     drifted = _declared_shapes("{modelo}:{filing_year}:{period}")
     period = Period.from_year_and_code(2024, "1T")
 
-    assert not _matches_any(member_observation_key("353", period, "B12345678"), drifted)
+    assert not _matches_any(member_observation_key("353", period, _MEMBER_ID), drifted)
     # The single-filer key was always covered; only the member variant drifted.
     assert _matches_any(observation_key("100", period), drifted)
 
@@ -157,7 +195,7 @@ def test_templated_namespaces_admit_their_real_keys_and_refuse_traversal() -> No
     assert observations.singleton_object_key is None
 
     observations.validate_object_key(observation_key("100", period))
-    observations.validate_object_key(member_observation_key("353", period, "B12345678"))
+    observations.validate_object_key(member_observation_key("353", period, _MEMBER_ID))
 
     transactions = TRANSACTION_CATALOGUE_NAMESPACE
     assert transactions.singleton_object_key is None

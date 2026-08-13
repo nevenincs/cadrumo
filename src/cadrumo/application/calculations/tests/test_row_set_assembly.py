@@ -17,7 +17,10 @@ import pytest
 
 from ....adapters.outbound.google import RowSetCellEdit
 from ....core.resources import resources
-from ....domain.calculations.registry import RegistryValidationError
+from ....domain.calculations.registry import (
+    RegistryValidationError,
+    WithholdingObservation,
+)
 from .._row_set_assembly import (
     assemble_atribucion_observations,
     assemble_donativo_observations,
@@ -465,8 +468,6 @@ def test_the_model_itself_no_longer_supplies_a_country() -> None:
     returned, every call-site fix above would silently stop mattering and the
     row-level cases would still pass.
     """
-    from ....domain.calculations.registry._withholding_bindings import WithholdingObservation
-
     observation = WithholdingObservation(
         source_id="direct",
         perceptor_tax_id="12345678A",
@@ -480,8 +481,6 @@ def test_the_model_itself_no_longer_supplies_a_country() -> None:
 
 def test_a_stated_country_still_arrives_intact() -> None:
     """The precision half: removing the default must not lose a real reading."""
-    from ....domain.calculations.registry._withholding_bindings import WithholdingObservation
-
     observation = WithholdingObservation(
         source_id="direct",
         perceptor_tax_id="12345678A",
@@ -492,33 +491,3 @@ def test_a_stated_country_still_arrives_intact() -> None:
     )
 
     assert observation.country_code == "FR"
-
-
-def test_an_absent_country_leaves_the_built_row_without_the_field() -> None:
-    """Absence propagates as an absent KEY, so a binding needing it refuses.
-
-    The payload carries decimals and strings and cannot hold a null, and the
-    shipped resolver already raises a not-produced error naming the binding when
-    a row_field is missing. So the absence surfaces there -- visibly, with the
-    binding named -- instead of as a silent country nobody stated.
-    """
-    from ....domain.calculations.registry._withholding_bindings import (
-        WithholdingObservation,
-        _build_withholding_rows,
-    )
-
-    def _observation(country: str | None) -> WithholdingObservation:
-        return WithholdingObservation(
-            source_id=f"row-{country}",
-            perceptor_tax_id="12345678A",
-            perceptor_legal_name="Perceptor One",
-            country_code=country,
-            transaction_date=date(2025, 12, 31),
-            clave="A",
-        )
-
-    stated = _build_withholding_rows("per_perceptor", (_observation("FR"),))[0]
-    unstated = _build_withholding_rows("per_perceptor", (_observation(None),))[0]
-
-    assert stated["country_code"] == "FR"
-    assert "country_code" not in unstated

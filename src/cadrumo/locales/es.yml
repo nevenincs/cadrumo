@@ -5639,9 +5639,6 @@ cli:
         de un pagador, con más de 1.500 € de los pagadores secundarios, reduce el
         límite de la obligación de declarar (art. 96.3 LIRPF); puede estar obligado
         a presentar el Modelo 100 si su total de rendimientos del trabajo lo supera.
-      integrity_next: Ejecuta `aeat config repair` para ver el detalle. No pongas
-        filas en cuarentena salvo que quieras archivar deliberadamente datos locales
-        antiguos ilegibles.
       invoices_empty: No hay facturas emitidas ni recibidas en el registro de facturas.
         Es un almacén distinto del libro bancario y no cuenta las transacciones del
         libro clasificadas. Un registro de facturas vacío es normal si solo usas el
@@ -5649,24 +5646,21 @@ cli:
       invoices_present: '%{count} factura(s) emitida(s)/recibida(s) en el registro
         de facturas (un almacén distinto del libro bancario).'
       next_heading: Que escribir ahora
-      next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
-        csv - importar movimientos bancarios.'
-      next_landing_command: '  aeat --help - volver a la guía de comandos.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo
-        210 está visible para descubrimiento IRNR, pero la creación local de trabajos
-        aún no está soportada; presenta por AEAT Sede G320.'
-      next_modelo_work_command: '  aeat app modelo work create - iniciar una declaración
-        de modelo a partir de los datos de tu libro.'
-      next_review_command: '  aeat app ledger review - revisar filas importadas.'
-      next_step_available: Hay un siguiente paso recomendado disponible en la salida
-        del resumen.
-      next_work_calculate_command: '  aeat app modelo work list - retomar una unidad
-        de trabajo de modelo en curso.'
-      next_work_create_command: '  aeat app modelo work create - iniciar una unidad
-        de trabajo para otro modelo.'
+      next_step:
+        command_guide: Vuelve a la guía de comandos.
+        import_transactions: Importa un extracto bancario para registrar tus movimientos.
+        modelo_210_sede_only: Modelo 210 está visible para descubrimiento IRNR, pero
+          la creación local de unidades de trabajo aún no está soportada; presenta
+          por AEAT Sede G320.
+        repair_storage: Ejecuta el diagnóstico de almacenamiento para ver el detalle.
+          No pongas filas en cuarentena salvo que quieras archivar deliberadamente
+          datos locales antiguos ilegibles.
+        review_ledger: Revisa las filas importadas.
+        start_work_unit_from_ledger: Inicia una declaración de modelo a partir de
+          los datos de tu libro.
       profile_active: Estas trabajando en el perfil `%{profile}`.
-      profile_missing: No hay un perfil activo configurado. Ejecuta `aeat config profile
-        create NAME` antes de importar datos.
+      profile_missing: No hay un perfil activo configurado. Crea uno antes de importar
+        datos.
       storage_ok: El almacenamiento local cifrado se puede leer con la clave maestra
         actual.
       storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden
@@ -5679,11 +5673,10 @@ cli:
         el libro.'
       work_units_empty: Aun no se ha iniciado ninguna unidad de trabajo de modelos.
       work_units_present: '%{count} unidad(es) de trabajo de modelos en curso en este
-        almacenamiento local; tu trabajo de modelos esta guardado, retomalo con `aeat
-        app modelo work list`.'
+        almacenamiento local; tu trabajo de modelos esta guardado y puedes retomarlo.'
       work_units_present_with_discarded: '%{count} unidad(es) de trabajo de modelos
         activas (%{discarded} descartada(s)) en este almacenamiento local; tu trabajo
-        de modelos activo esta guardado, retomalo con `aeat app modelo work list`.'
+        de modelos activo esta guardado y puedes retomarlo.'
     status_help: Mostrar el estado del perfil, libro y modelos
     taxpayer_model_undeclared: El perfil activo no declara este modelo fiscal; actualiza
       el perfil o vuelve a ejecutar con la anulación de perfil incompleto.

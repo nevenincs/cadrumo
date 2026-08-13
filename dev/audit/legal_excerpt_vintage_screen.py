@@ -43,6 +43,15 @@ excluded a third of its own population. Every verdict class here is exhaustive
 over the input population and :func:`summarise` reconciles the totals; a screen
 whose counts do not add up says so instead of printing a number.
 
+AND THE POPULATION BOUNDARY IS THE SAME HAZARD ONE STEP EARLIER. An entry whose
+cited file has no shorter bundled prefix was once skipped outright, as though
+it always meant "this entry cites the whole consolidated norm, which is its own
+current text". That is true for most of them and false for the rest: an excerpt
+whose norm ships no whole-norm counterpart looks identical at that test, and 97
+entries left the population before it was counted. The two are separated on the
+cited file's own unit count -- many units is the norm itself, one unit is an
+excerpt -- and the excluded set is counted and printed rather than skipped.
+
 MEASURED LIMIT, stated because it bounds every verdict this screen emits. The
 opening-operative-sentence check is conclusive for SAME-PROVISION IDENTITY and
 is not a full-text comparison, so a later-clause divergence remains possible in
@@ -60,6 +69,40 @@ matching heading would recover it, and was rejected: that forks unit selection
 away from the canonical primitive to buy one entry, and the entry is reported
 as ``misresolved`` with both headings, which is the honest disposition for what
 is plausibly a mislabelled excerpt rather than a resolution defect.
+
+THE SECOND ORACLE, and the trap that makes it dangerous. A norm with no bundled
+whole-norm consolidation can still have its individual articles bundled as BOE
+open-data ARTICLE payloads (``*-redacciones.html``). Those are NOT
+current-text documents: each concatenates EVERY historical redaction of the
+article, wrapped in ``<version fecha_vigencia=...>`` elements. Comparing an
+excerpt against the whole payload finds a clause that survives only in a
+REPEALED redaction and reports the entry MATCHING -- a false clean verdict on
+exactly the defect class this screen exists to catch. So the redaction IN FORCE
+is selected first, by
+:func:`dev.corpus.fetch_boe_normative.assert_serves_the_article_in_force`,
+which reads the maximum ``fecha_vigencia`` and REFUSES a tie rather than
+picking (art. 91 of LIVA carries two redactions dated 19950120, one reading
+3 per cent and one 4 per cent). This module never re-derives that rule.
+
+Their committed sidecars are unusable as an oracle for the same reason -- the
+extractor has no heading delimiter for this XML shape, so it folds every
+redaction into one unit and leads it with the response envelope's ``200``/``ok``
+tokens. The raw payload is read instead, which excludes the envelope by
+construction rather than by stripping it afterwards.
+
+BOE's block ID is POSITIONAL and its ``titulo`` is SEMANTIC, so a payload is
+matched to an entry on the title. The catalogue's own ``corpus_ref`` anchor is
+deliberately NOT used for matching, and is reported rather than trusted: many
+of these entries carry an anchor that is not BOE's block id, and a subset name
+a genuinely DIFFERENT block -- article 11 of the Spain-Morocco convention lives
+at ``ar-10``, article 10 of the Spain-Netherlands convention at ``a1-2``. The
+screen prints the current counts; no figure is frozen in this prose.
+
+PRECEDENCE, chosen rather than incidental. Where an entry already has a
+whole-norm consolidation, that stays its oracle even if an article payload also
+exists. Re-oracling an already-comparable entry would move its verdict for a
+reason that has nothing to do with the law, and the split could no longer
+separate "newly reachable" from "measured differently".
 
 A SCREEN, not a gate, deliberately. Divergences are known-present right now, so
 a gate would land red and tax every peer for a defect they did not create.
@@ -86,6 +129,13 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core import CorpusAnchorResolutionError, normalise_corpus_text, resolve_anchored_extracted_unit
+from dev.corpus.fetch_boe_normative import (
+    NormativeAcquisitionError,
+    article_block_title,
+    article_redaction_markup,
+    assert_serves_the_article_in_force,
+)
+from dev.docs.preprocess import render_normative_prose
 
 #: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
 #: unshipped tooling and must not reach into the shipped package's internals,
@@ -141,6 +191,28 @@ _LATIN_ORDINALS: Final = frozenset(
         "novovicies",
         "tricies",
     }
+)
+
+#: A BOE open-data article payload, whose stem carries the document id and the
+#: BOE block it was fetched for. The block is read from the FILENAME because it
+#: is not derivable from the article number, and it is then re-asserted against
+#: the payload's own ``<bloque id=...>`` by the acquirer.
+_REDACTION_PAYLOAD: Final = re.compile(r"^(?P<document_id>boe-[a-z]-\d{4}-\d+)-(?P<block>.+)-redacciones$")
+
+#: BOE's per-redaction editorial annotation ("Redactado conforme a la
+#: corrección de erratas publicada en BOE núm. 295 ... Ref. BOE-A-2003-22594").
+#: Dropped because it is PROVENANCE, not a clause of the article: an excerpt
+#: sliced from the whole-document view carries a differently-worded note or
+#: none, so counting it as legal text reports a divergence about the annotation
+#: rather than about the law. Table paragraphs are deliberately NOT dropped --
+#: a rate table is operative text.
+_EDITORIAL_NOTE: Final = re.compile(r"<p\b[^>]*\bclass=\"nota_pie[^\"]*\"[^>]*>.*?</p\s*>", re.IGNORECASE | re.DOTALL)
+
+#: The tokens that open a structural citation in an excerpt filename. A trailing
+#: year is a declared vintage only when one of these precedes it; otherwise the
+#: year is part of the norm's own name.
+_CITATION_HEADS: Final = frozenset(
+    {"art", "arts", "articulo", "articulos", "apartado", "anexo", "da", "dt", "df", "dd"}
 )
 
 _VINTAGE_YEAR: Final = re.compile(r"^(?:19|20)\d{2}$")
@@ -220,8 +292,16 @@ class Verdict(StrEnum):
     """
 
     NO_ORACLE = "no_oracle"
-    """The norm ships no whole-norm consolidated counterpart. Not comparable,
-    and neither clean nor dirty -- simply unmeasured."""
+    """Nothing bundled can state this provision's current text: neither a
+    whole-norm consolidation nor a BOE article payload. Not comparable, and
+    neither clean nor dirty -- simply unmeasured."""
+
+    ORACLE_INDETERMINATE = "oracle_indeterminate"
+    """An article payload exists but does not say which redaction is in force.
+    Distinct from NO_ORACLE on purpose: a payload that ties on the latest
+    ``fecha_vigencia`` looks like an oracle and is not one, and folding it into
+    "nothing bundled" would hide the one failure mode that can silently return
+    REPEALED text."""
 
     UNRESOLVED = "unresolved"
     """A consolidated counterpart exists but no candidate key reached a unit."""
@@ -247,6 +327,25 @@ class Verdict(StrEnum):
     text, so the gate passes over a stale document. The defect class."""
 
 
+class OracleKind(StrEnum):
+    """Which bundled document stated the current text an entry was measured on.
+
+    Reported alongside the verdict so a shift in the published split can be
+    attributed. Two things moved the ratio at once -- the anchor derivation was
+    rebuilt, and a population that had no oracle at all acquired one -- and a
+    split that cannot separate them answers neither question.
+    """
+
+    NONE = "none"
+    """No comparison was made, so no document stated anything."""
+
+    CONSOLIDATED_NORM = "consolidated_norm"
+    """The norm's whole-norm consolidated file, reached by anchor derivation."""
+
+    ARTICLE_REDACTION = "article_redaction"
+    """A BOE open-data article payload, reduced to the redaction in force."""
+
+
 @dataclass(frozen=True)
 class Finding:
     """One entry's measured relationship to the bundled current text."""
@@ -259,10 +358,38 @@ class Finding:
     opening_sentence_matches: bool = False
     identity_confirmed: bool = False
     resolved_anchor: str = ""
+    oracle_kind: OracleKind = OracleKind.NONE
+    catalogue_anchor: str = ""
+    boe_block: str = ""
+
+    @property
+    def anchor_disagrees(self) -> bool:
+        """Whether the catalogue's own anchor is not BOE's block id, verbatim.
+
+        Reported, never acted on: repointing an anchor is adjudication.
+        """
+        return bool(self.catalogue_anchor and self.boe_block and self.catalogue_anchor != self.boe_block)
+
+    @property
+    def anchor_names_another_block(self) -> bool:
+        """Whether the disagreement is substantive rather than a naming form.
+
+        ``art-10`` against block ``a10`` is the same provision spelled two
+        ways and costs nothing. ``art-10`` against block ``a1-2`` is a
+        DIFFERENT block, and an instrument keyed on the catalogue anchor would
+        have compared the entry against another article and read the difference
+        as supersession. Only this subset is a hazard.
+        """
+        return self.anchor_disagrees and structural_key(self.catalogue_anchor) != structural_key(self.boe_block)
 
     def render(self) -> str:
         """Return the finding as one operator-readable line."""
-        if self.verdict in {Verdict.NO_ORACLE, Verdict.UNRESOLVED, Verdict.MISRESOLVED}:
+        if self.verdict in {
+            Verdict.NO_ORACLE,
+            Verdict.ORACLE_INDETERMINATE,
+            Verdict.UNRESOLVED,
+            Verdict.MISRESOLVED,
+        }:
             return f"{self.entry_id}: {self.verdict.value} -- {self.detail}"
         opening = "opening sentence verbatim" if self.opening_sentence_matches else "opening sentence differs"
         identity = "identity confirmed" if self.identity_confirmed else "identity UNCONFIRMED"
@@ -455,6 +582,37 @@ def norm_root(stem: str, stems: frozenset[str]) -> tuple[str, str] | None:
     return None
 
 
+@dataclass(frozen=True)
+class ArticlePayload:
+    """One bundled BOE open-data article payload, before redaction selection.
+
+    ``block`` is read from the filename because it is not derivable from the
+    article number, and the acquirer re-asserts it against the payload's own
+    ``<bloque id=...>``. ``title`` is BOE's ``titulo``, which is the only field
+    that names the provision.
+    """
+
+    path: Path
+    document_id: str
+    block: str
+    title: str
+
+
+@dataclass(frozen=True)
+class ScreenResult:
+    """The screened population, plus the one subpopulation deliberately excluded.
+
+    The exclusion is carried rather than dropped. An entry citing its norm's
+    whole consolidated file has no excerpt to compare and is out of scope by
+    definition -- but "out of scope" and "silently lost" look identical in a
+    published ratio unless the count is printed.
+    """
+
+    findings: tuple[Finding, ...]
+    population: int
+    cites_consolidated_norm: int
+
+
 def summarise(findings: list[Finding], population: int) -> str:
     """Return the reconciled tally, refusing to print a split that does not add up.
 
@@ -481,28 +639,68 @@ def summarise(findings: list[Finding], population: int) -> str:
     return "\n".join(lines)
 
 
-def screen(root: Path) -> tuple[list[Finding], int]:
-    """Return one finding per excerpt-backed entry, and the population size."""
+def article_payloads(corpus: Path) -> dict[str, tuple[ArticlePayload, ...]]:
+    """Return the bundled article payloads, grouped by BOE document id.
+
+    Read at run time with no baked-in list, so a later acquisition widens the
+    comparable population without editing this module.
+    """
+    grouped: dict[str, list[ArticlePayload]] = {}
+    for path in sorted(corpus.glob("*-redacciones.html")):
+        match = _REDACTION_PAYLOAD.match(path.name.removesuffix(".html"))
+        if match is None:
+            continue
+        document_id = match.group("document_id").upper()
+        payload = path.read_text(encoding=_UTF_8)
+        grouped.setdefault(document_id, []).append(
+            ArticlePayload(
+                path=path,
+                document_id=document_id,
+                block=match.group("block"),
+                title=article_block_title(payload),
+            ),
+        )
+    return {document_id: tuple(items) for document_id, items in grouped.items()}
+
+
+def screen(root: Path) -> ScreenResult:
+    """Return one finding per excerpt-backed entry, and the excluded count."""
     entries = _load_entries(root / _LEGAL_DIR)
     corpus = root / _CORPUS_DIR
     stems = frozenset(path.name.removesuffix(".html") for path in corpus.glob("*.html"))
     if not stems:
         raise SystemExit(f"read zero corpus files, so the result would be meaningless: {corpus}")
+    payloads = article_payloads(corpus)
 
     findings: list[Finding] = []
+    cites_consolidated_norm = 0
     for entry_id, body in sorted(entries.items()):
         corpus_ref = body.get("corpus_ref", "")
         if not isinstance(corpus_ref, str):
             continue
-        path, _, _fragment = corpus_ref.partition("#")
+        path, _, fragment = corpus_ref.partition("#")
         if not path.endswith(".html"):
             continue
         stem = Path(path).name.removesuffix(".html")
         root_pair = norm_root(stem, stems)
-        if root_pair is None:
-            continue  # The entry cites the consolidated file itself: its own current text.
-        findings.append(_screen_entry(entry_id, body, corpus, stem, root_pair))
-    return findings, len(findings)
+        if root_pair is not None:
+            findings.append(_screen_entry(entry_id, body, corpus, stem, root_pair))
+            continue
+        # No shorter bundled prefix. Either the entry cites its norm's whole
+        # consolidated file -- its own current text, nothing to compare -- or it
+        # cites an excerpt whose norm ships no consolidation at all. The two are
+        # indistinguishable by name and were once both skipped; the cited file's
+        # own unit count tells them apart.
+        cited = corpus / f"{stem}.html.extracted.json"
+        if not cited.exists():
+            findings.append(Finding(entry_id, Verdict.NO_ORACLE, f"no extracted sidecar for {stem}"))
+            continue
+        cited_units = readable_units(cited)
+        if len(cited_units) >= _MIN_ORACLE_UNITS:
+            cites_consolidated_norm += 1
+            continue
+        findings.append(_screen_via_article_payload(entry_id, body, stem, fragment, cited_units, payloads))
+    return ScreenResult(tuple(findings), len(findings), cites_consolidated_norm)
 
 
 def _screen_entry(
@@ -535,19 +733,116 @@ def _screen_entry(
         return Finding(entry_id, Verdict.UNRESOLVED, f"no candidate key reached a unit ({reason}); tried {keys}")
 
     current_title, current_text = resolved
-    identity_confirmed = False
-    excerpt_key = structural_key(excerpt_unit["title"])
-    if excerpt_key:
-        if excerpt_key != structural_key(current_title):
-            return Finding(
-                entry_id,
-                Verdict.MISRESOLVED,
-                f"excerpt heading {excerpt_unit['title'].split('.')[0]!r} "
-                f"but the consolidated unit reached is {current_title.split('.')[0]!r}",
-            )
-        identity_confirmed = True
+    identity = _confirm_identity(entry_id, excerpt_unit["title"], current_title, "consolidated unit")
+    if isinstance(identity, Finding):
+        return identity
+    anchor = next((unit["anchor"] for unit in oracle_units if unit["text"] == current_text.strip()), "")
+    return _classify(
+        entry_id,
+        body,
+        stem,
+        excerpt_unit,
+        current_title,
+        current_text,
+        identity_confirmed=identity,
+        resolved_anchor=anchor,
+        oracle_kind=OracleKind.CONSOLIDATED_NORM,
+    )
 
-    return _classify(entry_id, body, stem, excerpt_unit, current_title, current_text, oracle_units, identity_confirmed)
+
+def _screen_via_article_payload(
+    entry_id: str,
+    body: dict[str, object],
+    stem: str,
+    fragment: str,
+    cited_units: tuple[dict[str, str], ...],
+    payloads: dict[str, tuple[ArticlePayload, ...]],
+) -> Finding:
+    """Measure one entry against the redaction in force of a BOE article payload."""
+    document_id = body.get("document_id")
+    if not isinstance(document_id, str) or document_id.upper() not in payloads:
+        return Finding(entry_id, Verdict.NO_ORACLE, f"no whole-norm consolidation and no article payload for {stem}")
+    if len(cited_units) != 1:
+        return Finding(entry_id, Verdict.NO_ORACLE, f"excerpt {stem} holds {len(cited_units)} units, not one")
+    excerpt_unit = cited_units[0]
+
+    token = entry_id.partition(":")[2]
+    wanted = {structural_key(key) for key in candidate_keys(token)} - {""}
+    matched = [item for item in payloads[document_id.upper()] if structural_key(item.title) in wanted]
+    if len(matched) != 1:
+        return Finding(
+            entry_id,
+            Verdict.NO_ORACLE,
+            f"{len(matched)} of {len(payloads[document_id.upper()])} article payloads for {document_id} "
+            f"carry a title matching {sorted(wanted)}; refused rather than picked",
+        )
+    payload_file = matched[0]
+
+    markup = payload_file.path.read_text(encoding=_UTF_8)
+    try:
+        redaction = assert_serves_the_article_in_force(
+            markup,
+            document_id=payload_file.document_id,
+            block=payload_file.block,
+        )
+        in_force = _EDITORIAL_NOTE.sub("", article_redaction_markup(markup, redaction))
+        current = render_normative_prose(in_force)
+    except NormativeAcquisitionError as exc:
+        return Finding(
+            entry_id,
+            Verdict.ORACLE_INDETERMINATE,
+            f"{payload_file.path.name}: {exc}",
+            oracle_kind=OracleKind.ARTICLE_REDACTION,
+            catalogue_anchor=fragment,
+            boe_block=payload_file.block,
+        )
+
+    current_title, current_text = _split_redaction_heading(current, block_title=payload_file.title)
+    identity = _confirm_identity(entry_id, excerpt_unit["title"], current_title, "article payload reached")
+    if isinstance(identity, Finding):
+        return identity
+    return _classify(
+        entry_id,
+        body,
+        stem,
+        excerpt_unit,
+        current_title,
+        current_text,
+        identity_confirmed=identity,
+        resolved_anchor=f"#{payload_file.block}",
+        oracle_kind=OracleKind.ARTICLE_REDACTION,
+        catalogue_anchor=fragment,
+        boe_block=payload_file.block,
+    )
+
+
+def _split_redaction_heading(prose: str, *, block_title: str) -> tuple[str, str]:
+    """Split a rendered redaction into ``(heading, body)``.
+
+    The consolidated path compares an article's BODY against the excerpt's
+    body, because the extractor lifts the heading into the unit title. A
+    redaction carries its heading inline, so leaving it in the body would count
+    the article's own heading as a clause the excerpt is missing.
+    """
+    head, separator, rest = prose.partition("\n")
+    head_key = structural_key(head)
+    if separator and head_key and head_key == structural_key(block_title):
+        return head, rest
+    return block_title, prose
+
+
+def _confirm_identity(entry_id: str, excerpt_title: str, current_title: str, reached: str) -> bool | Finding:
+    """Return whether identity was corroborated, or the misresolution finding."""
+    excerpt_key = structural_key(excerpt_title)
+    if not excerpt_key:
+        return False
+    if excerpt_key != structural_key(current_title):
+        return Finding(
+            entry_id,
+            Verdict.MISRESOLVED,
+            f"excerpt heading {excerpt_title.split('.')[0]!r} but the {reached} is {current_title.split('.')[0]!r}",
+        )
+    return True
 
 
 def _classify(
@@ -557,14 +852,17 @@ def _classify(
     excerpt_unit: dict[str, str],
     current_title: str,
     current_text: str,
-    oracle_units: tuple[dict[str, str], ...],
+    *,
     identity_confirmed: bool,
+    resolved_anchor: str,
+    oracle_kind: OracleKind,
+    catalogue_anchor: str = "",
+    boe_block: str = "",
 ) -> Finding:
     current_clauses = clause_chunks(current_text)
     excerpt_normalised = normalise_corpus_text(excerpt_unit["text"])
     absent = [clause for clause in current_clauses if clause not in excerpt_normalised]
     opening_matches = bool(current_clauses) and current_clauses[0] in excerpt_normalised
-    anchor = next((unit["anchor"] for unit in oracle_units if unit["text"] == current_text.strip()), "")
 
     if not absent:
         verdict = Verdict.MATCHES
@@ -588,13 +886,32 @@ def _classify(
         clauses_absent=len(absent),
         opening_sentence_matches=opening_matches,
         identity_confirmed=identity_confirmed,
-        resolved_anchor=anchor,
+        resolved_anchor=resolved_anchor,
+        oracle_kind=oracle_kind,
+        catalogue_anchor=catalogue_anchor,
+        boe_block=boe_block,
     )
 
 
 def _is_vintaged(stem: str) -> bool:
-    """Return whether the excerpt declares a historical vintage in its stem."""
-    return bool(_VINTAGE_YEAR.match(stem.rsplit("-", maxsplit=1)[-1]))
+    """Return whether the excerpt declares a historical vintage in its stem.
+
+    A trailing year alone does not say so, and reading it that way is a FALSE
+    CLEAN VERDICT: ``vintaged`` means "divergence from current text is correct
+    by design", so a misclassification excuses a real staleness. Almost every
+    norm carries its own enactment year in its name -- ``orden-hac-590-2021``,
+    ``trlirnr-rdleg-5-2004``, ``ley-12-2002`` -- and a bare-norm-stem rule
+    called 29 of those vintaged the moment the population widened to entries
+    citing a norm-named excerpt.
+
+    A vintage suffix is a year that FOLLOWS a citation token
+    (``ley-35-2006-art-52-2015`` is article 52 as it stood in 2015), so the
+    stem must carry a citation head as well as the year.
+    """
+    segments = stem.split("-")
+    if not _VINTAGE_YEAR.match(segments[-1]):
+        return False
+    return any(segment in _CITATION_HEADS for segment in segments[:-1])
 
 
 def _resolve_first(sidecar: Path, keys: list[str]) -> tuple[tuple[str, str] | None, str]:
@@ -624,12 +941,37 @@ def _load_entries(legal_dir: Path) -> dict[str, dict[str, object]]:
 def main() -> int:
     """Print the reconciled split and the worklist. Always exits 0 -- this reports."""
     root = Path(__file__).resolve().parents[2]
-    findings, population = screen(root)
+    result = screen(root)
+    findings = list(result.findings)
     if not findings:
         raise SystemExit("screened zero excerpt-backed entries; the result would be meaningless")
 
-    print(summarise(findings, population))
-    for verdict in (Verdict.UNRESOLVED, Verdict.MISRESOLVED, Verdict.DIVERGES_GATE_GREEN, Verdict.DIVERGES_GATE_FIRES):
+    print(summarise(findings, result.population))
+    print(f"\nexcluded, cites its norm's whole consolidated file: {result.cites_consolidated_norm}")
+
+    for kind in (OracleKind.CONSOLIDATED_NORM, OracleKind.ARTICLE_REDACTION):
+        subset = [finding for finding in findings if finding.oracle_kind is kind]
+        if not subset:
+            continue
+        print(f"\n=== measured against a {kind.value} oracle ({len(subset)}) ===")
+        print(summarise(subset, len(subset)))
+        # Stratified, because the two strata are not the same measurement. An
+        # identity-confirmed excerpt carries the article's own structural
+        # heading and is a faithful per-article copy; an unconfirmed one is a
+        # curated catalogue snippet, abridged by design, whose divergence from
+        # full current text says nothing about staleness. Pooling them makes a
+        # catch rate that is mostly a statement about excerpt shape.
+        confirmed = [finding for finding in subset if finding.identity_confirmed]
+        print(f"\n  -- identity confirmed only ({len(confirmed)}) --")
+        print("\n".join(f"  {line}" for line in summarise(confirmed, len(confirmed)).splitlines()))
+
+    for verdict in (
+        Verdict.UNRESOLVED,
+        Verdict.MISRESOLVED,
+        Verdict.ORACLE_INDETERMINATE,
+        Verdict.DIVERGES_GATE_GREEN,
+        Verdict.DIVERGES_GATE_FIRES,
+    ):
         selected = [finding for finding in findings if finding.verdict is verdict]
         if not selected:
             continue
@@ -644,6 +986,17 @@ def main() -> int:
         print("  derived key alone and is weaker than the others.")
         for finding in unconfirmed:
             print(f"  {finding.entry_id}")
+    disagreeing = [finding for finding in findings if finding.anchor_disagrees]
+    if disagreeing:
+        substantive = [finding for finding in disagreeing if finding.anchor_names_another_block]
+        print(f"\n--- catalogue anchor disagrees with BOE's block id ({len(disagreeing)}) ---")
+        print(f"  {len(substantive)} name a DIFFERENT block; the rest are the same provision spelled")
+        print("  two ways. Reported, never acted on: repointing an anchor is adjudication.")
+        for finding in disagreeing:
+            marker = "DIFFERENT BLOCK" if finding.anchor_names_another_block else "naming form"
+            print(
+                f"  {finding.entry_id}: cites #{finding.catalogue_anchor}, BOE serves #{finding.boe_block} ({marker})"
+            )
     return 0
 
 

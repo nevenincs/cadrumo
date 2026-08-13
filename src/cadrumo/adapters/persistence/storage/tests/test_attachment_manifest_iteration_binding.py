@@ -28,32 +28,22 @@ the row's own AAD so the row stays genuinely readable.
 
 from __future__ import annotations
 
-import json
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
 
 import pytest
 from sqlalchemy import select
 
-from .....core.external_constants import UTF_8_ENCODING
 from .....domain.attachments import (
     Attachment,
     AttachmentKind,
     AttachmentSource,
     AttachmentValidationError,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
-from ..crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ..sql import SecureObjectRow
 from ..sql.engine import get_engine
-from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -87,33 +77,12 @@ def _attachment(*, sha256: str, bytes_size: int, bucket_id: str) -> Attachment:
     )
 
 
-def _rewrite_manifest_envelope(
-    engine: Any,
-    attachment_id: str,
-    mutate: Callable[[dict[str, Any]], None],
-) -> None:
-    """Rewrite the decrypted manifest envelope in place, under the row's own AAD.
-
-    Re-encrypting under the same associated data keeps the row genuinely
-    readable, so the test exercises manifest drift rather than a broken
-    ciphertext the substrate would reject for unrelated reasons.
-    """
-    statement = select(SecureObjectRow).where(
+def _manifest_row_statement(attachment_id: str):
+    """Select one manifest row while the caller owns the content mutation."""
+    return select(SecureObjectRow).where(
         SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
         SecureObjectRow.object_key == attachment_id,
     )
-    with session_scope(engine) as session:
-        row = session.execute(statement).scalar_one()
-        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        envelope = cast(
-            "dict[str, Any]",
-            json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode(UTF_8_ENCODING)),
-        )
-        mutate(envelope)
-        row.payload = encrypt_secure_object_payload(
-            json.dumps(envelope).encode(UTF_8_ENCODING),
-            associated_data=aad,
-        )
 
 
 def _seed_two_attachments(store: AttachmentStore, *, bucket_id: str) -> tuple[Attachment, Attachment]:
@@ -153,10 +122,10 @@ def test_iteration_refuses_a_substitution_onto_another_stored_digest(tmp_path: P
         store = AttachmentStore()
         attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
-        _rewrite_manifest_envelope(
+        mutate_encrypted_secure_object_json(
             engine,
-            attachment_a.attachment_id,
-            lambda envelope: envelope["payload"].update(
+            row_statement=_manifest_row_statement(attachment_a.attachment_id),
+            mutate=lambda envelope: envelope["payload"].update(
                 sha256=attachment_b.attachment_id,
                 bytes_size=attachment_b.bytes_size,
             ),
@@ -180,10 +149,10 @@ def test_iteration_never_yields_the_substituted_identity(tmp_path: Path) -> None
         store = AttachmentStore()
         attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
-        _rewrite_manifest_envelope(
+        mutate_encrypted_secure_object_json(
             engine,
-            attachment_a.attachment_id,
-            lambda envelope: envelope["payload"].update(
+            row_statement=_manifest_row_statement(attachment_a.attachment_id),
+            mutate=lambda envelope: envelope["payload"].update(
                 sha256=attachment_b.attachment_id,
                 bytes_size=attachment_b.bytes_size,
             ),
@@ -209,10 +178,10 @@ def test_iteration_still_refuses_a_drift_to_an_unstored_digest(tmp_path: Path) -
         store = AttachmentStore()
         attachment_a, _ = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
-        _rewrite_manifest_envelope(
+        mutate_encrypted_secure_object_json(
             engine,
-            attachment_a.attachment_id,
-            lambda envelope: envelope["payload"].update(sha256=_ABSENT_DIGEST),
+            row_statement=_manifest_row_statement(attachment_a.attachment_id),
+            mutate=lambda envelope: envelope["payload"].update(sha256=_ABSENT_DIGEST),
         )
 
         with pytest.raises(AttachmentValidationError):
@@ -232,10 +201,10 @@ def test_restoring_the_true_digest_restores_both_surfaces(tmp_path: Path) -> Non
         store = AttachmentStore()
         attachment_a, attachment_b = _seed_two_attachments(store, bucket_id=profile.bucket_id)
 
-        _rewrite_manifest_envelope(
+        mutate_encrypted_secure_object_json(
             engine,
-            attachment_a.attachment_id,
-            lambda envelope: envelope["payload"].update(
+            row_statement=_manifest_row_statement(attachment_a.attachment_id),
+            mutate=lambda envelope: envelope["payload"].update(
                 sha256=attachment_b.attachment_id,
                 bytes_size=attachment_b.bytes_size,
             ),
@@ -243,10 +212,10 @@ def test_restoring_the_true_digest_restores_both_surfaces(tmp_path: Path) -> Non
         with pytest.raises(AttachmentValidationError):
             list(store.iter_manifests())
 
-        _rewrite_manifest_envelope(
+        mutate_encrypted_secure_object_json(
             engine,
-            attachment_a.attachment_id,
-            lambda envelope: envelope["payload"].update(
+            row_statement=_manifest_row_statement(attachment_a.attachment_id),
+            mutate=lambda envelope: envelope["payload"].update(
                 sha256=attachment_a.attachment_id,
                 bytes_size=attachment_a.bytes_size,
             ),

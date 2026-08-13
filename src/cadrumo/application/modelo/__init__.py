@@ -113,6 +113,7 @@ from ._action_errors import (
 )
 from ._amendment_actions import amend_modelo_revision
 from ._binding_readiness import profile_resolvable_binding_ids
+from ._binding_resolution import DeclarationPeriodInputs, resolve_declaration_period_inputs
 from ._borrador_binding import (
     Modelo100BorradorBindingCommand,
     Modelo100BorradorBindingError,
@@ -607,6 +608,7 @@ __all__ = [
     "CounterSignedReceipt",
     "DataInventoryCasilla",
     "DataInventoryChecklist",
+    "DeclarationPeriodInputs",
     "ExternalModeloImportError",
     "FeedbackCounterSignatureInvalidError",
     "FeedbackPackage",
@@ -946,6 +948,7 @@ __all__ = [
     "resolve_active_natural_modelo_work_unit",
     "resolve_calculation_binding_channels",
     "resolve_casilla_population_scope",
+    "resolve_declaration_period_inputs",
     "resolve_export_identity",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",

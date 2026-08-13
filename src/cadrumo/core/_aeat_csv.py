@@ -41,15 +41,23 @@ def normalise_aeat_csv(value: str) -> str:
 
     A normal form has to satisfy the contract it normalises toward, and this
     one is uppercase alphanumeric, so the normal form is uppercase. That rules
-    out :meth:`str.casefold`, which two call sites reached for independently:
-    it produces lowercase, which fails :data:`AEAT_CSV_PATTERN` outright, and
-    it TRANSLITERATES — fatal for a value that must round-trip to AEAT's
-    cotejo endpoint byte-for-byte to re-serve a document.
+    out :meth:`str.casefold`, which call sites in the calendar-evidence and
+    cross-period clean-state surfaces reached for independently: it produces
+    lowercase, which fails :data:`AEAT_CSV_PATTERN` outright, and it
+    TRANSLITERATES — fatal for a value that must round-trip to AEAT's cotejo
+    endpoint byte-for-byte to re-serve a document.
 
     This is the one comparison form. A call site that lowercases, casefolds or
     strips differently is not being lenient, it is minting a second key for one
     identifier, which is how the same receipt fails to match itself across two
     surfaces.
+
+    Singularity is the load-bearing claim here, not the transform, so it is
+    enforced rather than asserted in prose: this concept re-fragmented twice
+    after being consolidated once, because a prose claim cannot notice the next
+    inline copy. ``cadrumo.tests.test_aeat_csv_normalisation_singularity`` scans
+    production sources for a case transform applied to a CSV-bearing expression
+    and fails on any site that restates the transform instead of calling here.
     """
     return value.strip().upper()
 

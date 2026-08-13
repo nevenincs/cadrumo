@@ -15,6 +15,7 @@ from ._models import (
     ActionArgumentBinding,
     ActionReference,
     ConditionEvidence,
+    DeclaredNextAction,
     PreconditionVerdict,
 )
 
@@ -26,6 +27,7 @@ __all__ = [
     "ActionCatalogueEntry",
     "ActionReference",
     "ConditionEvidence",
+    "DeclaredNextAction",
     "PreconditionVerdict",
     "build_action_catalogue",
     "lookup_action",

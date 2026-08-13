@@ -27,7 +27,6 @@ See Also:
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -36,19 +35,13 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import CasillaId, ObservedHeaderFact, Period, validated_casilla_id
 from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,
@@ -183,26 +176,23 @@ def test_a_header_fact_stripped_of_its_locator_refuses_at_load(tmp_path: Path) -
         _save(repo)
 
         object_key = member_observation_key("303", _PERIOD, "B12345678")
-        with session_scope(profile.repository._engine) as session:
-            row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-                    SecureObjectRow.object_key == object_key,
-                ),
-            ).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            envelope = json.loads(
-                decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8")
-            )
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(envelope):
             facts = envelope["payload"]["source_headers"]
             assert facts and facts[0]["source_locator"], (
                 "the fixture did not serialise a locator, so this proof would pass over a broken boundary"
             )
             del facts[0]["source_locator"]
-            row.payload = encrypt_secure_object_payload(
-                json.dumps(envelope).encode("utf-8"),
-                associated_data=aad,
-            )
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(ValidationError, match="source_locator"):
             repo.load(member_observation_key("303", _PERIOD, "B12345678"))
@@ -227,22 +217,19 @@ def test_dropping_the_whole_header_channel_surfaces_as_inequality(tmp_path: Path
         assert saved.source_headers, "nothing was stored, so the deletion below would prove nothing"
 
         object_key = member_observation_key("303", _PERIOD, "B12345678")
-        with session_scope(profile.repository._engine) as session:
-            row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-                    SecureObjectRow.object_key == object_key,
-                ),
-            ).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            envelope = json.loads(
-                decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8")
-            )
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(envelope):
             del envelope["payload"]["source_headers"]
-            row.payload = encrypt_secure_object_payload(
-                json.dumps(envelope).encode("utf-8"),
-                associated_data=aad,
-            )
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         reloaded = repo.load(member_observation_key("303", _PERIOD, "B12345678"))
 

@@ -21,7 +21,6 @@ amount-is-magnitude convention exists to make unrepresentable.
 
 from __future__ import annotations
 
-import json as _json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -31,15 +30,9 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.outbound.aeat.sede import Deuda
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import DeudaDireccion, ObjetoTributario, Period
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._deudas import (
     DeudasCapture,
     DeudasService,
@@ -205,21 +198,22 @@ def test_deleting_the_direction_on_disk_makes_the_load_refuse(tmp_path: Path) ->
         persisted = service.capture(bucket_id=_BUCKET_ID, capture=_populated_capture())
 
         object_key = deudas_snapshot_object_key(_BUCKET_ID, persisted.snapshot_id)
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            decoded = _json.loads(
-                decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8")
-            )
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == _NAMESPACE,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(decoded):
             assert "direccion" in decoded["payload"]["deudas"][0], (
                 "fixture must serialise direccion into the envelope payload for this proof to mean anything"
             )
             del decoded["payload"]["deudas"][0]["direccion"]
-            row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(ValidationError, match="direccion"):
             service.show(bucket_id=_BUCKET_ID, snapshot_id=persisted.snapshot_id)
@@ -237,18 +231,19 @@ def test_a_negative_importe_on_disk_makes_the_load_refuse(tmp_path: Path) -> Non
         persisted = service.capture(bucket_id=_BUCKET_ID, capture=_populated_capture())
 
         object_key = deudas_snapshot_object_key(_BUCKET_ID, persisted.snapshot_id)
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            decoded = _json.loads(
-                decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8")
-            )
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == _NAMESPACE,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(decoded):
             decoded["payload"]["deudas"][0]["importe_pendiente"] = "-1250.75"
-            row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(ValidationError, match="importe_pendiente"):
             service.show(bucket_id=_BUCKET_ID, snapshot_id=persisted.snapshot_id)

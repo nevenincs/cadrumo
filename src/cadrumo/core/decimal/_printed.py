@@ -25,11 +25,20 @@ detects the missing evidence, this grammar demands the evidence be present.
 Why it lives in ``core``
 ------------------------
 
-Two adapters read AEAT-printed money, and they sit on opposite sides of the
-hexagon: the inbound sanción/liquidación notification reader and the outbound
-sede IVA compensation wallet reader. Neither may own a primitive the other
-imports, so the grammar belongs to neither and is declared here, beside the
-separator and coercion helpers both already consume.
+The strict and the tolerant readings of a printed amount are one taxonomy, not
+two neighbouring conveniences. Which grammar a token is judged by follows from
+its provenance — AEAT printed it, or a human typed it — and that choice has to
+be made identically wherever an amount enters the system. A taxonomy whose
+members are decided together belongs where the whole tree can reach it, beside
+the separator and coercion helpers its callers already consume.
+
+Its readers happen to be an inbound adapter (the sanción/liquidación
+notification reader) and an outbound one (the sede IVA compensation wallet
+reader). That is not itself the argument for the placement: this tree already
+carries a runtime outbound-to-inbound adapter edge, so "an adapter may not own
+a primitive its counterpart imports" would be a rule stated here and broken
+elsewhere. The grammar lives in ``core`` because of what it is, not because of
+who could not otherwise import it.
 
 The check previously shipped as a hand-copied regex literal in each of those
 two modules — one of which described it in prose as "shared verbatim", which is

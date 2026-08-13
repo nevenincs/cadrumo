@@ -62,7 +62,6 @@ from ._protocols import (
     RegistryModeloDraftProtocol,
     SubmissionEngineProtocol,
     WorkflowExpedienteProtocol,
-    WorkflowNotificationsSnapshotProtocol,
 )
 
 _logger = get_logger(__name__)
@@ -193,14 +192,6 @@ async def _live_expedientes_source(session: object, modelo: str | None) -> tuple
     return await walk_expedientes_tree(session, modelo=modelo)
 
 
-async def _live_notifications_source(session: object) -> WorkflowNotificationsSnapshotProtocol:
-    from ...adapters.outbound.aeat.auth import AeatSession
-    from ...adapters.outbound.aeat.sede import fetch_notifications_query
-
-    assert isinstance(session, AeatSession)
-    return await fetch_notifications_query(session)
-
-
 def default_engine(
     *,
     submission_engine: SubmissionEngineProtocol | None = None,
@@ -266,7 +257,10 @@ def default_engine(
         inputs_provider=inputs_provider,
         settings=cfg,
         expedientes_source=_live_expedientes_source if session is not None else None,
-        notifications_source=_live_notifications_source if session is not None else None,
+        # A workflow has no active-bucket input. Do not bypass the canonical
+        # bucket-scoped capture_notifications application facade merely to
+        # populate this transient preflight; the inbox stage remains NOT_WIRED.
+        notifications_source=None,
     )
 
 

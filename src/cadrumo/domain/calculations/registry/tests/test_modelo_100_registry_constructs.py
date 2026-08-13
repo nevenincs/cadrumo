@@ -247,6 +247,10 @@ def test_modelo_100_dependent_modelos_construct_carries_every_dependency_classif
     snapshot = _modelo_100_snapshot()
     dependencies = snapshot.constructs["renta-dependent-modelos"]
     assert set(dependencies.dependency_classifications) == set(snapshot.dependency_classifications)
+    assert (
+        "renta-2025-dep-100"
+        in snapshot.constructs["renta-anexo-c-base-liquidable-negativa-general"].dependency_classifications
+    )
 
 
 _CASILLA_TO_PROFILE_BINDING: Mapping[CasillaId, str] = _binding_map_by_casilla(
@@ -879,13 +883,34 @@ def test_validator_rejects_partial_dependency_classification_relation_coverage()
     _assert_registry_validation_error(mutated_modelo, match="does not cover relation refs")
 
 
-def test_schema_rejects_direct_dependency_classification_without_relation_refs() -> None:
+def test_schema_accepts_direct_previous_filing_classification_without_relation_refs() -> None:
     modelos_by_id, _catalogues = _loaded_registry()
     revision = modelos_by_id["100"].revisions["2025"]
-    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "100")
 
-    with pytest.raises(ValueError, match="must declare relation_refs"):
-        classification.__class__.model_validate({**classification.model_dump(mode="python"), "relation_refs": ()})
+    assert classification.treatment == "direct_annual_settlement"
+    assert classification.relation_refs == ()
+    assert classification.__class__.model_validate(classification.model_dump(mode="python")) == classification
+
+
+def test_validator_rejects_direct_dependency_classification_without_relation_or_direct_binding() -> None:
+    modelo, revision = _modelo_100_revision_2025()
+    classification = next(item for item in revision.dependency_classifications if item.source_modelo == "130")
+    mutated_classification = classification.model_copy(update={"relation_refs": ()})
+    mutated_revision = revision.model_copy(
+        update={
+            "dependency_classifications": tuple(
+                mutated_classification if item.id == classification.id else item
+                for item in revision.dependency_classifications
+            ),
+        },
+    )
+    mutated_modelo = _modelo_100_with_revision(modelo, mutated_revision)
+
+    _assert_registry_validation_error(
+        mutated_modelo,
+        match="must declare relation refs or cover direct previous_filing bindings",
+    )
 
 
 def test_validator_rejects_duplicate_dependency_classification_source() -> None:

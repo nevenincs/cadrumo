@@ -70,6 +70,21 @@ _BASE_ATTRIBUTION = (
 # address) that must never ride into the last article's body. The content is
 # clipped to the textoxslt container before splitting.
 _CONTENT_START = re.compile(r'<div[^>]*id="textoxslt"[^>]*>', re.IGNORECASE)
+
+#: The legal-text container's own BOE fragment. Literal, not an extractor
+#: alias: ``doc.php`` serves ``<div id="textoxslt">`` and the permalink
+#: ``...doc.php?id=BOE-A-...#textoxslt`` deep-links to it, so this satisfies
+#: the same "fragment the source supplies" rule the bloque markers do.
+#:
+#: It is stamped only on the whole-document fallback unit, and only when the
+#: container was actually found. A BOE page with no article delimiter (a
+#: correccion de errores, a single-provision norm) otherwise yields one unit
+#: with no anchor at all, and ``resolve_anchored_extracted_unit`` returns the
+#: sole unit of an anchorless single-unit sidecar for ANY requested anchor --
+#: so every such citation's ``corpus_ref`` fragment is unfalsifiable. Carrying
+#: the real container fragment makes the declared anchor checkable: the right
+#: one matches exactly and a wrong one is refused.
+_CONTAINER_ANCHOR: Final[str] = "#textoxslt"
 _FOOTER_START = re.compile(r'<div[^>]*id="pie"[^>]*>', re.IGNORECASE)
 _CANONICAL_LINK = re.compile(
     r"""<link\b(?=[^>]*\brel=["']canonical["'])(?=[^>]*\bhref=["'](?P<href>https://www\.boe\.es/[^"']+)["'])[^>]*>""",
@@ -174,7 +189,7 @@ _M303_ANNUAL_ORDEN_SOURCES: Final[frozenset[str]] = frozenset(
 )
 
 
-def _clip_to_content(markup: str) -> str:
+def _clip_to_content(markup: str) -> tuple[str, str]:
     """Clip markup to the BOE legal-text container, dropping page chrome.
 
     A full BOE page wraps its legal text in ``<div id="textoxslt">`` and ends
@@ -182,22 +197,35 @@ def _clip_to_content(markup: str) -> str:
     address). The footer must never ride into the last article, so the markup
     is clipped from the content-start marker (when present) up to the footer
     marker. A single-article slice has neither marker and is returned whole.
+
+    Returns the clipped markup plus the container's own BOE fragment when the
+    content marker was present, else the empty string. The fragment is what
+    lets an unsegmented full BOE page still carry a falsifiable anchor: see
+    :data:`_CONTAINER_ANCHOR`.
     """
+    container_anchor = ""
     start = _CONTENT_START.search(markup)
     if start is not None:
         markup = markup[start.end() :]
+        container_anchor = _CONTAINER_ANCHOR
     footer = _FOOTER_START.search(markup)
     if footer is not None:
         markup = markup[: footer.start()]
-    return markup
+    return markup, container_anchor
 
 
-def _strip_tags(markup: str) -> str:
+def render_normative_prose(markup: str) -> str:
     """Strip remaining tags and collapse whitespace into readable prose.
 
     Runs after the block-level noise removal: drops every residual tag,
     collapses runs of spaces/tabs, and squeezes three-or-more blank lines to
     a paragraph break so the article reads as clean text.
+
+    Public because it is the project's one BOE-markup-to-prose rendering, and
+    a second consumer now needs it: the excerpt-versus-current screen compares
+    an extracted sidecar's prose against a redaction sliced out of raw
+    article-endpoint markup, and a comparison rendered two different ways
+    measures the renderer rather than the law.
     """
     text = _TAG.sub("", markup)
     text = _BLOQUE_MARKER.sub("", text)
@@ -284,9 +312,9 @@ def _heading_and_body(unit_markup: str) -> tuple[str, str]:
     """
     closing = _HEADING_CLOSE.search(unit_markup)
     if closing is None:
-        return "", _strip_tags(unit_markup)
-    heading = _strip_tags(unit_markup[: closing.start()])
-    body = _strip_tags(unit_markup[closing.end() :])
+        return "", render_normative_prose(unit_markup)
+    heading = render_normative_prose(unit_markup[: closing.start()])
+    body = render_normative_prose(unit_markup[closing.end() :])
     return heading, body
 
 
@@ -414,7 +442,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """
     markup = source.read_text(encoding=_UTF_8)
     boe_url = _document_boe_url(markup)
-    markup = _clip_to_content(markup)
+    markup, container_anchor = _clip_to_content(markup)
     markup = _SCRIPT.sub(" ", markup)
     markup = _STYLE.sub(" ", markup)
     markup = _FORM.sub(" ", markup)
@@ -448,11 +476,13 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
 
     # A file with no <h5 class="articulo"> (a single-article slice whose body
     # is bare parrafos, or an atypical fragment) still yields one unit from
-    # the whole stripped document so nothing is silently dropped.
+    # the whole stripped document so nothing is silently dropped. A full BOE
+    # page reaching here was clipped to its legal-text container, so that
+    # container's fragment anchors the unit; a bare slice supplies none.
     if not units:
-        whole = _strip_tags(markup)
+        whole = render_normative_prose(markup)
         if whole:
-            units.append(PreprocessUnit(text=whole))
+            units.append(PreprocessUnit(text=whole, anchor=container_anchor or None))
 
     units = _with_derived_annex_fragments(
         units,

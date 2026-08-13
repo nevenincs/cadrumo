@@ -21,7 +21,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....core.external_constants import UTF_8_ENCODING
 from .....domain.contribuyente.inventory import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -30,7 +29,7 @@ from .....domain.contribuyente.inventory import (
     StockLayer,
     ValuationMethod,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.sql.engine import get_engine
 from ..inventory import InventoryLedgerRepository
 
@@ -135,17 +134,9 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
     every ledger roundtrip in the suite is suspect.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_INVENTORY_LEDGER_NAMESPACE
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
@@ -154,15 +145,12 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
         ledger = _populated_ledger()
         repo.save(InventoryLedgerDocument(ledgers=(ledger,)))
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
-                SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            document = _json.loads(_h3_plain.decode(UTF_8_ENCODING))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_INVENTORY_LEDGER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_INVENTORY_LEDGER_NAMESPACE.require_default_object_key(),
+        )
+
+        def mutate(document):
             ledger_dict = document["ledgers"][0]
             assert ledger_dict.get("opening_stock"), (
                 "fixture must serialise opening_stock onto the ledger for this proof test to be meaningful"
@@ -170,9 +158,8 @@ def test_inventory_ledger_dropped_layer_balance_surfaces_at_load(
             # Halve the opening_stock so the layer-balance check fails
             # (sum of layers no longer matches the declared aggregate).
             ledger_dict["opening_stock"] = "750.00"
-            row.payload = encrypt_secure_object_payload(
-                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=_h3_aad
-            )
+
+        mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
         with pytest.raises(pydantic.ValidationError, match="opening_stock must equal the value of opening_layers"):
             repo.load()

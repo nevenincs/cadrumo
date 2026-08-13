@@ -29,7 +29,7 @@ Regressions this test catches:
 * Parser swapping ejercicio with periodo (year/period confusion).
 * Parser corrupting tax_id (NIF regex mismatch across layouts).
 * Parser returning wrong ejercicio year (off-by-one or stale regex capture).
-* Parser breaking the CSV shape constraint (not 8-24 uppercase alphanum).
+* Parser breaking the canonical CSV shape constraint.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ from urllib.parse import urlparse
 
 import pytest
 
-from .....core import Period
+from .....core import Period, is_aeat_csv
 from .....domain.justificante import Justificante
 from .....tests import FIXTURES_DIR as _FIXTURES_ROOT
 from .....tests import parse_committed_justificante_fixture
@@ -240,12 +240,9 @@ class TestCorpusSidecarRoundtrip:
         )
 
         # CSV shape invariant — must survive even if the SANITIZED token pattern
-        # happened to match a noise string that is not alphanumeric-uppercase.
-        assert record.csv.isalnum() and record.csv.isupper(), (
+        # happened to match a noise string outside the canonical contract.
+        assert is_aeat_csv(record.csv), (
             f"csv shape violation for {pdf_path.parent.name}/{pdf_path.stem}: {record.csv!r}"
-        )
-        assert 8 <= len(record.csv) <= 24, (
-            f"csv length violation for {pdf_path.parent.name}/{pdf_path.stem}: {record.csv!r}"
         )
 
         # presented_at must always be a real datetime across every layout.

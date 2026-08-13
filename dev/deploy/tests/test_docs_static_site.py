@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 import contextlib
 import gzip
 import http.server
+import inspect
 import json
+import textwrap
 import threading
 from collections.abc import Iterator
 from pathlib import Path
@@ -68,11 +71,28 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
     Pagefind output in ``test_publish_preflight_search_records``, where a
     genuine no-injection build is the subject.
     """
-    root = html_root / language
+    _materialise_site_root(html_root / language, canonical_base=_language_site_url(language))
+
+
+def _materialise_apex_root(html_root: Path) -> None:
+    """Write the apex's own artifact set, then the language entry over its index page.
+
+    The apex is a site root in its own right -- it carries the English
+    full-scope build, its sitemap is rooted at the canonical docs URL rather
+    than a language sub-path, and its Pagefind bundle is the one the published
+    site is checked against after upload -- so a tree that omits it is not a
+    complete built site and must not stand in for one here.
+    """
+    _materialise_site_root(html_root, canonical_base=CANONICAL_DOCS_BASE_URL)
+    _write_language_entry(html_root)
+
+
+def _materialise_site_root(root: Path, *, canonical_base: str) -> None:
+    """Write one site root's complete required-artifact set, rooted at its own URL."""
     root.mkdir(parents=True, exist_ok=True)
     (root / "index.html").write_text("<html></html>", encoding="utf-8")
     (root / "404.html").write_text("<html></html>", encoding="utf-8")
-    canonical_root = f"{_language_site_url(language)}/"
+    canonical_root = f"{canonical_base}/"
     (root / "sitemap.xml").write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -290,6 +310,36 @@ def test_validate_language_roots_refuses_an_empty_pagefind_index(tmp_path: Path)
         _validate_language_roots(tmp_path)
 
 
+def _direct_calls(function: object) -> list[str]:
+    """Return the plain-name calls a function makes, in source order."""
+    tree = ast.parse(textwrap.dedent(inspect.getsource(function)))  # type: ignore[arg-type]
+    return [node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)]
+
+
+def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -> None:
+    """Publish and dry run share ONE build-and-validate prefix, and nothing may re-inline it.
+
+    The dry run is only worth running if its verdict is the publish's verdict.
+    That holds today because both go through ``_build_site_roots`` and
+    ``_validate_built_site``, but "holds by construction" is not a gate: the
+    exact shape that existed before this composition was extracted -- the
+    validation calls written out inline in the publish -- would reintroduce a
+    dry run that passes where a publish refuses, with a green suite. So the
+    inlined form is refused here by name.
+    """
+    calls = _direct_calls(_docs_static_site._publish)
+    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_sync_site"), (
+        f"the publish no longer builds, then validates, then uploads: {calls}"
+    )
+    inlined = sorted(
+        {"_build_language_roots", "_write_language_entry", "_validate_language_entry", "_validate_language_roots"}
+        & set(calls)
+    )
+    assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"
+
+    assert inspect.signature(_dry_run).parameters["build"].default is _docs_static_site._build_site_roots
+
+
 def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:
     """The dry run passes on a complete multi-root tree, touching no AWS surface.
 
@@ -301,7 +351,7 @@ def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: P
     """
     for language in _localized_languages():
         _materialise_language_root(tmp_path, language)
-    _write_language_entry(tmp_path)
+    _materialise_apex_root(tmp_path)
 
     assert _dry_run(tmp_path, build=lambda _: tmp_path) == 0
 
@@ -315,8 +365,27 @@ def test_dry_run_refuses_a_root_that_would_publish_incomplete(tmp_path: Path) ->
     """
     for language in _localized_languages():
         _materialise_language_root(tmp_path, language)
-    _write_language_entry(tmp_path)
+    _materialise_apex_root(tmp_path)
     (tmp_path / _localized_languages()[0] / "404.html").unlink()
+
+    with pytest.raises(SystemExit, match="required artifacts are missing"):
+        _dry_run(tmp_path, build=lambda _: tmp_path)
+
+
+def test_dry_run_refuses_an_apex_missing_the_bundle_the_publish_checks_after_upload(tmp_path: Path) -> None:
+    """The apex is validated as a root BEFORE the upload, not only after it.
+
+    ``_verify_published_search_index`` fetches the apex's served Pagefind entry
+    and compares it against the built file at the apex root, raising when that
+    built file is absent -- but it runs after the sync and after the cache
+    invalidation. An apex that cannot satisfy the publish would therefore have
+    written to the live destination first and failed second. The same file is
+    now required before a byte moves, and this deletes exactly it.
+    """
+    for language in _localized_languages():
+        _materialise_language_root(tmp_path, language)
+    _materialise_apex_root(tmp_path)
+    (tmp_path / "pagefind" / "pagefind-entry.json").unlink()
 
     with pytest.raises(SystemExit, match="required artifacts are missing"):
         _dry_run(tmp_path, build=lambda _: tmp_path)
@@ -326,7 +395,7 @@ def test_dry_run_refuses_an_apex_entry_that_strands_a_root(tmp_path: Path) -> No
     """The apex half of the publish's validation runs in the dry run too."""
     for language in _localized_languages():
         _materialise_language_root(tmp_path, language)
-    _write_language_entry(tmp_path)
+    _materialise_apex_root(tmp_path)
     stranded = _localized_languages()[-1]
     entry = tmp_path / "index.html"
     entry.write_text(entry.read_text(encoding="utf-8").replace(f'"{stranded}"', '"zz"'), encoding="utf-8")

@@ -79,8 +79,21 @@ The THIRD endpoint: as-published text BOE never consolidated
 exists because a class of BOE instruments has no consolidated text at all -- a
 ``corrección de errores`` is published once and never amended, so ``act.php``
 redirects to ``doc.php`` and every consolidated-shape invariant above refuses
-it correctly. Bilateral tax conventions are the same shape, which is why their
-bundled excerpts' permalinks already point at ``doc.php``.
+it correctly.
+
+**Bilateral tax conventions are NOT that class, and this docstring said they
+were.** The corrected claim is measured over the bundled corpus rather than
+inferred from a permalink: of the nine conventions the legal catalogue cites,
+eight are consolidated and their articles were acquired through the endpoint
+above -- Belgium (``BOE-A-2003-13375``), Germany (``BOE-A-2012-10212``),
+France (``BOE-A-1997-12729``), the United Kingdom (``BOE-A-2014-5171``),
+Morocco (``BOE-A-1985-9280``), the Netherlands (``BOE-A-1972-1469``),
+Portugal (``BOE-A-1995-24001``) and the United States (``BOE-A-1990-30940``).
+Only Argentina 1992 (``BOE-A-1994-20084``) has none. A bundled excerpt whose
+permalink points at ``doc.php`` therefore evidences how that excerpt was
+acquired, never that BOE holds no consolidated text -- and reading it as the
+latter is what left eight conventions unmeasurable. The class that genuinely
+has no consolidated text is the annual modelo-approval orden.
 
 **Its invariants are the mirror image of the consolidated ones, and the danger
 is the mirror image too.** ``act.php`` can serve a superseded redaction, so the
@@ -134,6 +147,8 @@ _ARTICLE_HEADERS: Final[dict[str, str]] = {"Accept": "application/xml"}
 _ENVELOPE_CODE = re.compile(r"<code>(?P<code>\d+)</code>")
 _ENVELOPE_MESSAGE = re.compile(r"<status>.*?<text>(?P<message>.*?)</text>", re.DOTALL)
 _BLOCK_ID = re.compile(r"<bloque\b[^>]*\bid=\"(?P<block>[^\"]+)\"", re.IGNORECASE)
+#: BOE's own title for the block. Semantic where the id is positional.
+_BLOCK_TITLE = re.compile(r"<bloque\b[^>]*\btitulo=\"(?P<titulo>[^\"]*)\"", re.IGNORECASE)
 #: Each redaction of the article, tagged with the norm and the date it took effect.
 _ARTICLE_VERSION = re.compile(
     r"<version\b[^>]*\bid_norma=\"(?P<document_id>BOE-[A-Z]-\d{4}-\d+)\""
@@ -416,6 +431,71 @@ def article_redactions(payload: str) -> tuple[ArticleRedaction, ...]:
     )
 
 
+def article_block_title(payload: str) -> str:
+    """Return BOE's own title for the block an article payload describes.
+
+    The block ID is POSITIONAL and its title is SEMANTIC, and the two disagree
+    often enough that only the title identifies the provision. Measured across
+    the bundled article payloads: block ``a1-3`` of the Spain-Netherlands
+    convention is titled "Artículo 11", and block ``ar-10`` of the
+    Spain-Morocco convention is titled "Artículo 11" too. A consumer matching
+    an entry to a payload by article number therefore has to read this, not the
+    id.
+
+    Args:
+        payload: The decoded API response.
+
+    Returns:
+        The ``titulo`` attribute, or the empty string when the payload declares
+        none. Never a value derived from the block id.
+    """
+    found = _BLOCK_TITLE.search(payload)
+    return found.group("titulo") if found else ""
+
+
+def article_redaction_markup(payload: str, redaction: ArticleRedaction) -> str:
+    """Return the markup of exactly one redaction of the article.
+
+    The article endpoint concatenates every redaction into one ``<bloque>``,
+    so any consumer reading the payload as a single document is reading
+    repealed law mixed with law in force. Slicing to one ``<version>`` element
+    is what makes the payload usable as an oracle, and it is deliberately a
+    LOOKUP rather than a selection: pass the redaction
+    :func:`assert_serves_the_article_in_force` returned, which is the only
+    function here that decides which redaction is in force and the only one
+    that refuses a tie.
+
+    Args:
+        payload: The decoded API response.
+        redaction: The redaction to slice out, obtained from
+            :func:`assert_serves_the_article_in_force` or
+            :func:`article_redactions`.
+
+    Returns:
+        The markup between that ``<version>`` element's opening tag and the
+        next redaction's opening tag (or the end of the payload).
+
+    Raises:
+        NormativeAcquisitionError: If the payload does not carry exactly one
+            ``<version>`` matching this redaction. Zero means the redaction did
+            not come from this payload; more than one means the slice is
+            ambiguous, which is the tie hazard reached from the other side.
+    """
+    opens = [
+        match
+        for match in _ARTICLE_VERSION.finditer(payload)
+        if match.group("document_id") == redaction.amending_norm and match.group("vigencia") == redaction.vigencia
+    ]
+    if len(opens) != 1:
+        raise NormativeAcquisitionError(
+            f"payload carries {len(opens)} <version> elements for {redaction.amending_norm} "
+            f"at fecha_vigencia {redaction.vigencia!r}, so the redaction cannot be sliced unambiguously"
+        )
+    start = opens[0].end()
+    following = [match.start() for match in _ARTICLE_VERSION.finditer(payload) if match.start() >= start]
+    return payload[start : following[0]] if following else payload[start:]
+
+
 def assert_serves_the_article_in_force(payload: str, *, document_id: str, block: str) -> ArticleRedaction:
     """Refuse the payload unless it is this article, and return the redaction in force.
 
@@ -551,8 +631,6 @@ def fetch_article(
 def assert_serves_the_published_document(payload: str, *, document_id: str) -> None:
     """Refuse a payload that is not this document's own single-document view.
 
-    Two refusals, both reading the payload alone:
-
     One refusal, and deliberately only one: the server-emitted ``rel="canonical"``
     link must name this endpoint and this id. It is preferred over the id echoed
     into the page body, which any view of the document satisfies, and it is the
@@ -598,15 +676,29 @@ def assert_boe_holds_no_consolidated_text(*, document_id: str, client: httpx.Cli
     request for the consolidated view that is still served BY the consolidated
     view, and that carries a version selector, proves consolidated text exists.
 
-    A redirect away from ``act.php`` is the expected, accepted answer -- it is
-    exactly how BOE says "there is no consolidated text for this id".
+    A redirect away from ``act.php`` is the expected, accepted answer -- and it
+    is the ONLY accepted answer. It is exactly how BOE says "there is no
+    consolidated text for this id", and it is the single observation that
+    positively establishes the absence this function is asked to certify.
+
+    Every other outcome refuses, including the case where ``act.php`` answers
+    for itself and the payload carries no version selector. That combination
+    says nothing: it is equally the shape of an id with no consolidated text
+    served through an unredirected route, of a BOE error or maintenance page
+    returned at 200, and of a selector markup change this parser no longer
+    recognises. Returning on it would let the third case silently hand the
+    caller an as-published redaction of an amended norm -- the exact defect
+    this guard exists to prevent -- so the ambiguity is refused and the
+    operator re-checks the id by hand. A guard whose unrecognised case is a
+    pass is not a guard.
 
     Args:
         document_id: The BOE identifier being acquired as-published.
         client: The HTTP client to probe with, shared with the caller's fetch.
 
     Raises:
-        NormativeAcquisitionError: If BOE serves consolidated text for the id.
+        NormativeAcquisitionError: If BOE serves consolidated text for the id,
+            or if the probe cannot positively establish that it does not.
     """
     response = client.get(_ACT_URL, params={"id": document_id})
     response.raise_for_status()
@@ -614,11 +706,16 @@ def assert_boe_holds_no_consolidated_text(*, document_id: str, client: httpx.Cli
     wanted = urlsplit(_ACT_URL)
     if (served.scheme, served.netloc, served.path) != (wanted.scheme, wanted.netloc, wanted.path):
         return
-    if not version_selections(response.content.decode("utf-8", errors="replace")):
-        return
+    if version_selections(response.content.decode("utf-8", errors="replace")):
+        raise NormativeAcquisitionError(
+            f"BOE serves consolidated text for {document_id}, so the as-published view would bundle the "
+            "original redaction of a norm that may since have been amended; use fetch_normative instead"
+        )
     raise NormativeAcquisitionError(
-        f"BOE serves consolidated text for {document_id}, so the as-published view would bundle the "
-        "original redaction of a norm that may since have been amended; use fetch_normative instead"
+        f"the consolidated endpoint answered for {document_id} without redirecting away and without a "
+        "version selector, so this probe cannot establish that BOE holds no consolidated text for it; "
+        "only a redirect away from the consolidated endpoint establishes that. Re-check the id by hand "
+        "before bundling the as-published view"
     )
 
 

@@ -82,10 +82,9 @@ from ._overview_rendering import (
     overview_calendar_profile_output,
     overview_coverage_notices,
     overview_explain_output,
-    overview_next_step_notices,
     overview_pipeline_output,
     overview_prepare_output,
-    render_cli_overview_status_lines,
+    overview_status_output,
 )
 
 if TYPE_CHECKING:
@@ -304,7 +303,7 @@ def overview_status(
     raw_values = record_to_values(profile_record) if profile_record is not None else None
     report = _overview_application.build_overview_status_report(state=current, raw_values=raw_values)
     typed_status = strict_round_trip(OverviewStatusResult, report)
-    status_notices = list(overview_next_step_notices(report))
+    status_lines, status_notices = overview_status_output(report)
     coverage_lines: list[str] = []
     # ``status`` is a "what must I file" surface too: reconcile the active
     # profile's obligation coverage over the current year and surface the same
@@ -335,7 +334,7 @@ def overview_status(
         ctx,
         command="overview.status",
         result=typed_status,
-        lines=[*render_cli_overview_status_lines(report), *coverage_lines],
+        lines=[*status_lines, *coverage_lines],
         notices=status_notices,
     )
 

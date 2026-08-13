@@ -14,14 +14,14 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.setup_answers import SetupAnswers
 from ....domain.deadlines import (
+    MODELO_IVA_BLOCK_CLAIMING_PATHS,
     MODELO_IVA_BLOCK_REQUIRED_PATHS,
     ProfileError,
     modelo_iva_profile_required_paths,
     profile_claims_modelo_iva_block,
+    taxpayer_profile_from_mapping,
 )
-from ....domain.deadlines._profiles import _MODELO_IVA_PROFILE_PATHS, _resolve_modelo_iva_profile
 from ... import wizard as _wizard  # noqa: F401 - registers compiled profile keys
 from .._completeness import conditional_profile_missing_required
 from .._keys_validation import validate_profile_values
@@ -96,7 +96,7 @@ def test_any_single_iva_fact_claims_the_block_including_a_declined_enrolment() -
 
 def test_every_block_owned_path_claims_the_block_on_its_own() -> None:
     """No path in the claim set may be declarable without obliging the rest."""
-    for path in sorted(_MODELO_IVA_PROFILE_PATHS):
+    for path in sorted(MODELO_IVA_BLOCK_CLAIMING_PATHS):
         assert profile_claims_modelo_iva_block({path: "false"}) is True, path
 
 
@@ -109,41 +109,39 @@ def test_a_satisfied_block_leaves_nothing_outstanding() -> None:
 def test_completeness_demands_exactly_what_the_resolver_refuses_without() -> None:
     """The anti-divergence gate: derive the resolver's demands by running it.
 
-    The published tuple is not compared against a restatement of itself. The
-    resolver is executed against a claimed block and peeled one refusal at a
-    time, so the set it ACTUALLY enforces is discovered rather than assumed.
-    A fact added to the resolver without being published here reds this test.
+    The published tuple is not compared against a restatement of itself. A
+    claimed block is built through ``taxpayer_profile_from_mapping`` -- the
+    public door every real caller passes through, canonical-token projection
+    included -- and peeled one refusal at a time, so the set it ACTUALLY
+    enforces is discovered rather than assumed. A fact added to the resolver
+    without being published here reds this test.
     """
-    canonical = {"iva.regime": "GENERAL"}
-    answers: dict[str, object] = {"tax_id": "12345678Z", "iva_regime": "GENERAL"}
-    satisfy: dict[str, object] = {
-        "iva.m303_regime_composition": ("iva_m303_regime_composition", "general"),
-        "tax_residence.jurisdiction_scope": ("tax_residence_jurisdiction_scope", "common_regime"),
-        "iva.redeme_enrolled": ("iva_redeme_enrolled", False),
-        "iva.cash_accounting_regime_enrolled": ("iva_cash_accounting_regime_enrolled", False),
-        "iva.voluntary_sii_enrolled": ("iva_voluntary_sii_enrolled", False),
-        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": (
-            "iva_hydrocarbon_deposit_advance_payment_deduction_entitled",
-            False,
-        ),
+    satisfy = {
+        "iva.m303_regime_composition": "general",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
+    values: dict[str, str] = {"iva.regime": "GENERAL"}
 
     demanded: list[str] = []
     for _ in range(len(satisfy) + 1):
         try:
-            _resolve_modelo_iva_profile(canonical, SetupAnswers(**answers))
+            profile = taxpayer_profile_from_mapping(dict(values), tax_id_default="12345678Z")
         except ProfileError as exc:
             named = [path for path in satisfy if path in str(exc)]
             assert len(named) == 1, f"refusal names no single known path: {exc}"
             path = named[0]
             assert path not in demanded, f"resolver re-refused {path}"
             demanded.append(path)
-            attribute, value = satisfy[path]
-            answers[attribute] = value
+            values[path] = satisfy[path]
             continue
+        assert profile.iva is not None, "a fully satisfied block must build an IVA profile"
         break
     else:  # pragma: no cover - the loop must terminate by resolving
         pytest.fail("resolver never resolved a fully satisfied IVA block")
 
     assert sorted(demanded) == sorted(MODELO_IVA_BLOCK_REQUIRED_PATHS)
-    assert sorted(modelo_iva_profile_required_paths(canonical)) == sorted(demanded)
+    assert sorted(modelo_iva_profile_required_paths({"iva.regime": "GENERAL"})) == sorted(demanded)

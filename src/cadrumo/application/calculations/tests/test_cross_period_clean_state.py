@@ -503,7 +503,7 @@ def test_cross_period_clean_state_blocks_taxpayer_filing_with_wrong_tax_id_justi
             omit_justificante_metadata_periods={"1T"},
         )
         _persist_justificante_metadata(
-            "JUST-1T",
+            "JUST00001T",
             modelo="303",
             period="1T",
             filing_year=_M390_YEAR,
@@ -589,7 +589,7 @@ def test_cross_period_clean_state_accepts_matching_aeat_register_observation_pro
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "EXP-303-2025-1T",
                     "authenticated_identity": "X1234567L",
-                    "aeat_justificante_csv": "JUST-1T",
+                    "aeat_justificante_csv": "JUST00001T",
                 },
             },
         )
@@ -614,7 +614,7 @@ def test_cross_period_clean_state_accepts_matching_filed_history_justificante_cs
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "EXP-303-2025-1T",
                     "authenticated_identity": "X1234567L",
-                    "aeat_justificante_csv": "JUST-1T",
+                    "aeat_justificante_csv": "JUST00001T",
                 },
             },
         )

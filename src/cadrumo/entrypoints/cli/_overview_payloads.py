@@ -31,7 +31,7 @@ from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
 from ...core.identity import AeatCsv, CalculationRevisionId
-from ...core.json_contract import OutputSchema, register_schema
+from ...core.json_contract import OutputSchema, ResolvedNoticeAction, register_schema
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
 from ._decimal_wire import NonNegativeDecimalWireText
@@ -222,12 +222,18 @@ class OverviewCalendarWarningPayload(OutputSchema):
     Warnings identify profile keys whose missing values forced the calendar
     builder to use deadline-engine defaults. ``affected_modelos`` mirrors the
     application row so consumers can show which obligations may depend on the
-    suggested ``fix_command``.
+    remedy.
+
+    The remedy is deliberately absent from this row. Every calendar warning
+    reaches the operator as an envelope ``Notice`` carrying its schema-resolved
+    action, and that notice is what the text surface renders its executable
+    line from. Restating the remedy here would be a second copy of operator
+    guidance inside ``result`` - the shape the envelope contract reserves for
+    the notice channel, and the shape a ``fix_command`` field once had.
     """
 
     code: str
     message: str
-    fix_command: str
     affected_modelos: list[str] = []
 
 
@@ -495,14 +501,19 @@ class OverviewPrepareStepPayload(OutputSchema):
     """One ordered row in the ``aeat app overview prepare`` checklist.
 
     Mirrors :class:`~cadrumo.application.overview.DataPrepStep`: a closed step
-    identifier, its current readiness state, a human-readable progress
-    summary, and the exact next ``cadrumo`` command to run.
+    identifier, its current readiness state, a human-readable progress summary,
+    and the schema-resolved action that advances the step.
+
+    ``next_action`` is absent when the continuation needs operator-supplied
+    input this read model cannot know. That is stated by omission rather than by
+    a placeholder command, and it never means the step is finished - read
+    ``state`` for that.
     """
 
     step_id: DataPrepStepId
     state: DataPrepStepState
     summary: str
-    next_command: str
+    next_action: ResolvedNoticeAction | None = None
 
 
 @register_schema("overview.prepare")
@@ -527,7 +538,8 @@ class OverviewPipelineModeloPayload(OutputSchema):
 
     Mirrors :class:`~cadrumo.application.overview.ModeloHealthRow`: the modelo's
     current readiness state against the requested period, its outstanding
-    blocking/warning finding counts, and the exact next command to run.
+    blocking/warning finding counts, and the schema-resolved action that
+    advances it.
     """
 
     modelo: str
@@ -536,7 +548,7 @@ class OverviewPipelineModeloPayload(OutputSchema):
     blocking_finding_count: int = Field(default=0, ge=0)
     warning_finding_count: int = Field(default=0, ge=0)
     summary: str
-    next_command: str
+    next_action: ResolvedNoticeAction | None = None
 
 
 @register_schema("overview.pipeline")

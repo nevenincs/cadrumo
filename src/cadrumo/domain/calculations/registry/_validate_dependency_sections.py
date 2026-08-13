@@ -23,6 +23,8 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from ....core import BindingSourceKind
+from ._bindings_previous_filing import previous_filing_source_reference
 from ._ids import BindingId
 from ._schema import (
     ConstructDefinition,
@@ -106,6 +108,7 @@ def validate_dependency_classification_section(
     must cite known refs, point at declared constructs/relations, and cover every
     relation source modelo with a dependency-bearing treatment.
     """
+    previous_filing_bindings_by_source = _previous_filing_bindings_by_source(revision)
     for classification in revision.dependency_classifications:
         _validate_single_dependency_classification(
             failures,
@@ -116,6 +119,13 @@ def validate_dependency_classification_section(
             legal_refs=legal_refs,
             source_refs=source_refs,
             evidence=evidence,
+        )
+        _validate_direct_previous_filing_classification(
+            failures,
+            prefix=prefix,
+            classification=classification,
+            direct_bindings=previous_filing_bindings_by_source.get(classification.source_modelo, ()),
+            construct_by_id=construct_by_id,
         )
 
     for duplicate in sorted(duplicates([item.source_modelo for item in revision.dependency_classifications])):
@@ -142,6 +152,13 @@ def validate_dependency_classification_section(
                 f"{prefix}: dependency classification {classification.id!r} does not cover relation refs "
                 f"{missing_relation_refs!r}",
             )
+    _validate_previous_filing_classification_completeness(
+        failures,
+        prefix=prefix,
+        classifications_by_source=classifications_by_source,
+        previous_filing_bindings_by_source=previous_filing_bindings_by_source,
+        construct_by_id=construct_by_id,
+    )
 
 
 def _validate_single_dependency_classification(
@@ -197,6 +214,120 @@ def _validate_single_dependency_classification(
             failures.append(
                 f"{prefix}: {owner} relation {relation_id!r} "
                 f"does not include relation source refs {missing_source_refs!r}",
+            )
+
+
+def _validate_direct_previous_filing_classification(
+    failures: list[str],
+    *,
+    prefix: str,
+    classification: DependencyClassificationDefinition,
+    direct_bindings: tuple[DataBindingDefinition, ...],
+    construct_by_id: Mapping[str, ConstructDefinition],
+) -> None:
+    """Require a relation-less direct settlement to cover its direct carries.
+
+    A direct ``previous_filing`` carry has no relation id to declare, but its
+    source-modelo classification must identify every target binding and carry
+    their legal grounding.
+    """
+    if classification.treatment != "direct_annual_settlement" or classification.relation_refs:
+        return
+
+    if not direct_bindings:
+        failures.append(
+            f"{prefix}: dependency classification {classification.id!r} with direct_annual_settlement "
+            "must declare relation refs or cover direct previous_filing bindings",
+        )
+        return
+
+    _validate_direct_previous_filing_binding_coverage(
+        failures,
+        prefix=prefix,
+        classification=classification,
+        direct_bindings=direct_bindings,
+        construct_by_id=construct_by_id,
+    )
+
+
+def _validate_direct_previous_filing_binding_coverage(
+    failures: list[str],
+    *,
+    prefix: str,
+    classification: DependencyClassificationDefinition,
+    direct_bindings: tuple[DataBindingDefinition, ...],
+    construct_by_id: Mapping[str, ConstructDefinition],
+) -> None:
+    """Require a direct previous-filing treatment to cover targets and legal refs."""
+    target_binding_ids = {
+        binding_id
+        for construct_id in classification.target_constructs
+        if (construct := construct_by_id.get(construct_id)) is not None
+        for binding_id in construct.bindings
+    }
+    missing_target_bindings = sorted({binding.id for binding in direct_bindings}.difference(target_binding_ids))
+    if missing_target_bindings:
+        failures.append(
+            f"{prefix}: dependency classification {classification.id!r} does not target direct previous_filing "
+            f"bindings {missing_target_bindings!r}",
+        )
+
+    required_legal_refs = {legal_ref for binding in direct_bindings for legal_ref in binding.legal_refs}
+    missing_legal_refs = sorted(required_legal_refs.difference(classification.legal_refs))
+    if missing_legal_refs:
+        failures.append(
+            f"{prefix}: dependency classification {classification.id!r} does not include direct previous_filing "
+            f"legal refs {missing_legal_refs!r}",
+        )
+
+
+def _previous_filing_bindings_by_source(
+    revision: ModeloRevision,
+) -> dict[str, tuple[DataBindingDefinition, ...]]:
+    """Group every direct previous-filing consumer by its canonical source modelo."""
+    grouped: dict[str, list[DataBindingDefinition]] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
+            continue
+        source_modelo = previous_filing_source_reference(binding).source_modelo
+        grouped.setdefault(source_modelo, []).append(binding)
+    return {source_modelo: tuple(bindings) for source_modelo, bindings in grouped.items()}
+
+
+def _validate_previous_filing_classification_completeness(
+    failures: list[str],
+    *,
+    prefix: str,
+    classifications_by_source: Mapping[str, DependencyClassificationDefinition],
+    previous_filing_bindings_by_source: Mapping[str, tuple[DataBindingDefinition, ...]],
+    construct_by_id: Mapping[str, ConstructDefinition],
+) -> None:
+    """Require exactly one dependency-bearing classification for every direct carry.
+
+    A classification is keyed by source modelo, the same canonical key the
+    previous-filing resolver uses to project its treatment. Duplicate keys are
+    rejected by the sibling duplicate check; this pass closes the missing and
+    ``non_dependency`` cases that a per-classification validator cannot see.
+    """
+    for source_modelo in sorted(previous_filing_bindings_by_source):
+        classification = classifications_by_source.get(source_modelo)
+        if classification is None:
+            failures.append(
+                f"{prefix}: previous_filing source modelo {source_modelo!r} has no dependency classification",
+            )
+            continue
+        if classification.treatment == "non_dependency":
+            failures.append(
+                f"{prefix}: previous_filing source modelo {source_modelo!r} cannot be classified as non_dependency",
+            )
+            continue
+        if classification.treatment == "factual_evidence" and not classification.relation_refs:
+            _validate_direct_previous_filing_binding_coverage(
+                failures,
+                prefix=prefix,
+                classification=classification,
+                direct_bindings=previous_filing_bindings_by_source[source_modelo],
+                construct_by_id=construct_by_id,
             )
 
 

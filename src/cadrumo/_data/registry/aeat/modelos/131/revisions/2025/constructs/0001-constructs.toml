@@ -77,6 +77,7 @@ formulas = [
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate", "m131-modulos-coeficientes-2025", "m131-modulos-reduccion-general-2025"]
 bindings = ["modelo-131-2025-resultados-negativos-anteriores"]
+dependency_classifications = ["modelo-131-2025-dep-131"]
 export_layouts = ["modelo-131-2025-fichero-boe"]
 extraction_profiles = ["modelo-131-2025-submitted-file"]
 live_cross_references = ["modelo-131-2025-filed-declarations-read"]

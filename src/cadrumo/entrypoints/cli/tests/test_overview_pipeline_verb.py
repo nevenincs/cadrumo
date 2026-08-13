@@ -339,7 +339,6 @@ def test_pipeline_modelo_row_enforces_the_canonical_readiness_contract() -> None
         modelo="130",
         state=ModeloReadinessState.NOT_STARTED,
         summary="nothing calculated yet",
-        next_command="aeat app modelo work create",
     )
     assert json.loads(row.model_dump_json())["state"] == ModeloReadinessState.NOT_STARTED.value
 
@@ -347,7 +346,6 @@ def test_pipeline_modelo_row_enforces_the_canonical_readiness_contract() -> None
         "modelo": "130",
         "state": ModeloReadinessState.NOT_STARTED,
         "summary": "s",
-        "next_command": "c",
     }
     for label, override in (
         ("unknown readiness state", {"state": "bogus"}),

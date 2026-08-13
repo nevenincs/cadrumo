@@ -17,7 +17,7 @@ from pydantic import ValidationError
 from .....core import StorageCategory, storage_path
 from .....domain.invoices import Invoice, InvoiceCatalogue, InvoiceLine, IvaRate, PaymentStatus
 from .....domain.iva import InvoiceKind
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..invoices import _INVOICE_NAMESPACE, InvoiceCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -144,17 +144,9 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
     post-persistence.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
-    from ...storage.sql.session import session_scope
 
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         invoice = _populated_invoice(invoice_number="F-2025-001")
@@ -162,21 +154,19 @@ def test_invoice_catalogue_tampered_identity_field_surfaces_at_load(tmp_path: Pa
         repo = InvoiceCatalogueRepository()
         repo.save(catalogue)
 
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _INVOICE_NAMESPACE,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            envelope = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == _INVOICE_NAMESPACE,
+        )
+
+        def mutate(envelope):
             invoices = envelope["payload"]["invoices"]
             invoice_dict = invoices[invoice.invoice_id]
             assert invoice_dict["invoice_number"] == "F-2025-001", (
                 "fixture must serialise the invoice_number for this proof test to be meaningful"
             )
             invoice_dict["invoice_number"] = "F-2025-999"
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(profile.repository._engine, row_statement=stmt, mutate=mutate)
 
         with pytest.raises(ValidationError):
             repo.load()

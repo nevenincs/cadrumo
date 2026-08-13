@@ -28,7 +28,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import ClassVar
 
-from .....core import CasillaId, Modelo, validated_casilla_id
+from .....core import CasillaId, Modelo, normalise_aeat_csv, validated_casilla_id
 from .....core.time import now
 from ...pdf import (
     SPANISH_AMOUNT_GROUP,
@@ -102,7 +102,7 @@ class Modelo100ObservedV2025Extractor:
         ejercicio = _require_match(_EJERCICIO_RE, text, "ejercicio")
 
         csv_match = _CSV_RE.search(text)
-        csv_value = csv_match.group(1).upper() if csv_match else None
+        csv_value = normalise_aeat_csv(csv_match.group(1)) if csv_match else None
         if artefact_kind is ArtefactKind.DECLARACION and csv_value is None:
             raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
         if artefact_kind is not ArtefactKind.DECLARACION:

@@ -885,7 +885,7 @@
             },
             {
               "binding_source": "previous_filing",
-              "dependency_treatment": "",
+              "dependency_treatment": "factual_evidence",
               "fingerprint": null,
               "source_kind": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"

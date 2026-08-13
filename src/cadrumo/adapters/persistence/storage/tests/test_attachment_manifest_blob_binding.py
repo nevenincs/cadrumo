@@ -15,60 +15,29 @@ the *content* the validator inspects is corrupted, not the ciphertext framing.
 from __future__ import annotations
 
 import hashlib
-import json
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 from sqlalchemy import select
 
-from .....core.external_constants import UTF_8_ENCODING
 from .....domain.attachments import (
     Attachment,
     AttachmentKind,
     AttachmentSource,
     AttachmentValidationError,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import _ATTACHMENT_MANIFEST_NAMESPACE, AttachmentStore
-from ..crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ..sql import SecureObjectRow
 from ..sql.engine import get_engine
-from ..sql.session import session_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _CAPTURED_AT = datetime(2026, 5, 25, 13, 45, 0, tzinfo=UTC)
 _BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
 _PAYLOAD = b"%PDF-1.4\n%attachment-manifest-blob-binding-canary\n" + b"\x00" * 48
-
-
-def _rewrite_manifest_envelope(
-    engine: Any,
-    attachment_id: str,
-    mutate: Callable[[dict[str, Any]], None],
-) -> None:
-    """Corrupt the stored manifest content in place, preserving valid framing."""
-    with session_scope(engine) as session:
-        row = session.execute(
-            select(SecureObjectRow).where(
-                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
-                SecureObjectRow.object_key == attachment_id,
-            ),
-        ).scalar_one()
-        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        envelope = cast(
-            "dict[str, Any]",
-            json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode(UTF_8_ENCODING)),
-        )
-        mutate(envelope)
-        row.payload = encrypt_secure_object_payload(json.dumps(envelope).encode(UTF_8_ENCODING), associated_data=aad)
 
 
 def _manifest(*, sha256: str, bytes_size: int) -> Attachment:
@@ -148,7 +117,14 @@ def test_tampered_stored_bytes_size_is_refused_on_load(tmp_path: Path) -> None:
             )
             manifest["bytes_size"] = len(_PAYLOAD) + 1
 
-        _rewrite_manifest_envelope(engine, attachment.attachment_id, tamper_size)
+        mutate_encrypted_secure_object_json(
+            engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
+                SecureObjectRow.object_key == attachment.attachment_id,
+            ),
+            mutate=tamper_size,
+        )
 
         with pytest.raises(AttachmentValidationError) as excinfo:
             store.load_manifest(attachment.attachment_id)

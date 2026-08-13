@@ -5514,33 +5514,26 @@ cli:
         bevallási mentességi határ a 96.3 LIRPF szerinti csökkentett értékre csökken;
         ha a teljes munkajövedelem ezt meghaladja, előfordulhat, hogy be kell nyújtania
         a Modelo 100-at.
-      integrity_next: 'A részletekért futtassa: `aeat config repair`. Ne karanténozzon
-        sorokat, hacsak nem szándékosan szeretné archiválni az olvashatatlan régi
-        helyi adatokat.'
       invoices_empty: Nincs értékesítési vagy vásárlási számla tárolva a számlaregiszterben.
         Ez külön tár a banki főkönyvtől – a besorolt főkönyvi tranzakciókat nem számolja.
         Üres számlaregiszter normális, ha csak a banki főkönyvet használja.
       invoices_present: '%{count} értékesítési/vásárlási számla található a számlaregiszterben
         (ez külön tár a banki főkönyvtől).'
       next_heading: Mit gépeljen be ezután
-      next_import_command: '  aeat app ledger import <bankikivonás.csv> --provider
-        csv - banki tranzakciók importálása.'
-      next_landing_command: '  aeat --help - visszatérés a parancs-útmutatóhoz.'
-      next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - A Modelo
-        210 látható IRNR-felderítéshez, de helyi munkaegység-létrehozás még nem támogatott;
-        nyújtsa be az AEAT Sede G320 felületen.'
-      next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
-        indítása a főkönyvi adatokból.'
-      next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
-      next_step_available: Az áttekintés kimenetében elérhető egy ajánlott következő
-        lépés.
-      next_work_calculate_command: '  aeat app modelo work list - folyamatban lévő
-        modellómunka-egység folytatása.'
-      next_work_create_command: '  aeat app modelo work create - új munkaegység indítása
-        egy másik nyomtatványhoz.'
+      next_step:
+        command_guide: Térjen vissza a parancsútmutatóhoz.
+        import_transactions: Importáljon bankkivonatot a tranzakciói rögzítéséhez.
+        modelo_210_sede_only: A Modelo 210 IRNR-felderítéshez látható, de a helyi
+          munkaegység-létrehozás még nem támogatott; nyújtsa be az AEAT Sede G320
+          felületen.
+        repair_storage: Futtassa a tároló-diagnosztikát a részletekért. Ne helyezzen
+          sorokat karanténba, hacsak nem szándékosan archiválja az olvashatatlan régi
+          helyi adatokat.
+        review_ledger: Tekintse át az importált sorokat.
+        start_work_unit_from_ledger: Indítson modelo bevallást a főkönyvi adataiból.
       profile_active: A(z) `%{profile}` profilban dolgozik.
-      profile_missing: 'Nincs aktív profil beállítva. Futtassa: `aeat config profile
-        create NÉV` az adatok importálása előtt.'
+      profile_missing: Nincs beállítva aktív profil. Hozzon létre egyet az adatok
+        importálása előtt.
       storage_ok: A helyi titkosított tár olvasható az aktuális főkulccsal.
       storage_warning: '%{count} titkosított helyi társor nem olvasható az aktuális
         főkulccsal. Ezek nem bankikivonás-sorok; importálhat új tranzakciókat, de
@@ -5549,11 +5542,10 @@ cli:
       transactions_empty: Még nem importáltak banki tranzakciókat.
       transactions_present: '%{count} banki tranzakció érhető el a főkönyvben.'
       work_units_empty: Még nem indítottak modellómunka-egységet.
-      work_units_present: '%{count} modellómunka-egység folyamatban van a helyi tárban
-        – a modellómunkája mentve van; folytassa: `aeat app modelo work list`.'
-      work_units_present_with_discarded: '%{count} aktív modellómunka-egység (%{discarded}
-        eldobott) a helyi tárban – az aktív modellómunkája mentve van; folytassa:
-        `aeat app modelo work list`.'
+      work_units_present: '%{count} modelo munkaegység van folyamatban ebben a helyi
+        tárolóban; a modelo munkája mentve van és folytatható.'
+      work_units_present_with_discarded: '%{count} aktív modelo munkaegység (%{discarded}
+        elvetve) ebben a helyi tárolóban; az aktív modelo munkája mentve van és folytatható.'
     status_help: Profil, főkönyv és nyomtatvány-készültség megjelenítése.
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.

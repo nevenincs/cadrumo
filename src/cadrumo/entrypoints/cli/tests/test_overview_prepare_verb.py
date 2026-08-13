@@ -49,14 +49,20 @@ def test_prepare_shows_import_step_pending_on_fresh_profile(_isolated_cli_backen
     steps = {step["step_id"]: step for step in payload["steps"]}
     import_step = steps["import_transactions"]
     assert import_step["state"] == "pending"
-    assert "aeat app ledger import" in import_step["next_command"]
+    # Importing needs a statement file and a provider this read model cannot
+    # know, so the row carries no executable action rather than a placeholder.
+    assert import_step["next_action"] is None
 
     # Every later step is not-done either; none can be satisfied before data exists.
     assert steps["start_modelo_work"]["state"] == "pending"
-    assert (
-        (steps["start_modelo_work"]["next_command"])
-        == "aeat app modelo work create --modelo 130 --year 2026 --period 1T"
-    )
+    work_action = steps["start_modelo_work"]["next_action"]
+    assert work_action["action"]["action_id"] == "operator.modelo.work.create"
+    assert work_action["action"]["cli_path"] == ["app", "modelo", "work", "create"]
+    assert {binding["argument_name"]: binding["value"] for binding in work_action["argument_bindings"]} == {
+        "modelo": "130",
+        "year": 2026,
+        "period": "1T",
+    }
     preparation_notices = [
         notice for notice in _notices(result.output) if notice["code"].startswith("overview.prepare.next_step.")
     ]
@@ -93,7 +99,7 @@ def test_prepare_advances_import_step_after_manual_ledger_entry(_isolated_cli_ba
     # points the operator at the classify command, not the import command.
     classify_step = steps["classify_transactions"]
     assert classify_step["state"] != "done"
-    assert "aeat app ledger classify" in classify_step["next_command"]
+    assert classify_step["next_action"]["action"]["action_id"] == "operator.ledger.classify"
 
 
 def test_prepare_is_read_only_and_safe_to_run_repeatedly(_isolated_cli_backend: Path) -> None:
@@ -137,13 +143,12 @@ def test_prepare_step_row_enforces_the_canonical_step_contract() -> None:
         step_id=step_id,
         state=state,
         summary="import your bank statements",
-        next_command="aeat app ledger import --file STATEMENT.csv",
     )
     rendered = json.loads(row.model_dump_json())
     assert rendered["step_id"] == step_id.value
     assert rendered["state"] == state.value
 
-    base = {"step_id": step_id, "state": state, "summary": "s", "next_command": "c"}
+    base = {"step_id": step_id, "state": state, "summary": "s"}
     for label, override in (
         ("unknown step id", {"step_id": "bogus"}),
         ("unknown step state", {"state": "bogus"}),

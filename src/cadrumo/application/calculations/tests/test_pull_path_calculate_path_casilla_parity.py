@@ -109,6 +109,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import (
     CalculationSourceContext,
@@ -121,9 +122,8 @@ from ...aggregation import (
 from ...modelo import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     create_work_unit,
+    resolve_declaration_period_inputs,
 )
-from ...modelo._binding_resolution import resolve_declaration_period_inputs
-from ...modelo.tests._export_test_support import _general_m303_filing_evidence
 from ...user_profile import UserProfileLifecycleRepository
 from .. import IvaWalletDecisionRepository, RelationPrefillSourceResolver
 from .._observations_repository import CalculationObservationRepository
@@ -602,7 +602,10 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
         bucket_event_repository=bucket_event_repository,
         transaction_repository=transaction_repository,
         invoice_repository=invoice_repository,
-        filing_instance_evidence=_general_m303_filing_evidence(_PRORRATA_PERIOD),
+        filing_instance_evidence=general_m303_filing_evidence(
+            _PRORRATA_PERIOD,
+            reference="test:pull-calculate-parity:exonerado-not-applicable",
+        ),
         clock=_PRORRATA_T1,
     )
 

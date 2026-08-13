@@ -441,7 +441,15 @@ def parse_sancion_document(
     # resolved: a document stating a sanción but no payable amount has not been
     # read, and returning it with a zero payable is the silent under-declaration
     # this parser exists to refuse.
-    payable = values.get("importe_a_ingresar") or values.get("diferencia")
+    # Presence, not truthiness. A printed ``0,00`` payable is a fact AEAT
+    # stated -- a sanción whose reducciones absorb it entirely leaves nothing to
+    # pay -- and ``or`` reads that Decimal as absent. The document printing only
+    # ``Importe a ingresar 0,00`` then refused as unread though it had been read
+    # correctly, and the document printing both lines bound the payable to
+    # ``Diferencia``, inverting the precedence stated on the record.
+    payable = values.get("importe_a_ingresar")
+    if payable is None:
+        payable = values.get("diferencia")
     if payable is not None:
         missing = [field for field in missing if field not in {"importe_a_ingresar", "diferencia"}]
     else:

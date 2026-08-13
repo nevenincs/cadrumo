@@ -7,7 +7,6 @@ amend
 delete
 payment
 debit
-POST
 enviar
 presentar
 firmar

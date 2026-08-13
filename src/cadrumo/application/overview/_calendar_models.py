@@ -34,6 +34,7 @@ from ...domain.calculations.registry import ApplicabilityVerdict, RevisionId
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines import ObligationStatus as _ObligationStatus
 from ...domain.deadlines import Recovery as _Recovery
+from ..operator_actions import DeclaredNextAction
 from ._coverage import ObligationCoverageReport
 
 
@@ -349,13 +350,30 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
 
 
 class CalendarWarning(BaseModel):
-    """One under-specified-profile warning attached to a calendar query."""
+    """One under-specified-profile warning attached to a calendar query.
+
+    Attributes:
+        code: Stable warning identity; for a profile-completeness gap this is
+            the profile field's declared selector token.
+        message: Locale key for the operator-facing explanation.
+        fix_action: The catalogue action that answers this warning. It carries
+            no command string and no CLI path: resolution against the live
+            command surface belongs to the presentation boundary, which projects
+            the resolved form onto this warning's envelope notice.
+
+            It is excluded from serialization deliberately. An unresolved
+            declaration on the wire would be a second, weaker statement of the
+            same remedy the notice already carries fully resolved, and a remedy
+            field inside a result payload is the shape the envelope contract
+            reserves for the notice channel.
+        affected_modelos: Obligation rows this gap can distort.
+    """
 
     model_config = _STRICT_FROZEN
 
     code: str = Field(min_length=1, max_length=128)
     message: str = Field(min_length=1, max_length=128)
-    fix_command: str = Field(min_length=1, max_length=256)
+    fix_action: DeclaredNextAction = Field(exclude=True)
     affected_modelos: tuple[str, ...] = Field(default=())
 
 

@@ -17,7 +17,6 @@
 
 from __future__ import annotations
 
-import json as _json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -31,7 +30,7 @@ from ....domain.calculations.registry import (
     CasillaObservation,
     RegistryModeloObservation,
 )
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._binding_prefill import BindingPrefillReport, resolve_bindings_from_local_store
 from .._observations_repository import (
     CalculationObservationRepository,
@@ -167,14 +166,8 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
     """
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
     from ....adapters.persistence.storage.sql.engine import get_engine
-    from ....adapters.persistence.storage.sql.session import session_scope
 
     namespace = CalculationObservationRepository.namespace
 
@@ -191,21 +184,23 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
         )
 
         object_key = observation_key(_MODELO, _filing_period())
-        with session_scope(get_engine(profile.settings)) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == namespace,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            envelope = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == namespace,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(envelope):
             # Confirm the field is present with a non-null value before we mutate.
             assert envelope["payload"]["stamped_revision_id"] == revision_id, (
                 "fixture must serialize stamped_revision_id as a non-null value for this proof to be meaningful"
             )
             del envelope["payload"]["stamped_revision_id"]
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(
+            get_engine(profile.settings),
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(ValidationError):
             repo.load_observation(_MODELO, _filing_period())

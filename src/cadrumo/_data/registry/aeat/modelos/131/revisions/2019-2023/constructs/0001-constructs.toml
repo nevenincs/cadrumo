@@ -29,6 +29,7 @@ formulas = [
 ]
 parameters = ["irpf.objective_no_base_fractional_payment_rate", "irpf.objective_agriculture_fractional_payment_rate"]
 bindings = ["modelo-131-2019-2023-resultados-negativos-anteriores"]
+dependency_classifications = ["modelo-131-2019-2023-dep-131"]
 export_layouts = ["modelo-131-2019-2023-fichero-boe"]
 extraction_profiles = ["modelo-131-2019-2023-submitted-file"]
 live_cross_references = ["modelo-131-2019-2023-filed-declarations-read"]

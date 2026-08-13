@@ -23,7 +23,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....core.external_constants import UTF_8_ENCODING
 from .....domain.contribuyente.assets import (
     AmortizacionEntry,
     AmortizacionLedger,
@@ -32,7 +31,7 @@ from .....domain.contribuyente.assets import (
     AssetsLedgerDocument,
     LibertadAmortizacionElection,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.sql.engine import get_engine
 from ..assets import (
     AmortizacionLedgerRepository,
@@ -128,17 +127,9 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
     roundtrip in the suite is suspect.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-dropped") as profile:
@@ -147,15 +138,12 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
         asset = _populated_asset()
         assets_repo.save(AssetsLedgerDocument(assets=(asset,)))
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
-                SecureObjectRow.object_key == PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            document = _json.loads(_h3_plain.decode(UTF_8_ENCODING))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
+        )
+
+        def mutate(document):
             asset_dict = document["assets"][0]
             assert asset_dict.get("cost_basis"), (
                 "fixture must serialise cost_basis onto the asset for this proof test to be meaningful"
@@ -164,9 +152,8 @@ def test_assets_ledger_dropped_cost_basis_surfaces_at_load(
             # check fails ("cost_basis must equal taxable_base plus
             # non-deductible IVA").
             asset_dict["cost_basis"] = "5525.00"
-            row.payload = encrypt_secure_object_payload(
-                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=_h3_aad
-            )
+
+        mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
         with pytest.raises(
             pydantic.ValidationError,
@@ -189,17 +176,9 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
     cross-check), never silently rehydrate an asset with no cost basis.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_ASSETS_LEDGER_NAMESPACE
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="assets-rt-missing") as profile:
@@ -207,21 +186,17 @@ def test_assets_ledger_missing_cost_basis_surfaces_at_load(
         assets_repo = AssetsLedgerRepository()
         assets_repo.save(AssetsLedgerDocument(assets=(_populated_asset(),)))
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
-                SecureObjectRow.object_key == PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            document = _json.loads(_h3_plain.decode(UTF_8_ENCODING))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_ASSETS_LEDGER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key(),
+        )
+
+        def mutate(document):
             asset_dict = document["assets"][0]
             assert "cost_basis" in asset_dict
             del asset_dict["cost_basis"]
-            row.payload = encrypt_secure_object_payload(
-                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=_h3_aad
-            )
+
+        mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
         with pytest.raises(pydantic.ValidationError, match="cost_basis"):
             assets_repo.load()

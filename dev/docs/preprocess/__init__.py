@@ -28,10 +28,14 @@ Major declarations:
 * :func:`write_sidecar` / :func:`load_sidecar` -- the thin
   writer/loader for the ``*.extracted.md`` + ``*.extracted.json`` pair.
 * :data:`PREPROCESS_SCHEMA_VERSION` -- the current schema version string.
+* :func:`render_normative_prose` -- the one BOE-markup-to-prose rendering,
+  shared with any consumer that must compare an extracted sidecar's text
+  against markup the sidecars do not cover.
 """
 
 from __future__ import annotations
 
+from ._html import render_normative_prose
 from ._schema import (
     PREPROCESS_SCHEMA_VERSION,
     ExtractionStatus,
@@ -58,6 +62,7 @@ __all__ = [
     "PreprocessUnit",
     "SourceDocumentKind",
     "load_sidecar",
+    "render_normative_prose",
     "sidecar_paths_for",
     "write_sidecar",
 ]

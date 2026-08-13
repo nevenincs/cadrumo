@@ -23,7 +23,6 @@ field at all.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -32,16 +31,10 @@ import pytest
 from pydantic import ValidationError
 from sqlalchemy import select
 
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import IvaCompensationStateProvenance, Period
 from ....domain.iva_compensation import IvaCompensationPeriodState
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._iva_compensation_history import IvaCompensationHistoryRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -120,25 +113,24 @@ def test_a_state_stripped_of_its_persisted_provenance_refuses_to_load(tmp_path: 
         repository.save_period(original)
         identifier = repository.extract_identifier(original)
 
-        with session_scope(profile.repository._engine) as session:
-            row = session.execute(
-                select(SecureObjectRow).where(
-                    SecureObjectRow.namespace == repository.namespace,
-                    SecureObjectRow.object_key == identifier,
-                ),
-            ).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            payload = json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == repository.namespace,
+            SecureObjectRow.object_key == identifier,
+        )
+
+        def mutate(payload):
             state_payload = payload["payload"]
             assert "provenance" in state_payload, (
                 "the producer must write provenance before deleting it proves anything"
             )
             assert state_payload["provenance"] == IvaCompensationStateProvenance.AEAT_CAPTURE.value
             del state_payload["provenance"]
-            row.payload = encrypt_secure_object_payload(
-                json.dumps(payload).encode("utf-8"),
-                associated_data=aad,
-            )
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(ValidationError) as caught:
             repository.load_period(original.period)

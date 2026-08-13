@@ -30,6 +30,11 @@ def _iter_sede_sources() -> tuple[Path, ...]:
     return tuple(p for p in _SEDE_ROOT.rglob("*.py") if "__pycache__" not in p.parts)
 
 
+def _iter_sede_production_sources() -> tuple[Path, ...]:
+    """Every production .py file under the sede boundary, excluding tests."""
+    return tuple(source for source in _iter_sede_sources() if "tests" not in source.parts)
+
+
 def _local_persistence_is_allowed(source_name: str, line: str) -> bool:
     """Whether ``line`` is the one sanctioned local-persistence call shape.
 
@@ -94,6 +99,35 @@ class TestNoWriteModeLiteral:
             assert forbidden not in content, (
                 f"{source.relative_to(_SEDE_ROOT)}: boundary-crossing record declares a non-read mode literal"
             )
+
+
+class TestReadPostCanary:
+    """The only raw POST is the legally guarded already-read document retrieval."""
+
+    def test_only_the_guarded_notification_detail_post_exists(self) -> None:
+        post_sites: list[tuple[Path, int]] = []
+        sources: dict[Path, str] = {}
+        for source in _iter_sede_production_sources():
+            content = source.read_text(encoding="utf-8")
+            sources[source] = content
+            for line_number, line in enumerate(content.splitlines(), start=1):
+                if re.search(r"\.post\s*\(", line):
+                    post_sites.append((source, line_number))
+
+        assert len(post_sites) == 1, f"unexpected raw POST call sites: {post_sites}"
+        source, _ = post_sites[0]
+        assert source.name == "_notifications.py"
+
+        content = sources[source]
+        function_start = content.index("async def fetch_notification_document")
+        function_end = content.index("\n\nasync def fetch_notifications_query", function_start)
+        function = content[function_start:function_end]
+        post_index = function.index(".post(")
+
+        assert function.count(".post(") == 1
+        assert function.index("assert_notification_content_readable(row)") < post_index
+        assert function.index('_assert_read_http("GET", url)') < post_index
+        assert function.index('assert_read_http_for(_READ_GUARD_POLICY, "POST", url)') < post_index
 
 
 class TestTheGuardCanActuallyFire:

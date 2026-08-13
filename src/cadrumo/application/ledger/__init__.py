@@ -194,6 +194,7 @@ if TYPE_CHECKING:
     from ._consent_withdrawal import (
         CloudDerivedArtefact,
         ConsentedDispatch,
+        ConsentRederivationError,
         ConsentWithdrawalSurvey,
         LocalRederivation,
         OnHostReader,
@@ -778,6 +779,7 @@ __all__ = [
     "ConfirmedCounterpartyFactsRepository",
     "ConfirmedCounterpartyResolution",
     "ConfirmedEstablishment",
+    "ConsentRederivationError",
     "ConsentWithdrawalSurvey",
     "ConsentedDispatch",
     "CounterpartyDraftSide",
