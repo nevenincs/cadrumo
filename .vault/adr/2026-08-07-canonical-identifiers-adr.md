@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-10'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:cc567fb690d61f8d558a5f4acf33bb6e841ba8d3309a6d27f39f5bc2692af85a'
+body_hash: 'sha256:519ba44ecc0ea607c0e7c7ea2d72c05d5412f397833cb7528ba0e561d0a4817c'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -879,3 +879,193 @@ amendment, with the reason recorded rather than silently dropped. `S24` and
 `S25` are re-scoped behind ruling 3 and do not execute until a deciding Step
 names a consumer or rules the resolver out. That deciding Step is added to
 `W03.P04`.
+
+## Amendment (2026-08-13): the truncated-display-id instruction is withdrawn; the width was never measured
+
+### What this record asserts, and what is true
+
+Two loci of the `W05` amendment (2026-08-07) rule on truncated display ids:
+
+- Refined census, second trap: "The existing `core._hex.Hex16Str` (already
+  declared, already used for `ModeloDraftContentAddress` in
+  `domain/filing/_schema.py`) is the correct alias — no new primitive
+  needed."
+- Constraints added by that amendment: "Truncated display ids alias
+  `Hex16Str`, never a full-length alias."
+
+**Both are withdrawn as factually wrong.** `core.Hex16Str`
+(`src/cadrumo/core/_hex.py:57-60`) is
+`StringConstraints(strip_whitespace=True, min_length=16, max_length=16, pattern=HEX_PATTERN_16)`
+— exactly sixteen lowercase hex characters. Every value in this population
+is **twelve**. The instruction as written does not narrow the population;
+it refuses all of it. A field retyped onto `Hex16Str` would raise
+`ValidationError` on the first work unit the CLI renders.
+
+The sentence was authored from the census bucket, not from a measurement:
+the source rows are `2026-08-07-canonical-identifiers-reference.md:271-272`,
+which propose `Hex16Str` for `short_work_unit_id` (3 sites) and
+`short_calculation_revision_id` (2 sites) with the justification "per
+census". The census counted sites; it never read a width. The resemblance
+that made `Hex16Str` look right is real but dimension-blind — its own
+docstring calls `HEX_PATTERN_16` "the shape of a TRUNCATED digest used as a
+short content address", and this population is indeed a truncated digest
+used as a short address. It is truncated to a different width.
+
+### The measurement, re-derived independently for this amendment
+
+`rg` over `src/` at HEAD, not taken from any prior document:
+
+- **Zero sites anywhere in the tree slice to sixteen.** A tree-wide search
+  for a `[-16:]` slice returns nothing.
+- **Seven production truncation expressions, all twelve:**
+  `application/workflow/_resume.py:598`;
+  `application/modelo/_work_addressing.py:189`, `:233`, `:235`;
+  `application/modelo/_selectors.py:237`, `:271`; and
+  `entrypoints/cli/_modelo_rendering.py:239`, the `short_id()` helper —
+  `return value[-12:] if value else None` — which is the sole truncation
+  behind every CLI surface. Its consumers are
+  `_modelo_rendering.py:310`, `:319`, `:321`, `:335`, `:343`, `:345`,
+  `:374`, `:381`, `:382`; `_modelo_work_revision_cli.py:142`, `:144`; and
+  `_modelo_cli_support.py:649`, `:650`.
+- **Twelve files carry the symbol family** (`short_work_unit_id`,
+  `short_calculation_revision_id`, `short_current_calculation_revision_id`,
+  `short_filed_calculation_revision_id`) — the two the plan row names plus
+  ten it does not: four CLI modules,
+  `application/modelo/_work_addressing.py`,
+  `entrypoints/cli/_modelo_work_runs_cli.py`, and four test files.
+- **Every carrier field is a bare `str` / `str | None` today:**
+  `_resume.py:123`, `:146`, `:148`; `_work_addressing.py:167`, `:213`,
+  `:215`; `_selectors.py:219`, `:258`; and seventeen fields across
+  `entrypoints/cli/_modelo_payloads.py` (`:138`, `:147`, `:149`, `:422`,
+  `:431`, `:433`, `:471`, `:480`, `:482`, `:504`, `:513`, `:515`, `:538`,
+  `:547`, `:549`, `:1217`, `:1219`).
+- **The wire confirms it.** Recorded CLI transcripts under
+  `docs/_sequences/how-to/` carry values such as `af6b2264dd9d` and
+  `2d0933eb70d7` — twelve characters, on operator-facing JSON and text
+  payloads alike.
+
+### Twelve is a product decision, not a truncation artefact
+
+`src/cadrumo/application/modelo/_selectors.py:57-66` declares the operator
+lookup type:
+
+```
+_WorkUnitLookupId = Annotated[
+    str,
+    StringConstraints(
+        strip_whitespace=True,
+        to_lower=True,
+        pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$",
+        min_length=12,
+        max_length=64,
+    ),
+]
+```
+
+The `12|64` alternation is the CLI's "paste either the short id you were
+shown or the full one" contract, consumed by
+`ModeloWorkSelectorRequest.work_unit_id` (`_selectors.py:191`). Two gates
+lock it: `application/modelo/tests/test_selectors.py:260` resolves a work
+unit from `unit.work_unit_id[-12:]`, and `:273` — docstring "Mutable work
+may be addressed only by the published 12-char handle or full id" —
+asserts a `ValidationError` for anything shorter.
+`entrypoints/cli/tests/test_config_profile_sandbox.py:834`, `:841` drive
+the live CLI with a twelve-character handle in both text and JSON modes.
+Retyping the selector onto `Hex16Str` would break the paste contract;
+retyping only the display fields would make the value the CLI prints
+unparseable by the CLI that printed it.
+
+### The record has disagreed with its own reference since 2026-08-10
+
+`2026-08-10-canonical-identifiers-revision-id-adjudication-reference`
+(Class D section) classifies this population **"NOT this taxonomy, must not
+be retyped"** for exactly this reason: "a 12-character abbreviation.
+Neither canonical type admits it... The selector that parses it accepts an
+alternation of 12 or 64 characters deliberately. Retyping either way
+refuses a live value." **The reference was right and this record was
+wrong**, and the two have contradicted each other for three days while
+`W05.P07.S37` stood open against the stale sentence. Scope note: that
+reference's population was `revision_id` sites, so its Class D enumerates
+the three short *revision* id fields (14 sites) and never adjudicated
+`short_work_unit_id`; the measurement above governs both, since both flow
+through the same `[-12:]` producers and the same selector.
+
+### Why the stale sentence survived: the correction never reached this record
+
+`W05.P07.S37` executed on 2026-08-13 and correctly retyped nothing; its
+exec record `2026-08-07-canonical-identifiers-W05-P07-S37` re-derived the
+width and flagged that no ADR amendment recorded the correction. That flag
+is what this amendment answers.
+
+The contrast with the sibling reversal in the same Phase is instructive,
+and narrower than it first appears. `W05.P07.S36`'s `RegistryRevisionId`
+reversal *did* get a durable correction — but in the **plan row's own
+text**, superseded on 2026-08-11 with the reason inline, so anyone reading
+the row reads the reversal before acting. The `Hex16Str` row got no such
+treatment: `W05.P07.S37`'s row text still reads "retype ... onto the
+existing `core.Hex16Str` primitive", and the correction lived only in an
+exec record a reader reaches *after* acting. **Neither reversal reached
+this ADR until now**, which leaves a second, still-live inconsistency this
+amendment records without ruling on: the "Additional namespaces surfaced"
+section above still states `registry_revision_id` needs "[its] own new
+`IdentifierNamespace` member and alias", and open plan rows `W05.P08.S39`
+and `S40` still instruct minting `RegistryRevisionId` — the exact act
+`W05.P07.S36` superseded as canonical-type fragmentation. Flagged here as
+owed a ruling; not decided here.
+
+### Correct disposition: UNDECIDED, and deliberately left open
+
+The plan row's authorised action set was `Hex16Str` **or** a full-length
+alias. The measurement rules out both, and no existing primitive fits:
+`core/` carries no `min_length=12` constrained alias and no short-id
+`IdentifierNamespace` member. Minting one is an architectural act and is
+not this amendment's to perform. The options, with their costs:
+
+1. **Mint a twelve-character primitive in `core`** — an
+   `Annotated[str, StringConstraints(min_length=12, max_length=12, pattern=r"^[0-9a-f]{12}$")]`
+   — retype the ~25 carrier fields onto it, and decide separately whether
+   `_WorkUnitLookupId`'s alternation is rebuilt from it. *Buys:* the width
+   is declared once instead of re-sliced at seven production sites, and a
+   future site slicing a different width fails at the boundary. *Costs:* a
+   new core primitive whose only referent is a rendering, plus the
+   golden-schema pinning diff this record's own Constraints require for
+   every touched `OutputSchema` — five in `_modelo_payloads.py` alone.
+2. **Leave the population deliberately bare, with the reason recorded.**
+   *Buys:* matches the adjudication reference's Class D disposition,
+   changes no wire schema, mints nothing. *Costs:* 12 stays an inline
+   literal at seven production sites and fourteen test assertions, and
+   nothing structurally prevents a divergent width appearing later.
+3. **A middle path the row did not authorise:** keep the fields bare but
+   name the width once as a constant beside `short_id()`, so the literal is
+   declared in one place without enrolling a display form into an
+   identifier taxonomy. *Costs:* still a code change needing its own row,
+   and it leaves the fields untyped at the boundary.
+
+The category question underneath all three, which the deciding record must
+answer first: **a short display form is a RENDERING of an identifier, not
+an identifier any minter issues.** If it is not a namespace member, option
+1 is a category error however cleanly it validates, and this population is
+correctly out of scope for a document-identifier taxonomy — which is what
+Class D already says.
+
+### Rulings
+
+**1. The `Hex16Str` instruction is withdrawn** at both loci — the refined
+census's second trap and the Constraints bullet. The original sentences
+stay in place above so the plan rows written against them remain legible;
+they are superseded by this section, not deleted.
+
+**2. No Step of this campaign may retype the short-form population onto
+`Hex16Str`, `WorkUnitId`, `CalculationRevisionId`, `RevisionId`, or any
+other existing alias.** Every one of them refuses a live twelve-character
+value.
+
+**3. `W05.P07.S37` is closed as adjudicated, zero sites changed** — the
+correct outcome, since its authorised action set contained no fitting
+action. Any future action on this population requires a NEW row under
+whichever disposition is ruled, never a re-run of `S37`.
+
+**4. The disposition is explicitly UNDECIDED and owed a ruling.** This
+amendment names the three options and their costs and leaves the choice.
+Until it is ruled, the population stays bare `str` by default, and that
+default is a holding state, not a decision.

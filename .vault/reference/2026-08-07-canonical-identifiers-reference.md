@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-10'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:8c7025e6f334c8e084de782fc2489a7f624dcc3f29d598e5cc0a33087ac9ecd2'
+body_hash: 'sha256:d3966ccba645abd418620030d5c8407a7b504f7dc1c1fa237d75a8f95146e561'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -268,8 +268,8 @@ app-derived primitive), 302 sites across the census's names:**
 | `invoice_id` | 16 | `InvoiceId` (exists) | verified: file list in `application/invoices/`, `domain/invoices/`, `entrypoints/cli/` |
 | `bucket_event_id` | 7 | `BucketEventId` (exists, declared in `domain/buckets/_event.py`, NOT `core/identity/`) | verified: `domain/buckets/_event.py:28` aliases `Hex64Str` already; consumers in `application/modelo/_reconciliation_records.py`, `entrypoints/cli/_ledger_payloads.py`, `entrypoints/cli/_modelo_payloads.py` |
 | `revision_id` | 12 (UNDETERMINED by the census, deliberately not app-derived-classified) | split between `CalculationRevisionId` and new `RegistryRevisionId` per-site | verified: `registry_snapshot_id_for()` at `domain/calculations/registry/_snapshot_coordinate.py:54` takes the registry version-tag meaning, not hex-64 |
-| `short_work_unit_id` | 3 | `Hex16Str` (exists) | per census |
-| `short_calculation_revision_id` | 2 | `Hex16Str` (exists) | per census |
+| `short_work_unit_id` | 3 | `Hex16Str` (exists) | per census — **WITHDRAWN 2026-08-13: `Hex16Str` admits only 16 characters and these values are 12; the target alias in this row is wrong and must not be acted on. See the amendment at the end of this document.** |
+| `short_calculation_revision_id` | 2 | `Hex16Str` (exists) | per census — **WITHDRAWN 2026-08-13: `Hex16Str` admits only 16 characters and these values are 12; the target alias in this row is wrong and must not be acted on. See the amendment at the end of this document.** |
 | `registry_snapshot_id` | 3 | new `RegistrySnapshotId` | per census; explicitly NOT `core.identity.SnapshotId` |
 | `registry_revision_id` | not separately counted | new `RegistryRevisionId` | per census |
 
@@ -285,7 +285,9 @@ externally-controlled non-AEAT identifiers (`file_id`, `spreadsheet_id`,
 `folder_id` from Google; `serial_number` from PKI; `spdx_id`; possibly
 `finca_identifier` from Catastro, unconfirmed).
 
-**Known limitation of this table, stated rather than hidden:** every count
+**Known limitation of this table, stated rather than hidden — and see the
+second 2026-08-13 amendment, which measures it and finds it understates the
+large families without exception:** every count
 not marked "verified" is relayed from the coordinating census as reported
 in chat, not independently re-derived by an AST tool in this session. A
 plan Step consuming this table must still enumerate the exact files it
@@ -415,3 +417,664 @@ production fields the coordinating AST census counted were not individually
 hand-classified — this reference grounds the four AEAT-issued concepts and
 the `core/identity/` extension point in depth; it does not claim the
 remaining ~580 fields are triaged.
+
+## Amendment (2026-08-13): the two `Hex16Str` census rows are withdrawn
+
+### What the rows claim
+
+The classification census's app-derived table proposes `Hex16Str` as the
+target alias for two names:
+
+| field name | approx. sites | target alias | status |
+| --- | --- | --- | --- |
+| `short_work_unit_id` | 3 | `Hex16Str` (exists) | per census |
+| `short_calculation_revision_id` | 2 | `Hex16Str` (exists) | per census |
+
+**Both target aliases are withdrawn as factually wrong.** `core.Hex16Str`
+(`src/cadrumo/core/_hex.py:57-60`) is
+`StringConstraints(strip_whitespace=True, min_length=16, max_length=16, pattern=HEX_PATTERN_16)`
+— exactly sixteen lowercase hex characters. Every value these fields carry
+is **twelve**. The proposal does not narrow the population; it refuses all
+of it. The rows above are left in place, and marked in the live table, so
+the plan rows and the ADR sentence written from them stay legible.
+
+### Why "per census" cannot support the conclusion it was used for
+
+The status cell on both rows reads **"per census"**, and this document's own
+census preamble already declares what that marker means: "Per-name counts
+below are attributed to that census as reported and are NOT independently
+re-derived here, except where marked 'verified'." Neither row is marked
+verified.
+
+That honesty clause was correct and it was ignored downstream. The failure
+is not that the census lied — it is that **a census counts SITES and this
+row's third column is a WIDTH judgement.** The instrument was an AST pass
+over field annotations. It read field names and declared types; it never
+read a truncation producer, a runtime value, or a selector pattern, so it
+had no access to the one fact the alias choice depends on. `Hex16Str` was
+reached for on a resemblance that is real but dimension-blind: its own
+docstring calls `HEX_PATTERN_16` "the shape of a TRUNCATED digest used as a
+short content address", and this population is exactly that — truncated to
+a different width.
+
+**The generalisable form: an unverified COUNT may not be promoted into a
+TYPE decision.** A count and a constraint are different claims about a
+population, and the marker distinguishing them was already present in this
+document.
+
+### The measurement, derived at HEAD for this amendment
+
+`rg` over `src/` at HEAD, tests excluded:
+
+- **Zero sites anywhere in the tree truncate to sixteen.** A tree-wide
+  search for a `[-16:]` slice returns nothing.
+- **Seven production truncation expressions, every one twelve:**
+  `application/workflow/_resume.py:598`;
+  `application/modelo/_work_addressing.py:189`, `:233`, `:235`;
+  `application/modelo/_selectors.py:237`, `:271`; and
+  `entrypoints/cli/_modelo_rendering.py:239`, the `short_id()` helper —
+  `return value[-12:] if value else None` — which is the sole truncation
+  behind every CLI surface.
+- **Twelve is a product decision, not a truncation artefact.**
+  `application/modelo/_selectors.py:57-66` declares the operator lookup
+  type with `pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$"`, `min_length=12`,
+  `max_length=64` — the alternation backing the CLI's "paste either the
+  short id you were shown or the full one" contract. Two gates lock it:
+  `application/modelo/tests/test_selectors.py:260` resolves a work unit
+  from `unit.work_unit_id[-12:]`, and `:273` — docstring "Mutable work may
+  be addressed only by the published 12-char handle or full id" — refuses
+  anything shorter. Recorded CLI transcripts under `docs/_sequences/how-to/`
+  carry twelve-character values (`af6b2264dd9d`, `2d0933eb70d7`).
+
+### The counts are understated too, and the instrument explains it
+
+**Corrected 2026-08-13 (second amendment): the UNDER-COUNT below is confirmed
+and widened, but the MECHANISM this subsection proposes is withdrawn — a
+wider sample shows the census does see optional fields. Read the second
+amendment before citing the explanation offered here.**
+
+The withdrawal is about the target alias, but the site counts do not
+survive re-derivation either. Production annotated sites at HEAD, tests
+excluded:
+
+| field name | this census | measured at HEAD | of which bare `str` |
+| --- | --- | --- | --- |
+| `short_work_unit_id` | 3 | 13 (11 fields + 2 parameters) | 8 |
+| `short_calculation_revision_id` | 2 | 4 | 2 |
+| `short_current_calculation_revision_id` | absent | 5 | 0 |
+| `short_filed_calculation_revision_id` | absent | 5 | 0 |
+
+Two observations, both about the instrument rather than the author:
+
+1. **`short_calculation_revision_id`'s "2" is exactly its bare-`str`
+   count**, and the two names this table omits entirely are `str | None` at
+   every one of their ten sites. A bare-`str` pass cannot see an optional
+   field, and a short form is optional precisely because it is absent until
+   a revision is calculated. The
+   `2026-08-10-canonical-identifiers-revision-id-adjudication-reference`
+   named this same failure independently: "the bare-`str` pass alone would
+   have understated Class D by a factor of ten. Optionality is where the
+   divergent concepts concentrate."
+2. **The table names two of the four field names in this family and covers
+   5 of its 27 production sites.** A reader sizing the work from these rows
+   under-scopes it fivefold, which is a second, quieter way these rows
+   mislead even for someone who has already learned the alias is wrong.
+
+### Where this correction already lives, and where the decision is owed
+
+`2026-08-07-canonical-identifiers-adr`'s Amendment (2026-08-13) withdraws
+the ADR sentence these rows produced, and rules that no Step may retype the
+short-form population onto `Hex16Str`, `WorkUnitId`,
+`CalculationRevisionId`, `RevisionId` or any other existing alias. The
+`2026-08-10-canonical-identifiers-revision-id-adjudication-reference`
+reached the same disposition three days earlier by measurement, classifying
+the short-form sites **Class D — "NOT this taxonomy, must not be
+retyped."** Scope note: that reference's population was `revision_id`
+sites, so its Class D covers the three short *revision* id names and never
+literally adjudicated `short_work_unit_id`; the measurement above governs
+both, since both flow through the same `[-12:]` producers and the same
+selector.
+
+**The correct disposition is UNDECIDED and is not settled here.** A
+reference grounds a decision; it does not make one. The ADR amendment names
+three costed options — mint a twelve-character primitive in `core`, leave
+the population deliberately bare with the reason recorded, or name the
+width once as a constant beside `short_id()` without enrolling a display
+form into the taxonomy — and leaves the ruling open. Minting a core
+primitive is an architectural act.
+
+The category question that must be answered before any of the three is
+chosen, and the reason a future author should not simply reach for a new
+primitive on finding this row: **a short display form is a RENDERING of an
+identifier, not an identifier any minter issues.** If it is not a namespace
+member, minting one is a category error however cleanly it validates — and
+this population is then correctly out of scope for a document-identifier
+taxonomy, which is what Class D already says.
+
+### The placement lesson, recorded because it is reusable
+
+This error had a three-day life and two documents' worth of reach because
+of WHERE its correction sat, not because anyone failed to find it. The
+sibling `RegistryRevisionId` reversal in the same Phase was corrected in
+the **plan row's own text**, so every reader met the withdrawal before
+acting. This one was corrected only in an exec record, which a reader
+reaches after acting, and the ADR sentence and these rows stayed clean in
+the meantime. That is why the withdrawal is stamped on the live table rows
+above and not only in this section: a correction a reader meets after
+acting is not a correction.
+
+## Amendment (2026-08-13, second): the count column is not reproducible, and "verified" does not attest it
+
+Written to answer one question: is the under-count found in the short-form
+rows a property of that family, or of the instrument that produced every
+row? **It is the instrument.** The count column understates every large
+family in the sample, without exception.
+
+### Instrument
+
+AST over `git show <rev>:<path>` bytes — the object store, not the working
+tree, which carries a large uncommitted registry migration. Class-level
+annotated declarations (`AnnAssign` in a `ClassDef` body) in
+`src/cadrumo/**`, tests excluded: the model-field methodology this table's
+own `bucket_id` row states it uses. Function parameters counted separately
+and excluded from the totals below. Measured at `c8066b5f97` (2026-08-07,
+the census-era commit) so six days of campaign drift cannot be mistaken for
+instrument bias; a HEAD re-run moves no figure enough to change a verdict.
+
+Each site is partitioned into exactly one of: **bare** (annotated `str`,
+no `Annotated[...]` and no constraint-bearing `Field(...)` — the "589 bare
+`str` with no alias or constraint" enrollment surface this document's
+preamble defines), **opt** (`str | None` / `Optional[str]`, likewise
+unconstrained), and typed-or-constrained. Total is their sum.
+
+### The sample: 18 families, both tables, both status markers
+
+| family | census says | measured total | bare | opt | census ÷ measured | marker |
+| --- | --- | --- | --- | --- | --- | --- |
+| `bucket_id` | 24 | **233** | 63 | 9 | 9.7x under | verified |
+| `transaction_id` | 30 | **64** | 22 | 0 | 2.1x under | verified |
+| `revision_id` | 12 | **45** | 14 | 3 | 3.8x under | verified |
+| `invoice_id` | 16 | 21 | 8 | 2 | 1.3x under | verified |
+| `expediente_id` | 13 | 17 | 5 | 3 | 1.3x under | verified |
+| `bucket_event_id` | 7 | 16 | 3 | 4 | 2.3x under | verified |
+| `tax_id` | 6 | 11 | 1 | 2 | 1.8x under | per census |
+| `short_work_unit_id` | 3 | 11 | 8 | 3 | 3.7x under | per census |
+| `csv` | 5 | 7 | 1 | 1 | 1.4x under | verified |
+| `supplier_tax_id` | 6 | 7 | 0 | 6 | 1.2x under | per census |
+| `customer_tax_id` | 5 | 6 | 0 | 6 | 1.2x under | per census |
+| `display_number` | 5 | 5 | 4 | 0 | exact | per census |
+| `party_tax_id` | 4 | 4 | 2 | 0 | exact | per census |
+| `counterparty_tax_id` | 2 | 4 | 1 | 0 | 2.0x under | per census |
+| `short_calculation_revision_id` | 2 | 4 | 2 | 2 | 2.0x under | per census |
+| `official_tipo_renta_code` | 5 | 3 | 1 | 0 | **0.6x OVER** | per census |
+| `registry_snapshot_id` | 3 | 3 | 1 | 1 | exact | per census |
+| `presentation_id` | 1 | 1 | 0 | 0 | exact | verified |
+
+**Every one of the six families larger than fifteen sites is under-counted**,
+by 1.3x to 9.7x, and the error grows with family size. Four figures are
+exact, and all four are families of five sites or fewer. One family is
+over-counted. Nine of the eighteen match no measured quantity at all — not
+the total, not the bare count, not the optional count, not any sum of them.
+
+### Correcting this document's first 2026-08-13 amendment
+
+That amendment proposed a mechanism for the short-form under-count: a
+bare-`str` pass cannot see an optional field, so optionality is where the
+census goes blind. **This wider sample refutes that mechanism, and it is
+withdrawn.** Three disproofs:
+
+- `customer_tax_id` is optional at every one of its six sites and has zero
+  bare sites; the census counted 5. `supplier_tax_id` is optional at six of
+  seven; the census counted 6. A pass blind to optional fields would have
+  reported zero for both.
+- `short_work_unit_id`'s census figure of 3 is not its bare count either —
+  that is 8. It coincides with its *optional* count, the opposite of the
+  proposed mechanism.
+- Only one figure in eighteen equals its family's bare-only count, and that
+  family (`short_calculation_revision_id`) has bare and optional counts both
+  equal to 2, so it discriminates nothing.
+
+**What survives from that amendment is the fact, not the explanation:** the
+short-form rows do understate, the table does name two of that family's
+four field names, and it does cover 5 of its 27 sites. The claim that
+optionality explains it does not survive contact with a wider sample. The
+first amendment's subsection now carries a pointer here.
+
+Recorded because it is the same error one level up: **I generalised a
+mechanism from a single family without sampling a second one.** The census
+promoted an unverified count into a type decision; this amendment's
+predecessor promoted a single family's coincidence into a mechanism. Both
+are the same move.
+
+### "Verified" attests the name and the file list — never the count
+
+The status column's `verified` marker is the one a reader would trust, and
+it does not mean what this document's limitation clause implies. Read the
+verified cells: "real file list gathered by grep in ...", "file list spans
+...", "`domain/buckets/_event.py:28` aliases `Hex64Str` already", "`sede/_schema.py`
+lines 100-135". **Every verified cell attests a LOCATION or a CONCEPT. Not
+one attests a count.**
+
+The limitation clause then says "every count not marked 'verified' is
+relayed from the coordinating census" — which reads as though the marked
+counts were re-derived. They were not, and the measurement shows it: six of
+the eight verified rows understate, including the two worst in the sample
+(`bucket_id` at 9.7x, `revision_id` at 3.8x). **The marker is not a quality
+signal for the count column, and reading it as one is how a sized row
+inherits an unmeasured number.**
+
+`bucket_id`'s own cell shows the failure happening in real time. It notices
+the discrepancy — "far wider than the census count suggests many sites are
+function parameters, not model fields" — and rationalises it instead of
+re-deriving it. Model fields alone are 233 against a census 24; parameters
+(614 more) are not the explanation, they are a second population entirely.
+
+### Verdict
+
+**The census under-scopes generally. Every row sized from this table needs
+its size re-derived before execution.** This is the stronger of the two
+possible verdicts and the sample does not support the weaker one: the
+under-count is not confined to places where optionality concentrates, it is
+present in twelve of eighteen families across both tables and both status
+markers, and it is universal among the large families where the absolute
+cost of under-scoping is highest.
+
+What remains reliable is narrower and still useful:
+
+- **The SET of names is sound** — this is what the census was actually good
+  at, and what the table's own limitation clause claims for it ("this table
+  bounds the SET of names and approximate sizes"). The known breaches are
+  already recorded above: `clave_liquidacion` is absent because the
+  heuristic matched suffixes, and the short-form family is missing two of
+  its four names.
+- **The concept classification is sound** — AEAT-issued versus app-derived
+  versus free-text versus not-an-identifier survives every check made
+  against it so far.
+- **The COUNT column is not attested anywhere in this document** and should
+  be read as an order-of-magnitude hint that is reliably a floor, never a
+  scope.
+- **The TARGET ALIAS column is a judgement, not a measurement**, and has
+  been wrong at least once in a way no count could have caught.
+
+### A third instrument defect: one count can mix two populations
+
+Beside under-counting and the unreliable `verified` marker, a third,
+distinct failure surfaced executing `W05.P08.S38`/`S40`
+(`registry_snapshot_id`). The row's premise, "3 sites", and the
+model-field-only re-derivation's "1 site, already constrained" both
+measured correctly — they measured DIFFERENT populations under the SAME
+name. The two "missing" sites, `registry_snapshot_id()` and
+`registry_snapshot_id_for()` in `_snapshot_coordinate.py`, are plain
+function return-type annotations, never pydantic model fields; the
+survivor, `sede/_schema.py`'s `FiledDeclaracionObservation
+.registry_snapshot_id`, already carried its `Field(min_length=1,
+max_length=128)` constraint at HEAD before either row touched it
+(confirmed by reading the file before editing). The original census's "3"
+silently summed a function-signature population and a model-field
+population into one number; the field-only instrument correctly excludes
+the former, and neither figure is wrong on its own terms. Reconciling a
+census count against a re-derived one must therefore check whether the
+two are counting the SAME KIND of site before concluding either is
+mistaken — under-counting and mixed-population miscounting look identical
+from the row's side and are not the same defect.
+
+A related tooling hazard, worth recording here rather than only where it
+was hit: a semicolon embedded in a `vault plan step edit --action` prose
+string collides with the plan row grammar's action/scope delimiter. The
+write-verification round-trip catches the resulting mismatch and refuses
+to commit it, but the first write attempt is not rolled back, leaving a
+mangled row on disk that a naive retry compounds rather than fixes. The
+reliable fix is passing both `--action` and `--scope` explicitly, with no
+embedded semicolons in either string. Hit independently by more than one
+agent across this campaign's `W05.P08` rows.
+
+### A fourth instrument defect: a matched name can carry the wrong role
+
+Beside under-counting, the unreliable `verified` marker, and mixed-population
+counting, a fourth, distinct failure surfaced executing `W06.P09.S45`
+(self/profile-owned `tax_id`). The census matches sites by NAME into a
+bucket, and a name match is not a role match: two sites the row's own
+re-sizing correctly counted as "`tax_id`, self/profile-owned" turned out,
+once traced to their owning class, to carry the WRONG role.
+`adapters/inbound/einvoice/_record_batch.py`'s `AeatParty.tax_id` is shared
+by both `issuer` and `recipients` on one e-invoice record, so which party is
+the filer's own depends on the record's direction
+(`AeatRecordFamily.SII_FACTURAS_EMITIDAS` versus `_RECIBIDAS`) — no single
+static type is correct for every use of that one field.
+`application/ledger/_evidence_draft.py`'s `CounterpartyDraftSide.tax_id` is,
+by its own class name, a counterparty concept, and belongs with
+`W06.P10`'s `TaxIdIdentityToken` bucket despite carrying none of that
+bucket's counterparty-prefixed names and despite living inside the same
+census `tax_id` row as the self-owned sites beside it.
+
+This is not under-counting — both sites were counted, at the site the row
+named. It is not the mixed-population defect either — both are genuine
+model fields, not a function-signature/field conflation. The defect is that
+a name-keyed census cannot see role, and neither direction of search
+recovers it: searching by name finds the site but assigns it the wrong
+bucket, and searching by bucket never reaches a site whose name does not
+carry the bucket's vocabulary. Every row this campaign sizes by name alone
+carries this same latent risk, proportional to how many distinct semantic
+roles share one field name across the tree — the fix is per-site tracing to
+the owning class before typing, which this row did and which is now the
+standing practice, not a corrected instrument.
+
+### A fifth reason a census cannot decide a type: a diagnostic that reports malformed input cannot itself validate that input
+
+Surfaced across `W04.P06.S29`, `S30`, and `S32`, and distinct from all four
+defects above: a field can be a genuine, single-role, correctly-counted
+member of its census bucket and STILL be wrong to retype, because its
+FUNCTION is to hold a value that failed the very constraint the alias would
+enforce.
+
+Three concrete instances, one per file family:
+`application/ledger/_models.py`'s `BulkClassifyFailure.transaction_id`
+echoes the raw, unvalidated CSV cell text specifically BECAUSE the row
+failed to parse — every construction site sits in the failure branch of a
+`try`/`except` wrapped around the very validation the alias would apply.
+`application/ledger/_preflight.py`'s `LedgerPreflightIssue.transaction_id`
+carries the literal sentinel `"__period__"` for a period-level issue with
+no associated transaction at all — a second, deliberate non-identity
+population sharing the field's name. `domain/invoices/_service.py`'s
+`LinkInconsistency.invoice_id` is the sharpest case: the function
+(`verify_link_consistency`) exists specifically to detect a transaction
+whose `invoice_id` does NOT resolve to a real invoice, so typing the field
+would make constructing the diagnostic itself raise on exactly the dangling
+reference it was written to report.
+
+`application/aggregation/_iva_ledger.py`'s `IvaLedgerAggregationIssue
+.transaction_id` is the same family with an extra piece of evidence worth
+keeping: most of its construction sites feed a real transaction, but one
+feeds `IvaLedgerCandidate.ledger_id` — a module-private alias with a
+looser, non-hex64 bound. The field's OWN existing constraint
+(`Field(min_length=1, max_length=128)`) matches that looser alias's bound,
+not `TransactionId`'s, which is evidence the field's original author sized
+it deliberately to admit both populations. `IvaLedgerCandidate` has zero
+production construction sites in `src/` today — only tests — which does
+NOT make it dead code: it is a live, wired, exported, tested contract that
+would silently narrow the moment it gets a caller, the correct reading of
+zero-caller code in this repository rather than a license to ignore it.
+
+This is not role confusion (defect four) — a `transaction_id` field
+genuinely names a transaction concept at every one of these sites. The
+defect is narrower and sharper: the field's DECLARED shape and its ACTUAL
+job are in tension, because part of its job is to represent a value that
+fails the shape a name-keyed census would assign it. No census, however
+carefully it counts or roles-checks, can see this from the field's name or
+even from its single declared type — only tracing every construction site
+to see what values ACTUALLY reach the field surfaces it. This generalises:
+any "issue", "failure", "inconsistency", "diagnostic", or "exclusion"
+record that echoes a caller-supplied or foreign-key value back to the
+operator is a candidate for this defect and needs the same trace before
+retyping, not an assumption that its field name is safe because the count
+says "one role, N sites."
+
+### Mechanical or per-family: the split that decides the cost
+
+**Re-deriving the SIZES is mechanical.** One AST pass over the object store
+produces every per-family count, partitioned by bare/optional/typed, in a
+single run — the instrument described at the top of this amendment did all
+eighteen families at once. This is an afternoon's work for the whole table,
+not a campaign, and it needs no judgement because it answers "how many
+sites carry this name", which has one correct answer.
+
+**Re-validating the TARGET ALIAS column is per-family judgement and cannot
+be mechanised.** The withdrawn `Hex16Str` rows are the proof: no count,
+however carefully re-derived, would have caught a sixteen-character
+primitive proposed for a twelve-character population. That check requires
+reading the producer, the width, and the parse contract for each family —
+about thirty-three names across the two tables.
+
+**A third question sits between them and is also judgement: what the family
+IS.** `bucket_id`'s 24-versus-233 gap is not a counting error to correct
+but a scope decision nobody has made — whether a retype covers the model
+fields only, or also the 614 function parameters, and whether the 161
+already-typed sites are in or out. A re-derived count makes that decision
+visible; it does not make it.
+
+The order follows: re-derive the sizes mechanically first, because it is
+cheap and it tells you which families are large enough that the alias
+judgement and the scope decision are worth spending on.
+
+### What this amendment does not do
+
+No row is corrected here, no count in the tables above is rewritten, and
+the plan is untouched. This is a measurement of the instrument, recorded in
+the document whose reliability was in question. The rows keep their figures
+so the plan rows sized against them stay legible; a reader is told what
+those figures are worth.
+
+The sample is eighteen of the census's roughly thirty-three named families,
+chosen to span both tables, both status markers, and the full size range
+from one site to 233. It is not the whole table. Six families in the
+AEAT-issued table (`clave_liquidacion`, `certificado_id`, `form_number`,
+`from_number`, `to_number`, `spouse_tax_id`) and the "not separately
+counted" rows carry no census figure to test, and the UNDETERMINED,
+NOT_AN_IDENTIFIER and FREE_TEXT buckets were not sampled at all.
+
+### Full mechanical re-derivation: every named family, at HEAD
+
+The sizes above were a sample. This is the whole table — all 32 named
+families from both census tables, plus the two short-form names the tables
+omit — re-derived at HEAD, because HEAD is what anyone executing a row is
+working against. The instrument is embedded at the end of this amendment so
+this can be re-run rather than re-trusted.
+
+**Columns.** `fields` is class-level annotated declarations (model fields),
+the methodology this table's `bucket_id` cell states it uses. `bare` is
+annotated `str` with no `Annotated[...]` and no constraint-bearing
+`Field(...)`; `opt` is `str | None` / `Optional[str]` likewise unconstrained;
+`typed` is everything already aliased or constrained. **`enrol` = bare + opt
+is the only number that sizes work** — the rest is already done. `files`
+counts distinct files carrying an enrollment site, not all sites, because
+that is the retype's real footprint. `params` counts annotated function
+parameters, a separate population the census excludes. `drift` is the
+change in `fields` since the census-era commit `c8066b5f97`, so instrument
+error and six days of campaign churn stay distinguishable.
+
+| family | census | fields | bare | opt | typed | **enrol** | files | params | drift | executable as one commit? |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| `bucket_id` | 24 | 237 | 64 | 10 | 163 | **74** | 28 | 630 | +4 | **scope decision** |
+| `transaction_id` | 30 | 65 | 23 | 0 | 42 | **23** | 10 | 88 | +1 | **scope decision** |
+| `revision_id` | 12 | 45 | 0 | 2 | 43 | **2** | 2 | 47 | — | **scope decision** |
+| `invoice_id` | 16 | 21 | 8 | 2 | 11 | **10** | 9 | 28 | — | **scope decision** |
+| `bucket_event_id` | 7 | 17 | 3 | 4 | 10 | **7** | 3 | 4 | +1 | atomic OK |
+| `expediente_id` | 13 | 16 | 4 | 3 | 9 | **7** | 4 | 10 | -1 | atomic OK |
+| `tax_id` | 6 | 13 | 1 | 3 | 9 | **4** | 4 | 6 | +2 | atomic OK |
+| `short_work_unit_id` | 3 | 11 | 8 | 3 | 0 | **11** | 4 | 2 | — | atomic OK |
+| `registry_revision_id` | — | 11 | 0 | 0 | 11 | **0** | 0 | 13 | +5 | **scope decision** |
+| `csv` | 5 | 7 | 1 | 0 | 6 | **1** | 1 | 6 | — | atomic OK |
+| `supplier_tax_id` | 6 | 6 | 0 | 5 | 1 | **5** | 4 | 0 | -1 | atomic OK |
+| `display_number` | 5 | 5 | 4 | 0 | 1 | **4** | 4 | 3 | — | atomic OK |
+| `customer_tax_id` | 5 | 5 | 0 | 5 | 0 | **5** | 4 | 0 | -1 | atomic OK |
+| `short_current_calculation_revision_id` | **absent** | 5 | 0 | 5 | 0 | **5** | 1 | 0 | — | atomic OK |
+| `short_filed_calculation_revision_id` | **absent** | 5 | 0 | 5 | 0 | **5** | 1 | 0 | — | atomic OK |
+| `profile_tax_id` | incl. | 4 | 2 | 0 | 2 | **2** | 2 | 3 | — | atomic OK |
+| `party_tax_id` | 4 | 4 | 2 | 0 | 2 | **2** | 1 | 1 | — | atomic OK |
+| `counterparty_tax_id` | 2 | 4 | 1 | 0 | 3 | **1** | 1 | 5 | — | **scope decision** |
+| `short_calculation_revision_id` | 2 | 4 | 2 | 2 | 0 | **4** | 4 | 0 | — | atomic OK |
+| `official_tipo_renta_code` | 5 | 3 | 1 | 0 | 2 | **1** | 1 | 0 | — | atomic OK |
+| `operation_kind_code` | — | 3 | 0 | 0 | 3 | **0** | 0 | 0 | +1 | nothing to enroll |
+| `clave_liquidacion` | 1 | 2 | 1 | 0 | 1 | **1** | 1 | 0 | — | atomic OK |
+| `certificado_id` | — | 2 | 1 | 0 | 1 | **1** | 1 | 0 | — | atomic OK |
+| `form_number` | — | 2 | 0 | 1 | 1 | **1** | 1 | 8 | — | **scope decision** |
+| `from_number` | — | 2 | 2 | 0 | 0 | **2** | 2 | 0 | — | atomic OK |
+| `to_number` | — | 2 | 2 | 0 | 0 | **2** | 2 | 0 | — | atomic OK |
+| `donor_tax_id` | — | 2 | 1 | 0 | 1 | **1** | 1 | 0 | — | atomic OK |
+| `presentation_id` | 1 | 1 | 0 | 0 | 1 | **0** | 0 | 0 | — | nothing to enroll |
+| `spouse_tax_id` | — | 1 | 1 | 0 | 0 | **1** | 1 | 0 | — | atomic OK |
+| `member_tax_id` | — | 1 | 0 | 0 | 1 | **0** | 0 | 0 | — | nothing to enroll |
+| `asset_class_code` | — | 1 | 0 | 0 | 1 | **0** | 0 | 0 | — | nothing to enroll |
+| `registry_snapshot_id` | 3 | 1 | 0 | 0 | 1 | **0** | 0 | 0 | -2 | nothing to enroll |
+| **total** | | **508** | 132 | 50 | 326 | **182** | | 854 | | |
+
+**The executability column is the one judgement in an otherwise mechanical
+table, and its rule is stated so it can be disagreed with:** a family is
+*scope decision* when annotated parameters outnumber model fields and number
+at least five — the population is then genuinely ambiguous and a ruling, not
+a count, is what is missing. It is *nothing to enroll* when no bare or
+optional site remains. Otherwise it is *atomic OK* at 15 or fewer enrollment
+sites across 8 or fewer files, which is within this repository's own
+demonstrated commit sizes, and *split required* beyond that. Change the
+thresholds and the last two columns move; the first nine are measurements.
+
+### The headline: the size problem is a scope problem
+
+**No family is too large to retype in one commit. Not one row lands in
+"split required".** Every family that looks unmanageable — `bucket_id` at
+237 field sites, `transaction_id` at 65 — is unmanageable for a different
+reason: its population is dominated by function parameters the census never
+counted, and nobody has ruled on whether a retype covers them.
+
+Seven families are in that state, and the stakes vary by two orders of
+magnitude:
+
+| family | model fields | parameters | ratio |
+| --- | ---: | ---: | ---: |
+| `bucket_id` | 237 | **630** | 2.7x |
+| `transaction_id` | 65 | 88 | 1.4x |
+| `revision_id` | 45 | 47 | 1.0x |
+| `invoice_id` | 21 | 28 | 1.3x |
+| `registry_revision_id` | 11 | 13 | 1.2x |
+| `form_number` | 2 | 8 | 4.0x |
+| `counterparty_tax_id` | 4 | 5 | 1.3x |
+
+`bucket_id` is the one that matters: 630 annotated parameters against 237
+model fields, and 74 enrollment sites across 28 files even on the
+model-field-only reading. Its census figure of 24 is not an under-count to
+correct — it is a different question answered. **The ruling owed is what the
+family IS**, and only after that does a size mean anything.
+
+### Four rows are sized against a population that no longer exists
+
+The re-derivation found families whose enrollment surface is now empty,
+which no count-correction would have surfaced:
+
+- **`registry_revision_id`: 11 sites, every one already `RevisionId`** —
+  `application/workflow/_resume.py:242,349,520`,
+  `application/modelo/_work_review.py:162,201,254`,
+  `application/modelo/_work_addressing.py:91,172,259,353,385,412`. Zero
+  enrollment sites. The concept is already carried by the canonical type,
+  which is what `W05.P07.S36` ruled. Any row still instructing a new
+  `RegistryRevisionId` alias would not merely fragment a canonical type — it
+  has nothing left to retype.
+- **`registry_snapshot_id`: 1 site, already constrained** —
+  `adapters/outbound/aeat/sede/_schema.py:448` carries
+  `Field(default=None, min_length=1, max_length=128)`. The census counted 3;
+  two are gone and the survivor is off the bare enrollment surface.
+- **`presentation_id`: 1 site, already typed** — consistent with the
+  parameter removal the ADR's 2026-08-10 amendment records.
+- **`revision_id`: 45 field sites, 2 enrollment** — the census's 12 is
+  neither the population nor the remaining work; `W05.P07.S36` retyped the
+  bare half, and 43 sites are already typed.
+
+**A row sized from a census figure cannot tell the difference between work
+outstanding and work completed.** Re-deriving sizes surfaces both, and here
+it turned up more finished work than unfinished.
+
+### Drift is small; the divergence is instrument, not churn
+
+Only four families moved at all since the census-era commit, and only one
+materially: `registry_revision_id` +5 (typed during the campaign),
+`bucket_id` +4 on a base of 237, `tax_id` +2, `registry_snapshot_id` -2.
+Twenty-eight families are unchanged. **Six days of active campaign work
+moved nine field sites across the whole surface**, against census-versus-
+measured gaps of 213 (`bucket_id`), 35 (`transaction_id`) and 33
+(`revision_id`). The divergence is the instrument, and the earlier verdict
+stands unmodified by measuring at HEAD.
+
+### What the six untested AEAT names cost
+
+`clave_liquidacion` (2 sites, 1 to enroll), `certificado_id` (2, 1),
+`form_number` (2, 1 — but 8 parameters, so a scope decision),
+`from_number` (2, 2), `to_number` (2, 2), `spouse_tax_id` (1, 1). All tiny,
+all atomic, none previously sized. Together they are 11 sites and 8
+enrollment sites — the whole group is one commit's worth of work, which is
+worth knowing before it is scheduled as six rows.
+
+### Totals, and what they mean for scheduling
+
+**508 model-field sites across the 32 named families. 182 are enrollment
+sites; 326 are already typed or constrained. 854 annotated parameters sit
+outside the census's methodology entirely.**
+
+Two thirds of the surface is already done. Of the 182 remaining, **74 belong
+to `bucket_id` alone** and are blocked behind a scope ruling, and a further
+36 belong to the other six scope-decision families. **That leaves 72
+enrollment sites across 20 families that are executable today**, every one
+of them atomic — small, bounded, and needing only the per-family alias
+judgement this amendment deliberately does not attempt.
+
+### The instrument, embedded so it outlives this session
+
+Extract a tree from the object store and walk it — never the live worktree,
+which carries peer WIP that would inflate every count:
+
+```
+git archive <rev> src/cadrumo | tar -x -C <dir>
+python probe.py <dir>/src/cadrumo <name1,name2,...>
+```
+
+```python
+import ast, sys, json, collections
+from pathlib import Path
+
+ROOT, NAMES = Path(sys.argv[1]), sys.argv[2].split(",")
+CONSTRAINT_KW = {"min_length", "max_length", "pattern", "gt", "ge", "lt", "le", "max_digits"}
+R = {n: collections.Counter() for n in NAMES}
+E = {n: set() for n in NAMES}   # files carrying an enrollment site
+
+def constrained(stmt):
+    v = stmt.value
+    if isinstance(v, ast.Call) and CONSTRAINT_KW & {k.arg for k in v.keywords if k.arg}:
+        return True
+    return ast.unparse(stmt.annotation).startswith("Annotated[")
+
+for path in ROOT.rglob("*.py"):
+    if "tests" in path.parts:
+        continue
+    try:
+        tree = ast.parse(path.read_bytes().decode("utf-8"))
+    except (SyntaxError, UnicodeDecodeError):
+        continue
+    rel = path.relative_to(ROOT).as_posix()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            for stmt in node.body:
+                if not (isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name)):
+                    continue
+                n = stmt.target.id
+                if n not in R:
+                    continue
+                ann = ast.unparse(stmt.annotation)
+                if ann == "str" and not constrained(stmt):
+                    R[n]["bare"] += 1; E[n].add(rel)
+                elif ann in {"str | None", "Optional[str]"} and not constrained(stmt):
+                    R[n]["opt"] += 1; E[n].add(rel)
+                else:
+                    R[n]["typed"] += 1
+        elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for a in (*node.args.posonlyargs, *node.args.args, *node.args.kwonlyargs):
+                if a.arg in R and a.annotation is not None:
+                    R[a.arg]["param"] += 1
+
+print(json.dumps({n: {"fields": R[n]["bare"] + R[n]["opt"] + R[n]["typed"],
+                      "bare": R[n]["bare"], "opt": R[n]["opt"], "typed": R[n]["typed"],
+                      "enrol": R[n]["bare"] + R[n]["opt"], "params": R[n]["param"],
+                      "files": len(E[n])} for n in NAMES}))
+```
+
+Whole tree, both revisions, 32 families: about four seconds. **Re-deriving a
+size is cheap enough that citing a stale one is a choice.**
+
+### Bounds of this re-derivation
+
+Sizes only. **No target alias was judged**, and this amendment must not be
+read as validating any surviving alias proposal — that check needs the
+producer, the width and the parse contract read per family, and the
+withdrawn `Hex16Str` rows prove no count substitutes for it. Names come from
+the two census tables; a concept declared under a name neither table lists
+is invisible here exactly as it was to the original census, and
+`clave_liquidacion` is the recorded proof that such names exist. Test files
+are excluded throughout, so a retype's test-side cost is not sized. The
+UNDETERMINED, NOT_AN_IDENTIFIER and FREE_TEXT buckets are out of scope.

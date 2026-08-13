@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:59f9d6c017a9b5936fb01fcf5d356f0e14c19128d1078e44f9ca49cbdb8d7821'
+body_hash: 'sha256:66719998a9f69bdd635200bbfa750f1c35454ea088b71e01e453a27ce621f515'
 related:
   - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
 ---
@@ -114,6 +114,110 @@ These are separate from the simplified-regime deficit and are small enough to be
 authoring gap rather than a structural one, but they will each refuse the map's casilla
 reference check and so must be resolved before the map Step can close. They are recorded here
 so the map author does not rediscover them as five unexplained validator refusals.
+
+### absent-numbered-boxes-finding-corrected | low | Four of the five reported absent boxes were an artifact of my own matching, and the fifth is a numbering gap rather than a missing casilla
+
+Correcting the finding above rather than rewriting it, because the original entry is what a
+reader would otherwise carry forward. Two errors were mine.
+
+First, box extraction. Several official descriptions state a formula before naming the
+field's own box, as in the sum of results reading `( [46] + [58] + [76] ) [64]`. Matching the
+FIRST bracket takes a formula operand instead of the field's identity. The field's own box is
+the TRAILING bracket. Under the first-bracket rule I reported boxes 46, 110 twice, 78 and 69;
+under the correct trailing-bracket rule the candidate set is 46, 110, 78, 87 and 69, so the
+original list both double-counted 110 and missed 87 entirely.
+
+Second, and more consequential, resolution key. I checked candidates against casilla `id`
+when the official box number lives on casilla `number`. Four of the five resolve immediately
+once keyed correctly: `iva.compensacion-pendiente-periodos-anteriores` carries number 110,
+`iva.compensacion-aplicada-periodo` carries 78, `iva.compensacion-pendiente-periodos-posteriores`
+carries 87 and `iva.resultado` carries 69. They are fully defined, semantically keyed by id
+and officially keyed by number, which is the dual-keying this campaign already settled. They
+were never missing.
+
+Re-measured against `number`, exactly one box is genuinely absent, and it is the same one in
+every epoch: box 46, the general-regime result in DP30301, at ordinal 79 for 2023 through
+2025 and ordinal 86 for 2026. The concept is present as `iva.resultado-regimen-general`, but
+that casilla's `number` repeats its own id instead of declaring 46, while its four
+`compensacion` and `resultado` siblings all declare theirs. So this is a numbering gap on an
+existing casilla, not a missing definition, and the fix is to declare the official number on
+the casilla that already exists rather than to author a new one. Authoring a second casilla
+for box 46 would create exactly the duplicate official-box authority the campaign forbids.
+
+The map author should therefore resolve numbered anchors against casilla `number`, and should
+expect one grounding action here rather than five.
+
+### absent-numbered-boxes-finding-withdrawn | none | There is no absent box at all; the official number lives on a second field and every numbered anchor resolves
+
+Third and final refinement of the same finding, appended rather than substituted because the
+sequence of three successive corrections is itself the evidence that this surface is easy to
+measure wrongly. The finding is now WITHDRAWN in full.
+
+The compiled casilla schema carries two number-bearing fields, `number` and `form_number`. I
+measured only the first, in both earlier passes.
+
+The root cause is worth more than the answer, because the next author will reach for the same
+shortcut. The very first probe dumped the casilla and filtered the output to a key list that had
+been guessed in advance, naming `id`, `number`, `official_number`, `kind`, `label` and
+`legal_refs`. `form_number` was present in the model the entire time and the filter discarded it.
+Both later measurements then inherited that blind spot without ever re-examining it. The lesson,
+stated so it can be reused: filtering a dump to fields you expect, rather than reading the field
+set first, is what turns one mistake into three. Read the field set, then filter. `iva.resultado-regimen-general` does declare
+its official box: `form_number` is `46`. Nothing is missing, and the numbering-gap conclusion
+in the previous correction was wrong in the same way the original finding was wrong, one field
+later.
+
+Re-measured across every numbered anchor in all five epochs, resolving against the union of
+`number` and `form_number`, the absent set is empty: 174, 174, 182, 182 and 183 numbered
+anchors, zero unresolved. There is no box work in this campaign.
+
+The corpus-wide picture explains why the field exists and is worth recording, since the map
+author will meet it. Of 16,800 casillas across the loaded corpus, 15,990 carry a numeric
+`number` and no `form_number`, 790 carry a semantic `number` and no `form_number`, and only 20
+carry `form_number` at all, spread over modelos 180, 190, 303, 349 and 390. In 180, 190, 349
+and 390 the pattern is coherent and deliberate: `number` holds a byte range such as `145-160`
+for a declarant-summary record while `form_number` holds the printed sequence number such as
+`02`. So `form_number` is the sanctioned home for the printed number wherever `number` is
+already carrying a different coordinate.
+
+Modelo 303 uses it exactly once, on this casilla, whose `number` degenerately repeats its own
+id rather than carrying a competing coordinate. So relative to its 181 numbered siblings the
+casilla is stylistically anomalous, while being entirely correctly declared. That is a
+cosmetic inconsistency and explicitly NOT a grounding defect. It should not be "tidied" as a
+side effect of this campaign: `number` is consumed by other surfaces, and rewriting it to `46`
+to match its siblings is a change with consumers, not a formatting fix. It needs its own
+justification if anyone ever wants it.
+
+The operative rule for the map author is therefore: resolve a numbered anchor against `number`
+first and `form_number` second, and treat neither alone as the official-number authority.
+
+### second-consumer-confirms-the-projection-admission-gap | high | A generation gate independently hits the same declaration requirement, so the deficit is not bookkeeping
+
+The deficit above was found by attempting to author semantic maps. A second, unrelated consumer
+reaches the same wall from a different direction, which is worth recording because it changes how the
+blocker should be read.
+
+The variable-envelope generation gate fails on all five Modelo 303 epochs with "semantic map omits
+target-revision projection declarations", enumerating the differentiated-deduction endpoints from
+casilla 700 onward. Its harness declares no projection endpoints, while the selected revision demands
+that a map account for all 108. The failure is reproducible sequentially and was proven independent
+of unrelated in-flight work by reverting that work and observing identical failures.
+
+So the revision-owned projection admission is not merely inconvenient for a map author; it is already
+red for a generation gate that predates the contract. Two consumers, reached independently, both stop
+at the same requirement.
+
+That strengthens the case that the declaration deficit is a real structural blocker rather than a
+bookkeeping gap, and it means closing it unblocks more than the map rows. It also means the five
+failures should NOT be repaired by relaxing the projection bijection or by teaching the harness to
+skip it, because both would remove the very check that surfaced the missing declarations twice.
+
+A measurement caution attached to the same run, since it nearly produced a false report. The suite
+first appeared to carry twelve failures under parallel execution. Re-run sequentially it carries five,
+with the totals reconciling exactly at 236 either way, so seven were execution artefacts of parallel
+runs on this backing share rather than genuine failures. The project's own guidance to re-run
+sequentially before triaging registry failures existed and had not been applied; applying it changed
+the answer. Only the five are real.
 
 ## Recommendations
 

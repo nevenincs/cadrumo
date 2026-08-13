@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-05'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:6c08565b3a4913927cc15ccda947392100805abc8be520a9277db52dbe337d26'
+body_hash: 'sha256:5f65bd237fa01b958721e3308de21d6912ad88bad92a07dcfe4b0f20db3b0e2e'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -134,3 +134,7 @@ The M303 null Spanish labels are authored, so the authoritative record projectio
 With those fixed the gate runs green: 26 passed, covering concept recall by declared terms in any language and casilla recall by declared localized terms, on each of the four language roots, driven through the real browser path against real built artefacts.
 
 The row stays OPEN on its second half. It requires the same probes re-run against the DEPLOYED roots so a CI pass cannot mask a broken live root, and deployment is deferred by operator decision with the `es`, `ca` and `hu` roots currently returning 404. A green built-site gate is precisely what this row says must not be mistaken for a live one.
+
+### 2026-08-12 the deployed-half blocker changed composition; the row is unchanged
+
+The AWS-credential blocker the deployed half depends on through P04.S12/S13 is cleared: `aws sts get-caller-identity` now succeeds. That does not close this row. The live read-only probe is unchanged -- `/docs/` answers 200, `/docs/es/`, `/docs/ca/`, `/docs/hu/` answer 404 -- and P04.S12/S13 remain open on a separate blocker outside this campaign: 29 modules across other campaigns' surfaces still carry no API stub, so the strict full build the publish path runs first has no confirmed green run. The built-site half proven in the entry above is untouched. P03.S08 stays open pending the deployment-side evidence those two rows own.

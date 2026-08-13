@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#user-docs-search-consolidation'
 date: '2026-08-11'
-modified: '2026-08-12'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:91ff089665453ec58f592b646d45d56d2b0dee54694d5727db3ce0b5e3006c4d'
+body_hash: 'sha256:8d79c8aab20ab13268e0116b950296062d9a65b4a8c7c2a51f20586f234427e6'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
   - "[[2026-08-01-user-docs-search-consolidation-adr]]"
@@ -104,6 +104,20 @@ The alias-authority module argued in its docstring that its schema id must be ke
 - Re-authenticate and publish to close P04.S12 and P04.S13; preserve the current 404 evidence until real live checks replace it.
 - Do not soften the casilla projection's refusal on a missing source-locale label. It is the only thing currently making the violation visible.
 
+## 2026-08-12 fourth revision: the publish is no longer blocked by a defect, it is blocked by churn
+
+Every named blocker from the previous revisions is now cleared, and the publish still cannot complete. The reason is structural rather than a fault, and it is the finding worth carrying forward.
+
+**Cleared this session.** The credential was renewed. The peer merge was resolved. The strict build's translated roots were fixed. The calculate path was repaired: six advisory remedies embedded literal command prose in notice context, which the notice validator refuses, so `modelo work calculate` aborted with an internal fault for any filer whose calculation raised one of them -- an ordinary IRPF filer with children or with retenciones could not calculate at all. Three waves of newly-required profile facts were absorbed, the documented profile-create commands were given the flag the CLI had begun demanding, and Modelo 303's new filing-evidence precondition was satisfied by generating the document per run rather than committing a snapshot-bearing fixture that any registry change would invalidate.
+
+**The remaining obstacle is arithmetic.** A full golden refresh takes about thirty minutes and a publish about forty. The tree took 33 commits in the ninety minutes spanning the last attempt, nine of them touching the registry, the domain or the entrypoints. A refresh that completed with zero problems was, forty minutes later, stale across seven pages -- the publish died on Modelo 720 binding-coverage diagnostics that did not exist when those goldens were taken.
+
+So the cli-sequence gate cannot converge: it compares committed goldens against live execution, and the surface it records changes faster than one refresh-and-publish cycle runs. This is not an argument for weakening the gate. The gate is why a withdrawn export and a broken calculate path were caught before publication rather than after.
+
+**Two shapes would fix it, and both belong to the deploy surface rather than this campaign.** Publish from a pinned revision rather than the live worktree, so the build reads one immutable state; the tree is 22 GB, so this wants a git-level pin rather than a copy. Or take a coordinated quiet window, which is what the shared-tree conventions already use for rule syncs.
+
+**One editorial change made here, flagged for the docs owner.** Modelo 303's fichero-BOE layout is withdrawn by a recorded registry decision -- `remove_from_filing_grade`, because the official record design carries producer fields with no canonical typed producer authority and a partial layout would permit silent under-declaration. Two filing-spine sequences documented that export as a working step. They now document the refusal and its reason rather than teaching a dead end, because a filer meeting that refusal needs to know why. Someone owning the page should confirm the wording.
+
 ## 2026-08-12 third revision: the plan's own Verification list, checked item by item
 
 Checkbox counts are not completeness. This pass tested the plan's Verification section directly, because that is what the campaign actually promised.
@@ -165,3 +179,43 @@ So closing this needs the official AEAT Modelo 303 2026 form as the grounding so
 **A narrowed-authority workaround was attempted and rejected.** The resolver takes an injectable authority explicitly so a test can drive a narrowed registry, and the Diseño fail-closed rule's subject is modelo 036, so excluding M303 looked like a legitimate way to re-prove P06.S27 at HEAD. It is not reachable honestly: the authority's modelo index is a private cache that a field-level copy does not rebuild, so narrowing it means reaching into internals, which makes the resulting authority a fake rather than a real one. Recorded so it is not re-attempted.
 
 The surviving observation is still worth acting on later: the module-scoped resolver fixture projects every modelo, so a rule about one modelo is hostage to every other modelo's authoring state. Scoping that fixture to its subject is a real hardening, but it belongs with the gate owner and after the labels land, not as a way to make a red close look green.
+
+## The remaining three rows have one provable dependency, and it is not churn
+
+Added after the publish was attempted again and failed. Earlier passes attributed the failure to tree churn and to a dead `.git/index.lock`. Both were real conditions but neither was the cause, and recording the wrong cause is what made this row look unownable across several attempts.
+
+**The working tree cannot load the registry at all.** `bundled_authority()` raises `RegistryLoadError` at `modelos/130/revisions/2019-y-siguientes/bindings/0002-bindings.toml`: the fragment declares no `[revisions.<id>]` table. The file has been reduced to a comment block describing its own migration. Behind it sits a second defect -- `modelo-130-previous-year-economic-activity-net-income` is declared as both a casilla and a formula -- so removing the stub alone does not restore the load. A third piece, `_validate_previous_filing_year_coverage.py`, is UNTRACKED: a new build-time year-coverage validator that exists only in the working tree.
+
+The three pieces are coherent as a design. The M130 to M100 prior-year carry retires from a `previous_filing` binding into four `cross_model_output` relations, which is what the calculation-aggregation-taxonomy ADR requires of a cross-modelo fold-in, and the new validator's own allowance table documents the retirement in prose. What is wrong is only that the change is landing in halves, which is the failure mode `aeat-architecture-boundaries` names: a relocation lands in one commit or the tree is red between them. It is peer WIP and was not touched.
+
+**Committed HEAD is green.** Verified directly rather than assumed: HEAD's `src` extracted whole to a scratch tree and imported with `PYTHONPATH` ahead of the editable install, `bundled_authority()` returns 73 modelos. An earlier pass in this session claimed main was red; that claim was wrong, and its error is worth recording because it is easy to repeat -- HEAD's registry DATA had been tested against the working tree's CODE, and the code included the untracked validator. Pin both sides or neither.
+
+**Pinning to HEAD does not rescue the publish, and the reason is a contract, not an obstacle.** A pinned snapshot was built -- HEAD whole, with this campaign's three uncommitted deliverable groups layered on (the `docs/_sequences` contracts and goldens, `dev/docs/sequences/_runner.py`, and the four locale catalogues carrying the authored M303 labels). It resolves cleanly and its registry loads. The cli-sequence check against it returns 51 divergences, and their shape is the finding: `result.observations[].casilla_id`, `legal_refs`, `source_refs`, `operand_values`, `result.rows[].label` and `value`, across thousands of rows. The `registry:referential-integrity` error that dominated the working-tree run is gone.
+
+That is the proof. The goldens are a contract recorded against the tree's registry; the only registry that loads is HEAD's; fourteen registry files are dirty between them. Refreshing the goldens to HEAD would resolve the divergence and would be the wrong act -- it would overwrite the contract with a snapshot of a registry state the peers are actively moving off, and land golden churn inside their in-flight migration.
+
+So P03.S08's deployed half, P04.S12 and P04.S13 carry a genuine ordering dependency: the M130 migration lands (or its author reverts their own half), the goldens are refreshed ONCE against the settled tree, and the publish runs against that. The deferral recorded earlier stands, but it is no longer a deferral for lack of a quiet window. It is a deferral for a registry contract that cannot honestly be satisfied from either side while the migration is mid-flight.
+
+Two ordinary blockers remain alongside it and should not be confused with it: the AEAT deploy credentials expire on their own schedule and were expired again at this pass, and `.git/index.lock` has been frozen for over three hours with a dead holder, which blocks committing this campaign's finished work but blocks no build. Neither is on the critical path; the registry contract is.
+
+## The ordering dependency cleared, and the refresh found two product regressions behind it
+
+Added after the M130 migration landed. The registry now loads in the working tree (73 modelos), so the golden refresh this campaign was waiting on could finally run. It went from 94 divergences to 15 across 34 pages. What the remaining failures turned out to be is worth more than the refresh.
+
+**Twelve pages failed for four separate reasons, and only two were this campaign's own.** The `iva-year-2025` seed drove four Modelo 303 calculations without the typed filing-evidence document the CLI now requires, so the fixture generator was extended to the 2025 quarters and the seed carries the argument; and the documented `profile create` invocations had fallen behind a profile schema that gained five required IVA facts. Both were this campaign's surface catching up, both are fixed, both verified green.
+
+**The other two are product regressions, each a hardening gate merged ahead of the surface that can satisfy it.** They are the same failure shape twice in one in-flight campaign, and the cli-sequence goldens surfaced both within hours of the break.
+
+The first: `aeat app modelo export` refuses for every modelo. `_require_export_identity` landed 2026-08-12 and refuses unless `presenter` and `taxpayer_identity` are set; all three production construction sites -- the export CLI, `_quickfile.py` stage 5, and `_modelo_review_package_cli.py` -- leave both at their `None` default, and no CLI option supplies either. For Modelo 130 and 303 the withdrawn-layout refusal fires first and masks it; Modelo 349, which still holds a layout, shows it plainly at exit 5. Its golden expects exit 0 and a 1500-byte file, so this worked when that golden was recorded.
+
+The second is the more serious. **Modelo 303 drops every input-IVA deduction created through the CLI.** `_iva_ledger.py` now refuses any `SOPORTADO` transaction lacking both `deduction_fact_kind` and `deduction_provenance`; nothing under `entrypoints/` sets either field, and the only explicit assignment outside internal aggregation is in a test module. The documented worked example -- income cuota 210, deductible purchase cuota 105 -- moved from casilla 71 = 105.00 to 210.00, with casillas 28, 29 and 45 all falling to zero. The taxpayer overpays by the entire deduction.
+
+The safety apparatus behaved correctly and that is the part to keep: a `source_advisory` warning fires, naming the exact cause. So this is NOT a silent under-declaration. But the advisory is non-blocking, `calculate` still emits a draft carrying zero deductions, and the direction of the error is over-payment -- precisely the direction `no-silent-under-declaration` records as unwatched, producing valid output, no refusal, and no signal to the taxpayer.
+
+**A refresh is not a verification, and this pass proves why.** `refresh` executes frames and rewrites goldens; it does NOT evaluate the `@expect` value assertions authored in the `.seq` contracts. A page can therefore refresh at exit 0 and fail `check` immediately afterwards on the same tree, which is exactly what happened. Anyone reading a clean refresh as a green gate will publish wrong numbers.
+
+That is the live hazard this pass leaves behind: **the refreshed goldens now carry 210.00 and zeroed deduction casillas across the Modelo 303, IVA-lifecycle and filing-spine pages. They are wrong documentation and must not be committed.** They are uncommitted, and the dead index lock prevents any commit, so the exposure is contained -- but the containment is accidental, not designed. Restoring them from HEAD was rejected: those files also carry this campaign's own earlier uncommitted work, so a HEAD restore would destroy real authored content to undo a mechanical refresh.
+
+Two documentation corrections DID land and are sound independent of the above, because they document typed, intentional refusals rather than defects. Fichero-BOE export is withdrawn for modelos 111, 115, 123, 130, 200, 202, 232, 303 and 390 (`decision = "remove_from_filing_grade"`, reasoned as a partial layout permitting silent under-declaration), and nine sequences across eight how-to pages were still teaching readers to run it and asserting exact byte sizes. Those now document the refusal with `work file` as the supported ending, and the quickstart's prose was rewritten to match: enter the calculated values at the portal rather than upload a file the tool cannot produce.
+
+One further defect was fixed at its own seam. Host-conditional rows masked their rendered `detail` sentence but not the `facts` it was rendered from, so `free_memory_bytes` and `free_vram_bytes` stayed pinned in a golden that its own author's next run would red. Host-conditional rows now mask `*_bytes` fact VALUES while keeping the KEYS under exact comparison, so a reader that stops reporting a quantity still fails. Five tests, proven to bite against the pre-fix behaviour through an out-of-repo pytest plugin, so nothing tracked was mutated to run the proof. The global `GOLDEN_MASK_FIELDS` was deliberately left alone -- its docstring names widening it a standing honesty hazard, and this belongs in the sequence-local layer.

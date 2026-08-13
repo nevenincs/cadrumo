@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:8af7f739efdd8b723a07a15dfe06ca6edf80b0397bb12129658e122deafb8c09'
+body_hash: 'sha256:7cbc64a7c6354c02291f28b421b50eaf787cf9808f95dcce9e671720c6546844'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -110,6 +110,9 @@ related:
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s59-annual-orden-authority-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s60-producer-projection-address-review-audit]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-dp30302-projection-declaration-deficit-audit]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-dp30302-simplified-regime-grounding-proposal-reference]]'
+  - '[[2026-08-12-aeat-export-fragment-generator-authority-m303-2023-epoch-semantic-home-assignments-reference]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit]]'
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit]]'
@@ -177,6 +180,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-11-aeat-export-fragment-generator-authority-s58-filing-evidence-audit` - `aeat-export-fragment-generator-authority` audit: `S58 immutable M303 filing evidence review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s59-annual-orden-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S59 annual Orden authority formal review`
 - `2026-08-11-aeat-export-fragment-generator-authority-s60-producer-projection-address-review-audit` - `aeat-export-fragment-generator-authority` audit: `S60 producer and projection address formal review`
+- `2026-08-12-aeat-export-fragment-generator-authority-dp30302-projection-declaration-deficit-audit` - `aeat-export-fragment-generator-authority` audit: `dp30302 projection declaration deficit`
 - `2026-08-12-aeat-export-fragment-generator-authority-parallel-campaign-merge-reconciliation-audit` - `aeat-export-fragment-generator-authority` audit: `parallel campaign merge reconciliation`
 - `2026-08-12-aeat-export-fragment-generator-authority-s57-typed-filing-projection-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S57 Typed Filing Projection Authority Audit`
 - `2026-08-12-aeat-export-fragment-generator-authority-s60-producer-address-closure-audit` - `aeat-export-fragment-generator-authority` audit: `S60 Producer and Projection Address Closure Audit`
@@ -240,6 +244,8 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 ### reference
 
 - `2026-08-10-aeat-export-fragment-generator-authority-semantic-map-fragment-loader-reference` - `aeat-export-fragment-generator-authority` reference: `semantic-map fragment loader`
+- `2026-08-12-aeat-export-fragment-generator-authority-dp30302-simplified-regime-grounding-proposal-reference` - `aeat-export-fragment-generator-authority` reference: `dp30302 simplified regime grounding proposal`
+- `2026-08-12-aeat-export-fragment-generator-authority-m303-2023-epoch-semantic-home-assignments-reference` - `aeat-export-fragment-generator-authority` reference: `m303 2023 epoch semantic home assignments`
 
 ### research
 

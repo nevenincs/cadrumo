@@ -5,7 +5,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:0ee1ce5ac180b85085b8a85aade98cd74825cda7709a6ce0dd9a17c407ae5c42'
+body_hash: 'sha256:69c82f8542522cee517a8764cdf8a13c7d79fcf9d9f961057f4c861c7c0a9e54'
 step_id: 'S83'
 related:
   - "[[2026-08-10-casilla-schema-plan]]"
@@ -36,6 +36,8 @@ The implementation-time `ruff format --check` and `ruff check` runs passed for t
 Formal review at 2026-08-12 re-ran the exact module serially and observed all four scenarios green in 32.20 seconds, so the review-time obstruction recorded above has cleared and the implementation-time result is confirmed at HEAD.
 
 Scope narrowing, recorded per the campaign's scope-change protocol. The first scenario previously asserted a written fichero-BOE artefact (byte size, non-empty payload, the tax id present in the bytes) and now asserts a typed `ModeloExportUnsupportedError` refusal instead. The narrowing is truthful, not a workaround: an independent authority probe confirmed that every live M303 revision the suite law-selects carries an absent or empty `export_layouts` definition, so refusal is the only correct production behaviour available. What the standing goal still asks for that this excludes: an end-to-end proof that ledger input reaches real filing-grade fixed-width BYTES for M303. No scenario in this suite proves that today, and no other suite was substituted for it. That proof returns only when a filing-grade `export_layouts` definition is authored for a live M303 revision.
+
+Why the narrowing is principled rather than a defect, established after the paragraph above was written and recorded here so the two facts are read together. Every Modelo 303 revision carries a support-removal decision withdrawing the fixed-width layout from filing grade, on the stated ground that its official record design contains producer fields with no canonical typed producer authority and that retaining a partial layout would permit silent under-declaration. The refusal the suite now asserts is therefore the correct behaviour rather than a tolerated one, and the withdrawal is a recorded judgement rather than lost data. Read alone, that fact reads comfortably. Read alone, so does the narrowing above. The truth is the pair: the withdrawal is principled AND nothing in the tree currently proves ledger input reaching real filing-grade fixed-width bytes for Modelo 303. Neither half may be cited without the other, and the typed producer authority whose absence forced the withdrawal is owned by a separate campaign, not by this one.
 
 The cross-period advisory assertion was corrected from `app_filing` to `registry_relation` because the fact carries `requirement.origin.value`, the origin of the cross-period requirement, not the observation source kind. The prior value could never match, so the helper returned an empty set against an assertion demanding all four quarters. The non-official basis is still asserted directly through the persisted observation's `source_kind == "app_filing"`, and the advisory is only ever emitted on the `app_filing` admission branch, so the corrected assertion is strictly stronger than the one it replaced.
 

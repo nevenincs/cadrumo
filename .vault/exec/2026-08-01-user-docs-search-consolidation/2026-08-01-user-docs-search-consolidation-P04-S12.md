@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-04'
-modified: '2026-08-11'
+modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:e489c7dd56cb7314285b756dd03eeb26dfdde1652ce0db3d3763ef3d1ecf95c3'
+body_hash: 'sha256:e4c6e3f845a4cec31239a0b00ef1924fd54f59c8a0a4a82bc0c600a7f48aeb3f'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -98,3 +98,21 @@ All four roots now build clean: es and ca passed immediately, and hu passed on a
 So the remaining blocker really is only the credential. Before this session a re-authentication would have hit a failing build; now the publish path is clear up to the upload.
 
 One recurrence risk recorded rather than fixed: the generator does not prune its own output directory, and that directory is gitignored, so stale pages survive across builds and can red the strict build again. A pruning pass belongs with the generator's owner.
+
+### 2026-08-12 credential cleared; the outstanding blocker is the cross-campaign stub gap, not AWS
+
+`aws sts get-caller-identity` now succeeds. The session that blocked every prior attempt in this row is no longer expired, and nothing in this pass re-authenticated it -- it was already valid when checked.
+
+That does not make the mechanism live. `python -m dev.docs.apidocs scaffold --check` reports 29 missing stubs at HEAD, up from the 23 the sibling P04.S13 entry named the same day, none under any module this campaign owns: M303 filing and aggregation, IVA deduction and régimen rows, the TUI review screen, the profile sync store, and LLM precondition modules. The tree-wide scaffold-and-stage-your-own-lines discipline forbids this campaign closing that gap by running the scaffold itself.
+
+A fresh attempt at the strict full build that `_build_site` runs before any AWS call was made to get direct evidence rather than relying on the stub census alone. A first parallel attempt produced no further output for over ten minutes under heavy concurrent shared-tree load and never returned a result; it is SUPERSEDED by the second attempt below and should not be re-chased or treated as a pending signal. A second, separately launched attempt completed: it got past the stage the stub census predicted would fail and reached the sequence-golden gate, where it failed on divergences matching the standing, already-recorded pattern -- CLI-sequence output drift on M303 filing-evidence requirements and wallet notices, and two machine-specific hardware-fact fields (`free_memory_bytes`, `free_vram_bytes`) that a golden fixture cannot pin across runs. This is the same class of red this row's own history already named on 2026-08-06/07, not the stub gap, and not anything under `dev/docs/`.
+
+The live read-only probe is unchanged: `/docs/` answers 200; `/docs/es/`, `/docs/ca/`, `/docs/hu/` answer 404. No deploy, cache invalidation, or live mutation was attempted; a valid credential does not justify a publish attempt while the build precondition is unconfirmed and a known, cross-campaign content gap sits in front of it. P04.S12 remains open.
+
+### 2026-08-13 fresh re-check: both blockers persist and the cross-campaign gap widened
+
+Re-verified from a clean context rather than trusting the prior entries. `aws sts get-caller-identity` again reports an expired session -- the credential has lapsed a second time since the 2026-08-12 clearance. `python -m dev.docs.apidocs scaffold --check` now reports 31 missing stubs (up from 29), still none under any module this campaign owns: the M303 filing/aggregation/regimen-simplificado/prorrata/exonerado-390 rows, IVA deduction facts, the TUI work-review screen, the profile sync-runs store, the calc-sheets export service, filing-evidence and filing-projection core types, and the LLM preconditions/supply-nature modules. The named modules match the same cross-domain surfaces recorded on 2026-08-12, confirmed again by full name today.
+
+The live read-only probe is unchanged: `/docs/` answers 200; `/docs/es/`, `/docs/ca/`, `/docs/hu/` answer 404.
+
+No implementation files changed, no scaffold was run (the tree-wide scaffold-and-stage-your-own-lines discipline forbids this campaign closing a gap in modules it does not own), no deploy, cache invalidation, or live mutation was attempted. P04.S12 remains open. The blocker is the same documented failure mode as every prior entry: a full-tree build precondition red for reasons entirely outside this campaign's surface, compounded by an operator-owned credential that keeps re-expiring between sessions.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-12'
 modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:c1a369a22baa489b728608980a9f3b759b6bc417cbed2b9dbd22cdfc262d312a'
+body_hash: 'sha256:0190e444cc113189c916322f85c53329299ac982755d0129d74dd628d8afd5dd'
 related:
   - '[[2026-08-10-casilla-schema-W01-P01-S01]]'
   - '[[2026-08-10-casilla-schema-W01-P01-S02]]'
@@ -48,7 +48,18 @@ related:
   - '[[2026-08-10-casilla-schema-W05-P11-S41]]'
   - '[[2026-08-10-casilla-schema-W05-P11-S80]]'
   - '[[2026-08-10-casilla-schema-W05-P11-S82]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S83]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S84]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S85]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S86]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S87]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S88]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S90]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S91]]'
+  - '[[2026-08-10-casilla-schema-W05-P11-S92]]'
   - '[[2026-08-10-casilla-schema-W05-P12-S36]]'
+  - '[[2026-08-10-casilla-schema-W05-P12-S39]]'
+  - '[[2026-08-10-casilla-schema-W05-P12-S40]]'
   - '[[2026-08-10-casilla-schema-blocker-spine-adr]]'
   - '[[2026-08-10-casilla-schema-canonical-derivations-adr]]'
   - '[[2026-08-10-casilla-schema-dead-surface-adr]]'
@@ -94,10 +105,12 @@ related:
   - '[[2026-08-12-casilla-schema-s34-tui-review-audit]]'
   - '[[2026-08-12-casilla-schema-s35-faceted-filtering-review-audit]]'
   - '[[2026-08-12-casilla-schema-s36-campaign-close-honesty-review-audit]]'
+  - '[[2026-08-12-casilla-schema-s36-campaign-close-re-review-audit]]'
   - '[[2026-08-12-casilla-schema-s37-export-exemption-docstring-review-audit]]'
   - '[[2026-08-12-casilla-schema-s38-dormant-enum-adjudication-review-audit]]'
   - '[[2026-08-12-casilla-schema-s41-full-tree-collection-gate-review-audit]]'
   - '[[2026-08-12-casilla-schema-s82-spanish-casilla-family-review-audit]]'
+  - '[[2026-08-12-casilla-schema-s83-split-fixture-review-audit]]'
 ---
 
 # `casilla-schema` feature index
@@ -154,10 +167,12 @@ Auto-generated index of all documents tagged with `#casilla-schema`.
 - `2026-08-12-casilla-schema-s34-tui-review-audit` - `casilla-schema` audit: `W04.P10.S34 TUI review`
 - `2026-08-12-casilla-schema-s35-faceted-filtering-review-audit` - `casilla-schema` audit: `W04.P10.S35 faceted filtering review`
 - `2026-08-12-casilla-schema-s36-campaign-close-honesty-review-audit` - `casilla-schema` audit: `S36 campaign-close honesty review`
+- `2026-08-12-casilla-schema-s36-campaign-close-re-review-audit` - `casilla-schema` audit: `S36 campaign-close honesty re-review`
 - `2026-08-12-casilla-schema-s37-export-exemption-docstring-review-audit` - `casilla-schema` audit: `W05.P11.S37 export exemption docstring review`
 - `2026-08-12-casilla-schema-s38-dormant-enum-adjudication-review-audit` - `casilla-schema` audit: `W05.P11.S38 dormant enum adjudication review`
 - `2026-08-12-casilla-schema-s41-full-tree-collection-gate-review-audit` - `casilla-schema` audit: `W05.P11.S41 full-tree collection gate review`
 - `2026-08-12-casilla-schema-s82-spanish-casilla-family-review-audit` - `casilla-schema` audit: `S82 Spanish casilla-family rename review`
+- `2026-08-12-casilla-schema-s83-split-fixture-review-audit` - `casilla-schema` audit: `S83 split fixture review`
 
 ### exec
 
@@ -201,7 +216,18 @@ Auto-generated index of all documents tagged with `#casilla-schema`.
 - `2026-08-10-casilla-schema-W05-P11-S38` - adjudicate the dormant enum members (profile_schedule, UNRESOLVED_BINDING, INVALID_WAIVER, and the two unused exemption reasons): wire each, pin it dormant with a stated reason, or delete it
 - `2026-08-10-casilla-schema-W05-P11-S41` - correct the standing collect gate to measure every tracked test root
 - `2026-08-10-casilla-schema-W05-P11-S82` - destructively rename the OfficialBoxStatus, official_box_status, and classify_official_boxes family to one Spanish casilla-stem authority, sweep every consumer, and prove zero English-name references without aliases or compatibility exports
+- `2026-08-10-casilla-schema-W05-P11-S83` - repair the real M303-quarter-to-M390 end-to-end suite to law-select each live split M303 revision and make all four scenarios pass without restoring or tolerating the retired revision id
+- `2026-08-10-casilla-schema-W05-P11-S84` - remove the five retired application.verification.errors locale leaves from all four catalogues through dev.locales and prove no deleted-package key remains
+- `2026-08-10-casilla-schema-W05-P11-S85` - replace the relation-handoff applicability hard counts with count-free semantic invariants and a bite proof, making the complete owning module green
+- `2026-08-10-casilla-schema-W05-P11-S86` - correct the two S33 audit IVA-stem violations and fill the checked S02 execution Description through VaultSpec CLI, then pass the IVA-stem and feature body-section gates
+- `2026-08-10-casilla-schema-W05-P11-S87` - regenerate the casilla-schema feature index through the owning VaultSpec CLI after all other close findings settle and require the feature check to pass
+- `2026-08-10-casilla-schema-W05-P11-S88` - retire every stale Modelo 303 reference to the deleted revision id and tighten the cutover gate's modelo attribution so a sibling modelo's legitimate identically-named revision is not flagged, making the cutover gate, the registry diff module and the reconcile verb green - EXCLUDES the two M303 application modules whose deducible-IVA fold changed underneath them, which the standing goal still requires and which S91 now carries
+- `2026-08-10-casilla-schema-W05-P11-S90` - populate the 84 shared M303 continuity casilla-label keys the revision split left unresolved so the four currently-filing revisions render every casilla label in all four catalogues through dev.locales
+- `2026-08-10-casilla-schema-W05-P11-S91` - adjudicate where the Modelo 303 deducible-IVA evidence gate binds - the ledger-to-casilla aggregation fold or the verify grant - since an unevidenced purchase now folds to zero at calculate while two committed modules still contract for the fold-then-block shape, then repair those modules against the adjudicated contract
+- `2026-08-10-casilla-schema-W05-P11-S92` - add a tree-wide gate asserting every casilla label resolves in the mandatory Spanish source for every modelo and every revision, measured through resolve_modelo_localization and the production resolver chain and never by reading catalogue YAML, and prove the gate bites
 - `2026-08-10-casilla-schema-W05-P12-S36` - run the fresh-context honesty review of the campaign close and record it as a vault audit with every finding actioned or deferred
+- `2026-08-10-casilla-schema-W05-P12-S39` - retire the casilla-schema-buildout campaign rule and sync the provider copies in the same action as the closing review
+- `2026-08-10-casilla-schema-W05-P12-S40` - confirm every step in this plan is checked with an exec record or formally deferred with a follow-up reference, and only then declare the campaign structurally complete
 
 ### plan
 

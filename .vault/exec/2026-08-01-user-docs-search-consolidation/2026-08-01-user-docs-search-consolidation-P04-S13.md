@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#user-docs-search-consolidation'
 date: '2026-08-06'
-modified: '2026-08-11'
+modified: '2026-08-12'
 body_schema: 'body-v1'
-body_hash: 'sha256:013cd1ec509738fbfe3795ea47b134fbe86cc55d956cf8e753ddf24f73cbb74c'
+body_hash: 'sha256:7f9b182d6e71675c35702965d3a88ea82ac8908565521097b98001bc76733251'
 step_id: 'S13'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -72,3 +72,13 @@ Still blocking, and NOT this campaign's: the English root is the one root built 
 Deliberately not fixed here. The scaffold is tree-wide, so one run would emit stubs for all 23, and the standing rule is to stage only the stubs whose added lines name your own module and leave the rest to their owners. Regenerating and committing another campaign's API surface to unblock a deploy would be exactly the opportunistic peer edit that rule exists to prevent.
 
 So the publish needs two things, in either order: the credential, and those owners running the stub scaffold for their modules. The first is the operator's, the second is theirs.
+
+### 2026-08-12 the credential is no longer the blocker; the stub gap has grown and the build could not be reconfirmed
+
+Re-checked `aws sts get-caller-identity`: it now succeeds. The one blocker this row's own last entry attributed solely to the operator is cleared, and nothing here did the re-authenticating.
+
+That does not clear the OTHER blocker the same entry named as not this campaign's. `python -m dev.docs.apidocs scaffold --check` currently reports 29 missing stubs, up from the 23 measured that day, still none belonging to this campaign's surface (the same M303/IVA/TUI/profile-sync/LLM module set). `_publish` runs the identical strict full build before any upload, so nothing suggests it would pass now, and the gap is larger than when it was last measured.
+
+Attempted a fresh strict full build to get direct current evidence rather than resting on the stub census alone. A first attempt stalled under concurrent shared-tree load and never returned a result; it is SUPERSEDED by the second attempt below and carries no signal of its own -- do not re-chase it. A second, separately launched attempt completed and corrects the picture: it passed the stage the stub census predicted would fail, then failed at the sequence-golden gate on the same class of divergence this row already recorded on 2026-08-06/07 -- CLI-sequence drift on M303 filing evidence and wallet notices, plus two per-machine hardware-fact fields no golden fixture can pin across runs. No `publish` was run either way; the precondition is unmet regardless of which gate reds first, and neither is this campaign's surface.
+
+No deployment, root mutation, cache invalidation, or live URL claim was made. P04.S13 remains open, blocked on the cross-campaign stub gap this campaign cannot close by itself and, independently, on a clean window to confirm the build precondition.
