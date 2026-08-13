@@ -92,7 +92,6 @@ from ._declarations_observations import (
     FiledDeclaracionArtefactSink,
     _declaration_pdf_extraction_profile_provisional,
     _observed_casillas_from_declaration_pdf,
-    _observed_casillas_from_submitted_file,
     _observed_header_facts_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _register_row_artefact,
@@ -101,6 +100,7 @@ from ._declarations_observations import (
     _submitted_file_coverage_for_casillas,
     _verify_submitted_file_context,
     _with_derived_303_compensation_available_observation,
+    observed_casillas_from_submitted_file,
 )
 from ._declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ._declarations_schema import Declaracion
@@ -1234,7 +1234,7 @@ async def _capture_filed_declaration_observation_from_row(
             )
             artefacts.append(submitted_artefact)
             try:
-                casillas = _observed_casillas_from_submitted_file(
+                casillas = observed_casillas_from_submitted_file(
                     snapshot=snapshot,
                     declaration=declaration,
                     body=submitted_body,

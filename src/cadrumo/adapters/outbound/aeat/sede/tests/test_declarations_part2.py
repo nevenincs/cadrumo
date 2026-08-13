@@ -14,6 +14,7 @@ from .._declarations_observations import (
     _observed_header_facts_from_submitted_file,
     _submitted_file_coverage_for_casillas,
     non_numeric_observed_casillas,
+    observed_casillas_from_submitted_file,
     resolve_previous_filing_bindings_from_filed_declarations,
 )
 from ._declarations_support import (
@@ -45,7 +46,6 @@ from ._declarations_support import (
     _modelo_130_snapshot,
     _modelo_snapshot,
     _observed_casillas_from_declaration_pdf,
-    _observed_casillas_from_submitted_file,
     _read_guard_policy_from_snapshot,
     _submitted_file_payload,
     calculate_registry_snapshot,
@@ -115,7 +115,7 @@ class TestSubmittedFileObservation:
             captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
         )
 
-        observed = _observed_casillas_from_submitted_file(
+        observed = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,
@@ -236,7 +236,7 @@ class TestSubmittedFileObservation:
             captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
         )
 
-        observed_casillas = _observed_casillas_from_submitted_file(
+        observed_casillas = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,
@@ -275,7 +275,7 @@ class TestSubmittedFileObservation:
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
         )
-        observed = _observed_casillas_from_submitted_file(
+        observed = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,
@@ -365,7 +365,7 @@ class TestSubmittedFileObservation:
             sha256=hashlib.sha256(body).hexdigest(),
             captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
         )
-        casillas = _observed_casillas_from_submitted_file(
+        casillas = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,
@@ -409,7 +409,7 @@ class TestSubmittedFileObservation:
             captured_at=datetime(2026, 5, 5, 6, 9, 7, tzinfo=UTC),
         )
 
-        observed = _observed_casillas_from_submitted_file(
+        observed = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,
@@ -456,7 +456,7 @@ class TestSubmittedFileObservation:
             captured_at=datetime(2026, 5, 5, 10, 0, 0, tzinfo=UTC),
         )
 
-        observed = _observed_casillas_from_submitted_file(
+        observed = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,
@@ -512,7 +512,7 @@ class TestSubmittedFileObservation:
             artefact,
             body,
         )
-        observed = _observed_casillas_from_submitted_file(
+        observed = observed_casillas_from_submitted_file(
             snapshot=snapshot,
             declaration=declaration,
             body=body,

@@ -89,8 +89,6 @@ __all__ = [
     "_with_derived_303_compensation_available_observation",
     "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
-    "observed_header_facts_from_submitted_file",
-    "observed_headers_from_submitted_file",
     "registry_observation_from_filed_declaration",
     "resolve_previous_filing_bindings_from_filed_declarations",
     "resolve_relation_values_from_filed_declarations",
@@ -271,9 +269,6 @@ def _observed_header_facts_from_submitted_file(
     ``key -> value`` pair cannot answer where the value was read from, and a
     header fact that reaches persisted evidence without its record-design
     position is not auditable back to the bytes.
-    :func:`_observed_headers_from_submitted_file` is a derived flat view over
-    this result for readers that only want the tokens.
-
     Returns an empty tuple rather than raising when the payload cannot be parsed
     against the layout. The casilla projection is the caller's primary result and
     reports its own failure loudly; a header read that fails must not take the
@@ -315,35 +310,7 @@ def _observed_header_facts_from_submitted_file(
     return tuple(facts)
 
 
-def _observed_headers_from_submitted_file(
-    *,
-    snapshot: RegistrySnapshot,
-    body: bytes,
-) -> dict[str, str]:
-    """Return the submitted fichero's header tokens, keyed by header key.
-
-    A derived flat view over
-    :func:`_observed_header_facts_from_submitted_file`, which is the canonical
-    typed projection. Kept because a reader that only needs "what did AEAT say
-    for this key" should not have to walk a tuple, and dropped provenance is
-    acceptable in a convenience view precisely because the typed result is the
-    one that reaches persisted evidence.
-
-    One key wins once. The typed projection already keeps the FIRST fact per
-    key, so this view cannot silently disagree with it about which of two
-    same-key fields was authoritative -- which a second independent walk over
-    ``parsed.fields`` would have been free to do.
-    """
-    headers: dict[str, str] = {}
-    for fact in _observed_header_facts_from_submitted_file(
-        snapshot=snapshot,
-        body=body,
-    ):
-        headers.setdefault(fact.header_key, fact.value)
-    return headers
-
-
-def _observed_casillas_from_submitted_file(
+def observed_casillas_from_submitted_file(
     *,
     snapshot: RegistrySnapshot,
     declaration: Declaracion,
@@ -423,11 +390,6 @@ def _submitted_file_layout_refusal(
         },
         translated_message=tr("adapters.sede.errors.submitted_file_layout_parse_failed"),
     )
-
-
-observed_casillas_from_submitted_file = _observed_casillas_from_submitted_file
-observed_header_facts_from_submitted_file = _observed_header_facts_from_submitted_file
-observed_headers_from_submitted_file = _observed_headers_from_submitted_file
 
 
 def _submitted_file_extraction_coverage(
