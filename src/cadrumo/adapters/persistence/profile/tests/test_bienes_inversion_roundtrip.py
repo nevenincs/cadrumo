@@ -20,7 +20,6 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....core.external_constants import UTF_8_ENCODING
 from .....domain.bienes_inversion import (
     BienesInversionIvaRegister,
     BienInversionDisposal,
@@ -28,7 +27,7 @@ from .....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ....persistence.storage.sql.engine import get_engine
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
 
@@ -104,17 +103,9 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
     and asserts the strict-equality witness flags the drift after reload. If this
     ever passes silently, the register boundary is tautological.
     """
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-corrupt") as profile:
@@ -123,21 +114,16 @@ def test_register_corrupted_prorrata_surfaces_at_load(tmp_path: Path) -> None:
         original = _populated_register()
         repo.save(original)
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-                SecureObjectRow.object_key
-                == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
-            )
-            row = session.execute(stmt).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
-            document = _json.loads(plain.decode(UTF_8_ENCODING))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
+        )
+
+        def mutate(document):
             assert document["records"][0]["prorrata_inicial_pct"] == "80"
             document["records"][0]["prorrata_inicial_pct"] = "55"
-            row.payload = encrypt_secure_object_payload(
-                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=aad
-            )
+
+        mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
         reloaded = repo.load()
         assert reloaded != original
@@ -152,17 +138,9 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
     required, so its deletion must raise ``ValidationError``, never silently
     rehydrate a record with no cuota.
     """
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
     from ...storage import PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE
-    from ...storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ...storage.sql import SecureObjectRow
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="bi-rt-missing") as profile:
@@ -170,21 +148,16 @@ def test_register_missing_cuota_surfaces_at_load(tmp_path: Path) -> None:
         repo = BienesInversionIvaRegisterRepository()
         repo.save(_populated_register())
 
-        with session_scope(engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
-                SecureObjectRow.object_key
-                == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
-            )
-            row = session.execute(stmt).scalar_one()
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
-            document = _json.loads(plain.decode(UTF_8_ENCODING))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key(),
+        )
+
+        def mutate(document):
             assert "cuota_soportada" in document["records"][0]
             del document["records"][0]["cuota_soportada"]
-            row.payload = encrypt_secure_object_payload(
-                _json.dumps(document).encode(UTF_8_ENCODING), associated_data=aad
-            )
+
+        mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
         with pytest.raises(pydantic.ValidationError, match="cuota_soportada"):
             repo.load()

@@ -5,90 +5,56 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:f101d8f066971a2509bb750af783b489f01e9adb119a25c9af207b1a991edd4d'
+body_hash: 'sha256:09d8fdb42f02b34b609aad2614d75c28d8ee8ee6c584a3f9e79748ff1d50d3c4'
 step_id: 'S21'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
 ---
 
-# add a strict roundtrip test for `Justificante` populating every defaultable field non-default, plus an anti-tautology proof corrupting the persisted CSV value and asserting refusal
+# verify encrypted `Justificante` persistence at its canonical adapter boundary and remove the obsolete domain duplicate
 
 ## Scope
 
-- `src/cadrumo/domain/justificante/tests/`
+- `src/cadrumo/adapters/persistence/profile/tests/test_justificante_secure_storage_roundtrip.py`
+- `src/cadrumo/domain/justificante/tests/test_secure_storage_roundtrip.py` (deleted)
 
 ## Description
 
-- Add `test_secure_storage_roundtrip.py` under the receipt domain's own tests
-  directory, driving save and load through the real `JustificanteRepository`
-  persistence adapter rather than a hand-rolled repository call, so the test
-  exercises the path production uses.
-- Build the fixture with every defaultable field carrying a non-default value
-  and guard that claim with a dedicated test.
-- Add two anti-tautology proofs: an out-of-bound persisted CSV must be refused
-  at load, and a deleted optional amount must surface as strict inequality.
-- Add an iteration test confirming the CSV is the natural key for `list_csvs`
-  and `iter_justificantes`.
+- The canonical test is owned by the profile persistence adapter, beside
+  `JustificanteRepository`, rather than by the `justificante` domain. It drives
+  the production repository through the active runtime profile, encrypted SQL
+  object store, and SQLite engine.
+- Its populated fixture carries non-default values for the receipt's optional
+  fields and asserts strict Pydantic equality after the encrypted save/load
+  cycle. Focused field witnesses retain signal for the URL, path, monetary
+  `Decimal` values, and presentation id.
+- The refusal proof rewrites only the encrypted envelope payload's CSV to the
+  shape-valid foreign canonical CSV `ZXCV1234QWER5678`. The row remains filed
+  under the original CSV, so loading it proves natural-key identity binding:
+  the payload decrypts and validates, but `SecureObjectRowIdentityError`
+  exposes the expected and payload identifiers instead of returning a foreign
+  receipt.
+- Both runtime setup and encrypted-payload mutation use the shared
+  `cadrumo.tests.secure_sql` helpers (`isolated_runtime_profile` and
+  `mutate_encrypted_secure_object_json`), removing the local SQL/crypto
+  manipulation that had duplicated this boundary exercise in the domain suite.
+  The shared mutation helper now has 25 test-module callers, including the
+  notification-document custody suite migrated from its duplicate mechanical
+  decrypt/JSON/mutate/encrypt helper.
+- Delete the obsolete parallel domain suite. Persistence behaviour belongs to
+  the adapter test; the remaining domain tests cover the receipt vocabulary,
+  CSV bound, and filing-target contract.
 
 ## Outcome
 
-Five tests, all green. The roundtrip runs against real adapters throughout: a
-real ephemeral master-key provider, a real on-disk SQLite engine and the real
-serializer, provisioned through the shared isolated runtime profile helper. No
-mock, fake, stub or monkeypatch appears in the module.
+The canonical adapter suite contains the strict encrypted roundtrip and the
+shape-valid foreign-CSV refusal. It is the sole owner of this persistence
+contract; the duplicate domain suite is absent.
 
-**Defaultable-field count: four of thirteen.** `Justificante` declares thirteen
-fields, of which nine are required and exactly four are defaultable —
-`ejercicio`, `presentation_id`, `total_a_ingresar` and `total_a_devolver`, each
-defaulting to `None`. All four carry a non-default value in the fixture. Both
-amount fields are populated simultaneously; a real receipt prints one or the
-other, but the schema constrains neither and the point is to give the equality
-witness signal on both slots. The count is pinned as a literal frozenset and
-cross-checked against the model's own optional-field set, so a new optional
-field added later fails loudly instead of silently widening the set the
-roundtrip believes it covers.
+## Validation
 
-The equality assertion is strict pydantic equality on the whole model, not a
-per-field comparison; the explicit per-field assertions that follow it are
-readability aids, not the contract.
-
-Three separate bite proofs were run, each from a throwaway pytest plugin
-outside the repository tree loaded via `PYTHONPATH`, so no tracked file was
-edited and a crashed run leaves no residue.
-
-First, the strict-equality witness. Marking the optional amount excluded from
-serialisation **in place on the one model class** — deliberately not via a
-subclass, so a class-identity mismatch cannot be what explains the red — reds
-three of the five tests, the roundtrip failing on `assert loaded == original`
-with `Justificante(...) == Justificante(...)` on both sides. This is exactly
-the save-drops-field, load-re-defaults-field regression the discipline names,
-and it is invisible to a fixture that leaves the field at its default.
-
-Second, the CSV-corruption proof. Giving the csv field a before-validator that
-discards the envelope's value and substitutes the fixture's own makes the
-corruption undetectable; the proof reds with its own message, "an out-of-bound
-CSV persisted on disk loaded without refusal and compared equal to the
-original". Without this second proof the corruption test could have been
-passing on a boundary that never reads the persisted value at all.
-
-Third, the deleted-field proof's own fixture guard fires under the first bite,
-correctly refusing to run a signal-free negative case rather than passing
-vacuously.
-
-## Notes
-
-The corruption token chosen is short of the eight-character floor **and**
-carries a separator the character class refuses. That is deliberate: the alias
-normalises by stripping and uppercasing before its constraints run, so
-corrupting the persisted value to a mere lowercase variant would be
-accepted-and-corrected back to the original and the proof would falsely
-conclude the boundary was broken. A corruption used as a refusal proof has to
-be a value the normal form cannot rescue.
-
-Two tree-wide gates are red at HEAD and neither is owned by this Step. The type
-gate reports 432 diagnostics across more than 240 files; the two new modules
-appear in none of them. The import-hygiene gate fails three assertions on a
-test-only private-reach count that regressed from a documented 94 to a live
-107; running the scanner directly and filtering its inventory returns zero
-sites under this Step's directory. The relative-imports gate is separately red
-with six violations, all in one live-application test module.
+- `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/profile/tests/test_justificante_secure_storage_roundtrip.py`
+- `uv run --no-sync pytest -q src/cadrumo/domain/justificante/tests`
+- `uv run --no-sync ruff check src/cadrumo/adapters/persistence/profile/tests/test_justificante_secure_storage_roundtrip.py`
+- `uv run --no-sync ty check src/cadrumo/adapters/persistence/profile/tests/test_justificante_secure_storage_roundtrip.py`
+- `git diff --check -- src/cadrumo/domain/justificante/tests/test_secure_storage_roundtrip.py .vault/exec/2026-08-07-canonical-identifiers/2026-08-07-canonical-identifiers-W02-P03-S21.md`

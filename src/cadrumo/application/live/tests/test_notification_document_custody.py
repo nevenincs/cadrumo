@@ -27,29 +27,25 @@ refused row produces no bytes, no attachment and no record.
 
 from __future__ import annotations
 
-import json as _json
-from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
 from pydantic import ValidationError
+from sqlalchemy import select
 
 from ....adapters.outbound.aeat.sede import SedeNavigationError
 from ....adapters.persistence.storage import AttachmentStore
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
+from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core.hashing import sha256_hex
 from ....domain.attachments import AttachmentKind, load_attachment
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._errors import LiveApplicationInputError
 from .._notification_documents import (
     NotificationDocumentNotFoundError,
     NotificationDocumentService,
+    notification_document_object_key,
 )
 from ._notification_document_support import (
     BUCKET_ID as _BUCKET_ID,
@@ -64,6 +60,9 @@ from ._notification_document_support import (
     DETAIL_URL as _DETAIL_URL,
 )
 from ._notification_document_support import (
+    DOCUMENT_NAMESPACE as _DOCUMENT_NAMESPACE,
+)
+from ._notification_document_support import (
     SANCION_TEXT_LINES,
 )
 from ._notification_document_support import (
@@ -74,9 +73,6 @@ from ._notification_document_support import (
 )
 from ._notification_document_support import (
     served_document as _document,
-)
-from ._notification_document_support import (
-    stored_document_row,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -298,19 +294,6 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
 # ── Anti-tautology proofs ──────────────────────────────────────────────────
 
 
-def _mutate_stored_payload(
-    profile: TestRuntimeProfile,
-    *,
-    mutate: Callable[[dict[str, Any]], None],
-) -> None:
-    """Decrypt the stored record, apply ``mutate`` to it, and re-encrypt in place."""
-    with stored_document_row(profile) as row:
-        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        decoded = _json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8"))
-        mutate(decoded)
-        row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=aad)
-
-
 def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
     """Anti-tautology proof: a dropped required field must surface at load.
 
@@ -330,7 +313,14 @@ def test_deleting_the_attachment_id_on_disk_makes_the_load_refuse(tmp_path: Path
             )
             del payload["attachment_id"]  # type: ignore[index]
 
-        _mutate_stored_payload(profile, mutate=_drop)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_drop,
+        )
 
         with pytest.raises(ValidationError, match="attachment_id"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
@@ -351,7 +341,14 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
             assert "importe_a_ingresar" in sancion, "fixture must serialise the payable for this proof to mean anything"
             del sancion["importe_a_ingresar"]
 
-        _mutate_stored_payload(profile, mutate=_drop)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_drop,
+        )
 
         with pytest.raises(ValidationError, match="importe_a_ingresar"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
@@ -385,7 +382,14 @@ def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) ->
             )
             del payload["parse_refusal"]  # type: ignore[index]
 
-        _mutate_stored_payload(profile, mutate=_drop)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_drop,
+        )
 
         loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
         assert loaded != persisted
@@ -401,7 +405,14 @@ def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
         def _zero(decoded: dict[str, Any]) -> None:
             decoded["payload"]["byte_size"] = 0  # type: ignore[index]
 
-        _mutate_stored_payload(profile, mutate=_zero)
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == _DOCUMENT_NAMESPACE,
+                SecureObjectRow.object_key == notification_document_object_key(_BUCKET_ID, _CERT_READ),
+            ),
+            mutate=_zero,
+        )
 
         with pytest.raises(ValidationError, match="byte_size"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)

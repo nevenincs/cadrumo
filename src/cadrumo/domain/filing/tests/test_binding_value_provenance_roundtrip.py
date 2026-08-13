@@ -20,7 +20,6 @@ every roundtrip in the filing suite would be suspect.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -30,15 +29,9 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import BindingSourceKind, CasillaId, Period, validated_casilla_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...calculations.registry import RegistrySnapshotRef
 from .._schema import (
     ModeloBindingValue,
@@ -182,26 +175,24 @@ def test_boundary_catches_binding_provenance_field_drop(
                 original = _populated_draft(rendimiento=Decimal(f"8400.0{index}"))
                 repository.save(original)
 
-                with session_scope(profile.repository._engine) as session:
-                    row = session.execute(
-                        select(SecureObjectRow).where(
-                            SecureObjectRow.namespace == ModeloDraftRepository.namespace,
-                            SecureObjectRow.object_key == original.draft_id,
-                        ),
-                    ).scalar_one()
-                    aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-                    plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
-                    decoded = json.loads(plain.decode("utf-8"))
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == ModeloDraftRepository.namespace,
+                    SecureObjectRow.object_key == original.draft_id,
+                )
+
+                def mutate(decoded, *, field: str = field_name):
                     binding_values = decoded["payload"]["binding_values"]
                     assert binding_values, "fixture must serialise binding_values for this proof to be meaningful"
-                    assert field_name in binding_values[0], (
-                        f"fixture must serialise binding-value {field_name!r} into the envelope payload"
+                    assert field in binding_values[0], (
+                        f"fixture must serialise binding-value {field!r} into the envelope payload"
                     )
-                    del binding_values[0][field_name]
-                    row.payload = encrypt_secure_object_payload(
-                        json.dumps(decoded).encode("utf-8"),
-                        associated_data=aad,
-                    )
+                    del binding_values[0][field]
+
+                mutate_encrypted_secure_object_json(
+                    profile.repository._engine,
+                    row_statement=stmt,
+                    mutate=mutate,
+                )
 
                 try:
                     mutated = repository.load(original.draft_id)

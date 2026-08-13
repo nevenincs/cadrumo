@@ -42,7 +42,6 @@ was silently skipped.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -56,19 +55,11 @@ from sqlalchemy import Engine, select
 
 from ......core.config import override_settings
 from ......tests.master_key import EphemeralMasterKeyProvider
+from ......tests.secure_sql import mutate_encrypted_secure_object_json
 from ... import SensitivityClass
-from ...crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ...errors import ClassificationError
-from ...sql import (
-    Base,
-    SecureObjectRow,
-)
+from ...sql import Base, SecureObjectRow
 from ...sql.engine import create_engine_from_settings, dispose_engine
-from ...sql.session import session_scope
 from .._envelope import Envelope
 from .._secure_repository import SecureBoundRepository
 
@@ -286,21 +277,16 @@ def _boundary_catches_simulated_field_drop_via_corrupted_payload[T: BaseModel](
     baseline = repo.load(identifier)
     assert baseline == case.first_payload
 
-    with session_scope(engine) as session:
-        stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == repo.namespace).limit(1)
-        row = session.execute(stmt).scalar_one()
-        # The payload is AEAD-encrypted with the row identity in the associated
-        # data, so corrupt the decrypted *content* and re-encrypt under the same
-        # AAD; writing raw plaintext would merely fail to decrypt and hide the
-        # field-drop signal this anti-tautology proof depends on.
-        aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        decoded = json.loads(decrypt_secure_object_payload(bytes(row.payload), associated_data=aad).decode("utf-8"))
+    stmt = select(SecureObjectRow).where(SecureObjectRow.namespace == repo.namespace).limit(1)
+
+    def mutate(decoded: dict[str, Any]) -> None:
         assert case.mutation_field in decoded["payload"], (
             f"contract fixture must serialise {case.mutation_field!r} into "
             f"the envelope payload for the negative case to have signal"
         )
         del decoded["payload"][case.mutation_field]
-        row.payload = encrypt_secure_object_payload(json.dumps(decoded).encode("utf-8"), associated_data=aad)
+
+    mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=mutate)
 
     regression_caught = False
     try:

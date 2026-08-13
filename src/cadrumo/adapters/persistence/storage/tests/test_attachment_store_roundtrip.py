@@ -22,19 +22,16 @@ as a strict ``bytes`` / pydantic inequality.
 from __future__ import annotations
 
 import hashlib
-import json
-from collections.abc import Callable
 from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import pytest
 from sqlalchemy import select
 
 from .....core.config import override_settings
 from .....core.errors import build_error_envelope, resolve_error_message
-from .....core.external_constants import UTF_8_ENCODING
 from .....core.secure_object_write import SecureObjectWrite
 from .....domain.attachments import (
     Attachment,
@@ -43,7 +40,7 @@ from .....domain.attachments import (
     AttachmentSource,
     AttachmentValidationError,
 )
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..attachment import (
     _ATTACHMENT_BLOB_NAMESPACE,
     _ATTACHMENT_BLOB_SENSITIVITY,
@@ -123,18 +120,6 @@ def _manifest_row_statement(attachment_id: str) -> Any:
         SecureObjectRow.namespace == _ATTACHMENT_MANIFEST_NAMESPACE,
         SecureObjectRow.object_key == attachment_id,
     )
-
-
-def _rewrite_manifest_envelope(
-    engine: Any,
-    attachment_id: str,
-    mutate: Callable[[dict[str, Any]], None],
-) -> None:
-    with session_scope(engine) as session:
-        row = session.execute(_manifest_row_statement(attachment_id)).scalar_one()
-        envelope = cast("dict[str, Any]", json.loads(_decrypt_row_content(row).decode(UTF_8_ENCODING)))
-        mutate(envelope)
-        row.payload = _encrypt_row_content(row, json.dumps(envelope).encode(UTF_8_ENCODING))
 
 
 def _replace_manifest_row_payload(engine: Any, attachment_id: str, payload: bytes) -> None:
@@ -312,7 +297,11 @@ def test_attachment_manifest_id_sha_mismatch_surfaces_at_load(tmp_path: Path) ->
             tampered_digest = hashlib.sha256(b"tampered body").hexdigest()
             manifest["sha256"] = tampered_digest
 
-        _rewrite_manifest_envelope(engine, attachment.attachment_id, tamper_sha256)
+        mutate_encrypted_secure_object_json(
+            engine,
+            row_statement=_manifest_row_statement(attachment.attachment_id),
+            mutate=tamper_sha256,
+        )
 
         with pytest.raises(AttachmentValidationError, match="invalid attachment manifest"):
             store.load_manifest(attachment.attachment_id)
@@ -342,10 +331,10 @@ def test_attachment_manifest_envelope_metadata_drift_fails_closed(
             ) -> None:
                 envelope[field] = value
 
-            _rewrite_manifest_envelope(
+            mutate_encrypted_secure_object_json(
                 engine,
-                attachment.attachment_id,
-                mutate_envelope,
+                row_statement=_manifest_row_statement(attachment.attachment_id),
+                mutate=mutate_envelope,
             )
 
             with pytest.raises(AttachmentValidationError) as excinfo:

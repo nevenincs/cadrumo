@@ -22,7 +22,6 @@ re-audited.
 
 from __future__ import annotations
 
-import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -32,15 +31,9 @@ from pydantic import ValidationError
 from sqlalchemy import select
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
-from ....adapters.persistence.storage.crypto import (
-    decrypt_secure_object_payload,
-    encrypt_secure_object_payload,
-    secure_object_payload_aad,
-)
 from ....adapters.persistence.storage.sql import SecureObjectRow
-from ....adapters.persistence.storage.sql.session import session_scope
 from ....core import CasillaId, Period, validated_casilla_id
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ...calculations.registry import RegistrySnapshotRef
 from .._schema import (
     ModeloApprovalBasis,
@@ -177,19 +170,22 @@ def test_boundary_catches_simulated_field_drop_via_corrupted_payload(
             # Reach into the encrypted row and surgically delete the
             # snapshot_ref field from the JSON envelope payload. The
             # column accessor handles encrypt/decrypt automatically.
-            with session_scope(profile.repository._engine) as session:
-                stmt = select(SecureObjectRow).limit(1)
-                row = session.execute(stmt).scalar_one()
-                _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-                _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-                decoded = json.loads(_h3_plain.decode("utf-8"))
+            stmt = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == ModeloDraftRepository.namespace,
+                SecureObjectRow.object_key == original.draft_id,
+            )
+
+            def mutate(decoded):
                 assert "snapshot_ref" in decoded["payload"], (
                     "fixture must serialise snapshot_ref into the envelope's payload for this test to be meaningful"
                 )
                 del decoded["payload"]["snapshot_ref"]
-                row.payload = encrypt_secure_object_payload(
-                    json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad
-                )
+
+            mutate_encrypted_secure_object_json(
+                profile.repository._engine,
+                row_statement=stmt,
+                mutate=mutate,
+            )
 
             # Now reload through the repository. With ``snapshot_ref``
             # absent, strict model validation must refuse the payload.
@@ -238,23 +234,23 @@ def test_boundary_catches_optional_field_drop(tmp_path: Path) -> None:
                 original = _populated_draft(resultado=Decimal(f"12345.6{index}"))
                 repo.save(original)
 
-                with session_scope(profile.repository._engine) as session:
-                    stmt = select(SecureObjectRow).where(
-                        SecureObjectRow.namespace == ModeloDraftRepository.namespace,
-                        SecureObjectRow.object_key == original.draft_id,
-                    )
-                    row = session.execute(stmt).scalar_one()
-                    _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-                    _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-                    decoded = json.loads(_h3_plain.decode("utf-8"))
-                    assert field_name in decoded["payload"], (
-                        f"fixture must serialise {field_name!r} into the envelope payload "
+                stmt = select(SecureObjectRow).where(
+                    SecureObjectRow.namespace == ModeloDraftRepository.namespace,
+                    SecureObjectRow.object_key == original.draft_id,
+                )
+
+                def mutate(decoded, *, field: str = field_name):
+                    assert field in decoded["payload"], (
+                        f"fixture must serialise {field!r} into the envelope payload "
                         "for this field-drop case to be a meaningful proof"
                     )
-                    del decoded["payload"][field_name]
-                    row.payload = encrypt_secure_object_payload(
-                        json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad
-                    )
+                    del decoded["payload"][field]
+
+                mutate_encrypted_secure_object_json(
+                    profile.repository._engine,
+                    row_statement=stmt,
+                    mutate=mutate,
+                )
 
                 try:
                     mutated = repo.load(original.draft_id)

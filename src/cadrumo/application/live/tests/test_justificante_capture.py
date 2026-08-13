@@ -21,7 +21,7 @@ from typing import TypedDict
 import pytest
 
 from ....core import Modelo, Period
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from .._errors import LiveApplicationInputError
 from .._justificante import (
     JustificanteCaptureSnapshot,
@@ -183,18 +183,10 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
     If this test ever passes silently with the pointer dropped, every
     justificante-capture roundtrip in the suite is tautological.
     """
-    import json as _json
-
     from pydantic import ValidationError
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
     from .._justificante import (
         JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
         justificante_capture_snapshot_object_key,
@@ -218,20 +210,22 @@ def test_dropped_superseded_pointer_surfaces_at_load(tmp_path: Path) -> None:
         repo.save(predecessor)
 
         object_key = justificante_capture_snapshot_object_key(bucket_id, predecessor.snapshot_id)
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-            decoded = _json.loads(_h3_plain.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(decoded):
             assert "superseded_by_snapshot_id" in decoded["payload"], (
                 "fixture must serialise superseded_by_snapshot_id for this test to be meaningful"
             )
             del decoded["payload"]["superseded_by_snapshot_id"]
-            row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(
             (ValidationError, LiveApplicationInputError),

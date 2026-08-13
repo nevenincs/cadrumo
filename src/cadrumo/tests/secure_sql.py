@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+import json
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import pytest
+from sqlalchemy import Engine, Select
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
@@ -35,6 +37,11 @@ from ..adapters.persistence.storage.bucket import (
     provision_bucket_directory,
     write_manifest,
 )
+from ..adapters.persistence.storage.crypto import (
+    decrypt_secure_object_payload,
+    encrypt_secure_object_payload,
+    secure_object_payload_aad,
+)
 from ..adapters.persistence.storage.master_key import (
     BucketSession,
     KdfParams,
@@ -43,6 +50,8 @@ from ..adapters.persistence.storage.master_key import (
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )
+from ..adapters.persistence.storage.sql import SecureObjectRow
+from ..adapters.persistence.storage.sql.session import session_scope
 from ..core import StorageCategory
 from ..core.config import Settings, load_settings, override_settings
 from ..core.errors import CadrumoError
@@ -206,6 +215,41 @@ def read_db_at_rest_bytes(db_path: Path) -> bytes:
     if wal_path.exists():
         data += wal_path.read_bytes()
     return data
+
+
+def mutate_encrypted_secure_object_json(
+    engine: Engine,
+    *,
+    row_statement: Select[tuple[SecureObjectRow]],
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
+    """Mutate one real secure-object JSON document while preserving its AEAD binding.
+
+    Callers retain the SQL row selection and the domain-specific document
+    mutation. This test-support seam only performs the mechanical boundary
+    operation required for an honest persisted-payload proof: decrypt the
+    selected row using its actual identity-bound associated data, mutate the
+    decoded JSON document, and re-encrypt it under that unchanged binding.
+    """
+    with session_scope(engine) as session:
+        row = session.execute(row_statement).scalar_one()
+        associated_data = secure_object_payload_aad(
+            row.namespace,
+            bytes(row.object_key),
+            row.schema_version,
+        )
+        document = json.loads(
+            decrypt_secure_object_payload(
+                bytes(row.payload),
+                associated_data=associated_data,
+            ).decode("utf-8"),
+        )
+        assert isinstance(document, dict), "encrypted secure-object payload must decode to a JSON object"
+        mutate(document)
+        row.payload = encrypt_secure_object_payload(
+            json.dumps(document).encode("utf-8"),
+            associated_data=associated_data,
+        )
 
 
 def reset_secure_object_store(repository: SecureObjectRepository) -> None:
@@ -677,6 +721,7 @@ __all__ = [
     "isolated_sessionless_storage_root",
     "isolated_storage_root",
     "isolated_two_bucket_runtime",
+    "mutate_encrypted_secure_object_json",
     "reap_profile_session_keys",
     "reset_secure_object_store",
 ]

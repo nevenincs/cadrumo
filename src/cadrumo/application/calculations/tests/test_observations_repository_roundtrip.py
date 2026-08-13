@@ -36,7 +36,11 @@ from ....domain.iva_compensation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
-from ....tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from ....tests.secure_sql import (
+    isolated_runtime_profile,
+    mutate_encrypted_secure_object_json,
+    read_db_at_rest_bytes,
+)
 from .._errors import ObservationCasillaReferenceError
 from .._observations_repository import (
     CalculationObservationRepository,
@@ -429,17 +433,9 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
     loaded observation).
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
-    from ....adapters.persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....adapters.persistence.storage.sql import SecureObjectRow
-    from ....adapters.persistence.storage.sql.session import session_scope
     from .._observations_repository import observation_key
 
     observation_namespace = CalculationObservationRepository.namespace
@@ -456,23 +452,23 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
         )
 
         object_key = observation_key("303", Period.from_year_and_code(2025, "1T"))
-        with session_scope(profile.repository._engine) as session:
-            stmt = select(SecureObjectRow).where(
-                SecureObjectRow.namespace == observation_namespace,
-                SecureObjectRow.object_key == object_key,
-            )
-            row = session.execute(stmt).scalar_one()
-            # The payload is AEAD-encrypted with the row identity in the associated
-            # data; corrupt the decrypted content and re-encrypt under the same AAD.
-            aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-            plaintext = decrypt_secure_object_payload(bytes(row.payload), associated_data=aad)
-            envelope = _json.loads(plaintext.decode("utf-8"))
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == observation_namespace,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(envelope):
             casillas = envelope["payload"]["observation"]["observations"]
             assert casillas and casillas[1]["legal_refs"], (
                 "fixture must serialise legal_refs onto the computed casilla for this proof test to be meaningful"
             )
             casillas[1]["legal_refs"] = []
-            row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=aad)
+
+        mutate_encrypted_secure_object_json(
+            profile.repository._engine,
+            row_statement=stmt,
+            mutate=mutate,
+        )
 
         with pytest.raises(ValidationError, match="legal_refs"):
             repo.load_observation("303", Period.from_year_and_code(2025, "1T"))

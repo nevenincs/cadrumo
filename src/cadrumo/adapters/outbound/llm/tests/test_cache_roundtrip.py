@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 
 from .....llm import LLMProvider, LLMRequest, LLMResponse
-from .....tests.secure_sql import TestRuntimeProfile
+from .....tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from .._cache import LLMCache
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -154,18 +154,10 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     tautological.
     """
 
-    import json as _json
-
     from sqlalchemy import select
 
     from .....llm import LLMCacheError
-    from ....persistence.storage.crypto import (
-        decrypt_secure_object_payload,
-        encrypt_secure_object_payload,
-        secure_object_payload_aad,
-    )
     from ....persistence.storage.sql import SecureObjectRow
-    from ....persistence.storage.sql.session import session_scope
     from .._cache import _CACHE_NAMESPACE
 
     created_at = _CREATED_AT
@@ -178,21 +170,23 @@ def test_llm_cache_entry_with_dropped_text_field_surfaces_at_read(
     # from the nested response on the redacted entry. The column
     # accessor handles encrypt/decrypt automatically; the
     # _CACHE_NAMESPACE filter pins the right row.
-    with session_scope(secure_object_test_profile.repository._engine) as session:
-        stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == _CACHE_NAMESPACE,
-        )
-        row = session.execute(stmt).scalar_one()
-        _h3_aad = secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version)
-        _h3_plain = decrypt_secure_object_payload(bytes(row.payload), associated_data=_h3_aad)
-        decoded = _json.loads(_h3_plain.decode("utf-8"))
+    stmt = select(SecureObjectRow).where(
+        SecureObjectRow.namespace == _CACHE_NAMESPACE,
+    )
+
+    def mutate(decoded):
         entry_payload = decoded["entry"]
         assert "text" in entry_payload["response"], (
             "fixture must serialise response.text into the redacted entry for this proof test to be meaningful"
         )
         del entry_payload["response"]["text"]
         decoded["entry"] = entry_payload
-        row.payload = encrypt_secure_object_payload(_json.dumps(decoded).encode("utf-8"), associated_data=_h3_aad)
+
+    mutate_encrypted_secure_object_json(
+        secure_object_test_profile.repository._engine,
+        row_statement=stmt,
+        mutate=mutate,
+    )
 
     # Now read() must reject the mutated entry. LLMResponse.text
     # is required (no default), so the strict pydantic re-parse
