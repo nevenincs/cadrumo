@@ -24,7 +24,12 @@ related:
 
 No critical, high, medium, or low findings remain open.
 
+### invoice-class-branch-coverage | medium | The closed vocabulary's downstream semantics are not gated exhaustively
+
+The feature tests exercise the real-corpus `OO` and `OR` paths, the absent-code fallback, and only the ordinary-code-with-corrective-reference contradiction. They do not exercise the `CO` and `CR` copy mappings, either `OC` or `CC` recapitulativa blocker, or the reverse contradiction where a declared corrective code carries no corrective reference. The vocabulary equality test proves membership only, so all four unexercised codes could be routed to the wrong downstream class or finding while the committed feature suite remained green. This leaves the completed `S03` six-code partition and `S04` discrepancy totality supported by inspection rather than a non-tautological executable gate.
+
 ## Recommendations
 
 - Keep the deferred domain-level recapitulativa taxonomy change separate, as required by the accepted decision.
 - Treat the forty-two-test result as feature-scoped evidence only; repository-wide gates remain independently authoritative.
+- Add table-driven parser-to-draft coverage for all six corpus-grounded enum members, asserting `CO` as ordinaria, `CR` as rectificativa, `OC` and `CC` as unmodelled, and both declared-class/corrective-reference contradiction directions. Keep the existing real-corpus `OO` and `OR` confirmation journeys as the end-to-end anchors.
