@@ -33,7 +33,7 @@ review-visible, but the advisory keeps dead bindings from accumulating.
 from __future__ import annotations
 
 import argparse
-import json
+import math
 import os
 import re
 import subprocess
@@ -41,9 +41,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Final
+from typing import Annotated, Final
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -66,6 +66,7 @@ from ._runner import (
 from ._schema import ParsedSequence, SequenceId
 
 _UTF_8: Final[str] = "utf-8"
+_NonEmptyText = Annotated[str, StringConstraints(min_length=1)]
 
 __all__ = [
     "COHERENCE_TIER_PREFIX",
@@ -101,6 +102,19 @@ class DiscoveredSequence(BaseModel):
     sequence_id: SequenceId
     line_number: int = Field(ge=1)
     sequence: ParsedSequence
+
+
+class _SequenceProgressRecord(BaseModel):
+    """Strict child-to-parent receipt for the last executing sequence frame."""
+
+    model_config = _STRICT_FROZEN
+
+    page: _NonEmptyText
+    sequence_id: SequenceId
+    frame_index: int = Field(ge=0)
+    frame_source: _NonEmptyText
+    frame_line: int = Field(ge=1)
+    argv: list[_NonEmptyText] = Field(min_length=1)
 
 
 def default_docs_root() -> Path:
@@ -433,22 +447,25 @@ def _timeout_progress_diagnostic(journal: Path, *, timeout: float) -> str:
     the child did not reach a frame before the supplied supervisor deadline.
     """
     try:
-        payload = json.loads(journal.read_text(encoding=_UTF_8))
-    except (OSError, json.JSONDecodeError):
-        return f"timeout after {timeout}s before the child recorded an executing frame"
-    if not isinstance(payload, dict):
-        return f"timeout after {timeout}s before the child recorded an executing frame"
-    required = ("page", "sequence_id", "frame_index", "frame_source", "frame_line", "argv")
-    if any(key not in payload for key in required):
-        return f"timeout after {timeout}s before the child recorded an executing frame"
-    argv = payload["argv"]
-    if not isinstance(argv, list) or not all(isinstance(token, str) for token in argv):
+        record = _SequenceProgressRecord.model_validate_json(journal.read_text(encoding=_UTF_8))
+    except (OSError, ValidationError):
         return f"timeout after {timeout}s before the child recorded an executing frame"
     return (
-        f"timeout after {timeout}s while executing page {payload['page']!r} "
-        f"sequence {payload['sequence_id']!r} frame {payload['frame_index']} "
-        f"({payload['frame_source']} line {payload['frame_line']}): {' '.join(argv)}"
+        f"timeout after {timeout}s while executing page {record.page!r} "
+        f"sequence {record.sequence_id!r} frame {record.frame_index} "
+        f"({record.frame_source} line {record.frame_line}): {' '.join(record.argv)}"
     )
+
+
+def _positive_finite_timeout(value: str) -> float:
+    """Parse one finite, positive subprocess deadline for argparse."""
+    try:
+        timeout = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a finite number greater than zero") from exc
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise argparse.ArgumentTypeError("must be a finite number greater than zero")
+    return timeout
 
 
 def _run_check_child(command: list[str], *, timeout: float) -> tuple[str, ...]:
@@ -733,7 +750,7 @@ def _build_argument_parser() -> argparse.ArgumentParser:
             )
             sub.add_argument(
                 "--timeout",
-                type=float,
+                type=_positive_finite_timeout,
                 default=None,
                 metavar="SECONDS",
                 help=(
@@ -763,8 +780,6 @@ def main(argv: list[str] | None = None) -> int:
     """CLI entry: exit 0 on a clean run, 1 on any problem, 2 on usage errors."""
     parser = _build_argument_parser()
     args = parser.parse_args(argv)
-    if args.mode == "check" and args.timeout is not None and args.timeout <= 0:
-        parser.error("--timeout must be greater than zero")
 
     if args.mode == "refresh":
         written, problems, advisories = refresh_sequences(

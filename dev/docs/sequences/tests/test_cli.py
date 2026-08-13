@@ -16,6 +16,7 @@ import pytest
 
 from ..__main__ import (
     COHERENCE_TIER_PREFIX,
+    _timeout_progress_diagnostic,
     check_page_coherence,
     check_sequences,
     discover_sequences,
@@ -455,3 +456,112 @@ class TestPageCoherenceMode:
         exit_code = main(["check", "--coherence", "--sequence", "anything"])
         assert exit_code == 2
         assert "--page, not --sequence" in capsys.readouterr().err
+
+    def test_cli_bounded_coherence_runs_the_discovered_page_in_a_real_child(
+        self,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        (tmp_path / "coherent.md").write_text(_coherence_page("reused"), encoding="utf-8")
+        _write_coherence_contracts(tmp_path, "coherent", "reused")
+        discovered, discovery_problems = discover_sequences(docs_root=tmp_path)
+        assert discovery_problems == ()
+        page = discovered[0].page
+        timeout = 60.0
+
+        exit_code = main(
+            [
+                "check",
+                "--coherence",
+                "--page",
+                page,
+                "--docs-root",
+                str(tmp_path),
+                "--timeout",
+                str(timeout),
+            ],
+        )
+
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert captured.err == ""
+        assert "cli-sequence page coherence: clean" in captured.out
+
+
+@pytest.mark.parametrize("invalid_timeout", ["nan", "inf", "-inf", "0", "-1"])
+def test_cli_rejects_invalid_timeout_without_a_traceback(
+    invalid_timeout: str,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as raised:
+        main(["check", f"--timeout={invalid_timeout}"])
+
+    captured = capsys.readouterr()
+    assert raised.value.code == 2
+    assert "finite number greater than zero" in captured.err
+    assert "Traceback" not in captured.err
+
+
+@pytest.mark.parametrize(
+    "invalid_record",
+    [
+        {
+            "page": "",
+            "sequence_id": "receipt",
+            "frame_index": 0,
+            "frame_source": "body",
+            "frame_line": 1,
+            "argv": ["aeat"],
+        },
+        {
+            "page": "page",
+            "sequence_id": "receipt",
+            "frame_index": -1,
+            "frame_source": "body",
+            "frame_line": 1,
+            "argv": ["aeat"],
+        },
+        {
+            "page": "page",
+            "sequence_id": "receipt",
+            "frame_index": 0,
+            "frame_source": "",
+            "frame_line": 1,
+            "argv": ["aeat"],
+        },
+        {
+            "page": "page",
+            "sequence_id": "receipt",
+            "frame_index": 0,
+            "frame_source": "body",
+            "frame_line": 0,
+            "argv": ["aeat"],
+        },
+        {
+            "page": "page",
+            "sequence_id": "receipt",
+            "frame_index": 0,
+            "frame_source": "body",
+            "frame_line": 1,
+            "argv": [],
+        },
+        {
+            "page": "page",
+            "sequence_id": "receipt",
+            "frame_index": 0,
+            "frame_source": "body",
+            "frame_line": 1,
+            "argv": [""],
+        },
+    ],
+)
+def test_timeout_diagnostic_rejects_malformed_child_receipts(
+    tmp_path: Path,
+    invalid_record: dict[str, object],
+) -> None:
+    journal = tmp_path / "last-frame.json"
+    journal.write_text(json.dumps(invalid_record), encoding="utf-8")
+
+    diagnostic = _timeout_progress_diagnostic(journal, timeout=1.0)
+
+    assert "before the child recorded an executing frame" in diagnostic

@@ -52,6 +52,7 @@ import os
 import re
 import shutil
 import time
+import warnings
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import chdir, contextmanager
 from contextvars import ContextVar
@@ -69,6 +70,7 @@ from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage import close_active_bucket_session, dispose_engine
 from cadrumo.core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.time import frozen_clock
 from cadrumo.domain.user_profile import UserProfileFact
@@ -273,6 +275,15 @@ class SequenceSandbox:
     frozen_instant: datetime
 
 
+@dataclass(frozen=True)
+class _PageSeedState:
+    """Immutable result of executing one named seed in a page sandbox."""
+
+    frames: tuple[SequenceFrame, ...]
+    executions: tuple[FrameExecution, ...]
+    captures: tuple[CapturedValue, ...]
+
+
 def default_fixtures_root() -> Path:
     """Return the committed ``docs/_sequences/fixtures/`` synthetic-input tree.
 
@@ -376,7 +387,11 @@ def _record_frame_progress(
         "frame_line": frame.line_number,
         "argv": list(argv),
     }
-    Path(journal).write_text(json.dumps(payload, sort_keys=True) + "\n", encoding="utf-8")
+    atomic_write_best_effort_text(
+        Path(journal),
+        json.dumps(payload, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _live_aeat_tokens(frame: SequenceFrame) -> tuple[str, ...]:
@@ -1161,6 +1176,7 @@ def _execute_page_in_root(
     tuple therefore carries one transcript per executable sequence, in page order.
     """
     transcripts: list[SequenceTranscript] = []
+    page_seeds: dict[str, _PageSeedState] = {}
     with sequence_sandbox(
         sequence_id=label,
         sandbox_root=sandbox_root,
@@ -1170,10 +1186,72 @@ def _execute_page_in_root(
             if not sequence.executed_frames:
                 continue  # all-@static: nothing runs, so no transcript
             captures: dict[str, CapturedScalar] = {}
-            frames = tuple(
-                _execute_frame(sequence, frame, captures, frame_index=frame_index)
-                for frame_index, frame in enumerate(sequence.executed_frames)
+            seed_source = f"seed:{sequence.seed}" if sequence.seed is not None else None
+            seed_frames = (
+                tuple(frame for frame in sequence.executed_frames if frame.source == seed_source)
+                if seed_source is not None
+                else ()
             )
+            body_frames = tuple(frame for frame in sequence.executed_frames if frame.source != seed_source)
+            reused_seed_executions: tuple[FrameExecution, ...] = ()
+
+            if sequence.seed is not None and not seed_frames:
+                detail = (
+                    f"page {label!r} sequence {sequence.sequence_id!r} requests seed "
+                    f"{sequence.seed!r}, but no inlined seed frames are available; reparse the "
+                    "sequence from its contract before running page coherence"
+                )
+                warnings.warn(detail, UserWarning, stacklevel=2)
+                raise SequenceExecutionError(sequence.sequence_id, detail)
+
+            if sequence.seed is not None and sequence.seed in page_seeds:
+                prior = page_seeds[sequence.seed]
+                if prior.frames != seed_frames:
+                    detail = (
+                        f"page {label!r} sequence {sequence.sequence_id!r} reuses seed identity "
+                        f"{sequence.seed!r} with a divergent definition; give the changed recipe "
+                        "a new seed identity or make every use byte-equivalent"
+                    )
+                    warnings.warn(detail, UserWarning, stacklevel=2)
+                    raise SequenceExecutionError(sequence.sequence_id, detail)
+                available = {item.name: item.value for item in prior.captures}
+                required = {binding.name for frame in seed_frames for binding in frame.captures}
+                missing = sorted(required - available.keys())
+                if missing:
+                    detail = (
+                        f"page {label!r} sequence {sequence.sequence_id!r} cannot reuse seed "
+                        f"{sequence.seed!r}; page seed state lacks captures {missing}. Re-run from "
+                        "a clean page root and ensure every declared seed capture resolves"
+                    )
+                    warnings.warn(detail, UserWarning, stacklevel=2)
+                    raise SequenceExecutionError(sequence.sequence_id, detail)
+                warnings.warn(
+                    f"page {label!r} sequence {sequence.sequence_id!r} would replay seed "
+                    f"{sequence.seed!r}; reused its once-per-page state and immutable captures instead",
+                    UserWarning,
+                    stacklevel=2,
+                )
+                captures.update(available)
+                reused_seed_executions = prior.executions
+            elif sequence.seed is not None:
+                seed_executions = tuple(
+                    _execute_frame(sequence, frame, captures, frame_index=frame_index)
+                    for frame_index, frame in enumerate(seed_frames)
+                )
+                seed_captures = tuple(item for execution in seed_executions for item in execution.captured)
+                page_seeds[sequence.seed] = _PageSeedState(
+                    frames=seed_frames,
+                    executions=seed_executions,
+                    captures=seed_captures,
+                )
+                reused_seed_executions = seed_executions
+
+            body_start = len(seed_frames)
+            body_executions = tuple(
+                _execute_frame(sequence, frame, captures, frame_index=body_start + frame_index)
+                for frame_index, frame in enumerate(body_frames)
+            )
+            frames = reused_seed_executions + body_executions
             transcripts.append(
                 SequenceTranscript(
                     sequence_id=sequence.sequence_id,
