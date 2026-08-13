@@ -4,7 +4,7 @@ tags:
   - '#aeat-export-fragment-generator-authority'
 date: '2026-08-10'
 modified: '2026-08-13'
-body_hash: 'sha256:1040d9081b458dfe2e2f0d669205a635e5b3731edb2b40027c47a5334ebbc5df'
+body_hash: 'sha256:d85f90e548585e568306b7f625edd49935232dec8663240a3b8aa9d070ef593d'
 tier: L3
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
@@ -87,6 +87,7 @@ Cover every authority boundary with positive and negative real-behavior tests.
 
 Verify generated layouts as loadable complete structures and as real emitted filing bytes.
 
+
 ## Wave `W04` - regenerate and release relayout waves
 
 Use the proven authority to replace unverified trees, close the blocked split spans, and restore architecture-consistent model bindings.
@@ -141,6 +142,9 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [ ] `W04.P07.S80` - Author and hand-review the Modelo 390 2023 exact-source semantic map and exhaustive source-bound render profile, bijecting all 541 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 554 parsed anchors total, reusing only unchanged source-anchor and owner adjudications and hand-reviewing every delta; `dev/registry/mappings/modelo_390/2023/, dev/registry/render_profiles/modelo_390/2023/`.
 - [ ] `W04.P07.S81` - Author and hand-review the Modelo 390 2024 exact-source semantic map and exhaustive source-bound render profile, bijecting all 621 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 634 parsed anchors total, and hand-review the nine-to-ten-record decomposition and every added or changed semantic home; `dev/registry/mappings/modelo_390/2024/, dev/registry/render_profiles/modelo_390/2024/`.
 - [ ] `W04.P07.S82` - Author and hand-review the Modelo 390 2025 exact-source semantic map and exhaustive source-bound render profile, bijecting all 612 numbered-page fixed anchors plus the separately governed 13-anchor auxiliary header for 625 parsed anchors total, and hand-review the nine removed page-five anchors, three retired slots and every stable-offset meaning delta before Modelo 390 generation; `dev/registry/mappings/modelo_390/2025/, dev/registry/render_profiles/modelo_390/2025/`.
+- [ ] `W04.P07.S83` - Bundle and compile the exact ejercicio-2022 annual Orden authority, ground the official two-digit agricultural activity-code crosswalk and the 2022 Lorca annual-reduction authority or retain an explicit evidence-bearing refusal/input where official authority is absent, with no description matching, raw key, or zero default; `src/cadrumo/_data/corpus/, src/cadrumo/_data/registry/aeat/m303_orden_anual/, src/cadrumo/domain/calculations/registry/, src/cadrumo/domain/iva/`.
+- [ ] `W04.P07.S84` - Introduce the typed M303 fourth-quarter to Modelo 390 annual-summary handoff over the one canonical simplified-regime annual result, carrying strict source and target calculation identity, year, period, revision, evidence and digest checks, and atomically retire the scalar-only box-79 relation when boxes 74-83 arrive through the typed handoff; `src/cadrumo/core/, src/cadrumo/domain/calculations/registry/, src/cadrumo/application/calculations/, src/cadrumo/application/filing/, src/cadrumo/_data/registry/aeat/modelos/390/`.
+- [ ] `W04.P07.S85` - Census all 537 numbered-page Modelo 390 2022 anchors by canonical semantic owner and value-arrival path, then author the M390-specific closed activity, module and other repeated-row projection families and revision-owned declarations for page-one activity and representative rows, page-five simplified-regime rows, page-seven prorrata rows and page-eight differentiated-deduction rows, preserving numbered boxes 74-83 as canonical Casilla owners and refusing every ungrounded class; `src/cadrumo/core/, src/cadrumo/domain/calculations/registry/, src/cadrumo/application/filing/, dev/registry/, src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
 
 ### Phase `W04.P08` - campaign integration and release
 
