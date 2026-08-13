@@ -138,7 +138,7 @@ class FieldEditScreen(ModalScreen[str | None]):
         self._prompt = prompt if prompt is not None else field.label
         """What to call the field here, when the schema's own name is not
         the one the operator knows it by."""
-        self._choice_labels = dict(choice_labels or {})
+        self._choice_labels: dict[str, str] = dict(choice_labels or {})
         """How to show one token, for a field whose stored tokens are not
         words the operator reads.
 

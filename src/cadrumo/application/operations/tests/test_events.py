@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import TypedDict
 
 import pytest
 from pydantic import TypeAdapter, ValidationError
@@ -25,13 +26,29 @@ _IDENTITY = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync
 _DIAGNOSTIC_REF = "sha256:0123456789ab"
 
 
-def _base() -> dict[str, object]:
+class _EventBase(TypedDict):
+    """Typed common constructor fields shared by every event variant."""
+
+    identity: OperationIdentity
+    revision: int
+    sequence: int
+    timestamp: datetime
+    code: str
+
+
+def _base(
+    *,
+    revision: int = 3,
+    sequence: int = 7,
+    timestamp: datetime = _NOW,
+    code: str = "profile.sync.progress",
+) -> _EventBase:
     return {
         "identity": _IDENTITY,
-        "revision": 3,
-        "sequence": 7,
-        "timestamp": _NOW,
-        "code": "profile.sync.progress",
+        "revision": revision,
+        "sequence": sequence,
+        "timestamp": timestamp,
+        "code": code,
     }
 
 
@@ -52,11 +69,9 @@ def test_progress_refuses_impossible_counts() -> None:
 
 def test_event_ordering_and_time_are_fail_closed() -> None:
     with pytest.raises(ValidationError):
-        OperationDiagnosticEvent(**{**_base(), "sequence": 0}, diagnostic_ref=_DIAGNOSTIC_REF)
+        OperationDiagnosticEvent(**_base(sequence=0), diagnostic_ref=_DIAGNOSTIC_REF)
     with pytest.raises(ValidationError):
-        OperationDiagnosticEvent(
-            **{**_base(), "timestamp": datetime(2026, 8, 13, 18, 0)}, diagnostic_ref=_DIAGNOSTIC_REF
-        )
+        OperationDiagnosticEvent(**_base(timestamp=datetime(2026, 8, 13, 18, 0)), diagnostic_ref=_DIAGNOSTIC_REF)
 
 
 def test_log_record_has_no_message_or_untyped_fact_channel() -> None:
@@ -90,7 +105,7 @@ def test_terminal_event_binds_exact_receipt_identity_revision_and_time() -> None
     assert event.kind is OperationEventKind.TERMINAL
 
     with pytest.raises(ValidationError, match="revision does not match"):
-        OperationTerminalEvent(**{**_base(), "revision": 4}, receipt=receipt)
+        OperationTerminalEvent(**_base(revision=4), receipt=receipt)
 
 
 def test_event_models_are_strict_frozen_and_codes_are_stable() -> None:
@@ -98,7 +113,7 @@ def test_event_models_are_strict_frozen_and_codes_are_stable() -> None:
     with pytest.raises(ValidationError):
         event.sequence = 8
     with pytest.raises(ValidationError):
-        OperationDiagnosticEvent(**{**_base(), "code": "Localized prose!"}, diagnostic_ref=_DIAGNOSTIC_REF)
+        OperationDiagnosticEvent(**_base(code="Localized prose!"), diagnostic_ref=_DIAGNOSTIC_REF)
 
 
 @pytest.mark.parametrize(

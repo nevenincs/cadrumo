@@ -59,9 +59,12 @@ def _enum_options[EnumT: StrEnum](enum_type: type[EnumT], *, axis: str) -> tuple
 
 def _relation_channel_options() -> tuple[tuple[str, str], ...]:
     """Return the registry-owned Literal's exact localized option set."""
-    return tuple(
-        (_option_label("relation_channel", channel), channel) for channel in get_args(RelationConsumptionChannel)
-    )
+    options: list[tuple[str, str]] = []
+    for channel in get_args(RelationConsumptionChannel):
+        if not isinstance(channel, str):
+            raise TypeError("relation consumption channel literal must be text")
+        options.append((_option_label("relation_channel", channel), channel))
+    return tuple(options)
 
 
 def _presence_options() -> tuple[tuple[str, str], ...]:

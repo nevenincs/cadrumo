@@ -35,10 +35,6 @@ def test_representative_contracts_resolve_from_public_facade() -> None:
 def test_facade_does_not_import_frontend_or_adapter_modules() -> None:
     facade = Path(__file__).parents[1] / "__init__.py"
     tree = ast.parse(facade.read_text(encoding="utf-8"))
-    targets = {
-        node.module
-        for node in ast.walk(tree)
-        if isinstance(node, ast.ImportFrom) and node.module is not None
-    }
+    targets = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None}
 
     assert targets == {"core", "_capabilities", "_events", "_interactions", "_models"}

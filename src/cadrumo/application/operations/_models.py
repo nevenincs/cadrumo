@@ -40,6 +40,7 @@ OperationDefinitionId = Annotated[
 OperationReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Opaque safe reference to an application-owned record or subject."""
 
+
 class OperationIdentity(BaseModel):
     """Immutable invocation identity, distinct from recovery-action identity."""
 

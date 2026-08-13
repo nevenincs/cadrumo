@@ -475,7 +475,7 @@ async def test_m100_facets_project_exact_canonical_rows_and_reset_without_mutati
         screen.query_one("#modelo-review-filter-reset", Button).press()
         await pilot.pause()
         assert _row_keys(table) == original_rows
-        assert all(chooser.selection is None for chooser in screen.query("#modelo-review-filters Select"))
+        assert all(chooser.selection is None for chooser in screen.query(Select))
         assert review.model_dump(mode="json") == original_record
 
 
@@ -608,7 +608,7 @@ async def test_m130_realised_anomaly_finding_and_blocker_facets_bite_and_empty_t
         assert _row_keys(casillas) == original_casillas
         assert _row_keys(findings) == original_findings
         assert _row_keys(blockers) == original_blockers
-        assert all(chooser.selection is None for chooser in screen.query("#modelo-review-filters Select"))
+        assert all(chooser.selection is None for chooser in screen.query(Select))
         assert review.model_dump(mode="json") == original_record
 
 

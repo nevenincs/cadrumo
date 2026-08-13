@@ -55,7 +55,9 @@ class _Payload(BaseModel):
     value: int
 
 
-@pytest.mark.parametrize("lifecycle", tuple(member for member in OperationLifecycle if member is not OperationLifecycle.TERMINAL))
+@pytest.mark.parametrize(
+    "lifecycle", tuple(member for member in OperationLifecycle if member is not OperationLifecycle.TERMINAL)
+)
 @pytest.mark.parametrize("effect", tuple(OperationEffect))
 def test_nonterminal_lifecycle_and_effect_axes_remain_independently_representable(
     lifecycle: OperationLifecycle, effect: OperationEffect
@@ -115,22 +117,38 @@ def _ephemeral_capabilities() -> dict[str, object]:
         (_capabilities(), {"replay": OperationReplayPolicy.RESUMABLE}),
         (_capabilities(), {"conflict_scope": OperationConflictScope.NONE}),
         (
-            {**_capabilities(), "deadline": OperationDeadline.ABSENT, "close_policy": OperationClosePolicy.DETACH_ALLOWED},
+            {
+                **_capabilities(),
+                "deadline": OperationDeadline.ABSENT,
+                "close_policy": OperationClosePolicy.DETACH_ALLOWED,
+            },
             {"cancellation": OperationCancellation.CONTAINED},
         ),
         (
-            {**_capabilities(), "cancellation": OperationCancellation.UNSUPPORTED, "deadline": OperationDeadline.ABSENT,
-             "close_policy": OperationClosePolicy.DETACH_ALLOWED},
+            {
+                **_capabilities(),
+                "cancellation": OperationCancellation.UNSUPPORTED,
+                "deadline": OperationDeadline.ABSENT,
+                "close_policy": OperationClosePolicy.DETACH_ALLOWED,
+            },
             {"deadline": OperationDeadline.COOPERATIVE},
         ),
         (
-            {**_capabilities(), "cancellation": OperationCancellation.UNSUPPORTED, "deadline": OperationDeadline.ABSENT,
-             "close_policy": OperationClosePolicy.DETACH_ALLOWED},
+            {
+                **_capabilities(),
+                "cancellation": OperationCancellation.UNSUPPORTED,
+                "deadline": OperationDeadline.ABSENT,
+                "close_policy": OperationClosePolicy.DETACH_ALLOWED,
+            },
             {"close_policy": OperationClosePolicy.REQUEST_CANCEL},
         ),
         (
-            {**_capabilities(), "cancellation": OperationCancellation.COOPERATIVE, "deadline": OperationDeadline.ABSENT,
-             "close_policy": OperationClosePolicy.REQUEST_CANCEL},
+            {
+                **_capabilities(),
+                "cancellation": OperationCancellation.COOPERATIVE,
+                "deadline": OperationDeadline.ABSENT,
+                "close_policy": OperationClosePolicy.REQUEST_CANCEL,
+            },
             {"deadline": OperationDeadline.ENFORCED},
         ),
     ),
