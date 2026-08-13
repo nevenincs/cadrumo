@@ -28,6 +28,7 @@ from ._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry, Sem
 __all__ = [
     "SemanticMapAnomalyException",
     "validate_semantic_map",
+    "validate_snapshot_source_authority",
 ]
 
 
@@ -75,7 +76,7 @@ def validate_semantic_map(
             canonical registry reference is invalid.
     """
     _validate_scope(semantic_map, intermediate, snapshot)
-    _validate_source_authority(intermediate, snapshot)
+    validate_snapshot_source_authority(intermediate, snapshot)
     _validate_anomaly_exceptions(anomaly_exceptions, intermediate)
     _validate_exact_bijection(semantic_map, intermediate)
     _validate_exact_record_bijection(semantic_map, intermediate)
@@ -108,7 +109,7 @@ def _validate_scope(
         )
 
 
-def _validate_source_authority(
+def validate_snapshot_source_authority(
     intermediate: RecordDesignIntermediate,
     snapshot: RegistrySnapshot,
 ) -> None:
