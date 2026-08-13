@@ -7,8 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede import ObservedCasillaValue
-from ....adapters.outbound.aeat.sede._errors import SedeValidationError
+from ....adapters.outbound.aeat.sede import ObservedCasillaValue, SedeError
 from ....core import CasillaValueKind, IvaCompensationStateProvenance, ObservedHeaderFact, Period
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
 from ....domain.iva_compensation import (
@@ -270,7 +269,7 @@ def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric()
         },
     )
 
-    with pytest.raises(SedeValidationError) as excinfo:
+    with pytest.raises(SedeError) as excinfo:
         _history_state_from_filed_observation(observation)
 
     assert str(_M303_RESULTADO_CASILLA) in str(excinfo.value)

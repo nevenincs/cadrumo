@@ -326,15 +326,6 @@
         "reason": "White-box test enumerating the private per-namespace natural-key resolver registry to confirm custody-carry coverage. Internal dispatch table, not a public registry."
       },
       {
-        "importer_path": "src/cadrumo/application/calculations/tests/test_iva_compensation_filed_observations.py",
-        "occurrence": 1,
-        "target_mod": "cadrumo.adapters.outbound.aeat.sede._errors",
-        "imported_names": [
-          "SedeValidationError"
-        ],
-        "reason": "The test asserts which exception type the sede boundary raises on a malformed observed casilla, which is the behaviour under test rather than an incidental detail. The sede facade exports the observed-value records but not this error type, so the class is reachable only from its defining module. Promotion is a live candidate the next time that facade is touched: an error an application-layer caller must catch is arguably part of the boundary contract."
-      },
-      {
         "importer_path": "src/cadrumo/application/calculations/tests/test_observations_repository_roundtrip.py",
         "occurrence": 1,
         "target_mod": "cadrumo.adapters.persistence.storage.sql._secure_object_crypto",
