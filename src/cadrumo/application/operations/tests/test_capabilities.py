@@ -5,20 +5,20 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.application.operations._capabilities import (
+from ....core import (
+    OperationCancellation,
+    OperationClosePolicy,
+    OperationDeadline,
+    OperationDurability,
+    OperationEffect,
+)
+from .._capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
     OperationOwnedResource,
     OperationReplayPolicy,
     OperationSensitiveInputPolicy,
-)
-from cadrumo.core import (
-    OperationCancellation,
-    OperationClosePolicy,
-    OperationDeadline,
-    OperationDurability,
-    OperationEffect,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

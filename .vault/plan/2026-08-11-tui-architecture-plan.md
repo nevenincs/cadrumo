@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:11ce3b18adab594580c35d78bc39de42dadf1065690a8664fc7250d56a91ebac'
+body_hash: 'sha256:1d0336184f194acb9400ddb2a2bc0d41d6cfddf25c4628024d3e370dbeba3c46'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -47,7 +47,7 @@ Define the closed lifecycle axes, capability declarations, envelopes, events, in
 
 - [x] `W01.P02.S06` - Implement the closed operation lifecycle, terminal, effect, durability, cancellation, deadline, close-policy, event, and interaction axes; `src/cadrumo/core/operations.py`.
 - [x] `W01.P02.S07` - Define immutable operation request, identity, snapshot, revision, and terminal receipt models; `src/cadrumo/application/operations/_models.py`.
-- [ ] `W01.P02.S08` - Define validated per-operation capability declarations and forbidden capability combinations; `src/cadrumo/application/operations/_capabilities.py`.
+- [x] `W01.P02.S08` - Define validated per-operation capability declarations and forbidden capability combinations; `src/cadrumo/application/operations/_capabilities.py`.
 - [ ] `W01.P02.S09` - Define ordered phase, progress, safe-log, effect, notice, diagnostic, and terminal event contracts; `src/cadrumo/application/operations/_events.py`.
 - [ ] `W01.P02.S10` - Define revision-bound interaction requests, single-use response tokens, proposal digests, and apply or reject responses; `src/cadrumo/application/operations/_interactions.py`.
 - [ ] `W01.P02.S11` - Expose the sole public operation-platform API without leaking private models or frontend types; `src/cadrumo/application/operations/__init__.py`.

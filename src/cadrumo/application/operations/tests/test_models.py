@@ -10,14 +10,14 @@ from typing import cast
 import pytest
 from pydantic import BaseModel, ConfigDict, PrivateAttr, ValidationError
 
-from cadrumo.application.operations._models import (
+from ....core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
+from .._models import (
     OperationIdentity,
     OperationRequest,
     OperationSnapshot,
     OperationTerminalReceipt,
     new_operation_id,
 )
-from cadrumo.core import STRICT_FROZEN_CONFIG, OperationEffect, OperationLifecycle, OperationTerminalCondition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
