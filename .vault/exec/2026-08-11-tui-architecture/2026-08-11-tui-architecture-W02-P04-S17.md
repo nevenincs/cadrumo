@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:05463e01bf851a1100503ce7fcfca75ca431d96ba62cc8b55616f0492f03f5ea'
+body_hash: 'sha256:97390f06467702b75c1991866f4b3d90e8ac1c37af8ad497393002ac860c77a1'
 step_id: 'S17'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
@@ -15,29 +15,33 @@ related:
 ## Scope
 
 - `src/cadrumo/application/operations/_journal.py`
+- `src/cadrumo/application/operations/_leases.py`
+- `src/cadrumo/application/operations/_replay.py`
+- `src/cadrumo/application/operations/__init__.py`
 - `src/cadrumo/application/operations/tests/test_journal.py`
+- `src/cadrumo/application/operations/tests/test_facade.py`
 
 ## Description
 
-- Retain the credential-free persisted snapshot, journal, event-stream, lease, and secure-reference boundary.
-- Add a UTC-aware `started_at` fact to the persisted snapshot without changing the runtime `OperationSnapshot` contract.
-- Derive persisted phase state from the final phase event, bind nonempty batches to the final event timestamp, and reject reversed event timestamps.
-- Require a terminal snapshot to settle through one final terminal event carrying the exact terminal receipt.
-- Exercise valid phase, no-phase, and terminal cases plus planted temporal, phase-drift, terminal-middle, and receipt-divergence failures with concrete operation models.
+- Preserve the extracted journal, replay, and lease owners; expose their approved contracts only from the operations facade.
+- Add caller-timestamped, UTC-aware `ABSENT`, `ACTIVE`, and `EXPIRED` lease observations carrying the exact optional lease witness and derived canonical evidence reference.
+- Define absent-only acquisition, exact-predecessor renewal/takeover compare-and-swap, and exact-predecessor release ports. The compare-and-swap predecessor is never optional.
+- Validate transition witnesses: active conflict, expired refusal, renewal identity and extension, expired-predecessor takeover with a new owner and token, owner loss, and release.
+- Derive every lease evidence reference from a versioned canonical transition payload and caller-supplied observation time; add real production-model signature and mutation tests without test doubles.
 
 ## Outcome
 
-The journal persistence contract now preserves an ordered lifecycle record: phase state is event-derived, terminal settlement cannot be followed by more events, and the persisted timestamps agree with the event batch. The runtime snapshot and adapter policy remain unchanged.
+The application contract can now report targetable absent, active, and expired lease state, and persist adapters have an exact caller-clocked transition vocabulary without a hidden clock, storage-generated identity, or adapter policy. S19 remains the only owner of adapter atomicity and durable implementation.
 
 ## Verification
 
-- `uv run --no-sync ruff check src/cadrumo/application/operations/_journal.py src/cadrumo/application/operations/tests/test_journal.py`
-- `uv run --no-sync ruff format --check src/cadrumo/application/operations/_journal.py src/cadrumo/application/operations/tests/test_journal.py`
-- `uv run --no-sync pytest src/cadrumo/application/operations/tests/test_journal.py -q` - 12 passed
-- `uv run --no-sync basedpyright src/cadrumo/application/operations/_journal.py src/cadrumo/application/operations/tests/test_journal.py` - 0 errors, 0 warnings, 0 notes
-- Fresh independent S17 review - PASS, no findings in the journal contract or its direct tests.
-- `uvx vaultspec-core vault check all` - exit 0; structural checks passed with 1,362 advisory shared-corpus warnings and no closure error.
+- `uv run pytest src/cadrumo/application/operations/tests/test_journal.py src/cadrumo/application/operations/tests/test_facade.py -q` - 15 passed in 4.74s after exact production introspection pinned every lease protocol parameter and return annotation.
+- `uv run ruff check src/cadrumo/application/operations/_journal.py src/cadrumo/application/operations/_leases.py src/cadrumo/application/operations/_replay.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_journal.py src/cadrumo/application/operations/tests/test_facade.py` - all checks passed.
+- `uv run ruff format --check src/cadrumo/application/operations/_journal.py src/cadrumo/application/operations/_leases.py src/cadrumo/application/operations/_replay.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_journal.py src/cadrumo/application/operations/tests/test_facade.py` - 6 files already formatted.
+- `uv run basedpyright src/cadrumo/application/operations/_journal.py src/cadrumo/application/operations/_leases.py src/cadrumo/application/operations/_replay.py src/cadrumo/application/operations/__init__.py src/cadrumo/application/operations/tests/test_journal.py src/cadrumo/application/operations/tests/test_facade.py` - 0 errors, 0 warnings, 0 notes.
+- `uvx vaultspec-core vault check all` - exit 0; 1,376 shared-corpus advisory warnings, no structural or conformance failure.
 
 ## Notes
 
-No adapter policy or runtime snapshot surface changed. The Step state was left untouched for the supervising executor.
+Grounded against ADR D5 and the reopened S17 audit. Semantic search confirmed the profile custody pointer and auth acquisition lock as related exact-observation/CAS patterns, while the operation contract remains independent and does not import their storage mechanisms. The Step state was left untouched for the supervising executor.
+

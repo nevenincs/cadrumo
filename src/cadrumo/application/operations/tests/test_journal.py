@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-import asyncio
 import inspect
 from datetime import UTC, datetime, timedelta
-from types import SimpleNamespace
 
 import pytest
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError
 
 from ....core import OperationEffect, OperationLifecycle, OperationTerminalCondition
-from ....core.identity import ContentDigest
 from .. import (
     OperationEventStream,
+    OperationId,
     OperationIdentity,
     OperationJournal,
     OperationLeaseDisposition,
+    OperationLeaseObservation,
+    OperationLeaseObservationDisposition,
     OperationLeaseRepository,
     OperationLeaseResult,
     OperationOwnerLease,
@@ -26,7 +26,6 @@ from .. import (
     OperationReplayPage,
     OperationReplayStatus,
     OperationRequest,
-    OperationRevision,
     OperationSecureReferenceStore,
     OperationSnapshot,
     OperationTerminalEvent,
@@ -40,73 +39,6 @@ class Operand(BaseModel):
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid")
 
     value: str
-
-
-class JournalPort:
-    def __init__(self, snapshot: OperationPersistedSnapshot) -> None:
-        self.snapshot = snapshot
-        self.committed = False
-
-    async def load(self, operation_id: str) -> OperationPersistedSnapshot:
-        assert operation_id == self.snapshot.identity.operation_id
-        return self.snapshot
-
-    async def commit(
-        self,
-        snapshot: OperationPersistedSnapshot,
-        *,
-        expected_revision: OperationRevision,
-        lease: OperationOwnerLease,
-    ) -> None:
-        assert snapshot == self.snapshot
-        assert expected_revision == snapshot.revision
-        assert lease.operation_id == snapshot.identity.operation_id
-        self.committed = True
-
-
-class EventStreamPort:
-    async def read_after(self, operation_id: str, cursor: int, *, limit: int) -> OperationReplayPage:
-        assert operation_id == "a" * 64
-        assert limit == 10
-        return OperationReplayPage(
-            status=OperationReplayStatus.CAUGHT_UP, requested_cursor=cursor, events=(), next_cursor=cursor
-        )
-
-
-class LeasePort:
-    def __init__(self, result: OperationLeaseResult) -> None:
-        self.result = result
-
-    async def acquire(self, operation_id: str, owner_id: str, *, expires_at: datetime) -> OperationLeaseResult:
-        assert operation_id == "a" * 64 and owner_id == "b" * 64 and expires_at > self.result.observed_at
-        return self.result
-
-    async def inspect(self, operation_id: str) -> OperationLeaseResult:
-        assert operation_id == "a" * 64
-        return self.result
-
-    async def compare_and_swap(
-        self, predecessor: OperationOwnerLease | None, *, owner_id: str, expires_at: datetime
-    ) -> OperationLeaseResult:
-        assert predecessor is None and owner_id == "b" * 64 and expires_at > self.result.observed_at
-        return self.result
-
-    async def release(self, lease: OperationOwnerLease) -> OperationLeaseResult:
-        assert lease == self.result.current
-        return self.result
-
-
-class SecureReferencePort:
-    def __init__(self, operand: Operand) -> None:
-        self.operand = operand
-
-    async def put(self, operand: BaseModel) -> ContentDigest:
-        assert operand == self.operand
-        return "d" * 64
-
-    async def resolve(self, reference: ContentDigest, operand_type: type[Operand]) -> Operand:
-        assert reference == "d" * 64 and isinstance(self.operand, operand_type)
-        return self.operand
 
 
 def _snapshot() -> OperationSnapshot[Operand]:
@@ -330,40 +262,7 @@ def test_persisted_terminal_snapshot_binds_exact_terminal_event_and_receipt() ->
         OperationPersistedSnapshot.model_validate(changed)
 
 
-def test_public_ports_accept_complete_structural_implementations_and_invoke_every_method() -> None:
-    snapshot = _persisted_snapshot()
-    lease = OperationOwnerLease(
-        operation_id=snapshot.identity.operation_id,
-        owner_id="b" * 64,
-        token="c" * 64,
-        acquired_at=snapshot.updated_at,
-        expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC),
-    )
-    result = OperationLeaseResult(
-        disposition=OperationLeaseDisposition.ACQUIRED,
-        observed_at=snapshot.updated_at,
-        evidence_ref="d" * 64,
-        current=lease,
-    )
-    journal, stream, leases = JournalPort(snapshot), EventStreamPort(), LeasePort(result)
-    secure = SecureReferencePort(_snapshot().request.payload)
-    assert isinstance(journal, OperationJournal)
-    assert isinstance(stream, OperationEventStream)
-    assert isinstance(leases, OperationLeaseRepository)
-    assert isinstance(secure, OperationSecureReferenceStore)
-    assert asyncio.run(journal.load(snapshot.identity.operation_id)) == snapshot
-    asyncio.run(journal.commit(snapshot, expected_revision=0, lease=lease))
-    assert journal.committed
-    assert asyncio.run(stream.read_after("a" * 64, 0, limit=10)).status is OperationReplayStatus.CAUGHT_UP
-    assert asyncio.run(leases.acquire("a" * 64, "b" * 64, expires_at=lease.expires_at)) == result
-    assert asyncio.run(leases.inspect("a" * 64)) == result
-    assert asyncio.run(leases.compare_and_swap(None, owner_id="b" * 64, expires_at=lease.expires_at)) == result
-    assert asyncio.run(leases.release(lease)) == result
-    reference = asyncio.run(secure.put(secure.operand))
-    assert asyncio.run(secure.resolve(reference, Operand)) == secure.operand
-
-
-def test_public_port_signatures_pin_keywords() -> None:
+def test_public_port_signatures_pin_explicit_lease_evidence_inputs() -> None:
     assert tuple(inspect.signature(OperationJournal.commit).parameters) == (
         "self",
         "snapshot",
@@ -376,30 +275,64 @@ def test_public_port_signatures_pin_keywords() -> None:
         "cursor",
         "limit",
     )
-    assert tuple(inspect.signature(OperationLeaseRepository.acquire).parameters) == (
+    assert tuple(inspect.signature(OperationLeaseRepository.inspect).parameters) == (
         "self",
         "operation_id",
-        "owner_id",
-        "expires_at",
+        "observed_at",
+    )
+    assert tuple(inspect.signature(OperationLeaseRepository.acquire).parameters) == (
+        "self",
+        "candidate",
+        "observed_at",
     )
     assert tuple(inspect.signature(OperationLeaseRepository.compare_and_swap).parameters) == (
         "self",
         "predecessor",
-        "owner_id",
-        "expires_at",
+        "successor",
+        "observed_at",
     )
+    assert tuple(inspect.signature(OperationLeaseRepository.release).parameters) == (
+        "self",
+        "predecessor",
+        "observed_at",
+    )
+    for method in (
+        OperationLeaseRepository.inspect,
+        OperationLeaseRepository.acquire,
+        OperationLeaseRepository.compare_and_swap,
+        OperationLeaseRepository.release,
+    ):
+        assert inspect.signature(method).parameters["observed_at"].kind is inspect.Parameter.KEYWORD_ONLY
+    expected_annotations = {
+        OperationLeaseRepository.inspect: {
+            "operation_id": OperationId,
+            "observed_at": datetime,
+            "return": OperationLeaseObservation,
+        },
+        OperationLeaseRepository.acquire: {
+            "candidate": OperationOwnerLease,
+            "observed_at": datetime,
+            "return": OperationLeaseResult,
+        },
+        OperationLeaseRepository.compare_and_swap: {
+            "predecessor": OperationOwnerLease,
+            "successor": OperationOwnerLease,
+            "observed_at": datetime,
+            "return": OperationLeaseResult,
+        },
+        OperationLeaseRepository.release: {
+            "predecessor": OperationOwnerLease,
+            "observed_at": datetime,
+            "return": OperationLeaseResult,
+        },
+    }
+    for method, expected in expected_annotations.items():
+        assert inspect.get_annotations(method, eval_str=True) == expected
     assert tuple(inspect.signature(OperationSecureReferenceStore.resolve).parameters) == (
         "self",
         "reference",
         "operand_type",
     )
-
-
-def test_public_ports_refuse_incomplete_implementations() -> None:
-    assert not isinstance(SimpleNamespace(load=lambda: None), OperationJournal)
-    assert not isinstance(SimpleNamespace(), OperationEventStream)
-    assert not isinstance(SimpleNamespace(acquire=lambda: None, inspect=lambda: None), OperationLeaseRepository)
-    assert not isinstance(SimpleNamespace(resolve=lambda: None), OperationSecureReferenceStore)
 
 
 def test_owner_lease_requires_a_positive_utc_window() -> None:
@@ -410,11 +343,34 @@ def test_owner_lease_requires_a_positive_utc_window() -> None:
         )
 
 
+def _owner_lease(
+    *,
+    operation_id: str = "a" * 64,
+    owner_id: str = "b" * 64,
+    token: str = "c" * 64,
+    acquired_at: datetime = datetime(2026, 8, 13, 20, tzinfo=UTC),
+    expires_at: datetime = datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+) -> OperationOwnerLease:
+    return OperationOwnerLease(
+        operation_id=operation_id,
+        owner_id=owner_id,
+        token=token,
+        acquired_at=acquired_at,
+        expires_at=expires_at,
+    )
+
+
 def test_lease_and_replay_results_are_fail_closed() -> None:
     observed = datetime(2026, 8, 13, 20, tzinfo=UTC)
     for disposition in OperationLeaseDisposition:
         with pytest.raises(ValidationError):
-            OperationLeaseResult(disposition=disposition, observed_at=observed, evidence_ref="d" * 64)
+            OperationLeaseResult(operation_id="a" * 64, disposition=disposition, observed_at=observed)
+    for disposition in {
+        OperationLeaseObservationDisposition.ACTIVE,
+        OperationLeaseObservationDisposition.EXPIRED,
+    }:
+        with pytest.raises(ValidationError):
+            OperationLeaseObservation(operation_id="a" * 64, disposition=disposition, observed_at=observed)
     with pytest.raises(ValidationError, match="at least one event"):
         OperationReplayPage(status=OperationReplayStatus.PAGE, requested_cursor=0, events=(), next_cursor=0)
     with pytest.raises(ValidationError):
@@ -423,6 +379,129 @@ def test_lease_and_replay_results_are_fail_closed() -> None:
         TypeAdapter(OperationReplayLimit).validate_python(0)
     with pytest.raises(ValidationError):
         TypeAdapter(OperationReplayLimit).validate_python(1_001)
+
+
+def test_lease_observation_binds_target_state_and_deterministic_evidence() -> None:
+    observed = datetime(2026, 8, 13, 20, 2, tzinfo=UTC)
+    active = _owner_lease(expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC))
+    expired = _owner_lease(expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC))
+
+    absent = OperationLeaseObservation(
+        operation_id="a" * 64,
+        disposition=OperationLeaseObservationDisposition.ABSENT,
+        observed_at=observed,
+    )
+    active_observation = OperationLeaseObservation(
+        operation_id="a" * 64,
+        disposition=OperationLeaseObservationDisposition.ACTIVE,
+        observed_at=observed,
+        current=active,
+    )
+    expired_observation = OperationLeaseObservation(
+        operation_id="a" * 64,
+        disposition=OperationLeaseObservationDisposition.EXPIRED,
+        observed_at=observed,
+        current=expired,
+    )
+
+    assert absent.current is None
+    assert active_observation.current == active
+    assert expired_observation.current == expired
+    assert (
+        active_observation.evidence_ref
+        == OperationLeaseObservation.model_validate(active_observation.model_dump()).evidence_ref
+    )
+    assert active_observation.evidence_ref != expired_observation.evidence_ref
+
+    for mutation, message in (
+        ({"current": active}, "absent lease observation forbids"),
+        ({"disposition": OperationLeaseObservationDisposition.ACTIVE, "current": expired}, "requires an unexpired"),
+        ({"disposition": OperationLeaseObservationDisposition.EXPIRED, "current": active}, "requires an expired"),
+        (
+            {
+                "disposition": OperationLeaseObservationDisposition.ACTIVE,
+                "current": active.model_copy(update={"operation_id": "9" * 64}),
+            },
+            "does not match the operation identity",
+        ),
+    ):
+        payload = absent.model_dump()
+        payload.update(mutation)
+        payload.pop("evidence_ref")
+        with pytest.raises(ValidationError, match=message):
+            OperationLeaseObservation.model_validate(payload)
+
+
+def test_lease_transition_contracts_bind_exact_predecessors_and_derived_evidence() -> None:
+    acquired_at = datetime(2026, 8, 13, 20, tzinfo=UTC)
+    observed = datetime(2026, 8, 13, 20, 2, tzinfo=UTC)
+    predecessor = _owner_lease(acquired_at=acquired_at, expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC))
+    renewed = _owner_lease(acquired_at=acquired_at, expires_at=datetime(2026, 8, 13, 20, 4, tzinfo=UTC))
+    expired_predecessor = _owner_lease(acquired_at=acquired_at, expires_at=datetime(2026, 8, 13, 20, 1, tzinfo=UTC))
+    takeover = _owner_lease(
+        owner_id="e" * 64,
+        token="f" * 64,
+        acquired_at=observed,
+        expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+    )
+    acquired = _owner_lease(
+        acquired_at=observed,
+        expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
+    )
+
+    results = (
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.ACQUIRED,
+            observed_at=observed,
+            current=acquired,
+        ),
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.RENEWED,
+            observed_at=observed,
+            predecessor=predecessor,
+            current=renewed,
+        ),
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.CONFLICT,
+            observed_at=observed,
+            current=predecessor,
+        ),
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.EXPIRED,
+            observed_at=observed,
+            predecessor=expired_predecessor,
+        ),
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.TAKEN_OVER,
+            observed_at=observed,
+            predecessor=expired_predecessor,
+            current=takeover,
+        ),
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.RELEASED,
+            observed_at=observed,
+            predecessor=predecessor,
+        ),
+        OperationLeaseResult(
+            operation_id="a" * 64,
+            disposition=OperationLeaseDisposition.OWNER_LOST,
+            observed_at=observed,
+            predecessor=predecessor,
+        ),
+    )
+
+    assert len({result.evidence_ref for result in results}) == len(results)
+    assert all(OperationLeaseResult.model_validate(result.model_dump()) == result for result in results)
+    tampered = results[0].model_dump()
+    tampered["evidence_ref"] = "d" * 64
+    with pytest.raises(ValidationError, match="does not match the canonical transition payload"):
+        OperationLeaseResult.model_validate(tampered)
 
 
 def test_replay_page_binds_ordered_events_to_next_cursor() -> None:
@@ -469,29 +548,31 @@ def test_lease_transition_correlations_refuse_planted_identity_and_time_mutation
         expires_at=datetime(2026, 8, 13, 20, 3, tzinfo=UTC),
     )
     accepted = OperationLeaseResult(
+        operation_id="a" * 64,
         disposition=OperationLeaseDisposition.TAKEN_OVER,
         observed_at=observed,
-        evidence_ref="d" * 64,
         predecessor=predecessor,
         current=current,
     )
     assert accepted.current == current
     for mutation, message in (
-        ({"current": current.model_copy(update={"operation_id": "9" * 64})}, "operation identity"),
-        ({"current": current.model_copy(update={"owner_id": predecessor.owner_id})}, "change owner and token"),
-        ({"current": current.model_copy(update={"token": predecessor.token})}, "change owner and token"),
+        ({"current": current.model_copy(update={"operation_id": "9" * 64})}, "witness does not match"),
+        ({"current": current.model_copy(update={"owner_id": predecessor.owner_id})}, "new owner and token"),
+        ({"current": current.model_copy(update={"token": predecessor.token})}, "new owner and token"),
         (
             {"predecessor": predecessor.model_copy(update={"expires_at": current.expires_at})},
             "expired predecessor",
         ),
     ):
         with pytest.raises(ValidationError, match=message):
-            OperationLeaseResult(
-                disposition=OperationLeaseDisposition.TAKEN_OVER,
-                observed_at=observed,
-                evidence_ref="d" * 64,
-                predecessor=mutation.get("predecessor", predecessor),
-                current=mutation.get("current", current),
+            OperationLeaseResult.model_validate(
+                {
+                    "operation_id": "a" * 64,
+                    "disposition": OperationLeaseDisposition.TAKEN_OVER,
+                    "observed_at": observed,
+                    "predecessor": mutation.get("predecessor", predecessor),
+                    "current": mutation.get("current", current),
+                }
             )
 
 

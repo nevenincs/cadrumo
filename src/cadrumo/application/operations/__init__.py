@@ -54,19 +54,19 @@ from ._interactions import (
     OperationResponseToken,
 )
 from ._journal import (
-    OperationEventCursor,
     OperationEventStream,
     OperationJournal,
-    OperationLeaseDisposition,
     OperationLeaseRepository,
+    OperationPersistedSnapshot,
+    OperationSecureReferenceStore,
+)
+from ._leases import (
+    OperationLeaseDisposition,
+    OperationLeaseObservation,
+    OperationLeaseObservationDisposition,
     OperationLeaseResult,
     OperationLeaseToken,
     OperationOwnerLease,
-    OperationPersistedSnapshot,
-    OperationReplayLimit,
-    OperationReplayPage,
-    OperationReplayStatus,
-    OperationSecureReferenceStore,
 )
 from ._models import (
     OperationDefinitionId,
@@ -86,6 +86,7 @@ from ._registry import (
     OperationReconciliationPolicy,
     OperationRegistry,
 )
+from ._replay import OperationEventCursor, OperationReplayLimit, OperationReplayPage, OperationReplayStatus
 
 __all__ = [
     "JournalRepositoryBase",
@@ -126,6 +127,8 @@ __all__ = [
     "OperationInteractionResponse",
     "OperationJournal",
     "OperationLeaseDisposition",
+    "OperationLeaseObservation",
+    "OperationLeaseObservationDisposition",
     "OperationLeaseRepository",
     "OperationLeaseResult",
     "OperationLeaseToken",
