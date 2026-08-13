@@ -906,6 +906,17 @@ application:
           i aquesta confirmació difereix en: %{divergent_fields}. Corregiu o elimineu
           la factura emmagatzemada en lloc de confirmar dues vegades el mateix document.'
   live:
+    borrador:
+      errors:
+        binding_value_key_blank: Les claus dels valors de vinculació del borrador
+          no poden estar buides.
+        bucket_id_blank: L'identificador del bucket del borrador no pot estar buit.
+        snapshot_id_blank: L'identificador del snapshot del borrador no pot estar
+          buit.
+        snapshot_not_found: Cap snapshot del borrador coincideix amb l'identificador
+          sol·licitat.
+        snapshot_prefix_ambiguous: El prefix del snapshot del borrador coincideix
+          amb diversos snapshots.
     deudas:
       errors:
         bucket_id_blank: L'identificador del bucket de deudas no pot estar buit.
@@ -924,6 +935,69 @@ application:
           amb l identificador sol·licitat.
         snapshot_prefix_ambiguous: El prefix de la instantània d expedients coincideix
           amb diverses instantànies.
+    filed_data:
+      errors:
+        sync_run_repository_required: Una captura persistida de dades presentades
+          requereix un repositori de persistència d'execucions de sincronització.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: La declaració presentada del Model 303 no s'ha
+          pogut incorporar a l'històric de compensació d'IVA.
+        iva_history_reload_missing: L'històric segur de compensació d'IVA no s'ha
+          recarregat després de desar el període del Model 303.
+        observation_not_active: L'AEAT no informa aquesta declaració presentada com
+          a activa, per la qual cosa no es desa com a evidència de càlcul.
+        quarter_ordinal_missing: El període trimestral de l'històric presentat no
+          té ordinal de trimestre.
+        registry_enrollment_failed: L'observació presentada no s'ha pogut inscriure
+          com a evidència de càlcul fonamentada en el registre.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: La decisió de conciliació de la cartera d'IVA no
+          s'ha recarregat amb evidència idèntica.
+        observation_reload_diverged: L'observació de la cartera d'IVA no s'ha recarregat
+          amb evidència idèntica.
+    justificante:
+      errors:
+        bucket_id_blank: L'identificador del bucket de la captura del justificant
+          no pot estar buit.
+        capture_axis_mismatch: El justificant capturat no coincideix amb el model
+          i el període del snapshot en viu.
+        csv_mismatch: El CSV del justificant capturat no coincideix amb el CSV del
+          snapshot en viu.
+        evidence_overwrite_refused: El registre de presentació ja té evidència de
+          l'AEAT, que l'evidència de captura en viu no sobreescriurà.
+        evidence_snapshot_not_active: Només un snapshot de captura en viu actiu es
+          pot segellar com a evidència de presentació.
+        expediente_not_in_tree: La declaració presentada referencia un expedient que
+          no és a l'arbre d'expedients.
+        filing_identity_unresolved: No s'ha pogut resoldre la identitat fiscal del
+          perfil de presentació, per la qual cosa no se segella l'evidència de captura
+          en viu.
+        filing_record_mismatch: El justificant capturat no coincideix amb el registre
+          de presentació actual.
+        filing_record_missing: No hi ha cap registre de presentació actual per a aquest
+          model i període. Presenteu el període primer.
+        metadata_snapshot_not_active: Només un snapshot de captura en viu actiu pot
+          registrar metadades del justificant.
+        modelo_unknown: El model de la captura del justificant no és un model conegut
+          de l'AEAT.
+        no_filed_declaration: No hi ha cap declaració presentada per a aquest model
+          i període, per la qual cosa no es pot resoldre l'expedient del justificant.
+        pdf_base64_empty: El contingut PDF de la captura del justificant es descodifica
+          a zero bytes.
+        pdf_base64_invalid: El contingut PDF de la captura del justificant no és base64
+          vàlid.
+        pdf_sha256_mismatch: El resum del PDF de la captura del justificant no coincideix
+          amb els bytes PDF descodificats.
+        snapshot_bucket_mismatch: El snapshot de la captura del justificant no pertany
+          al bucket del repositori.
+        snapshot_id_blank: L'identificador del snapshot de la captura del justificant
+          no pot estar buit.
+        snapshot_not_found: Cap snapshot de captura del justificant coincideix amb
+          l'identificador sol·licitat.
+        snapshot_prefix_ambiguous: El prefix del snapshot de captura del justificant
+          coincideix amb diversos snapshots.
     notifications:
       errors:
         bucket_id_blank: L'identificador del bucket de notificacions no pot estar
@@ -944,10 +1018,24 @@ application:
           amb diverses instantànies.
     snapshot_base:
       errors:
+        repository_bucket_mismatch: El repositori de snapshots ha informat d'un bucket
+          diferent del sol·licitat.
+        service_bucket_mismatch: El bucket del servei de snapshots no coincideix amb
+          el bucket del seu repositori.
         snapshot_bucket_mismatch: El bucket de la càrrega de la instantània no coincideix
           amb el bucket del repositori.
         snapshot_key_mismatch: La instantània està emmagatzemada sota la clau d'una
           altra instantània.
+        state_active_supersession_pointer: Un snapshot actiu no pot portar un punter
+          de substitució.
+        state_discard_audit_required: Un snapshot descartat requereix marca de temps
+          de descart i actor que el descarta.
+        state_discard_metadata_forbidden: Només un snapshot descartat pot portar metadades
+          de descart.
+        state_discarded_supersession_pointer: Un snapshot descartat no pot portar
+          un punter de substitució.
+        state_supersession_pointer_required: Un snapshot substituït ha de portar l'identificador
+          del snapshot que el substitueix.
     verify:
       errors:
         bucket_id_blank: L identificador del bucket de verificació no pot estar buit.

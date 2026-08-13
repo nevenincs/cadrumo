@@ -142,7 +142,7 @@ def _raise_registry_enrollment_failure(failures: tuple[FiledDataCaptureFailureRo
         return
     first = failures[0]
     raise LiveApplicationError(
-        "filed observation could not be enrolled as registry-grounded calculation evidence",
+        translated_message="application.live.filed_observations.errors.registry_enrollment_failed",
         context={
             "failed_count": len(failures),
             "modelo": first.modelo,

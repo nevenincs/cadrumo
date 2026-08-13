@@ -152,21 +152,43 @@ def enforce_snapshot_state_invariants(
     discard_metadata_present = discarded_at is not None or bool(discarded_by) or bool(discard_reason)
     if state is SnapshotLifecycleState.ACTIVE:
         if has_supersession_pointer:
-            raise LiveApplicationInputError("active snapshots cannot carry supersession pointers")
+            raise LiveApplicationInputError(
+                translated_message="application.live.snapshot_base.errors.state_active_supersession_pointer",
+                context={"state": state.value, "has_supersession_pointer": True},
+            )
         if discard_metadata_present:
-            raise LiveApplicationInputError("only discarded snapshots can carry discard metadata")
+            raise LiveApplicationInputError(
+                translated_message="application.live.snapshot_base.errors.state_discard_metadata_forbidden",
+                context={"state": state.value, "discard_metadata_present": True},
+            )
         return
     if state is SnapshotLifecycleState.SUPERSEDED:
         if not has_supersession_pointer:
-            raise LiveApplicationInputError("superseded snapshots must carry superseded_by_snapshot_id")
+            raise LiveApplicationInputError(
+                translated_message="application.live.snapshot_base.errors.state_supersession_pointer_required",
+                context={"state": state.value, "has_supersession_pointer": False},
+            )
         if discard_metadata_present:
-            raise LiveApplicationInputError("only discarded snapshots can carry discard metadata")
+            raise LiveApplicationInputError(
+                translated_message="application.live.snapshot_base.errors.state_discard_metadata_forbidden",
+                context={"state": state.value, "discard_metadata_present": True},
+            )
         return
     # DISCARDED
     if has_supersession_pointer:
-        raise LiveApplicationInputError("discarded snapshots cannot carry supersession pointers")
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_discarded_supersession_pointer",
+            context={"state": state.value, "has_supersession_pointer": True},
+        )
     if discarded_at is None or not discarded_by.strip():
-        raise LiveApplicationInputError("discarded snapshots require discarded_at and discarded_by")
+        raise LiveApplicationInputError(
+            translated_message="application.live.snapshot_base.errors.state_discard_audit_required",
+            context={
+                "state": state.value,
+                "has_discarded_at": discarded_at is not None,
+                "has_discarded_by": bool(discarded_by.strip()),
+            },
+        )
 
 
 class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
@@ -189,7 +211,11 @@ class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
     def __init__(self, *, bucket_id: str, repository: SnapshotRepository[TPayload]) -> None:
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot service bucket_id={bucket_id!r} does not match repository bucket {repository.bucket_id!r}",
+                translated_message="application.live.snapshot_base.errors.service_bucket_mismatch",
+                context={
+                    "requested_bucket_id": bucket_id.strip(),
+                    "repository_bucket_id": repository.bucket_id,
+                },
             )
         self._repository: SnapshotRepository[TPayload] = repository
 
@@ -321,7 +347,11 @@ class StatelessSnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
         repository = self._repository_factory(bucket_id)
         if repository.bucket_id != bucket_id.strip():
             raise LiveApplicationInputError(
-                f"snapshot repository for bucket_id={bucket_id!r} reported bucket {repository.bucket_id!r}",
+                translated_message="application.live.snapshot_base.errors.repository_bucket_mismatch",
+                context={
+                    "requested_bucket_id": bucket_id.strip(),
+                    "repository_bucket_id": repository.bucket_id,
+                },
             )
         return repository
 

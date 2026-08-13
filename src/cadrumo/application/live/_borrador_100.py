@@ -90,7 +90,10 @@ class Borrador100Snapshot(BaseModel):
         )
         blank_keys = sorted(key for key in self.binding_values if not key.strip())
         if blank_keys:
-            raise LiveApplicationInputError("borrador binding value keys must not be blank")
+            raise LiveApplicationInputError(
+                translated_message="application.live.borrador.errors.binding_value_key_blank",
+                context={"blank_key_count": len(blank_keys)},
+            )
         return self
 
 
@@ -99,9 +102,13 @@ def borrador_100_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
-        raise LiveApplicationInputError("bucket_id must not be blank")
+        raise LiveApplicationInputError(
+            translated_message="application.live.borrador.errors.bucket_id_blank",
+        )
     if not trimmed_snapshot:
-        raise LiveApplicationInputError("snapshot_id must not be blank")
+        raise LiveApplicationInputError(
+            translated_message="application.live.borrador.errors.snapshot_id_blank",
+        )
     return f"modelo-100-borrador-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
 
 
@@ -148,17 +155,21 @@ class Borrador100SnapshotRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
-            raise LiveApplicationInputError("bucket_id must not be blank")
+            raise LiveApplicationInputError(
+                translated_message="application.live.borrador.errors.bucket_id_blank",
+            )
         self._delegate: SecureSnapshotRepository[Borrador100Snapshot] = SecureSnapshotRepository(
             bucket_id=trimmed,
             payload_model=Borrador100Snapshot,
             namespace_definition=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE,
             object_key=borrador_100_snapshot_object_key,
             not_found_factory=lambda snapshot_id: BorradorSnapshotNotFoundError(
-                f"borrador snapshot {snapshot_id!r} not found in bucket {trimmed!r}",
+                translated_message="application.live.borrador.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
             ),
-            ambiguous_prefix_factory=lambda snapshot_id, _full_ids: BorradorSnapshotNotFoundError(
-                f"borrador snapshot prefix {snapshot_id!r} is ambiguous",
+            ambiguous_prefix_factory=lambda snapshot_id, full_ids: BorradorSnapshotNotFoundError(
+                translated_message="application.live.borrador.errors.snapshot_prefix_ambiguous",
+                context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
             ),
             domain_label="borrador",
             input_error_cls=LiveApplicationInputError,

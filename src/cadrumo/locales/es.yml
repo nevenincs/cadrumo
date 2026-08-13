@@ -912,6 +912,17 @@ application:
           y esta confirmación difiere en: %{divergent_fields}. Corrija o elimine la
           factura almacenada en lugar de confirmar dos veces el mismo documento.'
   live:
+    borrador:
+      errors:
+        binding_value_key_blank: Las claves de los valores de vinculación del borrador
+          no pueden estar vacías.
+        bucket_id_blank: El identificador del bucket del borrador no puede estar vacío.
+        snapshot_id_blank: El identificador del snapshot del borrador no puede estar
+          vacío.
+        snapshot_not_found: Ningún snapshot del borrador coincide con el identificador
+          solicitado.
+        snapshot_prefix_ambiguous: El prefijo del snapshot del borrador coincide con
+          varios snapshots.
     deudas:
       errors:
         bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
@@ -931,6 +942,68 @@ application:
           con el identificador solicitado.
         snapshot_prefix_ambiguous: El prefijo de la instantánea de expedientes coincide
           con varias instantáneas.
+    filed_data:
+      errors:
+        sync_run_repository_required: Una captura persistida de datos presentados
+          requiere un repositorio de persistencia de ejecuciones de sincronización.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: La declaración presentada del Modelo 303 no
+          pudo incorporarse al histórico de compensación de IVA.
+        iva_history_reload_missing: El histórico seguro de compensación de IVA no
+          se recargó tras guardar el periodo del Modelo 303.
+        observation_not_active: La AEAT no informa esa declaración presentada como
+          activa, por lo que no se guarda como evidencia de cálculo.
+        quarter_ordinal_missing: El periodo trimestral del histórico presentado no
+          tiene ordinal de trimestre.
+        registry_enrollment_failed: La observación presentada no pudo inscribirse
+          como evidencia de cálculo fundamentada en el registro.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: La decisión de conciliación de la cartera de IVA
+          no se recargó con evidencia idéntica.
+        observation_reload_diverged: La observación de la cartera de IVA no se recargó
+          con evidencia idéntica.
+    justificante:
+      errors:
+        bucket_id_blank: El identificador del bucket de la captura del justificante
+          no puede estar vacío.
+        capture_axis_mismatch: El justificante capturado no coincide con el modelo
+          y el periodo del snapshot en vivo.
+        csv_mismatch: El CSV del justificante capturado no coincide con el CSV del
+          snapshot en vivo.
+        evidence_overwrite_refused: El registro de presentación ya tiene evidencia
+          de la AEAT, que la evidencia de captura en vivo no sobrescribirá.
+        evidence_snapshot_not_active: Solo un snapshot de captura en vivo activo puede
+          sellarse como evidencia de presentación.
+        expediente_not_in_tree: La declaración presentada referencia un expediente
+          que no está en el árbol de expedientes.
+        filing_identity_unresolved: No se pudo resolver la identidad fiscal del perfil
+          de presentación, por lo que no se sella la evidencia de captura en vivo.
+        filing_record_mismatch: El justificante capturado no coincide con el registro
+          de presentación actual.
+        filing_record_missing: No existe registro de presentación actual para ese
+          modelo y periodo. Presente el periodo primero.
+        metadata_snapshot_not_active: Solo un snapshot de captura en vivo activo puede
+          registrar metadatos del justificante.
+        modelo_unknown: El modelo de la captura del justificante no es un modelo conocido
+          de la AEAT.
+        no_filed_declaration: No hay declaración presentada para ese modelo y periodo,
+          por lo que no se puede resolver el expediente del justificante.
+        pdf_base64_empty: El contenido PDF de la captura del justificante se decodifica
+          a cero bytes.
+        pdf_base64_invalid: El contenido PDF de la captura del justificante no es
+          base64 válido.
+        pdf_sha256_mismatch: El resumen del PDF de la captura del justificante no
+          coincide con los bytes PDF decodificados.
+        snapshot_bucket_mismatch: El snapshot de la captura del justificante no pertenece
+          al bucket del repositorio.
+        snapshot_id_blank: El identificador del snapshot de la captura del justificante
+          no puede estar vacío.
+        snapshot_not_found: Ningún snapshot de captura del justificante coincide con
+          el identificador solicitado.
+        snapshot_prefix_ambiguous: El prefijo del snapshot de captura del justificante
+          coincide con varios snapshots.
     notifications:
       errors:
         bucket_id_blank: El identificador del bucket de notificaciones no puede estar
@@ -951,10 +1024,24 @@ application:
           con varias instantáneas.
     snapshot_base:
       errors:
+        repository_bucket_mismatch: El repositorio de snapshots informó un bucket
+          distinto del solicitado.
+        service_bucket_mismatch: El bucket del servicio de snapshots no coincide con
+          el bucket de su repositorio.
         snapshot_bucket_mismatch: El bucket de la carga de la instantánea no coincide
           con el bucket del repositorio.
         snapshot_key_mismatch: La instantánea está almacenada bajo la clave de otra
           instantánea.
+        state_active_supersession_pointer: Un snapshot activo no puede llevar un puntero
+          de sustitución.
+        state_discard_audit_required: Un snapshot descartado requiere marca de tiempo
+          de descarte y actor que lo descarta.
+        state_discard_metadata_forbidden: Solo un snapshot descartado puede llevar
+          metadatos de descarte.
+        state_discarded_supersession_pointer: Un snapshot descartado no puede llevar
+          un puntero de sustitución.
+        state_supersession_pointer_required: Un snapshot sustituido debe llevar el
+          identificador del snapshot que lo sustituye.
     verify:
       errors:
         bucket_id_blank: El identificador del bucket de verificación no puede estar

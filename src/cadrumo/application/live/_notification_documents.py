@@ -74,7 +74,11 @@ from ...domain.attachments import (
     AttachmentStoreProtocol,
     add_attachment,
 )
-from ._errors import LiveApplicationInputError
+from ._errors import (
+    LiveApplicationInputError,
+    LiveReadPrecondition,
+    live_read_no_recovery_verdict,
+)
 from ._snapshot_base import SnapshotNotFoundError
 
 if TYPE_CHECKING:
@@ -152,12 +156,10 @@ def notification_document_object_key(bucket_id: str, certificado_id: str) -> str
     trimmed_certificado = certificado_id.strip()
     if not trimmed_bucket:
         raise LiveApplicationInputError(
-            "bucket_id must not be blank",
             translated_message="application.live.notifications.errors.bucket_id_blank",
         )
     if not trimmed_certificado:
         raise LiveApplicationInputError(
-            "certificado_id must not be blank",
             translated_message="application.live.notifications.errors.certificado_id_blank",
         )
     return f"notification-document:{trimmed_bucket}:{trimmed_certificado}"
@@ -174,12 +176,10 @@ def _document_repository(
         namespace_definition=LIVE_NOTIFICATION_DOCUMENT_NAMESPACE,
         object_key=notification_document_object_key,
         not_found_factory=lambda certificado_id: NotificationDocumentNotFoundError(
-            "no stored notification document matches the requested certificado",
             translated_message="application.live.notifications.errors.document_not_found",
             context={"certificado_id": certificado_id},
         ),
         ambiguous_prefix_factory=lambda certificado_id, full_ids: NotificationDocumentNotFoundError(
-            "notification certificado prefix matches multiple stored documents",
             translated_message="application.live.notifications.errors.document_prefix_ambiguous",
             context={"certificado_id": certificado_id, "match_count": len(full_ids)},
         ),
@@ -245,13 +245,19 @@ class NotificationDocumentService:
         assert_notification_content_readable(row)
         if str(document.certificado_id) != str(row.certificado_id):
             raise LiveApplicationInputError(
-                "notification document does not belong to the supplied notification row; refusing to store it "
-                f"under the wrong certificado. row={row.certificado_id!r} document={document.certificado_id!r}",
                 translated_message="application.live.notifications.errors.document_row_mismatch",
                 context={
                     "row_certificado_id": str(row.certificado_id),
                     "document_certificado_id": str(document.certificado_id),
                 },
+                precondition_verdict=live_read_no_recovery_verdict(
+                    LiveReadPrecondition.NOTIFICATION_DOCUMENT_MATCHES_ROW,
+                    facts={
+                        "row_certificado_id": str(row.certificado_id),
+                        "document_certificado_id": str(document.certificado_id),
+                        "matches_row": False,
+                    },
+                ),
             )
 
         attachment = add_attachment(

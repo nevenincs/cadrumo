@@ -194,7 +194,10 @@ def test_filed_capture_fail_fast_finalizer_raises_on_incomplete_observation(tmp_
             update={"extraction_coverage": {}},
         )
 
-        with pytest.raises(LiveApplicationError, match="could not be enrolled as registry-grounded"):
+        with pytest.raises(
+            LiveApplicationError,
+            match=r"application\.live\.filed_observations\.errors\.registry_enrollment_failed",
+        ):
             finalize_filed_capture(
                 (observation,),
                 justificante_csvs_by_observation={},
@@ -379,7 +382,10 @@ def test_iva_compensation_history_strict_persist_stores_latest_and_reloads(tmp_p
 
 def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path) -> None:
     with _secure_backend(tmp_path):
-        with pytest.raises(LiveApplicationInputError, match="non-active AEAT filed observation"):
+        with pytest.raises(
+            LiveApplicationInputError,
+            match=r"application\.live\.filed_observations\.errors\.observation_not_active",
+        ):
             persist_filed_calculation_observation(
                 _prior_303_observation(
                     pending_compensation=Decimal("900.00"),

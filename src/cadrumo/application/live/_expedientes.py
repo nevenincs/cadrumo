@@ -88,12 +88,10 @@ def expedientes_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
         raise LiveApplicationInputError(
-            "bucket_id must not be blank",
             translated_message="application.live.expedientes.errors.bucket_id_blank",
         )
     if not trimmed_snapshot:
         raise LiveApplicationInputError(
-            "snapshot_id must not be blank",
             translated_message="application.live.expedientes.errors.snapshot_id_blank",
         )
     return f"expedientes-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
@@ -109,12 +107,10 @@ def _expedientes_repository(
         namespace_definition=LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE,
         object_key=expedientes_snapshot_object_key,
         not_found_factory=lambda snapshot_id: ExpedientesSnapshotNotFoundError(
-            "no expedientes snapshot matches the requested id",
             translated_message="application.live.expedientes.errors.snapshot_not_found",
             context={"snapshot_id": snapshot_id},
         ),
         ambiguous_prefix_factory=lambda snapshot_id, full_ids: ExpedientesSnapshotNotFoundError(
-            "expedientes snapshot prefix matches multiple snapshots",
             translated_message="application.live.expedientes.errors.snapshot_prefix_ambiguous",
             context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
         ),

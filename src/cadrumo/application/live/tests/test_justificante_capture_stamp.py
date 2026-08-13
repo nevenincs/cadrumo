@@ -138,7 +138,10 @@ def test_stamp_refuses_to_overwrite_existing_different_aeat_evidence() -> None:
         period="1T",
     )
 
-    with pytest.raises(LiveApplicationInputError, match="cannot overwrite existing AEAT evidence"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.evidence_overwrite_refused",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -171,7 +174,10 @@ def test_stamp_refuses_when_snapshot_csv_disagrees_with_parsed_receipt() -> None
         period="1T",
     ).model_copy(update={"csv": "DIFFERENTCSV12345"})
 
-    with pytest.raises(LiveApplicationInputError, match="does not match live snapshot csv"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.csv_mismatch",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -240,7 +246,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_modelo() -> Non
         period="1T",
     )
 
-    with pytest.raises(LiveApplicationInputError, match="does not match current filing record"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -278,7 +287,10 @@ def test_stamp_refuses_non_active_live_capture_snapshot() -> None:
         },
     )
 
-    with pytest.raises(LiveApplicationInputError, match="cannot stamp superseded live-capture snapshot"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.evidence_snapshot_not_active",
+    ):
         register_capture_as_filing_evidence(snapshot=superseded_snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -310,7 +322,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_year() -> None:
         period="1T",
     )
 
-    with pytest.raises(LiveApplicationInputError, match="does not match current filing record"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -342,7 +357,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_filing_period() -> Non
         period="2T",
     )
 
-    with pytest.raises(LiveApplicationInputError, match="does not match current filing record"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -380,7 +398,10 @@ def test_stamp_refuses_when_parsed_receipt_does_not_match_profile_tax_id() -> No
         period="1T",
     )
 
-    with pytest.raises(LiveApplicationInputError, match="does not match current filing record"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_mismatch",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)
 
     assert JustificanteRepository().load("ABCD1234EFGH5678") is None
@@ -411,5 +432,8 @@ def test_stamp_refuses_when_no_current_filing_exists() -> None:
         period="1T",
     )
 
-    with pytest.raises(LiveApplicationInputError, match="no current filing record"):
+    with pytest.raises(
+        LiveApplicationInputError,
+        match=r"application\.live\.justificante\.errors\.filing_record_missing",
+    ):
         register_capture_as_filing_evidence(snapshot=snapshot)

@@ -289,8 +289,8 @@ async def capture_expedientes_bulk(
     """Live-walk AEAT declaration-register rows and return an :class:`ExpedientesBulkCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
+            context={"year_from": year_from, "year_to": year_to},
         )
 
     from ._expedientes import ExpedientesCapture, ExpedientesService

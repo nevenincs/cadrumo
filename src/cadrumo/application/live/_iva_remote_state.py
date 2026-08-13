@@ -253,7 +253,6 @@ async def capture_iva_compensation_history(
     """Capture filed Modelo 303s across years and return an :class:`IvaCompensationHistoryCaptureReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
         )
 
@@ -599,7 +598,13 @@ def persist_and_reconcile_iva_compensation_wallet(
     path = store.persist_iva_wallet_observation(observation)
     reloaded = store.load_iva_wallet_observation(path)
     if reloaded != observation:
-        raise LiveApplicationError("persisted IVA wallet observation did not reload with identical evidence")
+        raise LiveApplicationError(
+            translated_message="application.live.iva_wallet.errors.observation_reload_diverged",
+            context={
+                "target_year": observation.target_year,
+                "target_period": observation.target_period.registry_token,
+            },
+        )
     snapshot = _resources().modelos.authority.snapshot(
         Modelo.M303.value,
         filing_year=reloaded.target_year,
@@ -627,7 +632,8 @@ def persist_and_reconcile_iva_compensation_wallet(
     )
     if loaded_decision != decision:
         raise LiveApplicationError(
-            "persisted IVA wallet reconciliation decision did not reload with identical evidence",
+            translated_message="application.live.iva_wallet.errors.decision_reload_diverged",
+            context={"target_period": decision.target_period.registry_token},
         )
     return IvaWalletCaptureReport(
         taxpayer_ref=_taxpayer_ref(reloaded.taxpayer_nif),
@@ -652,7 +658,6 @@ def _assert_target_period_year(*, target_year: int, target_period: Period) -> No
     if target_period.filing_year == target_year:
         return
     raise LiveApplicationInputError(
-        message="target-year must match target-period year",
         translated_message="live.errors.target_period_year_mismatch",
         context={"target_year": str(target_year), "target_period_year": str(target_period.filing_year)},
     )
@@ -772,7 +777,6 @@ async def _capture_iva_remote_state_for_active_storage(
     ):
         if year_from > year_to:
             raise LiveApplicationInputError(
-                message="from-year must be less than or equal to to-year",
                 translated_message="live.errors.year_range_invalid",
             )
 

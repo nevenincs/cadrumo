@@ -822,6 +822,13 @@ application:
           and this confirmation differs on: %{divergent_fields}. Correct or remove
           the stored invoice instead of confirming the same document twice.'
   live:
+    borrador:
+      errors:
+        binding_value_key_blank: Borrador binding value keys must not be blank.
+        bucket_id_blank: Borrador bucket id must not be blank.
+        snapshot_id_blank: Borrador snapshot id must not be blank.
+        snapshot_not_found: No borrador snapshot matches the requested id.
+        snapshot_prefix_ambiguous: The borrador snapshot prefix matches multiple snapshots.
     deudas:
       errors:
         bucket_id_blank: Deudas bucket id must not be blank.
@@ -835,6 +842,63 @@ application:
         snapshot_not_found: No expedientes snapshot matches the requested id.
         snapshot_prefix_ambiguous: The expedientes snapshot prefix matches multiple
           snapshots.
+    filed_data:
+      errors:
+        sync_run_repository_required: A persisted filed-data capture requires a sync-run
+          persistence repository.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: The filed Modelo 303 declaration could not be
+          promoted into IVA compensation history.
+        iva_history_reload_missing: The secure IVA compensation history did not reload
+          after persisting the Modelo 303 period.
+        observation_not_active: AEAT does not report that filed declaration as active,
+          so it is not persisted as calculation evidence.
+        quarter_ordinal_missing: The quarterly filed history period carries no quarter
+          ordinal.
+        registry_enrollment_failed: The filed observation could not be enrolled as
+          registry-grounded calculation evidence.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: The persisted IVA wallet reconciliation decision
+          did not reload with identical evidence.
+        observation_reload_diverged: The persisted IVA wallet observation did not
+          reload with identical evidence.
+    justificante:
+      errors:
+        bucket_id_blank: Justificante capture bucket id must not be blank.
+        capture_axis_mismatch: The captured justificante does not match the live snapshot's
+          modelo and period.
+        csv_mismatch: The captured justificante CSV does not match the live snapshot
+          CSV.
+        evidence_overwrite_refused: The filing record already holds AEAT evidence,
+          which live-capture evidence will not overwrite.
+        evidence_snapshot_not_active: Only an active live-capture snapshot can be
+          stamped as filing evidence.
+        expediente_not_in_tree: The filed declaration references an expediente absent
+          from the expedientes tree.
+        filing_identity_unresolved: The filing profile tax identity could not be resolved,
+          so live-capture evidence is not stamped.
+        filing_record_mismatch: The captured justificante does not match the current
+          filing record.
+        filing_record_missing: No current filing record exists for that modelo and
+          period. File the period first.
+        metadata_snapshot_not_active: Only an active live-capture snapshot can register
+          justificante metadata.
+        modelo_unknown: The justificante capture modelo is not a known AEAT modelo.
+        no_filed_declaration: No filed declaration exists for that modelo and period,
+          so no justificante expediente can be resolved.
+        pdf_base64_empty: The justificante capture PDF payload decodes to no bytes.
+        pdf_base64_invalid: The justificante capture PDF payload is not valid base64.
+        pdf_sha256_mismatch: The justificante capture PDF digest does not match the
+          decoded PDF bytes.
+        snapshot_bucket_mismatch: The justificante capture snapshot does not belong
+          to the repository bucket.
+        snapshot_id_blank: Justificante capture snapshot id must not be blank.
+        snapshot_not_found: No justificante capture snapshot matches the requested
+          id.
+        snapshot_prefix_ambiguous: The justificante capture snapshot prefix matches
+          multiple snapshots.
     notifications:
       errors:
         bucket_id_blank: Notifications bucket id must not be blank.
@@ -851,10 +915,24 @@ application:
           snapshots.
     snapshot_base:
       errors:
+        repository_bucket_mismatch: The snapshot repository reported a different bucket
+          than the one requested.
+        service_bucket_mismatch: The snapshot service bucket does not match its repository
+          bucket.
         snapshot_bucket_mismatch: Snapshot payload bucket does not match the repository
           bucket.
         snapshot_key_mismatch: The snapshot is stored under a different snapshot's
           key.
+        state_active_supersession_pointer: An active snapshot cannot carry a supersession
+          pointer.
+        state_discard_audit_required: A discarded snapshot requires both a discard
+          timestamp and a discarding actor.
+        state_discard_metadata_forbidden: Only a discarded snapshot can carry discard
+          metadata.
+        state_discarded_supersession_pointer: A discarded snapshot cannot carry a
+          supersession pointer.
+        state_supersession_pointer_required: A superseded snapshot must carry its
+          superseding snapshot id.
     verify:
       errors:
         bucket_id_blank: Verify bucket id must not be blank.

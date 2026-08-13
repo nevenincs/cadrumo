@@ -245,7 +245,7 @@ _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 
 
 def test_active_snapshot_rejects_supersession_pointer() -> None:
-    with pytest.raises(LiveApplicationInputError, match="active snapshots cannot carry"):
+    with pytest.raises(LiveApplicationInputError) as excinfo:
         enforce_snapshot_state_invariants(
             state=SnapshotLifecycleState.ACTIVE,
             has_supersession_pointer=True,
@@ -253,9 +253,14 @@ def test_active_snapshot_rejects_supersession_pointer() -> None:
             discarded_by="",
         )
 
+    key = "application.live.snapshot_base.errors.state_active_supersession_pointer"
+    assert excinfo.value.translated_message == key
+    assert excinfo.value.context == {"state": "active", "has_supersession_pointer": True}
+    assert str(excinfo.value) == key
+
 
 def test_active_snapshot_rejects_discard_metadata() -> None:
-    with pytest.raises(LiveApplicationInputError, match="only discarded snapshots"):
+    with pytest.raises(LiveApplicationInputError) as excinfo:
         enforce_snapshot_state_invariants(
             state=SnapshotLifecycleState.ACTIVE,
             has_supersession_pointer=False,
@@ -263,9 +268,14 @@ def test_active_snapshot_rejects_discard_metadata() -> None:
             discarded_by="operator",
         )
 
+    key = "application.live.snapshot_base.errors.state_discard_metadata_forbidden"
+    assert excinfo.value.translated_message == key
+    assert str(excinfo.value) == key
+
 
 def test_superseded_snapshot_requires_pointer() -> None:
-    with pytest.raises(LiveApplicationInputError, match="superseded snapshots must carry"):
+    key = "application.live.snapshot_base.errors.state_supersession_pointer_required"
+    with pytest.raises(LiveApplicationInputError, match=key):
         enforce_snapshot_state_invariants(
             state=SnapshotLifecycleState.SUPERSEDED,
             has_supersession_pointer=False,
@@ -275,7 +285,8 @@ def test_superseded_snapshot_requires_pointer() -> None:
 
 
 def test_superseded_snapshot_rejects_discard_metadata() -> None:
-    with pytest.raises(LiveApplicationInputError, match="only discarded snapshots"):
+    key = "application.live.snapshot_base.errors.state_discard_metadata_forbidden"
+    with pytest.raises(LiveApplicationInputError, match=key):
         enforce_snapshot_state_invariants(
             state=SnapshotLifecycleState.SUPERSEDED,
             has_supersession_pointer=True,
@@ -286,7 +297,8 @@ def test_superseded_snapshot_rejects_discard_metadata() -> None:
 
 
 def test_discarded_snapshot_requires_actor_and_timestamp() -> None:
-    with pytest.raises(LiveApplicationInputError, match="discarded snapshots require"):
+    key = "application.live.snapshot_base.errors.state_discard_audit_required"
+    with pytest.raises(LiveApplicationInputError, match=key):
         enforce_snapshot_state_invariants(
             state=SnapshotLifecycleState.DISCARDED,
             has_supersession_pointer=False,
@@ -296,7 +308,8 @@ def test_discarded_snapshot_requires_actor_and_timestamp() -> None:
 
 
 def test_discarded_snapshot_rejects_supersession_pointer() -> None:
-    with pytest.raises(LiveApplicationInputError, match="discarded snapshots cannot carry"):
+    key = "application.live.snapshot_base.errors.state_discarded_supersession_pointer"
+    with pytest.raises(LiveApplicationInputError, match=key):
         enforce_snapshot_state_invariants(
             state=SnapshotLifecycleState.DISCARDED,
             has_supersession_pointer=True,
@@ -407,8 +420,16 @@ def test_service_resolve_snapshot_supports_prefix(secure_objects: SecureObjectRe
 
 def test_service_constructor_rejects_bucket_mismatch(secure_objects: SecureObjectRepository) -> None:
     repository = ProbeRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    with pytest.raises(LiveApplicationInputError, match="does not match repository bucket"):
+    with pytest.raises(LiveApplicationInputError) as excinfo:
         ProbeService(bucket_id=_OTHER_BUCKET_ID, repository=repository)
+
+    key = "application.live.snapshot_base.errors.service_bucket_mismatch"
+    assert excinfo.value.translated_message == key
+    assert excinfo.value.context == {
+        "requested_bucket_id": _OTHER_BUCKET_ID,
+        "repository_bucket_id": _BUCKET_ID,
+    }
+    assert str(excinfo.value) == key
 
 
 # ---- Per-service SnapshotNotFoundError subclass hierarchy ---------------

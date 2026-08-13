@@ -298,7 +298,10 @@ def test_a_document_for_another_notification_is_refused(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         service = NotificationDocumentService()
 
-        with pytest.raises(LiveApplicationInputError, match="does not belong"):
+        with pytest.raises(
+            LiveApplicationInputError,
+            match=r"application\.live\.notifications\.errors\.document_row_mismatch",
+        ):
             service.persist_document(
                 bucket_id=_BUCKET_ID,
                 row=_read_row(),

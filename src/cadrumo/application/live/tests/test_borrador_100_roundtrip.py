@@ -107,7 +107,7 @@ def test_borrador_100_repository_default_refuses_active_bucket_mismatch(tmp_path
 
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID),
-        pytest.raises(StorageValidationError, match="storage runtime is not ready"),
+        pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"),
     ):
         Borrador100SnapshotRepository(bucket_id=_OTHER_BUCKET_ID)
 
@@ -260,5 +260,8 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         # SUPERSEDED state requires the pointer).
         from pydantic import ValidationError
 
-        with pytest.raises((ValidationError, LiveApplicationInputError), match="superseded"):
+        with pytest.raises(
+            (ValidationError, LiveApplicationInputError),
+            match=r"state_supersession_pointer_required|superseded",
+        ):
             repo.load(original.snapshot_id)

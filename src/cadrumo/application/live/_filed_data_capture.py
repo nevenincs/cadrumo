@@ -515,7 +515,6 @@ async def list_filed_data(
     """List declarations via AEAT and return a :class:`FiledDataListingReport`."""
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
         )
 
@@ -569,7 +568,6 @@ async def list_filed_data_bulk(
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
         )
 
@@ -932,7 +930,6 @@ async def capture_filed_data_bulk(
     """
     if year_from > year_to:
         raise LiveApplicationInputError(
-            message="from-year must be less than or equal to to-year",
             translated_message="live.errors.year_range_invalid",
         )
 
@@ -952,7 +949,8 @@ async def capture_filed_data_bulk(
 
     if not dry_run and sync_run_repository is None:
         raise LiveApplicationInputError(
-            message="a persisted filed-data capture requires a sync-run persistence repository",
+            translated_message="application.live.filed_data.errors.sync_run_repository_required",
+            context={"dry_run": dry_run, "sync_run_repository_present": False},
         )
 
     bucket_id = require_active_bucket_id()
@@ -980,7 +978,8 @@ async def capture_filed_data_bulk(
         )
     if sync_run_repository is None:
         raise LiveApplicationInputError(
-            message="a persisted filed-data capture requires a sync-run persistence repository",
+            translated_message="application.live.filed_data.errors.sync_run_repository_required",
+            context={"dry_run": dry_run, "sync_run_repository_present": False},
         )
     return _persisted_bulk_filed_capture_report(
         output_root=output_root,

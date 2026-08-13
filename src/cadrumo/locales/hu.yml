@@ -853,6 +853,15 @@ application:
           Javítsa vagy törölje a tárolt számlát ahelyett, hogy ugyanazt a dokumentumot
           kétszer erősítené meg.'
   live:
+    borrador:
+      errors:
+        binding_value_key_blank: A borrador kötési értékeinek kulcsai nem lehetnek
+          üresek.
+        bucket_id_blank: A borrador bucket azonosítója nem lehet üres.
+        snapshot_id_blank: A borrador pillanatkép azonosítója nem lehet üres.
+        snapshot_not_found: Egyetlen borrador pillanatkép sem felel meg a kért azonosítónak.
+        snapshot_prefix_ambiguous: A borrador pillanatkép előtagja több pillanatképre
+          illeszkedik.
     deudas:
       errors:
         bucket_id_blank: A deudas bucket azonosítója nem lehet üres.
@@ -867,6 +876,64 @@ application:
         snapshot_not_found: Nem található expedientes-pillanatkép a kért azonosítóhoz.
         snapshot_prefix_ambiguous: Az expedientes pillanatkép előtag több pillanatképre
           illeszkedik.
+    filed_data:
+      errors:
+        sync_run_repository_required: A mentett benyújtási adatrögzítéshez szinkronfuttatás-tároló
+          szükséges.
+    filed_observations:
+      errors:
+        iva_history_promotion_failed: A benyújtott 303-as modelo nem emelhető át az
+          IVA-kompenzációs előzményekbe.
+        iva_history_reload_missing: A biztonságos IVA-kompenzációs előzmény nem töltődött
+          újra a 303-as modelo időszakának mentése után.
+        observation_not_active: Az AEAT nem jelenti aktívként ezt a benyújtott bevallást,
+          ezért nem kerül mentésre számítási bizonyítékként.
+        quarter_ordinal_missing: A negyedéves benyújtási előzmény-időszakhoz nem tartozik
+          negyedév-sorszám.
+        registry_enrollment_failed: A benyújtási megfigyelés nem regisztrálható regiszter-alapú
+          számítási bizonyítékként.
+    iva_wallet:
+      errors:
+        decision_reload_diverged: A mentett IVA-tárca egyeztetési döntés nem azonos
+          bizonyítékkal töltődött újra.
+        observation_reload_diverged: A mentett IVA-tárca megfigyelés nem azonos bizonyítékkal
+          töltődött újra.
+    justificante:
+      errors:
+        bucket_id_blank: A justificante rögzítés bucket azonosítója nem lehet üres.
+        capture_axis_mismatch: A rögzített justificante nem egyezik az élő pillanatkép
+          modelo-jával és időszakával.
+        csv_mismatch: A rögzített justificante CSV-je nem egyezik az élő pillanatkép
+          CSV-jével.
+        evidence_overwrite_refused: A benyújtási rekord már tartalmaz AEAT-bizonyítékot,
+          amelyet az élő rögzítés bizonyítéka nem ír felül.
+        evidence_snapshot_not_active: Csak aktív élő rögzítésű pillanatkép bélyegezhető
+          benyújtási bizonyítékként.
+        expediente_not_in_tree: A benyújtott bevallás olyan expedientére hivatkozik,
+          amely nincs az expediente-fában.
+        filing_identity_unresolved: A benyújtási profil adóazonosítója nem határozható
+          meg, ezért az élő rögzítés bizonyítéka nem kerül bélyegzésre.
+        filing_record_mismatch: A rögzített justificante nem egyezik az aktuális benyújtási
+          rekorddal.
+        filing_record_missing: Nincs aktuális benyújtási rekord ehhez a modelo-hoz
+          és időszakhoz. Először nyújtsa be az időszakot.
+        metadata_snapshot_not_active: Csak aktív élő rögzítésű pillanatkép rögzíthet
+          justificante metaadatokat.
+        modelo_unknown: A justificante rögzítés modelo-ja nem ismert AEAT-modelo.
+        no_filed_declaration: Nincs benyújtott bevallás ehhez a modelo-hoz és időszakhoz,
+          ezért nem határozható meg justificante expediente.
+        pdf_base64_empty: A justificante rögzítés PDF-tartalma nulla bájtra dekódolódik.
+        pdf_base64_invalid: A justificante rögzítés PDF-tartalma nem érvényes base64.
+        pdf_sha256_mismatch: A justificante rögzítés PDF-lenyomata nem egyezik a dekódolt
+          PDF-bájtokkal.
+        snapshot_bucket_mismatch: A justificante rögzítés pillanatképe nem a tároló
+          bucketjéhez tartozik.
+        snapshot_id_blank: A justificante rögzítés pillanatkép-azonosítója nem lehet
+          üres.
+        snapshot_not_found: Egyetlen justificante rögzítési pillanatkép sem felel
+          meg a kért azonosítónak.
+        snapshot_prefix_ambiguous: A justificante rögzítési pillanatkép előtagja több
+          pillanatképre illeszkedik.
     notifications:
       errors:
         bucket_id_blank: A notifications bucket azonosítója nem lehet üres.
@@ -883,10 +950,24 @@ application:
           illeszkedik.
     snapshot_base:
       errors:
+        repository_bucket_mismatch: A pillanatkép-tároló a kérttől eltérő bucketet
+          jelentett.
+        service_bucket_mismatch: A pillanatkép-szolgáltatás bucketje nem egyezik a
+          tárolójának bucketjével.
         snapshot_bucket_mismatch: A pillanatkép payload bucketje nem egyezik a repository
           bucketjével.
         snapshot_key_mismatch: A pillanatkép egy másik pillanatkép kulcsa alatt van
           tárolva.
+        state_active_supersession_pointer: Aktív pillanatkép nem hordozhat felülírási
+          mutatót.
+        state_discard_audit_required: Az elvetett pillanatképhez elvetési időbélyeg
+          és elvető szereplő is szükséges.
+        state_discard_metadata_forbidden: Csak elvetett pillanatkép hordozhat elvetési
+          metaadatokat.
+        state_discarded_supersession_pointer: Elvetett pillanatkép nem hordozhat felülírási
+          mutatót.
+        state_supersession_pointer_required: A felülírt pillanatképnek hordoznia kell
+          az őt felülíró pillanatkép azonosítóját.
     verify:
       errors:
         bucket_id_blank: A verify bucket azonosítója nem lehet üres.

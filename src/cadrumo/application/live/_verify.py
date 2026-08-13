@@ -122,12 +122,10 @@ def verify_observation_object_key(bucket_id: str, observation_id: str) -> str:
     trimmed_observation = observation_id.strip()
     if not trimmed_bucket:
         raise LiveApplicationInputError(
-            "bucket_id must not be blank",
             translated_message="application.live.verify.errors.bucket_id_blank",
         )
     if not trimmed_observation:
         raise LiveApplicationInputError(
-            "observation_id must not be blank",
             translated_message="application.live.verify.errors.observation_id_blank",
         )
     return f"verify-observation:{trimmed_bucket}:{trimmed_observation}"
@@ -151,7 +149,6 @@ class VerifyObservationRepository:
         trimmed = bucket_id.strip()
         if not trimmed:
             raise LiveApplicationInputError(
-                "bucket_id must not be blank",
                 translated_message="application.live.verify.errors.bucket_id_blank",
             )
         self._bucket_id = trimmed
@@ -183,7 +180,6 @@ class VerifyObservationRepository:
         observation = self._observation_from_record(record, requested_observation_id=observation_id)
         if observation.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
-                "verify observation bucket does not match repository bucket",
                 translated_message="application.live.verify.errors.observation_bucket_mismatch",
                 context={
                     "observation_bucket": observation.bucket_id,
@@ -192,7 +188,6 @@ class VerifyObservationRepository:
             )
         if observation.observation_id != observation_id:
             raise LiveApplicationInputError(
-                "verify observation id does not match requested observation",
                 translated_message="application.live.verify.errors.observation_id_mismatch",
                 context={
                     "observation_id": observation.observation_id,
@@ -227,7 +222,6 @@ class VerifyObservationRepository:
             observation = self._observation_from_record(record)
             if observation.bucket_id != self._bucket_id:
                 raise LiveApplicationInputError(
-                    "verify observation bucket does not match repository bucket",
                     translated_message="application.live.verify.errors.observation_bucket_mismatch",
                     context={
                         "observation_bucket": observation.bucket_id,
@@ -255,7 +249,6 @@ class VerifyObservationRepository:
         )
         if not compare_digest(expected_key, record.object_key):
             raise LiveApplicationInputError(
-                "verify observation is stored under a different observation's key",
                 translated_message="application.live.verify.errors.observation_key_mismatch",
                 context={"observation_id": observation.observation_id},
             )
@@ -273,7 +266,6 @@ class VerifyObservationRepository:
         """
         if observation.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
-                "verify observation bucket does not match repository bucket",
                 translated_message="application.live.verify.errors.observation_bucket_mismatch",
                 context={
                     "observation_bucket": observation.bucket_id,
@@ -411,13 +403,11 @@ class VerifyService:
         ]
         if not matches:
             raise VerifyObservationNotFoundError(
-                "no verify observation matches the requested id",
                 translated_message="application.live.verify.errors.observation_not_found",
                 context={"observation_id": observation_id},
             )
         if len(matches) > 1:
             raise VerifyObservationNotFoundError(
-                "verify observation prefix matches multiple observations",
                 translated_message="application.live.verify.errors.observation_prefix_ambiguous",
                 context={"observation_id": observation_id, "match_count": len(matches)},
             )

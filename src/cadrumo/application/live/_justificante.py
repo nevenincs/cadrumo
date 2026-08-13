@@ -73,7 +73,11 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
 from ...core.identity import AeatCsv, BucketId, ContentDigest, tax_id_identity_token
 from ..calculations import ObservationSourceKind
-from ._errors import LiveApplicationInputError
+from ._errors import (
+    LiveApplicationInputError,
+    LiveReadPrecondition,
+    live_read_no_recovery_verdict,
+)
 from ._snapshot_base import (
     SnapshotLifecycleState,
     SnapshotNotFoundError,
@@ -140,7 +144,8 @@ class JustificanteCaptureSnapshot(BaseModel):
             Modelo(value)
         except ValueError as exc:
             raise LiveApplicationInputError(
-                f"justificante capture modelo {value!r} is not a known AEAT modelo",
+                translated_message="application.live.justificante.errors.modelo_unknown",
+                context={"modelo": value},
             ) from exc
         return value
 
@@ -156,11 +161,20 @@ class JustificanteCaptureSnapshot(BaseModel):
         try:
             decoded = base64.b64decode(self.pdf_base64, validate=True)
         except (binascii.Error, ValueError) as exc:
-            raise LiveApplicationInputError("justificante capture pdf_base64 is not valid base64") from exc
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.pdf_base64_invalid",
+                context={"snapshot_id": self.snapshot_id},
+            ) from exc
         if not decoded:
-            raise LiveApplicationInputError("justificante capture pdf_base64 must decode to non-empty bytes")
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.pdf_base64_empty",
+                context={"snapshot_id": self.snapshot_id},
+            )
         if sha256_hex(decoded) != self.pdf_sha256:
-            raise LiveApplicationInputError("justificante capture pdf_sha256 does not match decoded PDF bytes")
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.pdf_sha256_mismatch",
+                context={"snapshot_id": self.snapshot_id, "decoded_byte_size": len(decoded)},
+            )
         return self
 
     def decoded_pdf_bytes(self) -> bytes:
@@ -177,9 +191,13 @@ def justificante_capture_snapshot_object_key(bucket_id: str, snapshot_id: str) -
     trimmed_bucket = bucket_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_bucket:
-        raise LiveApplicationInputError("bucket_id must not be blank")
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.bucket_id_blank",
+        )
     if not trimmed_snapshot:
-        raise LiveApplicationInputError("snapshot_id must not be blank")
+        raise LiveApplicationInputError(
+            translated_message="application.live.justificante.errors.snapshot_id_blank",
+        )
     return f"justificante-capture-snapshot:{trimmed_bucket}:{trimmed_snapshot}"
 
 
@@ -245,8 +263,8 @@ def resolve_period_expediente(
     ]
     if not candidates:
         raise LiveApplicationInputError(
-            f"no filed declaration for modelo={modelo!r} period={target_period!r}; "
-            "cannot resolve a justificante expediente for this period",
+            translated_message="application.live.justificante.errors.no_filed_declaration",
+            context={"modelo": modelo, "period": target_period},
         )
     chosen = max(
         candidates,
@@ -260,8 +278,12 @@ def resolve_period_expediente(
         if expediente.expediente_id == chosen.expediente_id:
             return expediente
     raise LiveApplicationInputError(
-        f"declaration for modelo={modelo!r} period={target_period!r} references expediente "
-        f"{chosen.expediente_id!r} which is not present in the expedientes tree",
+        translated_message="application.live.justificante.errors.expediente_not_in_tree",
+        context={
+            "modelo": modelo,
+            "period": target_period,
+            "expediente_id": chosen.expediente_id,
+        },
     )
 
 
@@ -287,7 +309,9 @@ class JustificanteCaptureSnapshotRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
-            raise LiveApplicationInputError("bucket_id must not be blank")
+            raise LiveApplicationInputError(
+                translated_message="application.live.justificante.errors.bucket_id_blank",
+            )
         self._bucket_id = trimmed
         self._objects = objects if objects is not None else secure_object_repository_for_bucket(trimmed)
         self._delegate: SecureSnapshotRepository[JustificanteCaptureSnapshot] = SecureSnapshotRepository(
@@ -296,10 +320,12 @@ class JustificanteCaptureSnapshotRepository:
             namespace_definition=JUSTIFICANTE_CAPTURE_STORAGE_NAMESPACE,
             object_key=justificante_capture_snapshot_object_key,
             not_found_factory=lambda snapshot_id: JustificanteCaptureSnapshotNotFoundError(
-                f"justificante capture snapshot {snapshot_id!r} not found in bucket {trimmed!r}",
+                translated_message="application.live.justificante.errors.snapshot_not_found",
+                context={"snapshot_id": snapshot_id},
             ),
-            ambiguous_prefix_factory=lambda snapshot_id, _full_ids: JustificanteCaptureSnapshotNotFoundError(
-                f"justificante capture snapshot prefix {snapshot_id!r} is ambiguous",
+            ambiguous_prefix_factory=lambda snapshot_id, full_ids: JustificanteCaptureSnapshotNotFoundError(
+                translated_message="application.live.justificante.errors.snapshot_prefix_ambiguous",
+                context={"snapshot_id": snapshot_id, "match_count": len(full_ids)},
             ),
             domain_label="justificante capture",
             input_error_cls=LiveApplicationInputError,
@@ -327,8 +353,11 @@ class JustificanteCaptureSnapshotRepository:
     def save(self, snapshot: JustificanteCaptureSnapshot) -> None:
         if snapshot.bucket_id != self._bucket_id:
             raise LiveApplicationInputError(
-                f"justificante capture snapshot bucket_id={snapshot.bucket_id!r} "
-                f"does not match repository bucket {self._bucket_id!r}",
+                translated_message="application.live.justificante.errors.snapshot_bucket_mismatch",
+                context={
+                    "snapshot_bucket_id": snapshot.bucket_id,
+                    "repository_bucket_id": self._bucket_id,
+                },
             )
         envelope = Envelope[JustificanteCaptureSnapshot](
             schema_version=_JUSTIFICANTE_CAPTURE_SNAPSHOT_VERSION,
@@ -538,8 +567,8 @@ def register_capture_justificante_metadata(
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(
-            f"cannot register justificante metadata from {snapshot.state.value} "
-            f"live-capture snapshot {snapshot.snapshot_id!r}",
+            translated_message="application.live.justificante.errors.metadata_snapshot_not_active",
+            context={"snapshot_id": snapshot.snapshot_id, "state": snapshot.state.value},
         )
     try:
         justificante = parse_capture_to_justificante(snapshot)
@@ -547,12 +576,30 @@ def register_capture_justificante_metadata(
         return None
     if justificante.csv.strip().upper() != snapshot.csv.strip().upper():
         raise LiveApplicationInputError(
-            f"captured justificante csv {justificante.csv!r} does not match live snapshot csv {snapshot.csv!r}",
+            translated_message="application.live.justificante.errors.csv_mismatch",
+            context={"snapshot_id": snapshot.snapshot_id},
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
+                facts={"snapshot_id": snapshot.snapshot_id, "csv_matches": False},
+            ),
         )
     if not _justificante_matches_capture_axis(justificante, snapshot):
         raise LiveApplicationInputError(
-            f"captured justificante {snapshot.csv!r} does not match live snapshot axis "
-            f"for modelo={snapshot.modelo!r} period={snapshot.period!s}",
+            translated_message="application.live.justificante.errors.capture_axis_mismatch",
+            context={
+                "snapshot_id": snapshot.snapshot_id,
+                "modelo": snapshot.modelo,
+                "period": str(snapshot.period),
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
+                facts={
+                    "snapshot_id": snapshot.snapshot_id,
+                    "modelo": snapshot.modelo,
+                    "period": str(snapshot.period),
+                    "axis_matches": False,
+                },
+            ),
         )
     JustificanteRepository().save(justificante)
     return justificante
@@ -649,7 +696,8 @@ def register_capture_as_filing_evidence(
 
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise LiveApplicationInputError(
-            f"cannot stamp {snapshot.state.value} live-capture snapshot {snapshot.snapshot_id!r} as filing evidence",
+            translated_message="application.live.justificante.errors.evidence_snapshot_not_active",
+            context={"snapshot_id": snapshot.snapshot_id, "state": snapshot.state.value},
         )
 
     filing_repository = ModeloRecordCatalogueRepository()
@@ -662,15 +710,19 @@ def register_capture_as_filing_evidence(
     )
     if current is None:
         raise LiveApplicationInputError(
-            f"no current filing record for modelo={snapshot.modelo!r} "
-            f"period={snapshot.period!s}; "
-            "file the period before stamping live-capture evidence",
+            translated_message="application.live.justificante.errors.filing_record_missing",
+            context={"modelo": snapshot.modelo, "period": str(snapshot.period)},
         )
 
     justificante = parse_capture_to_justificante(snapshot)
     if justificante.csv.strip().upper() != snapshot.csv.strip().upper():
         raise LiveApplicationInputError(
-            f"captured justificante csv {justificante.csv!r} does not match live snapshot csv {snapshot.csv!r}",
+            translated_message="application.live.justificante.errors.csv_mismatch",
+            context={"snapshot_id": snapshot.snapshot_id},
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_MATCHES_CAPTURE,
+                facts={"snapshot_id": snapshot.snapshot_id, "csv_matches": False},
+            ),
         )
     expected_tax_id = _expected_tax_id_for_filing_record(current)
     if not _justificante_matches_filing_record(
@@ -679,16 +731,42 @@ def register_capture_as_filing_evidence(
         expected_tax_id=expected_tax_id,
     ):
         raise LiveApplicationInputError(
-            f"captured justificante {snapshot.csv!r} does not match current filing record "
-            f"for modelo={current.modelo!s} period={current.period!s}",
+            translated_message="application.live.justificante.errors.filing_record_mismatch",
+            context={
+                "snapshot_id": snapshot.snapshot_id,
+                "modelo": str(current.modelo),
+                "period": str(current.period),
+                "filing_record_id": current.filing_record_id,
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_MATCHES_FILING_RECORD,
+                facts={
+                    "snapshot_id": snapshot.snapshot_id,
+                    "modelo": str(current.modelo),
+                    "period": str(current.period),
+                    "filing_record_id": current.filing_record_id,
+                    "matches_filing_record": False,
+                },
+            ),
         )
     if current.aeat_accepted and current.external_evidence is not None:
         if _existing_capture_evidence_matches_current_csv(current, snapshot.csv):
             JustificanteRepository().save(justificante)
             return current
         raise LiveApplicationInputError(
-            f"cannot overwrite existing AEAT evidence {current.external_evidence.reference_id!r} "
-            f"on filing record {current.filing_record_id!r} with live-capture csv {snapshot.csv!r}",
+            translated_message="application.live.justificante.errors.evidence_overwrite_refused",
+            context={
+                "filing_record_id": current.filing_record_id,
+                "snapshot_id": snapshot.snapshot_id,
+            },
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_FILING_EVIDENCE_ABSENT,
+                facts={
+                    "filing_record_id": current.filing_record_id,
+                    "snapshot_id": snapshot.snapshot_id,
+                    "existing_evidence_present": True,
+                },
+            ),
         )
     JustificanteRepository().save(justificante)
 
@@ -756,13 +834,31 @@ def _expected_tax_id_for_filing_record(filing: ModeloRecord) -> str:
         record = UserProfileLifecycleRepository(bucket_id=filing.bucket_id).load(filing.bucket_id)
     except (CadrumoError, OSError) as exc:
         raise LiveApplicationInputError(
-            "cannot stamp live-capture evidence without the filing profile tax identity",
+            translated_message="application.live.justificante.errors.filing_identity_unresolved",
+            context={"filing_record_id": filing.filing_record_id, "profile_record_readable": False},
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_FILING_IDENTITY_RESOLVED,
+                facts={
+                    "filing_record_id": filing.filing_record_id,
+                    "profile_record_readable": False,
+                    "tax_id_resolved": False,
+                },
+            ),
         ) from exc
     values = record_to_values(record)
     tax_id = tax_id_identity_token(str(values.get("identity.tax_id") or values.get("tax.id") or ""))
     if not tax_id:
         raise LiveApplicationInputError(
-            "cannot stamp live-capture evidence without the filing profile tax identity",
+            translated_message="application.live.justificante.errors.filing_identity_unresolved",
+            context={"filing_record_id": filing.filing_record_id, "profile_record_readable": True},
+            precondition_verdict=live_read_no_recovery_verdict(
+                LiveReadPrecondition.JUSTIFICANTE_FILING_IDENTITY_RESOLVED,
+                facts={
+                    "filing_record_id": filing.filing_record_id,
+                    "profile_record_readable": True,
+                    "tax_id_resolved": False,
+                },
+            ),
         )
     return tax_id
 
