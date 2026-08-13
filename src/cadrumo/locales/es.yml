@@ -291,6 +291,9 @@ adapters:
         solicitado.
       no_auth_session: La sesión de autenticación de AEAT no existe o no está persistida;
         ejecute primero `aeat config auth status`.
+      notification_content_requires_operator: 'No se puede abrir el contenido de una
+        notificación no leída: ese mismo paso es la comparecencia, que la da por notificada
+        e inicia sus plazos, y requiere su firma. Ábrala usted en la Sede.'
       notifications_bad_landing: La página de notificaciones de la AEAT no se cargó
         correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento.
         Ejecute 'aeat config auth status' y vuelva a intentarlo. No lo interprete
@@ -4796,6 +4799,9 @@ cli:
       counterparty_identification_state_help: Estado miembro cuyo NIF-IVA utiliza
         la contraparte (la Ley 37/1992 art. 25 exime por este dato, no por dónde esté
         establecida)
+      deduction_fact_kind_help: Origen exacto de la deducción de IVA soportado (p.
+        ej. domestic_current). Obligatorio para que la cuota soportada se deduzca;
+        la taxonomía no se infiere.
       file_exclusive: --file no puede combinarse con un id de transacción ni --classification.
       file_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -5461,6 +5467,10 @@ cli:
       de trabajo de Modelo; esta vista se deriva del calendario de plazos y puede
       sobrenotificar un borrador en curso como aún pendiente u omitir borradores en
       curso más antiguos.
+    notificacion:
+      rechazo_tacito_summary: '%{count} notificación(es) de la AEAT están legalmente
+        notificadas por rechazo tácito (Ley 39/2015 art. 43.2): %{certificados}. Los
+        plazos ya están corriendo.'
     period: Periodo
     period_help: 'Periodo de declaración como token AEAT: 1T-4T (trimestres), 0A (anual),
       01-12 (meses). Combínelo con --year para elegir el año.'

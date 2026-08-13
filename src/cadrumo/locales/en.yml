@@ -255,6 +255,10 @@ adapters:
         modelo.
       no_auth_session: AEAT auth session is missing or not persisted; run `aeat config
         auth status` first.
+      notification_content_requires_operator: 'Cannot open the content of an unread
+        notification: that same step is the comparecencia, which makes it legally
+        served and starts its deadlines, and it requires your signature. Open it yourself
+        in the Sede.'
       notifications_bad_landing: The AEAT notifications page did not load correctly;
         your session may have expired or AEAT is under maintenance. Run 'aeat config
         auth status' and retry. Do not treat this as an empty inbox.
@@ -4432,6 +4436,9 @@ cli:
         for VAT identification.
       counterparty_identification_state_help: Member State whose VAT number the counterparty
         trades under (Ley 37/1992 art. 25 exempts on this, not on where it is established)
+      deduction_fact_kind_help: Exact source of the input-IVA deduction (for example
+        domestic_current). Required for the input cuota to be deducted; the taxonomy
+        is not inferred.
       file_exclusive: --file cannot be combined with a transaction id or --classification.
       file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -5061,6 +5068,10 @@ cli:
     local_work_units_unavailable: Local Modelo work-unit state could not be loaded;
       this overview is derived from the deadline schedule and may over-report an in-progress
       draft as still due or omit older in-progress drafts.
+    notificacion:
+      rechazo_tacito_summary: '%{count} AEAT notification(s) are legally served by
+        rechazo tácito (Ley 39/2015 art. 43.2): %{certificados}. The plazos are already
+        running.'
     period: Period
     period_help: 'Filing period as an AEAT token: 1T-4T (quarters), 0A (annual), 01-12
       (months). Combine with --year to choose the year.'

@@ -272,6 +272,10 @@ adapters:
       modelo_unavailable: Az AEAT nyilatkozatnyilvántartó nem kínálja a kért modellt.
       no_auth_session: Az AEAT hitelesítési munkamenet hiányzik vagy nincs perzisztálva;
         futtassa először a `aeat config auth status` parancsot.
+      notification_content_requires_operator: 'Nem nyitható meg olvasatlan értesítés
+        tartalma: ez a lépés maga a kézbesítés (comparecencia), amely jogilag kézbesítetté
+        teszi és elindítja a határidőket, és az Ön aláírását igényli. Nyissa meg személyesen
+        a Sede felületén.'
       notifications_bad_landing: Az AEAT értesítési oldala nem töltődött be megfelelően;
         a munkamenet lejárhatott, vagy az AEAT karbantartás alatt áll. Futtassa a
         'aeat config auth status' parancsot, és próbálja újra. Ne tekintse ezt üres
@@ -4675,6 +4679,9 @@ cli:
       counterparty_identification_state_help: Az a tagállam, amelynek közösségi adószámával
         a partner kereskedik (a 37/1992. sz. törvény 25. cikke ez alapján mentesít,
         nem a letelepedés helye alapján)
+      deduction_fact_kind_help: Az előzetesen felszámított áfa levonásának pontos
+        forrása (például domestic_current). Kötelező ahhoz, hogy a felszámított adó
+        levonásra kerüljön; a taxonómiát nem következtetjük ki.
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
@@ -5340,6 +5347,10 @@ cli:
       be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő
       piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat
       kihagyhat.
+    notificacion:
+      rechazo_tacito_summary: '%{count} AEAT-értesítés hallgatólagos elutasítás útján
+        jogilag kézbesítettnek minősül (39/2015. sz. törvény 43.2. cikk): %{certificados}.
+        A határidők már telnek.'
     period: Időszak
     period_help: 'Bevallási időszak AEAT tokenként: 1T-4T (negyedévek), 0A (éves),
       01-12 (hónapok). A --year kapcsolóval adja meg az évet.'

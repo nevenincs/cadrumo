@@ -290,6 +290,10 @@ adapters:
         sol·licitat.
       no_auth_session: La sessió d'autenticació d'AEAT no existeix o no està persistida;
         executeu primer `aeat config auth status`.
+      notification_content_requires_operator: 'No es pot obrir el contingut d''una
+        notificació no llegida: aquest mateix pas és la compareixença, que la dóna
+        per notificada i n''inicia els terminis, i requereix la vostra signatura.
+        Obriu-la vós mateix a la Seu.'
       notifications_bad_landing: La pàgina de notificacions de l'AEAT no s'ha carregat
         correctament; la vostra sessió pot haver caducat o l'AEAT està en manteniment.
         Executeu 'aeat config auth status' i torneu-ho a provar. No ho interpreteu
@@ -4752,6 +4756,9 @@ cli:
       counterparty_identification_state_help: Estat membre el NIF-IVA del qual utilitza
         la contrapart (la Llei 37/1992 art. 25 exempta per aquesta dada, no per on
         estigui establerta)
+      deduction_fact_kind_help: Origen exacte de la deducció d'IVA suportat (per exemple
+        domestic_current). Obligatori perquè la quota suportada es dedueixi; la taxonomia
+        no s'infereix.
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -5409,6 +5416,10 @@ cli:
       de treball de Model; aquesta vista es deriva del calendari de terminis i pot
       sobrenotificar un esborrany en curs com a encara pendent o ometre esborranys
       en curs més antics.
+    notificacion:
+      rechazo_tacito_summary: '%{count} notificació(ns) de lAEAT estan legalment notificades
+        per rebuig tàcit (Llei 39/2015 art. 43.2): %{certificados}. Els terminis ja
+        estan corrent.'
     period: Període
     period_help: 'Període de declaració com a testimoni AEAT: 1T-4T (trimestres),
       0A (anual), 01-12 (mesos). Combineu-lo amb --year per triar l''any.'
