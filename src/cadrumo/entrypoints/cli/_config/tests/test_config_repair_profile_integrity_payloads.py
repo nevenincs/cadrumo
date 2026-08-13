@@ -56,8 +56,8 @@ def _pointer_repair_payload(*, status: object = "none", source: object = "none")
 
 def _profile_record_status_payload() -> dict[str, object]:
     return {
-        "profile_id": "<profile-id>",
-        "bucket_id": "<bucket-id>",
+        "profile_id": "11111111-1111-4111-8111-111111111111",
+        "bucket_id": "22222222-2222-4222-8222-222222222222",
         "display_name": "x",
         "registered_bucket": True,
         "profile_record_present": True,

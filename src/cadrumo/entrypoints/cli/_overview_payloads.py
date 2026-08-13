@@ -30,7 +30,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
-from ...core.identity import AeatCsv, CalculationRevisionId
+from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.json_contract import OutputSchema, ResolvedNoticeAction, register_schema
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
@@ -124,7 +124,7 @@ class OverviewCalendarEntryPayload(OutputSchema):
     censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
     filing_evidence: OverviewCalendarFilingEvidencePayload
     source: str = "registry_deadline"
-    local_work_unit_id: str | None = None
+    local_work_unit_id: WorkUnitId | None = None
     local_work_unit_name: str | None = None
     local_work_unit_revision_id: RevisionId | None = None
 
@@ -144,7 +144,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     filing_year: int | None = None
     period: str | None = None
     local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
-    local_filing_record_id: str | None = None
+    local_filing_record_id: FilingRecordId | None = None
     local_calculation_revision_id: CalculationRevisionId | None = None
     local_filed_at: str | None = None
     aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]

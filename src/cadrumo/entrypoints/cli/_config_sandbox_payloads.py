@@ -128,7 +128,7 @@ class SandboxDiskUsagePayload(OutputSchema):
     """One sandbox's disk-usage row within a ``sandbox usage`` report."""
 
     label: str
-    bucket_id: str
+    bucket_id: BucketId
     total_bytes: int
     subdirs: list[SandboxDiskUsageSubdirPayload]
 

@@ -40,7 +40,7 @@ from pydantic import Field, field_validator, model_validator
 
 from ...core import LinkInconsistencyDirection, Period
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.identity import BucketId, CalculationRevisionId, SnapshotId, TransactionId
+from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, SnapshotId, TransactionId, WorkUnitId
 from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 from ._ledger_business_payloads import (
     EvidenceAddResult,
@@ -247,7 +247,7 @@ class LedgerRemovalBlockerPayload(OutputSchema):
     borradores should be recalculated after removal.
     """
 
-    work_unit_id: str
+    work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
     revision_state: str
     modelo: str
@@ -279,12 +279,12 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
     """
 
     calculation_revision_id: CalculationRevisionId
-    work_unit_id: str
+    work_unit_id: WorkUnitId
     modelo: str
     filing_year: int
     period: Period
     revision_state: str
-    filing_record_id: str | None = None
+    filing_record_id: FilingRecordId | None = None
     justificante_reference: str | None = None
 
 

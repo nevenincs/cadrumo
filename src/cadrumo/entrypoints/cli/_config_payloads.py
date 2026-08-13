@@ -501,7 +501,7 @@ class ConfigProfileShowResult(OutputSchema):
     :class:`UserProfileStatus` lifecycle state.
     """
 
-    profile_id: BucketId | None = None
+    profile_id: ProfileId | None = None
     display_name: str | None = Field(default=None, min_length=1, max_length=160)
     status: UserProfileStatus | Literal["profile_record_unreadable"] | None = None
     valid: bool | None = None
@@ -514,7 +514,7 @@ class ConfigProfileShowResult(OutputSchema):
     configured: bool | None = None
     error: str | None = None
     precondition_action: ResolvedPreconditionAction | None = None
-    bucket_id: str | None = None
+    bucket_id: BucketId | None = None
     # Readiness / repair branches (raised when profile record cannot be loaded).
     readiness: str | None = None
     profile_record: str | None = None
@@ -643,7 +643,7 @@ class ConfigStatusResult(OutputSchema):
     tax_id_present: bool | None = None
     activity_present: bool | None = None
     # Ready branch
-    profile_id: str | None = None
+    profile_id: ProfileId | None = None
     iva_regime: str | None = None
     tax_residence_ccaa: str | None = None
     precondition_action: ResolvedPreconditionAction | None = None
@@ -652,7 +652,7 @@ class ConfigStatusResult(OutputSchema):
 class ConfigResetTargetPayload(OutputSchema):
     """Secret-free phase projection for one reset target."""
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     label: str | None = Field(default=None, min_length=1, max_length=160)
     status_at_snapshot: UserProfileStatus | None = None
     exists_at_snapshot: bool
@@ -995,7 +995,7 @@ class AuthLoginPayload(OutputSchema, AuthLoginResult):
 class AuthLogoutPayload(OutputSchema):
     """Secret-free JSON envelope for ``aeat config auth logout``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     providers: list[str]
     removed_sessions: int
     cleared_session_state: bool
@@ -1005,7 +1005,7 @@ class AuthLogoutPayload(OutputSchema):
 class AuthResetPayload(OutputSchema):
     """Secret-free JSON envelope for ``aeat config auth reset``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     providers: list[str]
     removed_sessions: int
     cleared_provider_configuration: bool
@@ -1066,7 +1066,7 @@ class ConfigProfileExportResult(OutputSchema):
     envelope.
     """
 
-    profile_id: str
+    profile_id: ProfileId
     display_name: str
     out: str
     # bundle_schema_version is an int; the export handler passes the current
@@ -1098,7 +1098,7 @@ class ConfigProfileSubjectAccessRequestResult(OutputSchema):
     make the catalogue read as a completeness claim it cannot support.
     """
 
-    profile_id: str
+    profile_id: ProfileId
     display_name: str
     out: str
     schema_version: int
@@ -1117,7 +1117,7 @@ class ConfigProfileImportResult(OutputSchema):
     the imported profile identity, label, and bundle schema version.
     """
 
-    profile_id: str
+    profile_id: ProfileId
     display_name: str
     schema_version: int
 
@@ -1152,7 +1152,7 @@ class ConfigProfileArchiveExportResult(OutputSchema):
     cross-period calculation inputs.
     """
 
-    profile_id: str
+    profile_id: ProfileId
     display_name: str
     out: str
     manifest_digest: ContentDigest
@@ -1242,8 +1242,8 @@ class RepairProfileResult(OutputSchema):
     before: ActiveProfileHealthPayload | None = None
     after: ActiveProfileHealthPayload | None = None
     # Profile-record-status branch
-    profile_id: str | None = None
-    bucket_id: str | None = None
+    profile_id: ProfileId | None = None
+    bucket_id: BucketId | None = None
     display_name: str | None = None
     registered_bucket: bool | None = None
     profile_record_present: bool | None = None

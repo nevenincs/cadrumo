@@ -70,7 +70,13 @@ from ._app_live_notifications_cli import notifications_app, register_notificatio
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
-from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_optional_root, resolve_pull_year_range
+from ._common import (
+    _emit_envelope,
+    active_bucket_id_or_refuse,
+    notice_lines,
+    resolve_optional_root,
+    resolve_pull_year_range,
+)
 
 if TYPE_CHECKING:
     from ...application.live import VerifyVerdict
@@ -1294,7 +1300,7 @@ def filed_pull_all_cmd(
         ctx,
         command="app.live.filed.pull_all",
         result=result,
-        lines=(*lines, *_notice_lines(notices)),
+        lines=(*lines, *notice_lines(notices)),
         notices=notices,
     )
 
@@ -1456,11 +1462,6 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None
     return notices
 
 
-def _notice_lines(notices: Sequence[Notice]) -> tuple[str, ...]:
-    """Render supplied envelope notices into the matching text-only lines."""
-    return tuple(f"notice\t{notice.code}\t{notice.message}" for notice in notices)
-
-
 def _filed_capture_notices(
     report: FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport,
     *,
@@ -1573,7 +1574,7 @@ def filed_pull_cmd(
             ctx,
             command="app.live.filed.pull",
             result=result,
-            lines=(*lines, *_notice_lines(notices)),
+            lines=(*lines, *notice_lines(notices)),
             notices=notices,
         )
         return
@@ -1644,7 +1645,7 @@ def filed_pull_cmd(
         ctx,
         command="app.live.filed.pull",
         result=result,
-        lines=(*lines, *_notice_lines(capture_notices)),
+        lines=(*lines, *notice_lines(capture_notices)),
         notices=notices,
     )
 
@@ -1776,7 +1777,7 @@ def filed_pull_sources_cmd(
         ctx,
         command="app.live.filed.pull_sources",
         result=result,
-        lines=(*lines, *_notice_lines(notices)),
+        lines=(*lines, *notice_lines(notices)),
         notices=notices,
     )
 

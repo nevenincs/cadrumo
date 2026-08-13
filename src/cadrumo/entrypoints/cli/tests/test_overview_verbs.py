@@ -18,17 +18,22 @@ Closes two overview verb coverage gaps in one file:
 from __future__ import annotations
 
 import json
+import time
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
+import click
 import pytest
+from click.testing import CliRunner
 
 from ....adapters.persistence.profile.filing_drafts import ModeloDraftRepository
+from ....application.operator_actions import ActionReference
 from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
+from ....core.json_contract import ResolvedNoticeAction
 from ....domain.calculations.registry import RegistrySnapshotRef
 from ....domain.filing import (
     ModeloDraft,
@@ -42,6 +47,8 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.filing import build_registry_filing_draft
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
+from .._common import resolve_notice_action
+from .envelope_helpers import unwrap_envelope_notices
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -115,6 +122,72 @@ def test_overview_status_returns_envelope_on_empty_bucket() -> None:
 
     result = invoke_cached_cli(["app", "overview", "status"])
     assert result.exit_code == 0, result.output
+
+
+def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocation() -> None:
+    """One real overview invocation shares its inventory without changing actions.
+
+    Full status necessarily emits workspace guidance, so it has no action-free
+    branch from which to subtract its ordinary report work. S38 separately
+    proves the one-inventory-per-root lifecycle. The first deterministic full
+    invocation therefore measures healthy overview work after subtracting that
+    one S37 inventory cost; the second is held to the approved 1.64 allowance.
+    Wall time is reported separately for operator diagnostics but deliberately
+    does not decide this CPU-bound contract.
+    """
+    baseline_cpu_started = time.process_time()
+    baseline_wall_started = time.perf_counter()
+    baseline = invoke_cached_cli(["--format", "json", "app", "overview", "status"])
+    baseline_cpu_seconds = time.process_time() - baseline_cpu_started
+    baseline_wall_seconds = time.perf_counter() - baseline_wall_started
+
+    candidate_cpu_started = time.process_time()
+    candidate_wall_started = time.perf_counter()
+    overview = invoke_cached_cli(["--format", "json", "app", "overview", "status"])
+    candidate_cpu_seconds = time.process_time() - candidate_cpu_started
+    candidate_wall_seconds = time.perf_counter() - candidate_wall_started
+
+    assert baseline.exit_code == 0, baseline.output
+    assert overview.exit_code == 0, overview.output
+    assert json.loads(baseline.output) == json.loads(overview.output)
+    healthy_overview_cpu_seconds = baseline_cpu_seconds - 9.495
+    timing = (
+        f"baseline_cpu={baseline_cpu_seconds:.3f}s baseline_wall={baseline_wall_seconds:.3f}s "
+        f"healthy_overview_cpu={healthy_overview_cpu_seconds:.3f}s "
+        f"candidate_cpu={candidate_cpu_seconds:.3f}s candidate_wall={candidate_wall_seconds:.3f}s"
+    )
+    assert healthy_overview_cpu_seconds >= 0, timing
+    assert candidate_cpu_seconds <= (9.495 + healthy_overview_cpu_seconds) * 1.64, timing
+    assert candidate_wall_seconds > 0, timing
+
+    actions = tuple(
+        ResolvedNoticeAction.model_validate_json(json.dumps(notice["action"]))
+        for notice in unwrap_envelope_notices(overview.output)
+        if notice.get("action") is not None
+    )
+    assert len(actions) >= 2, "the deterministic overview must exercise multiple action-bearing notices"
+
+    fresh: list[ResolvedNoticeAction] = []
+
+    @click.command()
+    def fresh_resolution_root() -> None:
+        """Resolve the captured actions through one separate real Click root."""
+        fresh.extend(
+            resolve_notice_action(
+                action=ActionReference(action_id=action.action.action_id),
+                argument_bindings=action.argument_bindings,
+            )
+            for action in actions
+        )
+
+    fresh_result = CliRunner().invoke(fresh_resolution_root)
+    assert fresh_result.exit_code == 0, fresh_result.output
+    print(f"P03.S39 overview timing: {timing}")
+    fresh_actions = tuple(fresh)
+    assert actions == fresh_actions
+    assert tuple(action.model_dump_json() for action in actions) == tuple(
+        action.model_dump_json() for action in fresh_actions
+    )
 
 
 def test_overview_status_period_filter_matches_typed_draft_period() -> None:

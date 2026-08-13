@@ -8,6 +8,7 @@ conformance gate bind the ``aeat app ledger bienes-inversion`` leaves to a schem
 
 from __future__ import annotations
 
+from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, register_schema
 
 
@@ -45,7 +46,7 @@ class BienInversionRecordPayload(OutputSchema):
 class BienesInversionDeclareResult(OutputSchema):
     """JSON envelope for ``aeat app ledger bienes-inversion declare``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     record: BienInversionRecordPayload
     count: int
 
@@ -54,7 +55,7 @@ class BienesInversionDeclareResult(OutputSchema):
 class BienesInversionListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger bienes-inversion list``."""
 
-    bucket_id: str
+    bucket_id: BucketId
     rows: list[BienInversionRecordPayload]
     count: int
 

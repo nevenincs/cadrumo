@@ -148,7 +148,7 @@ class WorkHistoryResult(OutputSchema):
 
     operation: str = "modelo.work.history"
     bucket_id: str
-    work_unit_id: str
+    work_unit_id: WorkUnitId
     event_count: int
     events: list[WorkUnitHistoryEventPayload]
 

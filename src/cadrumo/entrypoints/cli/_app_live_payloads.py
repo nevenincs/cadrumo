@@ -650,6 +650,99 @@ class NotificationsLatestResult(OutputSchema):
     row_count: int | None = Field(default=None, ge=0)
 
 
+class SancionReadingPayload(OutputSchema):
+    """JSON projection of one :class:`SancionLiquidacion` reading.
+
+    Every amount is the figure PRINTED on the document AEAT served, carried as
+    a string so the persisted ``Decimal`` scale survives the wire exactly —
+    ``774.29`` and ``774.290`` are different printings and JSON's float would
+    lose the difference. Nothing here is computed by this application, and an
+    absent reducción stays ``None`` rather than becoming ``"0"``, because a
+    reducción AEAT did not grant is not a reducción it granted at zero.
+    """
+
+    certificado_id: str
+    clave_liquidacion: str
+    referencia: str
+    nif: str
+    objeto_tributario: str
+    base_sancion: str
+    porcentaje_minimo: str
+    sancion_resultante: str
+    reduccion_conformidad: str | None
+    reduccion_pronto_pago: str | None
+    diferencia: str | None
+    importe_a_ingresar: str
+    document_sha256: ContentDigest
+
+
+class NotificationDocumentPayload(OutputSchema):
+    """Shared projection of one stored :class:`NotificationDocumentRecord`.
+
+    The bytes themselves never appear here and never will: they live in the
+    encrypted attachment store, and this payload carries their content address
+    and digest so an operator can tie a reading back to the exact custody bytes
+    without the document leaving secure storage.
+
+    ``sancion`` and ``parse_refusal`` are mutually exclusive by construction —
+    the reader either vouched for a reading or refused to — and the refusal is
+    reported as primary result data rather than smuggled into a bespoke
+    advisory field, with the operator-facing diagnostic riding the envelope's
+    ``notices`` channel.
+    """
+
+    bucket_id: BucketId
+    certificado_id: str
+    attachment_id: ContentDigest
+    document_sha256: ContentDigest
+    byte_size: int = Field(ge=1)
+    source_url: str = Field(min_length=1)
+    fetched_at: datetime
+    sancion_parsed: bool
+    sancion: SancionReadingPayload | None = None
+    parse_refusal: str | None = Field(default=None, min_length=1, max_length=512)
+    mode: Literal["read"] = "read"
+
+    @model_validator(mode="after")
+    def _a_reading_is_present_or_refused_never_both_nor_neither(self) -> NotificationDocumentPayload:
+        """Keep the reading flag honest against the two fields it summarises.
+
+        A payload claiming ``sancion_parsed`` with no reading, or reporting
+        neither a reading nor a reason, would let an operator conclude the
+        document held no figures when the truth is that nobody looked.
+        """
+        if self.sancion_parsed != (self.sancion is not None):
+            raise ValueError("sancion_parsed must agree with the presence of a sancion reading")
+        if (self.sancion is None) == (self.parse_refusal is None):
+            raise ValueError("a stored document carries either a sancion reading or the reason there is none")
+        return self
+
+
+@register_schema("app.live.notifications.document.pull")
+class NotificationDocumentPullResult(NotificationDocumentPayload):
+    """Typed result for one guarded notification-document fetch.
+
+    ``already_in_custody`` is the idempotency outcome: a retry against a
+    certificado already held stores nothing and returns the row that was there,
+    which is otherwise indistinguishable from a first store. It is result data
+    rather than a diagnostic — the matching operator-facing advisory rides the
+    envelope's ``notices`` channel — and an agent routing on retries needs the
+    field, not the prose.
+    """
+
+    already_in_custody: bool
+
+
+@register_schema("app.live.notifications.document.view")
+class NotificationDocumentViewResult(NotificationDocumentPayload):
+    """Typed read-back of one stored notification document.
+
+    Resolved entirely from bucket-local encrypted custody through
+    :class:`NotificationDocumentService`. The verb that emits this contacts
+    AEAT not at all, so it can never be the act that serves a notification.
+    """
+
+
 # ---------------------------------------------------------------------------
 # Portals leaves (local catalogue)
 # ---------------------------------------------------------------------------

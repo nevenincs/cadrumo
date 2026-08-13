@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 
 import anyio
+import click
 import pytest
 
 from ....application.operator_actions import (
@@ -26,7 +27,9 @@ from ....core.json_contract import (
     ResolvedNoticeAction,
 )
 from .._common import (
+    _OPERATOR_SURFACE_RECONCILIATION_META_KEY,
     _action_text_lines,
+    _current_operator_surface_reconciliation,
     _powershell_action_token,
     _resolve_notice_actions,
     resolve_cli_precondition_action,
@@ -101,6 +104,14 @@ def test_common_action_resolver_uses_the_live_surface_for_zero_and_required_inpu
         resolve_notice_action(
             action=ActionReference(action_id="operator.profile.sandbox.restore"),
         )
+
+
+def test_common_action_resolver_refuses_invalid_invocation_reconciliation() -> None:
+    """A malformed invocation cache cannot silently weaken live action checks."""
+    with click.Context(click.Command("operator-surface")) as context:
+        context.meta[_OPERATOR_SURFACE_RECONCILIATION_META_KEY] = "not a reconciliation"
+        with pytest.raises(TypeError, match="operator-surface reconciliation context contains an invalid value"):
+            _current_operator_surface_reconciliation()
 
 
 def test_common_action_resolver_materialises_ledger_link_from_the_live_surface() -> None:

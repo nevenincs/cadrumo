@@ -32,6 +32,7 @@ from decimal import Decimal
 
 from pydantic import Field
 
+from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction, register_schema
 
 __all__ = [
@@ -115,7 +116,7 @@ class EvidenceBatchResult(OutputSchema):
     figures are what makes pacing observable at all.
     """
 
-    bucket_id: str
+    bucket_id: BucketId
     direction: str
     items: list[EvidenceBatchItemPayload] = []
     unresolved: list[EvidenceBatchUnresolvedPayload] = []

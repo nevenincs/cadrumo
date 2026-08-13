@@ -90,7 +90,7 @@ def test_readiness_payload_projects_actions_without_dropping_native_facts() -> N
         ledger_checked_transaction_count=1,
         ledger_issues=(
             LedgerPreflightIssue(
-                transaction_id="tx-1",
+                transaction_id="a" * 64,
                 reason=LedgerPreflightIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
                 detail="counterparty identification state is required",
             ),

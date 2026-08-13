@@ -21,7 +21,7 @@ def test_overview_status_result_carries_only_the_operator_label() -> None:
     """The result must not duplicate the envelope identity with a protected id."""
     projection = OperatorStateProjection(
         active_profile=ProjectionActiveProfile(
-            profile_id="protected-profile-id",
+            profile_id="11111111-1111-4111-8111-111111111111",
             label="operator-manual",
             health_status="ready",
             registered_bucket=True,
@@ -36,4 +36,4 @@ def test_overview_status_result_carries_only_the_operator_label() -> None:
 
     assert payload["active_profile_name"] == "operator-manual"
     assert "active_profile" not in payload
-    assert "protected-profile-id" not in str(payload)
+    assert "11111111-1111-4111-8111-111111111111" not in str(payload)

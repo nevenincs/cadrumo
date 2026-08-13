@@ -524,7 +524,7 @@ class EvidenceConfirmResult(OutputSchema):
     invoice_number: str
     issued_at: str
     counterparty_name: str
-    counterparty_tax_id: str
+    counterparty_tax_id: TaxIdIdentityToken
     counterparty_country: str
     base_total: str
     iva_total: str
