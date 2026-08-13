@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2021-8878-a1-redacciones.html",
+  "source_sha256": "e8c9dc8bc97f244b20692ae1322fd9c6ea1be95339b5f5dfd57e7dd4381fc12a",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 1. Aprobación del modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación».\nSe aprueba el modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación», de formato electrónico, cuyo contenido figura en los anexos I y II de la presente orden.\nEl anexo I contiene la autoliquidación del Impuesto y el anexo II recoge el formato del detalle informativo de las operaciones sujetas. Este anexo II deberá cumplimentarse de forma previa al anexo I.\nEn la presentación del modelo 604 deberá consignarse el número de justificante obtenido en la cumplimentación del anexo informativo.\nEl número identificativo que habrá de figurar en el modelo de autoliquidación 604 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 604.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

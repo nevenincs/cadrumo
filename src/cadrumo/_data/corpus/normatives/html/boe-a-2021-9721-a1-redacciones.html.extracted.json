@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2021-9721-a1-redacciones.html",
+  "source_sha256": "621dd84dc4338bd8800c8ea29482316fa5fcf584daec8ef247c3766c07fe5fcf",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 1. Aprobación del modelo 490.\n1. Se aprueba el modelo 490 «Impuesto sobre Determinados Servicios Digitales. Autoliquidación», que figura en el anexo de esta orden.\n2. El número de justificante que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 490.\n3. El citado modelo estará disponible exclusivamente en formato electrónico y su presentación e ingreso se realizarán por vía electrónica, de acuerdo con las condiciones generales y el procedimiento establecidos en el artículo 4.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

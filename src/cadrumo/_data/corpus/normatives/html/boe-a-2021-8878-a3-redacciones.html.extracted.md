@@ -1,0 +1,5 @@
+200
+ok
+Artículo 3. Plazo de presentación del modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación».
+El período de liquidación coincidirá con el mes natural de acuerdo con lo previsto en el artículo 8.3 de la Ley 5/2020, de 15 de octubre, del Impuesto sobre las Transacciones Financieras.
+De acuerdo con lo previsto en los artículos 6.1 y 8 del Real Decreto 366/2021, de 25 de mayo, por el que se desarrolla el procedimiento de presentación e ingreso de las autoliquidaciones del Impuesto sobre las Transacciones Financieras y se modifican otras normas tributarias, el modelo 604, «Impuesto sobre las Transacciones Financieras. Autoliquidación», deberá presentarse e ingresarse, según corresponda, por el depositario central de valores o por el sujeto pasivo, entre los días diez y veinte del mes siguiente al correspondiente periodo de liquidación mensual.

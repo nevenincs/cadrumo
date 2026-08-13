@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2014-13675-a1-redacciones.html",
+  "source_sha256": "67da3dd9d5371a10eeaef10de0279b35cfd419bc7b61e5a651a03583d7c456df",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 1. Aprobación del modelo 143.\nSe aprueba el modelo 143 «Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa o por personas con discapacidad a cargo. Solicitud de abono anticipado» que figura en el anexo de la presente Orden.\nArtículo 1. Aprobación del modelo 143.\nSe aprueba el modelo 143 «Impuesto sobre la Renta de las Personas Físicas. Deducciones por familia numerosa, por ascendiente con dos hijos o por personas con discapacidad a cargo. Solicitud de abono anticipado» que figura en el anexo de la presente Orden.\nSe modifica por el art. único.1 de la Orden HAP/410/2015, de 11 de marzo. Ref. BOE-A-2015-2629",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}

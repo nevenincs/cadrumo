@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "source_kind": "normatives_html",
+  "status": "ok",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-1995-24001-a10-redacciones.html",
+  "source_sha256": "c6f5a35eec0ddfb3053c33a589f719ca2e059954ab71805ef508734b3ccec2f2",
+  "preprocessor_id": "normatives-html",
+  "preprocessor_version": "1.3",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "units": [
+    {
+      "text": "200\nok\nArtículo 10. Dividendos.\n1. Los dividendos pagados por una sociedad residente de un Estado contratante a un residente del otro Estado contratante pueden someterse a imposición en ese otro Estado.\n2. Sin embargo, tales dividendos pueden también someterse a imposición en el Estado contratante en que resida la sociedad que paga los dividendos y según la legislación de ese Estado, pero si el perceptor de los dividendos es su beneficiario efectivo, el impuesto así exigido no podrá exceder del:\na) 10 por 100 del importe bruto de los dividendos si el beneficiario efectivo es una sociedad que posea directamente al menos el 25 por 100 del capital de la sociedad que paga los dividendos;\nb) 15 por 100 del importe bruto de los dividendos en los demás casos.\nLas autoridades competentes de los Estados contratantes establecerán de mutuo acuerdo la forma de aplicar estas limitaciones.\nEste apartado no afecta a la imposición de la sociedad respecto de los beneficios con cargo a los que se pagan los dividendos.\n3. El término «dividendos» empleado en el presente artículo significa los rendimientos de las acciones o bonos de disfrute, de las partes de minas, de las partes de fundador u otros derechos, excepto los de crédito, que permitan participar en los beneficios, así como las rentas de otras participaciones sociales sujetas al mismo régimen fiscal que los rendimientos de las acciones por la legislación del Estado en que resida la sociedad que las distribuye.\n4. Las disposiciones de los apartados 1 y 2 no se aplican si el beneficiario efectivo de los dividendos, residente de un Estado contratante, realiza en el otro Estado contratante del que es residente la sociedad que paga los dividendos, una actividad industrial o comercial a través de un establecimiento permanente situado en ese otro Estado, o presta unos servicios personales independientes por medio de una base fija situada en ese otro Estado, y la participación que genera los dividendos está vinculada efectivamente a dicho establecimiento permanente o base fija. En tales casos, se aplicarán las disposiciones del artículo 7 o del artículo 14, según proceda.\n5. Cuando una sociedad residente de una Estado contratante obtenga beneficios o rentas procedentes del otro Estado contratante, ese otro Estado no podrá exigir ningún impuesto sobre los dividendos pagados por la sociedad salvo en la medida en que dichos dividendos se paguen a un residente de ese otro Estado o la participación que genera los dividendos esté vinculada efectivamente a un establecimiento permanente o a una base fija situada en ese otro Estado, ni someter los beneficios no distribuidos de la sociedad a un impuesto sobre los mismos, aunque los dividendos pagados o los beneficios no distribuidos consistan, total o parcialmente, en beneficios o rentas procedentes de ese otro Estado.",
+      "title": null,
+      "section": null,
+      "anchor": null
+    }
+  ]
+}
