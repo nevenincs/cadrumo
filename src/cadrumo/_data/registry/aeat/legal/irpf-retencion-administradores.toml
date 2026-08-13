@@ -36,11 +36,40 @@
 # inferior a 100.000 euros, el porcentaje de retención e ingreso a cuenta será
 # del 19 por ciento."
 #
-# Neither article's amendment history (tracked above from the live payload)
-# touches these three figures: the Ley 31/2022 change to art. 101 modifies
-# apartados 3 and 9 only, and the RD 1008/2023 change to RIRPF art. 80 modifies
-# apartado 1.4º (obras literarias/artísticas/científicas) only. The
-# administrador figures in apartado 1.3º have stood since the 2007 text.
+# Neither article's MOST RECENT amendment touches these three figures: the
+# Ley 31/2022 change to art. 101 modifies apartados 3 and 9 only, and the RD
+# 1008/2023 change to RIRPF art. 80 modifies apartado 1.4.º (obras
+# literarias/artísticas/científicas) only.
+#
+# YEAR-AXIS CHECK (2026-08-13, full redaction history read via the BOE
+# Legislacion Consolidada article endpoint, every <version> block for both
+# BOE-A-2006-20764#a101 and BOE-A-2007-6820#a80, oldest to newest): the rate
+# WAS versioned historically, and the general 35 por ciento is NOT the whole
+# story for every year. From original enactment (2007-01-01 for LIRPF,
+# 2007-04-01 for RIRPF) through 2014-12-31, BOTH articles fixed a FLAT 35 por
+# ciento on every administrador/consejero rendimiento, with NO reduced rate
+# and NO INCN threshold of any kind -- the segundo inciso / segundo párrafo
+# introducing "cuando los rendimientos procedan de entidades con un importe
+# neto de la cifra de negocios inferior a 100.000 euros, el porcentaje ...
+# será del 19 por ciento" does not exist in any redaction before Ley 26/2014
+# (BOE-A-2014-12327, LIRPF) / RD 1003/2014 (BOE-A-2014-12730, RIRPF), both
+# effective 2015-01-01. From 2015-01-01 onward, every subsequent redaction of
+# both articles (LIRPF: BOE-A-2015-7765, BOE-A-2018-9268, BOE-A-2018-17990,
+# BOE-A-2020-17339, BOE-A-2022-22128; RIRPF: BOE-A-2015-7770,
+# BOE-A-2018-17601, BOE-A-2023-24841) carries the 19 por ciento / 100.000
+# euros pair byte-identically -- only an UNRELATED Ceuta/Melilla reduction
+# clause elsewhere in the same apartado changed wording ("a la mitad" ->
+# "en un 60 por ciento") across that span, never the administrador figures.
+#
+# So a single non-year-scoped parameter set IS the correct shape for THIS
+# application: Modelo 111's only registered revision
+# (registry/aeat/modelos/111/revisions/2019-y-siguientes/revision.toml) is
+# valid_from 2019-01-01, four years after the 2015-01-01 rate change that
+# introduced the 19 por ciento/100.000 euros pair, and the figures have not
+# moved since. A future revision covering a filing year before 2019 would
+# need to re-run this check and could need a two-value, year-scoped shape
+# for the reduced rate/threshold pair (the 35 por ciento general figure would
+# still be a single constant back to 2007).
 
 [parameters."lirpf-art-101:retencion-administrador-general"]
 evidence_tier = "legal_authority"
