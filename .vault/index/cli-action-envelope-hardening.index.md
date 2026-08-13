@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:765d10b7ad5279a276527a916a7f522fa900f726b0d12afbf44b319d8c07f62f'
+body_hash: 'sha256:ad3632e2c3f0ecffdef0d4bb44456fef6051da96b32444424f560a43b1e49d1b'
 related:
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S01]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W01-P01-S02]]'
@@ -79,6 +79,7 @@ related:
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S117]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S36]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S38]]'
+  - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S39]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S41]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S59]]'
   - '[[2026-08-09-cli-action-envelope-hardening-W05-P10-S60]]'
@@ -323,6 +324,7 @@ Auto-generated index of all documents tagged with `#cli-action-envelope-hardenin
 - `2026-08-09-cli-action-envelope-hardening-W05-P08-S105` - Migrate domain invoice, IVA, and portal exception producers to typed catalogue/live-input verdicts or explicit terminal/no-recovery dispositions
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S115` - Migrate the active-session diagnostics recovery producer to typed conditions and canonical action or explicit no-recovery outcome
 - `2026-08-09-cli-action-envelope-hardening-W05-P10-S36` - Migrate authentication and session recovery predicates and actions
+- `2026-08-09-cli-action-envelope-hardening-W05-P10-S39` - Migrate deadline recovery commands and overdue continuations
 
 ### plan
 
