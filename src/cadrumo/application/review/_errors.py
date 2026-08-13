@@ -53,7 +53,6 @@ class FilterParseError(ReviewError):
         if key is not None:
             context["key"] = key
         super().__init__(
-            f"cannot parse filter token: {reason}",
             context=context,
             translated_message="review.filter.errors.parse_failed",
         )
@@ -89,7 +88,6 @@ class EditParseError(ReviewError):
         if key is not None:
             context["key"] = key
         super().__init__(
-            f"cannot parse edit token: {reason}",
             context=context,
             translated_message="review.edit.errors.parse_failed",
         )
@@ -143,7 +141,6 @@ class ReviewKindReservedError(ReviewError):
                 upstream record type.
         """
         super().__init__(
-            "review kind is reserved and is not an emitted review kind",
             context={"reason": reason},
             translated_message="review.operator.errors.reserved_kind",
         )

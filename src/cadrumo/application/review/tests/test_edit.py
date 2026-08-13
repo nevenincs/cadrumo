@@ -54,7 +54,7 @@ def test_parse_edit_clause_normalizes_key_value_pairs(
     ),
 )
 def test_parse_edit_clause_rejects_malformed_tokens(raw: str, expected_reason: str) -> None:
-    with pytest.raises(EditParseError, match=expected_reason) as exc:
+    with pytest.raises(EditParseError) as exc:
         parse_edit_clause(raw)
     assert exc.value.reason == expected_reason
     if expected_reason == "missing-equals":
@@ -107,7 +107,7 @@ def test_ledger_spec_business_share_accepts_decimal_boundaries(raw_value: str, e
 
 @pytest.mark.parametrize("raw_value", ("1.5", "-0.1", "full"))
 def test_ledger_spec_business_share_rejects_invalid_values(raw_value: str) -> None:
-    with pytest.raises(EditParseError, match=r"invalid-value-ledger-business-share") as exc:
+    with pytest.raises(EditParseError) as exc:
         LedgerEditSpec.from_strings([f"business.share={raw_value}"])
     assert exc.value.reason == "invalid-value-ledger-business-share"
 
@@ -124,7 +124,7 @@ def test_ledger_spec_rejects_invalid_keys(
     expected_reason: str,
     expected_context: dict[str, str] | None,
 ) -> None:
-    with pytest.raises(EditParseError, match=expected_reason) as exc:
+    with pytest.raises(EditParseError) as exc:
         LedgerEditSpec.from_strings(clauses)
     assert exc.value.reason == expected_reason
     if expected_context is not None:
@@ -185,7 +185,7 @@ def test_invoice_spec_parses_supported_fields_together() -> None:
     ),
 )
 def test_invoice_spec_rejects_invalid_keys_and_values(clauses: list[str], expected_reason: str) -> None:
-    with pytest.raises(EditParseError, match=expected_reason) as exc:
+    with pytest.raises(EditParseError) as exc:
         InvoiceEditSpec.from_strings(clauses)
     assert exc.value.reason == expected_reason
 
@@ -195,14 +195,14 @@ def test_invoice_base_rejects_values_that_bare_decimal_would_misread(raw_value: 
     """Review editing cannot bypass the creation wizard's euro-cent precision boundary."""
     assert isinstance(Decimal(raw_value.replace(",", ".")), Decimal)
 
-    with pytest.raises(EditParseError, match="invalid-value-invoice-base") as exc:
+    with pytest.raises(EditParseError) as exc:
         InvoiceEditSpec.from_strings([f"base={raw_value}"])
 
     assert exc.value.reason == "invalid-value-invoice-base"
 
 
 def test_invoice_base_rejects_european_thousands_text() -> None:
-    with pytest.raises(EditParseError, match="invalid-value-invoice-base"):
+    with pytest.raises(EditParseError):
         InvoiceEditSpec.from_strings(["base=1.234,56"])
 
 

@@ -75,7 +75,7 @@ def test_ensure_unique_keys_rejects_scope_tagged_duplicates(scope: str, expected
     """The scope kwarg becomes the suffix of the reason code so the
     CLI can route the repair hint per-scope."""
     clauses = (_clause("status", "pending"), _clause("status", "reviewed"))
-    with pytest.raises(FilterParseError, match=expected_reason) as exc_info:
+    with pytest.raises(FilterParseError) as exc_info:
         _ensure_unique_keys(clauses, scope=scope)
 
     assert exc_info.value.reason == expected_reason
@@ -114,7 +114,7 @@ def test_ensure_known_keys_rejects_scope_tagged_unknowns(
     clauses: tuple[FilterClause, ...],
     expected_reason: str,
 ) -> None:
-    with pytest.raises(FilterParseError, match=expected_reason) as exc_info:
+    with pytest.raises(FilterParseError) as exc_info:
         _ensure_known_keys(clauses, scope=scope, allowed=allowed)
 
     assert exc_info.value.reason == expected_reason
@@ -126,7 +126,7 @@ def test_ensure_known_keys_uses_per_scope_catalogues() -> None:
     clauses = (_clause("import", "import_003"),)
     _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
 
-    with pytest.raises(FilterParseError, match=r"unknown-key-invoice") as exc_info:
+    with pytest.raises(FilterParseError) as exc_info:
         _ensure_known_keys(clauses, scope="invoice", allowed=InvoiceReviewFilterKey)
 
     assert exc_info.value.reason == "unknown-key-invoice"
@@ -168,7 +168,7 @@ def test_enum_value_or_raise_rejects_unknown_values_with_scope_tagged_reasons(
     case_fold: bool,
     expected_reason: str,
 ) -> None:
-    with pytest.raises(FilterParseError, match=expected_reason) as exc_info:
+    with pytest.raises(FilterParseError) as exc_info:
         _enum_value_or_raise(clause, enum_cls, scope=scope, case_fold=case_fold)
 
     assert exc_info.value.reason == expected_reason
@@ -180,7 +180,7 @@ def test_enum_value_or_raise_case_fold_false_rejects_uppercase_for_lowercase_enu
     a lowercase-valued enum like :class:`LedgerReviewStatus`."""
     clause = _clause("status", "PENDING")
 
-    with pytest.raises(FilterParseError, match=r"invalid-value-ledger") as exc_info:
+    with pytest.raises(FilterParseError) as exc_info:
         _enum_value_or_raise(clause, LedgerReviewStatus, scope="ledger")
 
     assert exc_info.value.reason == "invalid-value-ledger"

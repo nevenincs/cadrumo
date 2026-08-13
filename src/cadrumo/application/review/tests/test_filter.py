@@ -60,7 +60,7 @@ def test_parse_filter_clause_normalizes_key_value_pairs(
     ),
 )
 def test_parse_filter_clause_rejects_malformed_tokens(raw: str, expected_reason: str) -> None:
-    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+    with pytest.raises(FilterParseError) as exc:
         parse_filter_clause(raw)
     assert exc.value.reason == expected_reason
     if expected_reason == "missing-equals":
@@ -120,13 +120,13 @@ def test_ledger_spec_parses_supported_fields_together() -> None:
 @pytest.mark.parametrize("clauses", (["period=1T"], ["year=2026"]))
 def test_ledger_spec_requires_period_and_year_pairing(clauses: list[str]) -> None:
     """A bare ``period=`` token with no ``year=`` clause refuses (the pair travels together)."""
-    with pytest.raises(FilterParseError, match=r"period-year-pairing"):
+    with pytest.raises(FilterParseError):
         LedgerReviewFilterSpec.from_strings(clauses)
 
 
 @pytest.mark.parametrize("period_code", ("Q1", "quarter-1", "1P", "not-a-period"))
 def test_ledger_spec_rejects_non_filterable_period_values(period_code: str) -> None:
-    with pytest.raises(FilterParseError, match=r"invalid-value-ledger-period") as exc:
+    with pytest.raises(FilterParseError) as exc:
         LedgerReviewFilterSpec.from_strings([f"period={period_code}", "year=2026"])
 
     assert exc.value.reason == "invalid-value-ledger-period"
@@ -198,7 +198,7 @@ def test_ledger_spec_rejects_invalid_keys_and_values(
     expected_safe_token: str | None,
     expected_context: dict[str, str] | None,
 ) -> None:
-    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+    with pytest.raises(FilterParseError) as exc:
         LedgerReviewFilterSpec.from_strings(clauses)
     assert exc.value.reason == expected_reason
     if expected_safe_token is not None:
@@ -244,7 +244,7 @@ def test_invoice_spec_parses_status_and_case_folded_kind() -> None:
     ),
 )
 def test_invoice_spec_rejects_invalid_keys_and_values(clauses: list[str], expected_reason: str) -> None:
-    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+    with pytest.raises(FilterParseError) as exc:
         InvoiceReviewFilterSpec.from_strings(clauses)
     assert exc.value.reason == expected_reason
 
@@ -268,7 +268,7 @@ def test_declaration_spec_parses_status_values(status: DeclaracionReviewStatus) 
     ),
 )
 def test_declaration_spec_rejects_invalid_keys_and_values(clauses: list[str], expected_reason: str) -> None:
-    with pytest.raises(FilterParseError, match=expected_reason) as exc:
+    with pytest.raises(FilterParseError) as exc:
         DeclaracionReviewFilterSpec.from_strings(clauses)
     assert exc.value.reason == expected_reason
 
