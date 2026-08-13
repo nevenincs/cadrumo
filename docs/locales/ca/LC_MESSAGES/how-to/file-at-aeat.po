@@ -19,7 +19,7 @@ msgstr ""
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../how-to/file-at-aeat.md:1
-msgid "Upload your exported modelo at the AEAT portal"
+msgid "File your modelo at the AEAT portal"
 msgstr "Puja el teu model exportat al portal de l'AEAT"
 
 #: ../../how-to/file-at-aeat.md:3

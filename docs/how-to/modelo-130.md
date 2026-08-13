@@ -1,15 +1,17 @@
 # Prepare a Modelo 130 IRPF instalment
 
 This page covers the quarterly Modelo 130 filing: the complete
-create-calculate-verify-export chain, the cumulative year-to-date behaviour
+create-calculate-verify-file chain, the cumulative year-to-date behaviour
 that makes each quarter build on the ones before it, and the prior-period
 values a later quarter carries in. Modelo 130 is the IRPF payment on account
 for self-employed activity under estimación directa; the registry's official
 title is "Impuesto sobre la Renta de las Personas Físicas. Actividades
 económicas en estimación directa. Pago fraccionado."
 
-`aeat` does not submit Modelo 130 to AEAT. Export creates a local file that
-you upload through the official AEAT channel yourself.
+`aeat` does not submit Modelo 130 to AEAT, and it cannot currently produce an
+upload file for it either: Modelo 130 has no fichero-BOE layout, so `export`
+refuses. Read the calculated box values back and enter them through the
+official AEAT channel yourself.
 
 The tool needs a master-key passphrase and prompts for it.
 
@@ -25,13 +27,13 @@ classified ledger, then creates the draft, calculates it, and verifies it. Each
 load-bearing detail is explained under the sequence.
 
 ```{cli-sequence} modelo-130-quarterly
-:verify: Confirm the draft passed verification before you export it.
+:verify: Confirm the draft passed verification before you file it.
 ```
 
 Load-bearing details:
 
 - Create the profile with `--quiet` for the non-interactive form. The profile
-  MUST carry `--name` and `--surnames`, or export later refuses with
+  MUST carry `--name` and `--surnames`, or filing later refuses with
   "requires the operator name".
 - `--activity-start-date 2026-01-01` scopes the prior-period dependency out
   for a first period. Without it, verify blocks on the previous quarter.
@@ -48,8 +50,8 @@ Load-bearing details:
   of `1000.00`, rendimiento neto (casilla `03`) of `500.00` - income base
   minus expense base - and a pago fraccionado (casilla `04`) of `100.00`,
   20 percent of the net.
-- `verify` reports `completeness complete` and `granted true`. Export then
-  writes the `.boe` and reports its path, byte size, and SHA-256 checksum.
+- `verify` reports `completeness complete` and `granted true`. `export` then
+  refuses, because Modelo 130 carries no fichero-BOE layout.
 
 ## Before you create the draft
 
@@ -128,30 +130,31 @@ quarter. If the prior quarter is not filed and evidenced locally, verify
 blocks with a cross-period finding - record or reconcile that earlier filing
 first (see [Reconcile a filing](reconcile.md)).
 
-## Calculate, review, verify, export
+## Calculate, review, verify, file
 
 The chain is the standard filing workflow - see
 [The filing workflow](filing-spine.md) for how work units and calculation
 revisions behave. In short:
 
 ```{cli-sequence} modelo-130-review-chain
-:verify: Confirm the draft calculates, reviews, and verifies before you export it.
+:verify: Confirm the draft calculates, reviews, and verifies before you file it.
 ```
 
-Once the draft verifies, export it. Export refuses until every
-deductible-expense row carries linked purchase-invoice evidence (see
+Once the draft verifies, record the filed marker. Verification refuses until
+every deductible-expense row carries linked purchase-invoice evidence (see
 [Attach invoices and receipts](ledger-evidence.md)), so this example registers
 the supplier invoice and attaches it before it calculates. Attach in that
 order: a draft bundles its evidence when you verify it, so an invoice attached
 afterwards does not reach the filing.
 
+The sequence below shows `export` refusing, then the filed marker recording.
+
 ```{cli-sequence} modelo-130-export-file
-:verify: Confirm the export writes a local fichero and the filing stays local.
+:verify: Confirm the export refuses and the filing stays local.
 ```
 
-Recording the filed marker is optional, and it applies only while the
-obligation window is open. Export is the local finish line; the marker is an
-internal note that you have already presented the file at the portal.
+Recording the filed marker applies only while the obligation window is open. It
+is an internal note that you have already presented the figures at the portal.
 
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
@@ -168,5 +171,5 @@ instalments are folded into Modelo 100 as payments on account. See
 - [The income-tax year (run-through)](irpf-lifecycle.md)
 - [The filing workflow](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
-- [Upload your exported modelo at the AEAT portal](file-at-aeat.md)
+- [File your modelo at the AEAT portal](file-at-aeat.md)
 - [Reconcile a filing](reconcile.md)

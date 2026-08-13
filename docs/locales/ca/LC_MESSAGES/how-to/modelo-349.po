@@ -247,7 +247,7 @@ msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
 
 #: ../../how-to/modelo-349.md:109
-msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 
 #: ../../how-to/modelo-349.md:110

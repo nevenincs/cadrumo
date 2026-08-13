@@ -410,7 +410,7 @@ msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/modelo-130.md:171
-msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Sube tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 
 #: ../../how-to/modelo-130.md:172

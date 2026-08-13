@@ -1,15 +1,15 @@
-# Quickstart: produce a modelo file
+# Quickstart: prepare a modelo filing
 
 Use this when you are new to Cadrumo and want the shortest path from local
-records to a file you can upload yourself through the Agencia Estatal de
+records to figures you can present yourself at the Agencia Estatal de
 Administración Tributaria (AEAT) portal.
 
-Cadrumo, invoked as the `aeat` command, prepares, checks, and exports local
-files for Spanish tax forms. It does not submit filings to AEAT. You remain responsible for reviewing and filing
-through official AEAT channels.
+Cadrumo, invoked as the `aeat` command, prepares and checks local records for
+Spanish tax forms. It does not submit filings to AEAT. You remain responsible
+for reviewing and filing through official AEAT channels.
 
 This page follows one complete path: create a profile, add two transactions,
-then calculate, verify, and export a Modelo 130 for the first quarter of 2026.
+then calculate, verify, and file a Modelo 130 for the first quarter of 2026.
 Every command below is run in order. It links to deeper guides whenever a step
 has tax-specific setup or review choices.
 
@@ -49,7 +49,7 @@ own details:
 :verify: Confirm the profile is created and becomes the active profile.
 ```
 
-The name and surnames are required (the export step refuses without them), and
+The name and surnames are required (filing refuses without them), and
 the activity start date scopes out prior periods so a first filing has no
 earlier quarter to depend on. `--quiet` runs without the interactive setup
 wizard.
@@ -133,7 +133,7 @@ Spanish tax form, and the year plus period identify the filing you are
 preparing.
 
 ```{cli-sequence} quickstart-modelo-130
-:verify: Confirm the draft passed verification before you export it.
+:verify: Confirm the draft passed verification before you file it.
 ```
 
 Read the frames in order:
@@ -152,7 +152,7 @@ Read the frames in order:
   AEAT. When the draft is complete the report reads `completeness_status
   complete` and `granted_verificado_completo true`. A first filing also shows one
   advisory noting that the period falls before your activity start date; this is
-  informational and does not block the export.
+  informational and does not block filing.
 
 Review every saved box with:
 
@@ -166,22 +166,27 @@ covers entering missing box values and handling figures carried forward from
 earlier quarters. For how the tool organises filing work behind the scenes, see
 [The filing workflow](filing-spine.md).
 
-## 5. Export the file
+## 5. Record the quarter as filed
 
-Export creates the `.boe` file, the format AEAT's upload portal accepts:
+Modelo 130 has no fichero-BOE layout, so export refuses. Record the quarter as
+filed locally instead:
 
 ```{cli-sequence} quickstart-export
-:verify: Confirm the export wrote the file after the invoice was linked.
+:verify: Confirm the export refuses and the local filing marker is recorded.
 ```
 
-The tool shows where the file was saved, its size in bytes, and a `file_sha256`
-verification code. Keep this code so you can later confirm you uploaded the
-exact file that was generated.
+The refusal is deliberate. A fichero-BOE layout is published only once every
+field it contains can be produced from checked values, because a partial layout
+can under-declare without saying so. Calculation, verification and the local
+filing record all still work; only the upload file is unavailable.
+
+Enter the calculated box values yourself at the AEAT portal, as step 7
+describes.
 
 This example uses a deductible-IVA expense, so it links the purchase invoice
-before calculating. Export refuses a deducted IVA row that carries no invoice
-(the message reads `Deductible IVA ledger rows require linked purchase invoice
-evidence`).
+before calculating. Verification refuses a deducted IVA row that carries no
+invoice (the message reads `Deductible IVA ledger rows require linked purchase
+invoice evidence`).
 
 Link the invoice while you record the expense, before you calculate. A draft
 bundles its evidence when you verify it, so an invoice attached afterwards does
@@ -208,12 +213,13 @@ AEAT's official portal. For the full calendar flow, see
 The final filing step is outside `aeat`:
 
 1. Log in to the official AEAT electronic filing portal.
-2. Choose the Modelo 130 file-upload path for the relevant year and period.
-3. Upload the exported `.boe` file.
+2. Open the Modelo 130 form for the relevant year and period.
+3. Enter the box values the calculation produced. Read them back at any time
+   with `aeat app modelo work status --modelo 130 --year 2026 --period 1T`.
 4. Review, sign, and keep the justificante AEAT issues after filing.
 
-The full handoff checklist, including what to do when the upload goes wrong,
-is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
+The full handoff checklist is in
+[File your modelo at the AEAT portal](file-at-aeat.md).
 
 After a real filing, record the local filing marker:
 
@@ -221,9 +227,9 @@ After a real filing, record the local filing marker:
 :verify: Confirm the local filed marker recorded.
 ```
 
-Like export, `work file` refuses a deducted IVA row whose invoice is not linked
+`work file` refuses a deducted IVA row whose invoice is not linked
 (`Deductible IVA ledger rows require linked purchase invoice evidence`). The
-draft exported above already carries its invoice, so the marker records.
+draft verified above already carries its invoice, so the marker records.
 
 This only records the action on your own computer. It does not contact AEAT.
 To compare your local record with the AEAT receipt, see

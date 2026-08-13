@@ -120,5 +120,5 @@ See [Reconcile a filing](reconcile.md) for the reconciliation verdicts.
 - [How the Renta declaration is assembled](../explanation/how-renta-is-assembled.md)
 - [Prepare a Modelo 130 IRPF instalment](modelo-130.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
-- [Upload your exported modelo at the AEAT portal](file-at-aeat.md)
+- [File your modelo at the AEAT portal](file-at-aeat.md)
 - [Reconcile a filing](reconcile.md)

@@ -406,7 +406,7 @@ msgstr ""
 "values.md)"
 
 #: ../../how-to/modelo-130.md:171
-msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md)"
 
 #: ../../how-to/modelo-130.md:172

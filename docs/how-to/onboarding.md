@@ -89,7 +89,7 @@ Export the verified draft to the `.boe` file the AEAT portal accepts. Upload it
 yourself at the portal, signed with your own certificate or Cl@ve, then record the
 filing locally and reconcile AEAT's receipt against your record.
 
-Finish with: [Upload your exported modelo at the AEAT portal](file-at-aeat.md),
+Finish with: [File your modelo at the AEAT portal](file-at-aeat.md),
 then [How to reconcile a filed modelo against its justificante](reconcile.md).
 
 ## Where to go next

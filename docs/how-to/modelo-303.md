@@ -8,8 +8,9 @@ enrolment alone remains quarterly. The registry's official title is "Modelo 303.
 Impuesto sobre el Valor Anadido. Autoliquidacion."
 
 Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
-Tributaria (AEAT). Export creates a local file that you upload through the official
-AEAT channel yourself.
+Tributaria (AEAT), and it cannot produce an upload file for it: Modelo 303 has
+no fichero-BOE layout, so `export` refuses. Read the calculated box values back
+and enter them through the official AEAT channel yourself.
 
 The tool needs a master-key passphrase and prompts for it.
 
@@ -19,22 +20,26 @@ profile](profile-setup.md) walks through it step by step.
 
 ## The complete first-quarter chain
 
-This is the full path from a classified, evidenced ledger to an exported fichero
-for a first-period filer. The preparation below sets up a self-employed profile,
+This is the full path from a classified, evidenced ledger to a filed quarter for
+a first-period filer. The preparation below sets up a self-employed profile,
 classifies the quarter's income and expense rows, and attaches the supplier's
 purchase invoice as encrypted evidence. The sequence then creates the draft,
-calculates it, verifies it, records the local filed marker, and exports the
-fichero-BOE. Each load-bearing detail is explained under the sequence.
+calculates it, verifies it, and records the local filed marker. Each
+load-bearing detail is explained under the sequence.
+
+Modelo 303 has no fichero-BOE layout, so the export step refuses. Enter the
+calculated box values at the AEAT portal instead, as
+[File your modelo at the AEAT portal](file-at-aeat.md) describes.
 
 ```{cli-sequence} modelo-303-first-quarter
-:verify: Confirm the draft verifies, files locally, and exports a stable fichero.
+:verify: Confirm the draft verifies, files locally, and the export refuses.
 ```
 
 Load-bearing details:
 
 - Create the profile with `--quiet` for the non-interactive form. A bare
   `aeat config profile create me` opens an interactive wizard. The profile MUST
-  carry `--name` and `--surnames`, or export later refuses with "requires the
+  carry `--name` and `--surnames`, or filing later refuses with "requires the
   operator name".
 - `--activity-start-date 2026-01-01` scopes the prior-period dependency out for
   a first period. Without it, verify blocks on the previous quarter.
@@ -52,11 +57,9 @@ Load-bearing details:
   finalizes the revision and captures a snapshot over the contributing rows, so
   the evidence must already be on the expense row. A locked row cannot take a
   late attachment.
-- `verify` reports `completeness complete` and `granted true`. `work file` then
-  writes the local filed marker, and `export` writes the `.boe` and reports its
-  path, byte size, and SHA-256 checksum. The exported fichero is byte-stable:
-  the same classified, evidenced quarter always produces the same 7365-byte file
-  with the same checksum.
+- `verify` reports `completeness complete` and `granted true`, and `work file`
+  writes the local filed marker. `export` refuses: Modelo 303 carries no
+  fichero-BOE layout, so there is no upload file to produce.
 - Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
   automatically for a común-territory profile, so casilla 66 and the headline
   casilla 71 (Resultado final) carry the full régimen-general result. This tool
@@ -231,10 +234,10 @@ For a spreadsheet review loop, see
 manual inputs, bindings, offsets, and revision selection, see
 [Review and supply calculation inputs](review-calculation-values.md).
 
-## Verify and export
+## Verify and file
 
 Verify the selected calculation with `aeat app modelo work verify`. The
-complete-chain sequence above runs verify, file, and export end to end.
+complete-chain sequence above runs verify and file end to end.
 
 Verification checks the selected draft against the verified-complete contract.
 The report exposes the calculation revision id, completeness status, whether
@@ -247,12 +250,14 @@ revision. That evidence lets later staleness checks detect whether a
 contributing ledger row changed or disappeared. It is not a general lock on the
 whole ledger, and it does not freeze unrelated rows.
 
-Export the verified or filed revision with `aeat app modelo export`.
+`aeat app modelo export` refuses for Modelo 303. The registry withdraws a
+fichero-BOE layout whenever some field it contains cannot yet be produced from
+checked values, because a partial layout can under-declare without saying so.
+Modelo 303 is currently in that state, so no upload file is produced.
 
-Export writes a local AEAT-compatible fichero-BOE file and reports the output
-path, size, checksum, and IDs. It does not contact AEAT. For ledger-derived
-revisions, export expects bundled evidence or a resolvable snapshot reference;
-do not treat export as a way to bypass missing evidence.
+Read the verified figures back with `aeat app modelo work revision` and enter
+them at the AEAT portal. Verification, the local filed marker, and the evidence
+capture described above all still apply.
 
 If you need to mark the verified revision as filed in local history after you
 submit through AEAT, record the local marker with `aeat app modelo work file`.

@@ -279,7 +279,7 @@ chain above, so the export and the post-portal steps here are display frames:
 ```
 
 Upload the exported file through AEAT's official channel; the full checklist is
-in [Upload your exported modelo at the AEAT portal](file-at-aeat.md). Review your
+in [File your modelo at the AEAT portal](file-at-aeat.md). Review your
 filing records with `filing-record list` and `filing-record view`. `work file`
 is an internal local marker; it does not submit anything to AEAT. The listing
 below runs in a sandbox that filed nothing, so it reports no records; your own

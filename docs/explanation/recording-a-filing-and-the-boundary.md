@@ -22,7 +22,7 @@ Nothing flows the other way. The connection has no path that writes, edits, or r
 
 The real submission happens in your own browser, on the agency's website, with your own login credentials - a digital certificate or Cl@ve (the Spanish government's shared identity login). You sign in as yourself, you upload the file the tool prepared, and you press submit. The tool never holds your credentials for this and never stands between you and the agency at that moment.
 
-For the steps, see [Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md).
+For the steps, see [File your modelo at the AEAT portal](../how-to/file-at-aeat.md).
 
 ## Recording a filing in your own records
 

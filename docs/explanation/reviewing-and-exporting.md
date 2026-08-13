@@ -23,7 +23,7 @@ reviewed calculation on your own computer - generating the file and
 submitting it are separate acts, and the tool never submits for you. When it
 writes the file it reports a fingerprint of the exact contents, so you can
 later prove which file you uploaded. The steps are in
-[Upload your exported modelo at the AEAT portal](../how-to/file-at-aeat.md).
+[File your modelo at the AEAT portal](../how-to/file-at-aeat.md).
 
 One is a review surface; the other is a delivery format. Keeping them apart
 is what lets each be good at what it does.
