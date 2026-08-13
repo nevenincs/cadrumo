@@ -17,7 +17,7 @@ related:
   - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
 modified: '2026-08-13'
-body_hash: 'sha256:20c9a4f7ba03bd11322ea714f126a46f9411f6c02b6a9ca41fc70c3b0d4c908f'
+body_hash: 'sha256:344be0af53a4176aa436b1bbcab0dc1ae766f6d04b1371e74e85ebff3bda1bb7'
 ---
 # `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 semantic homes and exact fixed-slot official projection` | (**status:** `accepted`)
 
@@ -316,3 +316,9 @@ Keeping the proposed simplified-regime record separate avoids converting an unac
 - The semantic map remains meaning-only, the casilla classifier remains declaration-only, and export completeness remains the value-arrival authority.
 - The proposed simplified-regime ADR remains non-governing and separate; casilla 48 remains manual until a later accepted completeness decision.
 - S45-S52 remain required implementation and proof work and may not be short-circuited by this architectural decision.
+
+### Complete simplified-regime value arrival
+
+DP30302 structural coverage is not calculation completeness. The accepted simplified-regime calculation decision owns one reviewed five-epoch semantic field matrix and one calculation-domain per-activity result derived from immutable filing-row evidence plus the exact annual Orden snapshot. Annual parameters, taxpayer statements, calculated results, snapshot arrival, and coordinate-only projection remain distinct canonical homes.
+
+An applicable simplified-regime filing must carry complete attested inputs and exactly one year-, revision-, period-, evidence-, and source-bound calculation result before any endpoint is projected. Projection selects typed values only; it never calculates, infers, defaults, or reads a generic result bag. Missing, extraneous, duplicate, wrong-epoch, or digest-divergent results refuse the whole export before target creation. The partial 34-endpoint assumption and any generic `off_form_result` path replaced by typed results are deleted without aliases or compatibility readers.
