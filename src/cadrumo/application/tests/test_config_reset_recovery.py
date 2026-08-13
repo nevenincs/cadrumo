@@ -327,8 +327,8 @@ def test_resume_refuses_malformed_journal_identity_before_target_lock(
         document["targets"][0]["bucket_id"] = "x" * 129
         journal_path.write_text(json.dumps(document), encoding="utf-8")
 
-        with pytest.raises(ConfigResetError, match="configuration reset journal is corrupt") as raised:
+        with pytest.raises(ConfigResetError) as raised:
             resume_config_reset(interrupted.operation_id, confirmed=True)
 
-        assert raised.value.context == {"operation_id": interrupted.operation_id}
+        assert raised.value.context == {"operation_id": interrupted.operation_id, "journal_corrupt": True}
         assert bucket_paths(root, _PROFILE_A_ID).bucket_dir.is_dir()

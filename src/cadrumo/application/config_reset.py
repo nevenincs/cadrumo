@@ -258,8 +258,8 @@ def _already_running_error(
     error: ConfigResetJournalIncompleteError,
 ) -> ConfigResetAlreadyRunningError:
     return ConfigResetAlreadyRunningError(
-        "another configuration reset is incomplete",
-        context={"operation_id": error.args[0]},
+        translated_message="errors.locked.locked_storage_lock_acquisition",
+        context={"operation_id": (error.context or {}).get("operation_id", "")},
     )
 
 
