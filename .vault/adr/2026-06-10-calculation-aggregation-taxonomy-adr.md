@@ -347,6 +347,80 @@ and no-parallel-write-path rules.
   a `previous_filing` binding MUST carry a direct selector, and registry validation
   refuses a binding that is both relation-targeted and previous-filing-resolvable.
 
+## Amendment 2026-08-13: the direct cross-modelo carry row
+
+**What this adds.** One row to the mechanism table, admitting a DIRECT
+`previous_filing` carry whose source is another modelo, where and only where the
+relation entity cannot express the shape:
+
+| Calculation type | Canonical mechanism | Resolver / engine channel | Live enrollment |
+|---|---|---|---|
+| Cross-MODELO carry whose plural axis is SOURCE CASILLAS (no one-relation form) | `previous_filing` binding with a DIRECT selector, enumerated with its constraint and its revisit trigger | `PreviousFilingSourceResolver` → `binding_values` | already enrolled — unchanged |
+
+**Why the table needed it.** The original census counted seven cross-modelo
+`previous_filing` rows and assigned them all to migration or to the fan-in
+exemption. It missed the shape that Modelo 130's prior-year economic-activity net
+income carry has: `source_modelo = "100", filing_year_delta = -1, period = "0A"`,
+summing FOUR Modelo 100 boxes. Measured at HEAD, that carry is the only instance,
+and it is already modelled exactly ONE way.
+
+**The constraint, measured rather than argued.** The relation entity's plural axis
+is PERIODS — `source_periods` fanned against a single `source_casilla_id`
+(`RelationDefinition`, `_schema_surfaces.py`). This carry's plural axis is SOURCE
+CASILLAS, and Modelo 100 publishes no box totalling the four
+(0224 estimación directa, 1479 and 1553 estimación objetiva, 1577 atribuida —
+enumerated verbatim by the AEAT Modelo 130 instructions the binding cites). That
+is the same class of mismatch this ADR already accepted for M353: a missing AXIS,
+not a missing value. It fails the substitutability pre-filter for the same reason,
+so promoting it would be a force-fit rather than a standardisation.
+
+**The rejected design, named.** Four `cross_model_output` relations (one per source
+box), four `relation_prefill` materialisation slots, one `internal_only` computed
+casilla summing the four relation operands, and a rewrite of the casilla 13
+minoración formula to read that casilla. Rejected on three measured grounds:
+
+1. It converts one selector into nine registry entities to express the same sum,
+   and `materialize_relation_binding_values` refuses two relations sharing one
+   target binding with differing values, so the four slots are structural, not a
+   stylistic choice.
+2. It collapses the operator's single-value override channel
+   (`--binding irpf.previous_year_economic_activity_net_income=<total>`, a recorded
+   live invocation) into four per-box overrides. A taxpayer who holds only the
+   prior-year total cannot answer four boxes, and the minoración bracket depends on
+   the total.
+3. The consumer surface is 104 tracked files at HEAD, including 34 recorded
+   command-sequence goldens and four evaluation goldens owned by a live campaign.
+
+**The variant that looks cheaper and is worse.** Summing the four inside Modelo 100
+as one `internal_only` casilla and pointing a single relation at it would satisfy
+the schema, and it would break the channel this carry exists for: an `internal_only`
+casilla is exempt from the official record, so it never appears in a filed
+declaration, and a relation resolving from pulled AEAT history would find nothing.
+
+**This does not open the dual-modelling door.** The carry is modelled once. Two
+build-time validators already make a second mechanism impossible for it: a
+`previous_filing` binding must satisfy the direct-selector predicate, and no binding
+may be both relation-targeted and `previous_filing`-sourced
+(`_validate_relation_sources.py`). This amendment adds the missing third guard — a
+standing gate that walks the corpus and refuses a cross-modelo `previous_filing`
+carry that lands in NEITHER the fan-in row NOR the enumerated set
+(`registry/tests/test_cross_modelo_carry_taxonomy.py`). Before it, a new
+cross-modelo direct carry could enter with no decision at all, which is how this one
+did.
+
+**Revisit trigger, on the same terms as M353's.** Fold this carry onto a relation
+when either the relation schema gains a plural source-casilla axis, or Modelo 100
+publishes a single box totalling the rendimiento neto of economic activities. The
+enumerated entry carries that trigger as a required field, and a stale entry fails
+the gate.
+
+**What the standing goal still asks for that this excludes.** The goal is one
+mechanism per channel with cross-modelo channels on relations. This amendment does
+not deliver that for this carry; it records that the relation entity cannot yet hold
+it and refuses to pretend otherwise by decomposition. The relation schema's missing
+plural source-casilla axis remains an open capability gap, and it is the thing that
+would close this exemption for real.
+
 ## Status
 
 Accepted and FOUNDATIONAL — not reopened. This ADR's mechanism-ownership table

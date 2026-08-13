@@ -65,7 +65,7 @@ related:
 
 ## Outcome
 
-NOT COMPLETE. The ADR question is answered (relation is canonical, already
+CLOSED ON THE 2026-08-13 RULING RECORDED IN THE NOTES BELOW; the two paragraphs that follow are the earlier pass's state and are kept for the design they carry. NOT COMPLETE AT THAT TIME. The ADR question is answered (relation is canonical, already
 covered, no amendment needed) and the full migration is DESIGNED — every
 registry entity, every id, every legal ref, every construct-membership
 update — but landing it is blocked on a real prerequisite this row did not
@@ -198,6 +198,32 @@ most of the M100/Renta 2024 test files. The remainder (46 AssertionError,
 casilla TOML naming-convention violations, a continuidad-completeness
 ratchet baseline drift for modelo 303, and Modelo 232's `2016-2017`
 revision carrying an entirely empty `export_layouts`.
+
+RULED 2026-08-13, ON THE MEASUREMENT THE EARLIER PASSES DID NOT TAKE. The mechanism STAYS the direct `previous_filing` carry, and the taxonomy carries an amendment naming the rejected design — the row's second option, reached not as an escape from the first but because the first fails the substitutability pre-filter this repository requires before promoting any site onto an existing mechanism.
+
+THE CONSTRAINT IS A MISSING AXIS, NOT A MISSING VALUE. The relation entity's plural axis is PERIODS: `RelationDefinition.source_casilla_id` is SINGULAR and `source_periods` fans against it. This carry's plural axis is SOURCE CASILLAS — four Modelo 100 boxes summed (0224 estimación directa, 1479 and 1553 estimación objetiva, 1577 atribuida), enumerated verbatim by the AEAT Modelo 130 instructions the binding already cites in its `source_citations`. Measured rather than assumed: Modelo 100 declares NO casilla totalling the four in either the 2024 or the 2025 revision — the only registry references to them are their own casilla fragments and the economic-activities construct, and no formula sums them. So the relation's constraint shape is NARROWER than the binding's on the one axis that matters, which is the same class of mismatch this ADR already accepted when it exempted the M353 per-grupo-member fan-in for having no grouping axis. Promoting on a narrower shape is the false-positive class the audit discipline explicitly forbids.
+
+WHAT THE REJECTED DESIGN WOULD HAVE COST, MEASURED. The four-relation decomposition (recorded in full in this record's own Description, and still the correct design if the axis ever lands) needs four relations, four `relation_prefill` slots and one `internal_only` summing casilla, because `materialize_relation_binding_values` REFUSES two relations sharing one target binding with differing values — the four slots are structural, not stylistic. It also collapses the operator's single-value override channel: `--binding irpf.previous_year_economic_activity_net_income=<total>` is a recorded live CLI invocation, and after decomposition an operator who knows only the prior-year total cannot answer four per-box overrides, while the minoración bracket depends on the total. And the consumer surface is 104 tracked files at HEAD, including 34 recorded command-sequence goldens and four evaluation goldens owned by a live campaign.
+
+THE CHEAPER-LOOKING VARIANT IS THE WORST ONE, and it is recorded so nobody re-derives it as an improvement: summing the four inside Modelo 100 as one `internal_only` casilla, then pointing a single relation at it, satisfies the schema and destroys the function. An `internal_only` casilla is exempt from the official record by construction, so it never appears in a filed declaration, and a relation resolving from pulled AEAT history would find nothing — defeating precisely the channel this row exists to serve.
+
+THE GATE'S FIRST CLAUSE WAS ALREADY TRUE AND IS NOW PROVEN. "Resolves through exactly one enrolled mechanism" holds at build time already: `_validate_relation_sources.py` refuses a `previous_filing` binding whose selector is not direct, and refuses any binding that is both relation-targeted and `previous_filing`-sourced. What did NOT exist was anything refusing a cross-modelo direct carry that lands in no taxonomy row at all — which is how this carry entered without a decision. That third guard now exists as `src/cadrumo/domain/calculations/registry/tests/test_cross_modelo_carry_taxonomy.py`, committed as `e77167bf4d`: it walks the corpus, classifies every cross-modelo `previous_filing` binding as fan-in (by its grouping axis) or as an enumerated exemption (by full `(modelo, revision, binding)` coordinate, never a line number), and refuses anything else. Each enumerated entry must state its own reason and its own revisit trigger, and a stale entry — one whose carry no longer exists — fails the gate rather than outliving it.
+
+The ADR amendment is in `2026-06-10-calculation-aggregation-taxonomy-adr` under "Amendment 2026-08-13": it adds the row, names the rejected design and its three measured grounds, states why this does not open the dual-modelling door (the carry is modelled once and two build-time validators plus the new gate keep it that way), carries the M353-shaped revisit trigger, and states plainly what the standing goal still asks for that this excludes — the relation schema's missing plural source-casilla axis remains an open capability gap.
+
+    pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_cross_modelo_carry_taxonomy.py
+    8 passed in 39.95s
+
+MUTATION PROOF, out-of-repo pytest plugin, nothing under `src` mutated, run twice for the two independent teeth. Emptying the enumerated set: `test_every_cross_modelo_carry_lands_in_exactly_one_taxonomy_row` reddens and the other seven stay green — the correct blast radius, since dropping an exemption does not make a carry non-direct or relation-targeted. Adding an entry for a carry that does not exist: `test_no_enumerated_carry_is_stale` reddens alone. A gate that reddened everything under either mutation would have been asserting its own helper rather than the property.
+
+VALUE EVIDENCE, through the mechanism that is being kept rather than a new one. The end-to-end enrollment test drives the real encrypted-SQLite observation store, the real authority and the real `previous_filing` resolver across two renta years, seeding a real prior-year Modelo 100 observation and asserting the minoración band it selects. Its expected value is the AEAT band constant for the ≤9000 band, not a figure recomputed from the formula under test:
+
+    pytest -q -n0 -m "unit or integration" src/cadrumo/application/calculations/tests/test_modelo_130_multiyear_renta_enrollment.py
+    1 passed in 96.94s
+
+CONSEQUENCE FOR THE SIBLING ROW: `P02.S18` deferred this carry's treatment declaration on the ground that its MECHANISM was unsettled. That deferral is now discharged — the mechanism is settled and stays — so the carry is decidable on RIRPF art. 110.3.c, whose prior-year net income is a threshold the bracket is read against rather than an amount that settles the instalment.
+
+STEPS (3) AND (4) OF THIS RECORD'S OWN EARLIER PLAN ARE VOID, not deferred: they existed only to serve the migration. The `previous_filing` binding is not deleted, so its S13 year-coverage allowance stays live and correct, and the parity test they anticipated is answered by the enrollment test above rather than by a comparison across two mechanisms that now number one.
 
 Confirms this row's own two touched files
 (`_validate_relation_periods.py`, `_validate_relation_sources.py`) are not
