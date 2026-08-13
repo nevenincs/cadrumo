@@ -130,12 +130,22 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
 
     Four roots are tokenised — the per-run sandbox storage root, workdir, and
     their own parent sandbox root (all run-specific), plus the repository
-    checkout root (machine-specific) — each in both native and POSIX-slash
-    form. The replacement is value-anchored on the exact known root strings
-    (never a wildcard), so it can never over-mask an unrelated path;
-    longest-first ordering collapses a nested path before its parent, so the
-    sandbox root only catches what the two more specific siblings leave
+    checkout root (machine-specific) — each in native, POSIX-slash, and
+    JSON-escaped form. The replacement is value-anchored on the exact known
+    root strings (never a wildcard), so it can never over-mask an unrelated
+    path; longest-first ordering collapses a nested path before its parent, so
+    the sandbox root only catches what the two more specific siblings leave
     behind.
+
+    The JSON-escaped form is load-bearing on Windows, where a backslash path
+    serialised INTO a value doubles every separator. ``config check`` renders
+    its precondition evidence as a JSON blob inside a text table cell, so the
+    per-run sandbox path reaches the golden as ``C:\\\\Users\\\\...`` and the
+    native single-separator needle never matches it. Without this form that one
+    frame carries a run-specific directory name that reds the very next run on
+    the same machine — the same defect the host-conditional fact mask closes one
+    layer up. A POSIX path is unaffected (it has no backslash to double), so the
+    extra pair is inert off Windows rather than conditional on it.
     """
     replacements: list[tuple[str, str]] = []
     for raw, token in (
@@ -146,9 +156,12 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
     ):
         native = str(raw)
         posix = native.replace("\\", "/")
+        json_escaped = native.replace("\\", "\\\\")
         replacements.append((native, token))
         if posix != native:
             replacements.append((posix, token))
+        if json_escaped != native:
+            replacements.append((json_escaped, token))
     return sorted(replacements, key=lambda pair: len(pair[0]), reverse=True)
 
 
