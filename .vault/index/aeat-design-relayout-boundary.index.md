@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:d5d44a982a9178d9fb552f1273a2dc118571b3aa0a414c62f6f5c8de41157c28'
+body_hash: 'sha256:040ceb346089ecf68fe147383000e515f2135892b13fd3d1e75c741f80780117'
 related:
   - '[[2026-08-07-aeat-design-relayout-boundary-adr]]'
   - '[[2026-08-07-aeat-design-relayout-boundary-research]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S71]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S72]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S73]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S77]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S78]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S79]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P02-S80]]'
@@ -37,6 +38,7 @@ related:
   - '[[2026-08-08-aeat-design-relayout-boundary-W01-P03-S74]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S43]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W04-P09-S44]]'
+  - '[[2026-08-08-aeat-design-relayout-boundary-W05-P10-S63]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S60]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S66]]'
   - '[[2026-08-08-aeat-design-relayout-boundary-W05-P11-S70]]'
@@ -92,8 +94,10 @@ Auto-generated index of all documents tagged with `#aeat-design-relayout-boundar
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S14` - Handle the ambiguity refusal in the registry describe and bindings query
 - `2026-08-08-aeat-design-relayout-boundary-W01-P03-S74` - Record and verify that the profile inspect surface already refuses on the ambiguity error
 - `2026-08-08-aeat-design-relayout-boundary-W04-P09-S43` - Narrow the Modelo 200 revision to filing year 2025 onward
+- `2026-08-08-aeat-design-relayout-boundary-W01-P02-S77` - HELD: both ruled mechanisms are measured-blocked and neither may be re-proposed without new evidence
 - `2026-08-08-aeat-design-relayout-boundary-W01-P02-S78` - Establish Modelo 200's export fragment tree provenance and author method
 - `2026-08-08-aeat-design-relayout-boundary-W04-P09-S44` - Do not retire the Modelo 200 revision directory
+- `2026-08-08-aeat-design-relayout-boundary-W05-P10-S63` - Decide and record whether Modelo 200 and Modelo 390 should declare continuidad ids for their casillas as Modelo 303 already does
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S60` - Record in the campaign audit document that the first accepted record's no-implementation-action ruling for Modelo 200 was overtaken by a record-set-change finding, so a later reader does not read the record as still in force on that point
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S66` - Record in the campaign audit document that the sub-year decision record's finding of one layout-identical Modelo 303 revision pair was overtaken by an occupancy measurement, so the open-ended revision spans five design epochs rather than four and no pair may share a copied export fragment tree, and record beside it that the four-year prescripcion period scoping this plan is grounded on the tree's retention-floor constant rather than on bundled corpus text because Ley 58-2003 articles 66 and 67 are not bundled
 - `2026-08-08-aeat-design-relayout-boundary-W05-P11-S70` - Record in the campaign audit document that Modelo 200 filing years 2022 and 2023 sit inside the prescripcion window while no registry revision claims them, so they refuse today as a coverage gap rather than as a mis-write, and state that this campaign deliberately does not close that gap because its standing goal is that no filing year is written at wrong offsets rather than that every reachable year is served

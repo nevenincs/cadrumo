@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:f9f2b88eeeade833691178afe1e0710e4c4214c0f9e83b947f85932204335202'
+body_hash: 'sha256:e6683789c51f671d5fc1506f44d75a08f45e2c0d5e09243b39894cc3782aef85'
 related:
   - "[[2026-08-08-aeat-design-relayout-boundary-plan]]"
   - "[[2026-08-07-aeat-design-relayout-boundary-adr]]"
@@ -124,6 +124,91 @@ time of this campaign's closing phase carry several other agents' uncommitted
 translation work in the same files. The trade was judged not worth making for
 information the operator already has by another channel, against the cost of
 opening four contended locale files for a wording-only change.
+
+### continuidad-declaration-ruling-modelo-390-done-modelo-200-refused-with-precondition | medium | Modelo 390 already declares a full continuity set so that half of the question is closed; Modelo 200 is refused for now because 90.5 percent of its casillas cannot be mechanically keyed, with a concrete precondition and a stated cost of leaving it open
+
+The question was whether Modelo 200 and Modelo 390 should declare
+`continuidad_id` stamps for their casillas as Modelo 303 already does. It
+resolves differently for the two modelos, and the row's premises were
+re-measured against HEAD rather than adopted.
+
+**Modelo 390 needs no decision: it is already done.** The row records it as
+declaring none. That did not reproduce. At HEAD Modelo 390 declares 88
+continuity stamps across 88 casillas — its entire casilla set — carried by a
+commit whose subject states it gave all 88 casillas a continuity identity
+ahead of the split. The Spanish catalogue carries 88 continuity chains with
+88 non-null values, so the concept-level translation tier is populated, not
+merely scaffolded. This part of the row is closed as already satisfied by
+work landed elsewhere.
+
+**Modelo 200 is refused for now, on a measured admissibility ground rather
+than on cost.** Continuity identity is a grounded tax judgement against
+official AEAT and BOE sources, never text similarity and never a bulk
+mechanical stamp. The single mechanical shortcut the governing grounding
+discipline does sanction is deriving a chain id from the casilla's
+`semantic_role`, and it is admissible only where that role identifies exactly
+one box per revision. Modelo 390 satisfies that condition perfectly: 88
+casillas carrying 88 distinct roles, and every one of its 88 chain ids is
+exactly its role lowercased with underscores replaced by dashes, with zero
+mismatches. That is why an 88-stamp pass was legitimate there and landed in
+one commit.
+
+Modelo 200 fails that condition decisively. Its single revision declares
+3,250 casillas carrying only 621 distinct semantic roles. Of those roles 308
+are unique, while 313 collide, and the colliding roles cover 2,942 casillas —
+90.5 percent of the modelo. The heaviest collisions are the Estados Contables
+tables, where a single role covers a hundred or more distinct accounting
+lines: 111 casillas share one conversion-aid role, 106 share one
+socios-operations role, 100 share one profit-and-loss role, 90 and 82 share
+the two balance-sheet roles. Deriving chain ids mechanically there would
+merge distinct legal concepts into one chain, which is the precise failure the
+grounding discipline names as silent and unrecoverable — and merging is worse
+than declaring nothing, because a wrong chain asserts an identity that
+licenses value and translation sharing across boxes that are not the same
+concept. Stamping Modelo 200 honestly therefore means roughly 2,942
+hand-adjudicated instance-keyed names, which is a grounding campaign in its
+own right and not a stamping row.
+
+**Nothing forces the decision today.** Modelo 200 carries exactly one
+revision directory, and the completeness ratchet counts only casilla groups
+appearing in two or more revisions — a single-revision modelo contributes
+nothing to it, which is why neither Modelo 200 nor Modelo 390 appears in the
+committed baseline at all. The duplication cost the row names is contingent
+on a split, and Modelo 200's split is blocked on the sibling generator
+campaign for as long as this document's blocked-state section holds.
+
+**The precondition, stated concretely.** Modelo 200 must carry a grounded
+continuity set before its second revision directory lands, authored in the
+same change that authors that revision. The ordering is what matters: while
+the modelo has one revision, stamping is a naming act over a fixed set and
+the work does not grow; once a second revision exists, every unstamped
+casilla additionally needs cross-revision adjudication against both endpoint
+years, and the untranslated Spanish label set has already been duplicated.
+
+**What it costs to leave it open.** Until that precondition is met, Modelo
+200's occurrence keys are its only resolution source, so its first split
+duplicates the whole Spanish label set per revision and any later correction
+to an official label must be applied in every revision's copy rather than
+once at the concept. That cost is real and is accepted deliberately here,
+because paying it early by bulk-stamping would buy a cheaper translation
+surface with 2,942 ungrounded identity assertions — a trade the grounding
+discipline forbids outright.
+
+**Two row premises did not reproduce and are corrected here.** Modelo 303 is
+recorded as declaring stamps for 231 casillas and carrying 234 continuity
+keys; at HEAD it declares 202 stamps per revision across six revisions,
+resolving to 202 distinct chain ids and 202 continuity chains in the Spanish
+catalogue carrying 206 non-null values. The shape of the claim holds — Modelo
+303 does carry a populated revision-independent tier — but the figures are
+stale and a later reader should not treat 231 or 234 as current. Separately,
+the plan's description of the resolution chain as walking the revision
+occurrence key through the casilla alias key to the continuity key does not
+match the loader: a casilla's own chain is two tiers, the occurrence key
+followed by the continuity key when one is declared, while alias keys form a
+separate per-alias chain rather than an intermediate tier. The behaviour the
+description turns on is confirmed exactly as stated — resolution advances on
+the absence of a VALUE rather than of a key, which is what allows the
+continuity tier to fire at all.
 
 ## Current blocked state
 
