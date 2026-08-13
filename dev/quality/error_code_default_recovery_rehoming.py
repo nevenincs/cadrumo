@@ -110,6 +110,17 @@ class DispositionKind(StrEnum):
     RETIRED_OR_UNREACHABLE = "retired_or_unreachable"
 
 
+#: The final dispositions a row reaches once its producer migration has landed.
+#: A row carrying one of these is no longer owned by an open Step.
+_VERIFIED_DISPOSITIONS: Final[frozenset[DispositionKind]] = frozenset(
+    {
+        DispositionKind.VERIFIED_TYPED_ACTION,
+        DispositionKind.VERIFIED_TERMINAL_NO_RECOVERY,
+        DispositionKind.VERIFIED_NONPRODUCER_REFERENCE,
+    },
+)
+
+
 @dataclass(frozen=True, slots=True)
 class HistoricalKey:
     """The immutable identity of one non-null retired default declaration."""
@@ -727,7 +738,18 @@ def _validate_fingerprint_owners(
     steps: tuple[_PlanStep, ...],
     steps_by_id: dict[str, list[_PlanStep]],
     errors: list[str],
+    *,
+    require_open_owner: bool,
 ) -> None:
+    """Bind every fingerprint to exactly one scope-valid owner Step.
+
+    A row still awaiting migration needs an *open* owner, and the uniqueness it
+    is checked against is uniqueness among open Steps: two open Steps covering
+    one path is an unresolved ownership dispute. A row whose migration has
+    landed is the opposite case -- its owner is expected to be closed, and the
+    covering set is drawn from every Step, because a closed owner has left the
+    open population by construction.
+    """
     for ownership in row.ownerships:
         fingerprint = ownership.fingerprint
         owner_id = ownership.owner_step
@@ -739,14 +761,18 @@ def _validate_fingerprint_owners(
             errors.append(f"E_REHOMING_OWNER_MULTIPLE:{row.historical.error_qualname}:{owner_id}:{len(owners)}")
             continue
         owner = owners[0]
-        if owner.checked:
+        if require_open_owner and owner.checked:
             errors.append(f"E_REHOMING_OWNER_CLOSED:{row.historical.error_qualname}:{owner_id}")
             continue
         path = fingerprint.path
-        covering = [step for step in steps if not step.checked and _scope_covers(path, step.scope)]
+        covering = [
+            step
+            for step in steps
+            if (not step.checked or not require_open_owner) and _scope_covers(path, step.scope)
+        ]
         if not any(step.step_id == owner_id for step in covering):
             errors.append(f"E_REHOMING_OWNER_SCOPE:{row.historical.error_qualname}:{owner_id}:{path}")
-        if len(covering) != 1:
+        if require_open_owner and len(covering) != 1:
             errors.append(
                 f"E_REHOMING_OWNER_OVERLAP:{row.historical.error_qualname}:{path}:"
                 f"{','.join(sorted(step.step_id for step in covering))}"
@@ -759,9 +785,19 @@ def validate_rehoming_ledger(
     root: Path = REPO_ROOT,
     plan_path: Path = _PLAN_PATH,
 ) -> RehomingLedger:
-    """Require exact current evidence and a unique open scope-valid migration owner."""
+    """Require exact current evidence and a scope-valid owner for each row's disposition.
+
+    Whether a row still awaits migration is read from the current source, not
+    from the row's own bookkeeping: a constructor that still passes a
+    positional argument keeps an authored sentence alive, and such a row needs
+    exactly one open scope-valid owner. Once no constructor authors a message
+    the migration has landed by evidence, and the owner Step is expected to be
+    closed -- demanding an open owner there would make closing any Step red the
+    gate, so the campaign could never converge. A row may only *claim* a
+    verified disposition when the evidence agrees with the claim.
+    """
     reconciled = RehomingLedger(_reconcile_exact_preimage(ledger.rows))
-    current = current_source_fingerprints(root)
+    current, authored = _scan_current_source(root)
     steps = _current_plan_steps(plan_path)
     steps_by_id: dict[str, list[_PlanStep]] = defaultdict(list)
     for step in steps:
@@ -782,9 +818,16 @@ def validate_rehoming_ledger(
                 errors.append(f"E_REHOMING_FINGERPRINT_MULTISET:{qualname}")
             if len({ownership.fingerprint.identity for ownership in row.ownerships}) != len(row.ownerships):
                 errors.append(f"E_REHOMING_FINGERPRINT_DUPLICATE:{qualname}")
-            if row.disposition_kind is not DispositionKind.MIGRATION_REQUIRED:
-                errors.append(f"E_REHOMING_CURRENT_MIGRATION_REQUIRED:{qualname}")
-            _validate_fingerprint_owners(row, steps, steps_by_id, errors)
+            authored_groups = authored.get(qualname, frozenset())
+            authors_message = any(fingerprint.structural_group in authored_groups for fingerprint in expected)
+            has_constructor = any(fingerprint.role == "constructor" for fingerprint in expected)
+            if row.disposition_kind is DispositionKind.RETIRED_OR_UNREACHABLE:
+                errors.append(f"E_REHOMING_CURRENT_DISPOSITION:{qualname}:{row.disposition_kind.value}")
+            if row.disposition_kind in _VERIFIED_DISPOSITIONS and authors_message:
+                errors.append(f"E_REHOMING_VERIFIED_AUTHORS_MESSAGE:{qualname}")
+            if row.disposition_kind is DispositionKind.VERIFIED_NONPRODUCER_REFERENCE and has_constructor:
+                errors.append(f"E_REHOMING_REFERENCE_HAS_CONSTRUCTOR:{qualname}")
+            _validate_fingerprint_owners(row, steps, steps_by_id, errors, require_open_owner=authors_message)
         elif (
             row.disposition_kind is not DispositionKind.RETIRED_OR_UNREACHABLE
             or row.current_error_qualname is not None
@@ -2022,6 +2065,13 @@ class _LexicalScanner(ast.NodeVisitor):
         self.safe_non_target_import_module_calls: dict[int, _Resolution] = {}
         self.parents = {id(child): parent for parent in ast.walk(module.tree) for child in ast.iter_child_nodes(parent)}
         self.observations: list[tuple[str, SourceFingerprint]] = []
+        #: Identities (pre-ordinal) of constructor calls that pass a positional
+        #: argument. A registered error resolves its operator text from its
+        #: message key, but ``str(exc)`` prefers ``args[0]``, so a positional
+        #: argument is an authored sentence reaching tracebacks and logs in
+        #: every locale. This is evidence about the call shape only; it carries
+        #: no action, condition, command, or locale policy.
+        self.authored_message_sites: list[tuple[str, tuple[str, str, str, str, str]]] = []
 
     def _lookup(self, name: str) -> _Resolution:
         index = len(self.scopes) - 1
@@ -2133,7 +2183,11 @@ class _LexicalScanner(ast.NodeVisitor):
         if len(exact) != 1:
             line, column, _, _ = _node_location(node, path=self.module.relative_path)
             raise _recovery_error("E_REHOMING_TARGET_AMBIGUOUS", self.module.relative_path, line, column)
-        self.observations.append((next(iter(exact)), self._fingerprint(node, role=role)))
+        qualname = next(iter(exact))
+        fingerprint = self._fingerprint(node, role=role)
+        self.observations.append((qualname, fingerprint))
+        if role == "constructor" and isinstance(node, ast.Call) and node.args:
+            self.authored_message_sites.append((qualname, fingerprint.structural_group))
 
     def _has_target_export(self, resolution: _Resolution) -> bool:
         return any(
@@ -2881,14 +2935,18 @@ class _LexicalScanner(ast.NodeVisitor):
         )
 
 
-def current_source_fingerprints(root: Path = REPO_ROOT) -> dict[str, tuple[SourceFingerprint, ...]]:
-    """Return exact constructor and nonconstructor observations by historic qualname."""
+def _scan_current_source(root: Path) -> tuple[
+    dict[str, tuple[SourceFingerprint, ...]],
+    dict[str, frozenset[tuple[str, str, str, str, str]]],
+]:
+    """Return current fingerprints plus the groups whose calls author a message."""
     modules = _production_modules(root)
     targets = _target_qualnames()
     _current_definitions(modules, targets)
     exports = _resolve_module_exports(modules, targets)
     modules_by_name = {module.module: module for module in modules}
     collected: dict[str, list[SourceFingerprint]] = defaultdict(list)
+    authored: dict[str, set[tuple[str, str, str, str, str]]] = defaultdict(set)
     ordinals: defaultdict[tuple[str, str, str, str, str], int] = defaultdict(int)
     for module in modules:
         scanner = _LexicalScanner(module, exports, modules_by_name, targets)
@@ -2897,10 +2955,32 @@ def current_source_fingerprints(root: Path = REPO_ROOT) -> dict[str, tuple[Sourc
             group = fingerprint.structural_group
             ordinals[group] += 1
             collected[qualname].append(fingerprint.with_ordinal(ordinals[group]))
-    return {
-        qualname: tuple(sorted(fingerprints, key=lambda fingerprint: fingerprint.identity))
-        for qualname, fingerprints in sorted(collected.items())
+        for qualname, group in scanner.authored_message_sites:
+            authored[qualname].add(group)
+    fingerprints = {
+        qualname: tuple(sorted(values, key=lambda fingerprint: fingerprint.identity))
+        for qualname, values in sorted(collected.items())
     }
+    return fingerprints, {qualname: frozenset(groups) for qualname, groups in sorted(authored.items())}
+
+
+def current_source_fingerprints(root: Path = REPO_ROOT) -> dict[str, tuple[SourceFingerprint, ...]]:
+    """Return exact constructor and nonconstructor observations by historic qualname."""
+    return _scan_current_source(root)[0]
+
+
+def current_authored_message_groups(root: Path = REPO_ROOT) -> dict[str, frozenset[tuple[str, str, str, str, str]]]:
+    """Return, per historic qualname, the constructor groups passing a positional argument.
+
+    A registered error resolves its operator-facing text from its message key,
+    but ``str(exc)`` prefers ``args[0]``. A constructor still passing a
+    positional argument therefore keeps an authored sentence alive in
+    tracebacks, logs, and every boundary that renders the exception directly,
+    in every locale, while a key-and-context assertion stays green. This is the
+    machine evidence that separates a producer still awaiting migration from
+    one whose migration has landed.
+    """
+    return _scan_current_source(root)[1]
 
 
 def main(argv: list[str] | None = None) -> int:

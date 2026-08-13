@@ -69,6 +69,18 @@ def _live_ownership_with_multiple_row() -> FingerprintOwnership:
     return row.ownerships[0]
 
 
+def test_checked_rehoming_ledger_passes_every_validator_rule() -> None:
+    """The packaged ledger satisfies the validator itself, not a partial restatement.
+
+    The sibling test below re-derives part of the join inline. That inline
+    restatement can only agree with the validator by coincidence, and every
+    rule with no inline counterpart -- owner scope, owner overlap,
+    current-unjoined, and the disposition guards -- would be unenforced by this
+    suite. Calling the validator is what makes those rules bite here.
+    """
+    validate_rehoming_ledger(load_rehoming_ledger())
+
+
 def test_checked_rehoming_ledger_is_an_exact_live_source_join() -> None:
     ledger = load_rehoming_ledger()
     current = current_source_fingerprints()
