@@ -602,6 +602,7 @@ def check_sequences_in_subprocess(
 def check_page_coherence_in_subprocess(
     *,
     docs_root: Path | None = None,
+    page: str | None = None,
     timeout: float = 3600,
     jobs: int = 1,
 ) -> tuple[str, ...]:
@@ -619,6 +620,14 @@ def check_page_coherence_in_subprocess(
     Raises:
         SequenceEngineError: When a child cannot run the check surface.
     """
+    if page is not None:
+        command = _scoped_check_command(
+            page=page,
+            docs_root=docs_root,
+            goldens_root=None,
+            coherence=True,
+        )
+        return _run_check_child(command, timeout=timeout)
     return _check_pages_in_subprocesses(
         docs_root=docs_root,
         goldens_root=None,
@@ -722,6 +731,16 @@ def _build_argument_parser() -> argparse.ArgumentParser:
                     "cumulative output"
                 ),
             )
+            sub.add_argument(
+                "--timeout",
+                type=float,
+                default=None,
+                metavar="SECONDS",
+                help=(
+                    "run the check in one bounded child interpreter and report the "
+                    "last started page, sequence, frame, and resolved command on expiry"
+                ),
+            )
     return parser
 
 
@@ -742,7 +761,10 @@ def _owning_page(sequence_id: str, *, docs_root: Path | None = None) -> str | No
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry: exit 0 on a clean run, 1 on any problem, 2 on usage errors."""
-    args = _build_argument_parser().parse_args(argv)
+    parser = _build_argument_parser()
+    args = parser.parse_args(argv)
+    if args.mode == "check" and args.timeout is not None and args.timeout <= 0:
+        parser.error("--timeout must be greater than zero")
 
     if args.mode == "refresh":
         written, problems, advisories = refresh_sequences(
@@ -767,7 +789,19 @@ def main(argv: list[str] | None = None) -> int:
         if args.sequence is not None:
             print("--coherence is a page-level tier; scope with --page, not --sequence", file=sys.stderr)
             return 2
-        coherence_problems = check_page_coherence(docs_root=args.docs_root, page=args.page)
+        try:
+            coherence_problems = (
+                check_page_coherence(docs_root=args.docs_root, page=args.page)
+                if args.timeout is None
+                else check_page_coherence_in_subprocess(
+                    docs_root=args.docs_root,
+                    page=args.page,
+                    timeout=args.timeout,
+                )
+            )
+        except SequenceEngineError as exc:
+            print(f"FAIL: {exc}", file=sys.stderr)
+            return 1
         if coherence_problems:
             for problem in coherence_problems:
                 print(f"FAIL: {problem}", file=sys.stderr)
@@ -783,12 +817,26 @@ def main(argv: list[str] | None = None) -> int:
         print("cli-sequence page coherence: clean")
         return 0
 
-    problems, advisories = check_sequences(
-        docs_root=args.docs_root,
-        goldens_root=args.goldens_root,
-        page=args.page,
-        sequence_id=args.sequence,
-    )
+    try:
+        if args.timeout is None:
+            problems, advisories = check_sequences(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                page=args.page,
+                sequence_id=args.sequence,
+            )
+        else:
+            problems = check_sequences_in_subprocess(
+                docs_root=args.docs_root,
+                goldens_root=args.goldens_root,
+                page=args.page,
+                sequence_id=args.sequence,
+                timeout=args.timeout,
+            )
+            advisories = ()
+    except SequenceEngineError as exc:
+        print(f"FAIL: {exc}", file=sys.stderr)
+        return 1
     for advisory in advisories:
         print(f"advisory: {advisory}")
     if problems:

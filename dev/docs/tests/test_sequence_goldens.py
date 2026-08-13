@@ -408,6 +408,34 @@ class TestBothSurfacesRedOnDivergence:
         assert problems != ()
         assert any("golden expects 99" in problem for problem in problems), problems
 
+    def test_bounded_check_reports_the_last_real_frame_before_expiry(
+        self,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """The public bounded check reports a real child runner's last frame.
+
+        The enrolled lifecycle sequence is the measured long-running surface;
+        the check launches its real child interpreter and the twenty-second
+        supervisor deadline expires after the runner has journalled its first
+        overview frame. The assertion therefore proves the parent/child receipt,
+        not a hand-authored or golden-backed imitation of it.
+        """
+        exit_code = sequences_cli_main(
+            [
+                "check",
+                "--sequence",
+                "irpf-lifecycle-position",
+                "--timeout",
+                "20",
+            ],
+        )
+
+        assert exit_code == 1
+        stderr = capsys.readouterr().err
+        assert "timeout after 20.0s while executing page 'how-to/irpf-lifecycle'" in stderr
+        assert "sequence 'irpf-lifecycle-position' frame 0 (body line 2)" in stderr
+        assert "aeat --format json app overview status" in stderr
+
     def test_clean_goldens_pass_both_surfaces_green(
         self,
         tmp_path: Path,
