@@ -236,13 +236,24 @@ def _require_supported_period_token(
 ) -> Period:
     if period_code not in supported_periods:
         raise ModeloImportError(
-            f"modelo {modelo}: period token {period_code!r} is not declared by the active registry revision",
+            translated_message="application.filing.import.errors.period_token_undeclared",
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period_code": period_code,
+                "supported_period_count": len(supported_periods),
+            },
         )
     try:
         return Period.from_year_and_code(filing_year, period_code)
     except PeriodError as exc:
         raise ModeloImportError(
-            f"modelo {modelo}: period token {period_code!r} cannot be represented as a core Period",
+            translated_message="application.filing.import.errors.period_token_unrepresentable",
+            context={
+                "modelo": modelo,
+                "filing_year": filing_year,
+                "period_code": period_code,
+            },
         ) from exc
 
 

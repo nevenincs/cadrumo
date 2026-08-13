@@ -67,6 +67,7 @@ from ...core import (
 from ...core.config import load_settings
 from ...core.errors import CadrumoError
 from ...core.i18n import tr
+from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.resources import bundled_path, resources
 from ...core.time import now
@@ -1365,7 +1366,7 @@ class FiledPeriodSelectionRow(BaseModel):
     period: str = Field(min_length=1, max_length=8)
     raw_row_count: int = Field(ge=0)
     selected_count: int = Field(ge=0)
-    winning_expediente_id: str | None = Field(default=None, min_length=1, max_length=32)
+    winning_expediente_id: AeatExpedienteId | None = None
 
     @property
     def held_more_than_one_filing(self) -> bool:

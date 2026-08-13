@@ -73,7 +73,9 @@ def test_blank_relation_values_carry_registry_grounding() -> None:
         assert set(relation.legal_refs) <= set(row.legal_refs)
         assert set(relation.source_refs) <= set(row.source_refs)
 
-    assert any(row.dependency_treatment for row in relation_rows), "test precondition: the live snapshot declares treatment"
+    assert any(row.dependency_treatment for row in relation_rows), (
+        "test precondition: the live snapshot declares treatment"
+    )
 
 
 def test_unsupported_rounding_error_omits_raw_rounding_token() -> None:

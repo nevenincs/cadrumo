@@ -20,6 +20,7 @@ from enum import StrEnum
 from pydantic import BaseModel, ConfigDict
 
 from ...core import IvaCompensationStateProvenance, Period
+from ...core.identity import AeatExpedienteId, BucketId
 from ...core.json_contract import Notice
 from ...domain.iva_compensation import IvaCompensationDecisionReason
 from ._errors import LiveIvaAcquisitionFailureMode
@@ -83,7 +84,7 @@ class FiledDataCaptureFailureRow(BaseModel):
     modelo: str
     year: int
     period: Period | None = None
-    expediente_id: str | None = None
+    expediente_id: AeatExpedienteId | None = None
     error_type: str
     message: str
 
@@ -107,7 +108,7 @@ class FiledCasillaSkipRow(BaseModel):
     modelo: str
     year: int
     period: Period | None = None
-    expediente_id: str | None = None
+    expediente_id: AeatExpedienteId | None = None
     casilla_id: str
     label: str
     value_kind: str
@@ -148,7 +149,7 @@ class ExpedientesBulkCaptureReport(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    bucket_id: str
+    bucket_id: BucketId
     modelos: tuple[str, ...]
     year_from: int
     year_to: int

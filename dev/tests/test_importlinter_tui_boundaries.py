@@ -54,9 +54,7 @@ def _write_contract_config(root: Path) -> None:
     }
     for contract in CONTRACTS:
         section = f"importlinter:contract:{contract}"
-        selected[section] = {
-            key: value.replace("cadrumo", _FIXTURE_ROOT) for key, value in live[section].items()
-        }
+        selected[section] = {key: value.replace("cadrumo", _FIXTURE_ROOT) for key, value in live[section].items()}
 
     with (root / ".importlinter").open("w", encoding="utf-8") as stream:
         selected.write(stream)

@@ -149,9 +149,11 @@ def assemble_observations_for_grouping(
     source_kind = _GROUPING_DISPATCH.get(grouping)
     if source_kind is None:
         raise RegistryValidationError(
-            f"row-set grouping {grouping!r} has no application-layer assembler; "
-            f"declared but unassemblable groupings are: "
-            f"{sorted(set(_GROUPING_DISPATCH) ^ {grouping})}",
+            translated_message="application.calculations.row_set.errors.grouping_has_no_assembler",
+            context={
+                "grouping": str(grouping),
+                "unassemblable_groupings": sorted(str(item) for item in set(_GROUPING_DISPATCH) ^ {grouping}),
+            },
         )
     if source_kind == RowSetGroupingKind.WITHHOLDING:
         return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
@@ -166,7 +168,10 @@ def assemble_observations_for_grouping(
     if source_kind == RowSetGroupingKind.DONATIVO:
         return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
     # Unreachable: dispatch table is exhaustive.
-    raise RegistryValidationError(f"row-set grouping {grouping!r} dispatch fell through")
+    raise RegistryValidationError(
+        translated_message="application.calculations.row_set.errors.grouping_dispatch_fell_through",
+        context={"grouping": str(grouping)},
+    )
 
 
 class _RowCellShape(Protocol):
@@ -194,6 +199,24 @@ class _RowCellShape(Protocol):
     def value(self) -> Decimal | str | None: ...
 
 
+def _row_assembly_refusal(row_index: int, exc: Exception) -> RegistryValidationError:
+    """Return the one refusal every per-row assembler raises when a row will not validate.
+
+    The validator's own diagnostic rides in machine facts rather than in the
+    refusal sentence, so the operator-facing text resolves from the registered
+    key in the operator's locale while the field-level detail stays available to
+    whoever triages the row.
+    """
+    return RegistryValidationError(
+        translated_message="application.calculations.row_set.errors.row_assembly_failed",
+        context={
+            "row_index": row_index,
+            "validation_error_type": type(exc).__name__,
+            "validation_error_detail": str(exc),
+        },
+    )
+
+
 def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal | str | None]]:
     """Group cell edits by row_index → {binding_id: value}.
 
@@ -205,7 +228,10 @@ def _cells_by_row(cells: Iterable[_RowCellShape]) -> dict[int, dict[str, Decimal
         binding = str(cell.binding)
         row_index_raw = cell.row_index
         if row_index_raw < 1:
-            raise RegistryValidationError(f"row-set cell row_index must be a positive int, got {row_index_raw!r}")
+            raise RegistryValidationError(
+                translated_message="application.calculations.row_set.errors.row_index_not_positive",
+                context={"row_index": row_index_raw},
+            )
         value = cell.value
         grouped.setdefault(row_index_raw, {})[binding] = value
     return grouped
@@ -410,14 +436,15 @@ def assemble_withholding_observations(
         clave_value = _coerce_text(fields.get("clave"))
         if not clave_value:
             raise RegistryValidationError(
-                f"row-set assembly: row {row_index} has no clave; a percepción must declare its "
-                "AEAT clave (Modelo 190/193 Diseño de Registros, registro de tipo 2), not a default",
+                translated_message="application.calculations.row_set.errors.percepcion_clave_missing",
+                context={"row_index": row_index},
             )
         try:
             clave = RetencionClave(clave_value)
         except ValueError as exc:
             raise RegistryValidationError(
-                f"row-set assembly: row {row_index} declares unsupported AEAT clave {clave_value!r}",
+                translated_message="application.calculations.row_set.errors.percepcion_clave_unsupported",
+                context={"row_index": row_index, "clave": clave_value},
             ) from exc
 
         try:
@@ -441,7 +468,7 @@ def assemble_withholding_observations(
                 ),
             )
         except ValidationError as exc:
-            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+            raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
 
@@ -508,7 +535,7 @@ def assemble_related_party_observations(
                 ),
             )
         except (ValidationError, ValueError) as exc:
-            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+            raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
 
@@ -568,7 +595,7 @@ def assemble_foreign_asset_observations(
                 ),
             )
         except ValidationError as exc:
-            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+            raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
 
@@ -622,7 +649,7 @@ def assemble_atribucion_observations(
                 ),
             )
         except ValidationError as exc:
-            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+            raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
 
@@ -670,7 +697,7 @@ def assemble_refund_observations(
                 ),
             )
         except ValidationError as exc:
-            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+            raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)
 
 
@@ -719,5 +746,5 @@ def assemble_donativo_observations(
                 ),
             )
         except ValidationError as exc:
-            raise RegistryValidationError(f"row-set assembly failed for row {row_index}: {exc}") from exc
+            raise _row_assembly_refusal(row_index, exc) from exc
     return tuple(observations)

@@ -633,9 +633,12 @@ def _require_registry_review_alignment(
         return
     codes = tuple(finding.code for finding in findings)
     raise ModeloDraftError(
-        f"draft does not match the registry review surface: {codes!r}",
         translated_message="application.filing.review.errors.registry_review_mismatch",
-        context={"codes": ", ".join(codes)},
+        context={
+            "modelo": draft.modelo,
+            "finding_count": len(codes),
+            "codes": codes,
+        },
     )
 
 

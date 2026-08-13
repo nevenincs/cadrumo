@@ -56,7 +56,9 @@ Submodules
    cadrumo.application.modelo._m210_agrupacion_renta
    cadrumo.application.modelo._m210_convenio_lob_advisory
    cadrumo.application.modelo._m210_rate
+   cadrumo.application.modelo._m303_filing_evidence
    cadrumo.application.modelo._m303_m349_reconcile
+   cadrumo.application.modelo._m303_regimen_simplificado_scope
    cadrumo.application.modelo._m349_ledger_guard
    cadrumo.application.modelo._m720_redeclaration_gate
    cadrumo.application.modelo._maritime_preview
@@ -112,4 +114,5 @@ Submodules
    cadrumo.application.modelo._work_create_policy
    cadrumo.application.modelo._work_lifecycle
    cadrumo.application.modelo._work_plazo
+   cadrumo.application.modelo._work_review
    cadrumo.application.modelo._workflow_gate

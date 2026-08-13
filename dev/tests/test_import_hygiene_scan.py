@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_live_tui_migration_manifest_covers_declarations_exports_consumers_and_references() -> None:
     """The generated census must join the live legacy package and its reverse consumers."""
     rows = generate_tui_migration_manifest()
-    assert _tui_migration_identity_sha256(rows) == ("af0f314fcc15fa1b677c29ba372fe805fb2bd12a7964a88e6186a6b5dd3176fd")
+    assert _tui_migration_identity_sha256(rows) == ("4eda54f61f2d91912366af74bc8684732afce84ed2fb4e45c11c19ff28ee549f")
     assert all(row.owner_lane and row.replacement and row.deletion_proof.startswith("absent:") for row in rows)
 
     identities = {(row.kind, row.symbol, row.consumer, row.owner_lane, row.replacement) for row in rows}

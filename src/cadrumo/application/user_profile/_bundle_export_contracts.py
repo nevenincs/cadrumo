@@ -37,6 +37,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field, SecretStr, computed_field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity import ProfileId
 from ...domain.user_profile import ProfileExportError
 
 if TYPE_CHECKING:
@@ -160,7 +161,7 @@ class ProfileBundleExportResult(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    profile_id: str
+    profile_id: ProfileId
     display_name: str
     destination: Path
     bundle_schema_version: int

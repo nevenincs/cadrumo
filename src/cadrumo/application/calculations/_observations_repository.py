@@ -72,9 +72,11 @@ from ...domain.calculations.registry import (
 )
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import (
+    CalculationRefusalPrecondition,
     ObservationCasillaReferenceError,
     ObservationEvidenceDisplacementError,
     ObservationKeyError,
+    calculation_no_recovery_verdict,
 )
 
 
@@ -294,7 +296,10 @@ def _require_observation_period(period: Period) -> Period:
     # value composes a persisted observation key, so a wrong type would surface as
     # an unreadable record rather than a refusal here.
     if not isinstance(period, Period):  # pyright: ignore[reportUnnecessaryIsInstance]
-        raise ObservationKeyError(f"period must be a cadrumo.core.Period instance, got {type(period).__name__}")
+        raise ObservationKeyError(
+            translated_message="application.calculations.observations.errors.period_type_invalid",
+            context={"observed_type": type(period).__name__},
+        )
     return period
 
 
@@ -308,7 +313,10 @@ def observation_key_for_token(modelo: str, filing_year: int, period_token: str) 
     safe_repository_id(modelo, context="modelo")
     safe_repository_id(period_token, context="period")
     if not 2000 <= filing_year <= 2099:
-        raise ObservationKeyError(f"observation filing_year {filing_year} out of supported range [2000, 2099]")
+        raise ObservationKeyError(
+            translated_message="application.calculations.observations.errors.filing_year_out_of_range",
+            context={"filing_year": filing_year, "minimum": 2000, "maximum": 2099},
+        )
     return f"{modelo}:{filing_year}:{period_token}"
 
 
@@ -336,7 +344,10 @@ def member_observation_key_for_token(
         return base
     member_token = tax_id_identity_token(member_nif)
     if not member_token:
-        raise ObservationKeyError("member_nif must be non-empty")
+        raise ObservationKeyError(
+            translated_message="application.calculations.observations.errors.member_nif_blank",
+            context={"field": "member_nif"},
+        )
     return f"{base}:{sha256_hex(member_token.encode(UTF_8_ENCODING))}"
 
 
@@ -382,10 +393,16 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
     target_period_token = filing_period.registry_token
     taxpayer_token = tax_id_identity_token(taxpayer_nif)
     if not taxpayer_token:
-        raise ObservationKeyError("taxpayer_nif must be non-empty")
+        raise ObservationKeyError(
+            translated_message="application.calculations.observations.errors.taxpayer_nif_blank",
+            context={"field": "taxpayer_nif"},
+        )
     safe_repository_id(target_period_token, context="target_period")
     if not 2000 <= target_year <= 2099:
-        raise ObservationKeyError(f"IVA wallet target_year {target_year} out of supported range [2000, 2099]")
+        raise ObservationKeyError(
+            translated_message="application.calculations.observations.errors.iva_wallet_target_year_out_of_range",
+            context={"target_year": target_year, "minimum": 2000, "maximum": 2099},
+        )
     digest = sha256_hex(
         "\x1f".join((taxpayer_token, str(target_year), target_period_token)).encode(UTF_8_ENCODING),
     )
@@ -396,7 +413,10 @@ def iva_wallet_decision_event_key(decision: IvaCompensationReconciliationDecisio
     """Opaque immutable event key for one persisted reconciliation decision."""
     taxpayer_token = tax_id_identity_token(decision.taxpayer_nif)
     if not taxpayer_token:
-        raise ObservationKeyError("decision taxpayer_nif must be non-empty")
+        raise ObservationKeyError(
+            translated_message="application.calculations.observations.errors.decision_taxpayer_nif_blank",
+            context={"field": "decision.taxpayer_nif"},
+        )
     digest = sha256_hex(
         "\x1f".join(
             (
@@ -426,7 +446,7 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
         )
     except RegistrySnapshotError as exc:
         raise ObservationCasillaReferenceError(
-            "calculation observation casilla ids cannot be validated because the registry snapshot is missing",
+            translated_message="application.calculations.observations.errors.registry_snapshot_missing",
             context={
                 "modelo": observation.modelo,
                 "filing_year": observation.filing_year,
@@ -438,7 +458,7 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
     if not invalid:
         return str(snapshot.revision.id)
     raise ObservationCasillaReferenceError(
-        "calculation observations must use canonical casilla.id values declared by the registry snapshot",
+        translated_message="application.calculations.observations.errors.casilla_ids_noncanonical",
         context={
             "modelo": observation.modelo,
             "filing_year": observation.filing_year,
@@ -625,6 +645,19 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             "existing_source_kind": existing.source_kind.value,
             "incoming_source_kind": payload.source_kind.value,
         }
+        # Displacing captured AEAT evidence is unrecoverable through any path
+        # this repository exposes, so the refusal states that in typed form
+        # rather than leaving a boundary to project a retry of the same write.
+        verdict = calculation_no_recovery_verdict(
+            CalculationRefusalPrecondition.OFFICIAL_EVIDENCE_PRESERVED,
+            facts={
+                "modelo": str(observation.modelo),
+                "filing_year": str(observation.filing_year),
+                "period": str(observation.period),
+                "existing_source_kind": existing.source_kind.value,
+                "incoming_source_kind": payload.source_kind.value,
+            },
+        )
         # Two raises with LITERAL keys rather than one raise selecting a key by
         # expression: the locale scaffold discovers keys by reading the literal
         # argument, so a computed key is invisible to it and the parity gate
@@ -634,10 +667,12 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
             raise ObservationEvidenceDisplacementError(
                 translated_message="application.calculations.errors.observation_displaces_official_evidence_app_filing",
                 context=context,
+                precondition_verdict=verdict,
             )
         raise ObservationEvidenceDisplacementError(
             translated_message="application.calculations.errors.observation_displaces_official_evidence_manual",
             context=context,
+            precondition_verdict=verdict,
         )
 
     def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:

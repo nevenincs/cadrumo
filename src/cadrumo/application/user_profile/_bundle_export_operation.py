@@ -37,7 +37,7 @@ from ...core import Hex64Str, exclusive_file_lock
 from ...core.config import Settings
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.identity import ContentDigest
+from ...core.identity import ContentDigest, ProfileId
 from ...core.paths import effective_storage_root
 from ...core.time import validate_utc_aware
 from .._journal_repository import JournalRepositoryBase
@@ -113,7 +113,7 @@ class ProfileBundleExportOperation(BaseModel):
 
     operation_id: Hex64Str
     status: ProfileBundleExportOperationStatus
-    profile_id: str = Field(min_length=1)
+    profile_id: ProfileId
     display_name: str
     target_identity: str = Field(min_length=1)
     destination: str = Field(min_length=1)

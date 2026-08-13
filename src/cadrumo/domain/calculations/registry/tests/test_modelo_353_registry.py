@@ -115,7 +115,9 @@ def test_modelo_353_declares_iva_aggregation_bindings() -> None:
 def test_modelo_353_declares_322_group_settlement_treatment() -> None:
     modelo, catalogues = _load_modelo_353()
     revision = modelo.revisions["2008-y-siguientes"]
-    classifications = {classification.source_modelo: classification for classification in revision.dependency_classifications}
+    classifications = {
+        classification.source_modelo: classification for classification in revision.dependency_classifications
+    }
 
     classification = classifications["322"]
     assert classification.id == "modelo-353-dep-322"

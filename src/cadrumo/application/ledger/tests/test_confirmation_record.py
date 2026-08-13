@@ -54,6 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 _TRANSCRIPTION_SHA = "a" * 64
 _EVIDENCE_SHA = "b" * 64
+_INVOICE_ID = "c" * 64
 
 
 @pytest.fixture
@@ -202,7 +203,7 @@ def _populated_record() -> InvoiceConfirmationRecord:
     return InvoiceConfirmationRecord(
         confirmation_id="fedcba9876543210",
         bucket_id=_BUCKET_ID,
-        invoice_id="inv-0001",
+        invoice_id=_INVOICE_ID,
         evidence_reference="ev-structured-001",
         evidence_sha256=_EVIDENCE_SHA,
         transcription_sha256=_TRANSCRIPTION_SHA,
@@ -288,7 +289,7 @@ def test_the_derived_id_is_clock_free() -> None:
         """
         return build_confirmation_record(
             bucket_id=_BUCKET_ID,
-            invoice_id="inv-0001",
+            invoice_id=_INVOICE_ID,
             evidence_reference="ev-structured-001",
             evidence_sha256=_EVIDENCE_SHA,
             draft=draft,

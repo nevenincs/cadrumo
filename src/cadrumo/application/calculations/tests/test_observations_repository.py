@@ -59,13 +59,17 @@ def test_observation_key_error_build_error_envelope() -> None:
 
 
 def test_observation_key_raises_on_year_below_range() -> None:
-    with pytest.raises(ObservationKeyError, match="out of supported range"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         observation_key("303", Period.from_year_and_code(1999, "1T"))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.filing_year_out_of_range"
 
 
 def test_observation_key_raises_on_year_above_range() -> None:
-    with pytest.raises(ObservationKeyError, match="out of supported range"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         observation_key("303", Period.from_year_and_code(2100, "1T"))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.filing_year_out_of_range"
 
 
 def test_observation_key_succeeds_on_boundary_years() -> None:
@@ -83,8 +87,10 @@ def test_observation_key_derives_storage_token_from_typed_period() -> None:
 def test_observation_key_rejects_untyped_combined_period() -> None:
     combined_period: object = "2026 1T"
 
-    with pytest.raises(ObservationKeyError, match=r"cadrumo\.core\.Period"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         observation_key("303", cast(Period, combined_period))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.period_type_invalid"
 
 
 # ---------------------------------------------------------------------------
@@ -93,13 +99,17 @@ def test_observation_key_rejects_untyped_combined_period() -> None:
 
 
 def test_iva_wallet_decision_key_raises_on_empty_nif() -> None:
-    with pytest.raises(ObservationKeyError, match="taxpayer_nif must be non-empty"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         iva_wallet_decision_key("   ", Period.from_year_and_code(2024, "1T"))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.taxpayer_nif_blank"
 
 
 def test_iva_wallet_decision_key_raises_on_blank_nif() -> None:
-    with pytest.raises(ObservationKeyError, match="taxpayer_nif must be non-empty"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         iva_wallet_decision_key("", Period.from_year_and_code(2024, "1T"))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.taxpayer_nif_blank"
 
 
 # ---------------------------------------------------------------------------
@@ -108,13 +118,17 @@ def test_iva_wallet_decision_key_raises_on_blank_nif() -> None:
 
 
 def test_iva_wallet_decision_key_raises_on_year_below_range() -> None:
-    with pytest.raises(ObservationKeyError, match="out of supported range"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         iva_wallet_decision_key("12345678A", Period.from_year_and_code(1999, "1T"))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.iva_wallet_target_year_out_of_range"
 
 
 def test_iva_wallet_decision_key_raises_on_year_above_range() -> None:
-    with pytest.raises(ObservationKeyError, match="out of supported range"):
+    with pytest.raises(ObservationKeyError) as excinfo:
         iva_wallet_decision_key("12345678A", Period.from_year_and_code(2100, "1T"))
+
+    assert str(excinfo.value) == "application.calculations.observations.errors.iva_wallet_target_year_out_of_range"
 
 
 def test_iva_wallet_decision_key_succeeds() -> None:

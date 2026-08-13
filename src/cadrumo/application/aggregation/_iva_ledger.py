@@ -411,10 +411,24 @@ class IvaLedgerCandidate(BaseModel):
             or self.category is IvaCategory.RECARGO_EQUIVALENCIA
         ):
             if self.deduction_fact_kind is not None or self.deduction_provenance is not None:
-                raise AggregationValidationError(t("output IVA facts cannot carry deduction authority"))
+                raise AggregationValidationError(
+                    t("aggregation.iva_ledger.errors.output_facts_carry_deduction_authority"),
+                    context={
+                        "ledger_id": self.ledger_id,
+                        "flow_direction": self.flow_direction.value,
+                        "category": self.category.value,
+                    },
+                )
             return self
         if self.deduction_fact_kind is None or self.deduction_provenance is None:
-            raise AggregationValidationError(t("input IVA facts require exact deduction authority"))
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.input_facts_missing_deduction_authority"),
+                context={
+                    "ledger_id": self.ledger_id,
+                    "flow_direction": self.flow_direction.value,
+                    "category": self.category.value,
+                },
+            )
         validate_iva_deduction_fact(
             kind=self.deduction_fact_kind,
             provenance=self.deduction_provenance,
@@ -483,7 +497,10 @@ class IvaLedgerAggregation(BaseModel):
             if observation.deduction_fact_kind is IvaDeductionFactKind.RECTIFICATION
         ]
         if len(rectified_ids) != len(set(rectified_ids)):
-            raise AggregationValidationError(t("a corrected IVA ledger fact may be rectified only once"))
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.rectification_consumed_more_than_once"),
+                context={"rectified_ledger_id_count": len(rectified_ids)},
+            )
         return self
 
     @field_serializer("observations")
@@ -556,7 +573,10 @@ def aggregate_iva_ledger_observations_from_repositories(
                 context={"bucket_id": bucket_id, "repository_bucket_id": repository.bucket_id},
             )
         if investment_asset_register is None or investment_asset_profile_id is None:
-            raise AggregationValidationError(t("injected IVA repositories require explicit bienes-inversion authority"))
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.injected_repositories_missing_bienes_inversion_authority"),
+                context={"bucket_id": bucket_id},
+            )
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.iva_ledger.errors.bucket_mismatch"),
@@ -624,10 +644,13 @@ def _validate_investment_asset_authority(
         return
     if ledger_profile_id is None or investment_asset_register is None or investment_asset_profile_id is None:
         raise AggregationValidationError(
-            t(
-                "investment IVA observations require the explicit bienes-inversion "
-                "register and matching profile authority"
-            )
+            t("aggregation.iva_ledger.errors.investment_observations_missing_bienes_inversion_authority"),
+            context={
+                "filing_year": period.filing_year,
+                "has_ledger_profile_id": ledger_profile_id is not None,
+                "has_investment_asset_register": investment_asset_register is not None,
+                "has_investment_asset_profile_id": investment_asset_profile_id is not None,
+            },
         )
     validate_investment_asset_reciprocity(
         observations=observations,
@@ -1092,7 +1115,10 @@ def _sector_apportionments_by_id(
 ) -> dict[str, IvaLedgerSectorApportionment]:
     by_sector = {sector.sector_id: sector for sector in apportionment.sector_apportionments}
     if len(by_sector) != len(apportionment.sector_apportionments):
-        raise AggregationValidationError(t("sectorized IVA apportionment carries duplicate sector definitions"))
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.sectorized_apportionment_duplicate_sectors"),
+            context={"declared_sector_count": len(apportionment.sector_apportionments)},
+        )
     return by_sector
 
 
@@ -1115,7 +1141,10 @@ def _append_common_sector_observation(
     observation: IvaLedgerObservation,
 ) -> None:
     if observation.input_classification is not InputClassification.COMMON:
-        raise AggregationValidationError(t("sectorized IVA input is missing explicit sector identity"))
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.sectorized_input_missing_sector_identity"),
+            context={"ledger_id": observation.ledger_id},
+        )
     partitions.setdefault(None, []).append(observation)
 
 
@@ -1126,11 +1155,11 @@ def _active_sector_apportionment(
     sector = sectors.get(sector_key)
     if sector is None:
         raise AggregationValidationError(
-            t("sectorized IVA input references an unknown sector"), context={"sector_id": sector_key}
+            t("aggregation.iva_ledger.errors.sectorized_input_unknown_sector"), context={"sector_id": sector_key}
         )
     if sector.regime is ProrrataRegisterRegime.NINGUNA:
         raise AggregationValidationError(
-            t("sectorized IVA input references an inactive sector"), context={"sector_id": sector_key}
+            t("aggregation.iva_ledger.errors.sectorized_input_inactive_sector"), context={"sector_id": sector_key}
         )
     return sector
 
@@ -1140,7 +1169,10 @@ def _require_sector_input_classification(
     observation: IvaLedgerObservation,
 ) -> None:
     if sector.regime is ProrrataRegisterRegime.ESPECIAL and observation.input_classification is None:
-        raise AggregationValidationError(t("sectorized prorrata especial requires explicit input classification"))
+        raise AggregationValidationError(
+            t("aggregation.iva_ledger.errors.sectorized_especial_missing_input_classification"),
+            context={"sector_id": sector.sector_id, "ledger_id": observation.ledger_id},
+        )
 
 
 def _partition_apportionment(
@@ -1264,13 +1296,21 @@ def _active_prorrata_apportionment(
         sector = _sector_scoped_apportionment(register, ejercicio, sector_id=sector_id)
         if sector is None:
             entry = register.entry_for(ejercicio, sector_id=sector_id)
+            facts = {"sector_id": sector_id, "ejercicio": ejercicio}
             if entry is None:
-                reason = "has no filing-year register entry"
-            elif entry.interrupted or entry.regime is ProrrataRegisterRegime.NINGUNA:
-                reason = "is inactive for the filing year"
-            else:
-                reason = "has no resolved provisional percentage"
-            raise AggregationValidationError(t(f"differentiated sector {sector_id!r} {reason}"))
+                raise AggregationValidationError(
+                    t("aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
+                    context=facts,
+                )
+            if entry.interrupted or entry.regime is ProrrataRegisterRegime.NINGUNA:
+                raise AggregationValidationError(
+                    t("aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year"),
+                    context=facts,
+                )
+            raise AggregationValidationError(
+                t("aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage"),
+                context=facts,
+            )
         sector_apportionments_list.append(
             IvaLedgerSectorApportionment(
                 sector_id=sector_id,

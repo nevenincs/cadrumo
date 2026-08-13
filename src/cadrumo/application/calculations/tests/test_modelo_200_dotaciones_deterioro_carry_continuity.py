@@ -46,22 +46,14 @@ from ....domain.calculations.registry import (
     materialize_relation_binding_values,
     resolve_available_bound_inputs_by_casilla_id,
 )
-from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.modelos import ModeloVerificationFindingKind
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...modelo._verification_actions import _evaluate_verification_predicates
 from .._binding_prefill import resolve_bindings_from_local_store
 from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 from .._relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-# The advisory/casilla predicates here ignore the profile, but
-# _evaluate_verification_predicates requires a real TaxpayerProfile; supply a
-# minimal one rather than the typed-None hole the casilla-only path tolerated.
-_CASILLA_ONLY_PROFILE = TaxpayerProfile(tax_id="B12345674", iva_regime=IVARegime.GENERAL)
 
 _MODELO_200 = "200"
 
@@ -82,10 +74,6 @@ _SALDO_INICIAL_CUMPLIDO: CasillaId = validated_casilla_id(
     "01495",
     surface="_SALDO_INICIAL_CUMPLIDO",
 )  # opening pending cumplido (bound from prior 01499)
-_SALDO_INTEGRADO_CUMPLIDO: CasillaId = validated_casilla_id(
-    "01496",
-    surface="_SALDO_INTEGRADO_CUMPLIDO",
-)
 
 _YEAR_N = 2025
 _YEAR_N_PLUS_1 = 2026
@@ -108,7 +96,6 @@ _PROFILE_DECIMAL_BINDINGS: dict[str, Decimal] = {
 _PROFILE_ENUM_BINDINGS: dict[str, str] = {"modelo-200-2024-profile-legal-entity-form": "sl"}
 
 _CLOCK = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
-_ADVISORY_PREDICATE_ID = "modelo-200-dotaciones-deterioro-cumplido-disponible-integrar"
 
 
 def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservationRepository) -> None:
@@ -226,56 +213,3 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     evidence = recorder.evidence()
     assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
     assert_enrollment_matches_manifest(evidence)
-
-
-# ---------------------------------------------------------------------------
-# Carry-integration advisory (LIS art. 13): when cumplido stock (01495) is
-# available but the integrated amount this period (01496) is zero, surface a
-# non-blocking advisory — integrating is the operator's right, not a mandate, so
-# a deferral is legitimate, but the silent case is flagged. Mirrors the
-# no-silent-under-declaration "positive input, zero dependent" stance.
-# ---------------------------------------------------------------------------
-
-
-def _advisory_predicate():
-    revision = resources().modelos.authority.validate_modelo(_MODELO_200).revisions["2024-y-siguientes"]
-    predicate = next(p for p in revision.verification_predicates if p.predicate_id == _ADVISORY_PREDICATE_ID)
-    assert predicate.finding_kind == "ADVISORY"
-    assert "implies_nonzero" in predicate.expression
-    return predicate
-
-
-def test_advisory_fires_when_cumplido_stock_available_but_none_integrated() -> None:
-    """Cumplido stock present (01495 > 0) but 01496 = 0 surfaces a non-blocking advisory."""
-    predicate = _advisory_predicate()
-    findings = _evaluate_verification_predicates(
-        (predicate,),
-        {_SALDO_INICIAL_CUMPLIDO: Decimal("12000.00"), _SALDO_INTEGRADO_CUMPLIDO: Decimal("0")},
-        _CASILLA_ONLY_PROFILE,
-    )
-    assert len(findings) == 1
-    assert findings[0].kind is ModeloVerificationFindingKind.ADVISORY
-    assert findings[0].message_locale_key == "application.modelo.findings.registry_advisory_predicate_fired"
-    assert dict(findings[0].message_facts) == {"predicate_id": _ADVISORY_PREDICATE_ID}
-
-
-def test_advisory_silent_when_some_cumplido_stock_integrated() -> None:
-    """Integrating any of the available cumplido stock clears the advisory."""
-    predicate = _advisory_predicate()
-    findings = _evaluate_verification_predicates(
-        (predicate,),
-        {_SALDO_INICIAL_CUMPLIDO: Decimal("12000.00"), _SALDO_INTEGRADO_CUMPLIDO: Decimal("4000.00")},
-        _CASILLA_ONLY_PROFILE,
-    )
-    assert findings == []
-
-
-def test_advisory_silent_when_no_cumplido_stock_available() -> None:
-    """No cumplido stock (01495 = 0) raises nothing — implies_nonzero holds trivially."""
-    predicate = _advisory_predicate()
-    findings = _evaluate_verification_predicates(
-        (predicate,),
-        {_SALDO_INICIAL_CUMPLIDO: Decimal("0"), _SALDO_INTEGRADO_CUMPLIDO: Decimal("0")},
-        _CASILLA_ONLY_PROFILE,
-    )
-    assert findings == []

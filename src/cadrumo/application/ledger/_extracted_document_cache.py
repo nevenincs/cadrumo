@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from typing import override
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ...adapters.persistence.storage import (
     LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE,
@@ -44,6 +44,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
+from ...core.identity import BucketId
 from ._document_transcription import DocumentTranscription, TranscriptionCacheEntry
 
 __all__ = [
@@ -60,7 +61,7 @@ class ExtractedDocumentCacheDocument(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     entries: tuple[TranscriptionCacheEntry, ...] = ()
 
 

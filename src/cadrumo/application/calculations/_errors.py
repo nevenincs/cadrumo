@@ -7,6 +7,19 @@ validation failures use :class:`~core.errors.CoreValidationError` so CLI
 and API callers receive registry-backed envelopes instead of generic
 ``ValueError`` or ``TypeError`` failures.
 
+Every refusal raised across this package carries a registered locale key plus
+machine facts; no raise site authors an operator-facing sentence, so
+``str(exc)`` renders the key and the prose is resolved once, per locale, at the
+presentation boundary.
+
+A narrow subset is additionally a *safety* disposition: the calculation
+observed evidence whose contradiction cannot be resolved by choosing one side,
+because either choice silently changes a declared amount. Those raise sites
+attach a :class:`~application.operator_actions.PreconditionVerdict` whose
+``no_recovery_outcome`` is :attr:`~core.NoRecoveryOutcome.SAFETY`, so the CLI
+boundary projects an explicit "there is deliberately no recovery here" instead
+of manufacturing a retry that would re-derive the same contradiction.
+
 See Also:
     :mod:`application.calculations._binding_prefill`:
         Previous-filing binding readers that raise
@@ -21,7 +34,101 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+from enum import StrEnum
+from typing import TYPE_CHECKING, cast
+
+from ...core import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...core.errors import CoreError, CoreValidationError
+
+if TYPE_CHECKING:
+    from ..operator_actions import PreconditionVerdict
+
+
+class CalculationRefusalPrecondition(StrEnum):
+    """Closed failed-condition identities for calculation safety dispositions.
+
+    Membership is deliberately narrow. A condition earns a place here only when
+    the refusal reports two sources of the same declared amount that disagree,
+    so no automatic remedy exists: resolving it means deciding which figure the
+    taxpayer actually declared, which is an operator judgement made against
+    AEAT's own record. An evidence-incomplete refusal an operator fixes by
+    supplying better evidence is not a safety disposition and stays a plain
+    typed refusal.
+    """
+
+    OFFICIAL_EVIDENCE_PRESERVED = "calculations.observations.official_evidence_preserved"
+    M303_CARRY_DISPOSITION_CONSISTENT = "calculations.m303_carry.disposition_consistent"
+    M303_CARRY_DERIVATION_CONSISTENT = "calculations.m303_carry.derivation_consistent"
+    M303_CARRY_MATCHES_REGISTRY_FORMULA = "calculations.m303_carry.matches_registry_formula"
+
+
+def calculation_no_recovery_verdict(
+    condition: CalculationRefusalPrecondition,
+    *,
+    facts: Mapping[str, str | int | bool],
+    outcome: NoRecoveryOutcome = NoRecoveryOutcome.SAFETY,
+) -> PreconditionVerdict:
+    """Return one explicitly non-actionable outcome for a calculation refusal.
+
+    The facts name exactly what the two disagreeing sources reported; the closed
+    outcome is what stops a downstream boundary from manufacturing a recovery
+    command that would simply re-derive the same contradiction. No action is
+    bound because none of these conditions has a safe automatic remedy.
+
+    Args:
+        condition: The calculation condition that failed.
+        facts: Stable machine facts, never prose, describing the observation.
+        outcome: The closed no-recovery reason. Defaults to
+            :attr:`~core.NoRecoveryOutcome.SAFETY`.
+
+    Returns:
+        The :class:`~application.operator_actions.PreconditionVerdict` carrying
+        the failed condition and its explicit no-recovery outcome.
+    """
+    from ..operator_actions import ConditionEvidence, PreconditionVerdict
+
+    condition_id = condition.value
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(
+            ConditionEvidence(
+                condition_id=condition_id,
+                evidence_id=f"{condition_id}.observation",
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                values=facts,
+            ),
+        ),
+        conditionality=ActionConditionality.NOT_APPLICABLE,
+        no_recovery_outcome=outcome,
+    )
+
+
+class CalculationPreconditionErrorMixin:
+    """Carry a terminal application verdict without a prose recovery bridge.
+
+    Mixed in ahead of the registered error class so the subclass keeps its own
+    qualname and its declared :class:`~core.errors.ErrorCode` binding. The mixin
+    itself is not a :class:`~core.errors.CadrumoError` subclass, so it declares
+    no code of its own.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
+        parent_init = cast(Callable[..., None], super().__init__)
+        parent_init(message, context=context, translated_message=translated_message)
+        self._terminal_precondition_verdict = precondition_verdict
+
+    @property
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Return the explicit no-recovery verdict, when the raise site declared one."""
+        return self._terminal_precondition_verdict
 
 
 class IvaCompensationModeloError(CoreError):
@@ -63,7 +170,7 @@ class ObservationKeyError(CoreValidationError):
     """
 
 
-class ObservationEvidenceDisplacementError(CoreValidationError):
+class ObservationEvidenceDisplacementError(CalculationPreconditionErrorMixin, CoreValidationError):
     """Raised when a non-official write would displace official AEAT evidence.
 
     A ``(modelo, filing_year, period)`` slot holding evidence observed from AEAT

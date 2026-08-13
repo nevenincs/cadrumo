@@ -52,7 +52,7 @@ def _fact(
     base = taxable_base if taxable_base is not None else default_taxable_base
     iva = iva_amount if iva_amount is not None else default_iva_amount
     return RentaDeductibleExpenseFact(
-        transaction_id="tx-1",
+        transaction_id="a" * 64,
         invoice_id=invoice_id,
         catalogue_id="ledger-2025",
         operation_date=date(2025, 3, 8),
@@ -265,7 +265,7 @@ def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split() 
     double-count: there is no separately-known ``iva_amount`` to fold.
     """
     fact = RentaDeductibleExpenseFact(
-        transaction_id="tx-1",
+        transaction_id="a" * 64,
         catalogue_id="ledger-2025",
         operation_date=date(2025, 3, 8),
         posting_date=date(2025, 3, 9),

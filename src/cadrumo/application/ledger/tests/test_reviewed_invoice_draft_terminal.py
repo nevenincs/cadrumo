@@ -180,7 +180,7 @@ def test_a_transaction_bound_reject_still_takes_the_original_path(
     from ....llm import LLMClassificationSuggestion
 
     suggestion = LLMClassificationSuggestion(
-        transaction_id="tx-1",
+        transaction_id="a" * 64,
         provenance=_STAMP,
         classification=BusinessClassification.BUSINESS,
         confidence=Decimal("0.5"),

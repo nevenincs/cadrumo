@@ -138,10 +138,23 @@ class DeclaracionCalculateSummary(BaseModel):
         """
         if self.next_action is DeclaracionCalculateNextAction.RESOLVE_BLOCKERS:
             if not self.repair_hints:
-                raise ModeloCalculateError("repair_hints must be non-empty when next_action is RESOLVE_BLOCKERS")
-        else:
-            if self.repair_hints:
-                raise ModeloCalculateError("repair_hints must be empty unless next_action is RESOLVE_BLOCKERS")
+                raise ModeloCalculateError(
+                    translated_message="application.filing.calculate.errors.repair_hints_required",
+                    context={
+                        "next_action": self.next_action.value,
+                        "repair_hint_count": len(self.repair_hints),
+                        "blocker_count": self.blocker_count,
+                    },
+                )
+        elif self.repair_hints:
+            raise ModeloCalculateError(
+                translated_message="application.filing.calculate.errors.repair_hints_forbidden",
+                context={
+                    "next_action": self.next_action.value,
+                    "repair_hint_count": len(self.repair_hints),
+                    "blocker_count": self.blocker_count,
+                },
+            )
         return self
 
 

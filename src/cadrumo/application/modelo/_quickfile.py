@@ -48,6 +48,7 @@ from pydantic import BaseModel
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import PaymentElection, Period, PriorDomiciliationElection, RefundElection
 from ...core.errors import CadrumoError
+from ...core.identity import BucketId
 from ...core.logging import get_logger
 from ...domain.calculations.registry import RevisionId
 from ...domain.deadlines import TaxpayerProfile
@@ -177,7 +178,7 @@ class QuickfileCommand(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str
+    bucket_id: BucketId
     modelo: str
     filing_year: int
     period: Period

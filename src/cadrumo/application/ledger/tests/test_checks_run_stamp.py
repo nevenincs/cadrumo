@@ -42,6 +42,9 @@ from .._deterministic_findings import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+_INVOICE_ID_1 = "c" * 64
+_INVOICE_ID_2 = "d" * 64
+
 
 @contextmanager
 def _replacing(target: object, name: str, value: object):
@@ -127,7 +130,7 @@ def test_a_minted_record_carries_the_stamp() -> None:
 
     record = build_confirmation_record(
         bucket_id="bucket-checks-run",
-        invoice_id="inv-0001",
+        invoice_id=_INVOICE_ID_1,
         evidence_reference="ev-structured-001",
         evidence_sha256="a" * 64,
         draft=InvoiceDraft(taxable_base=Decimal("100.00")),
@@ -160,7 +163,7 @@ def test_the_stamp_is_not_folded_into_the_derived_identity() -> None:
     def _mint() -> InvoiceConfirmationRecord:
         return build_confirmation_record(
             bucket_id="bucket-checks-run",
-            invoice_id="inv-0002",
+            invoice_id=_INVOICE_ID_2,
             evidence_reference="ev-structured-002",
             evidence_sha256="b" * 64,
             draft=InvoiceDraft(taxable_base=Decimal("100.00")),

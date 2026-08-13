@@ -141,10 +141,10 @@ def test_unknown_casilla_raises_instead_of_emitting_empty_provenance() -> None:
     with pytest.raises(CasillaProvenanceMissingError) as raised_1:
         _build_typed_observations(engine_result=polluted_result, snapshot=snapshot)
 
-
     # The orphan casilla is a machine fact now, not part of a sentence.
     assert raised_1.value.context is not None
     assert raised_1.value.context["casilla_id"] == orphan_casilla
+
 
 def _baseline_revision(
     casilla_values: dict[CasillaId, Decimal],

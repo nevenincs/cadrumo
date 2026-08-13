@@ -65,7 +65,7 @@ def _evidence_plan() -> SheetExportPlan:
             contributor_rows=(
                 SheetEvidenceContributorRow(
                     casilla_id=_CUOTA_CASILLA,
-                    transaction_id="tx-001",
+                    transaction_id="c" * 64,
                     amount=Decimal("-121.00"),
                     currency="EUR",
                     taxable_base=Decimal("100.00"),
@@ -107,7 +107,7 @@ def test_apply_adapter_renders_evidencia_surface() -> None:
     # Fingerprint banner + header row + one contributor + one manual row.
     assert grid[f"'{tab}'!A1"] == ["Snapshot fingerprint", "f" * 64]
     assert grid[f"'{tab}'!A3"][0] == "Tipo"
-    assert grid[f"'{tab}'!A4"][:3] == ["ledger", "cuota", "tx-001"]
+    assert grid[f"'{tab}'!A4"][:3] == ["ledger", "cuota", "c" * 64]
     assert grid[f"'{tab}'!A5"][:2] == ["manual", "resultado.contable"]
 
 

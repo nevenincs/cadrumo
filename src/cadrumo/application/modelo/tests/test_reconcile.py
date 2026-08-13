@@ -341,11 +341,11 @@ def test_modelo_reconcile_refuses_cross_bucket_work_unit(tmp_path: Path) -> None
             ),
         )
 
-
     # Both bucket identities ride as machine facts rather than a sentence.
     assert raised.value.context is not None
     assert raised.value.context["active_bucket_id"]
     assert raised.value.context["work_unit_bucket_id"]
+
 
 def test_modelo_reconcile_refuses_malformed_evidence(tmp_path: Path) -> None:
     """A path that is not a valid AEAT justificante surfaces as

@@ -1,0 +1,166 @@
+schema_version = 1
+modelo = '303'
+distinct_field_semantics = 87
+
+[[epochs]]
+epoch = '2023'
+source_ref = 'aeat-dr-303-2023'
+source_sha256 = '72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4'
+total = 153
+agricola = 20
+no_agricola = 114
+numbered = 12
+constant = 5
+reserve = 1
+producer = 1
+
+[[epochs]]
+epoch = '2024-early'
+source_ref = 'aeat-dr-303-2024-early'
+source_sha256 = '8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9'
+total = 153
+agricola = 20
+no_agricola = 110
+numbered = 12
+constant = 5
+reserve = 5
+producer = 1
+
+[[epochs]]
+epoch = '2024-late'
+source_ref = 'aeat-dr-303-2024-late'
+source_sha256 = '2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8'
+total = 163
+agricola = 24
+no_agricola = 116
+numbered = 12
+constant = 5
+reserve = 5
+producer = 1
+
+[[epochs]]
+epoch = '2025'
+source_ref = 'aeat-dr-303-2025'
+source_sha256 = '6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6'
+total = 166
+agricola = 20
+no_agricola = 122
+numbered = 12
+constant = 5
+reserve = 6
+producer = 1
+
+[[epochs]]
+epoch = '2026'
+source_ref = 'aeat-dr-303-2026'
+source_sha256 = '0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b'
+total = 166
+agricola = 20
+no_agricola = 122
+numbered = 12
+constant = 5
+reserve = 6
+producer = 1
+
+[[repeating_module_families]]
+generalized_description = 'Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad N - Módulo Mesas - Capacidad'
+
+[[repeating_module_families.epochs]]
+epoch = '2023'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2024-early'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2024-late'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2025'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2026'
+sub_index_cardinality = 4
+
+[[repeating_module_families]]
+generalized_description = 'Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad N - Módulo Mesas - Días - 4T'
+
+[[repeating_module_families.epochs]]
+epoch = '2023'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2024-early'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2024-late'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2025'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2026'
+sub_index_cardinality = 4
+
+[[repeating_module_families]]
+generalized_description = 'Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad N - Módulo Mesas - Mesas'
+
+[[repeating_module_families.epochs]]
+epoch = '2023'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2024-early'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2024-late'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2025'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2026'
+sub_index_cardinality = 4
+
+[[repeating_module_families]]
+generalized_description = 'Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad N - Módulo Superficie de horno - Días - 4T'
+
+[[repeating_module_families.epochs]]
+epoch = '2023'
+sub_index_cardinality = 1
+
+[[repeating_module_families.epochs]]
+epoch = '2024-early'
+sub_index_cardinality = 1
+
+[[repeating_module_families.epochs]]
+epoch = '2024-late'
+sub_index_cardinality = 1
+
+[[repeating_module_families.epochs]]
+epoch = '2025'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2026'
+sub_index_cardinality = 4
+
+[[repeating_module_families]]
+generalized_description = 'Liquidación (3) - RS - (B) Actividades en RS (exc. a, g y f) - Actividad N - Módulo Superficie de horno - Superficie - 4T'
+
+[[repeating_module_families.epochs]]
+epoch = '2025'
+sub_index_cardinality = 4
+
+[[repeating_module_families.epochs]]
+epoch = '2026'
+sub_index_cardinality = 4

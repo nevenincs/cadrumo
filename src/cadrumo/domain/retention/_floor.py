@@ -24,6 +24,7 @@ from typing import Final, Protocol, runtime_checkable
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG
+from ...core.identity import FilingRecordId
 
 #: Legal retention floor (in whole years) for a filed tax record before it may
 #: be erased. Binding provision: Ley 58/2003 (Ley General Tributaria) art. 66 —
@@ -52,7 +53,7 @@ class RetainableFilingRecord(Protocol):
     """
 
     @property
-    def filing_record_id(self) -> str:
+    def filing_record_id(self) -> FilingRecordId:
         """Content-addressed id of the filing record."""
         ...
 
@@ -81,7 +82,7 @@ class RetentionBlockingRecord(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_record_id: str = Field(min_length=1)
+    filing_record_id: FilingRecordId
     modelo: str = Field(min_length=1)
     filing_year: int = Field(ge=2000, le=2099)
     filed_at: datetime

@@ -68,8 +68,9 @@ class TestShow:
         # Use an empty registry so any portal lookup misses.
         svc = PortalsService(registry={})
         portal = next(iter(PORTAL_REGISTRY.keys()))
-        with pytest.raises(PortalNotFoundError, match="not registered"):
+        with pytest.raises(PortalNotFoundError) as raised:
             svc.show(portal)
+        assert raised.value.portal == portal.value
 
 
 class TestRowProjection:
@@ -138,32 +139,37 @@ class TestRegistryInjection:
 
 
 class TestPortalNotFoundErrorLocale:
-    """PortalNotFoundError carries a translated_message resolvable from the locale catalogue."""
+    """PortalNotFoundError hands on a locale key, and the key resolves everywhere.
 
-    def test_portal_not_found_carries_translated_message(self) -> None:
+    These assertions once demanded the inverse: that ``translated_message`` was
+    *not* the key but the prose the raise site had already resolved. That froze
+    whichever locale happened to be configured at failure time into the refusal,
+    and it made the raise site the place operator-facing text was chosen. The
+    absence half of the contract lives in
+    ``test_portal_refusal_message_key_only``; what stays here is that the key
+    the producer hands on is real in every catalogue it must render from.
+    """
+
+    def test_portal_not_found_hands_on_the_registered_key(self) -> None:
         # An empty registry guarantees a miss for any known portal.
         svc = PortalsService(registry={})
         portal = next(iter(PORTAL_REGISTRY.keys()))
         with pytest.raises(PortalNotFoundError) as exc_info:
             svc.show(portal)
         err = exc_info.value
-        expected = tr("application.portals.errors.portal_not_found")
-        assert err.translated_message == expected, (
-            f"expected translated_message={expected!r}, got {err.translated_message!r}"
-        )
+        assert err.translated_message == "errors.refused.refused_live_portal_not_found"
 
-    def test_portal_not_found_locale_key_resolves_to_real_string(self) -> None:
-        key = "application.portals.errors.portal_not_found"
-        resolved = tr(key)
-        assert resolved != key, f"locale key {key!r} is still a placeholder"
+    @pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+    def test_portal_not_found_key_resolves_to_real_string(self, locale: str) -> None:
+        key = "errors.refused.refused_live_portal_not_found"
+        resolved = tr(key, locale=locale)
+        assert resolved != key, f"locale key {key!r} is still a placeholder in {locale!r}"
         assert len(resolved) > 20, f"locale key {key!r} resolved to suspiciously short string: {resolved!r}"
 
-    def test_portal_not_found_translated_message_not_placeholder(self) -> None:
-        # Verify the error's translated_message is not the key path itself.
-        svc = PortalsService(registry={})
-        portal = next(iter(PORTAL_REGISTRY.keys()))
-        with pytest.raises(PortalNotFoundError) as exc_info:
-            svc.show(portal)
-        err = exc_info.value
-        assert err.translated_message is not None
-        assert err.translated_message != "application.portals.errors.portal_not_found"
+    def test_portal_not_found_names_no_command(self) -> None:
+        # The refusal's prose must not spell a recovery command in any locale:
+        # a recovery command is a catalogue action the operator boundary
+        # resolves, never text baked into four translations.
+        key = "errors.refused.refused_live_portal_not_found"
+        for locale in ("en", "es", "ca", "hu"):
+            assert "aeat " not in tr(key, locale=locale)

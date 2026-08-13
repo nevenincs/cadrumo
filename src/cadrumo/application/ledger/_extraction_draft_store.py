@@ -34,6 +34,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
+from ...core.identity import BucketId
 from ...core.time import UtcInstant, now
 from ._evidence_draft import InvoiceDraft
 
@@ -89,7 +90,7 @@ class ExtractionDraftDocument(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     drafts: tuple[StoredExtractionDraft, ...] = ()
 
 

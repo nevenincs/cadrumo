@@ -22,6 +22,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...adapters.outbound.aeat.sede import Declaracion
 from ...core import Period
+from ...core.identity import AeatExpedienteId
 from ._errors import LiveApplicationInputError
 from ._remote_state_models import FiledDataCaptureFailureRow
 
@@ -34,7 +35,7 @@ class FiledDataListingRow(BaseModel):
     modelo: str
     year: int
     period: Period
-    expediente_id: str
+    expediente_id: AeatExpedienteId
     status: str
     presented_at: datetime
     has_submitted_file: bool

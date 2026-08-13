@@ -53,16 +53,24 @@ class M303SupplierRegimeArrival(BaseModel):
     @classmethod
     def _source_ledger_ids_are_unique_and_nonblank(cls, value: tuple[str, ...]) -> tuple[str, ...]:
         if any(not ledger_id.strip() for ledger_id in value):
-            raise AggregationValidationError(t("supplier-regime arrival contains a blank ledger identity"))
+            raise AggregationValidationError(
+                t("aggregation.m303_arrivals.errors.supplier_regime_blank_ledger_identity")
+            )
         if len(value) != len(set(value)):
-            raise AggregationValidationError(t("supplier-regime arrival contains duplicate ledger evidence"))
+            raise AggregationValidationError(
+                t("aggregation.m303_arrivals.errors.supplier_regime_duplicate_ledger_evidence")
+            )
         return value
 
     @model_validator(mode="after")
     def _recipient_fact_matches_its_evidence(self) -> M303SupplierRegimeArrival:
         if self.recipient_of_cash_accounting_operations != bool(self.source_ledger_ids):
             raise AggregationValidationError(
-                t("recipient-of-cash-accounting fact must agree with its supplier-regime ledger evidence")
+                t("aggregation.m303_arrivals.errors.recipient_fact_disagrees_with_ledger_evidence"),
+                context={
+                    "recipient_of_cash_accounting_operations": self.recipient_of_cash_accounting_operations,
+                    "source_ledger_id_count": len(self.source_ledger_ids),
+                },
             )
         return self
 
@@ -92,27 +100,38 @@ class M303ProrrataTransitionArrival(BaseModel):
         if not self.is_applicable:
             if self.transition is not None or self.register_evidence:
                 raise AggregationValidationError(
-                    t("prorrata transition evidence is applicable only in Modelo 303 final periods 4T or 12")
+                    t("aggregation.m303_arrivals.errors.prorrata_transition_not_applicable_for_period"),
+                    context={"period": self.period.registry_token},
                 )
             return self
         if self.transition is None:
             if self.register_evidence:
-                raise AggregationValidationError(t("prorrata transition evidence requires a declared transition"))
+                raise AggregationValidationError(
+                    t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_without_declared_transition")
+                )
             return self
         if not self.register_evidence:
-            raise AggregationValidationError(t("prorrata transition arrival is missing register evidence"))
+            raise AggregationValidationError(
+                t("aggregation.m303_arrivals.errors.prorrata_transition_missing_register_evidence")
+            )
         for entry in self.register_evidence:
             if entry.ejercicio != self.period.filing_year:
                 raise AggregationValidationError(
-                    t("prorrata transition register evidence belongs to another filing year")
+                    t("aggregation.m303_arrivals.errors.prorrata_transition_evidence_wrong_filing_year"),
+                    context={"entry_ejercicio": entry.ejercicio, "filing_year": self.period.filing_year},
                 )
             if entry.especial_transition is None:
                 raise AggregationValidationError(
-                    t("prorrata transition arrival contains an entry without transition evidence")
+                    t("aggregation.m303_arrivals.errors.prorrata_transition_entry_without_evidence"),
+                    context={"sector_id": entry.sector_id or ""},
                 )
             if entry.especial_transition.kind != self.transition:
                 raise AggregationValidationError(
-                    t("prorrata transition arrival contains contradictory transition evidence")
+                    t("aggregation.m303_arrivals.errors.prorrata_transition_contradictory_evidence"),
+                    context={
+                        "declared_transition": self.transition.value,
+                        "entry_transition": entry.especial_transition.kind.value,
+                    },
                 )
         return self
 
@@ -131,17 +150,25 @@ def resolve_m303_supplier_regime_arrival(
     settlements in the same period.
     """
     if iva_aggregation.period != period:
-        raise AggregationValidationError(t("supplier-regime IVA observations do not match the requested filing period"))
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.supplier_regime_aggregation_period_mismatch"),
+            context={
+                "requested_period": period.registry_token,
+                "aggregation_period": iva_aggregation.period.registry_token,
+            },
+        )
     observations: Sequence[IvaLedgerObservation] = iva_aggregation.observations
     wrong_period_ledger_ids = tuple(
         observation.ledger_id for observation in observations if not period.contains(observation.transaction_date)
     )
     if wrong_period_ledger_ids:
         raise AggregationValidationError(
-            t(
-                "supplier-regime IVA aggregation contains observations outside the requested filing period: "
-                f"{wrong_period_ledger_ids}"
-            )
+            t("aggregation.m303_arrivals.errors.supplier_regime_observations_outside_period"),
+            context={
+                "requested_period": period.registry_token,
+                "ledger_ids": ", ".join(wrong_period_ledger_ids),
+                "ledger_id_count": len(wrong_period_ledger_ids),
+            },
         )
     source_ledger_ids = tuple(
         dict.fromkeys(
@@ -173,7 +200,10 @@ def _m303_prorrata_transition_kind(
         entry.especial_transition.kind for entry in evidence if entry.especial_transition is not None
     }
     if len(transition_kinds) > 1:
-        raise AggregationValidationError(t("prorrata register carries contradictory option and revocation evidence"))
+        raise AggregationValidationError(
+            t("aggregation.m303_arrivals.errors.prorrata_register_contradictory_transition_evidence"),
+            context={"transition_kinds": ", ".join(sorted(kind.value for kind in transition_kinds))},
+        )
     return next(iter(transition_kinds), None)
 
 
@@ -190,10 +220,12 @@ def _validate_m303_prorrata_revocation_evidence(
             invalid_revocation_sectors.append(entry.sector_id)
     if invalid_revocation_sectors:
         raise AggregationValidationError(
-            t(
-                "prorrata especial revocation evidence has no prior-year especial register state for sector(s) "
-                f"{tuple(invalid_revocation_sectors)}"
-            )
+            t("aggregation.m303_arrivals.errors.prorrata_revocacion_without_prior_year_especial"),
+            context={
+                "filing_year": period.filing_year,
+                "prior_year": period.filing_year - 1,
+                "sector_ids": ", ".join(sector or "" for sector in invalid_revocation_sectors),
+            },
         )
 
 
@@ -213,7 +245,8 @@ def resolve_m303_prorrata_transition_arrival(
         return M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
     if not prorrata_register.has_complete_current_entry_coverage(period.filing_year):
         raise AggregationValidationError(
-            t("prorrata register lacks a complete explicit current-year declaration for Modelo 303")
+            t("aggregation.m303_arrivals.errors.prorrata_register_incomplete_current_year_declaration"),
+            context={"filing_year": period.filing_year},
         )
     evidence = _m303_prorrata_transition_evidence(period=period, prorrata_register=prorrata_register)
     transition = _m303_prorrata_transition_kind(evidence)

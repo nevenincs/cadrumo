@@ -68,6 +68,11 @@ Submodules
    cadrumo.domain.calculations.registry._live_parity
    cadrumo.domain.calculations.registry._loader
    cadrumo.domain.calculations.registry._loader_cache
+   cadrumo.domain.calculations.registry._m303_differentiated_deduction_projection
+   cadrumo.domain.calculations.registry._m303_exonerado_390_projection
+   cadrumo.domain.calculations.registry._m303_orden_anual
+   cadrumo.domain.calculations.registry._m303_prorrata_activity_projection
+   cadrumo.domain.calculations.registry._m303_regimen_simplificado_projection
    cadrumo.domain.calculations.registry._m347_threshold
    cadrumo.domain.calculations.registry._modelo_localization
    cadrumo.domain.calculations.registry._observation_fold
@@ -127,6 +132,7 @@ Submodules
    cadrumo.domain.calculations.registry._validate_label_artifacts
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
+   cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage
    cadrumo.domain.calculations.registry._validate_record_sections
    cadrumo.domain.calculations.registry._validate_reference_checker
    cadrumo.domain.calculations.registry._validate_reference_sections
@@ -147,4 +153,5 @@ Submodules
    cadrumo.domain.calculations.registry._validate_surfaces
    cadrumo.domain.calculations.registry._validate_verdict
    cadrumo.domain.calculations.registry._validate_verification_predicates
+   cadrumo.domain.calculations.registry._verification_tolerance
    cadrumo.domain.calculations.registry._withholding_bindings

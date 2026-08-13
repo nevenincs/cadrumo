@@ -39,7 +39,7 @@ from pydantic import BaseModel, Field, field_serializer, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import CasillaId, Period
-from ....core.identity import ContentDigest
+from ....core.identity import ContentDigest, TransactionId
 from ....core.time import now as _utc_now
 from ....core.time import validate_utc_aware
 from ....domain.calculations.registry import (
@@ -510,7 +510,7 @@ class SheetEvidenceContributorRow(BaseModel):
     model_config = _STRICT_FROZEN
 
     casilla_id: CasillaId
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     amount: Decimal
     currency: str = Field(min_length=1)
     # Euro projection of a foreign-currency contributor, mirroring the domain

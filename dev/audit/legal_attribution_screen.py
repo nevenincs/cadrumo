@@ -2,11 +2,15 @@
 
 The registry's evidence gate confirms a ``required_text`` phrase is PRESENT in
 the cited corpus file. It has no notion of whether the provision BELONGS to the
-modelo citing it, and that gap is not theoretical: four filing-grade citations
-sit inside it today. Modelos 187, 188 and 194 each cite an article whose own
-text reads "Se aprueba el modelo 193", and 296 cites one concerning "modelo
-123". The evidence gate passes all four, correctly by its own contract, because
-the phrase it checks genuinely is in the file.
+modelo citing it, and that gap was not theoretical: four filing-grade citations
+sat inside it when this screen was written. Modelos 187, 188 and 194 each cited
+an article whose own text reads "Se aprueba el modelo 193", and 296 cited one
+concerning "modelo 123". The evidence gate passed all four, correctly by its
+own contract, because the phrase it checks genuinely is in the file.
+
+Those four have since been corrected and the worklist reads zero. The screen
+prints its current counts and freezes no figure in this prose, so a reader is
+told what the catalogue says today rather than what it said at authoring.
 
 This is the same tautology the grounding rule warns about, one level up. There
 the ``required_text`` was self-authored, so it validated internal consistency
@@ -22,12 +26,14 @@ approval phrase and its form number live in separate entries, so a per-phrase
 rule demotes it wrongly -- a mistake made and corrected during the grounding
 pass that produced this screen.
 
-A SCREEN, not a gate, deliberately. Citations are known-wrong right now, so a
-gate would land red and tax every peer for a defect they did not create.
-Correcting them is legal-authority work: it needs the right approving orden
-located in the bundled corpus, and for several modelos the corpus may not hold
-one. Promote this to a pytest gate once the worklist is empty -- the detection is
-the hard part and it is done here.
+A SCREEN, not a gate. It was written as one because citations were known-wrong
+and a gate would have landed red on every peer for a defect they did not
+create; correcting them is legal-authority work, needing the right approving
+orden located in the bundled corpus. The worklist is empty now, so the stated
+condition for promoting this to a pytest gate is MET and the promotion is
+simply not taken here -- it is a scope decision with its own row, not a
+consequence of this file being read. The detection is the hard part and it is
+done here.
 
 MEASURED LIMIT, and the widening that was rejected. This screen catches the
 APPROVAL shape only, and there is a real mis-attribution it does not see: modelo
@@ -58,17 +64,10 @@ from __future__ import annotations
 
 import re
 import sys
-import tomllib
 from pathlib import Path
 from typing import Final, NamedTuple
 
-#: Declared locally rather than imported from ``cadrumo.core``: ``dev/`` is
-#: unshipped tooling and must not reach into the shipped package's internals,
-#: so every dev module carries its own constant (see the sibling screens in
-#: this package).
-_UTF_8: Final[str] = "utf-8"
-
-_LEGAL_DIR: Final = Path("src/cadrumo/_data/registry/aeat/legal")
+from dev.audit.legal_catalogue import load_legal_entries, required_text_by_entry
 
 #: Phrases a Spanish approving provision uses. Matched accent-insensitively
 #: against a folded copy, because the corpus and the catalogue disagree on
@@ -128,19 +127,6 @@ class Mismatch(NamedTuple):
         return f"modelo {self.modelo} cites {self.entry_id}, whose approving text names modelo {approved}"
 
 
-def load_legal_entries(root: Path) -> dict[str, tuple[str, ...]]:
-    """Return every legal entry id mapped to its ``required_text`` phrases."""
-    entries: dict[str, tuple[str, ...]] = {}
-    legal_dir = root / _LEGAL_DIR
-    if not legal_dir.is_dir():
-        raise SystemExit(f"legal catalogue is missing, so the result would be meaningless: {legal_dir}")
-    for path in sorted(legal_dir.glob("*.toml")):
-        data = tomllib.loads(path.read_text(encoding=_UTF_8))
-        for entry_id, body in data.get("legal", {}).items():
-            entries[entry_id] = tuple(body.get("required_text", ()))
-    return entries
-
-
 def find_mismatches(
     modelo_refs: dict[str, tuple[str, ...]],
     entries: dict[str, tuple[str, ...]],
@@ -183,9 +169,19 @@ def _modelo_refs_from_registry() -> dict[str, tuple[str, ...]]:
 
 
 def main() -> int:
-    """Print the worklist. Always exits 0 -- this reports, it does not gate."""
+    """Print the worklist.
+
+    Exits 0 whatever the worklist says: this reports and does not gate, because
+    the mis-attributions are known-present and correcting them is legal
+    authority work.
+
+    It does REFUSE, non-zero, when its own inputs cannot support a result -- a
+    missing catalogue or an empty read. Either would print an empty worklist,
+    which is indistinguishable from a clean one. "Always exits 0" described the
+    worklist and read as a promise about the process.
+    """
     root = Path(__file__).resolve().parents[2]
-    entries = load_legal_entries(root)
+    entries = required_text_by_entry(load_legal_entries(root))
     if not entries:
         raise SystemExit("read zero legal entries; the result would be meaningless")
 

@@ -91,6 +91,8 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
         "rate_kinds": ("general",),
         "flow_direction": "repercutido",
         "fact": "iva_amount_sum",
+        "observation_roles": ("settlement",),
+        "cash_accounting_treatments": ("none", "taxpayer_regime", "supplier_regime"),
     },
     "ledger_renta_gastos_estimacion_directa_aggregation": {
         "target_casilla_id": _M130_INGRESOS_CASILLA,

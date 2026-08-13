@@ -101,18 +101,24 @@ class TestResolveMaritimeExemptionArt7p:
         assert result.casilla_values[RENTA_EXENTA_CASILLA] == result.observations[0].value
 
     def test_raises_when_salary_missing_for_eligible_profile(self) -> None:
-        with pytest.raises(RentaValidationError, match="annual_salary"):
+        with pytest.raises(RentaValidationError) as excinfo:
             resolve_maritime_exemption(
                 facts=self._FACTS,
                 qualifying_days=100,
             )
 
+        assert str(excinfo.value) == "application.calculations.maritime_exemption.errors.art_7p_inputs_required"
+        assert excinfo.value.context == {"annual_salary_supplied": False, "qualifying_days_supplied": True}
+
     def test_raises_when_qualifying_days_missing_for_eligible_profile(self) -> None:
-        with pytest.raises(RentaValidationError, match="qualifying_days"):
+        with pytest.raises(RentaValidationError) as excinfo:
             resolve_maritime_exemption(
                 facts=self._FACTS,
                 annual_salary=Decimal("36500"),
             )
+
+        assert str(excinfo.value) == "application.calculations.maritime_exemption.errors.art_7p_inputs_required"
+        assert excinfo.value.context == {"annual_salary_supplied": True, "qualifying_days_supplied": False}
 
 
 class TestResolveMaritimeExemptionRebeca:
@@ -155,8 +161,11 @@ class TestResolveMaritimeExemptionRebeca:
         assert result.observations[0].value == Decimal("20000")
 
     def test_raises_when_navigation_income_missing_for_rebeca_eligible(self) -> None:
-        with pytest.raises(RentaValidationError, match="gross_navigation_income"):
+        with pytest.raises(RentaValidationError) as excinfo:
             resolve_maritime_exemption(facts=self._FACTS)
+
+        assert str(excinfo.value) == "application.calculations.maritime_exemption.errors.rebeca_input_required"
+        assert excinfo.value.context == {"gross_navigation_income_supplied": False}
 
 
 class TestResolveMaritimeExemptionDa41Guard:

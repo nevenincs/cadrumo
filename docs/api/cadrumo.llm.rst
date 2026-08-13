@@ -31,8 +31,10 @@ Submodules
    cadrumo.llm._invoice_field_contract
    cadrumo.llm._invoice_field_grounding
    cadrumo.llm._models
+   cadrumo.llm._preconditions
    cadrumo.llm._pricing
    cadrumo.llm._retention
    cadrumo.llm._suggestions
+   cadrumo.llm._supply_nature_proposal
    cadrumo.llm._text_classifier
    cadrumo.llm._vision_classifier

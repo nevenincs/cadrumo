@@ -89,7 +89,15 @@ def build_complementaria(
     original_submission = _submitted_original(original)
     original_draft = _load_original_draft(original_submission.draft_id)
     if original_draft.modelo != original_submission.modelo or original_draft.period != original_submission.period:
-        raise ModeloBuilderError("original submission and persisted draft disagree on modelo or period")
+        raise ModeloBuilderError(
+            translated_message="application.filing.complementaria.errors.original_draft_addressing_mismatch",
+            context={
+                "submission_modelo": original_submission.modelo,
+                "draft_modelo": original_draft.modelo,
+                "submission_period": original_submission.period.registry_token,
+                "draft_period": original_draft.period.registry_token,
+            },
+        )
     _require_one_taxpayer_identity(original_submission, original_draft)
     _require_original_registry_snapshot(original_draft, schema_provider=schema_provider)
     merged_inputs = _merge_inputs(original_draft, updated_inputs)
@@ -108,7 +116,15 @@ def build_complementaria(
     )
     delta = _delta(original_draft, amended_draft)
     if not delta:
-        raise ModeloBuilderError("complementaria requires at least one changed casilla")
+        raise ModeloBuilderError(
+            translated_message="application.filing.complementaria.errors.no_changed_casilla",
+            context={
+                "modelo": original_submission.modelo,
+                "period": original_draft.period.registry_token,
+                "submission_id": original_submission.submission_id,
+                "changed_casilla_count": 0,
+            },
+        )
     original_csv = original_submission.justificante_csv
     if original_csv is None:
         # The amendment record requires the CSV that identifies what is being
@@ -116,7 +132,12 @@ def build_complementaria(
         # every other precondition above, instead of a raw ValidationError
         # raised from inside the record construction below.
         raise ModeloBuilderError(
-            "complementaria requires the original submission's justificante CSV",
+            translated_message="application.filing.complementaria.errors.justificante_csv_absent",
+            context={
+                "modelo": original_submission.modelo,
+                "period": original_draft.period.registry_token,
+                "submission_id": original_submission.submission_id,
+            },
         )
     amendment = ModeloComplementaria(
         amendment_id=make_amendment_id(
@@ -151,13 +172,26 @@ def _submitted_original(original: object) -> _SubmittedOriginal:
     required = ("submission_id", "draft_id", "modelo", "period", "profile_tax_id", "justificante_csv")
     missing = [name for name in required if not hasattr(original, name)]
     if missing:
-        raise ModeloBuilderError(f"original submission is missing required fields: {missing!r}")
+        raise ModeloBuilderError(
+            translated_message="application.filing.complementaria.errors.original_submission_fields_missing",
+            context={"missing_count": len(missing), "missing_fields": tuple(missing)},
+        )
     if not isinstance(original, _SubmittedOriginal):
-        raise ModeloBuilderError("original submission does not conform to the expected protocol shape")
+        raise ModeloBuilderError(
+            translated_message="application.filing.complementaria.errors.original_submission_shape_invalid",
+            context={"observed_type": type(original).__name__},
+        )
     submitted: _SubmittedOriginal = original
     csv = submitted.justificante_csv
     if csv is None or not csv.strip():
-        raise ModeloBuilderError("original submission must include an official justificante CSV")
+        raise ModeloBuilderError(
+            translated_message="application.filing.complementaria.errors.original_submission_csv_blank",
+            context={
+                "submission_id": submitted.submission_id,
+                "modelo": submitted.modelo,
+                "csv_present": csv is not None,
+            },
+        )
     return submitted
 
 
@@ -222,9 +256,6 @@ def _require_one_taxpayer_identity(
     draft_identity = original_draft.profile_tax_id
     if not (submitted_declared or "").strip():
         raise ModeloBuilderError(
-            "complementaria requires a declared taxpayer identity: the submitted filing's "
-            f"profile_tax_id is {submitted_declared!r} while the original draft declares "
-            f"{draft_identity!r}",
             translated_message="application.filing.errors.complementaria_taxpayer_identity_absent",
             context={"submitted_tax_id": repr(submitted_declared), "draft_tax_id": repr(draft_identity)},
         )
@@ -232,17 +263,11 @@ def _require_one_taxpayer_identity(
         submitted_identity = validate_spanish_tax_id(submitted_declared)
     except IdentityError as exc:
         raise ModeloBuilderError(
-            f"complementaria cannot confirm one taxpayer: the submitted filing's profile_tax_id "
-            f"{submitted_declared!r} is not a valid NIF, NIE or CIF, and the original draft declares "
-            f"{draft_identity!r}",
             translated_message="application.filing.errors.complementaria_taxpayer_identity_malformed",
             context={"submitted_tax_id": repr(submitted_declared), "draft_tax_id": repr(draft_identity)},
         ) from exc
     if submitted_identity != draft_identity:
         raise ModeloBuilderError(
-            "complementaria taxpayer identity diverges: the submitted filing declares profile_tax_id "
-            f"{submitted_identity!r} and the original draft declares {draft_identity!r}; "
-            "both must name one taxpayer",
             translated_message="application.filing.errors.complementaria_taxpayer_identity_mismatch",
             context={"submitted_tax_id": repr(submitted_identity), "draft_tax_id": repr(draft_identity)},
         )
@@ -255,7 +280,14 @@ def _require_original_registry_snapshot(
 ) -> None:
     collection = schema_provider.get_collection(original_draft.modelo)
     if original_draft.schema_version != collection.schema_version:
-        raise ModeloBuilderError("original draft was not built from the active registry snapshot")
+        raise ModeloBuilderError(
+            translated_message="application.filing.complementaria.errors.original_draft_snapshot_stale",
+            context={
+                "modelo": original_draft.modelo,
+                "draft_schema_version": original_draft.schema_version,
+                "active_schema_version": collection.schema_version,
+            },
+        )
 
 
 def _merge_inputs(original_draft: ModeloDraft, updated_inputs: CasillaInputs) -> ModeloInputs:

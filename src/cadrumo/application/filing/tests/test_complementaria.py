@@ -289,7 +289,9 @@ class TestBuildComplementaria:
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, justificante_csv=None)
 
-        with pytest.raises(ModeloBuilderError, match="official justificante CSV"):
+        with pytest.raises(
+            ModeloBuilderError, match=r"^application\.filing\.complementaria\.errors\.original_submission_csv_blank$"
+        ):
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
@@ -332,7 +334,9 @@ class TestBuildComplementaria:
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft)
 
-        with pytest.raises(ModeloBuilderError, match="active registry snapshot"):
+        with pytest.raises(
+            ModeloBuilderError, match=r"^application\.filing\.complementaria\.errors\.original_draft_snapshot_stale$"
+        ):
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
@@ -351,7 +355,7 @@ class TestBuildComplementaria:
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-999")
 
-        with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
+        with pytest.raises(ModeloBuilderError, match=r"^application\.filing\.runtime\.errors\.modelo_not_in_registry$"):
             build_complementaria(
                 original,
                 {
@@ -414,7 +418,9 @@ class TestBuildComplementaria:
             profile_tax_id=_OTHER_TAXPAYER_NIF,
         )
 
-        with pytest.raises(ModeloBuilderError, match="taxpayer identity diverges") as raised:
+        with pytest.raises(
+            ModeloBuilderError, match=r"^application\.filing\.errors\.complementaria_taxpayer_identity_mismatch$"
+        ) as raised:
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
@@ -422,9 +428,11 @@ class TestBuildComplementaria:
                 m303_regimen_simplificado_scope=None,
             )
 
-        message = str(raised.value)
-        assert _OTHER_TAXPAYER_NIF in message
-        assert original_draft.profile_tax_id in message
+        assert str(raised.value) == "application.filing.errors.complementaria_taxpayer_identity_mismatch"
+        context = raised.value.context
+        assert isinstance(context, dict)
+        assert _OTHER_TAXPAYER_NIF in str(context["submitted_tax_id"])
+        assert original_draft.profile_tax_id in str(context["draft_tax_id"])
         assert _persisted_amendment_ids() == ()
 
     def test_absent_submitted_taxpayer_identity_refuses_rather_than_passing_through(self) -> None:
@@ -439,7 +447,9 @@ class TestBuildComplementaria:
         _persist_original_draft(original_draft)
         original = _conforming_submitted_filing(original_draft, profile_tax_id="   ")
 
-        with pytest.raises(ModeloBuilderError, match="requires a declared taxpayer identity"):
+        with pytest.raises(
+            ModeloBuilderError, match=r"^application\.filing\.errors\.complementaria_taxpayer_identity_absent$"
+        ):
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
@@ -466,7 +476,9 @@ class TestBuildComplementaria:
         _persist_original_draft(original_draft)
         original = _conforming_submitted_filing(original_draft, profile_tax_id=_MALFORMED_TAX_ID)
 
-        with pytest.raises(ModeloBuilderError, match="is not a valid NIF, NIE or CIF"):
+        with pytest.raises(
+            ModeloBuilderError, match=r"^application\.filing\.errors\.complementaria_taxpayer_identity_malformed$"
+        ):
             build_complementaria(
                 original,
                 {_M130_INGRESOS_CASILLA: Decimal("11000")},
@@ -485,7 +497,7 @@ class TestBuildComplementaria:
         _persist_original_draft(original_draft)
         original = _submitted_filing(original_draft, submission_id="sub-998")
 
-        with pytest.raises(ModeloBuilderError, match="not present in the calculation registry"):
+        with pytest.raises(ModeloBuilderError, match=r"^application\.filing\.runtime\.errors\.modelo_not_in_registry$"):
             build_complementaria(
                 original,
                 {_UNREGISTERED_M993_EJERCICIO_CASILLA: 2024},

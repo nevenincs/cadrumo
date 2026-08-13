@@ -185,6 +185,9 @@ def test_the_advisory_names_the_provision_and_disclaims_the_correction() -> None
     assert "52.00" in message
     assert "does not change it" in message
     assert diagnostics[0].reason == "invoice_recargo_departs_from_published_rate"
+    # Advisory-asserted: the comparison is per invoice, not per casilla, so no
+    # registry object is in reach to read art. 161's grounding off.
+    assert diagnostics[0].asserted_legal_refs == ("ley-37-1992:art-161",)
 
 
 def test_the_advisory_is_not_a_refusal() -> None:

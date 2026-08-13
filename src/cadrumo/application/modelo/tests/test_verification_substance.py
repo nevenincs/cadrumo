@@ -6,8 +6,14 @@ from decimal import Decimal
 
 import pytest
 
-from ....core import CasillaId
-from ....domain.calculations.registry import VerificationPredicateDefinition
+from ....core import CasillaId, Modelo, validated_casilla_id
+from ....core.resources import resources
+from ....domain.calculations.registry import (
+    ParsedVerificationPredicate,
+    VerificationPredicateDefinition,
+    VerificationPredicateOperator,
+    parse_verification_predicate_expression,
+)
 from ....domain.modelos import ModeloError, ModeloVerificationFindingKind
 from .._verification_actions import (
     evaluate_advisory_predicate_fires,
@@ -84,11 +90,11 @@ def test_predicate_expression_rejects_noncanonical_casilla_id_token() -> None:
     with pytest.raises(ModeloError) as raised:
         evaluate_predicate_expression('all_nonzero(["01", "bad key"])', values, _workflow_profile())
 
-
     # The refusal carries the offending token as a machine fact; the text is
     # catalogue-rendered, so there is no sentence to match on.
     assert raised.value.context is not None
     assert raised.value.context["casilla_id_canonical"] is False
+
 
 def test_cap_le_when_positive_passes_when_limited_within_ceiling() -> None:
     """cap_le_when_positive: passes when ceiling > 0 AND limited ≤ ceiling."""
@@ -477,3 +483,78 @@ def test_evaluate_verification_predicates_passing_predicate_no_finding() -> None
     values: dict[CasillaId, Decimal] = {_CASILLA_01: Decimal("1000"), _CASILLA_02: Decimal("500")}
     findings = evaluate_verification_predicates((predicate,), values, _workflow_profile())
     assert findings == []
+
+
+def _shipped_m100_m200_predicates(
+    *,
+    operator: VerificationPredicateOperator,
+    finding_kind: str,
+) -> tuple[tuple[VerificationPredicateDefinition, ParsedVerificationPredicate], ...]:
+    matches: list[tuple[VerificationPredicateDefinition, ParsedVerificationPredicate]] = []
+    for modelo in (Modelo.M100, Modelo.M200):
+        validated = resources().modelos.authority.validate_modelo(modelo.value)
+        for revision in validated.revisions.values():
+            for predicate in revision.verification_predicates:
+                parsed = parse_verification_predicate_expression(predicate.expression)
+                if parsed is not None and parsed.operator is operator and predicate.finding_kind == finding_kind:
+                    matches.append((predicate, parsed))
+    return tuple(matches)
+
+
+def test_shipped_m100_m200_cap_predicates_allow_the_ceiling_and_refuse_an_overage() -> None:
+    """Every loaded M100/M200 cap keeps its equality boundary and blocking finding."""
+    predicates = _shipped_m100_m200_predicates(
+        operator=VerificationPredicateOperator.CAP_LE_WHEN_POSITIVE,
+        finding_kind="BLOCKING_RULE",
+    )
+    assert predicates
+    unit = Decimal("1")
+
+    for predicate, parsed in predicates:
+        limited, ceiling = (
+            validated_casilla_id(token, surface="verification predicate substance test") for token in parsed.casilla_ids
+        )
+        assert evaluate_verification_predicates((predicate,), {limited: unit, ceiling: unit}, _workflow_profile()) == []
+        findings = evaluate_verification_predicates(
+            (predicate,),
+            {limited: unit + unit, ceiling: unit},
+            _workflow_profile(),
+        )
+        assert tuple(dict(finding.message_facts)["predicate_id"] for finding in findings) == (predicate.predicate_id,)
+
+
+def test_shipped_m100_m200_advisory_implications_fire_only_for_a_positive_missing_consequent() -> None:
+    """Every loaded M100/M200 implication stays an advisory in its active direction."""
+    predicates = _shipped_m100_m200_predicates(
+        operator=VerificationPredicateOperator.IMPLIES_NONZERO,
+        finding_kind="ADVISORY",
+    )
+    assert predicates
+    unit = Decimal("1")
+
+    for predicate, parsed in predicates:
+        antecedent, consequent = (
+            validated_casilla_id(token, surface="verification predicate substance test") for token in parsed.casilla_ids
+        )
+        findings = evaluate_verification_predicates(
+            (predicate,),
+            {antecedent: unit, consequent: Decimal("0")},
+            _workflow_profile(),
+        )
+        assert tuple(dict(finding.message_facts)["predicate_id"] for finding in findings) == (predicate.predicate_id,)
+        assert (
+            evaluate_verification_predicates(
+                (predicate,),
+                {antecedent: unit, consequent: unit},
+                _workflow_profile(),
+            )
+            == []
+        )
+        assert (
+            evaluate_verification_predicates(
+                (predicate,),
+                {antecedent: Decimal("0"), consequent: Decimal("0")},
+                _workflow_profile(),
+            )
+            == []
+        )

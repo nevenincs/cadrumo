@@ -15,6 +15,7 @@ values while keeping keys, so a row that stops reporting a quantity still reds.
 from __future__ import annotations
 
 import pytest
+
 from cadrumo.core.observability import MASK_SENTINEL
 
 from .._golden_store import mask_host_conditional_details

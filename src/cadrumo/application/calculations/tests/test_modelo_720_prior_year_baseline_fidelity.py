@@ -55,9 +55,11 @@ from pathlib import Path
 
 import pytest
 
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core import (
     CasillaId,
     ForeignAssetObligationGroup,
+    Period,
     validated_casilla_id,
 )
 from ....core.resources import resources
@@ -67,12 +69,20 @@ from ....domain.calculations.registry import (
     RegistryValidationError,
 )
 from ....domain.modelos import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_modelo_observation
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
+from ...aggregation import CalculationSourceContext
+from ...modelo import create_work_unit
+from ...modelo._calculation_actions import _resolve_bucket_source_mesh, _source_provenance_refs
+from ...user_profile import UserProfileLifecycleRepository
 from .._binding_prefill import resolve_bindings_from_local_store
-from .._foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
-from .._multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
+from .._foreign_asset_redeclaration import (
+    modelo_720_prior_baseline_observation,
+    modelo_720_redeclaration_advisory_findings,
+)
+from .._multi_year import EnrollmentRecorder, PreviousFilingSourceResolver, assert_enrollment_matches_manifest
 from .._observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -564,6 +574,7 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     assert {item.source_modelo for item in report.prefilled} == {_MODELO}
     assert {item.source_filing_year for item in report.prefilled} == {_YEAR_N}
     assert {item.source_periods for item in report.prefilled} == {("0A",)}
+    assert {item.dependency_treatment for item in report.prefilled} == {"factual_evidence"}
 
     prior_baseline = _prior_baseline_observation_from_bindings(dict(report.binding_values))
     findings = modelo_720_redeclaration_advisory_findings(
@@ -589,6 +600,190 @@ def test_previous_filing_baseline_drives_redeclaration_advisory_for_omitted_grow
     }
     assert "rd-1065-2007:art-42-bis" in finding.legal_refs
     assert "aeat-modelo-720-procedure" in finding.source_refs
+
+
+def test_previous_filing_baselines_do_not_cross_taxpayer_buckets(tmp_path: Path) -> None:
+    """A factual-evidence carry resolves only from its own encrypted taxpayer bucket.
+
+    The primary bucket holds the real 2023 Modelo 720 observation; the secondary
+    bucket holds none. Both resolve the same 2024 snapshot through the production
+    source-mesh adapter. This proves the factual-evidence values and their
+    treatment provenance cannot leak across taxpayers while preserving the
+    primary calculation input.
+    """
+    prior_observation = _year_n_observation_with_explicit_inmuebles_zero()
+    snapshot = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    expected_bindings = {
+        _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
+        _VALORES_BASELINE_BINDING: _VALORES_N,
+        _INMUEBLES_BASELINE_BINDING: _INMUEBLES_N,
+    }
+
+    with isolated_two_bucket_runtime(tmp_path=tmp_path) as runtime:
+        primary_repository = CalculationObservationRepository(objects=runtime.primary.repository)
+        secondary_repository = CalculationObservationRepository(objects=runtime.secondary.repository)
+        primary_repository.save(
+            primary_repository.prepare_observation_envelope(
+                prior_observation,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+            )
+        )
+        primary_resolution = PreviousFilingSourceResolver(
+            repository=primary_repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=runtime.primary.bucket_id,
+                modelo=_MODELO,
+                filing_year=_YEAR_N_PLUS_1,
+                period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
+                revision=snapshot.revision,
+            )
+        )
+        with runtime.switch_to_secondary():
+            secondary_resolution = PreviousFilingSourceResolver(
+                repository=secondary_repository,
+                registry_snapshot=snapshot,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=runtime.secondary.bucket_id,
+                    modelo=_MODELO,
+                    filing_year=_YEAR_N_PLUS_1,
+                    period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
+                    revision=snapshot.revision,
+                )
+            )
+
+    assert dict(primary_resolution.binding_values) == expected_bindings
+    assert primary_resolution.unresolved_binding_ids == ()
+    assert {item.dependency_treatment for item in primary_resolution.provenance} == {"factual_evidence"}
+    assert {item.source_ref.rsplit(":", maxsplit=1)[-1] for item in primary_resolution.provenance} == _BASELINE_BINDINGS
+    assert dict(secondary_resolution.binding_values) == {}
+    assert set(secondary_resolution.unresolved_binding_ids) == _BASELINE_BINDINGS
+    assert secondary_resolution.provenance == ()
+
+
+def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coordinate(tmp_path: Path) -> None:
+    """Real work units resolve only the previous annual coordinate they declare."""
+    prior_observation = _year_n_observation_with_explicit_inmuebles_zero()
+    snapshot_n1 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
+    snapshot_n2 = resources().modelos.authority.snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1 + 1, period="0A")
+    expected_bindings = {
+        _CUENTAS_BASELINE_BINDING: _CUENTAS_N,
+        _VALORES_BASELINE_BINDING: _VALORES_N,
+        _INMUEBLES_BASELINE_BINDING: _INMUEBLES_N,
+    }
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        UserProfileLifecycleRepository(bucket_id=profile.bucket_id).save(
+            UserProfileRecord(
+                profile_id=profile.bucket_id,
+                display_name="M720 source-mesh coordinate fixture",
+                facts=(
+                    UserProfileFact(path="identity.tax_id", value="12345678Z"),
+                    UserProfileFact(path="identity.name", value="Ready"),
+                    UserProfileFact(path="identity.surnames", value="Operator"),
+                    UserProfileFact(path="activities.description", value="asset reporting"),
+                    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+                    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+                    UserProfileFact(path="iva.regime", value="GENERAL"),
+                    UserProfileFact(path="iva.m303_regime_composition", value="general"),
+                    UserProfileFact(path="iva.redeme_enrolled", value=False),
+                    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+                    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+                    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+                    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+                    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
+                    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
+                    UserProfileFact(path="censo.activity_start_date", value="2020-01-01"),
+                ),
+                created_at=_CLOCK_N,
+                updated_at=_CLOCK_N,
+            )
+        )
+        observation_repository = CalculationObservationRepository()
+        observation_repository.save(
+            observation_repository.prepare_observation_envelope(
+                prior_observation,
+                source_kind="app_filing",
+                captured_at=_CLOCK_N,
+            )
+        )
+        work_unit_repository = WorkUnitCatalogueRepository()
+        work_unit_n1 = create_work_unit(
+            bucket_id=profile.bucket_id,
+            modelo=_MODELO,
+            filing_year=_YEAR_N_PLUS_1,
+            period=Period.from_year_and_code(_YEAR_N_PLUS_1, "0A"),
+            revision_id=snapshot_n1.revision.id,
+            repository=work_unit_repository,
+            clock=_CLOCK_N_PLUS_1,
+        )
+        work_unit_n2 = create_work_unit(
+            bucket_id=profile.bucket_id,
+            modelo=_MODELO,
+            filing_year=_YEAR_N_PLUS_1 + 1,
+            period=Period.from_year_and_code(_YEAR_N_PLUS_1 + 1, "0A"),
+            revision_id=snapshot_n2.revision.id,
+            repository=work_unit_repository,
+            clock=_CLOCK_N_PLUS_1,
+        )
+        resolution_n1 = _resolve_bucket_source_mesh(
+            snapshot_n1,
+            work_unit_n1,
+            transaction_repository=None,
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+        resolution_n2 = _resolve_bucket_source_mesh(
+            snapshot_n2,
+            work_unit_n2,
+            transaction_repository=None,
+            invoice_repository=None,
+            foreign_asset_observations=(),
+        )
+
+    assert work_unit_n1.work_unit_id != work_unit_n2.work_unit_id
+    assert work_unit_n1.bucket_id == work_unit_n2.bucket_id
+    assert dict(resolution_n1.binding_values) == expected_bindings
+    assert resolution_n1.unresolved_binding_ids == ()
+    assert dict(resolution_n2.binding_values) == {}
+    assert set(resolution_n2.unresolved_binding_ids) == _BASELINE_BINDINGS
+
+    previous_filing_provenance = tuple(
+        item for item in resolution_n1.provenance if item.source_kind == "previous_filing"
+    )
+    assert {item.dependency_treatment for item in previous_filing_provenance} == {"factual_evidence"}
+    assert {item.source_ref.rsplit(":", maxsplit=1)[-1] for item in previous_filing_provenance} == _BASELINE_BINDINGS
+    assert {
+        item.dependency_treatment
+        for item in _source_provenance_refs(resolution_n1)
+        if item.source_kind == "previous_filing"
+    } == {"factual_evidence"}
+
+    projected = modelo_720_prior_baseline_observation(
+        binding_values=resolution_n1.binding_values,
+        modelo_revision=snapshot_n1.revision,
+        filing_year=work_unit_n1.filing_year,
+        period=work_unit_n1.period.registry_token,
+    )
+    projected_by_casilla = {item.casilla_id: item for item in projected.observations}
+    casillas_by_id = {casilla.id: casilla for casilla in snapshot_n1.revision.casillas}
+    assert projected.modelo == _MODELO
+    assert projected.filing_year == work_unit_n1.filing_year
+    assert projected.period == work_unit_n1.period.registry_token
+    assert {casilla_id: item.value for casilla_id, item in projected_by_casilla.items()} == {
+        _CUENTAS_VALORACION_CASILLA: _CUENTAS_N,
+        _VALORES_VALORACION_CASILLA: _VALORES_N,
+        _INMUEBLES_VALORACION_CASILLA: _INMUEBLES_N,
+    }
+    assert all(item.formula_id is None for item in projected_by_casilla.values())
+    assert all(
+        item.legal_refs == casillas_by_id[casilla_id].legal_refs
+        and item.source_refs == casillas_by_id[casilla_id].source_refs
+        for casilla_id, item in projected_by_casilla.items()
+    )
 
 
 def test_previous_filing_baseline_does_not_invent_absent_inmuebles_zero(tmp_path: Path) -> None:

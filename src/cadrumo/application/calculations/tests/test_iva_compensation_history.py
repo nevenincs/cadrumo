@@ -80,8 +80,16 @@ def test_iva_compensation_four_year_window_blocks_expired_remaining_lot() -> Non
         as_of_year=2026,
     )
 
-    with pytest.raises(IvaCompensationCarryForwardPolicyError, match="2021/4T"):
+    with pytest.raises(IvaCompensationCarryForwardPolicyError) as excinfo:
         enforce_iva_compensation_four_year_window(report)
+
+    # The refusal now renders its registered key; the expired lot it names rides
+    # in machine facts, which is where the 2021/4T identity has to be readable.
+    assert str(excinfo.value) == "errors.refused.refused_filing_calculate"
+    context = excinfo.value.context or {}
+    assert context["source_filing_year"] == "2021"
+    assert context["source_period"] == "4T"
+    assert context["remaining_balance_expired"] is True
 
 
 def test_iva_compensation_four_year_window_allows_fully_applied_expired_lot() -> None:

@@ -22,7 +22,7 @@ from ...core.hashing import content_hash_hex
 if TYPE_CHECKING:
     from ..invoices import InvoiceTransactionLinkResult
 
-from ...core import BindingSourceKind, Period
+from ...core import BindingSourceKind, IvaDeductionEvidenceAuthority, Period
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.attachments import link_attachment_transaction
@@ -35,14 +35,13 @@ from ...domain.buckets import (
 )
 from ...domain.currency import CurrencyNormalizationService
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
-from ...domain.modelos import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    WorkUnitCatalogueRepositoryProtocol,
-)
-from ...core import IvaDeductionEvidenceAuthority
 from ...domain.iva import (
     IvaDeductionClassificationProvenance,
     required_deduction_evidence_authority,
+)
+from ...domain.modelos import (
+    CalculationRevisionCatalogueRepositoryProtocol,
+    WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.transactions import (
     BusinessClassification,
@@ -66,9 +65,6 @@ from ...domain.usage_ratios import (
 from ..review import LedgerReviewStatus
 from ._actions_common import (
     EventSpec as _EventSpec,
-)
-from ._actions_common import (
-    purchase_invoice_evidence_records,
 )
 from ._actions_common import (
     blocking_modelo_references as _blocking_modelo_references,
@@ -117,6 +113,9 @@ from ._actions_common import (
 )
 from ._actions_common import (
     primary_lineage_event_id as _primary_lineage_event_id,
+)
+from ._actions_common import (
+    purchase_invoice_evidence_records,
 )
 from ._actions_common import (
     raise_finalized_modelo_blocked as _raise_finalized_modelo_blocked,
@@ -1228,7 +1227,6 @@ def _evidence_event_specs(
     return tuple(specs)
 
 
-
 def _invoice_evidence_provenance(
     command: ManualLedgerTransactionCommand,
 ) -> IvaDeductionClassificationProvenance | None:
@@ -1269,6 +1267,7 @@ def _invoice_evidence_provenance(
         source_locator=record.evidence_id,
         evidence_digest=record.attachment_id,
     )
+
 
 def _transaction_from_command(
     command: ManualLedgerTransactionCommand,

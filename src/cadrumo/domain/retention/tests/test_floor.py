@@ -26,6 +26,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 #: specification the assessment must satisfy, not imported from the code path
 #: it exercises.
 _LGT_FLOOR_YEARS = 4
+_FILING_ID_1 = "1" * 64
+_FILING_ID_2 = "2" * 64
+_FILING_ID_3 = "3" * 64
 
 
 @dataclass(frozen=True)
@@ -43,7 +46,7 @@ def _dt(year: int, month: int = 6, day: int = 15) -> datetime:
 
 
 def test_record_satisfies_protocol() -> None:
-    record = _FiledRecord("id-1", "303", 2020, _dt(2021))
+    record = _FiledRecord(_FILING_ID_1, "303", 2020, _dt(2021))
     assert isinstance(record, RetainableFilingRecord)
 
 
@@ -68,21 +71,21 @@ def test_prescription_year_addition_preserves_date_or_datetime_kind() -> None:
 
 def test_record_inside_window_blocks_erase() -> None:
     filed_at = _dt(2023, 6, 15)
-    record = _FiledRecord("id-1", "130", 2022, filed_at)
+    record = _FiledRecord(_FILING_ID_1, "130", 2022, filed_at)
     # Two years after filing: well inside the four-year floor.
     assessment = assess_retention_floor((record,), as_of=_dt(2025, 6, 15))
     assert isinstance(assessment, RetentionFloorAssessment)
     assert assessment.blocks_erase is True
     assert len(assessment.retained) == 1
     blocking = assessment.retained[0]
-    assert blocking.filing_record_id == "id-1"
+    assert blocking.filing_record_id == _FILING_ID_1
     assert blocking.earliest_safe_erase_date == _dt(2027, 6, 15)
     assert assessment.latest_safe_erase_date == _dt(2027, 6, 15)
 
 
 def test_record_past_floor_is_erasable() -> None:
     filed_at = _dt(2019, 6, 15)
-    record = _FiledRecord("id-1", "100", 2018, filed_at)
+    record = _FiledRecord(_FILING_ID_1, "100", 2018, filed_at)
     # Six years after filing: the four-year window elapsed in 2023.
     assessment = assess_retention_floor((record,), as_of=_dt(2025, 6, 15))
     assert assessment.blocks_erase is False
@@ -92,24 +95,24 @@ def test_record_past_floor_is_erasable() -> None:
 
 def test_boundary_exactly_at_floor_is_erasable() -> None:
     filed_at = _dt(2021, 6, 15)
-    record = _FiledRecord("id-1", "303", 2020, filed_at)
+    record = _FiledRecord(_FILING_ID_1, "303", 2020, filed_at)
     # as_of == earliest_safe_erase_date: the window has elapsed (strict <).
     assessment = assess_retention_floor((record,), as_of=_dt(2025, 6, 15))
     assert assessment.blocks_erase is False
 
 
 def test_mixed_set_reports_latest_safe_erase_date() -> None:
-    old = _FiledRecord("old", "100", 2016, _dt(2017))
-    recent = _FiledRecord("recent", "303", 2023, _dt(2024, 1, 20))
-    newest = _FiledRecord("newest", "130", 2024, _dt(2025, 3, 10))
+    old = _FiledRecord(_FILING_ID_1, "100", 2016, _dt(2017))
+    recent = _FiledRecord(_FILING_ID_2, "303", 2023, _dt(2024, 1, 20))
+    newest = _FiledRecord(_FILING_ID_3, "130", 2024, _dt(2025, 3, 10))
     assessment = assess_retention_floor((old, recent, newest), as_of=_dt(2025, 6, 15))
     # Only the two records filed within the last four years block.
     retained_ids = {record.filing_record_id for record in assessment.retained}
-    assert retained_ids == {"recent", "newest"}
+    assert retained_ids == {_FILING_ID_2, _FILING_ID_3}
     # Latest safe-erase date is the max across retained: newest + 4 years.
     assert assessment.latest_safe_erase_date == _dt(2029, 3, 10)
     # Retained records are ordered by their safe-erase date (ascending).
-    assert [record.filing_record_id for record in assessment.retained] == ["recent", "newest"]
+    assert [record.filing_record_id for record in assessment.retained] == [_FILING_ID_2, _FILING_ID_3]
 
 
 def test_empty_record_set_never_blocks() -> None:

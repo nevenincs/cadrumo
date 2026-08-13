@@ -111,11 +111,7 @@ def relation_requirement_index(
     its established last-row-wins behavior for an invalid duplicate relation id
     until the registry validator reports that structural fault.
     """
-    return {
-        relation_id: requirement
-        for requirement in requirements
-        for relation_id in requirement.relation_ids
-    }
+    return {relation_id: requirement for requirement in requirements for relation_id in requirement.relation_ids}
 
 
 def relation_source_requirements(

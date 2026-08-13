@@ -810,7 +810,7 @@ def extract_invoice_draft_from_evidence(
     """
     if (evidence_id is None) == (attachment_id is None):
         raise PurchaseInvoiceEvidenceInputError(
-            "exactly one of evidence_id or attachment_id must be supplied",
+            translated_message="errors.refused.refused_ledger_evidence_input",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_ATTACHMENT_SELECTION_VALID,
                 facts={"exactly_one_evidence_source_supplied": False},
@@ -972,7 +972,6 @@ def _active_filer_tax_id() -> str | None:
     except Exception:
         return None
     return resolve_filer_tax_id(profile_record=state.active_profile_record())
-
 
 
 def _proposed_supply_nature(
@@ -1164,9 +1163,7 @@ def _refuse_an_unrecognised_xml_document(evidence: EvidenceInput) -> None:
         # would look correct while removing the capability it protects.
         return
     raise PurchaseInvoiceEvidenceInputError(
-        "this XML document carries no invoice record in a syntax this reader knows. Recognised "
-        "structured syntaxes are Facturae 3.2.x, EN16931 Cross Industry Invoice (CII) and EN16931 "
-        "UBL. AEAT SII and VERI*FACTU submission records are not read as invoice evidence.",
+        translated_message="errors.refused.refused_ledger_evidence_input",
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_XML_INVOICE_SUPPORTED,
             facts={"xml_invoice_syntax_recognized": False},
@@ -1979,9 +1976,7 @@ def _agreed_counterparty_tax_id(
         return supplied
     if not _same_bearer_allowing_own_country_prefix(supplied, extracted, country=counterparty_country):
         raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: the counterparty_tax_id supplied does not match the one "
-            "extracted from the document. Check the tax id printed on the invoice; re-run the "
-            "extract to see what was read, or correct the evidence record.",
+            translated_message="errors.refused.refused_ledger_evidence_input",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_COUNTERPARTY_VALID,
                 facts={"counterparty_tax_id_matches_document": False},
@@ -2034,10 +2029,7 @@ def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
     if not counterparty_is_the_filer(counterparty_tax_id=counterparty_tax_id, profile=profile):
         return
     raise PurchaseInvoiceEvidenceInputError(
-        "cannot confirm an invoice whose counterparty is the taxpayer themselves. The tax id read "
-        "from the document is this profile's own, which usually means the document is an invoice "
-        "YOU issued and the reader picked up your identifier from the letterhead instead of the "
-        "customer's. Supply the other party's tax id with --counterparty-nif.",
+        translated_message="errors.refused.refused_ledger_evidence_input",
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_COUNTERPARTY_VALID,
             facts={"counterparty_is_filer": True},
@@ -2048,8 +2040,7 @@ def _refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
 def _require_confirmed_field(value: Decimal | str | None, *, field: str) -> Decimal | str:
     if value is None:
         raise PurchaseInvoiceEvidenceInputError(
-            f"cannot confirm an invoice: {field} could not be extracted and no --{field.replace('_', '-')} "
-            "override was supplied",
+            translated_message="errors.refused.refused_ledger_evidence_input",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
                 facts={"required_field_available": False},
@@ -2292,8 +2283,7 @@ def _confirmed_counterparty_name(supplied: str | None, read: str | None) -> str:
     resolved = (supplied or read or "").strip()
     if not resolved:
         raise PurchaseInvoiceEvidenceInputError(
-            "cannot confirm an invoice: the document states no counterparty name and no "
-            "--counterparty-name override was supplied",
+            translated_message="errors.refused.refused_ledger_evidence_input",
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.EVIDENCE_REQUIRED_FIELD_AVAILABLE,
                 facts={"counterparty_name_available": False},
@@ -3090,7 +3080,7 @@ def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDra
         if parsed is not None:
             return parsed
     raise PurchaseInvoiceEvidenceInputError(
-        "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date override was supplied",
+        translated_message="errors.refused.refused_ledger_evidence_input",
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_INVOICE_DATE_AVAILABLE,
             facts={"invoice_date_available": False},

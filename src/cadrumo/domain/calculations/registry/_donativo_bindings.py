@@ -97,7 +97,7 @@ class DonativoDonorObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
-    donor_tax_id: str = Field(min_length=1, max_length=64)
+    donor_tax_id: TaxIdIdentityToken
     donor_legal_name: str = Field(default="", max_length=200)
     country_code: str = Field(default="ES", min_length=2, max_length=2)
     transaction_date: date

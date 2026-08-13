@@ -78,8 +78,14 @@ def _validate_303_observation_casilla_ids(observation: RegistryModeloObservation
     invalid = undeclared_casilla_ids(snapshot.revision, observation.casilla_values)
     if invalid:
         raise RegistryValidationError(
-            "Modelo 303 compensation observations must use canonical casilla.id values declared by "
-            f"revision {snapshot.revision.id}; got noncanonical references {invalid!r}",
+            translated_message=(
+                "application.calculations.iva_compensation.errors.annual_partition_casilla_ids_noncanonical"
+            ),
+            context={
+                "modelo": observation.modelo,
+                "revision_id": snapshot.revision.id,
+                "casilla_ids": invalid,
+            },
         )
 
 
@@ -92,7 +98,7 @@ def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> Iva
     generated = _observed_value(values, _303_GENERADA_ID)
     if generated is None:
         raise M303CarryIngressError(
-            "validated Modelo 303 carry envelope is missing its explicit generated compensation amount",
+            translated_message="application.calculations.m303_carry.errors.generated_compensation_amount_missing",
             context={"casilla_id": _303_GENERADA_ID},
         )
     applied = _observed_value(values, _303_APLICADA_ID) or _ZERO
@@ -100,7 +106,7 @@ def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> Iva
     available = _observed_value(values, _303_DISPONIBLE_ID)
     if available is None:
         raise M303CarryIngressError(
-            "validated Modelo 303 carry envelope is missing its explicit available compensation amount",
+            translated_message="application.calculations.m303_carry.errors.available_compensation_amount_missing",
             context={"casilla_id": _303_DISPONIBLE_ID},
         )
     period = Period.from_year_and_code(observation.filing_year, observation.period)

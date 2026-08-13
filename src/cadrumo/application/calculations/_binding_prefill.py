@@ -105,7 +105,10 @@ def _selector_year_delta(value: object) -> int:
         return value
     if isinstance(value, str):
         return int(value)
-    raise BindingPrefillTypeError(f"binding selector 'filing_year_delta' must be int|str, got {type(value).__name__}")
+    raise BindingPrefillTypeError(
+        translated_message="application.calculations.binding_prefill.errors.selector_filing_year_delta_type",
+        context={"selector_key": "filing_year_delta", "observed_type": type(value).__name__},
+    )
 
 
 def _selector_periods(value: object) -> tuple[str, ...]:
@@ -116,9 +119,13 @@ def _selector_periods(value: object) -> tuple[str, ...]:
         try:
             return _STRING_SEQUENCE.validate_python(value)
         except ValueError as exc:
-            raise BindingPrefillTypeError("binding selector 'source_periods' must contain strings") from exc
+            raise BindingPrefillTypeError(
+                translated_message="application.calculations.binding_prefill.errors.selector_source_periods_member_type",
+                context={"selector_key": "source_periods"},
+            ) from exc
     raise BindingPrefillTypeError(
-        f"binding selector 'source_periods' must be str|tuple[str,...], got {type(value).__name__}",
+        translated_message="application.calculations.binding_prefill.errors.selector_source_periods_type",
+        context={"selector_key": "source_periods", "observed_type": type(value).__name__},
     )
 
 
@@ -184,7 +191,15 @@ def _merge_gathered_observations(
     overlay_key = (overlay.observation.modelo, overlay.observation.filing_year, overlay.observation.period)
     if primary_key != overlay_key:
         raise BindingPrefillTypeError(
-            "cannot merge previous_filing observations with different modelo/year/period keys",
+            translated_message="application.calculations.binding_prefill.errors.observation_merge_key_conflict",
+            context={
+                "primary_modelo": primary.observation.modelo,
+                "primary_filing_year": primary.observation.filing_year,
+                "primary_period": str(primary.observation.period),
+                "overlay_modelo": overlay.observation.modelo,
+                "overlay_filing_year": overlay.observation.filing_year,
+                "overlay_period": str(overlay.observation.period),
+            },
         )
 
     observations_by_casilla = {item.casilla_id: item for item in primary.observation.observations}
@@ -493,9 +508,7 @@ def _iva_compensation_history_observation(
     casilla = casillas.get(casilla_id)
     if casilla is None:
         raise IvaCompensationCasillaReferenceError(
-            f"IVA compensation history casilla {casilla_id!r} is not declared in "
-            f"modelo {snapshot.modelo.id} revision {snapshot.revision.id}; refusing "
-            "to emit a CasillaObservation without legal_refs/source_refs",
+            translated_message="application.calculations.iva_compensation.errors.history_casilla_undeclared",
             context={
                 "modelo": snapshot.modelo.id,
                 "revision_id": snapshot.revision.id,
@@ -506,18 +519,18 @@ def _iva_compensation_history_observation(
     formula_id = None
     if len(operand_values) != len(operand_refs):
         raise IvaCompensationCasillaReferenceError(
-            f"IVA compensation history casilla {casilla_id!r} has {len(operand_refs)} operand refs "
-            f"but {len(operand_values)} operand values; refusing to emit partial formula provenance",
+            translated_message="application.calculations.iva_compensation.errors.history_operand_ref_value_arity",
             context={
                 "modelo": snapshot.modelo.id,
                 "revision_id": snapshot.revision.id,
                 "casilla_id": casilla_id,
+                "operand_ref_count": len(operand_refs),
+                "operand_value_count": len(operand_values),
             },
         )
     if operand_refs and formula is None:
         raise IvaCompensationCasillaReferenceError(
-            f"IVA compensation history casilla {casilla_id!r} supplied operand refs but has no "
-            f"formula in modelo {snapshot.modelo.id} revision {snapshot.revision.id}",
+            translated_message="application.calculations.iva_compensation.errors.history_operand_refs_without_formula",
             context={
                 "modelo": snapshot.modelo.id,
                 "revision_id": snapshot.revision.id,
@@ -529,13 +542,16 @@ def _iva_compensation_history_observation(
         if operand_refs:
             if operand_refs != expected_operand_refs:
                 raise IvaCompensationCasillaReferenceError(
-                    f"IVA compensation history casilla {casilla_id!r} supplied operand refs "
-                    f"{operand_refs!r} but formula {formula.id!r} projects to {expected_operand_refs!r}",
+                    translated_message=(
+                        "application.calculations.iva_compensation.errors.history_operand_refs_diverge_from_formula"
+                    ),
                     context={
                         "modelo": snapshot.modelo.id,
                         "revision_id": snapshot.revision.id,
                         "casilla_id": casilla_id,
                         "formula_id": formula.id,
+                        "supplied_operand_refs": operand_refs,
+                        "formula_operand_refs": expected_operand_refs,
                     },
                 )
             formula_id = formula.id
@@ -908,7 +924,10 @@ def extract_modelo_303_local_iva_compensation_recurrence(
     if str(getattr(snapshot.modelo, "id", snapshot.modelo)) != Modelo.M303.value:
         from ..modelo import ModeloApplicabilityFilterError
 
-        raise ModeloApplicabilityFilterError("local IVA compensation recurrence extraction only applies to Modelo 303")
+        raise ModeloApplicabilityFilterError(
+            translated_message="application.calculations.iva_compensation.errors.local_recurrence_modelo_303_only",
+            context={"modelo": str(getattr(snapshot.modelo, "id", snapshot.modelo))},
+        )
     # This is the explicit wallet-feeding path: reconstruct the local Modelo 303
     # compensation recurrence from the secure IVA-compensation history so the
     # iva-wallet reconciliation can compare it against live wallet evidence. The

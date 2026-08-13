@@ -1062,9 +1062,9 @@ def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
     }
 
     index_entries = (
-        OutOfWindowTransactionIndexEntry(transaction_id="a" * 40, filing_date=date(2026, 1, 5)),
-        OutOfWindowTransactionIndexEntry(transaction_id="b" * 40, filing_date=date(2026, 3, 20)),
-        OutOfWindowTransactionIndexEntry(transaction_id="c" * 40, filing_date=date(2026, 2, 1)),
+        OutOfWindowTransactionIndexEntry(transaction_id="a" * 64, filing_date=date(2026, 1, 5)),
+        OutOfWindowTransactionIndexEntry(transaction_id="b" * 64, filing_date=date(2026, 3, 20)),
+        OutOfWindowTransactionIndexEntry(transaction_id="c" * 64, filing_date=date(2026, 2, 1)),
     )
     summary = OutOfWindowTransactionSummary.from_index_entries(index_entries)
 

@@ -227,11 +227,11 @@ def test_non_m303_evidence_is_rejected_but_absent_evidence_is_accepted() -> None
             observations=(),
         )
 
-
     failure = raised_unsupported_modelo.value.precondition_failure
     assert failure is not None, "the refusal must carry its declared precondition failure"
     assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
     assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.unsupported_modelo"
+
 
 def test_m303_evidence_is_required_before_profile_lookup() -> None:
     period = Period.from_year_and_code(2026, "1T")
@@ -245,11 +245,11 @@ def test_m303_evidence_is_required_before_profile_lookup() -> None:
             observations=(),
         )
 
-
     failure = raised_missing.value.precondition_failure
     assert failure is not None, "the refusal must carry its declared precondition failure"
     assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
     assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.missing"
+
 
 @pytest.mark.parametrize(
     "composition",
@@ -272,11 +272,11 @@ def test_evidence_scope_disagreeing_with_active_censo_refuses(
                 observations=(),
             )
 
-
         failure = raised_regimen_scope_profile_divergence.value.precondition_failure
         assert failure is not None, "the refusal must carry its declared precondition failure"
         assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
         assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.regimen_scope_profile_divergence"
+
 
 def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: Path) -> None:
     work_period = Period.from_year_and_code(2026, "1T")
@@ -293,11 +293,11 @@ def test_evidence_for_another_work_period_refuses_before_persistence(tmp_path: P
                 observations=(),
             )
 
-
         failure = raised_period_mismatch.value.precondition_failure
         assert failure is not None, "the refusal must carry its declared precondition failure"
         assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
         assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.period_mismatch"
+
 
 def test_final_period_exonerado_evidence_covers_every_a28_endpoint_and_observation(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "4T")
@@ -402,4 +402,7 @@ def test_incomplete_a28_endpoint_population_refuses_before_persistence(tmp_path:
         failure = raised_exonerado_390_endpoint_coverage_incomplete.value.precondition_failure
         assert failure is not None, "the refusal must carry its declared precondition failure"
         assert failure.verdict.failed_condition_id == "modelo.work.calculate.m303_filing_evidence.valid"
-        assert failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoint_coverage_incomplete"
+        assert (
+            failure.scenario_id
+            == "modelo.work.calculate.m303_filing_evidence.exonerado_390_endpoint_coverage_incomplete"
+        )

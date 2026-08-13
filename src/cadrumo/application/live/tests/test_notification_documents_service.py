@@ -258,10 +258,14 @@ def test_the_bytes_are_written_through_the_shared_ingestion_primitive(tmp_path: 
         store = _RecordingAttachmentStore()
         document = served_document()
 
-        record = NotificationDocumentService(attachment_store=store).persist_document(
-            bucket_id=BUCKET_ID,
-            row=read_row(),
-            document=document,
+        record = (
+            NotificationDocumentService(attachment_store=store)
+            .persist_document(
+                bucket_id=BUCKET_ID,
+                row=read_row(),
+                document=document,
+            )
+            .record
         )
 
         assert len(store.write_manifest_calls) == 1
@@ -303,8 +307,10 @@ def test_a_matching_re_store_returns_what_is_held_and_writes_nothing(tmp_path: P
         first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
         second = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
 
-        assert second == first
-        assert second.fetched_at == first.fetched_at
+        assert first.already_in_custody is False
+        assert second.already_in_custody is True
+        assert second.record == first.record
+        assert second.record.fetched_at == first.record.fetched_at
         assert store.put_bytes_calls == [served_document().pdf_bytes]
         assert len(store.write_manifest_calls) == 1
         assert len(service.list_documents(bucket_id=BUCKET_ID)) == 1
@@ -351,7 +357,7 @@ def test_a_re_store_changing_a_caller_supplied_field_refuses_rather_than_droppin
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         store = _RecordingAttachmentStore()
         service = NotificationDocumentService(attachment_store=store)
-        first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
+        first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document()).record
 
         with pytest.raises(LiveApplicationInputError) as excinfo:
             service.persist_document(
@@ -378,7 +384,7 @@ def test_a_re_store_of_a_different_document_refuses_and_overwrites_nothing(tmp_p
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID):
         store = _RecordingAttachmentStore()
         service = NotificationDocumentService(attachment_store=store)
-        first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document())
+        first = service.persist_document(bucket_id=BUCKET_ID, row=read_row(), document=served_document()).record
 
         with pytest.raises(LiveApplicationInputError) as excinfo:
             service.persist_document(

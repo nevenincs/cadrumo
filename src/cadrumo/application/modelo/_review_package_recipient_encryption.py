@@ -196,7 +196,7 @@ class RecipientEncryptionKeypair(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     private_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     created_at: UtcInstant
@@ -222,7 +222,7 @@ class RecipientEncryptionPublicKey(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    bucket_id: str = Field(min_length=1)
+    bucket_id: BucketId
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     created_at: UtcInstant
 

@@ -306,9 +306,7 @@ def test_refuses_design_epoch_only_fragment(tmp_path: Path, identity_line: str) 
     root = tmp_path / "semantic-map"
     root.mkdir()
     fragment = _fragment(fragment_id="authority", body=_RECORD + _ENTRY)
-    without_identity = "\n".join(
-        line for line in fragment.splitlines() if not line.startswith(f"{identity_line} =")
-    )
+    without_identity = "\n".join(line for line in fragment.splitlines() if not line.startswith(f"{identity_line} ="))
     _write(root / "0001-authority.toml", without_identity)
 
     with pytest.raises(RegistryValidationError, match=identity_line):

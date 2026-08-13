@@ -88,7 +88,7 @@ def _evidence_plan() -> SheetExportPlan:
             contributor_rows=(
                 SheetEvidenceContributorRow(
                     casilla_id=_CUOTA_CASILLA,
-                    transaction_id="tx-001",
+                    transaction_id="c" * 64,
                     amount=Decimal("-121.00"),
                     currency="EUR",
                     taxable_base=Decimal("100.00"),
@@ -131,7 +131,7 @@ def test_offline_workbook_renders_evidencia_tab_from_plan_evidence() -> None:
     assert evidencia["A3"].value == "Tipo"
     assert evidencia["A4"].value == "ledger"
     assert evidencia["B4"].value == "cuota"
-    assert evidencia["C4"].value == "tx-001"
+    assert evidencia["C4"].value == "c" * 64
     assert evidencia["D4"].value == "-121.00"
     assert evidencia["F4"].value == "100.00"
     assert evidencia["M4"].value == "attachment-1"
@@ -160,6 +160,6 @@ def test_offline_export_emits_machine_readable_evidence_sidecar() -> None:
     assert sidecar["metadata"]["revision_id"] == "2009-y-siguientes"
     assert sidecar["metadata"]["registry_sha"] == "abcd1234"
     assert sidecar["evidence"]["snapshot_fingerprint"] == "f" * 64
-    assert sidecar["evidence"]["contributor_rows"][0]["transaction_id"] == "tx-001"
+    assert sidecar["evidence"]["contributor_rows"][0]["transaction_id"] == "c" * 64
     assert sidecar["evidence"]["contributor_rows"][0]["amount"] == "-121.00"
     assert sidecar["evidence"]["manual_entries"][0]["kind"] == "casilla_input"

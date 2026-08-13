@@ -2147,6 +2147,10 @@ def _recargo_rate_mismatch_diagnostics(
                 "the declared figure already matches it; where it was mistyped, correct the transaction "
                 "and recalculate"
             ),
+            # No casilla is addressable here -- the comparison is per invoice,
+            # not per casilla -- so the LIVA art. 161 provision the message
+            # names is declared rather than read off a registry object.
+            asserted_legal_refs=("ley-37-1992:art-161",),
         )
         for divergence in divergences
     )

@@ -53,14 +53,27 @@ from typing import Any
 import pikepdf
 
 from cadrumo.core import IBAN_SHAPE_RE, iban_mod_97
-from cadrumo.core.identity import IdentityError, validate_identity
+from cadrumo.core.identity import IdentityDocument, IdentityError, validate_identity
 
 
 class ResidualKind(StrEnum):
     """Identity pattern classes this scanner recognises.
 
+    A natural person and a legal entity are separate classes because their
+    shapes are disjoint -- one is digit-led or ``XYZ``/``KLM``-led, the other is
+    led by a company kind letter -- and a scanner that carried only the personal
+    shape reported a clean result over a document naming a company by its tax
+    identity.
+
     Attributes:
-        NIF_NIE: Spanish identity document, control-letter verified.
+        NIF_NIE: Spanish natural-person identity document, control-letter
+            verified. Covers the plain 8-digit NIF, the ``K``/``L``/``M``
+            prefixed NIF issued to persons without a DNI, and the ``X``/``Y``/
+            ``Z`` prefixed NIE.
+        CIF: Spanish legal-entity tax identity, control-character verified.
+        NIF_IVA: The ``ES``-prefixed spelling of any of the above, which the two
+            classes before it cannot see because a country prefix is itself an
+            alphanumeric character.
         IBAN: ISO 13616 account number, mod-97 verified.
         EMAIL: RFC-shaped address. No checksum exists, so this is
             advisory-tier -- see :data:`CHECKSUM_VERIFIED_KINDS`.
@@ -70,6 +83,8 @@ class ResidualKind(StrEnum):
     """
 
     NIF_NIE = "nif_nie"
+    CIF = "cif"
+    NIF_IVA = "nif_iva"
     IBAN = "iban"
     EMAIL = "email"
     PHONE = "phone"
@@ -82,7 +97,9 @@ class ResidualKind(StrEnum):
 #: which is how the surviving-identity hole stayed open behind a green gate in
 #: the first place. The advisory kinds are still reported, so a reviewer can
 #: look, but they do not fail the build on their own.
-CHECKSUM_VERIFIED_KINDS: frozenset[ResidualKind] = frozenset({ResidualKind.NIF_NIE, ResidualKind.IBAN})
+CHECKSUM_VERIFIED_KINDS: frozenset[ResidualKind] = frozenset(
+    {ResidualKind.NIF_NIE, ResidualKind.CIF, ResidualKind.NIF_IVA, ResidualKind.IBAN}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -103,9 +120,53 @@ class ResidualFinding:
         return f"{self.kind.value} at {self.surface}:{self.offset}, redacted"
 
 
-# A NIF/NIE candidate: 8 digits + letter, or [XYZ] + 7 digits + letter. Word
-# boundaries keep a longer digit run from yielding a spurious 8-digit window.
-_NIF_NIE_CANDIDATE = re.compile(r"(?<![0-9A-Za-z])((?:\d{8}|[XYZxyz]\d{7})[A-Za-z])(?![0-9A-Za-z])")
+# A NIF/NIE candidate: 8 digits + letter, or a natural-person leader + 7 digits
+# + letter. Word boundaries keep a longer digit run from yielding a spurious
+# 8-digit window. The leader class carries K/L/M as well as X/Y/Z: the first
+# three lead the NIF issued to a natural person who holds no DNI and the last
+# three lead the NIE, the checksum authority routes all six, and a class holding
+# only the NIE leaders reports a K-led identity as absent.
+_NATURAL_PERSON_LEADERS = "XYZxyzKLMklm"
+_NIF_NIE_CANDIDATE = re.compile(
+    rf"(?<![0-9A-Za-z])((?:\d{{8}}|[{_NATURAL_PERSON_LEADERS}]\d{{7}})[A-Za-z])(?![0-9A-Za-z])"
+)
+
+# A CIF candidate -- a legal entity's tax identity, which the personal shape
+# above cannot express because it is LETTER-led: a company kind letter (A-H, J,
+# N, P-S, U, V, W), seven digits, then a control character that is a digit or a
+# letter A-J depending on the kind.
+#
+# The shape is mirrored from the redaction funnel's own CIF arm rather than
+# imported from it: that arm is a separator-tolerant scan over printed operator
+# prose and lives private to another package, and admitting a separator here
+# would swallow neighbouring columns of a CSV row. What must not be duplicated
+# is the DECISION, and it is not -- the control character is checked by the same
+# :func:`~cadrumo.core.identity.validate_identity` authority as every other
+# class, never by arithmetic restated here.
+#
+# The leader set is why the personal pattern was not simply widened: a company
+# shape is also the shape of an ordinary document reference (an invoice
+# ``F1234567B``, a batch id), so the control character has to be the evidence.
+_CIF_KIND_LEADERS = "A-HJNPQRSUVWa-hjnpqrsuvw"
+_CIF_CANDIDATE = re.compile(rf"(?<![0-9A-Za-z])([{_CIF_KIND_LEADERS}]\d{{7}}[0-9A-Ja-j])(?![0-9A-Za-z])")
+
+# A NIF-IVA candidate: the ES-PREFIXED spelling of a Spanish tax identity, the
+# form this project's own structured readers recover and its own parsers emit.
+# Neither class above can see it. Both refuse to match inside a longer
+# alphanumeric run -- which is what stops a 12-digit reference yielding a
+# spurious 8-digit window -- and a country prefix is alphanumeric, so the same
+# guard hides the prefixed form.
+#
+# Only the Spanish prefix is recognised. Every other Member State's number is
+# validated in this project by a structural pattern and carries no checksum, so
+# admitting one would put a shape-only class in the blocking tier, which is the
+# thing :data:`CHECKSUM_VERIFIED_KINDS` exists to prevent.
+_NIF_IVA_CANDIDATE = re.compile(
+    r"(?<![0-9A-Za-z])([Ee][Ss](?:"
+    rf"\d{{8}}[A-Za-z]|[{_NATURAL_PERSON_LEADERS}]\d{{7}}[A-Za-z]|[{_CIF_KIND_LEADERS}]\d{{7}}[0-9A-Ja-j]"
+    r"))(?![0-9A-Za-z])"
+)
+_NIF_IVA_PREFIX_WIDTH = 2
 # An IBAN candidate. Spanish IBANs are ES + 22 digits; the generic ISO shape is
 # also accepted so a non-ES account in a bundled statement is not missed.
 _IBAN_CANDIDATE = re.compile(r"(?<![0-9A-Za-z])([A-Z]{2}\d{2}[A-Z0-9]{11,30})(?![0-9A-Za-z])")
@@ -114,13 +175,38 @@ _EMAIL_CANDIDATE = re.compile(r"(?<![0-9A-Za-z._%+-])([A-Za-z0-9._%+-]+@[A-Za-z0
 _PHONE_CANDIDATE = re.compile(r"(?<![0-9])((?:\+34|0034)?[\s.-]?[6789](?:[\s.-]?\d){8})(?![0-9])")
 
 
-def _is_valid_nif_nie(candidate: str) -> bool:
-    """True when ``candidate`` passes the AEAT control-letter algorithm."""
+def _identity_document(candidate: str) -> IdentityDocument | None:
+    """The document class ``candidate`` validates as, or ``None`` if it does not.
+
+    The one call into the checksum authority. Every class below decides through
+    it, so the AEAT control-letter and control-character algorithms are never
+    restated here, and a class that claims a match also confirms the authority
+    agreed on WHICH document it is -- a pattern that drifted onto another
+    class's shape would otherwise report the wrong kind with full confidence.
+    """
     try:
-        validate_identity(candidate)
+        return validate_identity(candidate)
     except IdentityError:
-        return False
-    return True
+        return None
+
+
+def _is_valid_nif_nie(candidate: str) -> bool:
+    """True when ``candidate`` is a natural-person document passing its checksum."""
+    return _identity_document(candidate) in {IdentityDocument.NIF, IdentityDocument.NIE}
+
+
+def _is_valid_cif(candidate: str) -> bool:
+    """True when ``candidate`` is a legal-entity identity passing its check character."""
+    return _identity_document(candidate) is IdentityDocument.CIF
+
+
+def _is_valid_nif_iva(candidate: str) -> bool:
+    """True when ``candidate`` is an ``ES``-prefixed identity passing its checksum.
+
+    The prefix is stripped and the body handed to the same authority; the prefix
+    itself carries no check of its own.
+    """
+    return _identity_document(candidate[_NIF_IVA_PREFIX_WIDTH:]) is not None
 
 
 def _is_valid_iban(candidate: str) -> bool:
@@ -136,6 +222,8 @@ def _is_valid_iban(candidate: str) -> bool:
 
 _VALIDATORS = {
     ResidualKind.NIF_NIE: (_NIF_NIE_CANDIDATE, _is_valid_nif_nie),
+    ResidualKind.CIF: (_CIF_CANDIDATE, _is_valid_cif),
+    ResidualKind.NIF_IVA: (_NIF_IVA_CANDIDATE, _is_valid_nif_iva),
     ResidualKind.IBAN: (_IBAN_CANDIDATE, _is_valid_iban),
     # No checksum exists for these two, so shape IS the whole test and they are
     # advisory-tier by construction.

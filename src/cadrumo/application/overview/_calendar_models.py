@@ -28,7 +28,7 @@ from ...core import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
-from ...core.identity import AeatCsv, CalculationRevisionId, WorkUnitId
+from ...core.identity import AeatCsv, CalculationRevisionId, FilingRecordId, SnapshotId, WorkUnitId
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry import ApplicabilityVerdict, RevisionId
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
@@ -207,13 +207,13 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
     period: _CalendarPeriod | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
-    local_filing_record_id: str | None = Field(default=None, min_length=1, max_length=128)
+    local_filing_record_id: FilingRecordId | None = None
     local_calculation_revision_id: CalculationRevisionId | None = None
     local_filed_at: datetime | None = None
     aeat_submission_state: OverviewAeatSubmissionState = OverviewAeatSubmissionState.NOT_OBSERVED
     aeat_submitted_at: datetime | None = None
     aeat_reference_id: str | None = Field(default=None, min_length=1, max_length=128)
-    aeat_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    aeat_snapshot_id: SnapshotId | None = None
     aeat_evidence_kind: str | None = Field(default=None, min_length=1, max_length=64)
     aeat_evidence_conflict_reference_ids: tuple[str, ...] = Field(default_factory=tuple)
     verified_justificante_csv: AeatCsv | None = None
@@ -329,7 +329,7 @@ class OverviewCalendarEvent(_CalendarJustificanteStateInvariant):
     source: str = Field(min_length=1, max_length=64)
     summary: _EventSummary
     reference_id: str = Field(min_length=1, max_length=128)
-    snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    snapshot_id: SnapshotId | None = None
     modelo: str | None = Field(default=None, min_length=1, max_length=8)
     filing_year: int | None = Field(default=None, ge=2000, le=2099)
     period: _CalendarPeriod | None = None

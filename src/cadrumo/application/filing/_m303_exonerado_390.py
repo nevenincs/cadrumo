@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ...core import M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef
+from ...core import M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef, Modelo
 from ...domain.calculations.registry import (
     M303Exonerado390RecordProjection,
     RegistrySnapshot,
@@ -25,9 +25,24 @@ def project_m303_exonerado_390_value_arrival(
     """Project the atomic DP30304 owner through the selected snapshot only."""
     snapshot_source = registry_snapshot.sources.get(record_design.id)
     if snapshot_source is None or snapshot_source.kind != "record_design":
-        raise FilingExportError("modelo 303 exonerado-390 requires a snapshot-owned record-design source")
+        raise FilingExportError(
+            translated_message="application.filing.m303_exonerado_390.errors.record_design_source_not_snapshot_owned",
+            context={
+                "modelo": Modelo.M303.value,
+                "record_design_id": record_design.id,
+                "source_present": snapshot_source is not None,
+                "source_kind": snapshot_source.kind if snapshot_source is not None else None,
+            },
+        )
     if snapshot_source != record_design:
-        raise FilingExportError("modelo 303 exonerado-390 record design does not match the selected snapshot")
+        raise FilingExportError(
+            translated_message="application.filing.m303_exonerado_390.errors.record_design_snapshot_mismatch",
+            context={
+                "modelo": Modelo.M303.value,
+                "record_design_id": record_design.id,
+                "snapshot_source_id": snapshot_source.id,
+            },
+        )
     return project_m303_exonerado_390_activity_rows(
         projection_refs=projection_refs,
         evidence=evidence,

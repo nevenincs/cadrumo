@@ -71,7 +71,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period, normalise_aeat_csv
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import content_hash_hex, sha256_hex
-from ...core.identity import AeatCsv, BucketId, ContentDigest, tax_id_identity_token
+from ...core.identity import AeatCsv, AeatExpedienteId, BucketId, ContentDigest, SnapshotId, tax_id_identity_token
 from ..calculations import ObservationSourceKind
 from ._errors import (
     LiveApplicationInputError,
@@ -112,12 +112,12 @@ class JustificanteCaptureSnapshot(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    snapshot_id: str = Field(min_length=1, max_length=128)
+    snapshot_id: SnapshotId
     bucket_id: BucketId
     modelo: str = Field(min_length=1, max_length=16)
     filing_year: int = Field(ge=1900, le=9999)
     period: Period
-    expediente_id: str = Field(min_length=12, max_length=32)
+    expediente_id: AeatExpedienteId
     csv: AeatCsv
     pdf_sha256: ContentDigest
     pdf_base64: str = Field(min_length=1)
@@ -131,7 +131,7 @@ class JustificanteCaptureSnapshot(BaseModel):
 
     captured_at: datetime
     state: SnapshotLifecycleState
-    superseded_by_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
     discard_reason: str = Field(default="", max_length=500)
@@ -381,7 +381,7 @@ class _JustificanteCaptureRequest(BaseModel):
     modelo: str
     filing_year: int
     period: Period
-    expediente_id: str
+    expediente_id: AeatExpedienteId
     csv: AeatCsv
     pdf_bytes: bytes
     pdf_sha256: str

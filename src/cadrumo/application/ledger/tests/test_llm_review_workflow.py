@@ -62,6 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _NOW = datetime(2026, 5, 4, 9, 30, tzinfo=UTC)
 _BUCKET = "bucket-review-workflow"
+_UNKNOWN_TRANSACTION_ID = "f" * 64
 
 
 @pytest.fixture
@@ -234,7 +235,7 @@ def test_reject_composes_reject_primitive_and_mutates_nothing(
 def test_split_decision_on_classification_suggestion_refuses() -> None:
     with pytest.raises(TransactionValidationError):
         execute_reviewed_decision(
-            _classification_suggestion("tx-1"),
+            _classification_suggestion(_UNKNOWN_TRANSACTION_ID),
             origin=LlmReviewInvocationOrigin.SPLIT_LLM,
             decision=LlmReviewDecision.SPLIT,
             bucket_id=_BUCKET,
@@ -245,7 +246,7 @@ def test_split_decision_on_classification_suggestion_refuses() -> None:
 def test_non_persisting_terminals_refuse_durable_execution(decision: LlmReviewDecision) -> None:
     with pytest.raises(TransactionValidationError):
         execute_reviewed_decision(
-            _classification_suggestion("tx-1"),
+            _classification_suggestion(_UNKNOWN_TRANSACTION_ID),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
             decision=decision,
             bucket_id=_BUCKET,

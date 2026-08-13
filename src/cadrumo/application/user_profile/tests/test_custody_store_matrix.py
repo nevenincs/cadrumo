@@ -456,15 +456,22 @@ def _seed_justificante_capture(bucket_id: str) -> None:
         JustificanteCaptureSnapshot,
         JustificanteCaptureSnapshotRepository,
         SnapshotLifecycleState,
+        derive_justificante_capture_snapshot_id,
     )
 
     pdf = b"%PDF-1.4 minimal"
+    period = Period.from_year_and_code(2024, "4T")
     snap = JustificanteCaptureSnapshot(
-        snapshot_id="just-1",
+        snapshot_id=derive_justificante_capture_snapshot_id(
+            modelo="303",
+            filing_year=2024,
+            period=period,
+            pdf_sha256=sha256_hex(pdf),
+        ),
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2024,
-        period=Period.from_year_and_code(2024, "4T"),
+        period=period,
         expediente_id="2024303EXP0001",
         csv="ABCD1234EFGH",
         pdf_sha256=sha256_hex(pdf),

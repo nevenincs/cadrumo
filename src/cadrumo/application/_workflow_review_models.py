@@ -44,7 +44,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core.identity import BucketId
+from ..core.identity import BucketId, InvoiceId, TransactionId
 from ..core.time import now as utc_now
 from ..core.time import validate_utc_aware
 from ..domain.contribuyente import normalise_key
@@ -103,7 +103,7 @@ class LedgerReviewRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     history: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)
 
@@ -123,7 +123,7 @@ class InvoiceReviewRecord(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str = Field(min_length=1)
+    invoice_id: InvoiceId
     fields: dict[str, str] = Field(default_factory=dict)
     history: tuple[WorkflowEvent, ...] = ()
     updated_at: datetime = Field(default_factory=utc_now)

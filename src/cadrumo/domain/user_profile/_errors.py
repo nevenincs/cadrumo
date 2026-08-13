@@ -3,10 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Final
 
 from pydantic import ValidationError
 
 from ...core.errors import CadrumoError
+
+#: Registered operator text for a user-profile schema that cannot be loaded.
+#: Stated once so the refusal and the gate that pins it read the same spelling,
+#: and held equal to the code registry's own ``message_key`` by a test.
+SCHEMA_LOAD_MESSAGE_KEY: Final[str] = "errors.fail.fail_user_profile_schema_load"
+
+#: Registered operator text for a persisted profile record that no longer
+#: validates. Shared with the transactions drift refusal, which reports the
+#: same condition over a different record.
+STORED_PROFILE_DRIFT_MESSAGE_KEY: Final[str] = "errors.storage.stored_data_validation_boundary"
 
 
 class UserProfileError(CadrumoError):
@@ -14,19 +25,24 @@ class UserProfileError(CadrumoError):
 
 
 class UserProfileSchemaLoadError(UserProfileError):
-    """Raised when the committed user-profile schema cannot be loaded."""
+    """Raised when the committed user-profile schema cannot be loaded.
 
-    def __init__(
-        self,
-        message: str | None = None,
-        *,
-        context: Mapping[str, object] | None = None,
-    ) -> None:
-        """Initialise a localized user-profile schema load failure."""
+    Constructed with facts only. The class supplies its registered key as the
+    sole rendered text, and the keyword-only signature is what makes that
+    structural rather than conventional: there is no positional slot an
+    authored sentence could occupy, so ``str(exc)`` is the key in every locale
+    and in every traceback and log line that renders the exception directly.
+
+    Attributes:
+        context: Locale-neutral machine facts naming the failed precondition,
+            the schema file and the stage of the load that refused.
+    """
+
+    def __init__(self, *, context: Mapping[str, object] | None = None) -> None:
+        """Initialise a localized user-profile schema load failure from facts."""
         super().__init__(
-            message,
             context=context,
-            translated_message="errors.fail.fail_user_profile_schema_load",
+            translated_message=SCHEMA_LOAD_MESSAGE_KEY,
         )
 
 
@@ -103,12 +119,30 @@ class StoredProfileDriftError(UserProfileError):
     :exc:`~entrypoints.cli._errors.CliValidationBoundaryError`) so
     operators see a repair-oriented message rather than a generic refusal.
 
+    The refusal carries facts, not a way out. Which command repairs a drifted
+    record is a decision about the operator surface, and this layer cannot see
+    that surface: it names the contract that diverged and leaves the outcome to
+    the CLI boundary, which classifies the wrapped refusal as a stored-data
+    precondition and emits the typed no-recovery outcome for it. A command
+    string carried here would be a second action authority competing with that
+    one, unread by every consumer and wrong the moment the verb is renamed.
+
+    The facts name WHICH contract diverged and HOW MANY of its constraints
+    failed, never the values that failed them. A violation's location path
+    reproduces mapping KEYS as well as field names, so a record keyed by a tax
+    identifier would put that identifier in the fact; the redaction-aware
+    projection that can tell those apart belongs to the boundary that owns the
+    record type, and re-deriving it here would be a second, unredacted copy.
+    ``original_exception`` carries the full typed detail to whoever is entitled
+    to project it.
+
     Attributes:
-        profile_id: Identifier of the profile whose record drifted.
+        profile_id: Generated profile identity (a UUIDv4, never a tax
+            identifier) whose record drifted.
         original_exception: The underlying :exc:`pydantic.ValidationError`.
     """
 
-    def __init__(self, profile_id: str, error: ValidationError) -> None:
+    def __init__(self, *, profile_id: str, error: ValidationError) -> None:
         """Initialise the drift error with profile identity and the validation failure.
 
         Args:
@@ -116,8 +150,12 @@ class StoredProfileDriftError(UserProfileError):
             error: The underlying :exc:`pydantic.ValidationError` from deserialization.
         """
         super().__init__(
-            translated_message="errors.storage.stored_data_validation_boundary",
-            context={"profile_id": profile_id, "recovery": "aeat config repair --help"},
+            translated_message=STORED_PROFILE_DRIFT_MESSAGE_KEY,
+            context={
+                "profile_id": profile_id,
+                "failing_record": error.title,
+                "violation_count": len(error.errors()),
+            },
         )
         self.profile_id: str = profile_id
         self.original_exception: ValidationError = error

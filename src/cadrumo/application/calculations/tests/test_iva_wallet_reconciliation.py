@@ -367,7 +367,7 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
         observation_repository = CalculationObservationRepository(objects=runtime.primary.repository)
         foreign_decision_repository = IvaWalletDecisionRepository(objects=runtime.secondary.repository)
 
-        with pytest.raises(IvaCompensationReconciliationInputError, match="same encrypted storage backend"):
+        with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
             reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=_TAXPAYER_REF,
@@ -376,6 +376,8 @@ def test_modelo_303_reconciliation_refuses_explicit_decision_repository_from_for
                 decision_repository=foreign_decision_repository,
                 decided_at=_NOW,
             )
+
+        assert str(excinfo.value) == "application.calculations.iva_wallet.errors.decision_repository_backend_split"
 
         assert (
             IvaWalletDecisionRepository(objects=runtime.primary.repository).load_decision(
@@ -476,7 +478,7 @@ def test_taxpayer_override_selects_override_with_wallet_and_local_context() -> N
 def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None:
     wallet = _wallet(Decimal("1200")).model_copy(update={"target_period": "1T"})
 
-    with pytest.raises(IvaCompensationReconciliationInputError, match="target"):
+    with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
@@ -485,12 +487,16 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_target() -> None
             local_recurrence_amount=Decimal("1200"),
             decided_at=_NOW,
         )
+
+    assert str(excinfo.value) == "errors.refused.reconciliation_evidence_invalid"
+    context = excinfo.value.context or {}
+    assert context["wallet_target_period"] != context["snapshot_target_period"]
 
 
 def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> None:
     wallet = _wallet(Decimal("1200")).model_copy(update={"taxpayer_nif": _OTHER_TAXPAYER_REF})
 
-    with pytest.raises(IvaCompensationReconciliationInputError, match="taxpayer"):
+    with pytest.raises(IvaCompensationReconciliationInputError) as excinfo:
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
@@ -499,6 +505,9 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> No
             local_recurrence_amount=Decimal("1200"),
             decided_at=_NOW,
         )
+
+    assert str(excinfo.value) == "errors.refused.reconciliation_evidence_invalid"
+    assert (excinfo.value.context or {})["taxpayer_matches_request"] is False
 
 
 # ---------------------------------------------------------------------------
@@ -526,7 +535,7 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
     typed CoreError subclass, not a bare ValueError.
     """
 
-    with pytest.raises(IvaWalletReconciliationError, match="non-negative"):
+    with pytest.raises(IvaWalletReconciliationError) as excinfo:
         reconcile_iva_compensation_wallet(
             taxpayer_nif=_TAXPAYER_REF,
             target_year=2026,
@@ -536,6 +545,9 @@ def test_negative_max_wallet_age_days_raises_iva_wallet_reconciliation_error() -
             decided_at=_NOW,
             max_wallet_age_days=-1,
         )
+
+    assert str(excinfo.value) == "errors.refused.refused_iva_wallet_reconciliation_invariant"
+    assert (excinfo.value.context or {})["non_negative"] is False
 
 
 # ---------------------------------------------------------------------------

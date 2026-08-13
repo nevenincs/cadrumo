@@ -172,7 +172,7 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
                 )
             )
 
-        assert "canonical casilla.id values" in str(raised.value)
+        assert str(raised.value) == "application.calculations.observations.errors.casilla_ids_noncanonical"
         assert raised.value.context is not None
         assert raised.value.context["modelo"] == "303"
         assert raised.value.context["filing_year"] == 2025
@@ -246,7 +246,7 @@ def test_calculation_observation_repository_rejects_unregistered_m303_annual_ing
         with pytest.raises(ObservationCasillaReferenceError) as raised:
             repo.save(repo.prepare_observation_envelope(annual_ingress, source_kind="aeat_sede_justificante"))
 
-        assert "registry snapshot is missing" in str(raised.value)
+        assert str(raised.value) == "application.calculations.observations.errors.registry_snapshot_missing"
         assert raised.value.context == {
             "modelo": "303",
             "filing_year": 2025,
