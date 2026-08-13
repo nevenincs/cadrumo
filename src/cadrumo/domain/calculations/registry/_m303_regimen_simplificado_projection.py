@@ -20,6 +20,7 @@ from ...iva import (
     ActividadAgricolaSimplificado,
     ActividadNoAgricolaSimplificado,
     ActividadOrdenAnual,
+    AutoridadAgricolaOrdenAnualNoResuelta,
     RegimenSimplificadoActivity,
     RegimenSimplificadoFilingRows,
     validate_regimen_simplificado_rows,
@@ -56,6 +57,7 @@ def project_m303_regimen_simplificado_rows(
     projection_refs: tuple[_RegimenSimplificadoProjectionRef, ...],
     rows: RegimenSimplificadoFilingRows,
     orden: tuple[ActividadOrdenAnual, ...],
+    agricultural_authority: AutoridadAgricolaOrdenAnualNoResuelta,
     applicable: bool,
     censo_iae_epigraphs: frozenset[str],
 ) -> tuple[M303RegimenSimplificadoRecordProjection, ...]:
@@ -63,6 +65,7 @@ def project_m303_regimen_simplificado_rows(
     validate_regimen_simplificado_rows(
         rows,
         orden=orden,
+        agricultural_authority=agricultural_authority,
         applicable=applicable,
         censo_iae_epigraphs=censo_iae_epigraphs,
     )

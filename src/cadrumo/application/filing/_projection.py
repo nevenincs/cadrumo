@@ -182,6 +182,7 @@ def _project_record(
             projection_refs=tuple(ref for ref in refs if isinstance(ref, _REGIMEN_REF_TYPES)),
             rows=evidence.rows,
             orden=evidence.regimen_snapshot.orden.activities,
+            agricultural_authority=evidence.regimen_snapshot.orden.agricultural_authority,
             applicable=not evidence.scope_decision.is_not_claimed,
             censo_iae_epigraphs=frozenset(
                 row.iae_epigrafe for row in evidence.rows.activities if isinstance(row, ActividadNoAgricolaSimplificado)

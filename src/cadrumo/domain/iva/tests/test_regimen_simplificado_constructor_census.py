@@ -66,7 +66,7 @@ def test_s59_constructor_scan_reaches_the_canonical_compiler() -> None:
     found = {(relative, name) for relative, _, name, _ in _constructor_sites()}
 
     assert (
-        "domain/calculations/registry/_m303_orden_anual.py",
+        "domain/calculations/registry/_m303_orden_projection_compiler.py",
         "ActividadOrdenAnual",
     ) in found
 

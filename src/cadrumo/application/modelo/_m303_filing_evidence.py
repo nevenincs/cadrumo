@@ -131,6 +131,7 @@ def _validate_m303_simplified_filing_evidence(
     validate_regimen_simplificado_rows(
         regimen.rows,
         orden=regimen.regimen_snapshot.orden.activities,
+        agricultural_authority=regimen.regimen_snapshot.orden.agricultural_authority,
         applicable=not regimen.scope_decision.is_not_claimed,
         censo_iae_epigraphs=censo_iae_epigraphs,
     )

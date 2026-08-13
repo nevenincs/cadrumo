@@ -26,11 +26,13 @@ from ._convenio import collect_convenio_fingerprints, load_convenio_authority, v
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._ids import RevisionId
 from ._loader import collect_registry_tree_fingerprints, load_registry_tree
-from ._m303_orden_anual import (
-    M303AnnualOrdenAuthority,
-    M303AnnualOrdenCompilation,
+from ._m303_orden_manifest import (
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,
+)
+from ._m303_orden_projection_models import (
+    M303AnnualOrdenAuthority,
+    M303AnnualOrdenCompilation,
 )
 from ._schema import DeadlineWindowDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
 from ._snapshot import build_validated_snapshot

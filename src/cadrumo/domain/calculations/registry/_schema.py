@@ -61,7 +61,7 @@ from ._ids import (
     WorkbookOutputId,
     WorkbookParityRefId,
 )
-from ._m303_orden_anual import M303AnnualOrdenAuthority
+from ._m303_orden_projection_models import M303AnnualOrdenAuthority
 from ._period_selector_match import selector_period_matches_request
 from ._schema_governance import (
     validate_attribution_names_somebody,

@@ -201,11 +201,26 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "Cuotas trimestrales" not in instructions.text
 
     iva_table_anchors = tuple(
-        unit.anchor for unit in output.units if unit.anchor and unit.anchor.startswith("#m303-anexo-ii-iva-")
+        unit.anchor
+        for unit in output.units
+        if unit.anchor
+        and unit.anchor.startswith("#m303-anexo-ii-iva-")
+        and unit.anchor != "#m303-anexo-ii-iva-ingreso-a-cuenta"
     )
     assert len(iva_table_anchors) == 49
     assert len(set(iva_table_anchors)) == len(iva_table_anchors)
-    assert not any(anchor.startswith("#anexo-i-iva-") for anchor in fragments)
+    agricultural_anchors = tuple(
+        unit.anchor
+        for unit in output.units
+        if unit.anchor
+        and unit.anchor.startswith("#m303-anexo-i-iva-")
+        and unit.anchor != "#m303-anexo-i-iva-ingreso-a-cuenta"
+    )
+    assert len(agricultural_anchors) == 17
+    assert len(set(agricultural_anchors)) == len(agricultural_anchors)
+    assert "#m303-anexo-i-iva-ingreso-a-cuenta" in fragments
+    assert "#m303-iva-indices-correctores-temporada" in fragments
+    assert "#m303-iva-cuotas-soportadas-dificil-justificacion" in fragments
 
     autotaxis = fragments["#m303-anexo-ii-iva-721-2-transporte-por-autotaxis"]
     assert autotaxis.title == "Transporte por autotaxis"

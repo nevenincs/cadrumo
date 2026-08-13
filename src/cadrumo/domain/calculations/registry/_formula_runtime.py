@@ -101,7 +101,8 @@ from ._ids import (
     RelationId,
     SourceRefId,
 )
-from ._m303_orden_anual import M303AnnualOrdenSnapshot, resolve_m303_regimen_simplificado_snapshot
+from ._m303_orden_projection_models import M303AnnualOrdenSnapshot
+from ._m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ._runtime_graph import formula_evaluation_order
 from ._schema import FormulaExpression, ParameterDefinition, RegistrySnapshot
 

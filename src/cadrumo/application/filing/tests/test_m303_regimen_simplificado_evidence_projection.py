@@ -117,6 +117,7 @@ def test_simplified_regime_evidence_projects_real_nonnumbered_dp30302_fields() -
         ),
         rows=evidence.rows,
         orden=evidence.regimen_snapshot.orden.activities,
+        agricultural_authority=evidence.regimen_snapshot.orden.agricultural_authority,
         applicable=not evidence.scope_decision.is_not_claimed,
         censo_iae_epigraphs=frozenset(
             activity.iae_epigrafe

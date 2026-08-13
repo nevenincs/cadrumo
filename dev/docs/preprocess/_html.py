@@ -390,21 +390,20 @@ def _m303_annual_orden_table_units(source: Path) -> list[PreprocessUnit]:
     """Project the canonical annual-Orden parser into exact legal-corpus units."""
     if source.name not in _M303_ANNUAL_ORDEN_SOURCES:
         return []
-    from cadrumo.core import (
-        extract_orden_anual_iva_tables,
-        orden_anual_iva_activity_anchors,
-        orden_anual_iva_table_text,
+    from cadrumo.core._orden_anual_html import (
+        extract_orden_anual_iva_authority,
+        orden_anual_iva_authority_units,
     )
 
-    activities = extract_orden_anual_iva_tables(source.read_bytes(), source_label=source.name)
+    authority = extract_orden_anual_iva_authority(source.read_bytes(), source_label=source.name)
     return [
         PreprocessUnit(
-            text=orden_anual_iva_table_text(activity),
-            title=activity.activity_name,
-            section=f"{activity.annex_heading}: IVA anual: {activity.activity_name}",
-            anchor=anchor,
+            text=unit.text,
+            title=unit.title,
+            section=unit.section,
+            anchor=unit.anchor,
         )
-        for activity, anchor in zip(activities, orden_anual_iva_activity_anchors(activities), strict=True)
+        for unit in orden_anual_iva_authority_units(authority)
     ]
 
 
