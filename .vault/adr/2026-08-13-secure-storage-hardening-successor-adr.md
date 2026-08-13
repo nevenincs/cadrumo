@@ -10,7 +10,7 @@ supersedes:
   - '2026-05-22-secure-storage-production-hardening-architecture-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:e80e33813ae57b210e5501574acfd7000d3958605eb3e726f95909c20bcd36a4'
+body_hash: 'sha256:2fce6f5d56de5271945c11d13b3e66e0c426948d47fa12d5b4f7767cc380ae16'
 ---
 # `secure-storage-hardening` adr: `non-custody secure storage hardening` | (**status:** `accepted`)
 
@@ -20,7 +20,7 @@ Secure storage still needs canonical data taxonomy, permission, validation, and 
 
 ## Considerations
 
-- Password and DEK authority belongs only to `2026-08-13-profile-password-custody-adr`.
+- Password and DEK authority belongs only to `2026-08-13-profile-password-custody-rollup-adr`.
 - Financial payloads remain secure-storage-only.
 - Diagnostics must not disclose profile secrets or financial content.
 
@@ -44,3 +44,4 @@ These controls remain valid for every encrypted storage format and do not depend
 ## Consequences
 
 Hardening remains centralized while shared-master, AUTO, fallback, and legacy-read rules disappear.
+

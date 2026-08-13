@@ -9,7 +9,7 @@ supersedes:
   - '2026-05-19-profile-lifecycle-disaster-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e55d6c7b8731c21f670db4b5be2ab139b9e582b1f39824bbfd58d4ecfbda2dd'
+body_hash: 'sha256:e05c08d13e00774e65e7957b9258a43d54c3087d78d06684e9996ef2f989a28f'
 ---
 # `profile-disaster-operations` adr: `profile disaster operation boundaries` | (**status:** `accepted`)
 
@@ -19,7 +19,7 @@ Operators need truthful local incident and disaster actions without silently exp
 
 ## Considerations
 
-- Custody restore and local deletion belong to `2026-08-13-profile-password-custody-adr`.
+- Custody restore and local deletion belong to `2026-08-13-profile-password-custody-rollup-adr`.
 - External effects require separate authorization and evidence.
 
 ## Considered options
@@ -42,3 +42,4 @@ Separate authority preserves consent and makes partial disaster handling auditab
 ## Consequences
 
 Operators may need several explicit operations, but no local cleanup silently changes an external system.
+

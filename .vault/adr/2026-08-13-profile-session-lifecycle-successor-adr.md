@@ -9,7 +9,7 @@ supersedes:
   - '2026-07-24-profile-login-session-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:c810c877377356ad13072c630ea93ec802b2c05117c632838f16deeb8c740575'
+body_hash: 'sha256:abfdc5fa64ab60145e483fadb133dec2c243c1866653c4e13ca3ad052509e5d8'
 ---
 # `profile-session-lifecycle` adr: `authenticated profile session lifecycle` | (**status:** `accepted`)
 
@@ -19,7 +19,7 @@ The application still needs one explicit active-profile session lifecycle after 
 
 ## Considerations
 
-- Cryptographic session creation, deadlines, handover ordering, and keyring acceleration belong to `2026-08-13-profile-password-custody-adr`.
+- Cryptographic session creation, deadlines, handover ordering, and keyring acceleration belong to `2026-08-13-profile-password-custody-rollup-adr`.
 - UI and command surfaces must project application session truth.
 
 ## Considered options
@@ -42,3 +42,4 @@ One lifecycle owner gives every CLI and TUI surface the same active-profile trut
 ## Consequences
 
 Operator surfaces remain consistent. The service depends on, but does not restate, the custody session contract.
+

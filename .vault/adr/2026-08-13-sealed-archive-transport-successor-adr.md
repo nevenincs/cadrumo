@@ -9,7 +9,7 @@ supersedes:
   - '2026-06-03-bucket-sealed-archive-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:c64276857b3b17cd3a4d102fdc684e4dea92b3be5c6da4624578136c59a43375'
+body_hash: 'sha256:0620dbeb6c598e4cb04bfe1190d7ec086dcc2b6fb10af04dfce7ffdb423b0839'
 ---
 # `sealed-archive-transport` adr: `sealed archive transport boundary` | (**status:** `accepted`)
 
@@ -19,7 +19,7 @@ Archive framing and hostile-input handling remain distinct from the custody cont
 
 ## Considerations
 
-- Restorative custody contents and restore modes belong to `2026-08-13-profile-password-custody-adr`.
+- Restorative custody contents and restore modes belong to `2026-08-13-profile-password-custody-rollup-adr`.
 - Transport must be deterministic and safe before decryption.
 
 ## Considered options
@@ -42,3 +42,4 @@ Transport safety can remain stable while custody formats change through explicit
 ## Consequences
 
 Optional recovery never changes archive completeness. Transport code cannot choose an unlock mechanism.
+

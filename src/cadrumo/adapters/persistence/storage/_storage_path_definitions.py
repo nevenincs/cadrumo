@@ -52,6 +52,11 @@ KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
 BUCKET_DEK_FILENAME = storage_location(StorageCategory.KEYSTORE_BUCKET_DEK).subpath
 PROFILE_SESSION_FILENAME = storage_location(StorageCategory.KEYSTORE_PROFILE_SESSION).subpath
 LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTTLE).subpath
+PROFILE_CUSTODY_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_CUSTODY).subpath
+PROFILE_PASSWORD_ENVELOPE_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).subpath
+PROFILE_RECOVERY_ENVELOPE_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE).subpath
+PROFILE_DATA_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_DATA).subpath
+PROFILE_COMMIT_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_COMMIT).subpath
 #: Directory holding the application-owned config-reset journal. The
 #: application module owns the durable journal itself; the name is declared
 #: once in the core taxonomy (:class:`~cadrumo.core.StorageCategory.CONFIG_RESET_JOURNAL`)

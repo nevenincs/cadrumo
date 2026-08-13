@@ -139,7 +139,14 @@ def _emit_pointer_repair(ctx: typer.Context, *, clear_active: bool, confirmed: b
 
 def _profile_health_payload(health: ActiveProfileHealth) -> dict[str, object]:
     """Project one health verdict through the canonical CLI action resolver."""
-    payload = health.model_dump(mode="json", exclude={"precondition_verdict"})
+    dumped = health.model_dump(mode="json", exclude={"precondition_verdict"})
+    if not isinstance(dumped, dict):
+        raise TypeError("profile health payload must be a mapping")
+    payload: dict[str, object] = {}
+    for key, value in dumped.items():
+        if not isinstance(key, str):
+            raise TypeError("profile health payload keys must be text")
+        payload[key] = value
     payload["active_profile"] = _repair_profile_label(health)
     if health.precondition_verdict is not None:
         action = resolve_cli_precondition_action(health.precondition_verdict)

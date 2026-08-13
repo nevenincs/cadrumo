@@ -1525,7 +1525,10 @@ def _export_active_profile_to_google_sheets(*, modelo: str, period: str, year: i
     except (GoogleAuthError, OutboundStorageError) as exc:
         raise _google_refusal(exc) from exc
 
-    return snapshot.modelo.id, result.spreadsheet_url
+    modelo_id = snapshot.modelo.id
+    if not isinstance(modelo_id, str):
+        raise TypeError("Google export snapshot has a non-text modelo id")
+    return modelo_id, result.spreadsheet_url
 
 
 def logout_action() -> ManagerAction:

@@ -9,7 +9,7 @@ supersedes:
   - '2026-05-27-profile-portability-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:802b4a4983fdbc199af2c660587df14f9d63a8baf9b99ba9acb21de430826076'
+body_hash: 'sha256:2aa0f84747fe0e25f4fd80bfd71ee633fc034ba4b060f765bce121af4e7e9435'
 ---
 # `profile-portability` adr: `structured profile portability boundary` | (**status:** `accepted`)
 
@@ -19,7 +19,7 @@ User-reviewed structured transfer remains useful but must not masquerade as rest
 
 ## Considerations
 
-- Restorative archives preserve UUID, DEK, and custody under `2026-08-13-profile-password-custody-adr`.
+- Restorative archives preserve UUID, DEK, and custody under `2026-08-13-profile-password-custody-rollup-adr`.
 - Portable transfer represents selected logical data, not encrypted storage internals.
 
 ## Considered options
@@ -42,3 +42,4 @@ Logical portability remains understandable and host-independent without becoming
 ## Consequences
 
 Transfer cannot restore the original cryptographic identity or serve as disaster recovery.
+

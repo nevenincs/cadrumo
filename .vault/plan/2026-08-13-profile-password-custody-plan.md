@@ -4,7 +4,7 @@ tags:
   - '#profile-password-custody'
 date: '2026-08-13'
 modified: '2026-08-13'
-body_hash: 'sha256:3f3f309a13474f9c71663f38fdfdfd9545bd9a54b9def0ecc99b656eeb26d049'
+body_hash: 'sha256:b379d1c7e443246f8e30f1fb800235535f1b8e23c2cde96866018816285022b1'
 tier: L3
 related:
   - '[[2026-08-13-profile-password-custody-research]]'
@@ -22,12 +22,6 @@ related:
 ---
 
 # `profile-password-custody` plan
-
-Hard-cut over profile unlock to password-wrapped per-profile custody, removing every shared-master and legacy authority while preserving only current-format, locally durable recovery paths.
-
-## Description
-
-This L3 plan executes the accepted custody roll-up and its ten successor decisions. Wave W01 defines the current-format custody contract and capsule transaction substrate, including committed-marker discovery and one exact closed retired-path inventory whose checks are existence-only. Wave W02 makes committed capsules, lifecycle projection, and sessions consume that substrate. Wave W03 rebuilds restorative transport and the CLI/TUI authority surface. Wave W04 deletes every legacy reader, provider, fallback, and format while retaining only that detector: it never opens or parses retired content or probes a legacy keyring account, and returns `LEGACY_CUSTODY_DETECTED` with explicit destructive-reset or re-enrollment guidance. Wave W05 proves the complete cutover using real local process and operator routes. Work occurs only in the main worktree with its normal shared index: no alternate index, lock workaround, or product-storage mutation during planning. The existing disposable store is reset only after the new cutover is implemented and validated. Normal operations remain local and perform no AEAT or other remote write.
 
 ## Steps
 
@@ -47,7 +41,7 @@ Define strict current-format custody records, typed refusals, and storage owners
 Implement supervised password wrapping, optional recovery, sentinels, capsules, journals, and exact pointer publication.
 
 - [x] `W01.P02.S03` - Have Terra XHigh implement finite-grid Argon2id calibration and a supervised child with ready-before-secret, framed-DEK-only results, and parent sentinel proof; `src/cadrumo/adapters/persistence/storage/custody/`.
-- [ ] `W01.P02.S04` - Have Terra XHigh implement password and optional recovery envelopes, strict external recovery artifacts, DEK sentinel proof, and immutable capsule publication; `src/cadrumo/adapters/persistence/storage/custody/`.
+- [x] `W01.P02.S04` - Have Terra XHigh implement password and optional recovery envelopes, strict external recovery artifacts, DEK sentinel proof, and immutable capsule publication; `src/cadrumo/adapters/persistence/storage/custody/`.
 - [ ] `W01.P02.S05` - Have Terra XHigh implement custody and deletion journals, root-profile locks, no-follow inventory, legal-hold confirmation, receipts, pointer CAS, and atomic deletion; `src/cadrumo/application/user_profile/`.
 - [ ] `W01.P02.S06` - Have Sol Medium jointly review KDF calibration and supervision, envelope and artifact AAD, capsule publication, journal recovery, and application-owned local deletion safety; `src/cadrumo/adapters/persistence/storage/custody/ and src/cadrumo/application/user_profile/`.
 
@@ -115,11 +109,3 @@ Exercise the actual local system and read-only DEHu path, then complete an indep
 - [ ] `W05.P08.S23` - Have Terra XHigh run and codify real CLI, TUI, recovery-isolation, artifact, and live read-only DEHu routes without remote writes; `src/cadrumo/entrypoints/cli/tests/`.
 - [ ] `W05.P08.S24` - Have Sol Medium complete the final security and architecture proof against every accepted custody invariant and execution record; `.vault/audit/`.
 - [ ] `W05.P08.S25` - After S24 proves the hard cutover, perform the explicitly authorized local-only destructive reset of the existing disposable retired/shared-master store through the new canonical application-owned profile deletion authority, capture journal and receipt evidence, re-enrol only current-format profiles, never read/adopt/migrate retired custody, never delete through raw filesystem or SQL, and perform no AEAT or external mutation; `src/cadrumo/application/user_profile/; .vault/exec/`.
-
-## Parallelization
-
-Waves are strictly serial. `W01.P01.S01` runs before its Sol Medium gate `S02`; `S03`, `S04`, and `S05` then run in order before `S06`. After `S06`, `S07` and `S08` may run in parallel only when their live diffs do not overlap, then `S09` gates `S11` and `S10` in dependency order before `S12`. `S13` precedes `S14`, then `S15` gates `S16` and `S17`, which may run in parallel only with disjoint current owners, before `S18`. `S19`, `S20`, and `S21` are serial; `S22`, `S23`, and `S24` are serial. Thus every coding phase begins after the preceding phase's Sol Medium gate, and every phase-ending Sol Medium gate reviews its Terra XHigh work and blocks every later phase and Wave until it has no unresolved critical or high finding. Every Terra XHigh handoff uses existing semantic grounding when available; when shared RAG compute is paused, agents do not manage it and instead use allowed fallback, whole-owner reads, and exact `rg`. No absent semantic result alone proves absence. All agents preserve concurrent work in the main worktree and never use an alternate index or lock workaround.
-
-## Verification
-
-Each coding Step uses real behavior tests that import and exercise production code, never test doubles, monkeypatches, fake implementations, or business logic in tests. The execution record proves exact current paths and removal checks. Required gates cover strict `ProfileCustodyEnvelope` validation; 15-to-256 scalar password handling; the bounded Argon2id grid; one discarded warm-up plus five-sample median calibration; sample and total deadlines; resource eligibility and the fixed eligible fallback; portable `KDF_RESOURCE_LIMIT` refusal; only post-success upward ratcheting behind the custody transaction; Windows Job Object plus `STARTUPINFOEX` handle allowlist and POSIX process-group, rlimit, close-from, and `pass_fds` controls; sanitized allowlisted environment and neutral working directory; ready-before-secret; child Argon plus AEAD with a framed DEK only; parent sentinel authentication; and `KDF_SUPERVISION_UNAVAILABLE` with no weaker fallback. They also prove password-only unlock independent of missing, corrupt, or inaccessible recovery, keyring, and projection state, tracing zero stat/open/read of `recovery.v1.json` on normal login; strict recovery-artifact exclusive export and import, warnings, collision refusal, UUID and `dek_epoch` agreement, sentinel proof, and restore-recover lineage/receipt; atomic capsule, pointer, journal, and local deletion crash recovery; symlink/junction/reparse refusal; hold preflight; target-bound confirmation; idempotent local receipts; retained-external-state reporting; and zero AEAT or external mutation. Cross-profile tests prove that B's candidate keys and session exist only in a transaction namespace before swap, a failed pre-swap path destroys that namespace with A byte-for-byte intact, no canonical B session or keyring entry exists before the atomic active-reference swap, the swap promotes B's process session first, optional keyring acceleration fails only as a B warning, candidate artifacts are then cleaned, and every post-swap failure leaves B process-usable without resurrecting A. The retired-path detector is separately traced to prove only allowlisted existence checks and zero retired-content open/read/parse or keyring calls. W05 runs real filesystem and subprocess cases plus exact CLI and TUI routes; it also runs the existing DEHu verification path in read-only mode only. Before each edit, agents use existing semantic grounding when available; if shared RAG is paused they do not manage it, use allowed fallback plus whole-owner reads and exact `rg`, and never treat absence output as proof. Plan completion requires all 25 Steps, their matching exec records, all Sol Medium gates, clean feature-scoped checks, the final architecture/security review, and the W05.P08.S25 journal-and-receipt proof that the disposable retired/shared-master store was reset only through the new canonical application-owned deletion authority after cutover validation.

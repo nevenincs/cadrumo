@@ -105,7 +105,7 @@ def _assignment_names(node: ast.Assign | ast.AnnAssign | ast.NamedExpr) -> set[s
     return {target.id for target in targets if isinstance(target, ast.Name)}
 
 
-def _assignment_value(node: ast.Assign | ast.AnnAssign | ast.NamedExpr) -> ast.expr:
+def _assignment_value(node: ast.Assign | ast.AnnAssign | ast.NamedExpr) -> ast.expr | None:
     return node.value
 
 

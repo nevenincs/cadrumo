@@ -48,7 +48,7 @@ from ..runtime_repository import (
     secure_object_repository_for_bucket,
 )
 from ..sql import SecureObjectDeletion, SecureObjectRecord, SecureObjectRepository
-from ._envelope import Envelope
+from ._envelope import Envelope, _parameterized_envelope_type
 
 _log = get_logger(__name__)
 
@@ -183,7 +183,7 @@ class SecureBoundRepository[T: BaseModel]:
     # CRUD
     # ------------------------------------------------------------------
 
-    def _validate_envelope(self, payload: bytes, *, subject: str) -> Envelope[BaseModel]:
+    def _validate_envelope(self, payload: bytes, *, subject: str) -> Envelope[T]:
         """Parse one stored payload and enforce the repository's envelope gates.
 
         The single classification/version gate behind both read paths. ``load``
@@ -240,15 +240,7 @@ class SecureBoundRepository[T: BaseModel]:
         if record is None:
             return None
         envelope = self._validate_envelope(record.payload, subject=f"{self.namespace}/{identifier}")
-        # Safe: _envelope_cls() returns Envelope[self.payload_model()] which equals
-        # Envelope[T] for this repository's concrete T. Pydantic's model_validate_json
-        # has already validated payload against the T schema, so the runtime type
-        # of envelope.payload IS T. The cast bridges the ClassVar[type[BaseModel]]
-        # declaration (required for cross-subclass compatibility) to the generic T
-        # visible to type checkers at the call site. Future improvement: replace the
-        # ClassVar[type[BaseModel]] fallback with explicit payload_model() overrides
-        # to eliminate this cast entirely (see: CAST-RATIONALE-SECURE-REPOSITORY-LOAD).
-        payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-LOAD
+        payload = envelope.payload
         payload_identifier = self.extract_identifier(payload)
         if payload_identifier != identifier:
             identity_error = SecureObjectRowIdentityError(
@@ -377,7 +369,7 @@ class SecureBoundRepository[T: BaseModel]:
             len(deletions),
         )
 
-    def _identified_envelope(self, payload: T) -> tuple[str, Envelope[BaseModel]]:
+    def _identified_envelope(self, payload: T) -> tuple[str, Envelope[T]]:
         """Return the validated natural id and the stamped envelope for ``payload``."""
         identifier = self.extract_identifier(payload)
         safe_repository_id(identifier, context="identifier")
@@ -401,7 +393,7 @@ class SecureBoundRepository[T: BaseModel]:
     # Enumeration
     # ------------------------------------------------------------------
 
-    def _iter_validated_rows(self) -> Iterator[tuple[SecureObjectRecord, Envelope[BaseModel]]]:
+    def _iter_validated_rows(self) -> Iterator[tuple[SecureObjectRecord, Envelope[T]]]:
         """Yield each stored row beside its classification/version-validated envelope."""
         for record in self._objects.list_records(
             self.namespace,
@@ -441,7 +433,7 @@ class SecureBoundRepository[T: BaseModel]:
         for record, envelope in self._iter_validated_rows():
             # Safe: same rationale as the load() path — the envelope was validated
             # against Envelope[self.payload_type] == Envelope[T].
-            payload = cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
+            payload = envelope.payload
             identifier = self.extract_identifier(payload)
             if secure_object_key_digest(identifier) != record.object_key:
                 raise SecureObjectRowIdentityError(self.namespace, expected_identifier=identifier)
@@ -503,21 +495,13 @@ class SecureBoundRepository[T: BaseModel]:
     # Internals
     # ------------------------------------------------------------------
 
-    def _envelope_cls(self) -> type[Envelope[BaseModel]]:
+    def _envelope_cls(self) -> type[Envelope[T]]:
         """Return the parameterised ``Envelope[payload_type]`` class.
 
         Delegates to :meth:`Envelope.for_payload_type` which encapsulates the
-        typed generic parameterisation. The return type is widened to
-        ``Envelope[BaseModel]`` because the method signature must be invariant
-        across all concrete subclasses (which each supply a different ``T``).
+        typed generic parameterisation for this repository's concrete ``T``.
         """
-        # The widening to Envelope[BaseModel] is the only remaining escape hatch
-        # here. Envelope.for_payload_type returns type[Envelope[self.payload_model()]];
-        # the mismatch is between the invariant return annotation and the
-        # covariant usage at call sites. Safe at runtime because Pydantic enforces
-        # the concrete type during model_validate_json.
-        # CAST-RATIONALE-SECURE-REPOSITORY-ENVCLS (future: eliminate via generic ClassVar alias)
-        return Envelope.for_payload_type(self.payload_model())  # type: ignore[return-value]  # reason: The widening to Envelope[BaseModel] is the only remaining escape hatch here. Envelope.for_payload_type returns type[Envelope[self.payload_model()]]...
+        return _parameterized_envelope_type(self.payload_model())
 
 
 __all__ = ["SecureBoundRepository"]

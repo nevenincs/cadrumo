@@ -76,13 +76,18 @@ def parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
         raise StorageValidationError(
             translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_json",
         ) from exc
-    if not isinstance(parsed, list) or not all(
-        isinstance(item, str) and _REVISION_ID_RE.fullmatch(item) is not None for item in parsed
-    ):
+    if not isinstance(parsed, list):
         raise StorageValidationError(
             translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_shape",
         )
-    return tuple(parsed)
+    revision_ids: list[str] = []
+    for item in parsed:
+        if not isinstance(item, str) or _REVISION_ID_RE.fullmatch(item) is None:
+            raise StorageValidationError(
+                translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_shape",
+            )
+        revision_ids.append(item)
+    return tuple(revision_ids)
 
 
 def build_revision_ancestor_ids(

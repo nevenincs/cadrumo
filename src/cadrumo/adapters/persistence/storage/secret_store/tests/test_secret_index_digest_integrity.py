@@ -34,7 +34,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+from pydantic import TypeAdapter
 
+from ......core import STR_KEYED_MAPPING_ADAPTER
 from ......core.classification import SensitivityClass
 from ......core.external_constants import UTF_8_ENCODING
 from ......core.hashing import sha256_hex
@@ -54,6 +56,7 @@ _EXPIRES_AT = datetime(2099, 5, 28, 11, 55, 0, tzinfo=UTC)
 #: A perfectly well-formed digest that is simply not this entry's key. The
 #: canonical field type accepts it, so only the agreement check can refuse it.
 _WRONG_BUT_WELL_FORMED = sha256_hex(b"a different natural key entirely")
+_SECRET_ENTRIES = TypeAdapter(dict[str, dict[str, object]])
 
 
 @pytest.fixture
@@ -84,9 +87,8 @@ def _index_path(store: SecretStore) -> Path:
 
 def _load(path: Path) -> tuple[dict[str, object], dict[str, dict[str, object]], str]:
     """Return ``(document, entries, sole_key)`` for a single-entry index."""
-    document = json.loads(path.read_text(encoding=UTF_8_ENCODING))
-    entries = document["entries"]
-    assert isinstance(entries, dict)
+    document = STR_KEYED_MAPPING_ADAPTER.validate_json(path.read_text(encoding=UTF_8_ENCODING))
+    entries = _SECRET_ENTRIES.validate_python(document["entries"])
     (key,) = entries
     return document, entries, key
 

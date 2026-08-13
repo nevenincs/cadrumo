@@ -9,7 +9,7 @@ supersedes:
   - '2026-08-08-recovery-mnemonic-surface-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:155db43f2f40e2f18ff92bc64fa9a49719daba332f5d9a52b29a0082a3e99b6b'
+body_hash: 'sha256:dd58049ebe1256c41a665d6857dcc82d89e3e45d93d4d4c18c8efdf96e633f48'
 ---
 # `recovery-mnemonic-presentation` adr: `recovery mnemonic presentation and handling` | (**status:** `accepted`)
 
@@ -19,7 +19,7 @@ Mnemonic encoding and one-time presentation remain useful operator-surface decis
 
 ## Considerations
 
-- Recovery authority, artifact import/export, and password-reset semantics belong to `2026-08-13-profile-password-custody-adr`.
+- Recovery authority, artifact import/export, and password-reset semantics belong to `2026-08-13-profile-password-custody-rollup-adr`.
 - Mnemonic plaintext is a secret and must not enter durable results or logs.
 
 ## Considered options
@@ -42,3 +42,4 @@ This keeps human handling stable without making presentation state part of login
 ## Consequences
 
 Lost mnemonic words cannot be redisplayed. Password login remains unaffected, and a new recovery enrollment requires current-password authentication.
+
