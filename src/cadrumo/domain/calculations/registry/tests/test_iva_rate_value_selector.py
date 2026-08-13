@@ -15,7 +15,13 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....domain.iva import IvaCategory, IvaFlowDirection, IvaLedgerObservationRole, IvaRateKind
+from .....domain.iva import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from .. import (
     DataBindingDefinition,
     IvaLedgerObservation,
@@ -33,6 +39,12 @@ def _binding(binding_id: str, *, applied_rates: tuple[Decimal, ...] | None) -> D
         "rate_kinds": (IvaRateKind.SUPER_REDUCED,),
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "fact": "base_amount_sum",
+        "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+        "cash_accounting_treatments": (
+            IvaCashAccountingTreatment.NONE,
+            IvaCashAccountingTreatment.TAXPAYER_REGIME,
+            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        ),
     }
     if applied_rates is not None:
         selector["applied_rates"] = applied_rates

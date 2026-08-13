@@ -11,9 +11,11 @@ from pydantic import ValidationError
 from .....core import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....iva import (
+    IvaCashAccountingTreatment,
     IvaCategory,
     IvaExemptionArticle,
     IvaFlowDirection,
+    IvaLedgerObservationRole,
     IvaRateKind,
 )
 from .. import (
@@ -86,6 +88,12 @@ def _article_filter_binding(**selector_updates: object) -> DataBindingDefinition
         "rate_kinds": (IvaRateKind.EXEMPT,),
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "fact": "base_amount_sum",
+        "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+        "cash_accounting_treatments": (
+            IvaCashAccountingTreatment.NONE,
+            IvaCashAccountingTreatment.TAXPAYER_REGIME,
+            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        ),
     }
     selector.update(selector_updates)
     return DataBindingDefinition(

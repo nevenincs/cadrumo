@@ -17,7 +17,13 @@ import pytest
 
 from .....core import validated_casilla_id
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from .....domain.iva import IvaCategory, IvaFlowDirection, IvaRateKind
+from .....domain.iva import (
+    IvaCashAccountingTreatment,
+    IvaCategory,
+    IvaFlowDirection,
+    IvaLedgerObservationRole,
+    IvaRateKind,
+)
 from .. import (
     CasillaDefinition,
     DataBindingDefinition,
@@ -49,6 +55,12 @@ def _binding(
         "rate_kinds": (rate_kind,),
         "flow_direction": IvaFlowDirection.REPERCUTIDO,
         "fact": fact,
+        "observation_roles": (IvaLedgerObservationRole.SETTLEMENT,),
+        "cash_accounting_treatments": (
+            IvaCashAccountingTreatment.NONE,
+            IvaCashAccountingTreatment.TAXPAYER_REGIME,
+            IvaCashAccountingTreatment.SUPPLIER_REGIME,
+        ),
     }
     if applied_rates is not None:
         selector["applied_rates"] = applied_rates
