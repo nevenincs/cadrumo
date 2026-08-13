@@ -5,7 +5,7 @@ tags:
 date: '2026-08-04'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:599c2a7ddc1ff5c222cfb2b8ad0cb58bfaa6f3d4226126bf3ea8843d1b6c5d50'
+body_hash: 'sha256:9c812f8ea79fe0ec6fe4cfeaaffb1518ba0ead771133dc7df5901114330bcfd0'
 step_id: 'S12'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -133,3 +133,14 @@ Landed in `dcf31c758a`:
 Gates run: `dev/deploy/tests` plus the justfile-scanning `test_justfile_release_guidance` and `test_ci_workflow` — 74 passed. Ruff clean.
 
 What this does NOT claim. The live-response half is untouched and stays rowed: `/docs/es/`, `/docs/ca/` and `/docs/hu/` are not proven to respond, and nothing here may be read as claiming they do. Nor does the verb make the deploy green — this row's 2026-08-12 and 2026-08-13 entries record a full-tree build precondition that is red for reasons entirely outside this campaign (31 missing API stubs owned by other campaigns, sequence-golden divergences, machine-specific hardware facts). The verb's value is that this precondition is now MEASURABLE offline, by anyone, at any time, instead of being discoverable only at the moment of publishing.
+
+### 2026-08-13 honesty review corrections to the entry above
+
+A fresh-context review confirmed every mechanism claim in the entry above against current code, individually rather than inherited, and confirmed the dry-run verb is real rather than ceremony: its two refusal gates run production validators over a real on-disk multi-root tree and would go red if the validation were dropped, and its build seam matches this module's own documented DI precedent. Three corrections and additions follow.
+
+**The composition is now gated.** The entry above leaned on an anti-drift property that was true by construction and enforced by nothing: re-inlining the validation calls into the publish, the exact shape that existed before the extraction, would have reintroduced a dry run that passes where a publish refuses, with a green suite. A gate now reads the publish's own call sequence, requires build then validate then upload, refuses the re-inlined form by name, and pins the dry run's default build to the shared composition. Proven to bite by re-inlining the validation in a copy of the source outside the repository and confirming the verdict flips to red.
+
+**The dry run's verdict is not yet the publish's verdict.** The shared validation covers the apex entry page and the language roots but NOT the apex root's own Pagefind bundle, while the post-publish index verification includes the apex and raises when that built file is absent — after the upload and the cache invalidation. So an apex root that would fail the publish's own index check still passes the dry run. This is rowed as an open step rather than absorbed, because it turns on an unresolved contradiction about what the apex owes at all, and on the fate of an uncalled validator that would have covered exactly this.
+
+**One prose correction**, the same one recorded against the sibling row: the claim that a localized build with no output directory "cleared that root's non-canonical entries on the way in" misstates the mechanism. That function removes stale entries directly under `docs/_build` that are not `html` and never reaches inside `html`. The English root was polluted, not cleared, and the true second cause of the observed residue was the full-build orphan sweep deleting every page of every nested language root.
+

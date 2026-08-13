@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:6f837d2f660789fcb89aa6cf7b07ab2d06512d78c06109488362e1fb78a3eb94'
+body_hash: 'sha256:37a60017f97fcd13348380ed5560101408786367718603ed90e3a5adfe8c4804'
 related:
   - '[[2026-08-01-user-docs-search-consolidation-P01-S01]]'
   - '[[2026-08-01-user-docs-search-consolidation-P01-S02]]'
@@ -85,6 +85,7 @@ related:
   - '[[2026-08-07-user-docs-search-consolidation-ranking-measurement-audit]]'
   - '[[2026-08-11-user-docs-search-consolidation-relevance-boost-band-containment-adr]]'
   - '[[2026-08-11-user-docs-search-consolidation-rung2-retirement-close-honesty-review-audit]]'
+  - '[[2026-08-13-user-docs-search-consolidation-split-closure-honesty-audit]]'
 ---
 
 # `user-docs-search-consolidation` feature index
@@ -132,6 +133,7 @@ Auto-generated index of all documents tagged with `#user-docs-search-consolidati
 - `2026-08-07-user-docs-search-consolidation-p02-s06-acceptance-provenance-gate-audit` - `user-docs-search-consolidation` audit: `P02.S06 acceptance provenance gate review`
 - `2026-08-07-user-docs-search-consolidation-ranking-measurement-audit` - `user-docs-search-consolidation` audit: `Ranked-result measurement across modelo, casilla, natural-language and tax-term queries`
 - `2026-08-11-user-docs-search-consolidation-rung2-retirement-close-honesty-review-audit` - `user-docs-search-consolidation` audit: `campaign close honesty review after the Rung-2 retirement ruling`
+- `2026-08-13-user-docs-search-consolidation-split-closure-honesty-audit` - `user-docs-search-consolidation` audit: `split-closure honesty review`
 
 ### exec
 

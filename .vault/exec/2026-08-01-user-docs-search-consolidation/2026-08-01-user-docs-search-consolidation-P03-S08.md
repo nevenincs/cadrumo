@@ -5,7 +5,7 @@ tags:
 date: '2026-08-05'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:6ca73e2b8eee1065886acd7fbf2efccc99c714368fb24b1bed82d02decfb0a07'
+body_hash: 'sha256:4281c95b342031e5177a5e186e7a0686f4d68f4cd6825e7e8e6a61849349c572'
 step_id: 'S08'
 related:
   - "[[2026-08-01-user-docs-search-consolidation-plan]]"
@@ -154,4 +154,14 @@ Fixed in `b9441f3f8f`: both recipes now pass `--out-dir docs/_build/html/<lang>`
 Two shared-tree conditions were met and re-run rather than triaged as regressions, both outside this campaign's surface and both transient mid-edit states of live peer work: a `RegistryLoadError` on duplicate catalogue ids in an untracked `legal/iva-dana-2024.toml`, and an `ImportError` for `AEAT_THOUSANDS_SEPARATORS` from `cadrumo.core.decimal` during a peer relocation that was mid-write. Neither file was touched. Both resolved on their own and the re-run was clean.
 
 What this does NOT establish: nothing about any deployed root. The original row's second clause — re-probing the deployed roots so a CI pass can never mask a broken live root — is precisely the claim a green built-site run cannot substitute for, and it is now carried by its own row.
+
+### 2026-08-13 honesty review corrections to the entry above
+
+A fresh-context review of this closure returned one HIGH finding that materially corrects the causal account above, plus two clarifications. The closure stands, but the entry above must not be read as complete on its own.
+
+**The recipe defect was not the whole cause, and the recipe fix was not durable.** The full-build orphan sweep resolves every built page's docname against a source under `docs/`, so a page at `html/es/index.html` resolved to a `docs/es/index.md` that has never existed and was unlinked as an orphan. Its skip set covered only asset and infrastructure directories. So every localized root nested in the same tree was emptied by the next apex build — which is a second, sufficient cause of the exact residue this row observed, and it would have undone the recipe fix on the very next `just docs`. The deploy path was safe only by ordering accident, because it happens to build the apex before the language roots. Fixed in `7957b3be2d`: the sweep now exempts a nested per-language site root, deriving the set from the canonical output-language enum rather than a hand-list and deliberately not from the module naming the deploy root set, since that module imports this one. A regression gate asserts the localized roots survive an apex sweep, paired with a genuine orphan in the same tree so a too-wide exemption fails rather than passes vacuously. The exemption was proven load-bearing by clearing it at runtime from outside the repository: with it the localized page survives, without it it is deleted.
+
+**Which corpus the green run measured.** The 26-passed run's subject varies with untracked build output, and the entry above did not say which branch each root took. It is recorded now: the English root read the real built English pages, and `es`, `ca` and `hu` each took the sanctioned retargeted-English fallback, because at run time the language roots held no rendered pages — the very defect this session fixed. The property under test is which index the records land in, decided by the `<html lang>` attribute alone, and the probes assert recall of the injected records, which carry the all-language content blob on every root. The claim therefore stands as made. A follow-up making that provenance self-labelling in the gate's own output is noted in the audit rather than rowed, because the gate's docstring already states the design.
+
+**One prose correction.** The entry above says the localized build "cleared that root's non-canonical entries on the way in". That is wrong as stated: the function it refers to removes stale entries directly under `docs/_build` that are not `html`, and never touches anything inside `html`. The English root was POLLUTED with translated pages, not cleared. The load-bearing half is unaffected and verified — with no output directory the full build's HTML root IS the canonical English root — but the wrong mechanism is precisely what hid the orphan-sweep finding, so it is corrected here rather than left standing.
 
