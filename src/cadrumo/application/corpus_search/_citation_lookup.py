@@ -71,7 +71,7 @@ class CitationLookup:
         reference = self._legal.get(key)
         if reference is None:
             raise CorpusSearchInputError(
-                "unknown citation id",
+                reason="citation_id_unknown",
                 context={"citation_id": citation_id},
             )
         path_part, _, anchor_part = reference.corpus_ref.partition("#")
@@ -107,14 +107,14 @@ class CitationLookup:
         path_part, _, anchor_part = key.partition("#")
         text = self._read_corpus_text(path_part, anchor=anchor_part or None)
         if text is None:
-            raise CorpusSearchInputError("no readable corpus text for reference", context={"ref": ref})
+            raise CorpusSearchInputError(reason="corpus_text_unreadable", context={"ref": ref})
         return text
 
     def _verbatim_text(self, reference: LegalReference, *, path_part: str, anchor: str | None) -> str:
         text = self._read_corpus_text(path_part, anchor=anchor, required_text=reference.required_text)
         if text is None:
             raise CorpusSearchInputError(
-                "citation has no readable extracted corpus text",
+                reason="citation_extracted_text_absent",
                 context={"citation_id": reference.id, "corpus_ref": reference.corpus_ref},
             )
         return text
@@ -129,7 +129,7 @@ class CitationLookup:
         source_path = (self._source_root / path_part).resolve()
         if self._source_root not in source_path.parents:
             raise CorpusSearchInputError(
-                "corpus_ref escapes the corpus root",
+                reason="corpus_ref_escapes_root",
                 context={"path": path_part},
             )
         extracted_json = source_path.with_name(source_path.name + ".extracted.json")
@@ -143,7 +143,7 @@ class CitationLookup:
             )
         except CorpusAnchorResolutionError as exc:
             raise CorpusSearchInputError(
-                "corpus_ref does not resolve to one extracted unit",
+                reason="corpus_ref_not_one_unit",
                 context={"path": path_part, "anchor": anchor or ""},
             ) from exc
 

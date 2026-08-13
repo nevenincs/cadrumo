@@ -127,7 +127,7 @@ def _validated_concept_id(token: str) -> str:
     """
     if not (CONCEPT_ID_MIN_LENGTH <= len(token) <= CONCEPT_ID_MAX_LENGTH) or _CONCEPT_ID_RE.fullmatch(token) is None:
         raise CorpusSearchInputError(
-            "malformed terminology concept_id",
+            reason="concept_id_malformed",
             context={"concept_id": token, "pattern": CONCEPT_ID_PATTERN},
         )
     return token
@@ -145,7 +145,7 @@ def _resolve_language(concept: dict[str, object], locale: str, *, concept_id: st
     languages = _as_str_object_dict(concept.get("language"))
     if not languages:
         raise CorpusSearchInputError(
-            "terminology concept declares no [language.*] sections",
+            reason="concept_declares_no_language_sections",
             context={"concept_id": concept_id},
         )
     for candidate in (locale, _FALLBACK_LOCALE):
@@ -198,7 +198,9 @@ def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
     try:
         return ConceptLifecycle(token)
     except ValueError as exc:
-        raise CorpusSearchInputError("unknown terminology concept", context={
+        raise CorpusSearchInputError(
+            reason="concept_lifecycle_unknown",
+            context={
                 "concept_id": concept_id,
                 "lifecycle": token,
                 "accepted": tuple(member.value for member in ConceptLifecycle),
@@ -306,12 +308,14 @@ def search_terminology(
     needle = _fold(query)
     if not needle:
         raise CorpusSearchInputError(
-            "malformed terminology concept_id",
-            context={"query": query})
+            reason="query_empty",
+            context={"query": query},
+        )
     if limit <= 0:
         raise CorpusSearchInputError(
-            "terminology concept declares no [language.*] sections",
-            context={"limit": limit})
+            reason="limit_not_positive",
+            context={"limit": limit},
+        )
     allowed = frozenset(lifecycles)
     scored: list[tuple[int, TerminologyHit]] = []
     for concept in load_terminology_concepts(locale):
@@ -350,8 +354,9 @@ def lookup_terminology(concept_id: str, *, locale: str = _FALLBACK_LOCALE) -> Te
         if concept.concept_id == key:
             return concept
     raise CorpusSearchInputError(
-            "unknown terminology concept lifecycle",
-            context={"concept_id": concept_id})
+        reason="concept_unknown",
+        context={"concept_id": concept_id},
+    )
 
 
 __all__ = [

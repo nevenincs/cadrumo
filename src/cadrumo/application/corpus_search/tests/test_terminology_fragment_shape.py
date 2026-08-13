@@ -98,8 +98,10 @@ def test_a_fragment_with_no_language_section_is_refused() -> None:
     real, demonstrated search-index pollution.
     """
     payload = tomllib.loads(_MISSING_LANGUAGE_FRAGMENT)
-    with pytest.raises(CorpusSearchInputError, match="no \\[language"):
+    with pytest.raises(CorpusSearchInputError) as raised:
         _project_concept(payload, locale="es")
+
+    assert raised.value.reason == "concept_declares_no_language_sections"
 
 
 def test_a_malformed_concept_id_is_refused() -> None:

@@ -6,10 +6,12 @@ category envelope (a ``REFUSED`` input/dependency refusal, an ``ERROR`` base)
 rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
 Each class binds one registered ``ErrorCode`` (declared in
 ``core.errors.registry._application_part1``) whose ``message_key`` supplies the
-localized envelope message; the free-form constructor ``message`` stays as the
-developer-facing ``str(exc)`` detail and the specifics ride on ``context`` — the
-same contextual detail the MCP tool layer projects onto the envelope (the
-offending query/limit/ref).
+localized envelope message, and the specifics ride on ``context`` — the same
+contextual detail the MCP tool layer projects onto the envelope (the offending
+query/limit/ref). The condition itself travels as a ``reason`` discriminant
+rather than as a sentence: a free-form constructor message would be preferred
+by ``str(exc)`` over the registered key, so it would reach tracebacks, logs and
+every direct rendering of the exception in English regardless of locale.
 
 There is no dependency refusal here: the retrieval surface needs no optional
 package, so it can never refuse for want of one.
@@ -27,15 +29,17 @@ class CorpusSearchError(CadrumoError):
 
     def __init__(
         self,
-        message: str,
         *,
+        reason: str,
+        translated_message: str = "errors.error.error_corpus_search",
         context: Mapping[str, object] | None = None,
     ) -> None:
-        super().__init__(message)
+        super().__init__(translated_message=translated_message, context={"reason": reason, **dict(context or {})})
         # Preserve the surface's always-a-dict ``context`` contract (CadrumoError's
         # own base leaves it None when unset); consumers read ``.context`` as a
         # mapping.
-        self.context = dict(context or {})
+        self.context = {"reason": reason, **dict(context or {})}
+        self.reason = reason
 
 
 class CorpusSearchInputError(CorpusSearchError):
@@ -43,8 +47,20 @@ class CorpusSearchInputError(CorpusSearchError):
 
     Covers an unknown citation id, a corpus_ref whose backing extracted
     text is missing, an empty query, and any other caller-supplied input
-    the surface refuses.
+    the surface refuses. Which of those it is travels as ``reason``.
     """
+
+    def __init__(
+        self,
+        *,
+        reason: str,
+        context: Mapping[str, object] | None = None,
+    ) -> None:
+        super().__init__(
+            reason=reason,
+            translated_message="errors.refused.refused_corpus_search_input",
+            context=context,
+        )
 
 
 __all__ = [
