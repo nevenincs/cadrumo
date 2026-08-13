@@ -8,9 +8,14 @@ false-positive, and this is the path a taxpayer's served sanción travels.
 
 Every defaultable field on the persisted record carries a NON-default value,
 because a save-drops-field / load-re-defaults-field regression is invisible when
-a fixture leaves the default in place. ``mode`` is the sole exception and
-deliberately so: it is a single-value ``Literal`` with no non-default value to
-carry, which is exactly the structural read-only marker it exists to be.
+a fixture leaves the default in place. ``sancion`` and ``parse_refusal`` are
+mutually exclusive by construction — a read either parses into a reading or it
+does not — so no single record can carry both non-default; the sanción
+roundtrip below exercises ``sancion`` and the refusal roundtrip exercises
+``parse_refusal``, and between the two every defaultable field is proven to
+survive at a non-default value at least once. ``mode`` is the sole exception
+and deliberately so: it is a single-value ``Literal`` with no non-default value
+to carry, which is exactly the structural read-only marker it exists to be.
 
 The legal guard is load-bearing here rather than incidental. Driving AEAT's
 content control on an unread notification IS the comparecencia — it makes the
@@ -262,6 +267,11 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
     The bytes are the authoritative artefact and stay in custody; the operator
     is told plainly that no figures were extracted. A partially-read record
     presenting as complete is the outcome this whole path is built to avoid.
+
+    ``parse_refusal`` is the one field the sanción roundtrip above cannot
+    exercise at a non-default value — it and ``sancion`` are mutually
+    exclusive by construction — so the strict equality check here is what
+    closes that gap across the two records.
     """
     truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
 
@@ -273,7 +283,9 @@ def test_an_unreadable_document_keeps_its_bytes_and_records_the_refusal(tmp_path
             row=_read_row(),
             document=_document(data=truncated),
         )
+        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
 
+        assert loaded == record
         assert record.sancion is None
         assert record.parse_refusal is not None
         assert "SancionParseError" in record.parse_refusal
@@ -340,6 +352,41 @@ def test_dropping_a_figure_from_the_nested_reading_makes_the_load_refuse(tmp_pat
 
         with pytest.raises(ValidationError, match="importe_a_ingresar"):
             service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+
+
+def test_deleting_the_parse_refusal_on_disk_silently_loses_it(tmp_path: Path) -> None:
+    """Anti-tautology proof for the one field with a default to fall back to.
+
+    Every other proof in this module deletes a REQUIRED field and shows the
+    load refuses outright. ``parse_refusal`` is optional, so a dropped key
+    does not raise at all — it silently re-defaults to ``None``. Strict
+    equality against the originally persisted record is what surfaces that
+    instead, which is exactly why the roundtrip above compares the whole
+    record rather than checking individual fields.
+    """
+    truncated = _pdf_bytes(("Clave de liquidacion: A2860024500012345", "Referencia: 2024/0001234"))
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        service = NotificationDocumentService()
+        persisted = service.persist_document(
+            bucket_id=_BUCKET_ID,
+            row=_read_row(),
+            document=_document(data=truncated),
+        )
+        assert persisted.parse_refusal is not None
+
+        def _drop(decoded: dict[str, Any]) -> None:
+            payload = decoded["payload"]
+            assert "parse_refusal" in payload, (  # type: ignore[operator]
+                "fixture must serialise parse_refusal for this proof to mean anything"
+            )
+            del payload["parse_refusal"]  # type: ignore[index]
+
+        _mutate_stored_payload(profile, mutate=_drop)
+
+        loaded = service.show(bucket_id=_BUCKET_ID, certificado_id=_CERT_READ)
+        assert loaded != persisted
+        assert loaded.parse_refusal is None
 
 
 def test_a_zero_byte_size_on_disk_makes_the_load_refuse(tmp_path: Path) -> None:
