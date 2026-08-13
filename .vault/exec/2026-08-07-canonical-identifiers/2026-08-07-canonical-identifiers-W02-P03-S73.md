@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:71d2b3b25faa4174b6269a15c26a2ccd3f44873605d3af56ccc538a7d95b6d1f'
+body_hash: 'sha256:578f672803b30c174edb9ccf5e1f420e97546bbb4ce103da585b9f8365e6bd39'
 step_id: 'S73'
 related:
   - "[[2026-08-07-canonical-identifiers-plan]]"
@@ -136,3 +136,19 @@ both carry the canonical alias and normalise at their model boundary, so they
 can never present a variant spelling. The surfaces that can are the ones that
 only trim: the external evidence reference, the register metadata string map,
 and the CSV recovered from a cotejo URL. Those are the surfaces exercised.
+
+One in-phase regression was absorbed in a separate commit rather than reported
+and left. Retiring the receipt CSV onto the canonical alias tightened its shape
+but did not sweep the cross-period clean-state fixtures, which still minted
+hyphenated seven-character values, so twenty-five tests died constructing a
+receipt before reaching the behaviour they assert. The fixture values move onto
+the adopted shape, paired so that every accept case still accepts and every
+mismatch case still mismatches, and eight tests recover. It is a separate commit
+because it answers a different row's decision, and it is separate from the
+consolidation for the same reason.
+
+Seventeen of those tests stay red for a reason that is neither this row's nor
+that sweep's, and it is worth naming because the CSV failure was masking it: the
+clean-state seeding helper still routes Modelo 303 filings through the external
+import verb, which now refuses that modelo outright. That is a live contradiction
+between a refusal and a fixture that predates it, and it needs its owner.
