@@ -45,7 +45,9 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import CasillaId, Period, validated_casilla_id
+from ....core.resources import resources
 from ....domain.calculations.registry import (
+    ModeloRevision,
     RegistryModeloObservation,
 )
 from ....domain.transactions import (
@@ -87,6 +89,10 @@ _T1 = datetime(2026, 7, 10, 11, 0, tzinfo=UTC)
 _ADVISORY_REASON = "prior_payment_not_deducted"
 _MINORACION_ADVISORY_REASON = "prior_payment_minoracion_not_captured"
 _THIRD_TRIMESTRE = "3T"
+
+
+def _m130_revision(period: str) -> ModeloRevision:
+    return resources().modelos.authority.snapshot("130", filing_year=_YEAR, period=period).revision
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -418,6 +424,7 @@ def test_three_t_degraded_carry_advisory_names_all_same_ejercicio_prior_quarters
     _seed_prior_1t_m130_filing(observation_repository, minoracion=Decimal("0"))
 
     diagnostics = collect_prior_payment_not_deducted_diagnostics(
+        _m130_revision(_THIRD_TRIMESTRE),
         {
             _M130_INGRESOS_CASILLA: Decimal("3000"),
             _PRIOR_PAYMENT_CASILLA: Decimal("0"),
@@ -433,6 +440,9 @@ def test_three_t_degraded_carry_advisory_names_all_same_ejercicio_prior_quarters
     assert advisory.reason == _ADVISORY_REASON
     assert "1T, 2T" in advisory.message
     assert "4T" not in advisory.message
+    # Casilla-derived grounding, threaded from the registry rather than
+    # restated: casilla 05 carries RD 439/2007 art. 110 among its own refs.
+    assert "rd-439-2007:art-110" in advisory.legal_refs
 
 
 def test_first_trimestre_does_not_fire(

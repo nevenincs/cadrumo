@@ -268,6 +268,7 @@ from ._profile_binding import (
 )
 from ._profile_export_binding import (
     compose_legal_full_name,
+    resolve_export_identity,
     resolve_profile_export_values,
 )
 from ._profile_readiness_gate import (
@@ -947,6 +948,7 @@ __all__ = [
     "resolve_available_bound_inputs_by_casilla_id",
     "resolve_calculation_binding_channels",
     "resolve_casilla_population_scope",
+    "resolve_export_identity",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_maternidad_meses",

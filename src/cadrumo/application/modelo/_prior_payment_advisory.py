@@ -48,10 +48,11 @@ from typing import Final
 
 from ...core import CasillaId, Modelo, validated_casilla_id
 from ...domain.calculations.registry import (
+    ModeloRevision,
     RegistryValidationError,
     same_ejercicio_prior_quarter_anchors,
 )
-from ..aggregation import CalculationSourceDiagnostic
+from ..aggregation import CalculationSourceDiagnostic, casilla_registry_legal_refs
 from ..calculations import CalculationObservationRepository
 
 __all__ = [
@@ -116,6 +117,7 @@ def _prior_m130_filing_exists(
 
 
 def collect_prior_payment_not_deducted_diagnostics(
+    revision: ModeloRevision,
     casilla_values: Mapping[CasillaId, Decimal],
     *,
     modelo: str,
@@ -136,6 +138,9 @@ def collect_prior_payment_not_deducted_diagnostics(
     first-obligation filer (whose casilla ``05`` is legitimately zero) silent.
 
     Args:
+        revision: The :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
+            being calculated, read only for casilla 05's own registry grounding
+            -- never for a legal figure.
         casilla_values: The computed casilla values (engine result), keyed by
             :class:`~cadrumo.core.CasillaId`.
         modelo: The modelo identifier of the filing being calculated. Used to
@@ -192,11 +197,17 @@ def collect_prior_payment_not_deducted_diagnostics(
                 f"in casilla 05 before filing"
             ),
             casilla_id=_PRIOR_PAYMENT_CASILLA,
+            # Casilla-derived: the advisory's subject IS casilla 05's own carry,
+            # so its typed grounding is read off the registry rather than
+            # restated from the RD 439/2007 art. 110 citation already in the
+            # message.
+            legal_refs=casilla_registry_legal_refs(revision, _PRIOR_PAYMENT_CASILLA),
         ),
     )
 
 
 def collect_prior_payment_minoracion_not_captured_diagnostics(
+    revision: ModeloRevision,
     *,
     modelo: str,
     period_token: str,
@@ -220,6 +231,8 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
     silent no-op (the value is captured; it just happens to be zero).
 
     Args:
+        revision: The :class:`~cadrumo.domain.calculations.registry.ModeloRevision`
+            being calculated, read only for casilla 05's own registry grounding.
         modelo: The modelo identifier of the filing being calculated; the advisory
             applies only to Modelo 130.
         period_token: The bare registry period code of the target filing.
@@ -275,5 +288,6 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
                 f"casilla 16)"
             ),
             casilla_id=_PRIOR_PAYMENT_CASILLA,
+            legal_refs=casilla_registry_legal_refs(revision, _PRIOR_PAYMENT_CASILLA),
         ),
     )

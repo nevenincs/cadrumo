@@ -146,7 +146,7 @@ from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._m303_regimen_simplificado_scope import m303_regimen_simplificado_scope_for_profile
 from ._preconditions import build_modelo_precondition_failure
 from ._prior_domiciliation import resolve_prior_domiciliation_election
-from ._profile_export_binding import resolve_profile_export_values
+from ._profile_export_binding import resolve_export_identity, resolve_profile_export_values
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -702,7 +702,7 @@ def _build_export_producer_snapshot(
     prior_domiciliation_election: PriorDomiciliationElectionProjection,
 ) -> FilingProducerSnapshot:
     """Build the sole typed producer boundary or refuse before any write."""
-    presenter, taxpayer_identity = _require_export_identity(command)
+    presenter, taxpayer_identity = _require_export_identity(command, work_unit=work_unit)
     evidence = _require_matching_amendment_evidence(command, revision)
     try:
         modelo = Modelo(str(work_unit.modelo))
@@ -741,8 +741,31 @@ def _build_export_producer_snapshot(
         ) from exc
 
 
-def _require_export_identity(command: ModeloExportCommand) -> tuple[PresenterIdentity, TaxpayerIdentityFacts]:
-    if command.presenter is None or command.taxpayer_identity is None:
+def _require_export_identity(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+) -> tuple[PresenterIdentity, TaxpayerIdentityFacts]:
+    """Resolve the producer identity, deriving it from the profile when unset.
+
+    An explicit command identity wins, so a caller that knows better -- a
+    future representative or gestor surface -- overrides without threading
+    anything new through this path. Otherwise the identity is read from the
+    filing profile in the work unit's OWN bucket, which is the same bucket the
+    export's other profile-sourced values already resolve against; taking it
+    from the active bucket instead would let a cross-bucket export stamp one
+    taxpayer's declaration with another's name.
+
+    The refusal survives derivation rather than being replaced by it: a profile
+    that is absent, or that declares no tax id or no usable name, still refuses
+    here instead of producing a filed artefact with a half-built identity.
+    """
+    if command.presenter is not None and command.taxpayer_identity is not None:
+        return command.presenter, command.taxpayer_identity
+    derived = resolve_export_identity(bucket_id=str(work_unit.bucket_id))
+    presenter = command.presenter or (derived[0] if derived else None)
+    taxpayer_identity = command.taxpayer_identity or (derived[1] if derived else None)
+    if presenter is None or taxpayer_identity is None:
         raise ModeloExportError(
             translated_message="application.modelo.errors.export_draft_write_failed",
             context={
@@ -750,7 +773,7 @@ def _require_export_identity(command: ModeloExportCommand) -> tuple[PresenterIde
                 "cause": "explicit presenter and taxpayer identity facts are required",
             },
         )
-    return command.presenter, command.taxpayer_identity
+    return presenter, taxpayer_identity
 
 
 def _require_matching_amendment_evidence(

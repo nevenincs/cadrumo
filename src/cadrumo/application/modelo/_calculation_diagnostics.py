@@ -130,6 +130,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
     return (
         collect_official_box_unpopulated_diagnostics(revision, casilla_values)
         + collect_prior_payment_not_deducted_diagnostics(
+            revision,
             casilla_values,
             modelo=modelo,
             period_token=period_token,
@@ -137,6 +138,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             observation_repository=observation_repository,
         )
         + collect_prior_payment_minoracion_not_captured_diagnostics(
+            revision,
             modelo=modelo,
             period_token=period_token,
             filing_year=filing_year,

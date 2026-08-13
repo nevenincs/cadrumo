@@ -25,12 +25,21 @@ from ...domain.user_profile import (
     UserProfileFactValue,
     load_user_profile_schema,
 )
+from ..filing import PresenterIdentity, TaxpayerIdentityFacts
 
 # Intra-package reuse of this package's own resolver internals, which the
 # architecture rule permits; the cross-package boundary has its own gate.
 from ._profile_binding import _profile_fact_index, _resolve_one  # pyright: ignore[reportPrivateUsage]
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
+
+#: Stored profile fact paths the export identity is read from. Named here
+#: rather than inline so the three that must agree stay visibly together.
+_IDENTITY_TAX_ID_KEY = "identity.tax_id"
+_IDENTITY_NAME_KEY = "identity.name"
+_IDENTITY_SURNAMES_KEY = "identity.surnames"
+_ENTITY_TYPE_KEY = "taxpayer_type.entity_type"
+_NATURAL_PERSON_ENTITY_TYPE = "natural_person"
 
 
 def compose_legal_full_name(*, surnames: str, name: str) -> str:
@@ -165,6 +174,94 @@ def resolve_profile_export_values(
         slot is fatal, since the export layout is what declares a field
         required.
     """
+    return _resolve_profile_export_values(
+        bindings,
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        schema=schema,
+    )
+
+
+def resolve_export_identity(
+    *,
+    bucket_id: str,
+    profile_record: object | None = None,
+    schema: ProfileSchemaDefinition | None = None,
+) -> tuple[PresenterIdentity, TaxpayerIdentityFacts] | None:
+    """Derive the presenter and taxpayer identity facts from the stored profile.
+
+    :class:`PresenterIdentity` deliberately offers no taxpayer-to-presenter
+    fallback of its own, so somebody must decide who is presenting. This is
+    that decision, made once: the operator whose profile is filing IS the
+    presenter. Cadrumo exposes no representative or gestor identity -- a filing
+    prepared here belongs to the profile that prepared it -- so deriving the
+    presenter from anything else would invent an actor the product has no way
+    to name. When a representative surface does land, it overrides here rather
+    than being threaded through every export caller.
+
+    The taxpayer facts are read as the four distinct official meanings the
+    producer declares, never as interchangeable aliases. A natural person
+    carries ``given_name`` and ``surnames`` and the ``full_name`` composed from
+    them through :func:`compose_legal_full_name`, so the surnames-first join
+    stays the single authority it already is; ``legal_name`` stays absent
+    because a natural person has none. Any other entity type carries its
+    registered name as BOTH ``legal_name`` and ``full_name`` and nothing else,
+    because an entity has no given name or surnames to split.
+
+    Returns:
+        The presenter/taxpayer pair, or ``None`` when the profile is absent or
+        declares no usable tax identity. ``None`` means "cannot answer", and
+        the export path's own refusal states that far better than a half-built
+        identity would.
+    """
+    record = profile_record
+    if record is None:
+        from ..user_profile import UserProfileLifecycleRepository
+
+        try:
+            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
+    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    facts = _profile_fact_index(record, resolved_schema)
+
+    tax_id = str(facts.get(_IDENTITY_TAX_ID_KEY) or "").strip()
+    if not tax_id:
+        return None
+    name = str(facts.get(_IDENTITY_NAME_KEY) or "").strip()
+    surnames = str(facts.get(_IDENTITY_SURNAMES_KEY) or "").strip()
+    entity_type = str(facts.get(_ENTITY_TYPE_KEY) or "").strip().casefold()
+
+    if entity_type == _NATURAL_PERSON_ENTITY_TYPE:
+        full_name = compose_legal_full_name(surnames=surnames, name=name)
+        identity = TaxpayerIdentityFacts(
+            legal_name=None,
+            given_name=name or None,
+            surnames=surnames or None,
+            full_name=full_name or None,
+        )
+    else:
+        registered = compose_legal_full_name(surnames=surnames, name=name)
+        identity = TaxpayerIdentityFacts(
+            legal_name=registered or None,
+            given_name=None,
+            surnames=None,
+            full_name=registered or None,
+        )
+
+    if identity.full_name is None:
+        return None
+    return PresenterIdentity(tax_id=tax_id, full_name=identity.full_name), identity
+
+
+def _resolve_profile_export_values(
+    bindings: Sequence[DataBindingDefinition],
+    *,
+    bucket_id: str,
+    profile_record: object | None,
+    schema: ProfileSchemaDefinition | None,
+) -> dict[str, UserProfileFactValue]:
+    """Body of :func:`resolve_profile_export_values`; see its contract."""
     if not bindings:
         # A revision declaring no export-addressed profile binding has nothing
         # to resolve, so there is no reason to open the bucket and decrypt a
