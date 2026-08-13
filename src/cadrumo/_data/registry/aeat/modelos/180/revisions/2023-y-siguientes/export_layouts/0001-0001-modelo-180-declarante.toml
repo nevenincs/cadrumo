@@ -56,10 +56,18 @@ offset = 9
 length = 9
 kind = "header"
 producer_key = "presenter.tax_id"
+# A NIF is a fixed-width alphanumeric identifier that always exactly
+# fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
+# never actually pads a present value here, but its parse-side _unpad
+# strips leading "0" characters from a low-numbered individual DNI
+# (e.g. "00012345Z" -> "12345Z"), corrupting a real identifier. padding
+# none + justification none renders identically for every full-width
+# value (proven by direct render comparison) and its parse side only
+# strips trailing spaces, never real digits.
 data_type = "text"
 required = true
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2023"]

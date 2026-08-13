@@ -17,7 +17,7 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from decimal import Decimal
 from typing import Any
 
@@ -32,6 +32,7 @@ from ....application.storage.calc_sheets import (
     evidence_table,
     guide_stamps,
 )
+from ....core.decimal import coerce_decimal
 
 #: Matches the single-cell anchor of a ``values.batchUpdate`` entry range:
 #: ``'Tab Name'!B4``. Every builder in this module emits an anchor plus a
@@ -140,19 +141,15 @@ def _build_guide_value_data(plan: SheetExportPlan) -> list[dict[str, Any]]:
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets values.batchUpdate payload entries.
-def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[str]:
-    """Return every qualified A1 address a ``values.batchUpdate`` payload writes.
+def _walk_payload_entries(data: Sequence[Mapping[str, Any]]) -> Iterator[tuple[str, object]]:
+    """Walk a ``values.batchUpdate`` payload, yielding every ``(qualified_address, value)`` pair it writes.
 
     Each entry in ``data`` is an anchor range plus a values block, so the
     written extent is the anchor offset by that block's own shape: row ``r``
     of the block lands on ``anchor_row + r``, column ``c`` on
-    ``anchor_column + c``.
-
-    This is deliberately derived from the PAYLOAD rather than re-walked from
-    the plan. Re-deriving the extent from the plan would be a second
-    implementation of the layout the builders above already encode, and the
-    two would drift — the stale-cell set would then name cells the write
-    actually covered, and clearing them would blank live content.
+    ``anchor_column + c``. :func:`payload_written_addresses` and
+    :func:`written_cell_values` both derive from this one walk so the address
+    set and the value map can never drift against each other.
 
     Raises:
         ValueError: When an entry's range is not a single-cell anchor. The
@@ -162,7 +159,6 @@ def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[st
             under-report the written set, which is the direction that
             destroys data.
     """
-    written: set[str] = set()
     for entry in data:
         raw_range = str(entry.get("range", ""))
         match = _ANCHOR_PATTERN.match(raw_range)
@@ -173,14 +169,44 @@ def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[st
         anchor_row = int(match.group("row"))
         anchor_column = column_letters_to_index(match.group("letters"))
         for row_offset, row_values in enumerate(entry.get("values", []) or []):
-            for column_offset, _cell in enumerate(row_values):
+            for column_offset, cell in enumerate(row_values):
                 address = SheetCellAddress.at(
                     tab,
                     anchor_row + row_offset,
                     anchor_column + column_offset,
                 )
-                written.add(address.qualified())
-    return frozenset(written)
+                yield address.qualified(), cell
+
+
+def payload_written_addresses(data: Sequence[Mapping[str, Any]]) -> frozenset[str]:
+    """Return every qualified A1 address a ``values.batchUpdate`` payload writes.
+
+    This is deliberately derived from the PAYLOAD rather than re-walked from
+    the plan. Re-deriving the extent from the plan would be a second
+    implementation of the layout the builders above already encode, and the
+    two would drift — the stale-cell set would then name cells the write
+    actually covered, and clearing them would blank live content.
+
+    Raises:
+        ValueError: See :func:`_walk_payload_entries`.
+    """
+    return frozenset(address for address, _ in _walk_payload_entries(data))
+
+
+def written_cell_values(data: Sequence[Mapping[str, Any]]) -> dict[str, object]:
+    """Return every qualified address a payload writes, mapped to its target value.
+
+    Companion to :func:`payload_written_addresses`, sharing the same walk so
+    the address set and the value map cannot drift against each other. Values
+    are the entry's raw cell content — the same shape :func:`_coerce_cell_value`
+    already produced for a real write — never re-derived from the plan. This is
+    what an export preview diffs against a read-back of current content to
+    answer "would this cell's value change".
+
+    Raises:
+        ValueError: See :func:`_walk_payload_entries`.
+    """
+    return dict(_walk_payload_entries(data))
 
 
 def stale_addresses(*, occupied: frozenset[str], written: frozenset[str]) -> tuple[str, ...]:
@@ -195,3 +221,43 @@ def stale_addresses(*, occupied: frozenset[str], written: frozenset[str]) -> tup
     Sorted so the emitted request is deterministic and diffable.
     """
     return tuple(sorted(occupied - written))
+
+
+def changed_cell_addresses(
+    *,
+    target: Mapping[str, object],
+    current: Mapping[str, object],
+) -> tuple[str, ...]:
+    """Return the addresses in ``target`` whose value would actually change.
+
+    ``target`` is :func:`written_cell_values` for the non-formula value
+    payload; ``current`` is a read-back of the same addresses' present
+    content. An address absent from ``current`` reads as blank, matching how
+    a value cell's coerced blank (``""``) compares against nothing having been
+    read there before. Both sides are normalised through
+    :func:`~core.decimal.coerce_decimal` where possible so a Decimal written as
+    fixed-point text (``"1234.50"``) is compared against the number Sheets
+    already stores (``1234.5``) rather than failing every numeric cell on
+    string shape alone.
+
+    Sorted so the result is deterministic and diffable, matching
+    :func:`stale_addresses`.
+    """
+    return tuple(
+        sorted(address for address, value in target.items() if not _cell_values_match(current.get(address), value)),
+    )
+
+
+def _cell_values_match(current: object, target: object) -> bool:
+    """Whether a current read-back value already equals a payload's target value."""
+    if current is None:
+        # Nothing was read at this address: it matches only a blank target,
+        # the coerced form of a ``None`` source value.
+        return target == ""
+    if isinstance(current, bool) or isinstance(target, bool):
+        return current == target
+    target_decimal = coerce_decimal(target) if isinstance(target, str) else None
+    current_decimal = coerce_decimal(current) if isinstance(current, (str, int, float, Decimal)) else None
+    if target_decimal is not None and current_decimal is not None:
+        return target_decimal == current_decimal
+    return str(current) == str(target)

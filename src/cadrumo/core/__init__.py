@@ -415,6 +415,7 @@ if TYPE_CHECKING:
         FOREIGN_ASSET_CLASS_OBLIGATION_GROUP,
         MODELO_720_FOREIGN_ASSET_CLASS_CODES,
         ForeignAssetObligationGroup,
+        M720AssetClassCode,
         foreign_asset_obligation_group,
     )
     from ._fsync import fsync_parent_dir
@@ -581,6 +582,7 @@ __all__: list[str] = [
     "M303RegimenSimplificadoFactProjectionRef",
     "M303RegimenSimplificadoModuleProjectionRef",
     "M303RegimenSimplificadoModuleValue",
+    "M720AssetClassCode",
     "ManualCorpusTextSidecar",
     "MetodoValoracion",
     "MissingOptionalExtraError",
@@ -785,6 +787,7 @@ def __getattr__(name: str) -> object:
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
         "ForeignAssetObligationGroup",
+        "M720AssetClassCode",
         "foreign_asset_obligation_group",
     ):
         from . import _foreign_asset_obligation

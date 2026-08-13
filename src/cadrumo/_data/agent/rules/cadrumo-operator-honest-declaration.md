@@ -17,7 +17,7 @@ findings. Treat the zero as a question to resolve, not a result to celebrate.
 ## Surface the advisory; do not bury it
 
 The verify gate surfaces an advisory for exactly this shape when it is wired for
-the modelo in question. Relay that advisory verbatim, with its `suggestion`, and
+the modelo in question. Relay that advisory verbatim, with its resolved `action`, and
 ask the taxpayer to confirm the zero is legitimate (a genuine loss, full BIN
 compensation, a stated exemption) before any export or file step runs. Where no
 advisory fires but the shape matches (positive input, zero dependent value, no

@@ -28,6 +28,7 @@ from pydantic import BaseModel, Field
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, M210PayerMode, Modelo, Period, validated_casilla_id
 from ...core.i18n import tr
+from ...core.identity import TransactionId
 from ...domain.calculations.registry import ModeloRevision
 from ...domain.transactions import (
     BusinessClassification,
@@ -76,7 +77,7 @@ class IrnrIncomeLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     reason: IrnrIncomeLedgerAggregationIssueReason
     detail: _IssueDetail
     rejected_source_jurisdiction: str | None = None
@@ -87,7 +88,7 @@ class IrnrIncomeObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     target_casilla_id: CasillaId
     official_tipo_renta_code: str = Field(min_length=2, max_length=2)
     gross_income_amount: Decimal = Field(ge=Decimal("0"))

@@ -184,6 +184,17 @@ _CASILLA_01 = validated_casilla_id("01", surface="test_grouping")
 _CASILLA_02 = validated_casilla_id("02", surface="test_grouping")
 
 
+def _tx(suffix: str) -> str:
+    """A real hex-64 shape ending in ``suffix``, sorting exactly as the single
+    trailing hex character does -- ``RentaIncomeObservation.transaction_id``
+    is typed :data:`~core.identity.TransactionId`, so a short placeholder
+    like the prior ``"tx-1"`` / ``"tx-a"`` literals no longer validates;
+    padding to 64 characters keeps the sort-order fixtures below meaningful
+    under the real shape.
+    """
+    return suffix.rjust(64, "0")
+
+
 def _income(transaction_id: str, casilla: str, gross: str, base: str | None = None) -> RentaIncomeObservation:
     return RentaIncomeObservation(
         transaction_id=transaction_id,
@@ -202,9 +213,9 @@ def _gross(observation: RentaIncomeObservation) -> Decimal:
 def test_fold_sums_each_observation_into_its_own_casilla() -> None:
     aggregation = fold_casilla_observations(
         (
-            _income("tx-1", _CASILLA_01, "100.00"),
-            _income("tx-2", _CASILLA_01, "50.00"),
-            _income("tx-3", _CASILLA_02, "7.00"),
+            _income(_tx("1"), _CASILLA_01, "100.00"),
+            _income(_tx("2"), _CASILLA_01, "50.00"),
+            _income(_tx("3"), _CASILLA_02, "7.00"),
         ),
         modelo=Modelo.M130.value,
         period=_PERIOD,
@@ -219,9 +230,9 @@ def test_fold_sums_each_observation_into_its_own_casilla() -> None:
 def test_fold_emits_one_provenance_row_per_casilla_in_sorted_order() -> None:
     aggregation = fold_casilla_observations(
         (
-            _income("tx-1", _CASILLA_02, "7.00"),
-            _income("tx-2", _CASILLA_01, "100.00"),
-            _income("tx-3", _CASILLA_01, "50.00"),
+            _income(_tx("1"), _CASILLA_02, "7.00"),
+            _income(_tx("2"), _CASILLA_01, "100.00"),
+            _income(_tx("3"), _CASILLA_01, "50.00"),
         ),
         modelo=Modelo.M130.value,
         period=_PERIOD,
@@ -234,16 +245,16 @@ def test_fold_emits_one_provenance_row_per_casilla_in_sorted_order() -> None:
 def test_fold_sorts_contributing_transaction_ids_within_a_row() -> None:
     aggregation = fold_casilla_observations(
         (
-            _income("tx-c", _CASILLA_01, "1.00"),
-            _income("tx-a", _CASILLA_01, "1.00"),
-            _income("tx-b", _CASILLA_01, "1.00"),
+            _income(_tx("c"), _CASILLA_01, "1.00"),
+            _income(_tx("a"), _CASILLA_01, "1.00"),
+            _income(_tx("b"), _CASILLA_01, "1.00"),
         ),
         modelo=Modelo.M130.value,
         period=_PERIOD,
         amount_fn=_gross,
     )
 
-    assert tuple(aggregation.provenance[0].transaction_ids) == ("tx-a", "tx-b", "tx-c")
+    assert tuple(aggregation.provenance[0].transaction_ids) == (_tx("a"), _tx("b"), _tx("c"))
 
 
 def test_fold_provenance_subtotals_reconcile_with_the_casilla_totals() -> None:
@@ -255,9 +266,9 @@ def test_fold_provenance_subtotals_reconcile_with_the_casilla_totals() -> None:
     """
     aggregation = fold_casilla_observations(
         (
-            _income("tx-1", _CASILLA_01, "100.00"),
-            _income("tx-2", _CASILLA_01, "50.00"),
-            _income("tx-3", _CASILLA_02, "7.00"),
+            _income(_tx("1"), _CASILLA_01, "100.00"),
+            _income(_tx("2"), _CASILLA_01, "50.00"),
+            _income(_tx("3"), _CASILLA_02, "7.00"),
         ),
         modelo=Modelo.M130.value,
         period=_PERIOD,
@@ -277,7 +288,7 @@ def test_fold_leaves_category_id_unset_because_it_groups_on_the_casilla_axis_alo
     keeps that distinction observable.
     """
     aggregation = fold_casilla_observations(
-        (_income("tx-1", _CASILLA_01, "100.00"),),
+        (_income(_tx("1"), _CASILLA_01, "100.00"),),
         modelo=Modelo.M130.value,
         period=_PERIOD,
         amount_fn=_gross,
@@ -294,8 +305,8 @@ def test_fold_routes_every_amount_through_the_callers_accessor() -> None:
     ``amount_fn`` and read a fixed attribute would fail here.
     """
     observations = (
-        _income("tx-1", _CASILLA_01, "121.00", base="100.00"),
-        _income("tx-2", _CASILLA_01, "60.50", base="50.00"),
+        _income(_tx("1"), _CASILLA_01, "121.00", base="100.00"),
+        _income(_tx("2"), _CASILLA_01, "60.50", base="50.00"),
     )
 
     gross_total = fold_casilla_observations(

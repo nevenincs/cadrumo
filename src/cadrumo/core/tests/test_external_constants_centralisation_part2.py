@@ -23,6 +23,7 @@ from __future__ import annotations
 import ast
 import importlib
 import inspect
+import re
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
@@ -579,3 +580,94 @@ def test_no_bare_decimal_literals_in_consumers(source_tree_ast: Mapping[Path, as
         )
 
         assert offenders == [], message + ":\n" + "\n".join(offenders)
+
+
+_EXTERNAL_CONSTANTS_RELATIVE_PATH = "src/cadrumo/core/external_constants.py"
+_DOC_COMMENT_PREFIX = "#:"
+_CATALOGUE_ID_RE = re.compile(r"``([a-z0-9][a-z0-9-]*:[a-z0-9][a-z0-9.\-]*)``")
+_QUOTED_PROVISION_RE = re.compile(r"\u201c([^\u201d]+)\u201d|\"([^\"]+)\"")
+
+#: Spanish cardinal for each plazo length a notification window could plausibly
+#: carry. The grounding test looks the CONSTANT's value up here and demands the
+#: corpus say that word, so changing the constant without the law changing reds.
+_SPANISH_CARDINAL_BY_DIAS: Mapping[int, str] = {
+    5: "cinco",
+    10: "diez",
+    15: "quince",
+    20: "veinte",
+    30: "treinta",
+}
+
+
+def _doc_comment_above(constant_name: str) -> str:
+    """Return the ``#:`` doc-comment block immediately above ``constant_name``.
+
+    Doc comments are not AST nodes, so the block is recovered from the source
+    text: walk up from the assignment line collecting contiguous ``#:`` lines.
+    """
+    lines = repo_path(_EXTERNAL_CONSTANTS_RELATIVE_PATH).read_text(encoding="utf-8").splitlines()
+    index = next(
+        (position for position, line in enumerate(lines) if line.startswith(f"{constant_name}:")),
+        None,
+    )
+    assert index is not None, f"{constant_name} not found in {_EXTERNAL_CONSTANTS_RELATIVE_PATH}"
+    block: list[str] = []
+    cursor = index - 1
+    while cursor >= 0 and lines[cursor].lstrip().startswith(_DOC_COMMENT_PREFIX):
+        block.append(lines[cursor].lstrip()[len(_DOC_COMMENT_PREFIX) :].strip())
+        cursor -= 1
+    assert block, f"{constant_name} carries no doc comment"
+    return " ".join(reversed(block))
+
+
+def test_dehu_rechazo_tacito_window_resolves_to_the_reviewed_legal_entry() -> None:
+    """The DEHu rechazo-tácito constant's citation resolves against the legal catalogue.
+
+    The constant is a bare ``10`` in source; what makes it a legal value rather
+    than a magic number is the provision its doc comment names. This proves that
+    citation is real end to end: the catalogue entry id resolves, the entry is
+    corpus-backed and passes the same verification registry build applies, the
+    Spanish clause quoted in the doc comment is the entry's own corpus text
+    rather than a restatement, and the corpus states the plazo in the cardinal
+    matching the constant's value. Changing the constant without the law
+    changing fails at the last assertion.
+    """
+    from ...domain.calculations.registry import legal_reference_quotes_corpus, verify_legal_catalogue
+    from ..external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
+    from ..resources import bundled_path, resources
+
+    doc_comment = _doc_comment_above("DEHU_RECHAZO_TACITO_DIAS_NATURALES")
+
+    cited_ids = sorted(set(_CATALOGUE_ID_RE.findall(doc_comment)))
+    assert cited_ids == ["ley-39-2015:art-43.2"], (
+        "the DEHu rechazo-tácito constant must name exactly its legal-catalogue entry "
+        f"in double backticks; found {cited_ids}"
+    )
+    entry_id = cited_ids[0]
+
+    catalogue = resources().modelos.authority.catalogues.legal
+    assert entry_id in catalogue, f"cited legal-catalogue entry {entry_id!r} absent from the registry"
+    reference = catalogue[entry_id]
+    verify_legal_catalogue({entry_id: reference}, source_root=bundled_path())
+
+    assert reference.article == "43.2"
+    assert reference.document_id == "BOE-A-2015-10565"
+
+    quoted = next(
+        (match.group(1) or match.group(2) for match in _QUOTED_PROVISION_RE.finditer(doc_comment)),
+        None,
+    )
+    assert quoted is not None, "the doc comment must quote the provision verbatim"
+    assert legal_reference_quotes_corpus(reference, quoted, source_root=bundled_path()), (
+        f"the clause quoted in the doc comment is not present in {entry_id}'s corpus text: {quoted!r}"
+    )
+
+    cardinal = _SPANISH_CARDINAL_BY_DIAS.get(DEHU_RECHAZO_TACITO_DIAS_NATURALES)
+    assert cardinal is not None, (
+        f"no Spanish cardinal known for a {DEHU_RECHAZO_TACITO_DIAS_NATURALES}-day window; "
+        "extend _SPANISH_CARDINAL_BY_DIAS alongside a corpus that states it"
+    )
+    assert legal_reference_quotes_corpus(reference, f"{cardinal} días naturales", source_root=bundled_path()), (
+        f"{entry_id}'s corpus does not state a {cardinal} días naturales window, so "
+        f"DEHU_RECHAZO_TACITO_DIAS_NATURALES = {DEHU_RECHAZO_TACITO_DIAS_NATURALES} is ungrounded"
+    )

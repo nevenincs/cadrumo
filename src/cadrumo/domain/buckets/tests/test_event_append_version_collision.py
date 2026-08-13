@@ -61,8 +61,16 @@ def test_two_versions_of_one_body_share_a_derived_id() -> None:
 def test_a_colliding_version_is_refused_rather_than_folded_in() -> None:
     catalogue = append_bucket_event(BucketEventHistoryCatalogue(), _event(1))
 
-    with pytest.raises(BucketEventValidationError):
+    with pytest.raises(BucketEventValidationError) as raised:
         append_bucket_event(catalogue, _event(2))
+
+    # Both versions travel as facts, which is what lets a caller see which
+    # revision it would have overwritten without parsing a sentence.
+    error = raised.value
+    assert error.context["recorded_payload_version"] == 1
+    assert error.context["offered_payload_version"] == 2
+    assert error.context["payload_versions_agree"] is False
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
 
 
 def test_the_refused_append_leaves_the_original_revision_intact() -> None:

@@ -19,10 +19,16 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import (
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+    validated_casilla_id,
+)
 from ....core.resources import resources
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva import InvoiceKind
+from ....domain.iva import InvoiceKind, IvaDeductionClassificationProvenance
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
@@ -206,6 +212,25 @@ def _iva_transaction(
             "taxable_base": taxable_base,
             "iva_rate": _IVA_RATE,
             "iva_amount": iva_amount,
+            # The deduction CLASSIFICATION axis, not the attached document. Input
+            # IVA without an exact kind and provenance is dropped by the
+            # aggregation gate before it can reach a casilla, which would leave
+            # the deducible total at zero and make this module measure the wrong
+            # thing. The scenario under test is untouched: no purchase-invoice
+            # evidence record is attached, so the verify gate still has nothing
+            # to resolve and still blocks.
+            "deduction_fact_kind": (
+                IvaDeductionFactKind.DOMESTIC_CURRENT if direction is TransactionDirection.OUTGOING else None
+            ),
+            "deduction_provenance": (
+                IvaDeductionClassificationProvenance(
+                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    source_locator=f"test-invoice:{provider_id}",
+                    evidence_digest="a" * 64,
+                )
+                if direction is TransactionDirection.OUTGOING
+                else None
+            ),
             "classified_at": _T0,
             "classified_by": "manual",
         },

@@ -270,6 +270,16 @@ class GoogleSyncCalcExportResult(OutputSchema):
     the pure :class:`SheetExportPlan` and
     :func:`apply_export_plan`
     materialises it in Google Sheets.
+
+    ``dry_run=True`` projects :class:`CalcSheetsExportPreview`
+    from :func:`preview_export_plan` instead: Drive and Sheets are read but
+    never written. ``folder_id``, ``spreadsheet_id`` and ``spreadsheet_url``
+    are ``None`` only on a preview against a target that does not exist yet —
+    the first export for a modelo, period and year has nothing to look up.
+    ``ranges_to_clear``, ``value_cells_changed`` and ``value_cells_unchanged``
+    are populated on a preview only: a real apply rewrites every cell the plan
+    carries unconditionally rather than diffing against current content, so
+    those fields carry no meaning there.
     """
 
     operation: str = "config.google.sync.calc.export"
@@ -281,13 +291,19 @@ class GoogleSyncCalcExportResult(OutputSchema):
     engine_version: str
     registry_sha: str
     root_folder_id: str
-    folder_id: str
-    spreadsheet_id: str
-    spreadsheet_url: str
+    dry_run: bool = False
+    spreadsheet_exists: bool | None = None
+    folder_id: str | None = None
+    spreadsheet_id: str | None = None
+    spreadsheet_url: str | None = None
     value_cells_written: int
     formula_cells_written: int
     protected_ranges_written: int
     tab_count: int
+    ranges_to_clear: list[str] = []
+    value_cells_changed: int | None = None
+    value_cells_unchanged: int | None = None
+    formula_cells_to_write: int | None = None
 
 
 class GoogleSyncCalcVerifyDivergencePayload(OutputSchema):

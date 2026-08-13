@@ -19,6 +19,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from .....core import M720AssetClassCode
 from .....core.aggregation import RetencionClave
 from .._bindings import (
     AtributionMemberObservation,
@@ -279,7 +280,7 @@ def test_foreign_asset_observation_iso_codes_must_be_uppercase_alphabetic() -> N
     with pytest.raises(ValidationError, match="ISO code must be uppercase alphabetic"):
         Modelo720RowObservation(
             source_id="a1",
-            asset_class_code="C",
+            asset_class_code=M720AssetClassCode.CUENTA,
             country_code="ch",
             currency_code="CHF",
             acquisition_date=date(2024, 1, 1),
@@ -288,7 +289,7 @@ def test_foreign_asset_observation_iso_codes_must_be_uppercase_alphabetic() -> N
     with pytest.raises(ValidationError, match="ISO code must be uppercase alphabetic"):
         Modelo720RowObservation(
             source_id="a1",
-            asset_class_code="C",
+            asset_class_code=M720AssetClassCode.CUENTA,
             country_code="CH",
             currency_code="ch1",
             acquisition_date=date(2024, 1, 1),
@@ -300,7 +301,7 @@ def test_foreign_asset_observation_valuation_must_be_non_negative() -> None:
     with pytest.raises(ValidationError, match="valuation must be non-negative"):
         Modelo720RowObservation(
             source_id="a1",
-            asset_class_code="C",
+            asset_class_code=M720AssetClassCode.CUENTA,
             country_code="CH",
             acquisition_date=date(2024, 1, 1),
             valuation_amount=Decimal("-1"),

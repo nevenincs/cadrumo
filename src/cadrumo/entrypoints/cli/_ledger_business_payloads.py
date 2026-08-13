@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Annotated
 
 from pydantic import AfterValidator, Field
 
+from ...core.identity import TaxIdIdentityToken
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.contribuyente.inventory import INVENTORY_SCHEMA_VERSION, MovementKind, ValuationMethod
 from ._decimal_wire import bounded_decimal_wire_text
@@ -401,13 +402,13 @@ class EvidenceExtractResult(OutputSchema):
     bucket_id: str
     evidence_id: str | None = None
     attachment_id: str | None = None
-    supplier_tax_id: str | None = None
+    supplier_tax_id: TaxIdIdentityToken | None = None
     # Both parties, not just the supplier. A structured record names each side,
     # and which one is the counterparty depends on the direction of the invoice:
     # on one the filer issued it is the customer. Surfacing only the supplier
     # showed the operator their OWN identifier where the counterparty belongs.
     supplier_name: str | None = None
-    customer_tax_id: str | None = None
+    customer_tax_id: TaxIdIdentityToken | None = None
     customer_name: str | None = None
     # The postal code each party's address prints, carried verbatim. The
     # operator sees the printed code, never the territory read off it: the

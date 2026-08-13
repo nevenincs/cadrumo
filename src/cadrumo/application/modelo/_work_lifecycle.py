@@ -45,6 +45,7 @@ from ...core import (
     NoRecoveryOutcome,
     Period,
 )
+from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import RevisionId
@@ -598,7 +599,7 @@ def require_active_work_unit(
 def require_revision_parent_active(
     *,
     work_unit: WorkUnit,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     operation: RevisionParentOperation,
 ) -> WorkUnit:
     """Admit a verify/file revision only while its persisted parent work unit is active."""

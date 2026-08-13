@@ -34,6 +34,7 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, ProrrataRegisterRegime
+from ...core.identity import TransactionId
 from ...core.resources import resources
 from ...domain.categories import CategoryProfile, SpendingCategory
 from ...domain.contribuyente import (
@@ -147,7 +148,7 @@ class RentaLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     purchase_invoice_evidence_id: str | None = Field(default=None, min_length=1, max_length=128)
     category_id: str | None = Field(default=None, min_length=1, max_length=128)
     reason: RentaLedgerAggregationIssueReason

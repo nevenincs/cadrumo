@@ -36,15 +36,20 @@ casilla_id = "iva.repercutido.reducido"
 [[revisions.2023.formulas.expression.args]]
 casilla_id = "iva.repercutido.super-reducido"
 
-# The two RD-ley 4/2024 transitional rungs. The diseño's own printed sum for
-# casilla 27 enumerates their cuota boxes ([155] and [167]) alongside the
-# ordinary tiers, so splitting a transitional row out of its tier carrier and
-# omitting it here would move the cuota off the return entirely.
+# The transitional reducido rung. This ejercicio's own printed sum for casilla
+# [27] enumerates [155] alongside the ordinary tiers, so splitting a
+# transitional row out of its tier carrier and omitting it here would move the
+# cuota off the return entirely.
+#
+# The transitional SUPER-REDUCIDO rung ([165]/[166]/[167]) is deliberately NOT
+# summed here: this ejercicio's diseño de registro carries no such box, and its
+# printed formula for [27] enumerates thirteen operands ending
+# [158] + [18] + [21] + [24] + [26] with no [167] and no [170]. AEAT opens that
+# rung with the 2024 a-partir-de-periodos-09-y-3T design, when RD-ley 4/2024
+# steps the enumerated basic foods from 0 % to 2 %. Summing it here would add an
+# operand this ejercicio's record design has no position to render.
 [[revisions.2023.formulas.expression.args]]
 casilla_id = "iva.repercutido.reducido.transitorio"
-
-[[revisions.2023.formulas.expression.args]]
-casilla_id = "iva.repercutido.super-reducido.transitorio"
 
 [[revisions.2023.formulas.expression.args]]
 casilla_id = "iva.autorepercutido.intracomunitaria"
@@ -64,10 +69,9 @@ casilla_id = "21"
 [[revisions.2023.formulas.expression.args]]
 casilla_id = "24"
 
-# The recargo rungs the aggregate omitted. AEAT's own printed formula for [27]
-# enumerates [158] and [26] in EVERY design this revision spans (2023 and 2025
-# both), and [170] from the 2024-late design onward, so their absence here was a
-# gap rather than a scoping choice.
+# The recargo rungs the aggregate omitted. This ejercicio's printed formula for
+# [27] enumerates [158] and [26], so their absence here was a gap rather than a
+# scoping choice.
 #
 # [158] is the one that costs money today. It is bound, so a super-reducido
 # recargo cuota already reaches that box -- but the box never reached this total,
@@ -77,14 +81,11 @@ casilla_id = "24"
 # defect that [158] is the wrong rung for that population (AEAT mandates it as
 # 1,75 % tabaco; the 0,5 % box is [170]).
 #
-# [170] contributes nothing until something populates it, and is added now so the
-# total stays correct on both sides of that box move rather than needing a second
-# edit at the moment the cuota relocates.
+# [170], the transitional recargo cuota, is NOT summed here: this ejercicio's
+# design carries no such box. It enters the aggregate at the 2024
+# a-partir-de-periodos-09-y-3T design, where AEAT first prints it inside [27].
 [[revisions.2023.formulas.expression.args]]
 casilla_id = "158"
-
-[[revisions.2023.formulas.expression.args]]
-casilla_id = "170"
 
 [[revisions.2023.formulas.expression.args]]
 casilla_id = "26"

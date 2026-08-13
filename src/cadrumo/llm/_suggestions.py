@@ -70,6 +70,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from ..application.ledger import ManualLedgerTransactionResult
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import FieldOrigin
+from ..core.identity import TaxIdIdentityToken
 from ..domain.categories import SpendingCategory
 from ..domain.iva import IvaCategory
 from ..domain.transactions import BusinessClassification
@@ -261,8 +262,8 @@ class ExtractionPayload(BaseModel):
 
     model_config = _INTERCHANGE_CONFIG
 
-    supplier_tax_id: str | None = None
-    customer_tax_id: str | None = None
+    supplier_tax_id: TaxIdIdentityToken | None = None
+    customer_tax_id: TaxIdIdentityToken | None = None
     invoice_number: str | None = None
     invoice_date: str | None = None
     currency: str | None = None

@@ -279,7 +279,7 @@ def test_a_derived_marker_without_a_figure_is_refused() -> None:
     with pytest.raises(ValueError, match="claims a derived figure"):
         RentaIncomeObservation.model_validate(
             {
-                "transaction_id": "tx-1",
+                "transaction_id": "720e1f85a69c11123bde21f70e4d24351509111d2fead5ee3c22ec243ee65931",
                 "target_casilla_id": "01",
                 "gross_amount": Decimal("1700.00"),
                 "taxable_base_amount": Decimal("2000.00"),
@@ -296,7 +296,7 @@ def test_a_refusal_carrying_the_figure_it_refused_is_rejected() -> None:
     with pytest.raises(ValueError, match="must not carry the figure it refused"):
         RentaIncomeObservation.model_validate(
             {
-                "transaction_id": "tx-2",
+                "transaction_id": "e7069cd081825298f943214257e7e4fe030860d44c74a04ca5ad380a498ff18d",
                 "target_casilla_id": "01",
                 "gross_amount": Decimal("1700.00"),
                 "taxable_base_amount": Decimal("2000.00"),

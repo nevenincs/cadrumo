@@ -2,7 +2,14 @@
 id = "perc.porcentaje-retencion"
 number = "93-96"
 section = ["perceptor", "renta"]
-data_type = "text"
+# "decimal", not "ratio": this codebase's "ratio" data_type carries an
+# established 0-1 fractional convention elsewhere in the registry (e.g. a
+# 50% reduction parameter stores 0.50), disambiguated for parameters by a
+# separate "unit" field casillas do not carry. AEAT's own diseño encodes
+# this field as a percentage NUMBER split into entero+decimal sub-parts
+# (93-94 / 95-96), i.e. 15.00 for 15%, not 0.15 -- "ratio" would silently
+# invite the wrong convention here with no field to catch it.
+data_type = "decimal"
 semantic_role = "porcentaje_retencion"
 continuidad_id = "porcentaje-retencion"
 required = true

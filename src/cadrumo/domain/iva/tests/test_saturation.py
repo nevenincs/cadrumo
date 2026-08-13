@@ -74,6 +74,7 @@ _NON_DERIVABLE_CATEGORIES = [
     IvaCategory.IMPORT_THIRD_COUNTRY,
     IvaCategory.RECARGO_EQUIVALENCIA,
     IvaCategory.REGIMEN_SIMPLIFICADO,
+    IvaCategory.REAGP_COMPENSATION,
     IvaCategory.OPERACION_NO_SUJETA,
     IvaCategory.ERRONEOUS_INVOICE,
     IvaCategory.UNKNOWN,
@@ -99,7 +100,7 @@ def test_eu_iva_non_derivable_reasons_are_advisory_not_filing_certainty() -> Non
         ),
         (
             IvaCategory.INTRA_COMMUNITY_SUPPLY,
-            ("potential intra-community supply", "verify the customer VAT ID", "reporting evidence"),
+            ("potential intra-community supply", "verify the customer IVA ID", "reporting evidence"),
         ),
         (
             IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,

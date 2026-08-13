@@ -265,16 +265,25 @@ def build_overview_explain(
             # unknown identifier. The coverage reconciliation advises it as
             # ``registry_unmodeled``; explain says the same in prose.
             raise OverviewExplainError(
-                f"modelo {modelo_id!r} ({unmodeled_description}) is a recognized AEAT "
-                "obligation the application does not model yet: it cannot be positively "
-                "scoped here (coverage: registry_unmodeled). Investigate whether it "
-                "applies and file it through AEAT.",
+                translated_message="errors.fail.overview_explain",
+                context={
+                    "modelo": str(modelo_id),
+                    "unmodeled_description": unmodeled_description,
+                    "coverage": "registry_unmodeled",
+                    "recognized_aeat_obligation": True,
+                    "registry_models_it": False,
+                },
             )
         # Refuse operator typos before calling the domain applicability
         # model: the domain schema validates known ModeloId shape and
         # must not leak a Pydantic error through the overview boundary.
         raise OverviewExplainError(
-            f"could not evaluate modelo {modelo_id!r} for year {resolved_year}: modelo is not registered",
+            translated_message="errors.fail.overview_explain",
+            context={
+                "modelo": str(modelo_id),
+                "filing_year": str(resolved_year),
+                "modelo_registered": False,
+            },
         )
 
     applicability = derive_modelo_applicability(profile, modelo_id)
@@ -338,7 +347,12 @@ def _scheduling_rationale(
         return None
     except DeadlineValidationError as exc:
         raise OverviewExplainError(
-            f"could not evaluate modelo {modelo!r} for year {year}: {exc}",
+            translated_message="errors.fail.overview_explain",
+            context={
+                "modelo": str(modelo),
+                "filing_year": str(year),
+                "evaluation_error_type": type(exc).__name__,
+            },
         ) from exc
 
 

@@ -270,6 +270,18 @@ def test_modelo_180_115_fold_in_fires_on_live_calculate(secure_objects: SecureOb
     # (0) would fail the assertion above.
     assert expected[_M115_BASE_CASILLA] > Decimal("0")
 
+    # The M180 dep-115 dependency classification declares this fold-in a
+    # direct_annual_settlement figure, not a fact to reconcile against. That real,
+    # non-default treatment must reach the PERSISTED revision's source_provenance
+    # trace on the live calculate path, end to end from the resolver to the
+    # encrypted-catalogue-bound domain record — not merely at the in-memory
+    # resolution the resolver-level tests already cover.
+    relation_prefill_provenance = [
+        item for item in result.revision.source_provenance if item.source_kind == "relation_prefill"
+    ]
+    assert relation_prefill_provenance, "the live calculate revision must persist relation_prefill provenance rows"
+    assert all(item.dependency_treatment == "direct_annual_settlement" for item in relation_prefill_provenance)
+
 
 def test_relation_target_collision_refused_by_mesh_guard(secure_objects: SecureObjectRepository) -> None:
     """A second resolver claiming a relation-materialised target binding is refused loudly.

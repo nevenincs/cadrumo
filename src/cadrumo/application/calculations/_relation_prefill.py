@@ -77,6 +77,7 @@ from ...domain.calculations.registry import (
     RegistryValidationError,
     RelationDefinition,
     RelationId,
+    RevisionId,
     SourceRefId,
     is_iva_wallet_owned_relation_target,
     materialize_relation_binding_values,
@@ -928,7 +929,7 @@ def _unresolved_bound_relation_ids(
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     taxpayer_filed_source_modelos: frozenset[ModeloId],
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
 ) -> frozenset[RelationId]:
     """Keep only actionable, non-wallet unresolved bound carries."""
     return frozenset(
@@ -952,7 +953,7 @@ def _is_actionable_unresolved_bound_relation(
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     taxpayer_filed_source_modelos: frozenset[ModeloId],
     modelo_id: str,
-    revision_id: str,
+    revision_id: RevisionId,
 ) -> bool:
     if relation_id in consumption.formula_fed or relation_id not in requirements_by_relation:
         return False
@@ -975,33 +976,67 @@ def _unresolved_relation_diagnostics(
     requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
     resolver_id: str,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Advise once per ABSENT SOURCE FILING, not once per relation reading it.
+
+    Measured on Modelo 190 for 2025 with an empty store and a long-running
+    filer: ten annual-summary relations each read a different fact off the
+    SAME absent Modelo 111 return, so the un-grouped form produced ten lines
+    naming one root cause. Grouped by ``(source_modelo, filing_year,
+    periods)`` — deliberately NOT including ``source_casilla_ids``, since the
+    casilla read is exactly the axis that varies across the grouped
+    relations and enumerating it is the "affected facts" the grouped
+    advisory names. A relation with no requirement at all (an orphan the
+    scoped requirement set never produced) has no source coordinate to group
+    by and stays one diagnostic per relation — there is no shared cause to
+    fold it into.
+    """
     diagnostics: list[CalculationSourceDiagnostic] = []
+    orphaned_ids: list[RelationId] = []
+    grouped: dict[tuple[str, int, tuple[str, ...]], list[tuple[RelationId, RegistryFoldRequirement]]] = {}
     for relation_id in sorted(unresolved_relation_ids):
         requirement = requirements_by_relation.get(relation_id)
         if requirement is None:
-            diagnostics.append(
-                CalculationSourceDiagnostic(
-                    reason="source_issue",
-                    source_kind="relation_prefill",
-                    resolver_id=resolver_id,
-                    relation_id=relation_id,
-                    message=f"relation {relation_id!r} has no resolved source filing",
-                ),
-            )
+            orphaned_ids.append(relation_id)
             continue
-        period_text = ",".join(requirement.periods)
-        binding_id = requirement.target_bindings[0] if len(requirement.target_bindings) == 1 else None
+        key = (requirement.source_modelo, requirement.filing_year, requirement.periods)
+        grouped.setdefault(key, []).append((relation_id, requirement))
+
+    for relation_id in orphaned_ids:
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="relation_prefill",
+                resolver_id=resolver_id,
+                relation_id=relation_id,
+                message=f"relation {relation_id!r} has no resolved source filing",
+            ),
+        )
+
+    for (source_modelo, filing_year, periods), members in sorted(grouped.items()):
+        member_relation_ids = tuple(sorted(relation_id for relation_id, _ in members))
+        binding_ids = {
+            requirement.target_bindings[0] for _, requirement in members if len(requirement.target_bindings) == 1
+        }
+        binding_id = next(iter(binding_ids)) if len(binding_ids) == 1 else None
+        period_text = ",".join(periods)
+        # Facts (the casilla ids the group reads) come first, so a long group's
+        # elision cuts into the trailing relation-id listing rather than the
+        # facts themselves; `relation_ids` above is the full, un-elided,
+        # machine-readable membership regardless of what the prose keeps.
+        facts_text = ", ".join(sorted({str(requirement.source_casilla_ids[0]) for _, requirement in members}))
+        relation_ids_text = ", ".join(member_relation_ids)
         diagnostics.append(
             CalculationSourceDiagnostic(
                 reason="source_issue",
                 source_kind="relation_prefill",
                 resolver_id=resolver_id,
                 binding_id=binding_id,
-                relation_id=relation_id,
+                relation_id=member_relation_ids[0],
+                relation_ids=member_relation_ids,
                 message=(
-                    f"relation {relation_id!r} requires modelo {requirement.source_modelo} "
-                    f"{requirement.filing_year} periods {period_text} output {requirement.source_casilla_ids[0]}; "
-                    "the source filing is missing or incomplete"
+                    f"modelo {source_modelo} {filing_year} periods {period_text} is missing or "
+                    f"incomplete in the local store; {len(members)} relation(s) read it, needing: "
+                    f"{facts_text}. Affected relations: {relation_ids_text}"
                 ),
             ),
         )
@@ -1154,6 +1189,7 @@ class RelationPrefillSourceResolver:
                     source_casilla_ids=item.source_casilla_ids,
                     legal_refs=item.legal_refs,
                     source_refs=item.source_refs,
+                    dependency_treatment=item.dependency_treatment,
                 )
                 for item in resolved
             ),

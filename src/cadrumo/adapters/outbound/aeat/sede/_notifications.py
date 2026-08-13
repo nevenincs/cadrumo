@@ -21,7 +21,8 @@ tells AEAT "this was read".
 
 Public surface: :class:`RemoteNotification`, :class:`NotificationsSnapshot`,
 :func:`parse_notifications_query`, :func:`parse_notifications_summary`,
-:func:`fetch_notifications_query`, :func:`fetch_notifications_summary`.
+:func:`fetch_notifications_query`, :func:`fetch_notifications_summary`,
+:func:`notifications_query_url`.
 """
 
 from __future__ import annotations
@@ -30,7 +31,7 @@ import re
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Final, Literal
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlencode, urlsplit, urlunsplit
 
 from bs4 import Tag
 from pydantic import AnyHttpUrl, BaseModel, Field
@@ -39,6 +40,7 @@ from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.i18n import tr
+from .....core.identity import AeatCertificadoId
 from .....core.logging import get_logger
 from .....core.parsing import parse_date
 from .....core.time import now
@@ -118,8 +120,8 @@ class RemoteNotification(BaseModel):
     delivered.
 
     Attributes:
-        certificado_id: ``Nº de certificado`` — 13-digit (or longer)
-            AEAT identifier.
+        certificado_id: ``Nº de certificado`` — AEAT's per-notification
+            identifier, typed :data:`~core.identity.AeatCertificadoId`.
         tipo: Row class — ``"notificacion"`` | ``"comunicacion"`` |
             ``"pendiente"`` | ``"unknown"``.
         concepto: Free-text concepto / subject line (may be empty for
@@ -142,7 +144,7 @@ class RemoteNotification(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    certificado_id: str = Field(min_length=8, max_length=32)
+    certificado_id: AeatCertificadoId
     tipo: Literal["notificacion", "comunicacion", "pendiente", "unknown"]
     concepto: str = Field(default="", max_length=256)
     titular_nif: str = Field(min_length=4, max_length=32)
@@ -488,23 +490,62 @@ async def fetch_notifications_summary(
     )
 
 
+def notifications_query_url(*, today: date, lookback_years: int | None = None) -> str:
+    """Return the query URL carrying an explicit, widened date window.
+
+    AEAT's search defaults ``fecha desde`` to one month before today, so a bare
+    request answers "what arrived this month" rather than "what is on the
+    register". Reading it that way reported a near-empty inbox for an account
+    holding older notifications -- the surface was answering the question it was
+    asked. The window is therefore stated rather than inherited.
+
+    The filters are sent as GET parameters. The form declares ``method="post"``,
+    but the servlet honours the same fields on a query string, so the reader
+    stays a pure navigation and needs no read-POST allowance on its guard
+    policy.
+
+    Args:
+        today: The upper bound of the window, injected rather than read from the
+            clock so the URL is a pure function of its inputs.
+        lookback_years: Override for the configured lookback.
+
+    Returns:
+        The absolute query URL with its date window and both filters widened.
+    """
+    config = Settings.external_constants().aeat.notifications_query
+    years = config.lookback_years if lookback_years is None else lookback_years
+    # ``date.replace`` is wrong here: it raises on 29 February. Going through the
+    # ordinal-free construction keeps a leap-day "today" on a real date.
+    desde = date(today.year - years, today.month, 1)
+    params = {
+        "F_FECHA_DESDE": desde.strftime(config.date_format),
+        "F_FECHA_HASTA": today.strftime(config.date_format),
+        "F_TIPO_CONSULTA": config.tipo_consulta_all,
+        "F_LEIDA": config.leida_all,
+    }
+    separator = "&" if "?" in _NOTIF_QUERY_URL else "?"
+    return f"{_NOTIF_QUERY_URL}{separator}{urlencode(params)}"
+
+
 async def fetch_notifications_query(
     session: AeatSession,
     *,
     settings: Settings | None = None,
+    today: date | None = None,
 ) -> NotificationsSnapshot:
-    """Live-fetch ``SvInteresadosQuery`` (the full table) using Cl@ve.
+    """Live-fetch ``SvInteresadosQuery`` over a widened date window using Cl@ve.
 
     Args:
         session: An authenticated :class:`AeatSession`.
         settings: Optional :class:`core.config.Settings` override.
+        today: Upper bound of the search window; defaults to the current date.
 
     Returns:
         A :class:`NotificationsSnapshot` parsed from the live HTML.
     """
     return await _fetch_and_parse(
         session,
-        url=_NOTIF_QUERY_URL,
+        url=notifications_query_url(today=today or now().date()),
         parser=parse_notifications_query,
         settings=settings,
     )
@@ -657,6 +698,7 @@ __all__ = [
     "RemoteNotification",
     "fetch_notifications_query",
     "fetch_notifications_summary",
+    "notifications_query_url",
     "parse_notifications_query",
     "parse_notifications_summary",
 ]

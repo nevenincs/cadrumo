@@ -14,9 +14,16 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import (
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+    validated_casilla_id,
+)
 from ....core.errors import resolve_error_message
 from ....domain.buckets import BucketEventType
+from ....domain.iva import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation import IvaCompensationDecisionReason, IvaCompensationReconciliationDecision
 from ....domain.modelos import (
     CalculationRevision,
@@ -145,6 +152,21 @@ def _transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
+            # Input IVA carries exact deduction authority; without it the
+            # aggregation gate drops the row as MISSING_DEDUCTION_CLASSIFICATION
+            # and the deducible casillas silently stay at zero.
+            "deduction_fact_kind": (
+                IvaDeductionFactKind.DOMESTIC_CURRENT if direction is TransactionDirection.OUTGOING else None
+            ),
+            "deduction_provenance": (
+                IvaDeductionClassificationProvenance(
+                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    source_locator=f"test-invoice:{provider_id}",
+                    evidence_digest="a" * 64,
+                )
+                if direction is TransactionDirection.OUTGOING
+                else None
+            ),
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },

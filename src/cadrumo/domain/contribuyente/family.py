@@ -29,6 +29,7 @@ from ...core.external_constants import (
     MINIMO_MENOR_TRES_MAX_AGE,
     NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
 )
+from ...core.identity import SubjectTaxId
 from ...core.parsing import parse_iso8601_date
 from ...core.time import today_madrid
 from ._errors import ProfileValidationError
@@ -1615,7 +1616,7 @@ class _RentaPersonProfileBase(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    tax_id: str | None = None
+    tax_id: SubjectTaxId | None = None
     display_name: str | None = None
     birth_date: date
     disability_grade: str | None = None

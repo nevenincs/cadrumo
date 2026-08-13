@@ -259,6 +259,15 @@ def _create_profile() -> None:
             "natural_person",
             "--irpf-income-categories",
             "actividad_economica",
+            # Required of every `--quiet` creation since the territorial regime
+            # became an explicit answer: a quiet run cannot fall back to the
+            # guided prompt, so the scope has to be stated. Common regime is
+            # the non-foral default and keeps this fixture's subject the fact
+            # rows rather than the territory.
+            "--tax-residence-jurisdiction-scope",
+            "common_regime",
+            "--iva-regime",
+            "GENERAL",
             "--tax-id",
             "12345678Z",
             "--name",

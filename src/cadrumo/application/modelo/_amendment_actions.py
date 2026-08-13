@@ -45,6 +45,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import CasillaId, Modelo
+from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import CasillaObservation
@@ -345,7 +346,7 @@ def amend_modelo_revision[CasillaKey](
 
 def _build_amendment_draft_revision(
     *,
-    new_revision_id: str,
+    new_revision_id: CalculationRevisionId,
     baseline: ModeloRecord,
     baseline_revision: CalculationRevision,
     corrected_values: dict[CasillaId, Decimal],
@@ -380,7 +381,7 @@ def _build_amendment_filing_updates(
     *,
     baseline: ModeloRecord,
     filing_catalogue: ModeloRecordCatalogue,
-    new_revision_id: str,
+    new_revision_id: CalculationRevisionId,
     actor: str,
     now: datetime,
 ) -> tuple[str, ModeloRecord, ModeloRecordCatalogue]:
@@ -445,7 +446,7 @@ def _build_amendment_filing_record(
     *,
     filing_record_id: str,
     baseline: ModeloRecord,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     filed_at: datetime,
     filed_by: str,
 ) -> ModeloRecord:
@@ -480,7 +481,7 @@ def _persist_amendment_side_effects(
     work_units: WorkUnitCatalogue,
     work_unit: WorkUnit,
     baseline: ModeloRecord,
-    new_revision_id: str,
+    new_revision_id: CalculationRevisionId,
     new_filing_id: str,
     amendment_kind: CalculationRevisionAmendmentKind,
     override_count: int,

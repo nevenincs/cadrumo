@@ -41,6 +41,7 @@ from ..aggregation import (
     CalculationSourceDiagnostic,
     CalculationSourceProvenance,
     CalculationSourceResolution,
+    casilla_registry_legal_refs,
     storage_degradation_resolution,
 )
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
@@ -168,6 +169,7 @@ def _current_year_prorrata_from_m303_observation(
 
 
 def build_bienes_inversion_regularizacion_advisory(
+    revision: ModeloRevision,
     register: BienesInversionIvaRegister,
     *,
     regularizacion_year: int,
@@ -190,6 +192,10 @@ def build_bienes_inversion_regularizacion_advisory(
     number still pending a definitive percentage, and the proposed casilla-43 value.
 
     Args:
+        revision: The :class:`ModeloRevision` being calculated, read only for
+            casilla 43's own registry grounding -- the caller of this function
+            is M303-gated, so the Modelo 303 casilla constant is the correct
+            one regardless of which revision year is loaded.
         register: The persisted :class:`BienesInversionIvaRegister`.
         regularizacion_year: The year being calculated.
         prorrata_definitiva_by_identifier: Current-year definitive deduction
@@ -221,11 +227,18 @@ def build_bienes_inversion_regularizacion_advisory(
         reason="official_box_unpopulated",
         source_kind=BindingSourceKind.BIENES_INVERSION_REGULARIZACION.value,
         message=message,
+        casilla_id=CASILLA_REGULARIZACION_BIENES_INVERSION,
+        # Casilla-derived: this advisory's subject IS casilla 43's own
+        # regularización, so its typed grounding is read off the registry
+        # rather than restated from the LIVA arts. 107-110 citation already in
+        # the message.
+        legal_refs=casilla_registry_legal_refs(revision, CASILLA_REGULARIZACION_BIENES_INVERSION),
     )
     return projection, diagnostic
 
 
 def build_bienes_inversion_transmision_advisory(
+    revision: ModeloRevision,
     register: BienesInversionIvaRegister,
     *,
     disposal_year: int,
@@ -245,6 +258,10 @@ def build_bienes_inversion_transmision_advisory(
     applied only when the caller supplies the disposal's own cuota devengada).
 
     Args:
+        revision: The :class:`ModeloRevision` being calculated, read only for
+            casilla 43's own registry grounding -- the caller of this function
+            is M303-gated, so the Modelo 303 casilla constant is the correct
+            one regardless of which revision year is loaded.
         register: The persisted :class:`BienesInversionIvaRegister`.
         disposal_year: The filing year being calculated.
         cuota_devengada_entrega_by_identifier: Optional per-good cuota devengada on
@@ -274,6 +291,8 @@ def build_bienes_inversion_transmision_advisory(
         reason="official_box_unpopulated",
         source_kind=_TRANSMISION_SOURCE_KIND,
         message=message,
+        casilla_id=CASILLA_REGULARIZACION_BIENES_INVERSION,
+        legal_refs=casilla_registry_legal_refs(revision, CASILLA_REGULARIZACION_BIENES_INVERSION),
     )
     return projection, diagnostic
 

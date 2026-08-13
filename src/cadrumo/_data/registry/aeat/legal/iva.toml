@@ -1677,6 +1677,44 @@ required_text = [
     "tendrán derecho a percibir una compensación a tanto alzado",
 ]
 
+[legal."ley-37-1992:art-131"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a131"
+document_id = "BOE-A-1992-28740"
+article = "131"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a131"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-13
+reviewed_by = "agent-review"
+notes = "Articulo 131 LIVA: obligados al reintegro de las compensaciones. Reparte quien paga la compensacion entre la Hacienda Publica (exportaciones y entregas a otro Estado miembro) y el adquirente o destinatario establecido en el territorio de aplicacion del impuesto."
+required_text = [
+    "Obligados al reintegro de las compensaciones",
+    "El adquirente de los bienes",
+]
+
+[legal."ley-37-1992:art-134"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-37-1992.html#a134"
+document_id = "BOE-A-1992-28740"
+article = "134"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a134"
+published_at = 1992-12-29
+effective_from = 1993-01-01
+review_status = "reviewed"
+reviewed_at = 2026-08-13
+reviewed_by = "agent-review"
+notes = "Articulo 134 LIVA: deduccion de las compensaciones del regimen especial de la agricultura, ganaderia y pesca. Quien satisface la compensacion deduce su importe como cuota soportada deducible, salvo los sujetos en recargo de equivalencia respecto de los productos destinados a su comercializacion, y debe poseer el documento que el mismo expide."
+required_text = [
+    "podrán deducir su importe de las cuotas devengadas",
+    "en posesión del documento emitido por ellos mismos",
+]
+
 [legal."rd-596-2016"]
 evidence_tier = "legal_authority"
 authority = "boe"

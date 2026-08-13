@@ -223,8 +223,8 @@ class ModeloWorkUnitCandidate(BaseModel):
     period: Period
     revision_id: _RevisionId
     state: WorkUnitState
-    current_calculation_revision_id: str | None = None
-    filed_calculation_revision_id: str | None = None
+    current_calculation_revision_id: CalculationRevisionId | None = None
+    filed_calculation_revision_id: CalculationRevisionId | None = None
     current_filing_record_id: str | None = None
     created_at: str
     updated_at: str
@@ -521,7 +521,7 @@ def select_modelo_calculation_revision(
     work_unit: WorkUnit,
     *,
     selector: ModeloCalculationRevisionSelector,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
     """Select one persisted calculation revision as :class:`ModeloCalculationRevisionSelection`.
@@ -589,7 +589,7 @@ def resolve_modelo_calculation_revision_pick(
     work_unit: WorkUnit,
     *,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     default_for: ModeloCalculationRevisionDefault | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
 ) -> ModeloCalculationRevisionSelection:
@@ -720,7 +720,7 @@ def _revisions_for_work_unit(
 def _explicit_revision_for_work_unit(
     *,
     work_unit: WorkUnit,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
 ) -> CalculationRevision:
     catalogue = (calculation_repository or CalculationRevisionCatalogueRepository()).load()

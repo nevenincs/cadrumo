@@ -115,6 +115,7 @@ class AeatSedePaths(_Frozen):
     cotejo_document: str
     notifications_summary: str
     notifications_query: str
+    notifications_detail: str
     certificate_selector: str
     r210_simulator_open_ajax: str
     borrador_100_detail_template: str
@@ -249,6 +250,28 @@ class AeatHelpPages(_Frozen):
     manual_practicos_root: str
 
 
+class AeatNotificationsQuery(_Frozen):
+    """Filter parameters driving AEAT's notifications search surface.
+
+    The surface defaults its date range to a single month. Reading it without
+    supplying a range therefore answers "what arrived this month", which is not
+    the question the notifications register is asked.
+
+    Attributes:
+        lookback_years: How far back the search window reaches from today.
+        date_format: ``strftime`` pattern AEAT accepts for the filter dates.
+        tipo_consulta_all: Filter value selecting every notification kind.
+        leida_all: Filter value selecting both read and unread rows.
+        detail_view_action: Action token returning the notification PDF.
+    """
+
+    lookback_years: int = Field(ge=1, le=50)
+    date_format: str
+    tipo_consulta_all: str
+    leida_all: str
+    detail_view_action: str
+
+
 class AeatOracles(_Frozen):
     """Absolute URLs of AEAT parity oracles."""
 
@@ -351,6 +374,7 @@ class AeatSection(_Frozen):
     # AeatPre303Surface boundary model.
     pre303_raw: dict[str, Any] = Field(default_factory=dict, alias="pre303")
     help_pages: AeatHelpPages
+    notifications_query: AeatNotificationsQuery
     oracles: AeatOracles
     live_safety: AeatLiveSafety
     portal_paths: AeatPortalPaths
@@ -820,7 +844,9 @@ PRORRATA_SECTORAL_SEPARATION_SPREAD_PP: Final[Decimal] = Decimal("50")
 #: Días NATURALES, not hábiles — weekends, holidays and August count, so a
 #: días-hábiles reading would compute a later lapse date than the law allows and
 #: understate urgency to the taxpayer. The clock runs from the puesta a disposición,
-#: never from access.
+#: never from access. The provision is enrolled in the legal catalogue as
+#: ``ley-39-2015:art-43.2``, and the quoted clause above is that entry's own
+#: corpus text rather than a restatement of it.
 DEHU_RECHAZO_TACITO_DIAS_NATURALES: Final[int] = 10
 
 

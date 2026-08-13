@@ -130,6 +130,20 @@ def test_fires_when_the_prorrata_was_inferred_rather_than_answered() -> None:
     assert diagnostics[0].casilla_id == _ESTATAL_CASILLA
 
 
+def test_the_advisory_grounds_from_the_casilla_it_addresses() -> None:
+    """Casilla-derived, not advisory-asserted: norma 1ª has no finer catalogue entry.
+
+    The whole-article ``ley-35-2006:art-61`` entry already grounds the norma 1ª
+    prorrateo clause at exactly this granularity (its own required_text targets
+    that sentence), which is what casilla 0513 already references -- nothing
+    finer exists to mint on ``asserted_legal_refs``.
+    """
+    _write_household(_child())
+    diagnostic = _collect()[0]
+    assert diagnostic.legal_refs == ("ley-35-2006:art-56", "ley-35-2006:art-58", "ley-35-2006:art-61")
+    assert diagnostic.asserted_legal_refs == ()
+
+
 def test_the_message_names_the_descendant_and_both_corrections() -> None:
     """The chosen default is only defensible if the operator can act on the message.
 

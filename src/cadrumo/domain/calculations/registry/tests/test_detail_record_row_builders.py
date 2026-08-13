@@ -17,6 +17,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core import M720AssetClassCode
 from .._bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
@@ -40,7 +41,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
     obs = (
         Modelo720RowObservation(
             source_id="a1",
-            asset_class_code="C",
+            asset_class_code=M720AssetClassCode.CUENTA,
             country_code="DE",
             asset_identifier="DE-bank-001",
             acquisition_date=date(2022, 6, 1),
@@ -48,7 +49,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
         ),
         Modelo720RowObservation(
             source_id="a2",
-            asset_class_code="V",
+            asset_class_code=M720AssetClassCode.VALOR,
             country_code="CH",
             asset_identifier="CH-stocks-001",
             acquisition_date=date(2020, 1, 1),
@@ -56,7 +57,7 @@ def test_build_foreign_asset_rows_sorts_by_country_class_identifier_date() -> No
         ),
         Modelo720RowObservation(
             source_id="a3",
-            asset_class_code="C",
+            asset_class_code=M720AssetClassCode.CUENTA,
             country_code="CH",
             asset_identifier="CH-bank-001",
             acquisition_date=date(2021, 3, 15),
@@ -76,7 +77,7 @@ def test_resolve_foreign_asset_binding_row_values_emits_per_column_indexed_value
     obs = (
         Modelo720RowObservation(
             source_id="a1",
-            asset_class_code="C",
+            asset_class_code=M720AssetClassCode.CUENTA,
             country_code="CH",
             asset_identifier="CH-iban-001",
             acquisition_date=date(2020, 1, 1),

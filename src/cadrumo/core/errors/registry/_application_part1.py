@@ -328,6 +328,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.topics.TopicCatalogueEmptyError",
+        ErrorCode(
+            code="REFUSED_TOPIC_CATALOGUE_EMPTY",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_topic_catalogue_empty",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation._source_mesh.SourceMeshError",
         ErrorCode(
             code="REFUSED_SOURCE_MESH_INVARIANT",

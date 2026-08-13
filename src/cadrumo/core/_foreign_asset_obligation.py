@@ -86,22 +86,40 @@ no Modelo 720 clave.
 """
 
 
-MODELO_720_FOREIGN_ASSET_CLASS_CODES: Final[Mapping[ForeignAssetClass, str]] = MappingProxyType(
+class M720AssetClassCode(StrEnum):
+    """The five one-character Modelo 720 position-102 ``clave-tipo-de-bien-o-derecho`` values.
+
+    The bundled AEAT record design limits Modelo 720's asset-row class code to
+    ``C``/``V``/``I``/``S``/``B``; ``I`` is participaciones en instituciones de
+    inversión colectiva, ``B`` is real estate. ``VIRTUAL_CURRENCY`` has no
+    member here because RD 1065/2007 art. 42 quater is declared through the
+    Modelo 721 sibling, not Modelo 720 -- this axis is the raw AEAT clave a
+    ``foreign_asset`` row carries, distinct from the semantic
+    :class:`ForeignAssetClass` it is derived from one-to-one via
+    :data:`MODELO_720_FOREIGN_ASSET_CLASS_CODES`.
+    """
+
+    CUENTA = "C"
+    VALOR = "V"
+    INSTITUCION_INVERSION_COLECTIVA = "I"
+    SEGURO = "S"
+    BIEN_INMUEBLE = "B"
+
+
+MODELO_720_FOREIGN_ASSET_CLASS_CODES: Final[Mapping[ForeignAssetClass, M720AssetClassCode]] = MappingProxyType(
     {
-        ForeignAssetClass.ACCOUNT: "C",
-        ForeignAssetClass.SECURITY: "V",
-        ForeignAssetClass.COLLECTIVE_INVESTMENT: "I",
-        ForeignAssetClass.INSURANCE: "S",
-        ForeignAssetClass.REAL_ESTATE: "B",
+        ForeignAssetClass.ACCOUNT: M720AssetClassCode.CUENTA,
+        ForeignAssetClass.SECURITY: M720AssetClassCode.VALOR,
+        ForeignAssetClass.COLLECTIVE_INVESTMENT: M720AssetClassCode.INSTITUCION_INVERSION_COLECTIVA,
+        ForeignAssetClass.INSURANCE: M720AssetClassCode.SEGURO,
+        ForeignAssetClass.REAL_ESTATE: M720AssetClassCode.BIEN_INMUEBLE,
     },
 )
 """Official Modelo 720 position-102 ``clave-tipo-de-bien-o-derecho`` map.
 
-The bundled AEAT record design limits Modelo 720's asset-row class code to
-``C``/``V``/``I``/``S``/``B``. ``I`` is participaciones en instituciones de
-inversion colectiva, while real estate is ``B``. ``VIRTUAL_CURRENCY`` is
-deliberately absent because RD 1065/2007 art. 42 quater is declared through the
-Modelo 721 sibling, not Modelo 720.
+Total over the Modelo-720-bearing :class:`ForeignAssetClass` members (every
+member except ``VIRTUAL_CURRENCY``, the Modelo 721 sibling with no Modelo 720
+clave).
 """
 
 
@@ -120,5 +138,6 @@ __all__ = [
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "MODELO_720_FOREIGN_ASSET_CLASS_CODES",
     "ForeignAssetObligationGroup",
+    "M720AssetClassCode",
     "foreign_asset_obligation_group",
 ]

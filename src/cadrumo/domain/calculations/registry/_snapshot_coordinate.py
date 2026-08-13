@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ....core.identity import RegistrySnapshotId
 from ._ids import RevisionId
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ def registry_snapshot_id(
     revision_id: RevisionId,
     filing_year: int,
     period: str,
-) -> str:
+) -> RegistrySnapshotId:
     """Return the canonical identifier for one validated registry snapshot.
 
     The coordinates are passed explicitly rather than read from a snapshot
@@ -53,7 +54,7 @@ def registry_snapshot_id(
     return f"{modelo}:{revision_id}:{filing_year}:{period}"
 
 
-def registry_snapshot_id_for(snapshot: RegistrySnapshot) -> str:
+def registry_snapshot_id_for(snapshot: RegistrySnapshot) -> RegistrySnapshotId:
     """Return the canonical identifier for ``snapshot``'s own coordinates.
 
     Use this when the snapshot IS the authority for all four coordinates. When

@@ -165,15 +165,51 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
-id = "modelo-145-dr-12-14-perceptor-movilidad-geografica-fecha"
+id = "modelo-145-dr-12-perceptor-movilidad-geografica-fecha-dia"
 offset = 156
-length = 8
+length = 2
 kind = "casilla"
-casilla_id = "perceptor.movilidad-geografica-fecha"
-data_type = "text"
+casilla_id = "perceptor.movilidad-geografica-fecha-dia"
+# Plain integer, no value_policy: this and its two siblings are
+# `required = false` (nobody is required to have moved), and both
+# two-digit-day and two-digit-month refuse a None value outright rather
+# than deferring to the field's own absence-fill -- their projector has
+# no None branch, so it raises before the numeric-absence check ever
+# runs. Matches the identical shape already live at
+# descendiente-1.anio-nacimiento below: plain integer, left_zero, right,
+# no policy, absence renders as the declared zero fill.
+data_type = "integer"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
+id = "modelo-145-dr-13-perceptor-movilidad-geografica-fecha-mes"
+offset = 158
+length = 2
+kind = "casilla"
+casilla_id = "perceptor.movilidad-geografica-fecha-mes"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
+id = "modelo-145-dr-14-perceptor-movilidad-geografica-fecha-anio"
+offset = 160
+length = 4
+kind = "casilla"
+casilla_id = "perceptor.movilidad-geografica-fecha-anio"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-dr-145-v20"]
@@ -641,15 +677,43 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
-id = "modelo-145-dr-48-50-comunicacion-firma-fecha"
+id = "modelo-145-dr-48-comunicacion-firma-fecha-dia"
 offset = 285
-length = 8
+length = 2
 kind = "casilla"
-casilla_id = "comunicacion.firma-fecha"
-data_type = "text"
+casilla_id = "comunicacion.firma-fecha-dia"
+data_type = "integer"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
+id = "modelo-145-dr-49-comunicacion-firma-fecha-mes"
+offset = 287
+length = 2
+kind = "casilla"
+casilla_id = "comunicacion.firma-fecha-mes"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
+id = "modelo-145-dr-50-comunicacion-firma-fecha-anio"
+offset = 289
+length = 4
+kind = "casilla"
+casilla_id = "comunicacion.firma-fecha-anio"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-dr-145-v20"]
@@ -697,15 +761,43 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendm
 source_refs = ["aeat-dr-145-v20"]
 
 [[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
-id = "modelo-145-dr-54-56-acuse-recibo-fecha"
+id = "modelo-145-dr-54-acuse-recibo-fecha-dia"
 offset = 393
-length = 8
+length = 2
 kind = "casilla"
-casilla_id = "acuse-recibo.fecha"
-data_type = "text"
+casilla_id = "acuse-recibo.fecha-dia"
+data_type = "integer"
 required = false
-padding = "right_space"
-justification = "left"
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
+source_refs = ["aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
+id = "modelo-145-dr-55-acuse-recibo-fecha-mes"
+offset = 395
+length = 2
+kind = "casilla"
+casilla_id = "acuse-recibo.fecha-mes"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
+signed = false
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
+source_refs = ["aeat-dr-145-v20"]
+
+[[revisions."2012-01-31-y-siguientes".export_layouts.records.fields]]
+id = "modelo-145-dr-56-acuse-recibo-fecha-anio"
+offset = 397
+length = 4
+kind = "casilla"
+casilla_id = "acuse-recibo.fecha-anio"
+data_type = "integer"
+required = false
+padding = "left_zero"
+justification = "right"
 signed = false
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
 source_refs = ["aeat-dr-145-v20"]

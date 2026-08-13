@@ -34,6 +34,7 @@ from typing import Protocol, runtime_checkable
 from ...adapters.persistence.profile.filing_amendments import ModeloAmendmentRepository
 from ...adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from ...core import Period
+from ...core.identity import SubjectTaxId
 from ...core.logging import get_logger
 from ...domain.filing import (
     AmendmentKind,
@@ -59,11 +60,21 @@ _logger = get_logger(__name__)
 
 @runtime_checkable
 class _SubmittedOriginal(Protocol):
+    """Structural shape a submitted-filing object must satisfy.
+
+    ``profile_tax_id`` is typed :data:`~core.identity.SubjectTaxId` for
+    reader consistency with the other self/profile-owned tax-identity
+    sites, but a ``Protocol`` attribute carries NO runtime validation --
+    ``@runtime_checkable`` only confirms the attribute's presence by
+    name, never its value's shape. This annotation is documentation, not
+    a guard; do not cite it as evidence the value is checksum-verified.
+    """
+
     submission_id: str
     draft_id: str
     modelo: str
     period: Period
-    profile_tax_id: str
+    profile_tax_id: SubjectTaxId
     justificante_csv: str | None
 
 

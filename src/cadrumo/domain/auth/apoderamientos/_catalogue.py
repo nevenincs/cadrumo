@@ -129,12 +129,12 @@ def _validate_scope_token_shape(token: str) -> None:
     """
     if "," in token:
         raise UnknownScopeError(
-            f"scope token {token!r} contains a comma; pass --scope repeatedly instead",
+            translated_message="errors.refused.refused_apoderado_unknown_scope",
             context={"scope_token": token, "validation_rule": "no_comma_separated_values"},
         )
     if token != token.upper():
         raise UnknownScopeError(
-            f"scope token {token!r} must be uppercase",
+            translated_message="errors.refused.refused_apoderado_unknown_scope",
             context={"scope_token": token, "validation_rule": "uppercase"},
         )
 
@@ -157,7 +157,7 @@ def _resolve_scope_token(
         return tuple(expand_all_token(catalogue))
     if token not in known:
         raise UnknownScopeError(
-            f"scope code {token!r} is not in catalogue version {catalogue.catalogue_version!r}",
+            translated_message="errors.refused.refused_apoderado_unknown_scope",
             context={
                 "catalogue_version": catalogue.catalogue_version,
                 "scope_token": token,

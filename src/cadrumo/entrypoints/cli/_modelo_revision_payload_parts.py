@@ -19,7 +19,7 @@ from __future__ import annotations
 from pydantic import Field, model_validator
 
 from ...application.modelo import ResultSummaryRole
-from ...core import CasillaId
+from ...core import BindingSourceKind, CasillaId
 from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.json_contract import OutputSchema
 from ...domain.calculations.registry import BindingId, FormulaId, LegalRefId, RelationId, SourceRefId
@@ -81,6 +81,31 @@ class ObservationPayload(OutputSchema):
         return self
 
 
+class SourceProvenancePayload(OutputSchema):
+    """One JSON-safe resolver-level source-mesh trace row.
+
+    Mirrors :class:`CalculationSourceRef`: the resolver -> source-object ->
+    fingerprint trace the calculation source mesh recorded when it produced
+    the revision, projected from :class:`CalculationRevision.source_provenance`.
+
+    ``dependency_treatment`` carries the registry's declared carry
+    classification (``direct_annual_settlement`` / ``factual_evidence``)
+    through to the operator, so a ``factual_evidence`` carry — a fact to
+    reconcile against a taxpayer's own document, rather than a figure that
+    settles the return — stays distinguishable at the JSON boundary. Empty
+    means the revision declared no treatment, which is not the same as either
+    declared value and must never be read as one. This field is carried, not
+    gated: its presence never withholds or zeroes the casilla value it
+    accompanies.
+    """
+
+    source_kind: str
+    binding_source: BindingSourceKind | None = None
+    source_ref: str
+    fingerprint: str | None = None
+    dependency_treatment: str = ""
+
+
 class ResultSummaryRowPayload(OutputSchema):
     """One headline-result summary row selected from a calculation revision.
 
@@ -117,6 +142,7 @@ class CalculationRevisionProjectionFields(OutputSchema):
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     detail_rows: tuple[DetailRowPayload, ...] = ()
+    source_provenance: tuple[SourceProvenancePayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -134,4 +160,5 @@ __all__ = [
     "DetailRowPayload",
     "ObservationPayload",
     "ResultSummaryRowPayload",
+    "SourceProvenancePayload",
 ]

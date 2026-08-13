@@ -61,35 +61,63 @@ def secure_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
 
 
 @pytest.mark.parametrize(
-    ("helper", "args", "expected_message"),
+    ("helper", "args", "expected_field"),
     (
         pytest.param(
             user_profile_value_object_key,
             ("  ",),
-            "profile_id must not be blank",
+            "profile_id",
             id="value-profile-id",
         ),
         pytest.param(
             user_profile_snapshot_object_key,
             (" ", "snap-1"),
-            "profile_id must not be blank",
+            "profile_id",
             id="snapshot-profile-id",
         ),
         pytest.param(
             user_profile_snapshot_object_key,
             ("a4f1c2e0-1111-4222-8333-444455556666", ""),
-            "snapshot_id must not be blank",
+            "snapshot_id",
             id="snapshot-id",
+        ),
+        pytest.param(
+            lambda bucket_id: UserProfileLifecycleRepository(bucket_id=bucket_id),
+            ("  ",),
+            "bucket_id",
+            id="lifecycle-bucket-id",
+        ),
+        pytest.param(
+            lambda bucket_id: UserProfileSnapshotRepository(bucket_id=bucket_id),
+            ("  ",),
+            "bucket_id",
+            id="snapshot-bucket-id",
         ),
     ),
 )
-def test_object_key_helpers_reject_blank_inputs(
-    helper: Callable[..., str],
+def test_blank_identity_refusals_raise_the_typed_localised_error(
+    helper: Callable[..., object],
     args: tuple[str, ...],
-    expected_message: str,
+    expected_field: str,
 ) -> None:
-    with pytest.raises(BucketValidationError, match=expected_message):
+    """Each blank-identity guard must complete as its typed refusal.
+
+    The guards construct :class:`BucketValidationError` with ``context`` only:
+    the class supplies its own ``translated_message``, so passing one is a
+    ``TypeError`` that aborts the validation branch before it can raise. The
+    operator then receives a stack trace instead of a localised refusal, and it
+    never reaches the CLI error envelope -- the guard is absent, not merely
+    unhelpful. Assert the machine-readable ``context`` rather than prose, since
+    the rendered text is a translation key resolved at the envelope boundary.
+    """
+    with pytest.raises(BucketValidationError) as excinfo:
         helper(*args)
+
+    context = excinfo.value.context
+    assert context is not None
+    assert context["field"] == expected_field
+    assert context["blank"] is True
+    assert excinfo.value.translated_message == "errors.integrity.integrity_storage_bucket_validation"
 
 
 def test_object_key_helpers_compose_canonical_keys() -> None:

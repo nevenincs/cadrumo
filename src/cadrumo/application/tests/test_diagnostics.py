@@ -933,3 +933,59 @@ def test_diagnostic_model_error_is_pydantic_validator_value_error() -> None:
     from .._errors import DiagnosticModelError
 
     assert issubclass(DiagnosticModelError, ValueError)
+
+
+def test_missing_active_bucket_session_is_classified_from_the_typed_chain_not_the_text() -> None:
+    """The cold-start verdict reads the exception chain, never the rendered message.
+
+    ``secure_state.load`` warns instead of failing, and withholds the raw
+    exception detail, only when this classifier says the probe failed for a
+    missing bucket session. Deciding that from rendered text is unsound in both
+    directions, and this pins both.
+
+    The producer already carries no authored sentence, so ``str(exc)`` is a
+    locale key that does not contain the class name: any wrapper whose text a
+    scan would have searched no longer mentions it. And an unrelated failure
+    whose message happens to name the class must not be waved through as an
+    expected cold start, because that downgrades a genuine fault to a warning
+    and suppresses the detail the operator needs.
+    """
+    from ...adapters.persistence.storage.master_key import NoActiveBucketSessionError
+    from ..diagnostics import _is_missing_active_bucket_session
+
+    session_error = NoActiveBucketSessionError()
+    assert "NoActiveBucketSessionError" not in str(session_error)
+    assert _is_missing_active_bucket_session(session_error) is True
+
+    try:
+        try:
+            raise session_error
+        except NoActiveBucketSessionError:
+            # An incidental re-raise sets `__context__` only, while the
+            # explicit `from` below sets `__cause__`; the chain forks and the
+            # typed link is reachable on the context edge alone.
+            raise RuntimeError("secure state probe failed") from ValueError("unrelated root cause")
+    except RuntimeError as forked:
+        assert _is_missing_active_bucket_session(forked) is True
+
+    impostor = RuntimeError("NoActiveBucketSessionError was mentioned in passing")
+    assert _is_missing_active_bucket_session(impostor) is False
+
+
+def test_missing_active_bucket_session_classifier_terminates_on_a_cyclic_chain() -> None:
+    """A self-referential chain must not hang the repair report.
+
+    The walk follows two edges per link, so a chain that points back at an
+    exception already visited would revisit it forever without identity
+    marking. ``config repair`` is the surface an operator reaches for when the
+    application is already unhealthy, so a hang here strands the one command
+    meant to explain the failure.
+    """
+    from ..diagnostics import _is_missing_active_bucket_session
+
+    first = RuntimeError("first")
+    second = RuntimeError("second")
+    first.__cause__ = second
+    second.__context__ = first
+
+    assert _is_missing_active_bucket_session(first) is False

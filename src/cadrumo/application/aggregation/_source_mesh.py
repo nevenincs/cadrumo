@@ -512,6 +512,20 @@ class CalculationSourceDiagnostic(BaseModel):
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     binding_id: BindingId | None = None
     relation_id: RelationId | None = None
+    relation_ids: tuple[RelationId, ...] = ()
+    """Every relation this ONE diagnostic speaks for, when it groups several.
+
+    A diagnostic naming a missing source filing is about the FILING, not
+    about any one relation reading it — Modelo 190's ten annual-summary
+    relations sourcing the same absent Modelo 111 return are ten symptoms of
+    one cause, and reporting them as ten separate advisories trains an
+    operator to stop reading the channel. :attr:`relation_id` stays populated
+    with the lowest sorted member for a caller that only ever consulted the
+    singular field before this one existed; this field is the FULL
+    machine-readable set the grouped advisory actually covers. Empty for a
+    diagnostic that was never about more than one relation to begin with —
+    absence means "nothing to add beyond `relation_id`", not "unknown".
+    """
     casilla_id: CasillaId | None = None
     legal_refs: tuple[LegalRefId, ...] = ()
     """Registry legal references grounding the subject this advisory speaks about.
@@ -624,6 +638,29 @@ def out_of_window_summary_source_diagnostic(
     )
 
 
+def casilla_registry_legal_refs(revision: ModeloRevision, casilla_id: CasillaId) -> tuple[LegalRefId, ...]:
+    """Return one casilla's own legal grounding, plus its binding's, off ``revision``.
+
+    The CASILLA-DERIVED path shared by every advisory whose subject IS the
+    named casilla's own computation: :attr:`CalculationSourceDiagnostic.legal_refs`
+    is populated by READING this off the registry definitions the caller already
+    resolved, never by restating an article in the caller's own layer. Ordered
+    union, casilla first: the casilla is the subject an operator reads about, and
+    the binding grounds the route the value would have taken.
+
+    Returns an empty tuple when ``casilla_id`` is absent from ``revision`` --
+    the caller's subject casilla is not on this filing, which is a statement
+    about the registry rather than about the taxpayer, or when the casilla
+    carries no grounding of its own.
+    """
+    casilla = next((candidate for candidate in revision.casillas if candidate.id == casilla_id), None)
+    if casilla is None:
+        return ()
+    binding = next((candidate for candidate in revision.bindings if candidate.id == casilla.binding), None)
+    binding_legal = binding.legal_refs if binding is not None else ()
+    return tuple(dict.fromkeys((*casilla.legal_refs, *binding_legal)))
+
+
 class CalculationSourceProvenance(BaseModel):
     """Stable source object provenance produced by a resolver."""
 
@@ -641,6 +678,15 @@ class CalculationSourceProvenance(BaseModel):
     source_casilla_ids: tuple[CasillaId, ...] = ()
     legal_refs: tuple[LegalRefId, ...] = ()
     source_refs: tuple[SourceRefId, ...] = ()
+    #: The registry's declared dependency treatment for this carry, empty when the
+    #: revision declares none. A ``factual_evidence`` carry is a fact to reconcile
+    #: against rather than a figure that settles the return, and a consumer must be
+    #: able to tell it from a ``direct_annual_settlement`` one. Carried here rather
+    #: than gated here: the value is NOT withheld, because a taxpayer is entitled to
+    #: a suffered retención and dropping it silently is an over-declaration. Empty
+    #: means the revision declared no treatment, which is not the same as any
+    #: particular one and must never be read as one.
+    dependency_treatment: str = ""
 
     @model_validator(mode="before")
     @classmethod

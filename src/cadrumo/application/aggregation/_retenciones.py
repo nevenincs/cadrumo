@@ -377,7 +377,7 @@ def compute_retenciones_totals_parity(
     perceptores_summary_total: int,
     base_summary_total: Decimal,
     retenciones_summary_total: Decimal,
-    tolerance: Decimal = Decimal("0.01"),
+    tolerance: Decimal = Decimal("0"),
 ) -> RetencionesTotalsParity:
     """Cross-check a :class:`RetencionesAggregation` against a resumen-anual summary's casillas.
 
@@ -398,8 +398,16 @@ def compute_retenciones_totals_parity(
             ``decl.retenciones-total`` (the relation-prefill sum of the
             taxpayer's quarterly filings' retenciones casilla).
         tolerance: Maximum absolute EUR delta that does not surface a
-            divergence on the monetary axes. Defaults to one cent, matching
-            the registry's standard rounding tolerance.
+            divergence on the monetary axes. THE REGISTRY IS THE AUTHORITY FOR
+            THIS VALUE and publishes it per revision: resolve it with
+            ``snapshot.verification_policy().tolerance`` and pass it. The
+            default is exact equality rather than a cent, because Modelo 193's
+            own 2025 revision publishes exact equality (``0.00``) -- a
+            hardcoded cent here would silently absorb a genuine one-cent
+            under-declaration on exactly the modelo this function's own
+            docstring names. Modelo 180 publishes ``0.01`` for the same
+            comparison shape, which is why the value must be resolved per
+            revision rather than assumed constant across both.
 
     Returns:
         A :class:`RetencionesTotalsParity` verdict. ``is_consistent`` is

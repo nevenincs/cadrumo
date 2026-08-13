@@ -392,7 +392,7 @@ _MODELO_180_EXPECTED_CASILLAS: tuple[tuple[CasillaId, object], ...] = (
     _expected_casilla_value("perc.provincia", "28"),
     _expected_casilla_value("perc.modalidad", "1"),
     _expected_casilla_value("perc.base", Decimal("-25.00")),
-    _expected_casilla_value("perc.porcentaje-retencion", "0000"),
+    _expected_casilla_value("perc.porcentaje-retencion", Decimal("0.00")),
     _expected_casilla_value("perc.retenciones", Decimal("4.75")),
     _expected_casilla_value("perc.ejercicio-devengo", Decimal("2025")),
     _expected_casilla_value("perc.situacion-inmueble", "1"),

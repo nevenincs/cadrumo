@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from ....core import STRICT_FROZEN_CONFIG, BindingSourceKind
 from ....core.aggregation import INVOICE_BINDING_SOURCE_KINDS, BindingAggregationOp
+from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import (
     intracommunity_clave_validator,
@@ -731,7 +732,7 @@ def compute_modelo_349_operador_totals_parity(
     *,
     operator_summary_total: Decimal,
     base_summary_total: Decimal,
-    tolerance: Decimal = Decimal("0.01"),
+    tolerance: Decimal = Decimal("0"),
 ) -> Modelo349OperadorTotalsParity:
     """Cross-check the per-operador row set against the resolved Modelo 349 declarant summary.
 
@@ -750,9 +751,15 @@ def compute_modelo_349_operador_totals_parity(
             ``decl.importe-operaciones``, typically read from
             ``revision.casilla_values["decl.importe-operaciones"]``.
         tolerance: Maximum absolute EUR delta on the base-imponible axis that
-            does not surface a divergence. Defaults to one cent, matching the
-            registry's standard rounding tolerance. The operator-count axis is
-            an exact integer match with no tolerance.
+            does not surface a divergence. THE REGISTRY IS THE AUTHORITY FOR
+            THIS VALUE and publishes it per revision: resolve it with
+            ``snapshot.verification_policy().tolerance`` and pass it. The
+            default is exact equality rather than a cent: Modelo 349's own
+            revisions declare no verification expectations at all, and with
+            no published contract there is no authority to widen the
+            comparison -- guessing strict yields a visible finding, guessing
+            loose yields a silent omission. The operator-count axis is an
+            exact integer match with no tolerance regardless.
 
     Returns:
         A :class:`Modelo349OperadorTotalsParity` verdict. ``is_consistent`` is
@@ -985,7 +992,7 @@ class _OperatorClaveAccumulator(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
 
     country_code: str
-    party_tax_id: str
+    party_tax_id: TaxIdIdentityToken
     clave: str
     party_legal_name: str | None
     base_total: Decimal
@@ -997,7 +1004,7 @@ class _OperatorClavePeriodAccumulator(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
 
     country_code: str
-    party_tax_id: str
+    party_tax_id: TaxIdIdentityToken
     clave: str
     party_legal_name: str | None
     rectified_year: int

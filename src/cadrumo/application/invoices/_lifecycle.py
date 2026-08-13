@@ -73,7 +73,6 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     trimmed = invoice_id.strip()
     if not trimmed:
         raise InvoiceNotFoundError(
-            "invoice id is required",
             translated_message="application.invoices.lifecycle.errors.invoice_id_required",
         )
     exact = catalogue.get(trimmed)
@@ -82,14 +81,12 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     matches = tuple(invoice for invoice in catalogue.values() if invoice.invoice_id.startswith(trimmed))
     if not matches:
         raise InvoiceNotFoundError(
-            f"catalogue invoice not found: {trimmed}",
             translated_message="application.invoices.lifecycle.errors.invoice_not_found",
             context={"invoice_id": trimmed},
         )
     if len(matches) > 1:
         candidates = ", ".join(invoice.invoice_id for invoice in matches)
         raise InvoiceValidationError(
-            "invoice id prefix is ambiguous",
             translated_message="application.invoices.lifecycle.errors.ambiguous_invoice_prefix",
             context={"invoice_id": trimmed, "candidates": candidates},
         )
@@ -132,7 +129,6 @@ def remove_catalogue_invoice(
     if invoice.linked_transaction_ids:
         linked = ", ".join(invoice.linked_transaction_ids)
         raise InvoiceValidationError(
-            "cannot remove an invoice that is still linked to transactions",
             translated_message="application.invoices.lifecycle.errors.remove_linked_invoice",
             context={"invoice_id": invoice.invoice_id, "linked_transaction_ids": linked},
         )
@@ -246,7 +242,6 @@ def update_catalogue_invoice(
     changes = patch.model_dump(exclude_unset=True, exclude_none=True)
     if not changes:
         raise InvoiceValidationError(
-            "an invoice correction must state at least one field to change",
             translated_message="application.invoices.lifecycle.errors.empty_invoice_patch",
             context={"invoice_id": existing.invoice_id},
         )

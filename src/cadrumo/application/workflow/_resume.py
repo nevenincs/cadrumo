@@ -59,6 +59,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import HEX_PATTERN_16, HEX_PATTERN_64, STRICT_FROZEN_CONFIG, Period
+from ...core.identity import CalculationRevisionId
 from ...domain.calculations.registry import RevisionId
 from ._errors import WorkflowError
 from ._models import WorkflowAbortReason, WorkflowObligationFacts, WorkflowResult, WorkflowStage
@@ -143,7 +144,7 @@ class WorkflowResumeTargetResolution(BaseModel):
     filing_year: int | None = None
     work_unit_id: str | None = None
     short_work_unit_id: str | None = None
-    calculation_revision_id: str | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
     short_calculation_revision_id: str | None = None
 
 
@@ -235,7 +236,7 @@ def resolve_modelo_workflow_resume_target(
     target: str | None = None,
     workflow_run_id: str | None = None,
     work_unit_id: str | None = None,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     modelo: str | None = None,
     year: int | None = None,
     period: Period | None = None,
@@ -316,7 +317,9 @@ def _workflow_run_id_resolution(run_id: str, *, source: str) -> WorkflowResumeTa
     return WorkflowResumeTargetResolution(run_id=run_id, source=source)
 
 
-def _resolve_resume_from_calculation_revision(calculation_revision_id: str) -> WorkflowResumeTargetResolution:
+def _resolve_resume_from_calculation_revision(
+    calculation_revision_id: CalculationRevisionId,
+) -> WorkflowResumeTargetResolution:
     from ..modelo import get_calculation_revision, get_work_unit
 
     revision = get_calculation_revision(calculation_revision_id)
@@ -568,7 +571,7 @@ def _resolve_resume_from_work_unit(
     *,
     source: str,
     latest: bool = False,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
 ) -> WorkflowResumeTargetResolution:
     from ..modelo import project_modelo_work_unit, workflow_period_for_work_unit
 

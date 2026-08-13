@@ -330,6 +330,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # (Option A engine): zero baseline for a
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
+        "renta-2024-profile-deduccion-maternidad": Decimal("0"),
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
         # Parte autonómica (casilla 0514): every scenario in this file
         # runs a Cataluña-resident profile, which is absent from the wired
@@ -391,6 +392,7 @@ def test_m100_2024_cuota_estatal_pere_age_70_with_age_supplement(
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
+            "renta-2024-profile-deduccion-maternidad": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
@@ -443,6 +445,7 @@ def test_m100_2024_cuota_estatal_two_descendants_one_under_three(
         enum_binding_values={"renta-2024-profile-tax-residence-ccaa": "cataluna"},
         binding_values={
             **_base_binding_values(),
+            "renta-2024-profile-deduccion-maternidad": Decimal("0"),
             "renta-2024-profile-minimo-descendientes-estatal": Decimal("7900"),
             "renta-2024-profile-minimo-descendientes-autonomico": Decimal("7900"),
         },

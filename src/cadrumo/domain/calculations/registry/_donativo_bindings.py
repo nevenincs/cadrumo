@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field, field_validator
 
 from ....core import STRICT_FROZEN_CONFIG
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.identity import TaxIdIdentityToken
 from ._binding_aggregation import binding_aggregation_op
 from ._binding_selector_utils import invariant_diagnostics, selector_against_model, uppercase_alpha_code
 from ._binding_selector_utils import selector_as_dict as _selector_as_dict
@@ -196,7 +197,7 @@ class _DonativoRowAccumulator:
     row shape :func:`resolve_donativo_binding_row_values` consumes.
     """
 
-    donor_tax_id: str
+    donor_tax_id: TaxIdIdentityToken
     donor_legal_name: str
     deduction_percentage: Decimal
     amount_donated: Decimal = Decimal("0")

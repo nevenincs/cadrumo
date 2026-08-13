@@ -48,6 +48,7 @@ See Also:
 from ._engine import CALC_SHEETS_ENGINE_VERSION, build_export_plan, collect_row_sets, registry_sha
 from ._errors import CalcSheetsEngineError, CalcSheetsParityError, CalcSheetsRecordError
 from ._evidence import sheet_evidence_from_ledger_filing
+from ._export_service import export_modelo_to_sheets
 from ._layout import BracketRanges, SheetLayout, plan_layout
 from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
 from ._parity_harness import OperatorInputScenario, verify_modelo_parity
@@ -159,6 +160,7 @@ __all__ = [
     "column_index_to_letters",
     "column_letters_to_index",
     "evidence_table",
+    "export_modelo_to_sheets",
     "guide_stamps",
     "hex_to_rgb_floats",
     "plan_layout",

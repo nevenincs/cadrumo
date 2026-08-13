@@ -218,10 +218,7 @@ def user_profile_value_object_key(profile_id: str) -> str:
     """
     trimmed_profile = profile_id.strip()
     if not trimmed_profile:
-        raise BucketValidationError(
-            translated_message="errors.integrity.integrity_storage_bucket_validation",
-            context={"field": "profile_id", "blank": True},
-        )
+        raise BucketValidationError(context={"field": "profile_id", "blank": True})
     return f"user-profile:{trimmed_profile}"
 
 
@@ -237,15 +234,9 @@ def user_profile_snapshot_object_key(profile_id: str, snapshot_id: str) -> str:
     trimmed_profile = profile_id.strip()
     trimmed_snapshot = snapshot_id.strip()
     if not trimmed_profile:
-        raise BucketValidationError(
-            translated_message="errors.integrity.integrity_storage_bucket_validation",
-            context={"field": "profile_id", "blank": True},
-        )
+        raise BucketValidationError(context={"field": "profile_id", "blank": True})
     if not trimmed_snapshot:
-        raise BucketValidationError(
-            translated_message="errors.integrity.integrity_storage_bucket_validation",
-            context={"field": "snapshot_id", "blank": True},
-        )
+        raise BucketValidationError(context={"field": "snapshot_id", "blank": True})
     return f"user-profile-snapshot:{trimmed_profile}:{trimmed_snapshot}"
 
 
@@ -300,10 +291,7 @@ class _BucketBoundRepository:
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
         trimmed = bucket_id.strip()
         if not trimmed:
-            raise BucketValidationError(
-                translated_message="errors.integrity.integrity_storage_bucket_validation",
-                context={"field": "bucket_id", "blank": True},
-            )
+            raise BucketValidationError(context={"field": "bucket_id", "blank": True})
         self._bucket_id = trimmed
         # Bind to THIS bucket's own database when no repository is
         # injected — cross-bucket operations must address the named

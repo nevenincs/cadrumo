@@ -8,6 +8,7 @@ from decimal import Decimal
 from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG, ActionEvidenceProvenance
+from ...core.identity import CalculationRevisionId
 from ...domain.modelos import (
     ModeloVerificationFinding,
     ModeloVerificationFindingSeverity,
@@ -53,7 +54,7 @@ class ModeloVerificationResult(BaseModel):
 
 def build_verification_precondition_failure(
     *,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     work_unit_id: str,
     condition_id: str,
     scenario_id: str,

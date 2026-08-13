@@ -67,9 +67,13 @@ def append_bucket_event(catalogue: BucketEventHistoryCatalogue, event: BucketEve
         if existing == event:
             return catalogue
         raise BucketEventValidationError(
-            f"event_id {event.event_id!r} already records payload_version "
-            f"{existing.payload_version}; refusing to overwrite it with "
-            f"payload_version {event.payload_version}",
+            translated_message="errors.error.error_storage_bucket",
+            context={
+                "event_id": str(event.event_id),
+                "recorded_payload_version": existing.payload_version,
+                "offered_payload_version": event.payload_version,
+                "payload_versions_agree": False,
+            },
         )
     mapping = dict(catalogue.events)
     mapping[event.event_id] = event

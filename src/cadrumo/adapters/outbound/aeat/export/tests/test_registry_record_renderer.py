@@ -20,6 +20,7 @@ from typing import Literal
 
 import pytest
 
+from ......core import FilingProducerKey
 from ......domain.calculations.registry import (
     CasillaFieldKind,
     ExportFieldDefinition,
@@ -51,10 +52,11 @@ def _field(
     data_type: Literal["text", "integer", "decimal", "money", "date", "boolean"] = "text",
     casilla_id: str | None = None,
     literal: str | None = None,
-    header_key: str | None = None,
+    producer_key: FilingProducerKey | None = None,
     padding: Literal["left_zero", "left_space", "right_space", "none"] = "right_space",
     justification: Literal["left", "right", "none"] = "left",
     signed: bool = False,
+    required: bool = False,
     value_policy: ExportValuePolicy | None = None,
 ) -> ExportFieldDefinition:
     return ExportFieldDefinition(
@@ -64,9 +66,9 @@ def _field(
         kind=kind,
         casilla_id=casilla_id,
         literal=literal,
-        header_key=header_key,
+        producer_key=producer_key,
         data_type=data_type,
-        required=False,
+        required=required,
         padding=padding,
         justification=justification,
         signed=signed,
@@ -119,7 +121,7 @@ def _count_field() -> ExportFieldDefinition:
     )
 
 
-def _money_field() -> ExportFieldDefinition:
+def _money_field(*, required: bool = False) -> ExportFieldDefinition:
     return _field(
         "money",
         offset=_MONEY_OFFSET,
@@ -129,6 +131,7 @@ def _money_field() -> ExportFieldDefinition:
         data_type="money",
         padding="left_zero",
         justification="right",
+        required=required,
     )
 
 
@@ -190,11 +193,39 @@ def test_a_shorter_text_value_pads_to_the_declared_width() -> None:
 
 
 def test_an_omitted_money_value_is_not_silently_substituted_with_zero() -> None:
-    with pytest.raises(ModeloExportError, match="invalid fixed-width value"):
+    """A mandatory figure the caller omitted must refuse, never reach the wire as zero.
+
+    An *optional* numeric slot legitimately fills with zeros -- AEAT's record
+    designs require every field to occupy its width -- so the property worth
+    proving is that the ``required`` declaration is what separates a lawful
+    blank fill from a silently invented figure. The refusal names the field and
+    its condition through machine facts, so no English sentence is asserted.
+    """
+    with pytest.raises(ModeloExportError) as raised:
         RegistryFixedWidthRecordRenderer().render_record_body(
-            _full_record(),
+            _record(_literal_field(), _nif_field(), _count_field(), _money_field(required=True), _filler_field()),
             field_values={"01": _NIF, "02": "7"},
         )
+
+    context = _error_context(raised.value)
+    assert context["export_field_id"] == "money"
+    assert context["reason"] == "fixed_width_value"
+
+
+def test_an_omitted_optional_money_value_fills_its_declared_width() -> None:
+    """An optional absent numeric slot renders its declared fill, not a fabricated value.
+
+    The zeros come from the field's own padding axis, which is what the AEAT
+    record design prescribes for an empty numeric field; the assertion pins that
+    the slot keeps its exact declared width rather than shifting the record.
+    """
+    body = RegistryFixedWidthRecordRenderer().render_record_body(
+        _full_record(),
+        field_values={"01": _NIF, "02": "7"},
+    )
+
+    assert len(body) == _TOTAL_LENGTH
+    assert _slice(body, _MONEY_OFFSET, _MONEY_LENGTH) == b"0" * _MONEY_LENGTH
 
 
 def test_declaration_order_does_not_change_the_wire_layout() -> None:
@@ -293,7 +324,7 @@ def test_a_field_kind_this_renderer_cannot_place_is_refused() -> None:
             offset=_NIF_OFFSET,
             length=_NIF_LENGTH,
             kind=CasillaFieldKind.HEADER,
-            header_key="ejercicio",
+            producer_key=FilingProducerKey.TAXPAYER_TAX_ID,
         ),
         _count_field(),
         _money_field(),

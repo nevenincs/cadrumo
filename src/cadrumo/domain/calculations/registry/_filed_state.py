@@ -97,6 +97,7 @@ def compare_calculation_to_filed_observation(
     observation: RegistryModeloObservation,
     *,
     required_casilla_ids: Iterable[CasillaId],
+    tolerance: Decimal = Decimal("0"),
 ) -> RegistryFiledStateComparison:
     """Compare local registry calculation values against filed AEAT casillas.
 
@@ -113,6 +114,20 @@ def compare_calculation_to_filed_observation(
     typed :class:`CasillaObservation` envelope, so the regulatory
     grounding for every drifted casilla is preserved in the comparison
     result and propagates to CLI / audit surfaces.
+
+    Args:
+        calculation: The local registry calculation result.
+        observation: The normalized filed AEAT observation to compare against.
+        required_casilla_ids: The casilla ids the comparison must cover.
+        tolerance: Maximum absolute delta that does not surface as a drift.
+            THE REGISTRY IS THE AUTHORITY FOR THIS VALUE and publishes it per
+            revision: resolve it with ``snapshot.verification_policy().tolerance``
+            and pass it, matching :func:`~application.modelo.detect_casilla_divergences`'s
+            same-named parameter and the same rationale. The default is exact
+            equality — matching this function's behaviour before the parameter
+            existed — because a caller that passes nothing must get the
+            strictest reading rather than a silently more permissive one it
+            never chose.
 
     Returns:
         A :class:`RegistryFiledStateComparison` summarising all casilla-level drift.
@@ -142,7 +157,7 @@ def compare_calculation_to_filed_observation(
             filed_value=filed_values[casilla_id],
         )
         for casilla_id in comparable
-        if local_values[casilla_id] != filed_values[casilla_id]
+        if abs(local_values[casilla_id] - filed_values[casilla_id]) > tolerance
     )
     status: Literal["satisfied", "failed"] = (
         "satisfied" if not missing_local and not missing_filed and not drifts else "failed"

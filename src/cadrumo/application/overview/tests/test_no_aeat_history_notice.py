@@ -12,6 +12,7 @@ from __future__ import annotations
 import pytest
 
 from ....core.json_contract import NoticeSeverity, ResolvedNoticeAction
+from ....domain.calculations.registry import TaxRoute
 from ...calculations import ObservationSourceKind
 from .. import NO_AEAT_HISTORY_NOTICE_CODE, no_aeat_history_notice
 
@@ -87,3 +88,51 @@ def test_the_message_resolves_to_real_copy_rather_than_its_locale_key() -> None:
     assert notice is not None
     assert notice.message
     assert "overview.no_aeat_history" not in notice.message
+
+
+def test_every_other_route_still_recommends_the_whole_history_sweep() -> None:
+    """The Sociedades carve-out is narrow: every other route keeps today's suggestion."""
+    for route in TaxRoute:
+        if route is TaxRoute.IMPUESTO_SOCIEDADES:
+            continue
+        notice = no_aeat_history_notice((), tax_route=route)
+        assert notice is not None, route
+        assert isinstance(notice.action, ResolvedNoticeAction), route
+        assert notice.action.action.action_id == "operator.live.filed.pull_all", route
+
+
+def test_a_sociedades_filer_carries_no_action_the_sweep_cannot_fulfil() -> None:
+    """The whole-history sweep structurally cannot fetch Modelo 200/202.
+
+    The bulk filed-data capture planner diverts a Sociedades filer's own
+    direct-tax modelos into typed unsupported rows, so recommending the sweep
+    verb here would recommend a verb that can never fetch what the notice is
+    about. This route carries no action at all rather than a misleading one.
+    """
+    notice = no_aeat_history_notice((), tax_route=TaxRoute.IMPUESTO_SOCIEDADES)
+    assert notice is not None
+    assert notice.severity is NoticeSeverity.INFO
+    assert notice.code == NO_AEAT_HISTORY_NOTICE_CODE
+    assert notice.action is None
+
+
+def test_a_sociedades_filer_still_silences_on_an_official_observation() -> None:
+    """The tax-route carve-out narrows the SUGGESTION, never the PREDICATE."""
+    assert (
+        no_aeat_history_notice(
+            (ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,),
+            tax_route=TaxRoute.IMPUESTO_SOCIEDADES,
+        )
+        is None
+    )
+
+
+def test_the_sociedades_message_resolves_to_real_copy_distinct_from_the_default() -> None:
+    """The Sociedades message is its OWN real, translated copy, not the generic one echoed."""
+    generic = no_aeat_history_notice(())
+    sociedades = no_aeat_history_notice((), tax_route=TaxRoute.IMPUESTO_SOCIEDADES)
+    assert generic is not None
+    assert sociedades is not None
+    assert sociedades.message
+    assert "overview.no_aeat_history_sociedades" not in sociedades.message
+    assert sociedades.message != generic.message

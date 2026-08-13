@@ -128,9 +128,15 @@ def test_business_proportion_personal_classification_returns_none() -> None:
 # ---------------------------------------------------------------------------
 
 
+#: A real hex-64 shape: RentaLedgerAggregationIssue.transaction_id is typed
+#: core.identity.TransactionId, so a placeholder like the prior "tx-1"
+#: literal no longer validates.
+_TRANSACTION_ID = "9f14b6c1a8f16d4b5cf5f177797a2c5e1d0b3e6a5f6d0c3b1a8f16d4b5cf5f17"
+
+
 def _issue(detail: str) -> RentaLedgerAggregationIssue:
     return RentaLedgerAggregationIssue(
-        transaction_id="tx-1",
+        transaction_id=_TRANSACTION_ID,
         reason=RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
         detail=detail,
     )

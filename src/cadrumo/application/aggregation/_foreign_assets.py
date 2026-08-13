@@ -27,6 +27,7 @@ from ...core import (
     STRICT_FROZEN_CONFIG,
     BindingSourceKind,
     ForeignAssetObligationGroup,
+    M720AssetClassCode,
     Modelo,
     Period,
     foreign_asset_obligation_group,
@@ -393,7 +394,7 @@ def _registry_observation_from_foreign_asset(
     )
 
 
-def _asset_class_code(asset_class: ForeignAssetClass) -> str:
+def _asset_class_code(asset_class: ForeignAssetClass) -> M720AssetClassCode:
     try:
         return MODELO_720_FOREIGN_ASSET_CLASS_CODES[asset_class]
     except KeyError as exc:

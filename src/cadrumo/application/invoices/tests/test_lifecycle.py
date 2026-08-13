@@ -309,13 +309,14 @@ def test_an_empty_correction_refuses(tmp_path: Path) -> None:
         repo = InvoiceCatalogueRepository(objects=profile.repository)
         repo.save(InvoiceCatalogue.from_invoices((original,)))
 
-        with pytest.raises(InvoiceValidationError):
+        with pytest.raises(InvoiceValidationError) as exc:
             update_catalogue_invoice(
                 bucket_id=_BUCKET_ID,
                 invoice_id=original.invoice_id,
                 patch=CatalogueInvoicePatch(),
                 repository=repo,
             )
+        assert exc.value.translated_message == "application.invoices.lifecycle.errors.empty_invoice_patch"
 
 
 def test_the_patch_model_cannot_express_an_identity_change() -> None:
@@ -340,3 +341,61 @@ def test_the_patch_model_cannot_express_an_identity_change() -> None:
     }
 
     assert identity_fields.isdisjoint(set(CatalogueInvoicePatch.model_fields))
+
+
+def test_no_lifecycle_refusal_carries_an_authored_sentence(tmp_path: Path) -> None:
+    """Every refusal this module raises resolves from the catalogue, never from source.
+
+    The sibling tests pin each refusal's key and facts, which stays green even
+    if an authored English sentence is passed alongside the key: message
+    resolution prefers the key, so the prose hides. It does not stay hidden
+    everywhere — ``str(exc)`` prefers the positional message, so an authored
+    sentence still reaches tracebacks, logs, and every boundary that renders the
+    exception directly, in every locale.
+
+    This drives all five refusals and asserts the absence rather than the
+    identity: with no authored message, ``str(exc)`` degrades to the key, and
+    the operator-facing text comes from the catalogue. Re-introducing prose at
+    any of the five raise sites makes ``str(exc)`` that sentence and fails here.
+    """
+    from ....core.errors import resolve_error_message
+
+    transaction_id = "b" * 64
+    catalogue = InvoiceCatalogue.from_invoices([_build("2026-0142")])
+    shared_char, members = _two_invoices_sharing_a_prefix()
+
+    raised: list[InvoiceNotFoundError | InvoiceValidationError] = []
+    for query, expected_error in (("   ", InvoiceNotFoundError), ("deadbeefdeadbeef", InvoiceNotFoundError)):
+        with pytest.raises(expected_error) as exc:
+            resolve_catalogue_invoice(catalogue, query)
+        raised.append(exc.value)
+
+    with pytest.raises(InvoiceValidationError) as ambiguous:
+        resolve_catalogue_invoice(InvoiceCatalogue.from_invoices(members), shared_char)
+    raised.append(ambiguous.value)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        linked_invoice = _build("2026-0143", linked=(transaction_id,))
+        repository = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID)
+        repository.save(InvoiceCatalogue.from_invoices([linked_invoice]))
+
+        with pytest.raises(InvoiceValidationError) as linked:
+            remove_catalogue_invoice(bucket_id=_BUCKET_ID, invoice_id=linked_invoice.invoice_id)
+        raised.append(linked.value)
+
+        with pytest.raises(InvoiceValidationError) as empty_patch:
+            update_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                invoice_id=linked_invoice.invoice_id,
+                patch=CatalogueInvoicePatch(),
+                repository=repository,
+            )
+        raised.append(empty_patch.value)
+
+    assert len({error.translated_message for error in raised}) == len(raised)
+    for error in raised:
+        key = error.translated_message
+        assert key is not None
+        assert str(error) == key, f"{key} carries an authored sentence: {str(error)!r}"
+        rendered = resolve_error_message(error)
+        assert rendered and rendered != key, f"{key} does not resolve in the default catalogue"

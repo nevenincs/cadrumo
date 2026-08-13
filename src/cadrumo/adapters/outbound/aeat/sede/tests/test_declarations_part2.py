@@ -658,16 +658,24 @@ class TestFiledObservationBindings:
         with pytest.raises(SedeParseError, match="justificante metadata"):
             registry_observation_from_filed_declaration(observation)
 
-    def test_missing_previous_filing_observation_rejected(self) -> None:
+    def test_missing_previous_filing_observation_is_unsatisfied_not_refused(self) -> None:
+        """Genuine absence resolves the binding to unsatisfied rather than raising.
+
+        AEAT simply never confirmed this filing; that is not the same defect
+        as a structurally malformed binding or observation, and the caller
+        (a cross-period clean-state gate, or an operator-facing advisory)
+        reports the gap rather than the resolver refusing outright.
+        """
         snapshot = _modelo_130_snapshot()
 
-        with pytest.raises(RegistryValidationError, match="expected one observed filing"):
-            resolve_previous_filing_bindings_from_filed_declarations(
-                snapshot.revision,
-                (),
-                filing_year=2026,
-                period="1T",
-            )
+        resolved = resolve_previous_filing_bindings_from_filed_declarations(
+            snapshot.revision,
+            (),
+            filing_year=2026,
+            period="1T",
+        )
+
+        assert "irpf.previous_year_economic_activity_net_income" not in resolved
 
     def test_observation_of_only_non_numeric_casillas_is_rejected(self) -> None:
         """Skipping every casilla leaves no evidence, and that still refuses.

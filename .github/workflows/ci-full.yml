@@ -249,8 +249,30 @@ jobs:
         #
         # Non-blocking on the same terms as the integration step above: these
         # directories have never run in CI either, so their first verdict is a
-        # backlog measurement rather than a regression signal. Flip it off with
-        # the other one.
+        # backlog measurement rather than a regression signal.
+        #
+        # NOT "TEMPORARY" -- A NAMED CONDITION, stated by count so it is
+        # checkable rather than a judgement: this flag flips OFF when a run of
+        # `just test-dev-tooling` measures ZERO failures and ZERO errors. It is
+        # not there yet and it is not trending there. Measured sequentially
+        # (-n0, 38m49s) on 2026-08-13: 83 failed, 1694 passed, 48 errors,
+        # against 70 and then 68 failures measured on 2026-08-12 -- the backlog
+        # grew.
+        #
+        # THE TOTAL IS A SUM OVER POPULATIONS WITH DIFFERENT OWNERS and must not
+        # be handed to one party. All 48 errors share ONE cause: a Modelo 145
+        # casilla label key untranslated in `es`, which is a locale/registry
+        # co-commit gap fixed with `python -m dev.locales set`, not a defect in
+        # any gate here. The failures concentrate in the CLI action-census
+        # dispositions (10), the registry conformance CLI (7), terminology-
+        # handbook curation (7), the variable-envelope generation gate (5, which
+        # includes a registry loader-cache race that reports as "registry
+        # directory changed during cache fingerprinting" and is a property of
+        # concurrent writes rather than of the code) and the agent-evaluation
+        # goldens (19 across five modules, a live campaign's own surface).
+        #
+        # Re-measure before acting rather than trusting these figures: at least
+        # one population moves under peer commits.
         run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
         continue-on-error: true
 

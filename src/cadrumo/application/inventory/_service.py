@@ -222,7 +222,6 @@ class InventoryService:
             method = parse_valuation_method(valuation_method)
         except InventoryLedgerError as exc:
             raise InventoryServiceInputError(
-                f"invalid valuation_method {valuation_method!r}",
                 translated_message="application.inventory.service.errors.invalid_valuation_method",
                 context={"valuation_method": valuation_method},
             ) from exc
@@ -230,7 +229,6 @@ class InventoryService:
         document = repository.load()
         if _find_ledger(document, actividad_id, year) is not None:
             raise InventoryActividadConflictError(
-                f"inventory ledger already exists for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_conflict",
                 context={"actividad_id": actividad_id, "year": str(year)},
             )
@@ -283,7 +281,6 @@ class InventoryService:
         ledger = _find_ledger(document, actividad_id, year)
         if ledger is None:
             raise InventoryActividadNotFoundError(
-                f"no inventory ledger for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
             )
@@ -308,7 +305,6 @@ class InventoryService:
         ledger = self.show(bucket_id=bucket_id, actividad_id=actividad_id, year=year)
         if any(m.movement_id == movement.movement_id for m in ledger.period_movements):
             raise InventoryServiceInputError(
-                f"movement_id {movement.movement_id!r} already present in ledger",
                 translated_message="application.inventory.service.errors.duplicate_movement_id",
                 context={"movement_id": movement.movement_id},
             )
@@ -401,7 +397,6 @@ class InventoryService:
         ledger = _find_ledger(document, actividad_id, year)
         if ledger is None:
             raise InventoryActividadNotFoundError(
-                f"no inventory ledger for actividad={actividad_id!r} year={year}",
                 translated_message="application.inventory.service.errors.actividad_not_found",
                 context={"actividad_id": actividad_id, "year": str(year)},
             )

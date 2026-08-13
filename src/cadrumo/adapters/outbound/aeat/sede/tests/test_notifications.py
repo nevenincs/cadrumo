@@ -332,3 +332,80 @@ class TestQueryColumnLabelsAcrossBothSedeSpellings:
             "a row with no resolvable emission-date column parsed anyway, so the cases above "
             "would pass even with the column indexer removed"
         )
+
+
+class TestNotificationsQueryWindow:
+    """AEAT's notifications search defaults its date range to ONE MONTH.
+
+    A bare request therefore answers "what arrived this month" rather than "what
+    is on the register", and the reader inherited that default silently. Against
+    a real account it returned a single row where a widened window returns ten.
+    Nothing failed and nothing warned -- the surface answered the question it was
+    asked.
+
+    These cases pin that the reader states its window rather than inheriting
+    one.
+    """
+
+    def test_the_url_states_a_window_instead_of_inheriting_the_one_month_default(self) -> None:
+        from datetime import date as _date
+
+        from .._notifications import notifications_query_url
+
+        url = notifications_query_url(today=_date(2026, 8, 13), lookback_years=10)
+
+        assert "F_FECHA_DESDE=01-08-2016" in url
+        assert "F_FECHA_HASTA=13-08-2026" in url
+
+    def test_both_filters_are_widened_to_todos(self) -> None:
+        """Neither the notificada axis nor the read/unread axis may narrow the result."""
+        from datetime import date as _date
+
+        from .._notifications import notifications_query_url
+
+        url = notifications_query_url(today=_date(2026, 8, 13))
+
+        assert "F_TIPO_CONSULTA=&" in url or url.endswith("F_TIPO_CONSULTA=")
+        assert "F_LEIDA=&" in url or url.endswith("F_LEIDA=")
+
+    def test_the_configured_lookback_is_honoured_rather_than_hardcoded(self) -> None:
+        """The window comes from external constants, not a literal in the reader."""
+        from datetime import date as _date
+
+        from ......core.config import Settings
+        from .._notifications import notifications_query_url
+
+        configured = Settings.external_constants().aeat.notifications_query.lookback_years
+        url = notifications_query_url(today=_date(2026, 8, 13))
+
+        assert f"F_FECHA_DESDE=01-08-{2026 - configured}" in url
+
+    def test_a_leap_day_today_does_not_raise(self) -> None:
+        """29 February has no counterpart in a non-leap year.
+
+        Subtracting years with ``date.replace(year=...)`` raises ``ValueError``
+        on a leap day, which would make the notifications read fail on exactly
+        one day every four years -- the kind of defect that ships because nobody
+        runs the suite on 29 February.
+        """
+        from datetime import date as _date
+
+        from .._notifications import notifications_query_url
+
+        url = notifications_query_url(today=_date(2028, 2, 29), lookback_years=1)
+
+        assert "F_FECHA_DESDE=01-02-2027" in url
+        assert "F_FECHA_HASTA=29-02-2028" in url
+
+    def test_the_window_reaches_past_the_prescription_period(self) -> None:
+        """A notification older than LGT art-66 prescription is still record.
+
+        Pinned as an inequality rather than an exact number so the configured
+        value can be tuned, while a change that quietly narrows the window back
+        towards AEAT's one-month default fails here.
+        """
+        from ......core.config import Settings
+
+        configured = Settings.external_constants().aeat.notifications_query.lookback_years
+
+        assert configured > 4, "the search window no longer outreaches the four-year prescription period"

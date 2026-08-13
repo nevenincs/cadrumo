@@ -404,7 +404,7 @@ def resolve_modelo_work_unit_for_operator_target(
 
 def resolve_modelo_revision_for_operator_target(
     *,
-    calculation_revision_id: str | None,
+    calculation_revision_id: CalculationRevisionId | None,
     work_unit_id: str | None,
     modelo: str | None,
     year: int | None,
@@ -496,7 +496,7 @@ def resolve_modelo_revision_for_operator_target(
 def _calculation_revision_work_unit_target_error(
     *,
     error: CalculationRevisionNotFoundError,
-    calculation_revision_id: str | None,
+    calculation_revision_id: CalculationRevisionId | None,
     address: ModeloWorkAddress,
     default_for: ModeloCalculationRevisionDefault | None,
 ) -> CalculationRevisionNotFoundError:
@@ -824,7 +824,7 @@ def resolve_modelo_work_address_unit(address: ModeloWorkAddress) -> WorkUnit:
 def resolve_modelo_calculation_revision_address(
     *,
     address: ModeloWorkAddress,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
     default_for: ModeloCalculationRevisionDefault | None = None,
 ) -> CalculationRevision:
@@ -858,7 +858,7 @@ def resolve_modelo_calculation_revision_address(
 
 def _resolve_exact_calculation_revision_or_current_work_unit_revision(
     *,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     default_for: ModeloCalculationRevisionDefault | None,
 ) -> CalculationRevision:
     """Resolve an exact revision, or a current revision reached through its work unit.
@@ -942,7 +942,7 @@ def _require_revision_state(
 def resolve_verifiable_modelo_calculation_revision_address(
     *,
     address: ModeloWorkAddress,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
     """Resolve the :class:`CalculationRevision` that ``work verify`` addresses.
@@ -967,7 +967,7 @@ def resolve_verifiable_modelo_calculation_revision_address(
 def resolve_fileable_modelo_calculation_revision_address(
     *,
     address: ModeloWorkAddress,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
     """Resolve the verified-complete :class:`CalculationRevision` that ``work file`` may consume."""
@@ -994,7 +994,7 @@ def resolve_fileable_modelo_calculation_revision_address(
 def resolve_exportable_modelo_calculation_revision_address(
     *,
     address: ModeloWorkAddress,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     selector: ModeloCalculationRevisionSelector = ModeloCalculationRevisionSelector.CURRENT,
 ) -> CalculationRevision:
     """Resolve the filed or verified-complete :class:`CalculationRevision` that ``modelo export`` may consume."""

@@ -1220,14 +1220,42 @@ def _auth_check(report: WizardStatusReport) -> DiagnosticCheck:
 
 
 def _is_missing_active_bucket_session(exc: BaseException) -> bool:
+    """Classify a secure-state probe failure as a missing active bucket session.
+
+    This verdict decides whether ``secure_state.load`` warns (an expected cold
+    start) or fails (a real fault), and whether the raw exception text reaches
+    the operator, so it reads the typed exception chain rather than rendered
+    text.
+
+    Scanning the rendered text for the class name could not survive this
+    module's own contract: a producer that stops passing an authored sentence
+    positionally leaves ``str(exc)`` degraded to a locale key which no longer
+    contains the class name, so the scan would quietly stop matching and every
+    cold start would report as a hard fault. It also matched in the wrong
+    direction, classifying any unrelated failure whose message merely mentioned
+    the class as an expected cold start, which downgrades a genuine fault to a
+    warning and suppresses its detail.
+
+    Both the ``__cause__`` and ``__context__`` edges are followed. An explicit
+    ``raise ... from`` sets only the former and an incidental re-raise inside an
+    ``except`` block sets only the latter, so a chain can fork across the two;
+    the previous single-edge walk silently abandoned the ``__context__`` branch
+    whenever a ``__cause__`` was present. Identity marking keeps a self- or
+    mutually-referential chain from looping.
+    """
     from ..adapters.persistence.storage.master_key import NoActiveBucketSessionError
 
-    current: BaseException | None = exc
-    while current is not None:
+    seen: set[int] = set()
+    pending: list[BaseException] = [exc]
+    while pending:
+        current = pending.pop()
+        if id(current) in seen:
+            continue
+        seen.add(id(current))
         if isinstance(current, NoActiveBucketSessionError):
             return True
-        current = current.__cause__ or current.__context__
-    return "NoActiveBucketSessionError" in f"{type(exc).__name__}: {exc}"
+        pending.extend(link for link in (current.__cause__, current.__context__) if link is not None)
+    return False
 
 
 def _compact_exception(exc: BaseException) -> str:

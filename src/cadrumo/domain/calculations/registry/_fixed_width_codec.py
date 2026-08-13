@@ -11,6 +11,7 @@ from pydantic import BeforeValidator
 
 from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
+from ....core.errors import CadrumoError
 from ....core.money import round_to_cents
 from ._errors import RegistryValidationError
 from ._export_value_policy import (
@@ -97,6 +98,9 @@ class _ExportField(Protocol):
     def data_type(self) -> Literal["text", "integer", "decimal", "money", "date", "boolean"]: ...
 
     @property
+    def required(self) -> bool: ...
+
+    @property
     def padding(self) -> ExportPadding: ...
 
     @property
@@ -131,18 +135,33 @@ class _ExportRecord(Protocol):
     def fields(self) -> tuple[_ExportField, ...]: ...
 
 
-class FixedWidthRecordRenderError(ValueError):
-    """A registry-owned fixed-record rendering refusal with exact context."""
+class FixedWidthRecordRenderError(CadrumoError):
+    """A registry-owned fixed-record rendering refusal with exact context.
+
+    The condition travels as the ``reason`` discriminant plus the coordinates
+    that produced it; the operator-facing sentence is resolved from the
+    registered key, so no raise site authors English prose.
+    """
 
     def __init__(
         self,
-        message: str,
         *,
         field_id: str | None,
         reason: str,
         export_record_id: str,
+        **facts: object,
     ) -> None:
-        super().__init__(message)
+        context: dict[str, object] = {
+            "reason": reason,
+            "export_record_id": export_record_id,
+            **facts,
+        }
+        if field_id is not None:
+            context["export_field_id"] = field_id
+        super().__init__(
+            translated_message="errors.fail.fixed_width_record_render",
+            context=context,
+        )
         self.field_id = field_id
         self.reason = reason
         self.export_record_id = export_record_id
@@ -184,8 +203,11 @@ def render_fixed_width_export_field(field: _ExportField, value: object) -> str:
     if kind == "literal":
         value = field.literal
     value = project_export_value(field.value_policy, value)
-    _require_allowed_value(field, value)
-    rendered = _render_typed_value(field, value)
+    if _is_absent_numeric_slot(field, value):
+        rendered = _render_absent_numeric(field)
+    else:
+        _require_allowed_value(field, value)
+        rendered = _render_typed_value(field, value)
     validate_export_wire_value(field.value_policy, rendered)
     return rendered
 
@@ -204,10 +226,10 @@ def render_fixed_width_export_record_body(
     fields = tuple(sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
     if not fields:
         raise FixedWidthRecordRenderError(
-            f"export record {record.id!r} declares no renderable fields",
             field_id=None,
             reason="empty_record",
             export_record_id=record.id,
+            renderable_field_count=0,
         )
     coordinates = tuple(_require_record_coordinates(field, record_id=record.id) for field in fields)
     total_length = max(offset + length - 1 for offset, length in coordinates)
@@ -217,36 +239,38 @@ def render_fixed_width_export_record_body(
         kind = str(getattr(field.kind, "value", field.kind))
         if kind not in {"literal", "filler", "casilla"}:
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} cannot be mapped to the fixed-width renderer",
                 field_id=field.id,
                 reason="field_kind",
                 export_record_id=record.id,
+                export_field_kind=kind,
             )
         try:
-            raw_value = field_values.get(field.casilla_id, "") if field.casilla_id is not None else ""
+            raw_value = field_values.get(field.casilla_id) if field.casilla_id is not None else None
             rendered = render_fixed_width_export_field(field, raw_value).encode(record.encoding)
         except (LookupError, UnicodeError, RegistryValidationError) as exc:
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} has an invalid fixed-width value",
                 field_id=field.id,
                 reason="fixed_width_value",
                 export_record_id=record.id,
+                producer_error_type=type(exc).__name__,
             ) from exc
         if len(rendered) != length:
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} encoded to {len(rendered)} bytes instead of {length}",
                 field_id=field.id,
                 reason="encoded_width",
                 export_record_id=record.id,
+                encoded_byte_count=len(rendered),
+                declared_byte_count=length,
             )
         start = offset - 1
         end = start + length
         if any(occupied[start:end]):
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} overlaps another field",
                 field_id=field.id,
                 reason="overlap",
                 export_record_id=record.id,
+                declared_offset=offset,
+                declared_byte_count=length,
             )
         buffer[start:end] = rendered
         occupied[start:end] = b"\x01" * length
@@ -265,10 +289,11 @@ def render_fixed_width_export_record_payload(
 def _require_record_coordinates(field: _ExportField, *, record_id: str) -> tuple[int, int]:
     if field.offset is None or field.length is None:
         raise FixedWidthRecordRenderError(
-            f"export field {field.id!r} lacks fixed-width coordinates",
             field_id=field.id,
             reason="missing_coordinates",
             export_record_id=record_id,
+            offset_declared=field.offset is not None,
+            length_declared=field.length is not None,
         )
     return field.offset, field.length
 
@@ -415,6 +440,44 @@ def _require_allowed_value(field: _ExportField, value: object) -> None:
         raise RegistryValidationError(
             f"export field {field.id!r} value {canonical!r} is outside allowed_values",
         )
+
+
+_NUMERIC_DATA_TYPES = frozenset({"integer", "decimal", "money"})
+
+
+def _is_absent_numeric_slot(field: _ExportField, value: object) -> bool:
+    """Report a numeric slot carrying no value once its policy has projected.
+
+    Absence is tested after projection so a value policy that assigns its own
+    meaning to an empty slot keeps it: an unselected checkbox projects to its
+    declared ``0`` and arrives here as a value, not an absence.
+    """
+    if field.data_type not in _NUMERIC_DATA_TYPES:
+        return False
+    return value is None or value == ""
+
+
+def _render_absent_numeric(field: _ExportField) -> str:
+    """Render an empty optional numeric slot as its declared blank fill.
+
+    A fixed-width record gives every field its byte slot unconditionally, so an
+    optional casilla the taxpayer legitimately lacks -- the birth year of a
+    descendant they do not have -- still has to occupy its width. AEAT's record
+    designs fill such a field with zeros ("los campos numéricos que no tengan
+    contenido se rellenarán a ceros"), which is exactly what the field's own
+    declared padding axis produces; the fill is therefore read from the registry
+    declaration rather than chosen here, and the absent value is never turned
+    into a value upstream.
+
+    A field the layout declares ``required`` has no blank representation and
+    refuses instead, so an omitted mandatory figure cannot reach the wire as a
+    zero.
+    """
+    if field.required:
+        raise RegistryValidationError(
+            f"required export field {field.id!r} has no value to render",
+        )
+    return _render_numeric_digits(field, "", negative=False)
 
 
 def _render_integer(field: _ExportField, value: object) -> str:

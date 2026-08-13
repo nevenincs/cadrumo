@@ -58,6 +58,7 @@ from ...core import (
 )
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n import tr
+from ...core.identity import TransactionId
 from ...domain.bienes_inversion import (
     BienesInversionIvaRegister,
     validate_investment_asset_reciprocity,
@@ -229,6 +230,11 @@ class IvaLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
+    # NOT core.identity.TransactionId, deliberately: most call sites feed a real
+    # Transaction's id, but aggregate_iva_ledger_candidates feeds candidate.ledger_id
+    # (IvaLedgerCandidate.ledger_id: _LedgerId, 1-128 chars, no hex-64 pattern) --
+    # a pre-classified ledger line that need not be a catalogued Transaction. The
+    # 128-char bound below matches _LedgerId's own bound, not TransactionId's.
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
     detail: _IssueDetail
@@ -239,7 +245,7 @@ class ProrrataLedgerReference(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     transaction_date: date
     reference: ProrrataReference
     base_amount: Decimal = Field(..., ge=Decimal("0"))

@@ -45,8 +45,8 @@ from ...core.time import validate_utc_aware
 from ...domain.calculations.registry import RevisionId
 from ...domain.user_profile import UserProfileStatus
 
-# The two wizard-owned profile result schemas register through the manifest's
-# explicit lazy schema-owner table, NOT here: the `config` group imports this
+# The two wizard-owned profile result schemas register at their own producer
+# through the schema decorator, NOT here: the `config` group imports this
 # module at group-resolution time, so importing the wizard from here would pull
 # its whole dependency tail into every `config` verb and redden the cold-start
 # guard.
@@ -1035,9 +1035,9 @@ class ApoderadoCheckResult(OutputSchema):
 # ``config.profile.create`` / ``config.profile.edit`` are declared at their real
 # producer in :mod:`application.wizard._results`, which sits below this package in
 # the hexagonal direction and cannot construct a class defined up here. They
-# register through the manifest's lazy canonical-owner table. There is NO
-# wizard import HERE: the ``config`` group must not pull the wizard dependency
-# tail into every ``config`` verb.
+# register there through the schema decorator. There is NO wizard import HERE:
+# the ``config`` group must not pull the wizard dependency tail into every
+# ``config`` verb.
 
 
 class ConfigProfileExportReconcileFailurePayload(OutputSchema):

@@ -50,17 +50,15 @@ def test_parse_scope_tokens_accepts_known_tokens_and_deduplicates(
 
 
 @pytest.mark.parametrize(
-    ("raw_tokens", "expected_match", "expected_context"),
+    ("raw_tokens", "expected_context"),
     (
         (
             ("BOGUS",),
-            "not in catalogue",
             {"scope_token": "BOGUS", "validation_rule": "declared_catalogue_code"},
         ),
-        (("iva",), "must be uppercase", {"scope_token": "iva", "validation_rule": "uppercase"}),
+        (("iva",), {"scope_token": "iva", "validation_rule": "uppercase"}),
         (
             ("IVA,RENT",),
-            "contains a comma",
             {"scope_token": "IVA,RENT", "validation_rule": "no_comma_separated_values"},
         ),
     ),
@@ -68,10 +66,11 @@ def test_parse_scope_tokens_accepts_known_tokens_and_deduplicates(
 def test_parse_scope_tokens_rejects_invalid_operator_tokens(
     catalogue: ApoderamientosCatalogue,
     raw_tokens: tuple[str, ...],
-    expected_match: str,
     expected_context: dict[str, str],
 ) -> None:
-    with pytest.raises(UnknownScopeError, match=expected_match) as excinfo:
+    # The validation_rule fact distinguishes the three refusals; the sentence
+    # that used to carry that distinction is catalogue-rendered now.
+    with pytest.raises(UnknownScopeError) as excinfo:
         parse_scope_tokens(raw_tokens, catalogue)
 
     expected_context_with_version = expected_context.copy()

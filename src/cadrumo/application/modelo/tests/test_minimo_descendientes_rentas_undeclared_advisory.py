@@ -121,6 +121,19 @@ def test_fires_for_a_contributing_descendant_with_no_rentas_figure() -> None:
     assert diagnostic.casilla_id == _ESTATAL_CASILLA
 
 
+def test_the_advisory_asserts_both_provisions_its_message_states() -> None:
+    """The message names two clauses; the typed grounding must name both, not the casilla's coarser ref.
+
+    Art. 58.1 and Art. 61 norma 2ª are declared on ``asserted_legal_refs``, the
+    advisory-asserted path -- not ``legal_refs``, which would read the coarser
+    whole-article refs off the casilla the advisory addresses.
+    """
+    _write(_contributing_child())
+    diagnostic = _collect()[0]
+    assert diagnostic.asserted_legal_refs == ("ley-35-2006:art-58-1", "ley-35-2006:art-61-norma-2")
+    assert diagnostic.legal_refs == ()
+
+
 def test_the_advisory_names_the_descendant_and_the_way_to_answer() -> None:
     """An advisory an operator cannot act on is noise."""
     _write(_contributing_child())

@@ -166,6 +166,7 @@ _BASE_BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-profile-declaration-type": Decimal("1"),
     "renta-2024-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-2024-modelo-100-estimacion-directa-es-normal": Decimal("0"),
+    "renta-2024-profile-deduccion-maternidad": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
 }

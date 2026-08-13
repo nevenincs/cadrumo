@@ -65,7 +65,7 @@ from ...core.ed25519_signing import (
     sign_digest_hex,
 )
 from ...core.errors import CadrumoError
-from ...core.identity import BucketId
+from ...core.identity import BucketId, CalculationRevisionId
 from ...core.time import UtcInstant
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
@@ -152,7 +152,7 @@ class SignedReviewPackage(BaseModel):
 
     envelope_version: int = Field(default=_SIGNATURE_ENVELOPE_VERSION, ge=1)
     bucket_id: str = Field(min_length=1)
-    calculation_revision_id: str = Field(min_length=1)
+    calculation_revision_id: CalculationRevisionId
     manifest_sha256: str = Field(pattern=_HEX_PATTERN_64)
     signature_hex: str = Field(pattern=_HEX_PATTERN_128)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)

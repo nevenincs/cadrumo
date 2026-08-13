@@ -30,6 +30,7 @@ from typing import Literal, Self
 from pydantic import Field, model_validator
 
 from ...application.overview import DataPrepStepId, DataPrepStepState, ModeloReadinessState
+from ...core.identity import CalculationRevisionId
 from ...core.json_contract import OutputSchema, register_schema
 from ...core.parsing import require_iso8601_date
 from ...domain.calculations.registry import RevisionId
@@ -144,7 +145,7 @@ class OverviewCalendarFilingEvidencePayload(OutputSchema):
     period: str | None = None
     local_filing_state: Literal["not_ready_to_file", "ready_to_file", "external_baseline_imported"]
     local_filing_record_id: str | None = None
-    local_calculation_revision_id: str | None = None
+    local_calculation_revision_id: CalculationRevisionId | None = None
     local_filed_at: str | None = None
     aeat_submission_state: Literal["not_observed", "submitted_observed", "accepted", "justificante_verified"]
     aeat_submitted_at: str | None = None

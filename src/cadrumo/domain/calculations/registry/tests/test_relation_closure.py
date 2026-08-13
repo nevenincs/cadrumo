@@ -20,9 +20,9 @@ from .._relations import (
     resolve_relation_values_from_observations,
 )
 from .._schema import ModeloDefinition, ModeloRevision
-from .._schema_surfaces import RelationDefinition
+from .._schema_surfaces import RelationDefinition, RelationPeriodAlignment, RelationRevisionSelector
 from .._validate import RegistryValidator
-from .._validate_relation_sources import validate_slot_source_hygiene
+from .._validate_relation_sources import validate_relation_closure, validate_slot_source_hygiene
 from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -527,3 +527,229 @@ def test_relation_definition_rejects_annual_summary_relation_without_summary_rol
 
     with pytest.raises(ValidationError, match="annual summary relation"):
         RelationDefinition.model_validate(raw_relation)
+
+
+# --------------------------------------------------------------------------
+# Relation source-year coverage: structural future exclusion and allowlist.
+#
+# Modelo 100 is period-versioned per-year (each revision covers exactly one
+# closed year, 2020-2025 today), unlike every EXISTING relation's source
+# modelo, all of which are open-ended. No relation in the committed corpus
+# yet pairs an open-ended consumer with a per-year-versioned source, so these
+# tests attach a synthetic one to a REAL open-ended revision (Modelo 130's
+# 2019-y-siguientes) reading a REAL per-year-closed one (Modelo 100), rather
+# than mutating an existing relation's shape past what it can validly become.
+# --------------------------------------------------------------------------
+
+_TEST_RELATION_ID = "test-relation-m130-reads-m100-annual"
+_M100_SOURCE_CASILLA: CasillaId = validated_casilla_id("0604", surface="_M100_SOURCE_CASILLA")
+
+
+def _m130_relation_reading_m100(
+    modelos: tuple[ModeloDefinition, ...],
+    *,
+    target_binding: str,
+) -> tuple[tuple[ModeloDefinition, ...], RelationDefinition]:
+    """Attach a relation reading Modelo 100 at filing_year_delta=-1 onto Modelo 130's open-ended revision.
+
+    Modelo 130's own revision starts at 2019, so this relation requires
+    Modelo 100 source years [2018, infinity): 2018-2019 predates Modelo
+    100's own corpus floor (2020), and every year from 2026 onward is beyond
+    Modelo 100's latest authored revision (2025) -- the structural "not yet
+    published" case under test.
+
+    ``target_binding`` is deliberately a parameter rather than fixed: it
+    controls ``source_is_observation_history``
+    (``_relation_is_prior_year_filing_carry``), which gates the EXISTING
+    pre-modelled-history exception this module's own tests must not
+    conflate with the NEW future-year one. Modelo 130's own
+    ``irpf.previous_year_economic_activity_net_income`` binding is
+    ``previous_filing``-sourced (observation-backed), so targeting it makes
+    2018-2019 ALSO structurally excluded -- a real, first-hand finding of
+    its own: once this concept's target binding becomes
+    ``relation_prefill``-sourced (itself observation-backed) under the real
+    migration, its 2018-2019 gap needs no allowlist entry at all. Targeting
+    a ledger-sourced binding instead forces ``source_is_observation_history
+    = False``, isolating a genuine, allowlist-eligible gap for the other
+    tests below.
+    """
+    modelo_130 = _modelo(modelos, "130")
+    revision = modelo_130.revisions["2019-y-siguientes"]
+    relation = RelationDefinition(
+        id=_TEST_RELATION_ID,
+        kind="cross_model_output",
+        dependency_role="direct_calculation",
+        source_modelo="100",
+        source_revision_selector=RelationRevisionSelector(filing_year_delta=-1),
+        source_casilla_id=_M100_SOURCE_CASILLA,
+        target_binding=target_binding,
+        period_alignment=RelationPeriodAlignment(source_period="0A", target_period="0A", filing_year_delta=-1),
+        source_periods=("0A",),
+        target_periods=("1T", "2T", "3T", "4T"),
+        legal_refs=("rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"),
+        source_refs=("aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"),
+    )
+    mutated_revision = revision.model_copy(update={"relations": (*revision.relations, relation)})
+    mutated_modelo = _with_revision(modelo_130, mutated_revision)
+    return _replace_modelo(modelos, mutated_modelo), relation
+
+
+def test_an_observation_backed_carry_is_silent_on_both_sides_needing_no_allowance() -> None:
+    """A real, first-hand finding: an observation-backed carry needs no allowlist entry at all.
+
+    Targeting Modelo 130's own ``previous_filing``-sourced binding makes
+    this relation an observation-backed carry, so BOTH structural
+    exclusions apply at once: the EXISTING pre-modelled-history one covers
+    2018-2019 and the NEW future-year one covers 2026 onward. Zero failures
+    proves the real migration's own eventual relation (whose target binding
+    becomes ``relation_prefill`` -- itself observation-backed) needs no
+    allowlist entry for the 2018-2019 range the old ``previous_filing``
+    mechanism's own allowance was written for.
+    """
+    modelos, _catalogues = _committed_tree()
+    mutated_modelos, _relation = _m130_relation_reading_m100(
+        modelos,
+        target_binding="irpf.previous_year_economic_activity_net_income",
+    )
+    modelos_by_id = {modelo.id: modelo for modelo in mutated_modelos}
+
+    failures = validate_relation_closure(mutated_modelos, modelos_by_id)
+
+    assert failures == []
+
+
+def test_a_non_observation_backed_relation_is_silent_beyond_its_latest_year_but_not_before_it() -> None:
+    """The NEW future-year exclusion is unconditional; the pre-modelled-history one stays scoped.
+
+    Targeting a ledger-sourced binding forces ``source_is_observation_history
+    = False``, so the EXISTING pre-modelled-history exception does not apply
+    and the genuine 2018-2019 gap surfaces as an ordinary failure. Without
+    the NEW future-year exclusion, an open-ended consumer (Modelo 130)
+    reading a per-year-closed source (Modelo 100) would ALSO fail
+    perpetually for every year beyond Modelo 100's latest authored revision
+    -- a standing, undischargeable failure no allowlist entry could ever
+    satisfy -- so nothing beyond 2025 may be reported either.
+    """
+    modelos, _catalogues = _committed_tree()
+    mutated_modelos, relation = _m130_relation_reading_m100(
+        modelos,
+        target_binding="modelo-130-actividad-economica-ingresos-cumulative",
+    )
+    modelos_by_id = {modelo.id: modelo for modelo in mutated_modelos}
+
+    failures = validate_relation_closure(mutated_modelos, modelos_by_id)
+
+    assert any(
+        "lacks exact source revision coverage" in failure and "2018-2019" in failure and relation.id in failure
+        for failure in failures
+    ), failures
+    # Nothing beyond Modelo 100's latest authored year (2025) is ever
+    # reported. If the structural exclusion regressed, this gate would fail
+    # perpetually for every later year and this assertion would catch it.
+    assert not any(str(year) in failure for year in range(2026, 2031) for failure in failures), failures
+
+
+def test_allowance_suppresses_the_genuine_gap_and_reports_a_stale_entry(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A matching allowance suppresses its finding; a non-matching one is reported stale."""
+    from .. import _validate_relation_sources as _module
+
+    modelos, _catalogues = _committed_tree()
+    mutated_modelos, relation = _m130_relation_reading_m100(
+        modelos,
+        target_binding="modelo-130-actividad-economica-ingresos-cumulative",
+    )
+    modelos_by_id = {modelo.id: modelo for modelo in mutated_modelos}
+
+    matching_allowance = _module._RelationSourceYearCoverageAllowance(
+        relation_id=relation.id,
+        source_modelo="100",
+        source_period="0A",
+        missing_from_year=2018,
+        missing_through_year=2019,
+        reason="test fixture: Modelo 100's own corpus floor (2020) postdates this relation's own start (2019).",
+        discharge="Author Modelo 100 registry revisions for filing years 2018 and 2019.",
+    )
+    stale_allowance = _module._RelationSourceYearCoverageAllowance(
+        relation_id=relation.id,
+        source_modelo="100",
+        source_period="0A",
+        missing_from_year=2015,
+        missing_through_year=2016,
+        reason="test fixture: an allowance that does not match any real finding.",
+        discharge="n/a -- this entry exists only to prove staleness detection.",
+    )
+    monkeypatch.setattr(_module, "_ALLOWANCES", (matching_allowance, stale_allowance))
+
+    failures = validate_relation_closure(mutated_modelos, modelos_by_id)
+
+    assert not any("2018-2019" in failure and "lacks" in failure for failure in failures), failures
+    assert any(
+        "stale relation source-year-coverage allowance" in failure and "2015" in failure and "2016" in failure
+        for failure in failures
+    ), failures
+
+
+def test_a_widened_gap_is_not_silently_absorbed_by_the_narrower_allowance(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The same START year with a LARGER end must not match the documented allowance.
+
+    Dropping Modelo 100's 2020 revision from the candidate set widens the
+    relation's missing range from 2018-2019 to 2018-2020. An allowance
+    naming 2018 THROUGH 2019 specifically must not silently absorb the
+    wider gap -- the match is exact, not start-year-only.
+    """
+    from .. import _validate_relation_sources as _module
+
+    modelos, _catalogues = _committed_tree()
+    mutated_modelos, relation = _m130_relation_reading_m100(
+        modelos,
+        target_binding="modelo-130-actividad-economica-ingresos-cumulative",
+    )
+    modelo_100 = _modelo(mutated_modelos, "100")
+    mutated_100 = modelo_100.model_copy(
+        update={"revisions": {rid: rev for rid, rev in modelo_100.revisions.items() if rid != "2020"}},
+    )
+    mutated_modelos = _replace_modelo(mutated_modelos, mutated_100)
+    modelos_by_id = {modelo.id: modelo for modelo in mutated_modelos}
+
+    matching_allowance = _module._RelationSourceYearCoverageAllowance(
+        relation_id=relation.id,
+        source_modelo="100",
+        source_period="0A",
+        missing_from_year=2018,
+        missing_through_year=2019,
+        reason="test fixture, deliberately too narrow for the widened gap below.",
+        discharge="n/a",
+    )
+    monkeypatch.setattr(_module, "_ALLOWANCES", (matching_allowance,))
+
+    failures = validate_relation_closure(mutated_modelos, modelos_by_id)
+
+    assert any("2018-2020" in failure and relation.id in failure for failure in failures), failures
+    assert any("stale relation source-year-coverage allowance" in failure for failure in failures), failures
+
+
+class TestSourceUpperBound:
+    """Pure unit coverage for the future-year structural exclusion helpers."""
+
+    def test_an_open_ended_candidate_has_no_ceiling(self) -> None:
+        from .._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+
+        modelos, _catalogues = _committed_tree()
+        m115_revision = _modelo(modelos, "115").revisions["2019-y-siguientes"]
+
+        assert _source_upper_bound((m115_revision,)) is None
+        assert _is_beyond_latest_modelled_source_year(2099, (m115_revision,)) is False
+
+    def test_closed_per_year_candidates_bound_at_the_latest_year(self) -> None:
+        from .._validate_relation_periods import _is_beyond_latest_modelled_source_year, _source_upper_bound
+
+        modelos, _catalogues = _committed_tree()
+        m100_revisions = tuple(_modelo(modelos, "100").revisions.values())
+
+        assert _source_upper_bound(m100_revisions) == 2025
+        assert _is_beyond_latest_modelled_source_year(2026, m100_revisions) is True
+        assert _is_beyond_latest_modelled_source_year(2025, m100_revisions) is False

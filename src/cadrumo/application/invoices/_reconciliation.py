@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.identity import InvoiceId
 from ...domain.invoices import (
     InvoiceCatalogue,
     InvoiceCatalogueRepositoryProtocol,
@@ -35,7 +36,7 @@ class ReconciliationSkippedSuggestion(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    invoice_id: str
+    invoice_id: InvoiceId
     transaction_id: str
     reason: str
 

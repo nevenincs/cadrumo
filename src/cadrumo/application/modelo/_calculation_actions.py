@@ -60,6 +60,7 @@ from ...core import (
     Modelo,
 )
 from ...core.aggregation import BindingSourceKind
+from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
@@ -897,7 +898,9 @@ def _source_provenance_refs(
     application→domain boundary map: the domain never imports the application
     provenance model, and the compact ref deliberately drops the per-casilla
     ``legal_refs`` / ``source_refs`` (carried by the revision's ``observations``)
-    to avoid duplicating that grounding.
+    to avoid duplicating that grounding. ``dependency_treatment`` is NOT dropped:
+    unlike the per-casilla refs, nothing else on the revision carries it, so it
+    survives onto the persisted ref unchanged.
     """
     return tuple(
         CalculationSourceRef(
@@ -905,6 +908,7 @@ def _source_provenance_refs(
             binding_source=provenance.binding_source,
             source_ref=provenance.source_ref,
             fingerprint=provenance.fingerprint,
+            dependency_treatment=provenance.dependency_treatment,
         )
         for provenance in source_resolution.provenance
     )
@@ -1723,7 +1727,7 @@ def list_calculation_revisions(
 
 
 def get_calculation_revision(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
@@ -1745,7 +1749,7 @@ def get_calculation_revision(
 
 
 def _calculation_revision_in_repository_bucket(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     catalogue: CalculationRevisionCatalogue,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
@@ -1773,7 +1777,7 @@ def _calculation_revision_in_repository_bucket(
 
 
 def mark_revision_verificado_completo(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     actor: str,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,

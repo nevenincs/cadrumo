@@ -409,6 +409,12 @@ def _m349_inferred_clave_diagnostics(
                 "If any of these supplies followed an exempt importation, set its operation type to M or H "
                 "and recalculate; otherwise the inferred clave is correct and no action is needed."
             ),
+            # Advisory-asserted: this module holds no revision, snapshot or
+            # casilla definition anywhere -- the claim spans two provisions
+            # (the ordinary art. 25 exemption and the art. 27.12 post-importation
+            # carve-out) about the invoice catalogue as a whole, not about one
+            # M349 casilla.
+            asserted_legal_refs=("ley-37-1992:art-25", "ley-37-1992:art-27"),
         ),
     )
 

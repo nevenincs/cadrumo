@@ -43,3 +43,34 @@ predicate_id = "modelo-131-2019-2023-pago-fraccionado-determinado-cuando-rendimi
 expression = 'implies_nonzero(["01", "02"])'
 finding_kind = "ADVISORY"
 legal_refs = ["rd-439-2007:art-110"]
+
+# Converse guard on the same datos-base pair, closing the direction the
+# advisory above structurally cannot see. That one fires on positive C01 with
+# zero C02, and is silent precisely when C01 is itself the omitted field,
+# because a zero antecedent satisfies the implication trivially. C01 ("Suma de
+# rendimientos netos") is manual, declares no formula, is not schema-required,
+# and is read by no formula in this revision — C02 is an independent manual
+# input and C07 = C02 + C04 + C06 never references C01 — so an omitted C01
+# reaches the fichero with nothing downstream noticing, exporting zero
+# rendimientos beside a positive pago fraccionado.
+#
+# Legal attribution. RD 439/2007 art. 110.1.b fixes the datos-base pago
+# fraccionado at el 4 / 3 / 2 por ciento of the rendimientos netos determined
+# by estimación objetiva on the datos-base, the scale minimum being 2 por 100,
+# so a strictly positive C02 is reachable only from a strictly positive C01.
+# The two situations that legitimately yield a pago fraccionado with no
+# datos-base rendimiento are routed by that same article to other casillas and
+# leave C02 at zero: "no pudiera determinarse ningún dato-base"
+# (art. 110.1.b in fine) is declared through C03/C04, and actividades
+# agrícolas, ganaderas y forestales (art. 110.1.c) through C05/C06.
+#
+# ADVISORY (non-blocking), and false-positive-free in both directions. It holds
+# trivially whenever C02 is absent, zero or negative, so a no-activity filer, a
+# loss filer, a pure-agrario filer and a sin-datos-base filer raise nothing; it
+# fires only on a strictly positive C02 with C01 zero or absent, which
+# art. 110.1.b makes unreachable for a legitimate filing.
+[[revisions."2019-2023".verification_predicates]]
+predicate_id = "modelo-131-2019-2023-rendimientos-declarados-cuando-pago-fraccionado-datos-base-positivo"
+expression = 'implies_nonzero(["02", "01"])'
+finding_kind = "ADVISORY"
+legal_refs = ["rd-439-2007:art-110"]

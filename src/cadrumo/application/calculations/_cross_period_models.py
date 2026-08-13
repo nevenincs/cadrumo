@@ -36,7 +36,7 @@ class _ObservationPayload(Protocol):
     observation: RegistryModeloObservation
     source_kind: ObservationSourceKind
     member_nif: str | None
-    stamped_revision_id: str
+    stamped_revision_id: RevisionId
     source_metadata: dict[str, str]
 
 

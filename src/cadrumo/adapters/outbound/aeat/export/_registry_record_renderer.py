@@ -40,12 +40,17 @@ from .....domain.calculations.registry import (
 from .....domain.modelos import ModeloExportError
 
 
-def _export_error(message: str, *, field_id: str | None, reason: str, **context: object) -> ModeloExportError:
-    """Build the port's failure with the diagnosis its callers re-raise from."""
+def _export_error(*, field_id: str | None, reason: str, **context: object) -> ModeloExportError:
+    """Build the port's failure with the diagnosis its callers re-raise from.
+
+    The sentence is resolved from the port error's own registered key; the
+    producer's condition travels as the ``reason`` discriminant so the boundary
+    forwards machine facts rather than a re-wrapped English string.
+    """
     payload: dict[str, object] = {"reason": reason, **context}
     if field_id is not None:
         payload["export_field_id"] = field_id
-    return ModeloExportError(message, context=payload)
+    return ModeloExportError(translated_message="errors.fail.modelo_export", context=payload)
 
 
 class RegistryFixedWidthRecordRenderer:
@@ -65,7 +70,6 @@ class RegistryFixedWidthRecordRenderer:
             return render_fixed_width_export_record_body(record, field_values=field_values)
         except FixedWidthRecordRenderError as exc:
             raise _export_error(
-                str(exc),
                 field_id=exc.field_id,
                 reason=exc.reason,
                 export_record_id=exc.export_record_id,

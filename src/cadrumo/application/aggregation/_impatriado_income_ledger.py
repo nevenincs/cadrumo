@@ -50,6 +50,7 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, validated_casilla_id
+from ...core.identity import TransactionId
 from ...domain.transactions import (
     BusinessClassification,
     OutOfWindowTransactionSummary,
@@ -113,7 +114,7 @@ class ImpatriadoIncomeLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     reason: ImpatriadoIncomeLedgerAggregationIssueReason
     detail: _IssueDetail
     # The rejected ISO 3166-1 alpha-2 source-jurisdiction code for a
@@ -139,7 +140,7 @@ class ImpatriadoIncomeObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     target_casilla_id: CasillaId
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))

@@ -99,6 +99,7 @@ from ._modelo_revision_payload_parts import (
     DetailRowPayload,
     ObservationPayload,
     ResultSummaryRowPayload,
+    SourceProvenancePayload,
 )
 from ._modelo_support_matrix_payloads import (
     ModeloPortalCompatibilityRefPayload,
@@ -209,7 +210,10 @@ class CalculationRevisionPayload(OutputSchema):
     ``observations`` carries joinable :class:`ObservationPayload` rows projected
     from :class:`CasillaObservation`.
     ``result_summary`` carries :class:`ResultSummaryRowPayload` rows selected
-    from :class:`ResultSummaryRow`. The binding and
+    from :class:`ResultSummaryRow`. ``source_provenance`` carries
+    :class:`SourceProvenancePayload` rows projected from
+    :class:`CalculationSourceRef`, including each carry's declared
+    ``dependency_treatment``. The binding and
     relation override maps preserve the operator inputs that shaped the draft
     revision.
     """
@@ -221,6 +225,7 @@ class CalculationRevisionPayload(OutputSchema):
     observations: tuple[ObservationPayload, ...]
     result_summary: tuple[ResultSummaryRowPayload, ...] = ()
     detail_rows: tuple[DetailRowPayload, ...] = ()
+    source_provenance: tuple[SourceProvenancePayload, ...] = ()
     binding_overrides: dict[BindingId, str]
     relation_overrides: dict[RelationId, str] = Field(default_factory=dict)
     input_values_by_casilla_id: dict[CasillaId, str]
@@ -286,7 +291,7 @@ class CrossPeriodDependencyEvidencePayload(OutputSchema):
     blockers: tuple[str, ...]
     observation_source_kind: str | None = None
     filing_record_id: str | None = None
-    calculation_revision_id: str | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
     external_evidence_kind: str | None = None
     expected_member_nifs: tuple[str, ...] = ()
     observed_member_nifs: tuple[str, ...] = ()
@@ -946,7 +951,7 @@ class ModeloExportPayload(OutputSchema):
 
     operation: str = "modelo.export"
     work_unit_id: str
-    calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
     bucket_id: str
     modelo: str
     filing_year: int
@@ -1210,7 +1215,7 @@ class WorkResumeResult(OutputSchema):
     resolved_source: str | None = None
     work_unit_id: str | None = None
     short_work_unit_id: str | None = None
-    calculation_revision_id: str | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
     short_calculation_revision_id: str | None = None
     modelo: str
     period: Period
@@ -1412,6 +1417,7 @@ __all__ = [
     "ModeloSupportRemovalPayload",
     "ObservationPayload",
     "ResultSummaryRowPayload",
+    "SourceProvenancePayload",
     "VerificationReportListResult",
     "VerificationReportPayload",
     "VerificationReportShowResult",

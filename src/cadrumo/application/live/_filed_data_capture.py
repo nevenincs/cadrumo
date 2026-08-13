@@ -36,7 +36,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-from decimal import InvalidOperation
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
@@ -1449,9 +1449,42 @@ def filed_period_selection_rows(
     )
 
 
+def _registry_recapture_tolerance(*, modelo: str, ejercicio: int, period: Period) -> Decimal:
+    """Return the registry-published tolerance for this filing triple, or exact equality.
+
+    Both sides of :func:`casillas_a_recapture_would_change` are AEAT-sourced
+    captures of the SAME underlying filing -- a fresh re-capture against the
+    previously stored one -- so the rounding-artefact rationale that grounds
+    ``detect_casilla_divergences`` and ``compare_calculation_to_filed_observation``
+    applies here too: a tolerance is CORRECT for this comparator's use, unlike
+    the revision-vs-revision delta in ``application/modelo/_projection.py``,
+    whose both sides are the application's own arithmetic and where a tolerance
+    would hide a real change rather than absorb rounding noise. This is a
+    distinct axis from the absence contract documented on the caller, which is
+    what makes this comparator non-substitutable with the other three; the
+    tolerance question is decided separately.
+
+    Falls back to exact equality (``0``) whenever no registry authority resolves
+    for the triple, or the resolved revision declares no verification
+    expectations at all: with no published contract there is no authority to
+    widen the comparison, mirroring
+    :func:`~application.modelo._pulled_filing_reconcile._registry_reconcile_tolerance`'s
+    identical published-tolerance-or-exact-equality contract.
+    """
+    from ...core.errors import CadrumoError
+
+    try:
+        snapshot = resources().modelos.authority.snapshot(modelo, filing_year=ejercicio, period=period.registry_token)
+        return snapshot.verification_policy().tolerance
+    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
+        return Decimal("0")
+
+
 def casillas_a_recapture_would_change(
     fresh: FiledDeclaracionObservation,
     stored: RegistryModeloObservation,
+    *,
+    tolerance: Decimal = Decimal("0"),
 ) -> tuple[CasillaId, ...]:
     """Return every casilla whose freshly captured value disagrees with the stored one.
 
@@ -1478,6 +1511,11 @@ def casillas_a_recapture_would_change(
     Args:
         fresh: The newly captured observation.
         stored: The prior stamped registry observation for the same key.
+        tolerance: Maximum absolute delta that does not count as a change. THE
+            REGISTRY IS THE AUTHORITY FOR THIS VALUE; resolve it with
+            :func:`_registry_recapture_tolerance` and pass it. The default is
+            exact equality, matching the caller's resolved fallback for a
+            triple with no published contract.
 
     Returns:
         The changed casilla ids, sorted, so the notice text is deterministic.
@@ -1501,7 +1539,7 @@ def casillas_a_recapture_would_change(
             # reachable failure here: a non-numeric casilla never reaches the
             # conversion, so its own refusal cannot arrive.
             continue
-        if fresh_value != stored_values[casilla_id]:
+        if abs(fresh_value - stored_values[casilla_id]) > tolerance:
             changed.add(casilla_id)
     return tuple(sorted(changed))
 
@@ -1820,7 +1858,12 @@ def recapture_divergence_notices(
         stored = repo.load_observation(observation.modelo, observation.period)
         if stored is None:
             continue
-        changed = casillas_a_recapture_would_change(observation, stored.observation)
+        tolerance = _registry_recapture_tolerance(
+            modelo=observation.modelo,
+            ejercicio=observation.ejercicio,
+            period=observation.period,
+        )
+        changed = casillas_a_recapture_would_change(observation, stored.observation, tolerance=tolerance)
         if not changed:
             continue
         named = ", ".join(changed)

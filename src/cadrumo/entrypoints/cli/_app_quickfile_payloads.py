@@ -12,6 +12,7 @@ from __future__ import annotations
 from ...application.modelo import QuickfileResult, QuickfileStage, QuickfileStageStatus
 from ...application.state_projection import ProjectionModeloReadiness
 from ...core import Period
+from ...core.identity import CalculationRevisionId
 from ...core.json_contract import OutputSchema, register_schema
 from ...domain.calculations.registry import RevisionId
 from ._modelo_payloads import ModeloExportPayload
@@ -59,7 +60,7 @@ class QuickfileResultPayload(OutputSchema):
     stopped_at_stage: QuickfileStage | None = None
     readiness: ProjectionModeloReadiness | None = None
     work_unit_id: str | None = None
-    calculation_revision_id: str | None = None
+    calculation_revision_id: CalculationRevisionId | None = None
     granted_verificado_completo: bool | None = None
     export: ModeloExportPayload | None = None
     stages: tuple[QuickfileStageOutcomePayload, ...]

@@ -66,6 +66,7 @@ def _field(
     justification: str = "left",
     decimals: int | None = None,
     signed: bool = False,
+    required: bool = False,
     value_policy: ExportValuePolicy | None = None,
 ) -> ExportFieldDefinition:
     kind = CasillaFieldKind.LITERAL if literal is not None else CasillaFieldKind.CASILLA
@@ -78,7 +79,7 @@ def _field(
             "casilla_id": casilla_id,
             "literal": literal,
             "data_type": data_type,
-            "required": False,
+            "required": required,
             "padding": padding,
             "justification": justification,
             "decimals": decimals,
@@ -101,7 +102,7 @@ def _record(*fields: ExportFieldDefinition) -> ExportRecordDefinition:
     )
 
 
-def _canonical_record(*, signed_money: bool = True) -> ExportRecordDefinition:
+def _canonical_record(*, signed_money: bool = True, required_integer: bool = False) -> ExportRecordDefinition:
     return _record(
         _field("literal", offset=1, length=1, literal="A", padding="none", justification="none"),
         _field(
@@ -112,6 +113,7 @@ def _canonical_record(*, signed_money: bool = True) -> ExportRecordDefinition:
             casilla_id="01",
             padding="left_zero",
             justification="right",
+            required=required_integer,
         ),
         _field(
             "money",
@@ -251,8 +253,6 @@ def test_real_amendment_header_internal_boolean_spelling_emits_exact_wire_byte(
         ("03", "1e2"),
         ("04", "yes"),
         ("01", "10000"),
-        ("01", ""),
-        ("02", ""),
     ),
 )
 def test_application_and_adapter_refuse_the_same_invalid_values(field_id: CasillaId, invalid: str) -> None:
@@ -290,8 +290,40 @@ def test_unsigned_negative_is_refused_by_both_active_renderers() -> None:
         _adapter_bytes(record, values)
 
 
-def test_missing_numeric_value_is_refused_by_both_active_renderers() -> None:
+@pytest.mark.parametrize("omitted", ({}, {"01": ""}))
+def test_absent_optional_numeric_renders_alike_in_both_active_renderers(omitted: dict[CasillaId, str]) -> None:
+    """An optional numeric slot left empty renders its declared zero fill in both.
+
+    A fixed-width field occupies its byte slot unconditionally, and AEAT's record
+    designs fill an empty numeric field with zeros, so a taxpayer who simply has
+    no such figure still produces a complete record rather than a refusal. Both
+    active renderers reach the same codec, so the two must agree byte for byte.
+    """
     record = _canonical_record()
+    values: dict[CasillaId, str] = {
+        "01": "7",
+        "02": "2.00",
+        "03": "1.25",
+        "04": "true",
+        "05": "1",
+        "06": "2026",
+    }
+    del values["01"]
+    values.update(omitted)
+
+    application = _application_bytes(record, values)
+
+    assert application[1:5] == b"0000"
+    assert _adapter_bytes(record, values) == application
+
+
+def test_absent_required_numeric_is_refused_by_both_active_renderers() -> None:
+    """The same empty slot on a required field refuses in both renderers.
+
+    This is the half that must never soften: rendering an omitted mandatory
+    figure as zeros would under-declare behind a structurally valid record.
+    """
+    record = _canonical_record(required_integer=True)
     values: dict[CasillaId, str] = {
         "02": "2.00",
         "03": "1.25",

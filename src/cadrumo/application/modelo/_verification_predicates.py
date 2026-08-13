@@ -752,6 +752,62 @@ def _evaluate_advisory_predicate_fires(
     return False
 
 
+#: Stable (year-independent) predicate-id suffixes for the two Modelo 100
+#: suffered-retencion ADVISORY predicate families. Every declaring revision
+#: carries the same suffix, since the id is only prefixed
+#: ``modelo-100-<year>-``, so one suffix serves that family's whole six-year
+#: run. ``test_every_production_verification_finding_constructor_is_locale_neutral``
+#: (S24) requires every ``ModeloVerificationFinding`` call site to carry its
+#: ``message_locale_key`` as a literal, so the dispatch on these suffixes
+#: lives in :func:`_advisory_predicate_finding` as separate constructor call
+#: sites rather than as a returned value threaded into one shared call.
+_TRABAJO_RETENCION_ADVISORY_SUFFIX = "retenciones-trabajo-declaradas-cuando-ingresos-integros-trabajo-positivos"
+_CAPITAL_MOBILIARIO_RETENCION_ADVISORY_SUFFIX = (
+    "retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+)
+
+
+def _advisory_predicate_finding(predicate: VerificationPredicateDefinition) -> ModeloVerificationFinding:
+    """Build the WARNING finding for a fired ADVISORY predicate.
+
+    The generic ``registry_advisory_predicate_fired`` key names no remedy, so
+    an operator reading it learns only that SOMETHING fired. The two
+    suffered-retencion families' own remedy (enter the payer's certificate
+    value) is not generic — it must be told, not implied — so those two
+    predicates resolve to their own literal ``message_locale_key`` here
+    instead of sharing the generic fallback's call site.
+    """
+    legal_refs = tuple(str(r) for r in predicate.legal_refs)
+    message_facts = {"predicate_id": predicate.predicate_id}
+    casilla_id = _unique_predicate_casilla_id(predicate)
+    if predicate.predicate_id.endswith(_TRABAJO_RETENCION_ADVISORY_SUFFIX):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=casilla_id,
+            message_locale_key="application.modelo.findings.suffered_retencion_trabajo_uncredited",
+            message_facts=message_facts,
+            legal_refs=legal_refs,
+        )
+    if predicate.predicate_id.endswith(_CAPITAL_MOBILIARIO_RETENCION_ADVISORY_SUFFIX):
+        return ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.ADVISORY,
+            severity=ModeloVerificationFindingSeverity.WARNING,
+            casilla_id=casilla_id,
+            message_locale_key="application.modelo.findings.suffered_retencion_capital_mobiliario_uncredited",
+            message_facts=message_facts,
+            legal_refs=legal_refs,
+        )
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        casilla_id=casilla_id,
+        message_locale_key="application.modelo.findings.registry_advisory_predicate_fired",
+        message_facts=message_facts,
+        legal_refs=legal_refs,
+    )
+
+
 def _evaluate_verification_predicates(
     predicates: tuple[VerificationPredicateDefinition, ...],
     casilla_values: Mapping[CasillaId, Decimal],
@@ -804,16 +860,7 @@ def _evaluate_verification_predicates(
             # ADVISORY predicates fire a WARNING finding when their condition IS met
             # (affirmative logic — opposite of BLOCKING_RULE predicates).
             if _evaluate_advisory_predicate_fires(predicate.expression, casilla_values, text_values, profile):
-                findings.append(
-                    ModeloVerificationFinding(
-                        kind=ModeloVerificationFindingKind.ADVISORY,
-                        severity=ModeloVerificationFindingSeverity.WARNING,
-                        casilla_id=_unique_predicate_casilla_id(predicate),
-                        message_locale_key="application.modelo.findings.registry_advisory_predicate_fired",
-                        message_facts={"predicate_id": predicate.predicate_id},
-                        legal_refs=tuple(str(r) for r in predicate.legal_refs),
-                    ),
-                )
+                findings.append(_advisory_predicate_finding(predicate))
         else:
             if not _evaluate_predicate_expression(predicate.expression, casilla_values, profile):
                 finding = ModeloVerificationFinding(

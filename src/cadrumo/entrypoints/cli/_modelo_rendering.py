@@ -46,6 +46,7 @@ from ._modelo_payloads import (
     ModeloRecordPayload,
     ObservationPayload,
     ResultSummaryRowPayload,
+    SourceProvenancePayload,
     VerificationReportPayload,
     WorkConditionalRecargoPreviewPayload,
     WorkDeadlinePosturePayload,
@@ -547,9 +548,11 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
     :class:`~cadrumo.entrypoints.cli._modelo_payloads.CalculationRevisionPayload`
     carries visible casilla values, nested
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ObservationPayload`
-    rows, and
+    rows,
     :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.ResultSummaryRowPayload`
-    headline rows for envelope-aware commands.
+    headline rows, and
+    :class:`~cadrumo.entrypoints.cli._modelo_revision_payload_parts.SourceProvenancePayload`
+    resolver-trace rows for envelope-aware commands.
     """
     observations = tuple(
         ObservationPayload(
@@ -566,6 +569,16 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
         )
         for obs in _visible_calculation_observations(rev)
     )
+    source_provenance = tuple(
+        SourceProvenancePayload(
+            source_kind=ref.source_kind,
+            binding_source=ref.binding_source,
+            source_ref=ref.source_ref,
+            fingerprint=ref.fingerprint,
+            dependency_treatment=ref.dependency_treatment,
+        )
+        for ref in rev.source_provenance
+    )
     return CalculationRevisionPayload(
         calculation_revision_id=rev.calculation_revision_id,
         work_unit_id=rev.work_unit_id,
@@ -574,6 +587,7 @@ def calculation_revision_payload(rev) -> CalculationRevisionPayload:
         observations=observations,
         result_summary=result_summary_payload(rev),
         detail_rows=detail_row_payloads(rev),
+        source_provenance=source_provenance,
         binding_overrides={key: str(value) for key, value in rev.binding_overrides.items()},
         relation_overrides={key: str(value) for key, value in rev.relation_overrides.items()},
         input_values_by_casilla_id=dict(rev.input_values_by_casilla_id),

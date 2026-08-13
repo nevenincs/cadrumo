@@ -55,6 +55,7 @@ _ALLOWED_MODULES: frozenset[str] = frozenset(
         "test_calc_sheets_apply_evidence.py",  # online Evidencia render + offline/online evidence parity
         "test_calc_sheets_apply_no_empty_window.py",  # apply never leaves the workbook empty (write-then-clear-stale ordering)
         "test_calc_sheets_export_integration.py",  # offline request-pipeline integration for live export
+        "test_calc_sheets_export_preview.py",  # dry-run export preview: pure diff + never-writes structural proof
         "test_calc_sheets_offline_online_conformance.py",  # offline/online renderer conformance
         "test_calc_sheets_pull_typing.py",  # contract: _ValueRange / _GoogleResource type-narrowing contract
         "test_calc_sheets_row_set_headers.py",

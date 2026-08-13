@@ -361,11 +361,19 @@ def modelo_reconcile(command: ModeloReconciliationCommand) -> ModeloReconciliati
 def modelo_reconcile_bytes(command: ModeloReconciliationBytesCommand) -> ModeloReconciliationReport:
     """Reconcile secure-storage evidence bytes without materialising a plaintext file.
 
-    Declaración reconciliation is not offered on the bytes path: the only
-    authenticated live-capture flow today captures justificante snapshots
-    (:func:`application.live.capture_justificante_snapshot`), never a filed
-    declaración. Use :func:`modelo_reconcile` with a local declaración PDF
-    file for casilla-level reconcile.
+    Declaración reconciliation is not offered on this bytes path, but not
+    because a filed declaración's bytes cannot exist here: the filed-history
+    sweep (:mod:`application.live`) already captures filed declaración
+    observations, complete with per-casilla values and their own artefact
+    bytes, into secure storage. What this command still lacks is a way to
+    reconcile THOSE bytes: it accepts only justificante-shaped evidence a
+    caller uploads. A pulled declaración never needs uploading in the first
+    place — its per-casilla values are already reconciled against the
+    taxpayer's own local calculation by
+    :func:`application.modelo.pulled_filing_divergence_findings`, which reads
+    both sides out of the same bucket the sweep already populated. Use
+    :func:`modelo_reconcile` with a local declaración PDF file for
+    casilla-level reconcile of a declaración held only on disk.
 
     Returns:
         The :class:`ModeloReconciliationReport` comparing the parsed

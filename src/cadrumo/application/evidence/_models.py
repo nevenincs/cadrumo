@@ -168,7 +168,7 @@ def derive_bundle_id(
     work_unit_id: str,
     manifest_version: int,
     records: tuple[EvidenceRecordRef, ...],
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     filing_record_id: str | None = None,
 ) -> str:
     """Compute the content-addressed ``bundle_id`` for canonical inputs.

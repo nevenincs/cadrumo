@@ -121,7 +121,7 @@ def test_modelo_145_casillas_and_parity_cite_official_sources() -> None:
     modelo, catalogues = _modelo_145()
     revision = modelo.revisions[_REVISION_ID]
 
-    assert len(revision.casillas) == 50
+    assert len(revision.casillas) == 56
     assert {casilla.id for casilla in revision.casillas} >= {
         "comunicacion.pagina-complementaria",
         "perceptor.nif",
@@ -160,8 +160,13 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
 
     assert layout.id == "modelo-145-dr-v20-fixed-width"
     assert layout.source_refs == ("aeat-dr-145-v20",)
-    assert len(revision.casillas) == 50
-    assert len(fields) == 53
+    # DR145 rows 12-14, 48-50 and 54-56 are each three independently
+    # numbered Num rows (día/mes/año), not a parent field with declared
+    # sub-parts, so each triad is modelled as three registry casillas and
+    # three registry fields rather than one combined text slot: 50 + 6
+    # casillas, 53 + 6 fields over the prior one-field-per-triad count.
+    assert len(revision.casillas) == 56
+    assert len(fields) == 59
     assert set(official_rows) == set(range(1, 60))
 
     expected_offset = 1
@@ -178,8 +183,7 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
             assert field.kind == CasillaFieldKind.FILLER
         else:
             assert field.kind != CasillaFieldKind.FILLER
-        if row_number not in {12, 13, 14, 48, 49, 50, 54, 55, 56}:
-            assert (field.offset, field.length) == (offset, length)
+        assert (field.offset, field.length) == (offset, length)
 
     record_start = resolved_layout.fields_by_id["modelo-145-dr-01-record-start"]
     assert record_start.kind == CasillaFieldKind.LITERAL
@@ -193,18 +197,24 @@ def test_modelo_145_export_layout_is_grounded_in_dr145_record_design() -> None:
     assert page_indicator.kind == CasillaFieldKind.CASILLA
     assert page_indicator.casilla_id == "comunicacion.pagina-complementaria"
 
-    for row_number in (12, 13, 14):
+    _expected_date_triad_fields = {
+        12: ("modelo-145-dr-12-perceptor-movilidad-geografica-fecha-dia", "perceptor.movilidad-geografica-fecha-dia"),
+        13: ("modelo-145-dr-13-perceptor-movilidad-geografica-fecha-mes", "perceptor.movilidad-geografica-fecha-mes"),
+        14: (
+            "modelo-145-dr-14-perceptor-movilidad-geografica-fecha-anio",
+            "perceptor.movilidad-geografica-fecha-anio",
+        ),
+        48: ("modelo-145-dr-48-comunicacion-firma-fecha-dia", "comunicacion.firma-fecha-dia"),
+        49: ("modelo-145-dr-49-comunicacion-firma-fecha-mes", "comunicacion.firma-fecha-mes"),
+        50: ("modelo-145-dr-50-comunicacion-firma-fecha-anio", "comunicacion.firma-fecha-anio"),
+        54: ("modelo-145-dr-54-acuse-recibo-fecha-dia", "acuse-recibo.fecha-dia"),
+        55: ("modelo-145-dr-55-acuse-recibo-fecha-mes", "acuse-recibo.fecha-mes"),
+        56: ("modelo-145-dr-56-acuse-recibo-fecha-anio", "acuse-recibo.fecha-anio"),
+    }
+    for row_number, (expected_field_id, expected_casilla_id) in _expected_date_triad_fields.items():
         field = _field_covering(fields, offset=official_rows[row_number][0], length=official_rows[row_number][1])
-        assert field.id == "modelo-145-dr-12-14-perceptor-movilidad-geografica-fecha"
-        assert field.casilla_id == "perceptor.movilidad-geografica-fecha"
-    for row_number in (48, 49, 50):
-        field = _field_covering(fields, offset=official_rows[row_number][0], length=official_rows[row_number][1])
-        assert field.id == "modelo-145-dr-48-50-comunicacion-firma-fecha"
-        assert field.casilla_id == "comunicacion.firma-fecha"
-    for row_number in (54, 55, 56):
-        field = _field_covering(fields, offset=official_rows[row_number][0], length=official_rows[row_number][1])
-        assert field.id == "modelo-145-dr-54-56-acuse-recibo-fecha"
-        assert field.casilla_id == "acuse-recibo.fecha"
+        assert field.id == expected_field_id
+        assert field.casilla_id == expected_casilla_id
 
     aeat_reserved = resolved_layout.fields_by_id["modelo-145-dr-58-aeat-reservado"]
     assert aeat_reserved.kind == CasillaFieldKind.FILLER

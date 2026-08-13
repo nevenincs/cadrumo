@@ -236,6 +236,15 @@ CUOTA_LESS_M303_IVA_CATEGORIES: frozenset[IvaCategory] = frozenset(
         IvaCategory.EXPORT_ASSIMILATED_ZERO_RATED,
         IvaCategory.INTRA_COMMUNITY_TRIANGULATION,
         IvaCategory.REGIMEN_SIMPLIFICADO,
+        # REAGP_COMPENSATION: a farmer under the régimen especial does not
+        # repercutir IVA at all — art. 130.Dos gives them a compensación a tanto
+        # alzado instead, and art. 134.Uno lets the acquirer deduct its amount.
+        # So no general-303 devengada cuota arises on either face, and the
+        # advisory would only ever be noise here. The DEDUCTION side is not
+        # suppressed by this membership: the evidence advisory reads this set on
+        # its output limb only, and the art. 134.Tres self-issued document is
+        # enforced by the deduction-fact authority instead.
+        IvaCategory.REAGP_COMPENSATION,
     },
 )
 

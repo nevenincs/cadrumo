@@ -19,7 +19,7 @@ from ....domain.bienes_inversion import (
     BienInversionIvaRecord,
     BienInversionKind,
 )
-from ....domain.calculations.registry import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry import CasillaObservation, ModeloRevision, RegistryModeloObservation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
 from .._bienes_inversion_regularizacion import (
@@ -73,6 +73,10 @@ def _context(
     )
 
 
+def _m303_revision() -> ModeloRevision:
+    return resources().modelos.authority.snapshot("303", filing_year=_FILING_YEAR, period="4T").revision
+
+
 def _register() -> BienesInversionIvaRegister:
     return BienesInversionIvaRegister(
         records=(
@@ -123,6 +127,7 @@ def test_advisory_surfaces_proposed_casilla_43_for_in_window_goods() -> None:
     ÷5 = 200,00 → proposed casilla 43.
     """
     projection, diagnostic = build_bienes_inversion_regularizacion_advisory(
+        _m303_revision(),
         _register(),
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={"bi-2022-maquina": Decimal("60")},
@@ -133,6 +138,11 @@ def test_advisory_surfaces_proposed_casilla_43_for_in_window_goods() -> None:
     assert diagnostic.binding_source is BindingSourceKind.BIENES_INVERSION_REGULARIZACION
     assert CASILLA_REGULARIZACION_BIENES_INVERSION in diagnostic.message
     assert "200.00" in diagnostic.message
+    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_BIENES_INVERSION
+    # Casilla-derived grounding, threaded from the registry rather than
+    # restated: casilla 43 carries LIVA arts. 107-110 among its own refs.
+    assert "ley-37-1992:art-107" in diagnostic.legal_refs
+    assert "ley-37-1992:art-110" in diagnostic.legal_refs
 
 
 def test_advisory_fires_even_when_percentage_pending() -> None:
@@ -143,6 +153,7 @@ def test_advisory_fires_even_when_percentage_pending() -> None:
     good is reported as pending rather than silently dropped.
     """
     projection, diagnostic = build_bienes_inversion_regularizacion_advisory(
+        _m303_revision(),
         _register(),
         regularizacion_year=2024,
         prorrata_definitiva_by_identifier={},
@@ -156,6 +167,7 @@ def test_advisory_fires_even_when_percentage_pending() -> None:
 def test_no_advisory_when_no_in_window_goods() -> None:
     """A register with no in-window goods produces no diagnostic (no noise)."""
     projection, diagnostic = build_bienes_inversion_regularizacion_advisory(
+        _m303_revision(),
         _register(),
         regularizacion_year=2030,  # outside the 2023-2026 mueble window
         prorrata_definitiva_by_identifier={},
@@ -374,6 +386,7 @@ def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -
     imputada (100%) 10.000,00 = −4.000,00 × 3 ÷ 5 = −2.400,00.
     """
     projection, diagnostic = build_bienes_inversion_transmision_advisory(
+        _m303_revision(),
         _disposed_register(),
         disposal_year=2024,
     )
@@ -382,11 +395,14 @@ def test_transmision_advisory_surfaces_proposed_casilla_43_for_disposed_good() -
     assert diagnostic.source_kind == "bienes_inversion_regularizacion_transmision"
     assert CASILLA_REGULARIZACION_BIENES_INVERSION in diagnostic.message
     assert "-2400.00" in diagnostic.message
+    assert diagnostic.casilla_id == CASILLA_REGULARIZACION_BIENES_INVERSION
+    assert "ley-37-1992:art-110" in diagnostic.legal_refs
 
 
 def test_transmision_advisory_applies_supplied_cap() -> None:
     """The regla-1.ª cap is passed through when the caller supplies the cuota devengada."""
     projection, diagnostic = build_bienes_inversion_transmision_advisory(
+        _m303_revision(),
         _disposed_register(),
         disposal_year=2024,
         cuota_devengada_entrega_by_identifier={"bi-2022-furgoneta": Decimal("1500.00")},
@@ -399,6 +415,7 @@ def test_transmision_advisory_applies_supplied_cap() -> None:
 def test_no_transmision_advisory_when_no_disposal_in_year() -> None:
     """A register with no disposal recorded for the year produces no diagnostic."""
     projection, diagnostic = build_bienes_inversion_transmision_advisory(
+        _m303_revision(),
         _disposed_register(),
         disposal_year=2023,  # the recorded disposal is 2024
     )
