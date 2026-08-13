@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:93d60c750e6495d7078ebaee1fe1dd4daad1754425acebd83573caab016e915c'
+body_hash: 'sha256:a3ee8e240fe266441ec213ac735d08508e05decf0a147f53480e9e0d23edc8e2'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -35,7 +35,7 @@ Freeze the dependency boundary, migration inventory, and frontend-neutral operat
 
 Create an exact migration census and enforce the final hexagonal and TUI dependency directions before code is moved.
 
-- [ ] `W01.P01.S01` - Generate the exact legacy TUI migration manifest with module, symbol, consumer, owner lane, replacement, and deletion proof; `dev/import_hygiene_scan.py`.
+- [x] `W01.P01.S01` - Generate the exact legacy TUI migration manifest with module, symbol, consumer, owner lane, replacement, and deletion proof; `dev/quality/import_hygiene_scan.py`.
 - [ ] `W01.P01.S02` - Enforce the hexagonal TUI boundary, launcher-only adapter wiring, and backend prohibition contracts; `.importlinter`.
 - [ ] `W01.P01.S03` - Reject static, dynamic, type-only, re-export, registration, Textual-location, and private-facade bypasses; `src/cadrumo/tests/test_import_hygiene_gate.py`.
 - [ ] `W01.P01.S04` - Reconcile accepted wizard and profile-bundle composition clauses with the dedicated TUI entrypoint; `.vault/adr`.

@@ -10,6 +10,8 @@ facade -- misclassifying every symbol already exported by that package as
 from __future__ import annotations
 
 import ast
+import json
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -17,15 +19,159 @@ import pytest
 from ..quality.import_hygiene_scan import (
     REPO_ROOT,
     FacadeInfo,
+    TuiMigrationManifestError,
+    TuiMigrationRowKind,
+    _require_accepted_tui_migration_identities,
+    _tui_migration_identity_sha256,
     discover_facades,
     dunder_all_assignment_value,
     find_shim_modules,
     find_underscore_in_all_violations,
+    generate_tui_migration_manifest,
     is_underscore_named,
+    tui_migration_manifest_payload,
     walk_module_imports,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_live_tui_migration_manifest_covers_declarations_exports_consumers_and_references() -> None:
+    """The generated census must join the live legacy package and its reverse consumers."""
+    rows = generate_tui_migration_manifest()
+    assert _tui_migration_identity_sha256(rows) == ("af0f314fcc15fa1b677c29ba372fe805fb2bd12a7964a88e6186a6b5dd3176fd")
+    assert all(row.owner_lane and row.replacement and row.deletion_proof.startswith("absent:") for row in rows)
+
+    identities = {(row.kind, row.symbol, row.consumer, row.owner_lane, row.replacement) for row in rows}
+    assert (
+        TuiMigrationRowKind.IMPORT,
+        "ManagerAction",
+        "cadrumo.entrypoints.cli._config._manager_actions",
+        "operations",
+        "cadrumo.application.operations",
+    ) in identities
+    assert (
+        TuiMigrationRowKind.REFERENCE,
+        "FormFieldKind",
+        "cadrumo.application.user_profile._overview",
+        "interface",
+        "cadrumo.entrypoints.tui.components.forms",
+    ) in identities
+
+
+def test_tui_migration_manifest_json_is_deterministic_and_complete() -> None:
+    """Rendering the same live census twice must produce byte-identical JSON."""
+    first = tui_migration_manifest_payload(generate_tui_migration_manifest())
+    second = tui_migration_manifest_payload(generate_tui_migration_manifest())
+
+    assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+    assert first["row_count"] == len(first["rows"])
+    assert first["legacy_package"] == ".".join(("cadrumo", "adapters", "inbound", "tui"))
+
+
+def test_tui_migration_manifest_refuses_a_new_undispositioned_legacy_module(tmp_path: Path) -> None:
+    """A newly introduced legacy identity must fail closed instead of growing the census."""
+    src_root = tmp_path / "src"
+    package_root = src_root / "cadrumo"
+    legacy_root = package_root / "adapters/inbound/tui"
+    legacy_root.mkdir(parents=True)
+    (legacy_root / "__init__.py").write_text("__all__ = []\n", encoding="utf-8")
+    (legacy_root / "_unowned.py").write_text("class NewLegacyIdentity: pass\n", encoding="utf-8")
+
+    with pytest.raises(TuiMigrationManifestError, match=r"has no accepted disposition.*_unowned"):
+        generate_tui_migration_manifest(
+            repo_root=tmp_path,
+            src_root=src_root,
+            package_root=package_root,
+            legacy_root=legacy_root,
+        )
+
+
+def test_tui_migration_manifest_refuses_an_unreadable_consumer(tmp_path: Path) -> None:
+    """An invalid scanned Python file must refuse the census, never disappear from it."""
+    src_root = tmp_path / "src"
+    package_root = src_root / "cadrumo"
+    legacy_root = package_root / "adapters/inbound/tui"
+    legacy_root.mkdir(parents=True)
+    (legacy_root / "__init__.py").write_text("__all__ = []\n", encoding="utf-8")
+    consumer = package_root / "broken_consumer.py"
+    consumer.write_text("from = broken\n", encoding="utf-8")
+
+    with pytest.raises(TuiMigrationManifestError, match=r"cannot parse TUI migration consumer.*broken_consumer"):
+        generate_tui_migration_manifest(
+            repo_root=tmp_path,
+            src_root=src_root,
+            package_root=package_root,
+            legacy_root=legacy_root,
+            accepted_identity_sha256=None,
+        )
+
+
+def test_tui_migration_manifest_refuses_a_new_symbol_or_consumer_identity(tmp_path: Path) -> None:
+    """The exact identity pin must reject either side of a new migration edge."""
+    repo_root = tmp_path
+    src_root = repo_root / "src"
+    package_root = src_root / "cadrumo"
+    legacy_root = package_root / "adapters/inbound/tui"
+    legacy_root.mkdir(parents=True)
+    facade = legacy_root / "__init__.py"
+    facade.write_text('class Existing: pass\n__all__ = ["Existing"]\n', encoding="utf-8")
+    baseline = generate_tui_migration_manifest(
+        repo_root=repo_root,
+        src_root=src_root,
+        package_root=package_root,
+        legacy_root=legacy_root,
+        accepted_identity_sha256=None,
+    )
+    accepted = _tui_migration_identity_sha256(baseline)
+
+    facade.write_text(
+        'class Existing: pass\nclass NewLegacySymbol: pass\n__all__ = ["Existing", "NewLegacySymbol"]\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(TuiMigrationManifestError, match="identities differ from the accepted exact census"):
+        generate_tui_migration_manifest(
+            repo_root=repo_root,
+            src_root=src_root,
+            package_root=package_root,
+            legacy_root=legacy_root,
+            accepted_identity_sha256=accepted,
+        )
+
+    facade.write_text('class Existing: pass\n__all__ = ["Existing"]\n', encoding="utf-8")
+    (package_root / "new_consumer.py").write_text(
+        f"from {'.'.join(('cadrumo', 'adapters', 'inbound', 'tui'))} import Existing\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(TuiMigrationManifestError, match="identities differ from the accepted exact census"):
+        generate_tui_migration_manifest(
+            repo_root=repo_root,
+            src_root=src_root,
+            package_root=package_root,
+            legacy_root=legacy_root,
+            accepted_identity_sha256=accepted,
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "changed"),
+    (
+        ("owner_lane", "wrong-lane"),
+        ("replacement", "cadrumo.wrong.destination"),
+        ("deletion_proof", "absent:wrong/path.py"),
+    ),
+)
+def test_tui_migration_manifest_refuses_disposition_drift(field: str, changed: str) -> None:
+    """Every accepted owner, destination, and deletion proof is digest-bound."""
+    rows = generate_tui_migration_manifest()
+    accepted = _tui_migration_identity_sha256(rows)
+    changed_row = replace(rows[0], **{field: changed})
+
+    with pytest.raises(TuiMigrationManifestError, match="identities differ from the accepted exact census"):
+        _require_accepted_tui_migration_identities(
+            (changed_row, *rows[1:]),
+            accepted_sha256=accepted,
+        )
 
 
 def _parse_single_statement(src: str) -> ast.stmt:
