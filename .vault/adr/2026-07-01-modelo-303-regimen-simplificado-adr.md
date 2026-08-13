@@ -8,7 +8,7 @@ related:
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-07-10-modelo-303-regimen-simplificado-research]]"
 modified: '2026-08-13'
-body_hash: 'sha256:66c5e4cbfeabe1b45a021c0377d36d4c98c663652472b8d28e7986a76e7cee5c'
+body_hash: 'sha256:d7c6579a74be334a522fa18d86fecc8d95a2adb15a595a97dfe7c68aabdc6ec0'
 ---
 # `modelo-303-regimen-simplificado` adr: `modulos-based IVA cuota binding set` | (**status:** `accepted`)
 
@@ -198,3 +198,13 @@ The existing registry calculation mechanism is extended atomically; no export-sp
 Before implementation, one reviewed five-epoch field matrix classifies every DP30302 semantic field as identity, declared input, attested off-form input, calculated output, or source-proven inapplicable. Applicable rows require complete evidence and exactly one matching calculation result. Wrong-year, wrong-revision, wrong-period, extraneous, duplicate, incomplete, or digest-divergent results refuse the whole export before any target is created. Non-applicability is decided only by the canonical typed scope decision.
 
 The partial 34-endpoint completeness assumption is withdrawn. Generic `off_form_result` paths that duplicate a typed calculated result are deleted in the same cutover. Blank and zero are never missing-value defaults, and no compatibility reader, alias, layout-derived semantic, or partial historical calculation survives.
+
+## Amendment (2026-08-13): S74 calculation-mechanism collapse
+
+For avoidance of doubt, the "existing registry calculation mechanism" retained by the preceding amendment is the calculation-domain, per-activity mechanism over immutable `RegimenSimplificadoFilingRows` and the exact `M303AnnualOrdenSnapshot`. It is not the generic casilla-leaf formula-runtime path. The calculation service owns derived agricultural and non-agricultural values; `project_m303_regimen_simplificado_rows` remains a coordinate-only selector over typed inputs and typed calculated results and must not acquire formula, annual-parameter lookup, inference, aggregation, default, or fallback behavior.
+
+The casilla-leaf channel is retired atomically. The two M303-specific formula operators, their operator vocabulary and arity contracts, evaluator dispatch and helpers, formula-evaluation context, generic calculation API arguments and transitive caller plumbing are deleted. Across every explicit modern M303 revision, the ten internal single-activity support casillas, their two formulas, construct membership, completeness-manifest declarations, and reconcile-when-present entries are deleted together. Spreadsheet handling and tests that name or preserve those operators are removed or retargeted to the row-indexed calculation contract. No re-export, adapter, compatibility reader, dormant dispatch, or parallel resolver survives.
+
+The annual-Orden compiler, immutable snapshot, typed scope decision, filing evidence, filing rows, projection-reference union, and row projector remain canonical foundations. S74 does not delete the transitional `off_form_result` member or its admitted projection endpoints ahead of replacement: S76 must first provide the complete typed per-activity calculated result, and S77 deletes that generic value path in the same atomic cutover. S75 first closes activity identity so the canonical calculation cannot select ambiguously. S76 then binds each result to year, law-selected revision, period, evidence, legal and source provenance, and deterministic digest. S77 completes the one-way migration with no alias, fallback, historical partial calculation, or missing-value zero.
+
+This amendment supersedes the earlier statements in this record that assign calculation ownership to the generic formula runtime or propose promotion of its single-activity support casillas to official casilla 48. The annual Orden remains registry authority; the calculation owner is row-indexed and calculation-domain; projection remains selection-only.

@@ -6,7 +6,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:dfd9fd244e357cc7132e1cce53b9177d1002f2bf8972c25a2e1738d2488518ec'
+body_hash: 'sha256:593ba3d539573c38c0c95c6594368e791a8053600a6e6f208614dab7edb21d55'
 related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S01]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W01-P01-S02]]'
@@ -57,6 +57,7 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S64]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S66]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S74]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-adr]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-m303-retired-revision-s39-audit]]'
   - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
@@ -122,6 +123,7 @@ related:
   - '[[2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit]]'
   - '[[2026-08-13-aeat-export-fragment-generator-authority-s64-source-pinned-semantic-map-authority-audit]]'
   - '[[2026-08-13-aeat-export-fragment-generator-authority-s65-simplified-regime-authority-blockers-audit]]'
+  - '[[2026-08-13-aeat-export-fragment-generator-authority-s74-mechanism-decision-review-audit]]'
 ---
 
 # `aeat-export-fragment-generator-authority` feature index
@@ -192,6 +194,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-12-aeat-export-fragment-generator-authority-s62-projection-declaration-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S62 Projection Declaration Authority Audit`
 - `2026-08-13-aeat-export-fragment-generator-authority-s64-source-pinned-semantic-map-authority-audit` - `aeat-export-fragment-generator-authority` audit: `S64 Source-Pinned Semantic Map Authority Audit`
 - `2026-08-13-aeat-export-fragment-generator-authority-s65-simplified-regime-authority-blockers-audit` - `aeat-export-fragment-generator-authority` audit: `S65 Simplified-Regime Authority Blockers`
+- `2026-08-13-aeat-export-fragment-generator-authority-s74-mechanism-decision-review-audit` - `aeat-export-fragment-generator-authority` audit: `s74 mechanism decision review`
 
 ### exec
 
@@ -244,6 +247,7 @@ Auto-generated index of all documents tagged with `#aeat-export-fragment-generat
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S62` - Establish the revision-owned typed projection_endpoints declaration authority before map generation: load and validate one grounded FilingProjectionRef declaration index for each selected M303 revision, admit semantic-map projection refs only through that index, replace duplicated casilla export_refs admission, integrate numbered declarations with classify_official_boxes, and require generated layouts to biject exactly with declarations without seed layouts or legacy fallback
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S64` - Require every persisted semantic map and fragment set to carry one exact source_ref and source_sha256 identity, validate that identity against the parser intermediate and selected revision source membership, bind it into provenance, and hard-refuse design-epoch-only maps, implicit source selection, alternate anchor catalogues, coordinate-bearing projection declarations, legacy-layout reads, and heuristic mapping compatibility before S19 authoring begins
 - `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S66` - Bundle and adjudicate the official DANA primary authorities required by S65 by acquiring RDL 6/2024 article 1 and its mutable municipal annex, RDL 7/2024 article 11.2 and final provision 14, and the BOE-A-2024-24097 correction provenance, pinning exact official bytes and hashes, authoring canonical legal/source references for the affected geography and the 25 percent 2024 annual simplified-regime IVA reduction, and refusing timeless geography, inferred applicability, missing correction provenance, or invented identifiers
+- `2026-08-10-aeat-export-fragment-generator-authority-W04-P07-S74` - Adjudicate and collapse the two Modelo 303 simplified-regime calculation mechanisms to one canonical mechanism, being the casilla-leaf formula-runtime ops and the filing-row projection, ruling which channel owns the computation given that the casilla channel is structurally single-activity at ten entries with no cohort or slot axis while the official design spans up to twelve activities, two cohorts and three records. Delete the non-canonical channel and sweep every consumer, fixture and registry TOML formula-op contract in one atomic explicit-path commit, leaving no re-export bridge, parallel resolver or compatibility reader
 
 ### plan
 
