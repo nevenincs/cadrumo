@@ -67,6 +67,7 @@ _BINDINGS_2024: dict[str, Decimal] = {
     "renta-2024-profile-incremento-guarderia": Decimal("0"),
     "renta-2024-profile-cotizaciones-ss-madre": Decimal("0"),
     "renta-2024-profile-descendientes-guarderia": Decimal("0"),
+    "renta-2024-profile-deduccion-maternidad": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
     "renta-2024-profile-minimo-descendientes-autonomico": Decimal("0"),
     # matrimonio-sobrevenido bindings (81feae7b0): zero = marriage pre-dates filing year.
