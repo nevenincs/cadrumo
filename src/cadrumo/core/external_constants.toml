@@ -154,6 +154,24 @@ renta_web_open_app_template = "https://www2.agenciatributaria.gob.es/wlpl/PARE-R
 groi_auth_unlock_descriptor = "www2 GROI ConsultaOperadorSedeGroiServlet"
 nif_iva_auth_locked_descriptor = "www1 IXVI ConsultaIntracomunitarios"
 
+[aeat.notifications_query]
+# AEAT's notifications search defaults to a ONE-MONTH window (fecha desde =
+# today minus one month). That default is the reason the reader reported a
+# near-empty inbox against an account with older notifications: the surface was
+# answering the question it was asked, over a month.
+#
+# The lookback is expressed in years and applied backwards from today. Four
+# years is the LGT art-66 prescription period, so this deliberately reaches
+# further: a notification older than prescription is still part of the record an
+# operator needs to see, and the surface costs nothing to widen.
+lookback_years = 10
+# AEAT prints and accepts these filter dates as DD-MM-YYYY, not ISO.
+date_format = "%d-%m-%Y"
+# Empty selects the "Todos" option on both filters, so neither the
+# notificada/no-notificada axis nor the read/unread axis narrows the result.
+tipo_consulta_all = ""
+leida_all = ""
+
 [aeat.live_safety]
 auth_browser_action_patterns = [
   "clave-movil-authorize",
