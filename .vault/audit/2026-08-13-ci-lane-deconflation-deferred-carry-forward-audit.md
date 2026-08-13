@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:17595cc2bf676c267001a599250741c1754c306e90c6191a342849cae985cb26'
+body_hash: 'sha256:7d3b1dc9504759b6f3d28216fc5698ed718873cc1d527ba1c47afe1a41717c37'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -74,6 +74,31 @@ own docstring refers to the host-conditional fact mask as a sibling layer, and
 The nearest landed commit on that surface masks host-measured facts. The fix is
 therefore in flight rather than absent, and this plan must not touch those files.
 
+CORRECTED ON THE SAME DAY, AFTER A FULL READ OF THE FAILING RUN'S LOG. The finding
+above named the host-fact divergence as the blocker on the strength of the first
+divergence the log reports. That is true but badly understated, and the correction
+matters because it changes who must act and how large the work is. The build
+actually raises on fifteen cli-sequence divergences spanning roughly
+eighty-seven individual frame failures, of which the host-fact pair is two, on the
+workstation-setup install-confirm frame 3 alone. The remainder are fourteen
+duplicate capture-name parse errors for `evidence_id` across seven pages, fifteen
+executed-argv divergences, two exit-code divergences, and a large body of stale
+envelope goldens concentrated in observation values, operand values, result
+summaries and calculation revision ids.
+
+Two further facts sharpen the attribution. The host-measured-fact mask cannot
+close this pair by construction: it matches fact keys by a `_bytes` suffix, and
+the two diverging keys are booleans, so the narrow suffix rule is structurally
+unable to reach them. And the masking commit that landed that rule was ALREADY an
+ancestor of the failing run's own sha, so it was in effect and did not help.
+Nothing on the docs-sequences surface has landed between that sha and HEAD, so the
+tree is byte-identical there and the failure reproduces exactly.
+
+The docs lane has NEVER once concluded success. Across its last hundred runs the
+conclusions are seventy cancelled and thirty failure, none successful, so the
+row's close criterion has no candidate run at all rather than merely lacking a
+recent one.
+
 ### ci-full-blocked-before-its-build-branch | high | The serial-pass observation is unobtainable because the run dies in the style gate two and a half minutes in, on an 87-violation cross-package backlog.
 
 Run 31674646030, the ci-full dispatch obtained specifically to watch the build
@@ -92,6 +117,37 @@ tests importing `resolve_available_bound_inputs_by_casilla_id` from
 `cadrumo.application.modelo` by absolute path. That spread is a cross-package
 backlog with many owners, it is not this plan's surface, and it stands between
 ci-full and every observation downstream of the style gate — not only this row's.
+
+THE SUSPECTED GATE OSCILLATION DOES NOT EXIST, and this is worth recording because
+the fear of it is what would otherwise stall the remedy. The two gates were read
+directly rather than inferred. The relative-imports gate governs SYNTAX: it bans an
+absolute `cadrumo.*` import inside the package and never inspects the target. The
+architecture boundary rule governs the TARGET: a cross-package import must resolve
+to the owning package's public facade rather than a private module. A cross-package
+RELATIVE import satisfies both at once, because relative syntax can perfectly well
+name a facade. The house norm already demonstrates it at scale — deep multi-dot
+relative imports are pervasive, including in the very directories holding the
+violations — and the symbol at the centre of the largest cluster is already exported
+on the `application.modelo` facade, so conversion is facade-preserving. There is no
+third shape to invent and no reason to hide anything from either matcher.
+
+THE CLUSTER HAS A SINGLE ROOT CAUSE, and it is a process gap rather than a design
+one. The sixty-two-file group entered in one commit, a registry relocation retiring
+the strict registry-domain bound-input resolver, which correctly swept every
+consumer to the new path but wrote the new imports in absolute form and never re-ran
+this gate. The atomic-relocation discipline was honoured for the move and skipped
+for the gate, which is precisely how a clean refactor lands a tree-wide red.
+
+OWNERSHIP IS CONFIRMED AND THE REMEDY IS ALREADY UNDER WAY, which retires the
+routing recommendation this audit makes below. The backlog is being actively swept
+by its owner, measured falling from 87 to 76 to 59 within a single session, with
+uncommitted work in place promoting the shared fixture onto its package facade —
+the stronger form the architecture rule mandates as a precondition of the consuming
+change. This plan contributed one convention-identical file and deliberately stood
+down from the rest rather than forking a second conversion convention against the
+owner's, since two shapes for one import is exactly the fragmentation the rules
+forbid. The precondition is therefore closing on its own and needs no intervention
+from this plan.
 
 ### both-flip-rows-remain-correctly-parked | medium | The two continue-on-error flips stay parked, each on a release condition that is measured and unmet.
 
