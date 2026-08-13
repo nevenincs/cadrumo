@@ -445,6 +445,7 @@ class PreviousFilingSourceResolver:
                         f"{item.source_modelo}:{item.source_filing_year}:"
                         f"{','.join(item.source_periods)}:{item.binding_id}"
                     ),
+                    dependency_treatment=item.dependency_treatment,
                 )
                 for item in report.prefilled
             ),

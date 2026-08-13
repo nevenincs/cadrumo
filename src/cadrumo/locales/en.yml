@@ -1215,6 +1215,15 @@ application:
         revision.
       registry_snapshot_unresolved: The registry snapshot for this work target could
         not be resolved.
+      suffered_retencion_capital_mobiliario_uncredited: This return declares rendimientos
+        del capital mobiliario del ahorro but credits no suffered retención. Enter
+        the amount from the payer's certificado de retenciones e ingresos a cuenta;
+        the taxpayer never filed the Modelo 123 that declares it, so this value cannot
+        be filled in automatically.
+      suffered_retencion_trabajo_uncredited: This return declares rendimientos del
+        trabajo but credits no suffered retención. Enter the amount from the payer's
+        certificado de retenciones e ingresos a cuenta; the taxpayer never filed the
+        Modelo 111 that declares it, so this value cannot be filled in automatically.
       transaction_evidence_missing_deductible: A deductible transaction has no supporting
         evidence.
       transaction_evidence_missing_output: An output transaction has no supporting
@@ -3469,6 +3478,8 @@ cli:
           export:
             capability_disabled: Google export is disabled for this profile; enable
               it with 'aeat config profile capabilities set google_export on'.
+            dry_run_help: Preview what this export would clear and rewrite in the
+              workbook, without writing anything
             modelo_help: Modelo id to export (e.g. 130, 303, 100)
             period_help: Filing period code (e.g. 1T, 2T, 0A)
             prefill_relations_help: Prefill cross-revision relation values from the
@@ -3791,8 +3802,8 @@ cli:
         one of them.'
       preflight_revision_help: Registry revision id.
       preflight_revision_id_help: Optional registry revision id override for exact
-        replay (e.g. 2024-0A); defaults to the active revision for the modelo, filing
-        year, and period.
+        replay (e.g. 2019-y-siguientes); defaults to the active revision for the modelo,
+        filing year, and period.
       preflight_revision_override_invalid: The registry revision is not valid for
         modelo {modelo} and filing year {filing_year}.
       preflight_revision_unresolved: No registry revision covers modelo %{modelo}
@@ -5332,6 +5343,9 @@ core:
         code in text form.
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
+  topics:
+    errors:
+      catalogue_empty: The bundled topic catalogue contains no topics.
 docs:
   casilla:
     binding_source:
@@ -6731,6 +6745,7 @@ errors:
       no table with a header row.
     refused_taxation_comparison: The conjunta-vs-individual taxation comparison cannot
       be performed for this modelo or snapshot.
+    refused_topic_catalogue_empty: The bundled topic catalogue contains no topics.
     refused_topic_not_found: The requested topic was not found.
     refused_user_profile_validation: A user profile value is not valid. Correct the
       field shown.
@@ -47854,7 +47869,13 @@ modelo:
             x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
               help: null
               label: null
-            x-c5hnasr55lp6aor9c9nispj5cdk62:
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
               help: null
               label: null
             x-c5hnasr55lp6aor9c9nisr3lctgn4:
@@ -47890,7 +47911,13 @@ modelo:
             x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
               help: null
               label: null
-            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo8:
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
               help: null
               label: null
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
@@ -47977,7 +48004,13 @@ modelo:
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
               help: null
               label: null
-            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4:
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
               help: null
               label: null
             x-e1in4or5e1q6ushedpkmc:
@@ -70877,6 +70910,9 @@ modelo:
             label: null
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
+  no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.
+    The automated retrieval sweep cannot fetch Impuesto sobre Sociedades filing history
+    (modelo 200/202); check it directly at the AEAT sede.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

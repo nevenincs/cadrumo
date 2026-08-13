@@ -263,41 +263,25 @@ def build_active_profile_notices(record: UserProfileRecord | None) -> tuple[Noti
     divergence_notice = censo_divergence_notice(record)
     if divergence_notice is not None:
         notices.append(divergence_notice)
-    history_notice = _no_aeat_history_notice()
+    history_notice = _no_aeat_history_notice(record)
     if history_notice is not None:
         notices.append(history_notice)
     return tuple(notices)
 
 
-def _no_aeat_history_notice() -> Notice | None:
+def _no_aeat_history_notice(record: UserProfileRecord) -> Notice | None:
     """Point an operator at the filing-history pull when the bucket holds no AEAT-sourced observation.
 
-    Reads the same persisted calculation observations
-    :func:`~cadrumo.application.overview.no_aeat_history_notice` was built
-    to judge, gathered across every modelo through
-    :meth:`~cadrumo.application.calculations.CalculationObservationRepository.iter_records`
-    rather than one modelo at a time — the status page asks about the
-    profile as a whole, not one filing.
+    Delegates to :func:`~cadrumo.entrypoints.cli._overview_evidence.overview_no_aeat_history_notice`,
+    the same producer the ``overview status`` envelope uses, so the full-screen
+    surface and the machine contract cannot silently diverge on when this
+    advisory fires or what it suggests.
     """
-    from ....application.calculations import CalculationObservationRepository
-    from ....application.operator_actions import ActionReference
-    from ....application.overview import no_aeat_history_notice
-    from .._common import resolve_notice_action
+    from ....application.user_profile import projection_for_taxpayer
+    from ....domain.calculations.registry import derive_tax_route
+    from .._overview_evidence import overview_no_aeat_history_notice
 
-    try:
-        observations = tuple(CalculationObservationRepository().iter_records())
-    except _guarded_read_errors():
-        return None
-    notice = no_aeat_history_notice(tuple(payload.source_kind for payload in observations))
-    if notice is None:
-        return None
-    return notice.model_copy(
-        update={
-            "action": resolve_notice_action(
-                action=ActionReference(action_id="operator.live.filed.pull_all"),
-            ),
-        },
-    )
+    return overview_no_aeat_history_notice(tax_route=derive_tax_route(projection_for_taxpayer(record)))
 
 
 def _build_fact_rows(

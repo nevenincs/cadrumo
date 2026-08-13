@@ -76,7 +76,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, field_validator
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core import CasillaId, CasillaValueKind, FiledHistoryDiscoverySignal, Modelo, ObservedHeaderFact, Period
 from .....core.decimal import coerce_decimal_strict
-from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest
+from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest, RegistrySnapshotId
 from .....core.time import UtcInstant
 from ._errors import SedeValidationError
 
@@ -445,7 +445,7 @@ class FiledDeclaracionObservation(BaseModel):
     headers: tuple[ObservedHeaderFact, ...] = ()
     metadata: dict[str, str] = Field(default_factory=dict)
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
-    registry_snapshot_id: str | None = Field(default=None, min_length=1, max_length=128)
+    registry_snapshot_id: RegistrySnapshotId | None = Field(default=None)
     mode: Literal["read"] = "read"
 
 

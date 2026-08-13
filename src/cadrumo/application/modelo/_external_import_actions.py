@@ -48,6 +48,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...core import CasillaId, Modelo, Period
+from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import BindingId, RelationId
@@ -328,7 +329,7 @@ def _build_external_filing_record(
     *,
     filing_record_id: str,
     work_unit: WorkUnit,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     filed_at: datetime,
     filed_by: str,
     evidence_kind: ExternalEvidenceKind,

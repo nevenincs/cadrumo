@@ -49,7 +49,7 @@ from typing import Protocol, TypedDict
 
 from pydantic import ValidationError
 
-from ...core import MetodoValoracion, TipoOperacionVinculada
+from ...core import M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
 from ...core.aggregation import RetencionClave, RowSetGroupingKind
 from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
@@ -548,7 +548,11 @@ def assemble_foreign_asset_observations(
             observations.append(
                 Modelo720RowObservation(
                     source_id=f"detalle:per_foreign_asset:row-{row_index}",
-                    asset_class_code=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
+                    asset_class_code=_hydrate_coded_field(
+                        field_name="asset_class_code",
+                        text=_coerce_text(fields.get("asset_class_code"), default="C") or "C",
+                        code_set=M720AssetClassCode,
+                    ),
                     # No invented default, and Spain least of all: modelo 720
                     # declares bienes y derechos situados en el EXTRANJERO, so
                     # ES is not merely unstated here but the one value the

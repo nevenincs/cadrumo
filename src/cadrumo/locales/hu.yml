@@ -1265,6 +1265,16 @@ application:
         ehhez a revízióhoz.
       registry_snapshot_unresolved: Nem sikerült feloldani a nyilvántartási pillanatképet
         ehhez a munkacélhoz.
+      suffered_retencion_capital_mobiliario_uncredited: Ez a bevallás megtakarítási
+        tőkejövedelmet tartalmaz, de nem számol el levont forrásadót. Adja meg az
+        összeget a kifizető igazolásából (certificado de retenciones e ingresos a
+        cuenta); az adózó soha nem nyújtotta be a 123-as nyomtatványt, amely ezt bevallja,
+        ezért ez az érték nem tölthető ki automatikusan.
+      suffered_retencion_trabajo_uncredited: Ez a bevallás munkaviszonyból származó
+        jövedelmet tartalmaz, de nem számol el levont forrásadót. Adja meg az összeget
+        a kifizető igazolásából (certificado de retenciones e ingresos a cuenta);
+        az adózó soha nem nyújtotta be a 111-es nyomtatványt, amely ezt bevallja,
+        ezért ez az érték nem tölthető ki automatikusan.
       transaction_evidence_missing_deductible: Egy levonható tranzakcióhoz nincs alátámasztó
         bizonyíték.
       transaction_evidence_missing_output: Egy fizetendő tranzakcióhoz nincs alátámasztó
@@ -3655,6 +3665,8 @@ cli:
             capability_disabled: A Google-exportálás le van tiltva ehhez a profilhoz;
               engedélyezd a 'aeat config profile capabilities set google_export on'
               paranccsal.
+            dry_run_help: Előnézetben mutatja, mit törölne és írna újra ez az exportálás
+              a munkafüzetben, anélkül hogy bármit írna
             modelo_help: Az exportálandó nyomtatvány azonosítója (pl. 130, 303, 100).
             period_help: Benyújtási időszak kódja (pl. 1T, 2T, 0A).
             prefill_relations_help: Keresztrevízió-kapcsolati értékek előtöltése a
@@ -3992,8 +4004,8 @@ cli:
         --revision-id kapcsolóval, egyiküket megadva.'
       preflight_revision_help: Nyilvántartási revízió azonosítója.
       preflight_revision_id_help: Opcionális registry-revízió-azonosító felülbírálás
-        pontos visszajátszáshoz (pl. 2024-0A); alapértelmezetten a modellhez, bevallási
-        évhez és időszakhoz tartozó aktív revíziót használja.
+        pontos visszajátszáshoz (pl. 2019-y-siguientes); alapértelmezetten a modellhez,
+        bevallási évhez és időszakhoz tartozó aktív revíziót használja.
       preflight_revision_override_invalid: A beállításjegyzék-változat nem érvényes
         a(z) {modelo} modellhez és a(z) {filing_year} bevallási évhez.
       preflight_revision_unresolved: Egyetlen registry-revízió sem fedi le a(z) %{modelo}
@@ -5616,6 +5628,9 @@ core:
         lennie szöveges formában.
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
+  topics:
+    errors:
+      catalogue_empty: A beépített témakatalógus egyetlen témát sem tartalmaz.
 docs:
   casilla:
     binding_source:
@@ -48496,7 +48511,13 @@ modelo:
             x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
               help: null
               label: null
-            x-c5hnasr55lp6aor9c9nispj5cdk62:
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
               help: null
               label: null
             x-c5hnasr55lp6aor9c9nisr3lctgn4:
@@ -48532,7 +48553,13 @@ modelo:
             x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
               help: null
               label: null
-            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo8:
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
               help: null
               label: null
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
@@ -48619,7 +48646,13 @@ modelo:
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
               help: null
               label: null
-            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4:
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
               help: null
               label: null
             x-e1in4or5e1q6ushedpkmc:
@@ -71425,6 +71458,9 @@ modelo:
             label: null
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
+  no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
+    Az automatikus lekérés nem tudja lekérni a társasági adó (200/202 nyomtatvány)
+    benyújtási előzményeit; ellenőrizze közvetlenül az AEAT elektronikus ügyfélkapuján.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50%-os arányosítás alkalmazva (LIRPF 61.

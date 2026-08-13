@@ -12,6 +12,7 @@ from pydantic import AnyUrl, BaseModel, Field, field_validator
 from ....core import STRICT_FROZEN_CONFIG, CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.decimal import coerce_finite_european_decimal, normalize_decimal_separators
+from ....core.identity import AeatBoxNumber
 from ._errors import RegistryValidationError
 from ._external_grounding import (
     BUNDLED_ORACLE_EVIDENCE_LOCATOR_MAX_LENGTH,
@@ -60,7 +61,7 @@ class RentaWebOpenSyntheticProfile(RentaWebOpenModel):
 class RentaWebOpenDisplayOverride(RentaWebOpenModel):
     """One browser-coordinate override keyed externally by canonical casilla id."""
 
-    display_number: str = Field(min_length=1, max_length=16)
+    display_number: AeatBoxNumber
     value: str = Field(max_length=128)
 
     @field_validator("display_number", "value")

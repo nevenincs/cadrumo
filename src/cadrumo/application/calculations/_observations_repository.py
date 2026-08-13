@@ -64,7 +64,12 @@ from ...core.hashing import sha256_hex
 from ...core.identity import FilingRecordId, same_tax_identifier, tax_id_identity_token
 from ...core.resources import resources
 from ...core.time import UtcInstant, now
-from ...domain.calculations.registry import RegistryModeloObservation, RegistrySnapshotError, undeclared_casilla_ids
+from ...domain.calculations.registry import (
+    RegistryModeloObservation,
+    RegistrySnapshotError,
+    RevisionId,
+    undeclared_casilla_ids,
+)
 from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import (
     ObservationCasillaReferenceError,
@@ -214,9 +219,7 @@ class ObservationEnvelopePayload(BaseModel):
             "single-filer (modelo, filing_year, period) key bit-for-bit."
         ),
     )
-    stamped_revision_id: str = Field(
-        min_length=1,
-        max_length=128,
+    stamped_revision_id: RevisionId = Field(
         description=(
             "Registry revision id the source filing resolved to at capture time "
             "so carry-read code can re-confirm the value against the law-determined "
@@ -491,7 +494,7 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         source_kind: ObservationSourceKind | str,
         captured_at: datetime | None = None,
         member_nif: str | None = None,
-        stamped_revision_id: str | None = None,
+        stamped_revision_id: RevisionId | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,

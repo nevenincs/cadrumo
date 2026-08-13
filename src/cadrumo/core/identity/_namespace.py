@@ -44,11 +44,14 @@ __all__ = [
     "AEAT_EXPEDIENTE_ID_MAX_LENGTH",
     "AEAT_EXPEDIENTE_ID_MIN_LENGTH",
     "AEAT_EXPEDIENTE_ID_PATTERN",
+    "AeatBoxNumber",
+    "AeatCertificadoId",
     "AeatClaveLiquidacion",
     "AeatCsv",
     "AeatExpedienteId",
     "AeatPresentationId",
     "IdentifierNamespace",
+    "RegistrySnapshotId",
 ]
 
 
@@ -95,12 +98,29 @@ class IdentifierNamespace(StrEnum):
             Alias not yet relocated into this package.
         APP_VERIFICATION_REPORT_ID: Content-addressed verification-report
             identity. Alias not yet relocated into this package.
+        APP_REGISTRY_SNAPSHOT_ID: The colon-joined ``modelo:revision_id:
+            filing_year:period`` composite naming one validated registry
+            snapshot. Explicitly NOT :data:`~core.identity.SnapshotId`,
+            whose own docstring disclaims non-hex minters, and not
+            content-addressed -- it is derived from the four coordinates
+            AEAT's own orden binds, not hashed from a payload. Alias:
+            :data:`RegistrySnapshotId`.
+        AEAT_CERTIFICADO_ID: *Nº de certificado*, AEAT's per-notification
+            identifier on the *notificaciones y comunicaciones* surface.
+            Alias: :data:`AeatCertificadoId`.
+        AEAT_BOX_NUMBER: The box or form number AEAT prints or displays for
+            one casilla position -- e.g. ``"611"`` or ``"0611"`` -- distinct
+            from the registry's own :class:`~domain.calculations.registry
+            .CasillaId` slug, which the registry mints and never AEAT.
+            Alias: :data:`AeatBoxNumber`.
     """
 
     AEAT_CSV = "aeat_csv"
     AEAT_PRESENTATION_ID = "aeat_presentation_id"
     AEAT_EXPEDIENTE_ID = "aeat_expediente_id"
     AEAT_CLAVE_LIQUIDACION = "aeat_clave_liquidacion"
+    AEAT_CERTIFICADO_ID = "aeat_certificado_id"
+    AEAT_BOX_NUMBER = "aeat_box_number"
     APP_SNAPSHOT_ID = "app_snapshot_id"
     APP_TRANSACTION_ID = "app_transaction_id"
     APP_INVOICE_ID = "app_invoice_id"
@@ -108,6 +128,7 @@ class IdentifierNamespace(StrEnum):
     APP_CALCULATION_REVISION_ID = "app_calculation_revision_id"
     APP_FILING_RECORD_ID = "app_filing_record_id"
     APP_VERIFICATION_REPORT_ID = "app_verification_report_id"
+    APP_REGISTRY_SNAPSHOT_ID = "app_registry_snapshot_id"
 
 
 # Deliberately NOT members of the taxonomy above, recorded here so a later
@@ -208,6 +229,76 @@ Carried unchanged at the bound the debt boundary already evidences. No shape
 pattern is asserted: unlike an expediente id, no clave de liquidación grammar
 has been observed across enough captures to constrain beyond a length, and
 asserting one on a single sighting would be invention rather than evidence.
+"""
+
+RegistrySnapshotId = Annotated[str, StringConstraints(min_length=1, max_length=128)]
+"""The colon-joined four-coordinate identity of one validated registry snapshot.
+
+A registry snapshot is addressed by ``modelo:revision_id:filing_year:period``
+(see :func:`~domain.calculations.registry.registry_snapshot_id`), because AEAT
+binds each ``(modelo, filing_year, period)`` triple to exactly one revision by
+published orden -- dropping any coordinate produces an id two genuinely
+different snapshots can share.
+
+Explicitly NOT :data:`~core.identity.SnapshotId`: that alias is a SHA-256
+content-address of a payload, while this one is DERIVED from four coordinates
+and carries no digest. Two snapshots with identical content but different
+coordinates get different ids here and would collide under the content-address
+scheme, which is the conflation this namespace exists to prevent.
+
+No colon-structure pattern is asserted, matching :data:`AeatClaveLiquidacion`'s
+reasoning: the ``revision_id`` segment is a human-authored registry slug of
+variable shape (see :data:`~domain.calculations.registry.RevisionId`), so a
+regex built from today's observed values would be invention, not evidence. The
+bound is carried unchanged from the one production field this alias replaces
+(``adapters.outbound.aeat.sede._schema``).
+"""
+
+AeatCertificadoId = Annotated[str, StringConstraints(min_length=10, max_length=16, pattern=r"^\d{10,16}$")]
+"""AEAT's *Nº de certificado*, at the bound the live notifications parser already enforces.
+
+Every real capture observed is 13 digits (``2699101808461`` / ``2596230606502``); the
+parser's own gate (``adapters.outbound.aeat.sede._notifications._CERT_RE``) admits
+10 to 16 digits, a deliberate margin around the observation rather than the observation
+itself, matching :data:`AeatExpedienteId`'s precedent of widening past a thin sample
+rather than pinning to it exactly.
+
+Digits-only, unlike the class docstring's looser "13-digit (or longer)" phrasing this
+alias replaces: the parser never constructs the field from anything the regex has not
+already matched, so digits-only is the ACTUAL bound already enforced, not an invention.
+Do not tighten this alias toward the 13-digit observation, and do not widen it past what
+the parser gate admits without moving the gate itself in the same change -- the two must
+travel together, or the alias tightens ahead of the parser and refuses a value the parser
+already accepted.
+"""
+
+AeatBoxNumber = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=16, pattern=r"^\d+$"),
+]
+"""The box or form number AEAT prints or displays for one casilla position.
+
+Digits-only, variable width and padding (``"1"``, ``"01"``, ``"0611"``, ``"611"`` all
+appear across the tree with no consistent zero-padding convention observed), at the
+1-16 bound already established independently at the two sites that already carried a
+``Field`` bound before this alias existed
+(``domain.calculations.registry._schema_surfaces.CasillaDefinition.form_number`` and
+``domain.calculations.registry._renta_web_open_oracle``'s ``display_number``). Every
+other value found in the tree -- production code, TOML registry data, and test
+fixtures -- fits inside that same window.
+
+Strips surrounding whitespace before the pattern check, preserving a
+behaviour ``domain.calculations.registry._renta_web_open_oracle
+.RentaWebOpenDisplayOverride`` already asserts with its own
+``@field_validator``: that validator runs AFTER this alias's own
+constraints, so a value the pattern would otherwise refuse for untrimmed
+whitespace must already be clean by the time this alias sees it.
+
+Distinct from :class:`~domain.calculations.registry.CasillaId`: this value is AEAT's
+OWN printed or on-screen numbering, carried by the registry as authored metadata about
+an official form's layout, never invented by this app the way a `CasillaId` slug is.
+Conflating the two loses that provenance distinction -- a box number can repeat across
+modelos and revisions where a `CasillaId` slug never does.
 """
 
 AeatPresentationId = Annotated[str, StringConstraints(max_length=64)]

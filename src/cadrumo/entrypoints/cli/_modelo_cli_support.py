@@ -54,6 +54,7 @@ from ...core.decimal import try_parse_canonical_decimal
 from ...core.errors import CadrumoError, resolve_error_message
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
+from ...core.identity import CalculationRevisionId
 from ...core.logging import get_logger
 from ...domain.buckets import BUCKET_ACTOR_LABEL_MAX_LENGTH
 from ...domain.calculations.registry import BindingId, RelationId
@@ -123,7 +124,7 @@ def validate_work_unit_id(value: str) -> str:
     return stripped
 
 
-def validate_calculation_revision_id(value: str) -> str:
+def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
     """Validate that *value* is a 64-character lowercase hex string."""
     stripped = value.strip()
     if not re.fullmatch(HEX_PATTERN_64, stripped):
@@ -724,7 +725,7 @@ def load_work_unit(work_unit_id: str) -> WorkUnit:
     return get_work_unit(work_unit_id)
 
 
-def load_calculation_revision(calculation_revision_id: str) -> CalculationRevision:
+def load_calculation_revision(calculation_revision_id: CalculationRevisionId) -> CalculationRevision:
     """Return one :class:`CalculationRevision` by id through the shared support facade.
 
     Companion to :func:`load_work_unit`: the raw ``get_calculation_revision``

@@ -11,7 +11,7 @@ The success envelope and the error envelope share `schema_version`, `command`,
 - `warning` — the command completed but attached a `warning` notice; read `result`
   AND surface the notice (see the safety rule).
 - `error` — the command failed; the document is on stderr with a nested `error`
-  carrying `code`, `category`, `message`, `suggestion`, `retryable`, and `runbook_id`.
+  carrying `code`, `category`, `message`, `action`, `retryable`, and `runbook_id`.
 
 Do not branch on whether output arrived on stdout or stderr; branch on `status`.
 
@@ -32,13 +32,14 @@ The exit-code table is meaningful, and the load-bearing distinction is:
 
 The CLI never fails as a silent black hole. A bad `--year`/`--period` enumerates the
 accepted period tokens; a bad enum value lists the accepted set; the "did you mean"
-table suggests the nearest verb; and every error envelope carries a runnable
-`suggestion`. When a call is refused, read the suggestion and the accepted set and
+table suggests the nearest verb; and every error envelope carries a resolved
+`action`. When a call is refused, read that action and the accepted set and
 re-issue the corrected command yourself — you rarely need to ask the human to fix a
-syntax error.
+syntax error. An action that resolves to a no-recovery outcome is telling you the
+refusal has no automatic fix; do not invent one.
 
 ## Diagnostics ride on `notices`, nowhere else
 
 Non-blocking advisories and next-step hints arrive only as typed `notices`
-(`severity`, `code`, `message`, `suggestion`, `context`). There is no other advisory
+(`severity`, `code`, `message`, `action`, `context`). There is no other advisory
 channel to scrape. Read `notices` on every result.

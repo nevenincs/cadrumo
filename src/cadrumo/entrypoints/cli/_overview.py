@@ -66,6 +66,7 @@ from ._overview_evidence import (
     _local_live_calendar_events,
     _local_modelo_record_calendar_events,
     _local_modelo_work_units,
+    overview_no_aeat_history_notice,
 )
 from ._overview_payloads import (
     OverviewCalendarResult,
@@ -323,6 +324,13 @@ def overview_status(
         for notice in overview_coverage_notices(status_cal.coverage):
             status_notices.append(notice)
             coverage_lines.append(f"coverage_advised\t{len(status_cal.coverage.advised)}\t{notice.message}")
+        from ...domain.calculations.registry import derive_tax_route
+
+        history_notice = overview_no_aeat_history_notice(
+            tax_route=derive_tax_route(_profile_to_taxpayer(current)),
+        )
+        if history_notice is not None:
+            status_notices.append(history_notice)
     _emit_envelope(
         ctx,
         command="overview.status",

@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import SecureObjectWrite
+from ...core.identity import InvoiceId
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -29,7 +30,7 @@ class InvoiceTransactionLinkResult(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    invoice_id: str
+    invoice_id: InvoiceId
     transaction_id: str
     invoice: Invoice
     invoices: InvoiceCatalogue

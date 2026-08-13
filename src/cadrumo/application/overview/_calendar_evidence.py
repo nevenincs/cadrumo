@@ -42,6 +42,7 @@ from ...core import normalise_aeat_csv
 from ...core.i18n import tr
 from ...core.identity import same_tax_identifier
 from ...core.json_contract import Notice, NoticeSeverity
+from ...domain.calculations.registry import TaxRoute
 from ...domain.modelos import is_justificante_backed_external_evidence
 from ..calculations import ObservationSourceKind, is_official_aeat_observation_source
 from ._calendar_models import (
@@ -100,7 +101,11 @@ NO_AEAT_HISTORY_NOTICE_CODE = "overview.no_aeat_history"
 """Notice code for a workable profile carrying no official AEAT observation."""
 
 
-def no_aeat_history_notice(observation_source_kinds: tuple[ObservationSourceKind, ...]) -> Notice | None:
+def no_aeat_history_notice(
+    observation_source_kinds: tuple[ObservationSourceKind, ...],
+    *,
+    tax_route: TaxRoute | None = None,
+) -> Notice | None:
     """Point a workable profile with no AEAT-sourced history at the history pull.
 
     Fires only when NOT ONE persisted calculation observation carries an official
@@ -128,9 +133,40 @@ def no_aeat_history_notice(observation_source_kinds: tuple[ObservationSourceKind
     capture provenance as AEAT confirmation. Asking for the enum makes the two
     axes non-interchangeable at the call site, where the caller holds the
     payload and knows which one it has.
+
+    Args:
+        observation_source_kinds: Every persisted calculation observation's
+            source kind, across every modelo.
+        tax_route: The active profile's :func:`~domain.calculations.registry.derive_tax_route`
+            branch, when known. A Sociedades filer
+            (:attr:`~domain.calculations.registry.TaxRoute.IMPUESTO_SOCIEDADES`)
+            has no whole-history sweep to recommend: the bulk filed-data
+            capture planner structurally diverts Modelo 200 and 202 -- the
+            Sociedades filer's own direct-tax obligations -- into typed
+            unsupported rows, because this deployment's registry declares no
+            authenticated filed-declarations read surface for them. Pointing
+            such a taxpayer at the sweep verb recommends a verb that can never
+            fetch what the notice is about, so this route carries no action
+            and a route-specific message instead. ``None`` (the default)
+            keeps the whole-history-sweep suggestion for every other route.
     """
     if any(source_kind.is_official_aeat for source_kind in observation_source_kinds):
         return None
+    if tax_route is TaxRoute.IMPUESTO_SOCIEDADES:
+        return Notice(
+            action=None,
+            severity=NoticeSeverity.INFO,
+            code=NO_AEAT_HISTORY_NOTICE_CODE,
+            message=tr(
+                "overview.no_aeat_history_sociedades",
+                default=(
+                    "This profile holds no filing evidence AEAT confirmed. The automated retrieval sweep "
+                    "cannot fetch Impuesto sobre Sociedades filing history (Modelo 200/202); check it "
+                    "directly at the AEAT sede."
+                ),
+            ),
+            context={"observation_count": str(len(observation_source_kinds))},
+        )
     return Notice(
         action=next_action("operator.live.filed.pull_all"),
         severity=NoticeSeverity.INFO,

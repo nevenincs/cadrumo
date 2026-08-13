@@ -40,6 +40,7 @@ from ...core import STRICT_FROZEN_CONFIG, Hex64Str
 from ...core.config import Settings
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
+from ...core.identity import CalculationRevisionId
 from ._models import (
     BundleVerificationState,
     EvidenceBundle,
@@ -216,7 +217,7 @@ class EvidenceBundleService:
         bucket_id: str,
         work_unit_id: str,
         record_payloads: Mapping[tuple[str, str], bytes],
-        calculation_revision_id: str | None = None,
+        calculation_revision_id: CalculationRevisionId | None = None,
         filing_record_id: str | None = None,
         notes: str = "",
     ) -> EvidenceBundle:

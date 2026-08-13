@@ -59,7 +59,7 @@ class ProrrataPriorDefinitivaSeed:
     source_filing_year: int
     source_period: str
     source_casilla_id: CasillaId
-    stamped_revision_id: str
+    stamped_revision_id: RevisionId
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +72,7 @@ class ProrrataSeedFinding:
     source_modelo: str
     source_filing_year: int
     source_period: str
-    stamped_revision_id: str
+    stamped_revision_id: RevisionId
     selected_revision_id: RevisionId | None
 
     @property
@@ -99,7 +99,7 @@ class _PriorSettlementObservation:
     percentage: Decimal
     source_filing_year: int
     source_period: str
-    stamped_revision_id: str
+    stamped_revision_id: RevisionId
     captured_at: datetime
 
 

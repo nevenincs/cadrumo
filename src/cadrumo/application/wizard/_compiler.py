@@ -54,7 +54,7 @@ def _iter_catalogue_questions(flows: Sequence[WizardFlow]) -> Iterator[WizardQue
 def _reject_duplicate_profile_key(question: WizardQuestion, keys: dict[str, ProfileKey]) -> None:
     if question.profile_key in keys:
         raise WizardCompileError(
-            f"wizard compile duplicate profile_key {question.profile_key!r}",
+            translated_message="errors.error.error_wizard_compile",
             context={"profile_key": question.profile_key, "question_id": question.id},
         )
 
@@ -81,7 +81,7 @@ def _compile_one(
         required_when_key, required_when_value = _resolve_condition(question.visible_when, by_id)
     if question.profile_key is None:
         raise WizardCompileError(
-            f"question {question.id!r} reached _compile_one without a profile_key",
+            translated_message="errors.error.error_wizard_compile",
             context={"question_id": question.id},
         )
     return ProfileKey(

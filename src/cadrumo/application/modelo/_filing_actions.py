@@ -53,6 +53,7 @@ from ...core import (
     ResultDisposition,
 )
 from ...core.config import Settings
+from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry import (
@@ -114,7 +115,7 @@ class ModeloFilingEvidenceMissingError(ModeloPreconditionErrorMixin, ModeloError
 
 def _existing_vigente_filing_record(
     catalogue: ModeloRecordCatalogue,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
 ) -> ModeloRecord | None:
     """Return the current (VIGENTE) filing record for a filed revision, if any.
 
@@ -162,7 +163,7 @@ def _resolve_filing_repositories(
 
 
 def file_modelo_revision(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     actor: str,
     workflow_profile: TaxpayerProfile,
@@ -541,7 +542,7 @@ def get_filing_record(
 
 def list_verification_reports(
     *,
-    calculation_revision_id: str | None = None,
+    calculation_revision_id: CalculationRevisionId | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
 ) -> tuple[VerificationReport, ...]:
     """List :class:`VerificationReport` records.

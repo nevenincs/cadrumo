@@ -127,7 +127,7 @@ from ...core import (
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.external_constants import DEFAULT_CURRENCY, XML_MIME_TYPE
-from ...core.identity import ContentDigest, same_tax_identifier
+from ...core.identity import ContentDigest, TaxIdIdentityToken, same_tax_identifier
 from ...core.logging import get_logger
 from ...core.parsing import parse_iso8601_date
 from ...domain.attachments import AttachmentNotFoundError, link_attachment_invoice, normalize_media_type
@@ -677,9 +677,9 @@ class InvoiceDraft(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    supplier_tax_id: str | None = None
+    supplier_tax_id: TaxIdIdentityToken | None = None
     supplier_name: str | None = None
-    customer_tax_id: str | None = None
+    customer_tax_id: TaxIdIdentityToken | None = None
     customer_name: str | None = None
     supplier_postal_code: str | None = None
     customer_postal_code: str | None = None

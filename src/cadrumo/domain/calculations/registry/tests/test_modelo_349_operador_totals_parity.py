@@ -192,14 +192,52 @@ def test_totals_parity_over_empty_observations_reports_full_shortfall() -> None:
     assert parity.by_clave == ()
 
 
+def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
+    """The DEFAULT tolerance is exact equality, and a genuine one-cent gap is caught by it.
+
+    Modelo 349's own revisions declare NO verification expectations at all
+    -- pinned against the live registry below so this proof cannot silently
+    drift -- so with no published contract there is no authority to widen the
+    comparison. A caller that resolves no explicit tolerance must not have a
+    one-cent gap silently absorbed by this function's own default. A prior
+    version of this default was a hardcoded cent that would have masked
+    exactly this gap.
+    """
+    from .....core.resources import resources
+    from .....domain.calculations.registry import RegistryValidationError
+
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2025, period="01")
+    assert not snapshot.revision.verification_expectations, (
+        "test precondition: modelo 349 must declare no verification expectations"
+    )
+    try:
+        snapshot.verification_policy()
+    except RegistryValidationError:
+        pass
+    else:
+        raise AssertionError("test precondition: verification_policy() must refuse an expectation-less revision")
+
+    revision = _modelo_349_revision()
+
+    one_cent_off = compute_modelo_349_operador_totals_parity(
+        revision,
+        _CONSISTENT_OBSERVATIONS,
+        operator_summary_total=_EXPECTED_OPERATOR_COUNT,
+        base_summary_total=_EXPECTED_BASE_TOTAL + Decimal("0.01"),
+    )
+    assert not one_cent_off.is_consistent, "the default must not silently absorb a genuine one-cent divergence"
+    assert one_cent_off.base_delta == Decimal("-0.01")
+
+
 def test_totals_parity_tolerance_absorbs_sub_cent_rounding_only() -> None:
-    """A one-cent delta is within tolerance; a two-cent delta is not.
+    """A one-cent delta is within an EXPLICITLY PASSED tolerance; a two-cent delta is not.
 
     Pure unit-level boundary check on the comparison primitive itself (no
     resolver dependency) — the monetary tolerance is symmetric and exclusive
-    of the boundary+epsilon, matching the registry's standard money-2
-    rounding tolerance used throughout the reconcile framework. The
-    operator-count axis is an exact integer match with no tolerance.
+    of the boundary+epsilon. Passed explicitly rather than relied on as a
+    default, because the registry (not this test) is the authority for what
+    value a real caller resolves. The operator-count axis is an exact
+    integer match with no tolerance.
     """
     revision = _modelo_349_revision()
 
@@ -208,6 +246,7 @@ def test_totals_parity_tolerance_absorbs_sub_cent_rounding_only() -> None:
         _CONSISTENT_OBSERVATIONS,
         operator_summary_total=_EXPECTED_OPERATOR_COUNT,
         base_summary_total=_EXPECTED_BASE_TOTAL + Decimal("0.01"),
+        tolerance=Decimal("0.01"),
     )
     assert within_tolerance.is_consistent
 
@@ -216,6 +255,7 @@ def test_totals_parity_tolerance_absorbs_sub_cent_rounding_only() -> None:
         _CONSISTENT_OBSERVATIONS,
         operator_summary_total=_EXPECTED_OPERATOR_COUNT,
         base_summary_total=_EXPECTED_BASE_TOTAL + Decimal("0.02"),
+        tolerance=Decimal("0.01"),
     )
     assert not beyond_tolerance.is_consistent
     assert beyond_tolerance.base_delta == Decimal("-0.02")

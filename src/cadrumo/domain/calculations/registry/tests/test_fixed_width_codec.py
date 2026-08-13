@@ -16,10 +16,12 @@ from .. import (
     ExportPadding,
     ExportRecordDefinition,
     ExportValuePolicy,
+    FixedWidthRecordRenderError,
     ParsedExportPolicyWireValue,
     RegistryValidationError,
     parse_fixed_width_export_field,
     render_fixed_width_export_field,
+    render_fixed_width_export_record_body,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -388,6 +390,115 @@ def test_schema_refuses_allowed_domains_on_incompatible_field_shapes(overrides: 
             allowed_values=("1", "3"),
             **overrides,
         )
+
+
+@pytest.mark.parametrize("absent", (None, ""))
+@pytest.mark.parametrize(
+    ("overrides", "expected"),
+    (
+        ({"data_type": "integer"}, "00000"),
+        ({"data_type": "decimal", "decimals": 2}, "00000"),
+        ({"data_type": "money"}, "00000"),
+    ),
+)
+def test_optional_numeric_slot_absent_renders_its_declared_blank_fill(
+    overrides: dict[str, object],
+    expected: str,
+    absent: object,
+) -> None:
+    """An optional numeric casilla the taxpayer lacks occupies its slot as zeros.
+
+    Grounded in the AEAT record designs bundled under
+    ``_data/corpus/aeat_official/disenos_registro``: "los campos numéricos que no
+    tengan contenido se rellenarán a ceros". The expected wire is the declared
+    ``left_zero`` padding across the declared width, not a value invented here.
+    """
+    field = _field(required=False, **overrides)
+
+    assert render_fixed_width_export_field(field, absent) == expected
+
+
+@pytest.mark.parametrize("absent", (None, ""))
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        {"data_type": "integer"},
+        {"data_type": "decimal", "decimals": 2},
+        {"data_type": "money"},
+        {"data_type": "money", "signed": True},
+    ),
+)
+def test_required_numeric_slot_absent_still_refuses(overrides: dict[str, object], absent: object) -> None:
+    """A required numeric casilla has no blank representation and must refuse.
+
+    This is the anti-weakening half of the optional-slot contract above: were an
+    omitted mandatory figure to render as zeros, a filing would silently
+    under-declare behind a valid digest. Modelo 180's declarante retenciones
+    total and Modelo 145's perceptor birth year are declared ``required = true``
+    precisely so this path refuses.
+    """
+    field = _field(required=True, **overrides)
+
+    with pytest.raises(RegistryValidationError, match="has no value to render"):
+        render_fixed_width_export_field(field, absent)
+
+
+def test_absent_optional_signed_numeric_keeps_its_sign_marker_slot() -> None:
+    """A signed field's leading marker byte is never consumed by the zero fill."""
+    field = _field(data_type="money", signed=True, required=False, length=17)
+
+    rendered = render_fixed_width_export_field(field, None)
+
+    assert rendered == " " + "0" * 16
+    assert parse_fixed_width_export_field(field, rendered) == Decimal(0)
+
+
+def test_absent_optional_numeric_slot_parses_back_as_its_declared_zero() -> None:
+    """The blank fill is canonical wire, so the codec round-trips it."""
+    field = _field(data_type="integer", required=False)
+
+    rendered = render_fixed_width_export_field(field, None)
+
+    assert parse_fixed_width_export_field(field, rendered) == Decimal(0)
+
+
+def _absence_record(*, required: bool) -> ExportRecordDefinition:
+    return ExportRecordDefinition(
+        id="absent-optional-numeric-record",
+        record_type="1",
+        order=0,
+        encoding="iso-8859-1",
+        line_ending="none",
+        fields=(
+            _field(id="present-year", offset=1, length=4, casilla_id="01", required=True),
+            _field(id="absent-year", offset=5, length=4, casilla_id="02", required=required),
+        ),
+    )
+
+
+def test_record_renders_when_an_optional_numeric_casilla_is_absent() -> None:
+    """One unfilled optional numeric slot must not refuse the whole record.
+
+    The refusal is raised per record, so before this contract held, a taxpayer
+    with no descendants could not export a Modelo 145 communication at all.
+    """
+    body = render_fixed_width_export_record_body(
+        _absence_record(required=False),
+        field_values={"01": "2010"},
+    )
+
+    assert body == b"20100000"
+
+
+def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
+    """The same absent slot on a required field still refuses the record."""
+    with pytest.raises(FixedWidthRecordRenderError) as excinfo:
+        render_fixed_width_export_record_body(
+            _absence_record(required=True),
+            field_values={"01": "2010"},
+        )
+
+    assert excinfo.value.field_id == "absent-year"
 
 
 def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:

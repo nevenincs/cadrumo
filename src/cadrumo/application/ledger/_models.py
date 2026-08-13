@@ -726,7 +726,7 @@ class BulkClassifyRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     classification: BusinessClassification
     category_id: str | None = None
     business_pct: Decimal | None = None
@@ -786,7 +786,7 @@ class ApplyRulesAppliedRow(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1)
+    transaction_id: TransactionId
     matched_rule_id: str = Field(min_length=1)
     classification: BusinessClassification
 

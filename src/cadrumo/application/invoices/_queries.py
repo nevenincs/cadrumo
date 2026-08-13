@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ...core.identity import InvoiceId
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -31,7 +32,7 @@ class InvoiceListRow(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    invoice_id: str
+    invoice_id: InvoiceId
     kind: InvoiceKind
     issued_at: date
     counterparty_name: str

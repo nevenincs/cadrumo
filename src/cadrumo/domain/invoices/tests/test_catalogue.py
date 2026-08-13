@@ -264,16 +264,18 @@ def test_link_transaction_is_idempotent_on_duplicate() -> None:
 
 def test_link_transaction_rejects_invalid_request() -> None:
     """Invalid link requests must raise the typed service error."""
-    cases: tuple[tuple[str | None, str, type[Exception], str], ...] = (
-        (None, "not-hex", InvoiceLinkError, r"transaction_id|hex"),
-        ("nonexistent", "a" * 64, InvoiceNotFoundError, r"invoice|not|found"),
+    # The error type is what distinguishes the two cases; the sentences that
+    # used to carry that distinction are catalogue-rendered now.
+    cases: tuple[tuple[str | None, str, type[Exception]], ...] = (
+        (None, "not-hex", InvoiceLinkError),
+        ("nonexistent", "a" * 64, InvoiceNotFoundError),
     )
     invoice = _valid_invoice()
     catalogue = InvoiceCatalogue.from_invoices([invoice])
 
-    for invoice_id_override, transaction_id, expected_error, match in cases:
+    for invoice_id_override, transaction_id, expected_error in cases:
         invoice_id = invoice.invoice_id if invoice_id_override is None else invoice_id_override
-        with pytest.raises(expected_error, match=match):
+        with pytest.raises(expected_error):
             link_transaction(catalogue, invoice_id, transaction_id)
 
 

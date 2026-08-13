@@ -63,42 +63,39 @@ def _retired_identifier_locations(paths: Iterable[Path], *, retired_identifier: 
         if path.suffix == ".yml":
             locations.extend(_m303_locale_retired_identifier_locations(path, source, retired_identifier))
         elif path.suffix == ".py":
-            try:
-                tree = ast.parse(source, filename=str(path))
-            except SyntaxError:
-                tree = None
             for line_number, line in enumerate(source.splitlines(), start=1):
                 if retired_identifier not in line:
                     continue
-                if tree is None:
-                    nearby = "\n".join(source.splitlines()[max(0, line_number - 6) : line_number + 5])
-                    is_m303_context = bool(_M303_CONTEXT.search(nearby))
-                else:
-                    is_m303_context = _is_m303_source_line(tree, source, line_number)
-                if is_m303_context:
+                if _is_m303_source_line(source, line_number):
                     locations.append(f"{repo_relative(path)}:{line_number}")
     return tuple(sorted(set(locations)))
 
 
 _M303_CONTEXT = re.compile(r"(?:m303|modelo[_ ]303|model 303|[\"']303[\"'])", re.IGNORECASE)
+_MODELO_MARKER = re.compile(
+    r"(?:\bm(\d{3})(?!\d)|modelo[_ ](\d{3})|model (\d{3})|[\"'](\d{3})[\"'])",
+    re.IGNORECASE,
+)
 
 
-def _is_m303_source_line(tree: ast.AST, source: str, line_number: int) -> bool:
-    """Return whether a source line belongs to one M303-specific test or module claim."""
-    functions = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef))
-        and node.lineno <= line_number <= (node.end_lineno or node.lineno)
-    ]
-    if functions:
-        innermost = min(functions, key=lambda node: (node.end_lineno or node.lineno) - node.lineno)
-        scope = ast.get_source_segment(source, innermost) or ""
-        return bool(_M303_CONTEXT.search(scope))
+def _is_m303_source_line(source: str, line_number: int) -> bool:
+    """Return whether the NEAREST modelo named around this line is Modelo 303.
+
+    Attribution is by proximity rather than by enclosing scope because the
+    retired identifier is a legitimate, current revision id for sibling modelos
+    -- Modelo 180 and Modelo 721 both ship one. A scope-wide search flags a
+    Modelo 180 assertion whenever anything else in the same function happens to
+    mention Modelo 303, which is how a passing corpus reads as a violation.
+    """
     lines = source.splitlines()
-    lower = max(0, line_number - 6)
-    upper = min(len(lines), line_number + 5)
-    return bool(_M303_CONTEXT.search("\n".join(lines[lower:upper])))
+    nearest: tuple[int, int, str] | None = None
+    for index, line in enumerate(lines, start=1):
+        for match in _MODELO_MARKER.finditer(line):
+            modelo = next(group for group in match.groups() if group)
+            candidate = (abs(index - line_number), 0 if index <= line_number else 1, modelo)
+            if nearest is None or candidate[:2] < nearest[:2]:
+                nearest = candidate
+    return nearest is not None and nearest[2] == "303"
 
 
 def _m303_locale_retired_identifier_locations(path: Path, source: str, retired_identifier: str) -> tuple[str, ...]:
@@ -120,8 +117,26 @@ def _m303_locale_retired_identifier_locations(path: Path, source: str, retired_i
     return tuple(locations)
 
 
+def _constant_strings(node: ast.AST) -> set[str]:
+    """Return every string constant appearing anywhere beneath one node."""
+    return {
+        descendant.value
+        for descendant in ast.walk(node)
+        if isinstance(descendant, ast.Constant) and isinstance(descendant.value, str)
+    }
+
+
 def _m303_selector_redeclaration_locations(paths: Iterable[Path], *, revision_ids: frozenset[str]) -> tuple[str, ...]:
-    """Reject dict/branch copies that map Modelo 303 to a revision outside the selector."""
+    """Reject dict/branch copies that MAP Modelo 303 onto one of its revisions.
+
+    A redeclaration answers "which revision applies to Modelo 303", so the
+    modelo token has to sit in the deciding position: a dict KEY whose value
+    carries a revision id, or a branch whose TEST compares against ``"303"``
+    and whose arms yield one. Merely carrying both tokens is what every
+    work-unit, receipt and report fixture in the tree does, and several of the
+    modelo's live revision ids are bare four-digit years, so a
+    both-tokens-present rule reads the whole corpus as a selector.
+    """
     locations: list[str] = []
     for path in paths:
         if path.suffix != ".py" or path.resolve() == Path(__file__).resolve():
@@ -131,15 +146,22 @@ def _m303_selector_redeclaration_locations(paths: Iterable[Path], *, revision_id
         except SyntaxError:
             continue
         for node in ast.walk(tree):
-            if not isinstance(node, (ast.Dict, ast.If, ast.IfExp)):
+            if isinstance(node, ast.Dict):
+                mapped = any(
+                    isinstance(key, ast.Constant) and key.value == "303" and _constant_strings(value) & revision_ids
+                    for key, value in zip(node.keys, node.values, strict=True)
+                    if key is not None
+                )
+            elif isinstance(node, (ast.If, ast.IfExp)):
+                arms: list[ast.AST] = (
+                    [node.body, node.orelse] if isinstance(node, ast.IfExp) else [*node.body, *node.orelse]
+                )
+                mapped = "303" in _constant_strings(node.test) and any(
+                    _constant_strings(arm) & revision_ids for arm in arms
+                )
+            else:
                 continue
-            strings = {
-                value
-                for descendant in ast.walk(node)
-                if isinstance(descendant, ast.Constant) and isinstance(descendant.value, str)
-                for value in (descendant.value,)
-            }
-            if "303" in strings and strings.intersection(revision_ids):
+            if mapped:
                 locations.append(f"{repo_relative(path)}:{node.lineno}")
     return tuple(sorted(set(locations)))
 

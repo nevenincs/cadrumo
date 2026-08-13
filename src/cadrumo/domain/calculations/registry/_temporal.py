@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date
 
 from ._errors import AmbiguousRevisionSelectionError, NoRevisionForPeriodError
+from ._ids import RevisionId
 from ._period_selector_match import selector_token_for_request
 from ._schema import ModeloDefinition, ModeloRevision
 
@@ -72,7 +73,7 @@ def select_revision(
     filing_year: int,
     period: str,
     on: date | None = None,
-    revision_id: str | None = None,
+    revision_id: RevisionId | None = None,
 ) -> ModeloRevision:
     """Select exactly one :class:`ModeloRevision` for a filing period.
 

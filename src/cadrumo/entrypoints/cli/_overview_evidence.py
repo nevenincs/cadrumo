@@ -1,18 +1,23 @@
-"""Local evidence loaders for the ``aeat app overview`` calendar and backlog surfaces.
+"""Local evidence loaders for the ``aeat app overview`` calendar, status and backlog surfaces.
 
 Every loader here reads bucket-scoped persistence (live-capture snapshots, local
-modelo filing records, filed-declaration observations, work-unit catalogues) to
-ENRICH a schedule-derived overview surface with observed evidence. None of them
-is the source of truth for what is due — the deadline schedule plus obligation
-applicability is — so every loader DEGRADES to an empty result plus a WARNING
-:class:`Notice` on failure rather than refusing the whole overview. Shared by
-:mod:`._overview`'s single-profile ``calendar`` command, its ``--all-profiles``
-multi-profile scan, and the ``backlog`` command's work-unit enrichment.
+modelo filing records, filed-declaration observations, calculation observations,
+work-unit catalogues) to ENRICH a schedule-derived overview surface with
+observed evidence. None of them is the source of truth for what is due — the
+deadline schedule plus obligation applicability is — so every loader DEGRADES to
+an empty result plus a WARNING :class:`Notice` (or, for
+:func:`overview_no_aeat_history_notice`, no advisory at all) on failure rather
+than refusing the whole overview. Shared by :mod:`._overview`'s single-profile
+``calendar`` command, its ``--all-profiles`` multi-profile scan, the ``backlog``
+command's work-unit enrichment, the ``status`` command's no-AEAT-history
+advisory, and the ``config profile status`` full-screen surface — so the
+CLI envelope and the TUI cannot silently diverge on when that advisory fires.
 """
 
 from __future__ import annotations
 
 from datetime import date
+from typing import TYPE_CHECKING
 
 from ...application.overview import (
     OverviewCalendarEvent,
@@ -21,12 +26,17 @@ from ...application.overview import (
     build_overview_calendar_events,
     calendar_events_from_modelo_records,
     calendar_filing_evidence_from_sources,
+    no_aeat_history_notice,
 )
 from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
 from ...domain.modelos import WorkUnit
+from ._common import resolve_notice_action
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry import TaxRoute
 
 logger = get_logger(__name__)
 
@@ -180,6 +190,52 @@ def _local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Noti
             context={},
         )
         return (), notice
+
+
+def overview_no_aeat_history_notice(*, tax_route: TaxRoute | None) -> Notice | None:
+    """Project the no-AEAT-history advisory onto the live envelope notice channel.
+
+    Reads persisted calculation observations across every modelo — the profile
+    as a whole, not one filing — through the same
+    :meth:`~cadrumo.application.calculations.CalculationObservationRepository.iter_records`
+    read the ``config profile status`` full-screen surface already uses, and
+    projects the application
+    :func:`~cadrumo.application.overview.no_aeat_history_notice` advisory
+    through the live action resolver so its ``cli_path`` is populated the way
+    every other envelope notice's action is (the application layer's bare
+    :func:`~cadrumo.application.operator_actions.next_action` carries only the
+    action id). The one shared function keeps the CLI envelope and the TUI
+    from silently diverging on when this advisory fires or what it suggests.
+
+    A read failure degrades to no advisory, matching every other loader in
+    this module: this is an overview ENRICHMENT, never something the whole
+    command should fail over.
+    """
+    from ...application.calculations import CalculationObservationRepository
+    from ...application.operator_actions import ActionReference
+    from ...core.json_contract import ResolvedNoticeAction
+
+    try:
+        observations = tuple(CalculationObservationRepository().iter_records())
+    except Exception:
+        logger.warning(
+            "overview: AEAT-history evidence unavailable; no-history advisory skipped",
+            exc_info=True,
+        )
+        return None
+    notice = no_aeat_history_notice(
+        tuple(payload.source_kind for payload in observations),
+        tax_route=tax_route,
+    )
+    if notice is None or not isinstance(notice.action, ResolvedNoticeAction):
+        return notice
+    return notice.model_copy(
+        update={
+            "action": resolve_notice_action(
+                action=ActionReference(action_id=notice.action.action.action_id),
+            ),
+        },
+    )
 
 
 def _live_censo_verified_profile_keys(record) -> tuple[str, ...]:

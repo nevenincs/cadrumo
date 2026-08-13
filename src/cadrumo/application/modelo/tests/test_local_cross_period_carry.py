@@ -552,6 +552,16 @@ def test_carry_resolver_excludes_303_iva_compensation_binding(repos: _Repos) -> 
         "test precondition: the raw resolver must surface the 303 compensation binding "
         "so the exclusion has something to strip"
     )
+    # The revision's self-referential dependency classification
+    # (modelo-303-dep-self-prior-quarter, source_modelo="303") declares this carry
+    # a fact to reconcile against, not a settling figure; that real, non-default
+    # treatment must survive the resolver join onto the provenance trace rather
+    # than default to the undeclared empty string.
+    compensation_provenance = [
+        item for item in raw.provenance if item.source_ref.endswith(f":{MODELO_303_IVA_COMPENSATION_BINDING_ID}")
+    ]
+    assert compensation_provenance, "test precondition: the compensation binding must carry a provenance row"
+    assert all(item.dependency_treatment == "factual_evidence" for item in compensation_provenance)
 
     filtered = PreviousFilingSourceResolver(
         registry_snapshot=snapshot,

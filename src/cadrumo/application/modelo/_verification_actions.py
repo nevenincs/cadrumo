@@ -62,6 +62,7 @@ from ...adapters.persistence.profile.participation_index import TransactionParti
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import ActionEvidenceProvenance, BindingSourceKind, CasillaId, M210GrossIncomeSourceMode, Modelo
 from ...core.config import Settings
+from ...core.identity import CalculationRevisionId
 from ...core.time import now as _utc_now
 from ...domain.buckets import BucketEventHistoryRepositoryProtocol, BucketEventObjectType, BucketEventType
 from ...domain.calculations.registry import (
@@ -664,7 +665,7 @@ def _collect_verification_gate_findings(
 
 def _existing_granting_verification_report(
     catalogue: VerificationReportCatalogue,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
 ) -> VerificationReport | None:
     """Return the granting verification report for a locked revision, or ``None``.
 
@@ -682,7 +683,7 @@ def _existing_granting_verification_report(
 
 def _build_verification_report(
     *,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     findings: Iterable[ModeloVerificationFinding],
     resolved_casilla_ids: Iterable[CasillaId],
     missing_required_casilla_ids: Iterable[CasillaId],
@@ -805,7 +806,7 @@ def _resolve_verification_repositories(
 
 
 def verify_modelo_revision_with_preconditions(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     actor: str,
     workflow_profile: TaxpayerProfile,
@@ -1058,7 +1059,7 @@ def verify_modelo_revision_with_preconditions(
 
 
 def verify_modelo_revision(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     actor: str,
     workflow_profile: TaxpayerProfile,
@@ -1110,7 +1111,7 @@ def verify_modelo_revision(
 def _repair_verified_revision_current_pointer(
     *,
     work_unit: WorkUnit,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     verified_at: datetime,
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
 ) -> None:
@@ -1240,7 +1241,7 @@ def _emit_verification_bucket_event(
     work_unit: WorkUnit,
     target: CalculationRevision,
     report_id: str,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     completeness: VerificationCompletenessStatus,
     granted: bool,
     finding_count: int,

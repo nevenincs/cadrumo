@@ -608,6 +608,15 @@ class CalculationSourceRef(BaseModel):
         fingerprint: Data-dependent digest of the contributing source object when
             the resolver produced one; ``None`` when the resolver emits a
             reference without a content digest.
+        dependency_treatment: The registry's declared dependency treatment for
+            this carry, empty when the revision declares none. Unlike
+            ``legal_refs`` / ``source_refs`` this carries no grounding duplicated
+            elsewhere on the revision — it is the sole persisted trace of whether
+            a carry is a ``factual_evidence`` fact to reconcile against or a
+            ``direct_annual_settlement`` figure that settles the return, and an
+            audit reader has no other way to recover that distinction after the
+            fact. Carried here rather than gated here: the value is NOT withheld
+            on the basis of its treatment.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -616,6 +625,7 @@ class CalculationSourceRef(BaseModel):
     binding_source: BindingSourceKind | None = None
     source_ref: str = Field(min_length=1, max_length=256)
     fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
+    dependency_treatment: str = ""
 
 
 class CalculationSourceIssue(BaseModel):
@@ -999,7 +1009,7 @@ class CalculationRevisionCatalogue(BaseModel):
                 )
         return self
 
-    def get(self, calculation_revision_id: str) -> CalculationRevision | None:
+    def get(self, calculation_revision_id: CalculationRevisionId) -> CalculationRevision | None:
         return self.revisions.get(calculation_revision_id)
 
     def values(self):

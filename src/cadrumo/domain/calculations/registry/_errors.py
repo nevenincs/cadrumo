@@ -18,7 +18,7 @@ from typing import Self
 
 from ....core import CasillaId
 from ....core.errors import CadrumoError, CoreValidationError
-from ._ids import BindingId, RelationId
+from ._ids import BindingId, RelationId, RevisionId
 
 
 class RegistryError(CadrumoError, ValueError):
@@ -304,7 +304,7 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
         modelo_id: str,
         filing_year: int,
         period: str,
-        revision_id: str | None,
+        revision_id: RevisionId | None,
     ) -> None:
         """Construct the no-revision-for-period error.
 
@@ -317,7 +317,7 @@ class NoRevisionForPeriodError(RegistrySnapshotError):
         self.modelo_id: str = modelo_id
         self.filing_year: int = filing_year
         self.period: str = period
-        self.revision_id: str | None = revision_id
+        self.revision_id: RevisionId | None = revision_id
         super().__init__(
             f"modelo {modelo_id}: no revision for year={filing_year!r} period={period!r} revision={revision_id!r}",
             translated_message="errors.snapshot.no_revision_for_period",

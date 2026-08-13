@@ -107,7 +107,7 @@ class ModeloReviewPackageSignResult(OutputSchema):
     package_path: str
     signature_path: str
     bucket_id: str = Field(min_length=1)
-    calculation_revision_id: str = Field(min_length=1)
+    calculation_revision_id: CalculationRevisionId
     manifest_sha256: str = Field(pattern=HEX_PATTERN_64)
     signer_public_key_hex: str = Field(pattern=HEX_PATTERN_64)
     signed_at: datetime

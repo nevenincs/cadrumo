@@ -52,6 +52,9 @@ Major declarations:
 * :class:`CalcSheetsApplyResult` and
   :func:`apply_export_plan` — the
   export-plan-to-Sheets apply surface.
+* :class:`CalcSheetsExportPreview` and
+  :func:`preview_export_plan` — the read-only
+  dry-run preview of the same apply surface.
 * :class:`RowSetEdit`,
   :class:`PullResult`,
   :func:`pull_operator_edits`, and
@@ -79,7 +82,7 @@ See Also:
 
 from ._active_profile import resolve_active_profile
 from ._api import GoogleApiResponseBody, GoogleDriveFile, GoogleSheetsRange, GoogleSpreadsheet
-from ._calc_sheets_apply import CalcSheetsApplyResult, apply_export_plan
+from ._calc_sheets_apply import CalcSheetsApplyResult, CalcSheetsExportPreview, apply_export_plan, preview_export_plan
 from ._calc_sheets_pull import (
     PullResult,
     RowSetCellEdit,
@@ -150,6 +153,7 @@ __all__ = [
     "REQUIRED_SCOPES",
     "SHEETS_SCOPE",
     "CalcSheetsApplyResult",
+    "CalcSheetsExportPreview",
     "DriveAppProperties",
     "DriveConfig",
     "DriveFolderDocument",
@@ -194,6 +198,7 @@ __all__ = [
     "load_metadata",
     "load_token",
     "parse_drive_file_id",
+    "preview_export_plan",
     "pull_operator_edits",
     "relation_edit_payload",
     "resolve_active_profile",

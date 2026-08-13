@@ -48,7 +48,7 @@ def test_service_records_accept_64_char_transaction_id() -> None:
     # Test ReconciliationSuggestion
     suggestion = ReconciliationSuggestion(
         transaction_id=_SAMPLE_HEX_64,
-        invoice_id="INV-1",
+        invoice_id=_SAMPLE_HEX_64,
         amount_match=True,
         counterparty_match=True,
         score=Decimal("1"),

@@ -149,6 +149,12 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
             assert provenance.source_casilla_ids == prefilled.source_casilla_ids
             assert provenance.legal_refs == prefilled.legal_refs
             assert provenance.source_refs == prefilled.source_refs
+            # The registry's declared dependency classification for M115 (the M180
+            # dep-115 dependency_classification) survives the resolver join intact:
+            # a real, non-default declared treatment reaches the operator-facing
+            # provenance trace, not a silently dropped/defaulted empty string.
+            assert provenance.dependency_treatment == prefilled.dependency_treatment
+            assert provenance.dependency_treatment == "direct_annual_settlement"
 
 
 def test_resolve_relations_returns_operator_manual_blanks_when_local_store_is_empty(tmp_path: Path) -> None:
@@ -460,6 +466,47 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
         "an unresolved non-formula relation that materialises no binding slot produced no "
         "diagnostic — the narrow silent gap this guard closes"
     )
+
+
+def test_modelo_190_2025_empty_store_collapses_absent_m111_source_to_one_diagnostic(tmp_path: Path) -> None:
+    """Ten Modelo 190 relations reading the same absent Modelo 111 quarter fold to one advisory.
+
+    The real-corpus measurement the grouping change was built against: an
+    empty local store leaves every one of the annual resumen's monetary
+    relations unresolved, each reading a different Modelo 111 casilla (02,
+    05, 08, ..., 28) off the SAME absent 1T-4T filing. Un-grouped, that is
+    ten diagnostics naming one root cause; grouped by
+    ``(source_modelo, filing_year, periods)``, it must be exactly one.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()  # empty store — nothing to resolve
+        snapshot = _snapshot("190", 2025, "0A")
+        source_resolution = RelationPrefillSourceResolver(
+            repository=repository,
+            registry_snapshot=snapshot,
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id="operator",
+                modelo="190",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision=snapshot.revision,
+            ),
+        )
+
+    m111_diagnostics = [
+        diagnostic for diagnostic in source_resolution.diagnostics if diagnostic.message.startswith("modelo 111 2025")
+    ]
+    assert len(m111_diagnostics) == 1, (
+        "one absent Modelo 111 source filing must fold to one diagnostic, not one per relation "
+        f"(got {len(m111_diagnostics)} diagnostics naming it)"
+    )
+    diagnostic = m111_diagnostics[0]
+    # The row's own measurement: ten annual-summary relations share this absent
+    # source. The structured field carries every one, machine-readable, whatever
+    # the length-capped prose message elides.
+    assert len(diagnostic.relation_ids) >= 9
+    assert set(diagnostic.relation_ids) <= set(source_resolution.unresolved_relation_ids)
 
 
 # ---------------------------------------------------------------------------

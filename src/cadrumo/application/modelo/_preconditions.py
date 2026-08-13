@@ -16,6 +16,7 @@ from ...core import (
     ActionEvidenceProvenance,
     NoRecoveryOutcome,
 )
+from ...core.identity import CalculationRevisionId
 from ...domain.modelos import WorkUnit
 from ..operator_actions import (
     ActionArgumentBinding,
@@ -502,7 +503,7 @@ def build_modelo_precondition_failure_for_scenario(
 
 def build_modelo_work_file_unverified_revision_failure(
     *,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     state: str,
     work_unit: WorkUnit,
 ) -> ModeloPreconditionFailure:

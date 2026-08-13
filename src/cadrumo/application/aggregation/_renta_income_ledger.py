@@ -46,6 +46,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, PeriodKind, TipoActividad, validated_casilla_id
 from ...core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
+from ...core.identity import TransactionId
 from ...core.money import round_to_cents
 from ...domain.invoices import InvoiceCatalogue, InvoiceCatalogueRepositoryProtocol, decompose_invoice
 from ...domain.iva import InvoiceKind, category_cuota_is_zero_by_law
@@ -179,7 +180,7 @@ class RentaIncomeLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     reason: RentaIncomeLedgerAggregationIssueReason
     detail: _IssueDetail
 
@@ -236,7 +237,7 @@ class RentaIncomeObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     target_casilla_id: CasillaId
     gross_amount: Decimal = Field(ge=Decimal("0"))
     taxable_base_amount: Decimal | None = Field(default=None, ge=Decimal("0"))

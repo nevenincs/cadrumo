@@ -465,7 +465,7 @@ def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> N
 
 
 def _load_revision_for_export(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     *,
     repo: CalculationRevisionCatalogueRepositoryProtocol,
 ) -> CalculationRevision:

@@ -1337,6 +1337,16 @@ application:
         per a aquesta revisió.
       registry_snapshot_unresolved: No s'ha pogut resoldre la instantània del registre
         per a aquest objectiu de treball.
+      suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració consigna
+        rendiments del capital mobiliari de l'estalvi però no acredita cap retenció
+        suportada. Introdueixi l'import del certificat de retencions i ingressos a
+        compte del pagador; el contribuent mai va presentar el Model 123 que ho declara,
+        de manera que aquest valor no es pot emplenar automàticament.
+      suffered_retencion_trabajo_uncredited: Aquesta declaració consigna rendiments
+        del treball però no acredita cap retenció suportada. Introdueixi l'import
+        del certificat de retencions i ingressos a compte del pagador; el contribuent
+        mai va presentar el Model 111 que ho declara, de manera que aquest valor no
+        es pot emplenar automàticament.
       transaction_evidence_missing_deductible: Una transacció deduïble no té evidència
         justificativa.
       transaction_evidence_missing_output: Una transacció repercutida no té evidència
@@ -3727,6 +3737,8 @@ cli:
             capability_disabled: L'exportació a Google està desactivada per a aquest
               perfil; activa-la amb 'aeat config profile capabilities set google_export
               on'.
+            dry_run_help: Previsualitza el que aquesta exportació esborraria i reescriuria
+              al llibre, sense escriure res
             modelo_help: Identificador del model a exportar (p. ex. 130, 303, 100)
             period_help: Codi de període (p. ex. 1T, 2T, 0A)
             prefill_relations_help: Preomple els valors de relacions entre revisions
@@ -4059,8 +4071,8 @@ cli:
         --revision-id indicant-ne una.'
       preflight_revision_help: Id de revisió del registre.
       preflight_revision_id_help: Anul-lació opcional de l'id de revisió del registre
-        per a reproducció exacta (p. ex. 2024-0A); per defecte fa servir la revisió
-        activa per al model, exercici i període.
+        per a reproducció exacta (p. ex. 2019-y-siguientes); per defecte fa servir
+        la revisió activa per al model, exercici i període.
       preflight_revision_override_invalid: La revisió del registre no és vàlida per
         al model {modelo} i l'exercici {filing_year}.
       preflight_revision_unresolved: Cap revisió del registre cobreix el model %{modelo}
@@ -5689,6 +5701,9 @@ core:
       registration_duplicate_callable: La implementació de respostes del projecte
         s'ha registrat dues vegades amb invocables distintos; s'ha de registrar exactament
         una vegada.
+  topics:
+    errors:
+      catalogue_empty: El catàleg de temes inclòs no conté cap tema.
 docs:
   casilla:
     binding_source:
@@ -7181,6 +7196,7 @@ errors:
       o no conté cap taula amb fila de capçalera.
     refused_taxation_comparison: La comparació tributària conjunta/individual no es
       pot realitzar per a aquest model o instantània.
+    refused_topic_catalogue_empty: El catàleg de temes inclòs no conté cap tema.
     refused_topic_not_found: No s'ha trobat el tema sol·licitat.
     refused_user_profile_validation: Un valor del perfil d'usuari no és vàlid. Corregeix
       la dada indicada.
@@ -48556,9 +48572,15 @@ modelo:
             x-c5hnasr55lp6aor9c9nispbde1p6asr15limst39chgm8:
               help: null
               label: 7. Justificant de recepció, empresa o entitat pagadora
-            x-c5hnasr55lp6aor9c9nispj5cdk62:
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb1dpkmu:
               help: null
-              label: 7. Justificant de recepció, data
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bb4d5gg:
+              help: null
+              label: null
+            x-c5hnasr55lp6aor9c9nispj5cdk62bbdclpg:
+              help: null
+              label: null
             x-c5hnasr55lp6aor9c9nisr3lctgn4:
               help: null
               label: 7. Justificant de recepció, lloc
@@ -48594,9 +48616,15 @@ modelo:
             x-c5pm6pbechkmarjkckmj4bj4d5pm6obgc5hmip31cgmmesj1chng:
               help: null
               label: 3.2. Ascendents majors de 65 anys, grau de discapacitat
-            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo8:
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dc5n6iro:
               help: null
-              label: 6. Data i signatura de la comunicació, data
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9dchkm2:
+              help: null
+              label: null
+            x-cdnmqtbed5hm2or9dtn2spj9e9mm2bb6clhmgo9ddlin6:
+              help: null
+              label: null
             x-cdnmqtbed5hm2or9dtn2spj9e9mm2bbceljm2sg:
               help: null
               label: 6. Data i signatura de la comunicació, lloc
@@ -48686,9 +48714,15 @@ modelo:
             x-e1in4or5e1q6ushechkn6or1e1gm6qb4c5i2qpric5i6u:
               help: null
               label: 1. Discapacitat del perceptor, grau reconegut
-            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4:
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm2rj9ds:
               help: null
-              label: 1. Mobilitat geogràfica, data de trasllat
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mm8qb1:
+              help: null
+              label: null
+            x-e1in4or5e1q6ushedlnncqbcd5i62p1dctimupric5j6ior15lj6aor8c4mmqpbj:
+              help: null
+              label: null
             x-e1in4or5e1q6ushedpkmc:
               help: null
               label: null
@@ -71329,6 +71363,10 @@ modelo:
             label: null
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
+  no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.
+    La recuperació automàtica no pot obtenir l'historial de presentacions de l'Impost
+    sobre Societats (model 200/202); consulti'l directament a la seu electrònica de
+    l'AEAT.
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: S'ha aplicat prorrata 50 %% (Art. 61 LIRPF)

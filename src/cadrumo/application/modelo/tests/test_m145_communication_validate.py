@@ -101,7 +101,10 @@ def test_validate_m145_communication_record_reports_missing_required_casilla_wit
 @pytest.mark.parametrize(
     ("data_type", "invalid_value"),
     (
-        ("date", "2026/01/31"),
+        # No "date" case: Modelo 145's diseño de registro declares every
+        # date as independently numbered día/mes/año Num rows rather than
+        # one combined field, so the registry carries no data_type="date"
+        # casilla for this modelo to exercise.
         ("integer", "1.5"),
         ("money", "not-money"),
         ("nif", "not-a-nif"),

@@ -131,7 +131,7 @@ class ExternalEvidence(BaseModel):
 def derive_filing_record_id(
     *,
     work_unit_id: str,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     filed_by: str,
     member_nif: str | None = None,
 ) -> str:

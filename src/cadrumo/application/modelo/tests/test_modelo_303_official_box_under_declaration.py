@@ -45,12 +45,22 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
-from ....core import CasillaId, Period, validated_casilla_id
+from ....core import (
+    CasillaId,
+    IvaDeductionEvidenceAuthority,
+    IvaDeductionFactKind,
+    Period,
+    validated_casilla_id,
+)
 from ....domain.calculations.registry import RegistryValidationError
 from ....domain.deadlines import IVARegime, TaxpayerProfile
-from ....domain.iva import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
+from ....domain.iva import (
+    IvaDeductionClassificationProvenance,
+    M303RegimenSimplificadoScope,
+    M303RegimenSimplificadoScopeDecision,
+)
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
-from ....domain.modelos import ModeloVerificationFindingKind
+from ....domain.modelos import FilingInstanceEvidence, ModeloVerificationFindingKind
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -61,6 +71,7 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
+from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import IvaWalletDecisionRepository
 from ...user_profile import UserProfileLifecycleRepository
@@ -225,6 +236,22 @@ def _iva_transaction(
             "taxable_base": taxable_base,
             "iva_rate": Decimal("0.21"),
             "iva_amount": iva_amount,
+            # Input IVA carries exact deduction authority or the aggregation gate
+            # drops the row with MISSING_DEDUCTION_CLASSIFICATION, which would
+            # leave the deducible boxes at zero and make every box-equals-source
+            # assertion below pass vacuously against two zeroes.
+            "deduction_fact_kind": (
+                IvaDeductionFactKind.DOMESTIC_CURRENT if direction is TransactionDirection.OUTGOING else None
+            ),
+            "deduction_provenance": (
+                IvaDeductionClassificationProvenance(
+                    authority=IvaDeductionEvidenceAuthority.INVOICE_EVIDENCE,
+                    source_locator=f"test-invoice:{provider_id}",
+                    evidence_digest="a" * 64,
+                )
+                if direction is TransactionDirection.OUTGOING
+                else None
+            ),
             "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -260,6 +287,11 @@ def _seed_work_unit(wu_repo: WorkUnitCatalogueRepository):
         repository=wu_repo,
         clock=_T0,
     )
+
+
+def _filing_evidence(period: Period) -> FilingInstanceEvidence:
+    """Return the shared not-claimed M303 evidence every calculate now requires."""
+    return general_m303_filing_evidence(period, reference="test:official-box:exonerado-390")
 
 
 def _seeded_calculation(
@@ -304,6 +336,7 @@ def _seeded_calculation(
         calculation_repository=cr_repo,
         bucket_event_repository=event_repo,
         transaction_repository=tx_repo,
+        filing_instance_evidence=_filing_evidence(work_unit.period),
         clock=_T1,
     )
 
@@ -392,6 +425,7 @@ def test_calculate_rejects_caller_override_of_projected_box(
             calculation_repository=cr_repo,
             bucket_event_repository=event_repo,
             transaction_repository=tx_repo,
+            filing_instance_evidence=_filing_evidence(work_unit.period),
             clock=_T1,
         )
 
@@ -565,12 +599,19 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
     # The compensacion-pendiente-anteriores casilla is a previous_filing-bound
     # slot; feed it via binding_values, not inputs (the engine rejects a smuggled
     # previous_filing input). The computed-total sources (devengada/deducible
-    # total) are produced by the engine, so they are NOT seeded as inputs.
-    excluded = {_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA}
+    # total) are produced by the engine, so they are NOT seeded as inputs, and
+    # neither are the projection-only rows, whose canonical typed row projection
+    # owns their values and which the engine refuses as inputs outright.
+    # The simplified-regime módulos unit casillas are refused outright under the
+    # not-claimed general scope this run declares, so they are not seedable either.
+    excluded = {_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA} | {
+        validated_casilla_id(f"modulos-iva-{index}-unidades", surface="M303 pull-path parity") for index in range(1, 8)
+    }
     inputs = {
         c.id: Decimal("0")
         for c in rev.casillas
-        if c.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL) and c.id not in excluded
+        if c.input_kind not in (InputKind.COMPUTED, InputKind.INFORMATIONAL, InputKind.PROJECTION_ONLY)
+        and c.id not in excluded
     }
     # Seed only the BOUND semantic sources the live calculate folded in (the
     # computed-total sources are recomputed by the engine, never seeded).
@@ -607,26 +648,34 @@ def test_pull_and_calculate_paths_produce_equal_projected_box_values(
 def test_export_ref_points_at_projected_box_carrying_value(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """The casilla-27 export field references box 27, which now carries the projected value.
+    """Box 27 carries the projected value the export would write.
 
-    The BOE/fichero export field ``modelo-303-page-01-casilla-27`` is wired to
-    ``casilla = "27"`` (the numbered box). Stage 1 left box 27 manual and zero, so
-    the export wrote zero. Stage 2 makes box 27 a projection of
-    ``iva.cuota-devengada-total``, so the export field now reads the real cuota.
-    This test confirms the export ref still targets the numbered box AND that the
-    numbered box carries the positive projected value on a ledger-fed calculate.
+    Stage 1 left box 27 manual and zero, so an export wrote zero. Stage 2 makes
+    box 27 a projection of ``iva.cuota-devengada-total``, so whatever transport
+    reads it reads the real cuota.
+
+    The ``modelo-303-page-01-casilla-27`` export-field half of this claim has no
+    witness at present: every Modelo 303 revision has had its filing-grade export
+    layouts withdrawn, so no revision declares an export ref to assert against.
+    That withdrawal is asserted here rather than skipped, so restoring a layout
+    reds this test and forces the ref-targeting assertion back rather than
+    leaving it silently unproven.
     """
     snap = _authority_for_303().snapshot("303", filing_year=2026, period="1T")
     rev = snap.revision
 
-    # The export layout field for casilla 27 references the numbered box "27".
+    authority = _authority_for_303()
+    modelo = authority.modelo("303")
+    for revision in modelo.revisions.values():
+        assert revision.export_layouts == (), (
+            f"revision {revision.id} declares export layouts again -- restore the casilla-27 "
+            "export-ref assertion this test dropped when the layouts were withdrawn"
+        )
     casilla_27 = next(c for c in rev.casillas if c.id == _OFFICIAL_CUOTA_DEVENGADA_TOTAL)
-    assert "modelo-303-page-01-casilla-27" in tuple(casilla_27.export_refs), (
-        "the casilla-27 export ref must still target the numbered box 27"
-    )
+    assert casilla_27.number == "27"
 
     # On a ledger-fed calculate, box 27 carries the projected (non-zero) cuota,
-    # equal to its semantic source — so the export reads value, not zero.
+    # equal to its semantic source — so a transport reads value, not zero.
     result = _seeded_calculation(secure_objects)
     box_27 = Decimal(result.revision.casilla_values[_OFFICIAL_CUOTA_DEVENGADA_TOTAL])
     source_total = Decimal(result.revision.casilla_values[_M303_CUOTA_DEVENGADA_TOTAL_CASILLA])

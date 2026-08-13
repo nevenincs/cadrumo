@@ -499,8 +499,8 @@ historical_source_column = 31
 disposition_kind = "migration_required"
 current_error_qualname = "cadrumo.domain.invoices._errors.InvoiceNotFoundError"
 ownerships = [
-  { path = "src/cadrumo/application/invoices/_lifecycle.py", lexical_owner = "cadrumo.application.invoices._lifecycle.resolve_catalogue_invoice", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "285be47201c79a1288bf256aa58852cb58951777a523612b3cb958c696f34714", identical_site_ordinal = 1, line = 75, column = 14, end_line = 78, end_column = 9, owner_step = "S108" },
-  { path = "src/cadrumo/application/invoices/_lifecycle.py", lexical_owner = "cadrumo.application.invoices._lifecycle.resolve_catalogue_invoice", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "f570b8ba8a5c6f70c7c3a488e6b2b4797de18ee7a637f4af697a5e707f0bca5b", identical_site_ordinal = 1, line = 84, column = 14, end_line = 88, end_column = 9, owner_step = "S108" },
+  { path = "src/cadrumo/application/invoices/_lifecycle.py", lexical_owner = "cadrumo.application.invoices._lifecycle.resolve_catalogue_invoice", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "a208ba11858d6cc11aa5f20a082cccfe7949a77426cf2850355dfe2e24e14e45", identical_site_ordinal = 1, line = 75, column = 14, end_line = 77, end_column = 9, owner_step = "S108" },
+  { path = "src/cadrumo/application/invoices/_lifecycle.py", lexical_owner = "cadrumo.application.invoices._lifecycle.resolve_catalogue_invoice", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "a99dedb76ecc90dd4e1dbc29600bc125c636a0ecf4ec9695f9c2dc02678935d9", identical_site_ordinal = 1, line = 83, column = 14, end_line = 86, end_column = 9, owner_step = "S108" },
   { path = "src/cadrumo/domain/invoices/_service.py", lexical_owner = "cadrumo.domain.invoices._service._require_invoice", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "f905de10a412e3062b73e647595dae1539d9467c281aa61c4cabc40f90d1816a", identical_site_ordinal = 1, line = 310, column = 14, end_line = 310, end_column = 70, owner_step = "S105" },
 ]
 
@@ -3877,8 +3877,8 @@ historical_source_column = 31
 disposition_kind = "migration_required"
 current_error_qualname = "cadrumo.core.topics.TopicNotFoundError"
 ownerships = [
-  { path = "src/cadrumo/core/topics/__init__.py", lexical_owner = "cadrumo.core.topics.TopicCatalogue.topic", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "d6a8abbbfdbfd92491be9a5ab397dfc27b0f2055e19989ec9cd07c5b3bb02ac6", identical_site_ordinal = 1, line = 92, column = 14, end_line = 92, end_column = 62, owner_step = "S112" },
-  { path = "src/cadrumo/core/topics/__init__.py", lexical_owner = "cadrumo.core.topics._load_topic_catalogue_cached", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "50dbe1d4028be6dbd4d73ff2c8125f44860a20863b5a0d680ab322d4d3408bb6", identical_site_ordinal = 1, line = 137, column = 14, end_line = 137, end_column = 73, owner_step = "S112" },
+  { path = "src/cadrumo/core/topics/__init__.py", lexical_owner = "cadrumo.core.topics.TopicCatalogue.topic", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "69fadb3abdc1044e633c872e5cb13c7ce56b56832c9ba1a660faba3c82a62222", identical_site_ordinal = 1, line = 92, column = 14, end_line = 95, end_column = 9, owner_step = "S112" },
+  { path = "src/cadrumo/core/topics/__init__.py", lexical_owner = "cadrumo.core.topics._load_topic_catalogue_cached", role = "constructor", ast_format = "recovery-ast-v1", normalized_ast_sha256 = "2d284052a269bb69d491905f044fbf40ab323ee4a951936ae710d0e27af27542", identical_site_ordinal = 1, line = 140, column = 14, end_line = 143, end_column = 9, owner_step = "S112" },
 ]
 
 [[rehoming]]

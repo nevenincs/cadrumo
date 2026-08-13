@@ -8,10 +8,30 @@ target relation window.
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 
 from ._errors import RegistryValidationError
+from ._ids import ModeloId, RelationId
 from ._period_offset_math import apply_period_offset
 from ._schema import ModeloDefinition, ModeloRevision, PeriodSelector, RelationDefinition, RelationRevisionSelector
+
+
+@dataclass(frozen=True, slots=True)
+class RelationCoverageFailure:
+    """One relation-source coverage failure, structured for allowlist reconciliation.
+
+    ``allowance_key`` is populated ONLY for a genuine "lacks exact source
+    revision coverage" year-gap finding on a BOUNDED segment -- the one
+    failure shape a documented, currently-necessary corpus gap can
+    legitimately excuse. Every other failure shape (ambiguous ownership, an
+    unsupported source period, an unbounded "not yet published" segment
+    already excluded structurally) carries ``None`` and can never be
+    allowlisted: those are either registry authoring defects or already
+    structurally resolved, never a corpus gap.
+    """
+
+    message: str
+    allowance_key: tuple[RelationId, ModeloId, str, int, int] | None = None
 
 
 def select_relation_source_revisions(
@@ -99,7 +119,7 @@ def validate_relation_source_coordinate_coverage(
     source_revisions: Iterable[ModeloRevision],
     source_periods: Iterable[str],
     source_is_observation_history: bool,
-) -> tuple[tuple[tuple[ModeloRevision, tuple[str, ...]], ...], list[str]]:
+) -> tuple[tuple[tuple[ModeloRevision, tuple[str, ...]], ...], list[RelationCoverageFailure]]:
     """Resolve exact source-revision ownership for a cross-model relation.
 
     A source model may partition one year across multiple revisions. Validate
@@ -111,16 +131,31 @@ def validate_relation_source_coordinate_coverage(
     partitions its years across; ownership is resolved against their union
     rather than against any one of them.
 
-    The sole history boundary is generic: an observation-backed carry can read
-    a filing before the earliest modelled source year.  That filing still has
-    to use a known period shape and semantic casilla (checked by the caller),
-    but it cannot be required to have an engine revision that predates the
-    modelled registry.
+    Two structural boundaries are excluded before a "lacks coverage" finding
+    is emitted, neither ever a candidate for the allowlist:
+
+    - An observation-backed carry can read a filing before the earliest
+      modelled source year. That filing still has to use a known period
+      shape and semantic casilla (checked by the caller), but it cannot be
+      required to have an engine revision that predates the modelled
+      registry.
+    - ANY segment entirely beyond the source modelo's own latest MODELLED
+      year is not yet published by AEAT for anyone, regardless of
+      ``source_is_observation_history`` -- the expected state of the world
+      today, not a corpus omission, and it resolves itself the moment a new
+      source revision ships. Without this, an open-ended CONSUMER reading a
+      period-versioned, closed-ended SOURCE (each revision covering exactly
+      one year) fails perpetually for every year beyond the source's latest
+      authored revision.
+
+    What remains after both exclusions is either genuine coverage or a real,
+    currently-unmodelled gap in the SOURCE corpus -- the caller reconciles
+    those against a documented allowlist keyed on ``allowance_key``.
     """
     candidates = tuple(source_revisions)
     covered_periods_by_revision: dict[str, set[str]] = {}
     revisions_by_id = {revision.id: revision for revision in candidates}
-    failures: list[str] = []
+    failures: list[RelationCoverageFailure] = []
 
     for source_period, offset_year_delta, target_period in _relation_source_coordinates(relation, source_periods):
         covered_revision_ids, coordinate_failures = _coordinate_coverage(
@@ -177,18 +212,22 @@ def _coordinate_coverage(
     offset_year_delta: int,
     target_period: str | None,
     source_is_observation_history: bool,
-) -> tuple[tuple[str, ...], list[str]]:
+) -> tuple[tuple[str, ...], list[RelationCoverageFailure]]:
     """Resolve owners for one source-period coordinate across all required years."""
     period_candidates = tuple(revision for revision in candidates if source_period in revision.period_selector.periods)
     if not period_candidates:
         target_context = "" if target_period is None else f" for target period {target_period!r}"
         return (), [
-            f"{scope} derived source period {source_period!r}{target_context} "
-            "is not supported by any selected source revision",
+            RelationCoverageFailure(
+                message=(
+                    f"{scope} derived source period {source_period!r}{target_context} "
+                    "is not supported by any selected source revision"
+                ),
+            ),
         ]
 
     covered_revision_ids: set[str] = set()
-    failures: list[str] = []
+    failures: list[RelationCoverageFailure] = []
     for source_start, source_end in _offset_source_year_intervals(
         target_selector,
         relation=relation,
@@ -196,6 +235,7 @@ def _coordinate_coverage(
     ):
         assignments, interval_failures = _coverage_assignments(
             scope,
+            relation=relation,
             source_period=source_period,
             source_start=source_start,
             source_end=source_end,
@@ -210,18 +250,20 @@ def _coordinate_coverage(
 def _coverage_assignments(
     scope: str,
     *,
+    relation: RelationDefinition,
     source_period: str,
     source_start: int,
     source_end: int | None,
     candidates: tuple[ModeloRevision, ...],
     source_is_observation_history: bool,
-) -> tuple[tuple[str, ...], list[str]]:
+) -> tuple[tuple[str, ...], list[RelationCoverageFailure]]:
     """Resolve one-owner segments, retaining the history exception and diagnostics."""
     assignments: set[str] = set()
-    failures: list[str] = []
+    failures: list[RelationCoverageFailure] = []
     for segment_start, segment_end, owners in _coverage_segments(source_start, source_end, candidates):
         revision_id, failure = _coverage_segment_owner(
             scope,
+            relation=relation,
             source_period=source_period,
             segment_start=segment_start,
             segment_end=segment_end,
@@ -239,25 +281,76 @@ def _coverage_assignments(
 def _coverage_segment_owner(
     scope: str,
     *,
+    relation: RelationDefinition,
     source_period: str,
     segment_start: int,
     segment_end: int | None,
     owners: tuple[ModeloRevision, ...],
     candidates: tuple[ModeloRevision, ...],
     source_is_observation_history: bool,
-) -> tuple[str | None, str | None]:
+) -> tuple[str | None, RelationCoverageFailure | None]:
     """Return the exact owner or the unchanged diagnostic for one stable segment."""
     if len(owners) == 1:
         return owners[0].id, None
     if not owners and source_is_observation_history and _is_pre_modelled_history(segment_end, candidates):
         earliest = min(candidates, key=lambda revision: _earliest_selector_year(revision.period_selector))
         return earliest.id, None
+    if not owners and _is_beyond_latest_modelled_source_year(segment_start, candidates):
+        # STRUCTURAL, unconditional: not yet published by AEAT for anyone,
+        # self-resolving the moment a new source revision ships. Never a
+        # candidate for the allowlist -- see
+        # `_is_beyond_latest_modelled_source_year`.
+        return None, None
     coverage = "lacks" if not owners else "has ambiguous"
-    return (
-        None,
+    message = (
         f"{scope} {coverage} exact source revision coverage for derived "
-        f"period {source_period!r} in source years {_year_interval_label(segment_start, segment_end)}",
+        f"period {source_period!r} in source years {_year_interval_label(segment_start, segment_end)}"
     )
+    # Only a genuine "lacks" finding on a BOUNDED segment is ever allowlist-
+    # eligible. Ambiguous ownership is a registry authoring defect, never a
+    # corpus gap; a bounded segment is guaranteed here because an unbounded
+    # one with no owner is always caught by the future-year exclusion above.
+    allowance_key = (
+        (relation.id, relation.source_modelo, source_period, segment_start, segment_end)
+        if not owners and segment_end is not None
+        else None
+    )
+    return None, RelationCoverageFailure(message=message, allowance_key=allowance_key)
+
+
+def _source_upper_bound(candidates: tuple[ModeloRevision, ...]) -> int | None:
+    """Return the latest year ANY candidate models, or ``None`` when any is open-ended.
+
+    ``None`` means "no ceiling": an open-ended candidate covers every year
+    from its own start onward, so a segment reaching that far would already
+    have found an owner and never reach
+    :func:`_is_beyond_latest_modelled_source_year`.
+    """
+    bound: int | None = None
+    for revision in candidates:
+        for _, end in _selector_year_intervals(revision.period_selector):
+            if end is None:
+                return None
+            bound = end if bound is None else max(bound, end)
+    return bound
+
+
+def _is_beyond_latest_modelled_source_year(start: int, candidates: tuple[ModeloRevision, ...]) -> bool:
+    """Whether ``start`` is entirely beyond every candidate's own latest modelled year.
+
+    STRUCTURAL and unconditional (unlike :func:`_is_pre_modelled_history`,
+    which stays scoped to ``source_is_observation_history``): a required year
+    beyond the SOURCE modelo's own latest published year is not yet
+    published by AEAT for ANYONE, which is the expected state of the world
+    today rather than a corpus omission, and it resolves itself the moment a
+    new source revision ships. Without this, an open-ended CONSUMER reading
+    a period-versioned, closed-ended SOURCE (each revision covering exactly
+    one year) fails this gate perpetually for every year beyond the
+    source's latest authored revision -- a standing, undischargeable
+    failure no allowlist entry could ever satisfy.
+    """
+    bound = _source_upper_bound(candidates)
+    return bound is not None and start > bound
 
 
 def period_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:

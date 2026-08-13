@@ -9,7 +9,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator
 
-from ....core import STRICT_FROZEN_CONFIG, MetodoValoracion, TipoOperacionVinculada
+from ....core import STRICT_FROZEN_CONFIG, M720AssetClassCode, MetodoValoracion, TipoOperacionVinculada
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.external_constants import DEFAULT_CURRENCY
 from ._binding_aggregation import binding_aggregation_op
@@ -260,7 +260,7 @@ class Modelo720RowObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
-    asset_class_code: str = Field(min_length=1, max_length=4)
+    asset_class_code: M720AssetClassCode
     country_code: str = Field(min_length=2, max_length=2)
     currency_code: str = Field(default=DEFAULT_CURRENCY, min_length=3, max_length=3)
     asset_identifier: str = Field(default="", max_length=128)

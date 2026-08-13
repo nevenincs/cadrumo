@@ -40,7 +40,7 @@ from pydantic import Field, field_validator, model_validator
 
 from ...core import LinkInconsistencyDirection, Period
 from ...core.decimal import try_parse_canonical_decimal
-from ...core.identity import BucketId, SnapshotId, TransactionId
+from ...core.identity import BucketId, CalculationRevisionId, SnapshotId, TransactionId
 from ...core.json_contract import OutputRootSchema, OutputSchema, register_schema
 from ._ledger_business_payloads import (
     EvidenceAddResult,
@@ -248,7 +248,7 @@ class LedgerRemovalBlockerPayload(OutputSchema):
     """
 
     work_unit_id: str
-    calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
     revision_state: str
     modelo: str
     filing_year: int
@@ -278,7 +278,7 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
     content-addressed transaction itself.
     """
 
-    calculation_revision_id: str
+    calculation_revision_id: CalculationRevisionId
     work_unit_id: str
     modelo: str
     filing_year: int

@@ -32,11 +32,20 @@ def update_ledger_review(
 ) -> WorkflowState:
     """Return a :class:`WorkflowState` with workflow attention history for one transaction."""
     if fields:
-        raise ReviewError("ledger review annotations must not store durable ledger fields")
+        raise ReviewError(
+            translated_message="errors.error.error_review",
+            context={"field_class": "durable_ledger_field", "writable_through_review": False},
+        )
     if skipped is not None:
-        raise ReviewError("ledger skip state must be written through transaction classification")
+        raise ReviewError(
+            translated_message="errors.error.error_review",
+            context={"field": "skipped", "canonical_writer": "transaction_classification"},
+        )
     if split is not None or clear_split:
-        raise ReviewError("ledger allocation must be written through transaction business_pct")
+        raise ReviewError(
+            translated_message="errors.error.error_review",
+            context={"field": "split", "canonical_writer": "transaction_business_pct"},
+        )
 
     reviews = dict(state.ledger_reviews)
     current = reviews.get(transaction_id, LedgerReviewRecord(transaction_id=transaction_id))

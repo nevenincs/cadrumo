@@ -131,6 +131,12 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
+# AEAT's diseño de registro calls this position "Numérico" (claves "1"
+# dinerario / "2" especie). data_type stays "text" (the export field enum
+# has no province/enum-code type and the committed golden fixture expects
+# a string), but value_policy "digit-string" enforces ASCII-digit-only
+# content on render and parse without changing the value's Python type.
+value_policy = "digit-string"
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
 
@@ -154,7 +160,20 @@ offset = 93
 length = 4
 kind = "casilla"
 casilla_id = "perc.porcentaje-retencion"
-data_type = "text"
+# AEAT's diseño de registro declares 93-96 as ONE field, "Numérico %
+# RETENCIÓN", explicitly subdivided ("este campo se subdivide en otros
+# dos") into 93-94 ENTERO and 95-96 DECIMAL -- a parent field with two
+# Numérico sub-parts, not two independent AEAT rows. That shape is a
+# scaled numeric with two decimals, exactly what data_type "decimal" plus
+# decimals 2 renders and parses (parte entera in the high digits, parte
+# decimal in the low two, via the codec's existing scaled-numeric path
+# shared with money fields). A prior fix on this field left it "text"
+# with a digit-string value_policy, which only refused non-digit content
+# without correcting the parsed type -- the field is a genuine percentage
+# value, not an opaque digit string, and the codec already renders/parses
+# money fields (perc.base) with this same left_zero/right shape.
+data_type = "decimal"
+decimals = 2
 required = true
 padding = "left_zero"
 justification = "right"
@@ -201,6 +220,11 @@ required = true
 padding = "none"
 justification = "none"
 signed = false
+# AEAT's diseño de registro calls this position "Numérico" (claves 1-4).
+# data_type stays "text" (matching the committed golden fixture's string
+# expectation); value_policy "digit-string" enforces ASCII-digit-only
+# content on render and parse without changing the value's Python type.
+value_policy = "digit-string"
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
 

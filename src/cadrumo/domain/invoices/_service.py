@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import LinkInconsistencyDirection
-from ...core.identity import TransactionId
+from ...core.identity import InvoiceId, TransactionId
 from ...core.logging import get_logger
 from ..iva import InvoiceKind
 from ..transactions import (
@@ -62,7 +62,7 @@ class ReconciliationSuggestion(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str = Field(min_length=1)
+    invoice_id: InvoiceId
     transaction_id: TransactionId
     amount_match: bool
     counterparty_match: bool
@@ -88,6 +88,13 @@ class LinkInconsistency(BaseModel):
 
     model_config = _STRICT_FROZEN
 
+    # NOT core.identity.InvoiceId, deliberately: the TRANSACTION_ONLY branch
+    # (verify_link_consistency) feeds this from transaction.invoice_id, which
+    # is domain.transactions.Transaction's own bare `str | None` foreign key
+    # -- unconstrained today, and this function's entire purpose is to
+    # detect a transaction whose invoice_id does NOT resolve to a real
+    # invoice. A stricter type here would make the diagnostic itself raise
+    # on exactly the dangling reference it exists to report.
     invoice_id: str = Field(min_length=1)
     transaction_id: TransactionId
     direction: LinkInconsistencyDirection
@@ -155,7 +162,10 @@ def link_transaction(
     invoice = _require_invoice(catalogue, invoice_id)
     normalized_tx = transaction_id.strip().lower()
     if len(normalized_tx) != 64 or any(char not in "0123456789abcdef" for char in normalized_tx):
-        raise InvoiceLinkError(f"transaction_id must be a 64-character lowercase hex digest: {transaction_id!r}")
+        raise InvoiceLinkError(
+            translated_message="errors.error.error_financial_invoices_invoice_link",
+            context={"transaction_id": str(transaction_id), "hex_digest_shape_valid": False},
+        )
     if normalized_tx in invoice.linked_transaction_ids:
         _LOGGER.debug(
             "link_transaction: transaction=%s already linked to invoice=%s; skipping",
@@ -169,7 +179,10 @@ def link_transaction(
             {**invoice.model_dump(mode="python"), "linked_transaction_ids": updated_ids},
         )
     except ValidationError as exc:
-        raise InvoiceLinkError(f"invalid invoice link update for {invoice_id}") from exc
+        raise InvoiceLinkError(
+            translated_message="errors.error.error_financial_invoices_invoice_link",
+            context={"invoice_id": str(invoice_id), "link_update_error_type": type(exc).__name__},
+        ) from exc
     return _replace_invoice(catalogue, updated_invoice)
 
 
@@ -307,5 +320,8 @@ def _require_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> Invoice:
     """Return one invoice or raise a typed not-found error."""
     invoice = catalogue.get(invoice_id)
     if invoice is None:
-        raise InvoiceNotFoundError(f"invoice not found: {invoice_id}")
+        raise InvoiceNotFoundError(
+            translated_message="errors.error.error_financial_invoices_invoice_not_found",
+            context={"invoice_id": str(invoice_id), "invoice_present": False},
+        )
     return invoice

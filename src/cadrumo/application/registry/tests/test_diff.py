@@ -1,12 +1,12 @@
 """Tests for :func:`~cadrumo.application.registry.diff_registry_revisions`.
 
 Grounds the diff against *real* revision pairs shipped in the bundled registry
--- the two Modelo 303 revisions (``2009-y-siguientes`` and
-``2023-y-siguientes``) and, for the legal-grounding dimension, the two Modelo
-180 revisions (``2019-2022`` and ``2023-y-siguientes``). Every expected count
-and identifier below was read off the registry TOML tree, never hand-computed
-from a synthetic fixture, so the diff is proven against real, known rulebook
-changes rather than values manufactured by the test author.
+-- the Modelo 303 pair spanning its 2023 rulebook change (``2009-y-siguientes``
+and ``2023``) and, for the legal-grounding dimension, the two Modelo 180
+revisions (``2019-2022`` and the one Orden HFP/1284/2023 approved). Every
+expected count and identifier below was read off the registry TOML tree, never
+hand-computed from a synthetic fixture, so the diff is proven against real,
+known rulebook changes rather than values manufactured by the test author.
 
 Choosing an anchor
 ------------------
@@ -61,9 +61,10 @@ from .. import RegistryApplicationInputError, diff_registry_revisions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-# Modelo 303 ships exactly two revisions: "2009-y-siguientes" (covers filing
-# years 2009-2022) and "2023-y-siguientes" (covers 2023 onward). These are the
-# modelo's real, declared revision boundaries -- not synthetic fixtures.
+# Modelo 303's 2023 rulebook change: "2009-y-siguientes" covers filing years
+# 2009-2022 and "2023" covers 2023 alone, the modelo having since split again
+# for 2024 onward. These are the modelo's real, declared revision boundaries --
+# not synthetic fixtures.
 _M303_PRE_YEAR = 2022
 _M303_POST_YEAR = 2023
 
@@ -136,7 +137,7 @@ def test_diff_registry_revisions_resolves_the_real_m303_revision_boundary() -> N
 
     assert report.same_revision is False
     assert report.from_revision_id == "2009-y-siguientes"
-    assert report.to_revision_id == "2023-y-siguientes"
+    assert report.to_revision_id == "2023"
 
 
 def test_diff_registry_revisions_surfaces_real_added_casillas() -> None:
@@ -186,14 +187,21 @@ def test_diff_registry_revisions_surfaces_a_formula_that_gained_a_new_summand() 
     assert "iva.autoconsumo.promotor.cuota" in new_summands
 
 
-def test_diff_registry_revisions_surfaces_a_formula_regrounded_on_a_later_orden() -> None:
-    """The resultado formula cites the orden that approved its own form version.
+def test_diff_registry_revisions_surfaces_a_formula_that_dropped_a_superseded_orden() -> None:
+    """The resultado formula stops citing the orden that approved the 2008 form.
 
-    Each M303 revision grounds this formula in the orden that approved the form
-    it belongs to, and the two ordenes are sixteen years apart.  A citation
-    swap between two dated, separately published ordenes is not something a
-    later correction converges, so the divergence is durable in a way an
-    incidental expression difference is not.
+    Orden EHA/3786/2008 approved the form the 2009 revision belongs to and
+    binds nothing in the 2023 one, so the citation is dropped rather than
+    converged: a dated, separately published orden is not something a later
+    correction reinstates.
+
+    The mirror-image half -- a formula GAINING the orden that approved its own
+    later form -- is not asserted here.  Orden HAC/819/2024 grounds the two
+    2024 revisions, and the year-keyed diff entry point cannot address a filing
+    year that carries a mid-year design boundary, so that witness is currently
+    unreachable through this surface.  The addition direction is covered
+    instead by the Modelo 180 pair below, which is the bundled registry's
+    isolated ``legal_refs`` witness.
     """
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
@@ -201,7 +209,6 @@ def test_diff_registry_revisions_surfaces_a_formula_regrounded_on_a_later_orden(
 
     assert resultado.target_casilla_id == "iva.resultado"
     assert "orden-eha-3786-2008:art-1" in set(resultado.from_legal_refs) - set(resultado.to_legal_refs)
-    assert "orden-hac-819-2024:art-unico" in set(resultado.to_legal_refs) - set(resultado.from_legal_refs)
 
 
 def test_diff_registry_revisions_surfaces_a_formula_that_changed_only_its_legal_grounding() -> None:
@@ -301,10 +308,18 @@ def test_diff_registry_revisions_surfaces_real_added_bindings() -> None:
 
 
 def test_diff_registry_revisions_surfaces_real_added_parameters() -> None:
-    """Rate/threshold parameters that the 2023 módulos IVA machinery introduces."""
+    """Rate parameters the 2023 transitional reduced-rate regime introduces.
+
+    The two ``dr303`` transitional rate percentages carry the 5.00 and 7.50
+    values that only exist because a temporary reduced rate was in force for
+    part of the window the 2023 revision covers.  The 2009 revision has no such
+    parameter to declare, so the addition is forced by the rulebook rather than
+    read off the diff's own output.
+    """
     report = diff_registry_revisions("303", from_year=_M303_PRE_YEAR, to_year=_M303_POST_YEAR)
 
-    assert "m303-modulos-iva-coeficientes-2025" in report.added_parameters
+    assert "m303-dr303-154-transitional-rate-percent" in report.added_parameters
+    assert "m303-dr303-166-transitional-rate-percent" in report.added_parameters
     assert report.removed_parameters == ()
 
 
@@ -344,7 +359,9 @@ def test_diff_registry_revisions_applies_the_canonical_validity_window_and_retai
 
     assert excinfo.value.context is not None
     assert excinfo.value.context["filing_year"] == _M303_POST_YEAR
-    assert excinfo.value.context["available_revisions"] == "2009-y-siguientes, 2023-y-siguientes"
+    assert excinfo.value.context["available_revisions"] == ", ".join(
+        sorted(bundled_authority().modelo("303").revisions),
+    )
     cause = excinfo.value.__cause__
     assert isinstance(cause, NoRevisionForPeriodError)
     assert cause.period == "year"

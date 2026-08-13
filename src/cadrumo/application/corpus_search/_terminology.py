@@ -198,9 +198,7 @@ def _hydrated_lifecycle(token: str, *, concept_id: str) -> ConceptLifecycle:
     try:
         return ConceptLifecycle(token)
     except ValueError as exc:
-        raise CorpusSearchInputError(
-            "unknown terminology concept lifecycle",
-            context={
+        raise CorpusSearchInputError("unknown terminology concept", context={
                 "concept_id": concept_id,
                 "lifecycle": token,
                 "accepted": tuple(member.value for member in ConceptLifecycle),
@@ -307,9 +305,13 @@ def search_terminology(
     """
     needle = _fold(query)
     if not needle:
-        raise CorpusSearchInputError("terminology query must be non-empty", context={"query": query})
+        raise CorpusSearchInputError(
+            "malformed terminology concept_id",
+            context={"query": query})
     if limit <= 0:
-        raise CorpusSearchInputError("terminology limit must be positive", context={"limit": limit})
+        raise CorpusSearchInputError(
+            "terminology concept declares no [language.*] sections",
+            context={"limit": limit})
     allowed = frozenset(lifecycles)
     scored: list[tuple[int, TerminologyHit]] = []
     for concept in load_terminology_concepts(locale):
@@ -347,7 +349,9 @@ def lookup_terminology(concept_id: str, *, locale: str = _FALLBACK_LOCALE) -> Te
     for concept in load_terminology_concepts(locale):
         if concept.concept_id == key:
             return concept
-    raise CorpusSearchInputError("unknown terminology concept", context={"concept_id": concept_id})
+    raise CorpusSearchInputError(
+            "unknown terminology concept lifecycle",
+            context={"concept_id": concept_id})
 
 
 __all__ = [

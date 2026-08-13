@@ -43,7 +43,7 @@ class RevisionCarryOutcome:
 
 
 def revision_carry_outcome(
-    stamped_revision_id: str,
+    stamped_revision_id: RevisionId,
     *,
     source_modelo: str,
     source_filing_year: int,

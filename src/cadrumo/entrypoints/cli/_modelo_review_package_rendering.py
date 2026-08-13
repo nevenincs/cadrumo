@@ -25,6 +25,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ...core.identity import CalculationRevisionId
 from ._modelo_review_package_payloads import (
     ModeloReviewPackageBuildResult,
     ModeloReviewPackageCounterSignResult,
@@ -294,7 +295,7 @@ def review_package_encrypt_feedback_result(
     originator_id: str,
     originator_public_key_hex: str,
     work_unit_id: str,
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     has_counter_sign: bool,
     envelope: RecipientEncryptedPackage,
 ) -> tuple[ModeloReviewPackageEncryptFeedbackResult, list[str]]:

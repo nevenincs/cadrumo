@@ -28,7 +28,7 @@ from ...core import ElidedProse
 from ...core import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core import Period as _Period
 from ...core import PostFilingEventKind as _PostFilingEventKind
-from ...core.identity import WorkUnitId
+from ...core.identity import CalculationRevisionId, WorkUnitId
 from ...core.time import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry import ApplicabilityVerdict, RevisionId
 from ...domain.deadlines import HolidayJurisdiction as _HolidayJurisdiction
@@ -207,7 +207,7 @@ class OverviewCalendarFilingEvidence(_CalendarJustificanteStateInvariant):
     period: _CalendarPeriod | None = None
     local_filing_state: OverviewLocalFilingState = OverviewLocalFilingState.NOT_READY_TO_FILE
     local_filing_record_id: str | None = Field(default=None, min_length=1, max_length=128)
-    local_calculation_revision_id: str | None = Field(default=None, min_length=1, max_length=128)
+    local_calculation_revision_id: CalculationRevisionId | None = None
     local_filed_at: datetime | None = None
     aeat_submission_state: OverviewAeatSubmissionState = OverviewAeatSubmissionState.NOT_OBSERVED
     aeat_submitted_at: datetime | None = None

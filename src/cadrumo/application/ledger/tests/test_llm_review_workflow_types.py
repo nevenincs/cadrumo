@@ -19,6 +19,12 @@ from .._llm_review_workflow import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+#: A real hex-64 shape ``transaction_id`` now requires, not a placeholder like
+#: the ``"tx-1"`` literal this constant replaces -- retyping the field onto
+#: :data:`~core.identity.TransactionId` means a shape-invalid fixture fails
+#: construction for a reason unrelated to what each test actually exercises.
+_TRANSACTION_ID = "f57ba9b0d0391f6eeeca9335832bf83c9e32af6f1952a10584442112c571137b"
+
 
 def test_every_origin_derives_a_non_empty_source_command() -> None:
     # Totality: a new origin without a spelling must fail loudly here, never
@@ -51,7 +57,7 @@ def test_request_requires_an_invocation_origin() -> None:
             {
                 "decision": LlmReviewDecision.REJECT,
                 "bucket_id": "bucket-1",
-                "transaction_id": "tx-1",
+                "transaction_id": _TRANSACTION_ID,
             },
         )
 
@@ -61,7 +67,7 @@ def test_request_source_command_is_derived_from_the_origin() -> None:
         invocation_origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
         decision=LlmReviewDecision.REJECT,
         bucket_id="bucket-1",
-        transaction_id="tx-1",
+        transaction_id=_TRANSACTION_ID,
     )
     assert request.source_command == "aeat app ledger classify --llm --reject"
     assert request.actor == "operator"
@@ -72,7 +78,7 @@ def test_request_is_frozen() -> None:
         invocation_origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
         decision=LlmReviewDecision.APPLY,
         bucket_id="bucket-1",
-        transaction_id="tx-1",
+        transaction_id=_TRANSACTION_ID,
     )
     with pytest.raises(ValidationError):
         request.transaction_id = "tx-2"

@@ -59,11 +59,25 @@ class PreviousFilingSourceReference:
     :class:`~cadrumo.domain.calculations.registry.ModeloId`, required periods, and
     source :class:`~cadrumo.core.CasillaId` values declared
     by one previous-filing binding selector.
+
+    ``filing_year_delta`` and ``max_year_delta`` ride along so a build-time
+    year-coverage check can derive the exact source-year interval a selector
+    requires without re-parsing the selector a second time.
+
+    ``has_variable_year_offset`` is ``True`` for a selector using
+    ``prior_quarter_expanding_span`` or ``source_period_offset_from_target``:
+    both produce PER-ANCHOR year deltas (:meth:`required_period_anchors_for_target`
+    returns several ``(period_year_delta, period)`` pairs, each with its own
+    offset) rather than the single uniform ``filing_year_delta`` a coverage
+    check keyed on one interval can represent.
     """
 
     source_modelo: ModeloId
     required_periods: tuple[str, ...]
     source_casilla_ids: tuple[CasillaId, ...]
+    filing_year_delta: int = 0
+    max_year_delta: int | None = None
+    has_variable_year_offset: bool = False
 
 
 def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
@@ -79,6 +93,11 @@ def previous_filing_source_reference(binding: DataBindingDefinition) -> Previous
         source_modelo=selector.source_modelo,
         required_periods=selector.required_periods,
         source_casilla_ids=_previous_filing_source_ids(selector),
+        filing_year_delta=selector.filing_year_delta,
+        max_year_delta=selector.max_year_delta,
+        has_variable_year_offset=(
+            selector.prior_quarter_expanding_span or selector.source_period_offset_from_target is not None
+        ),
     )
 
 
@@ -183,6 +202,25 @@ def _observed_casilla_values(
     return values
 
 
+class _PreviousFilingObservationAbsentError(Exception):
+    """Internal signal: the required source filing was simply never observed.
+
+    Raised by :func:`_resolve_anchor_values` for the ZERO-MATCH case only,
+    and deliberately NOT a :class:`RegistryValidationError` subclass, so it
+    can never be caught by a broad ``except RegistryValidationError`` /
+    ``except CoreValidationError`` elsewhere in the tree — the raise site's
+    OTHER two conditions (an ambiguous multiple-match, or a matched filing
+    missing a required source casilla) are structural defects and must keep
+    raising :class:`RegistryValidationError` unchanged. Absence is not a
+    validation failure: AEAT has simply never seen this filing yet, which is
+    exactly the SAME condition the sibling relation-fold channel resolves to
+    an unsatisfied slot rather than a refusal. Caught immediately by
+    :func:`_resolve_binding_values`, which resolves the whole binding to
+    ``None`` (unsatisfied — the caller's existing "nothing to add" shape)
+    rather than letting the raise propagate.
+    """
+
+
 def _resolve_anchor_values(
     binding: DataBindingDefinition,
     selector: _PreviousModeloSelector,
@@ -200,20 +238,26 @@ def _resolve_anchor_values(
     )
     if selector.grouping == "per_grupo_member":
         if not matches:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} (per_grupo_member) expected at least one observed filing "
-                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found 0",
+            raise _PreviousFilingObservationAbsentError(
+                f"binding {binding.id!r} (per_grupo_member) has no observed filing "
+                f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
             )
         values: list[Decimal] = []
         for member_match in matches:
             values.extend(_observed_casilla_values(binding, selector, member_match, expected_year, required_period))
         return values
-    if len(matches) != 1:
+    if not matches:
+        raise _PreviousFilingObservationAbsentError(
+            f"binding {binding.id!r} has no observed filing "
+            f"{selector.source_modelo!r}/{expected_year}/{required_period!r}",
+        )
+    if len(matches) > 1:
         raise RegistryValidationError(
             f"binding {binding.id!r} expected one observed filing "
             f"{selector.source_modelo!r}/{expected_year}/{required_period!r}, found {len(matches)}",
         )
-    return _observed_casilla_values(binding, selector, matches[0], expected_year, required_period)
+    single_match = next(iter(matches))
+    return _observed_casilla_values(binding, selector, single_match, expected_year, required_period)
 
 
 def _resolve_binding_values(
@@ -239,15 +283,22 @@ def _resolve_binding_values(
         ):
             scoped_pre_activity = True
             continue
-        values.extend(
-            _resolve_anchor_values(
-                binding,
-                selector,
-                available,
-                expected_year=expected_year,
-                required_period=required_period,
-            ),
-        )
+        try:
+            values.extend(
+                _resolve_anchor_values(
+                    binding,
+                    selector,
+                    available,
+                    expected_year=expected_year,
+                    required_period=required_period,
+                ),
+            )
+        except _PreviousFilingObservationAbsentError:
+            # The whole binding resolves to unsatisfied rather than a partial
+            # (and therefore wrong) value from the anchors that DID resolve.
+            # A malformed binding (RegistryValidationError, not caught here)
+            # still propagates unchanged.
+            return None
     if not values and scoped_pre_activity:
         return _zero_values_for_scoped_out_binding(selector)
     return values

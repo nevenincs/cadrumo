@@ -32,6 +32,7 @@ from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogue
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity import CalculationRevisionId
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
@@ -78,7 +79,7 @@ class ParticipationRebuildStats(BaseModel):
 
 
 def _filing_record_for_revision(
-    calculation_revision_id: str,
+    calculation_revision_id: CalculationRevisionId,
     filings: ModeloRecordCatalogue,
 ) -> ModeloRecord | None:
     """Return the filing record bound to ``calculation_revision_id``, if any."""

@@ -219,19 +219,47 @@ def test_totals_parity_catches_a_dropped_perceptor_row(tmp_path: Path) -> None:
     assert parity.row_count == 1
 
 
+def test_totals_parity_default_is_exact_equality_not_a_hardcoded_cent() -> None:
+    """The DEFAULT tolerance is exact equality, and a genuine one-cent gap is caught by it.
+
+    Modelo 190's own 2025 revision publishes an EXACT (``0.00``) verification
+    tolerance -- pinned against the live registry below so this proof cannot
+    silently drift -- so a caller that forgets to resolve and pass
+    ``snapshot.verification_policy().tolerance`` must not have a one-cent gap
+    silently absorbed by this function's own default. A prior version of this
+    default was a hardcoded cent that would have masked exactly this gap.
+    """
+    published = (
+        resources()
+        .modelos.authority.snapshot(_MODELO_190, filing_year=_FILING_YEAR, period="0A")
+        .verification_policy()
+        .tolerance
+    )
+    assert published == Decimal("0"), "test precondition: modelo 190 2025 must publish exact equality"
+
+    one_cent_off = compute_withholding_totals_parity(
+        _CONSISTENT_WITHHOLDING_OBSERVATIONS,
+        percepciones_summary_total=_EXPECTED_PERCEPCIONES_TOTAL + Decimal("0.01"),
+        retenciones_summary_total=_EXPECTED_RETENCIONES_TOTAL,
+    )
+    assert not one_cent_off.is_consistent, "the default must not silently absorb a genuine one-cent divergence"
+    assert one_cent_off.percepciones_delta == Decimal("-0.01")
+
+
 def test_totals_parity_tolerance_absorbs_sub_cent_rounding_only() -> None:
-    """A one-cent delta is within tolerance; a two-cent delta is not.
+    """A one-cent delta is within an EXPLICITLY PASSED tolerance; a two-cent delta is not.
 
     Pure unit-level boundary check on the comparison primitive itself
     (no engine dependency) — the tolerance is symmetric and exclusive of the
-    boundary+epsilon, matching the registry's standard money-2 rounding
-    tolerance used throughout the reconcile framework
-    (``detect_casilla_divergences``).
+    boundary+epsilon. Passed explicitly rather than relied on as a default,
+    because the registry (not this test) is the authority for what value a
+    real caller resolves.
     """
     within_tolerance = compute_withholding_totals_parity(
         _CONSISTENT_WITHHOLDING_OBSERVATIONS,
         percepciones_summary_total=_EXPECTED_PERCEPCIONES_TOTAL + Decimal("0.01"),
         retenciones_summary_total=_EXPECTED_RETENCIONES_TOTAL,
+        tolerance=Decimal("0.01"),
     )
     assert within_tolerance.is_consistent
 
@@ -239,6 +267,7 @@ def test_totals_parity_tolerance_absorbs_sub_cent_rounding_only() -> None:
         _CONSISTENT_WITHHOLDING_OBSERVATIONS,
         percepciones_summary_total=_EXPECTED_PERCEPCIONES_TOTAL + Decimal("0.02"),
         retenciones_summary_total=_EXPECTED_RETENCIONES_TOTAL,
+        tolerance=Decimal("0.01"),
     )
     assert not beyond_tolerance.is_consistent
     assert beyond_tolerance.percepciones_delta == Decimal("-0.02")

@@ -21,11 +21,12 @@ from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
 from ...core import CasillaId, Modelo, Period
-from ...core.identity import same_tax_identifier
+from ...core.identity import CalculationRevisionId, same_tax_identifier
 from ...domain.calculations.registry import (
     Modelo202Modality,
     RegistryFoldRequirement,
     RegistrySnapshot,
+    RevisionId,
     ValidatedRegistryAuthority,
     previous_filing_observation_requirements,
     relation_source_requirements,
@@ -626,7 +627,7 @@ class _MemberHistory(NamedTuple):
 
 
 def _revision_carry_check(
-    stamped_revision_id: str,
+    stamped_revision_id: RevisionId,
     source_modelo: str,
     source_filing_year: int,
     source_period: Period,
@@ -1109,7 +1110,7 @@ def _filing_verification_blockers(
 
 class _FilingHistory(NamedTuple):
     filing_record_id: str | None
-    calculation_revision_id: str | None
+    calculation_revision_id: CalculationRevisionId | None
     calculation_revision_state: CalculationRevisionState | None
     verification_status: VerificationCompletenessStatus | None
     aeat_accepted: bool | None

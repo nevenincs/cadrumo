@@ -130,17 +130,53 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 export_refs = ["modelo-145-dr-11-perceptor-discapacidad-ayuda"]
 
+# AEAT's diseño de registro declares this date as THREE independently
+# numbered rows -- dr-12 Día, dr-13 Mes, dr-14 Año, each its own Num
+# field with no "se subdivide" parent language -- unlike a genuine
+# parent-with-subparts field (e.g. Modelo 180's % RETENCIÓN), so this is
+# a real concatenation and is modelled as three casillas, one per
+# AEAT-declared row, rather than one combined text slot.
 [[revisions."2012-01-31-y-siguientes".casillas]]
-id = "perceptor.movilidad-geografica-fecha"
+id = "perceptor.movilidad-geografica-fecha-dia"
 number = "dr-12"
 section = ["perceptor"]
-data_type = "date"
-semantic_role = "modelo_145_perceptor_movilidad_geografica_fecha"
+data_type = "integer"
+semantic_role = "modelo_145_perceptor_movilidad_geografica_fecha_dia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the perceptor's movilidad geografica relocation day once, split from DR145 row 12; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
-export_refs = ["modelo-145-dr-12-14-perceptor-movilidad-geografica-fecha"]
+export_refs = ["modelo-145-dr-12-perceptor-movilidad-geografica-fecha-dia"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.movilidad-geografica-fecha-mes"
+number = "dr-13"
+section = ["perceptor"]
+data_type = "integer"
+semantic_role = "modelo_145_perceptor_movilidad_geografica_fecha_mes"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the perceptor's movilidad geografica relocation month once, split from DR145 row 13; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+export_refs = ["modelo-145-dr-13-perceptor-movilidad-geografica-fecha-mes"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "perceptor.movilidad-geografica-fecha-anio"
+number = "dr-14"
+section = ["perceptor"]
+data_type = "year"
+semantic_role = "modelo_145_perceptor_movilidad_geografica_fecha_anio"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the perceptor's movilidad geografica relocation year once, split from DR145 row 14; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+export_refs = ["modelo-145-dr-14-perceptor-movilidad-geografica-fecha-anio"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "perceptor.prolongacion-actividad-laboral"
@@ -548,17 +584,51 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aproba
 source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 export_refs = ["modelo-145-dr-47-comunicacion-firma-lugar"]
 
+# Same shape as the perceptor movilidad-geografica date above: AEAT
+# declares dr-48 Dia, dr-49 Mes, dr-50 Año as three independently
+# numbered Num rows, so this is a concatenation, modelled as three
+# casillas.
 [[revisions."2012-01-31-y-siguientes".casillas]]
-id = "comunicacion.firma-fecha"
+id = "comunicacion.firma-fecha-dia"
 number = "dr-48"
 section = ["comunicacion"]
-data_type = "date"
-semantic_role = "modelo_145_comunicacion_firma_fecha"
+data_type = "integer"
+semantic_role = "modelo_145_comunicacion_firma_fecha_dia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the communication signature day once, split from DR145 row 48; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
 source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
-export_refs = ["modelo-145-dr-48-50-comunicacion-firma-fecha"]
+export_refs = ["modelo-145-dr-48-comunicacion-firma-fecha-dia"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "comunicacion.firma-fecha-mes"
+number = "dr-49"
+section = ["comunicacion"]
+data_type = "integer"
+semantic_role = "modelo_145_comunicacion_firma_fecha_mes"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the communication signature month once, split from DR145 row 49; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+export_refs = ["modelo-145-dr-49-comunicacion-firma-fecha-mes"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "comunicacion.firma-fecha-anio"
+number = "dr-50"
+section = ["comunicacion"]
+data_type = "year"
+semantic_role = "modelo_145_comunicacion_firma_fecha_anio"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the communication signature year once, split from DR145 row 50; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2011-01-03-modelo-145:aprobacion"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+export_refs = ["modelo-145-dr-50-comunicacion-firma-fecha-anio"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "comunicacion.firma-tipo"
@@ -598,17 +668,50 @@ legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendm
 source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
 export_refs = ["modelo-145-dr-53-acuse-recibo-lugar"]
 
+# Same shape again: AEAT declares dr-54 Día, dr-55 Mes, dr-56 Año as
+# three independently numbered Num rows, so this is a concatenation,
+# modelled as three casillas.
 [[revisions."2012-01-31-y-siguientes".casillas]]
-id = "acuse-recibo.fecha"
+id = "acuse-recibo.fecha-dia"
 number = "dr-54"
 section = ["acuse_recibo"]
-data_type = "date"
-semantic_role = "modelo_145_acuse_recibo_fecha"
+data_type = "integer"
+semantic_role = "modelo_145_acuse_recibo_fecha_dia"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the acuse de recibo day once, split from DR145 row 54; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
 required = false
 input_kind = "manual"
 legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
 source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
-export_refs = ["modelo-145-dr-54-56-acuse-recibo-fecha"]
+export_refs = ["modelo-145-dr-54-acuse-recibo-fecha-dia"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "acuse-recibo.fecha-mes"
+number = "dr-55"
+section = ["acuse_recibo"]
+data_type = "integer"
+semantic_role = "modelo_145_acuse_recibo_fecha_mes"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the acuse de recibo month once, split from DR145 row 55; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+export_refs = ["modelo-145-dr-55-acuse-recibo-fecha-mes"]
+
+[[revisions."2012-01-31-y-siguientes".casillas]]
+id = "acuse-recibo.fecha-anio"
+number = "dr-56"
+section = ["acuse_recibo"]
+data_type = "year"
+semantic_role = "modelo_145_acuse_recibo_fecha_anio"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "Modelo 145 records the acuse de recibo year once, split from DR145 row 56; near-duplicate day/month/year roles for the two other DR145 date triads are distinct facts."
+required = false
+input_kind = "manual"
+legal_refs = ["rd-439-2007:art-88", "resolucion-dgt-2013-12-17-modelo-145:amendment"]
+source_refs = ["aeat-modelo-145-form", "aeat-dr-145-v20"]
+export_refs = ["modelo-145-dr-56-acuse-recibo-fecha-anio"]
 
 [[revisions."2012-01-31-y-siguientes".casillas]]
 id = "acuse-recibo.tipo-firma"

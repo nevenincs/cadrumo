@@ -19,6 +19,7 @@ import json
 import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -28,16 +29,19 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclarationAvailabilityReport,
 )
 from ....core import FiledHistoryDiscoverySignal, Period, RegisterScopingSignal, validated_casilla_id
+from ....core.resources import resources
 from ....domain.deadlines import TaxpayerProfile
 from .._filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,
+    _registry_recapture_tolerance,
     casillas_a_recapture_would_change,
     classify_register_scoping_signal,
     expected_filed_declaration_grid,
     filed_history_discovery_report,
     filed_period_selection_rows,
+    recapture_divergence_notices,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -727,6 +731,128 @@ def test_a_casilla_the_stored_revision_never_held_is_not_a_divergence() -> None:
         ),
     )
     assert casillas_a_recapture_would_change(_filed_130_observation_for_tests(), stored_without_03) == ()
+
+
+def test_registry_recapture_tolerance_reads_the_published_modelo_130_value() -> None:
+    """The tolerance comes from the registry, not a literal.
+
+    Modelo 130's 2026 1T revision publishes a real one-cent tolerance -- pinned
+    against the LIVE bundled registry rather than a hand-typed expectation, so a
+    future revision change would move this assertion rather than silently
+    de-synchronise it.
+    """
+    published = (
+        resources().modelos.authority.snapshot("130", filing_year=2026, period="1T").verification_policy().tolerance
+    )
+    assert published == Decimal("0.01"), "test precondition: modelo 130 2026 1T must publish a real, non-zero tolerance"
+
+    resolved = _registry_recapture_tolerance(modelo="130", ejercicio=2026, period=Period.from_year_and_code(2026, "1T"))
+
+    assert resolved == published
+
+
+def test_registry_recapture_tolerance_falls_back_to_exact_equality_when_no_authority_resolves() -> None:
+    """No published contract means no authority to widen the comparison."""
+    resolved = _registry_recapture_tolerance(
+        modelo="not-a-real-modelo",
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+    )
+
+    assert resolved == Decimal("0")
+
+
+def test_a_change_within_the_registry_published_tolerance_is_absorbed() -> None:
+    """A real registry-published tolerance -- not a hardcoded cent -- absorbs rounding noise.
+
+    The fresh capture reads casilla 03 as ``1500.00``; the stored value differs
+    by EXACTLY the modelo 130 2026 1T published tolerance (``0.01``), so it must
+    not surface as a divergence when that tolerance is passed.
+    """
+    changed = casillas_a_recapture_would_change(
+        _filed_130_observation_for_tests(),
+        _stored_130_registry_observation(casilla_03="1499.99"),
+        tolerance=Decimal("0.01"),
+    )
+    assert changed == ()
+
+
+def test_a_change_beyond_the_registry_published_tolerance_still_fires() -> None:
+    """A genuine divergence beyond the published tolerance is never silently absorbed."""
+    changed = casillas_a_recapture_would_change(
+        _filed_130_observation_for_tests(),
+        _stored_130_registry_observation(casilla_03="1499.98"),
+        tolerance=Decimal("0.01"),
+    )
+    assert changed == ("03",)
+
+
+def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_end(tmp_path: Path) -> None:
+    """The real caller resolves and applies the registry tolerance, not just the pure function.
+
+    Exercised through :func:`recapture_divergence_notices` itself -- the actual
+    production entry point -- against a REAL persisted stored observation, so
+    the proof is not confined to the pure comparator in isolation.
+    """
+    from ....domain.calculations.registry import RegistryModeloObservation
+    from ....tests.registry_observations import registry_grounded_observations
+    from ....tests.secure_sql import isolated_runtime_profile
+    from ...calculations import CalculationObservationRepository
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = CalculationObservationRepository()
+        repo.save(
+            repo.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="130",
+                    filing_year=2026,
+                    period="1T",
+                    observations=registry_grounded_observations(
+                        modelo="130",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={validated_casilla_id("03"): Decimal("1499.99")},
+                    ),
+                ),
+                source_kind="app_filing",
+            ),
+        )
+
+        notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)
+
+    assert notices == ()
+
+
+def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path: Path) -> None:
+    """The mutation-based counterpart: a genuine divergence still reaches the operator as a Notice."""
+    from ....domain.calculations.registry import RegistryModeloObservation
+    from ....tests.registry_observations import registry_grounded_observations
+    from ....tests.secure_sql import isolated_runtime_profile
+    from ...calculations import CalculationObservationRepository
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repo = CalculationObservationRepository()
+        repo.save(
+            repo.prepare_observation_envelope(
+                RegistryModeloObservation(
+                    modelo="130",
+                    filing_year=2026,
+                    period="1T",
+                    observations=registry_grounded_observations(
+                        modelo="130",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={validated_casilla_id("03"): Decimal("1499.98")},
+                    ),
+                ),
+                source_kind="app_filing",
+            ),
+        )
+
+        notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)
+
+    assert len(notices) == 1
+    assert notices[0].context["changed_casillas"] == "03"
 
 
 def test_the_divergence_set_is_derived_from_the_captured_casillas_not_a_fixed_list() -> None:

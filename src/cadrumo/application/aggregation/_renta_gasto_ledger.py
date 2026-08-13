@@ -53,6 +53,7 @@ from pydantic import BaseModel, Field
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import CasillaId, ElidedProse, Modelo, Period, validated_casilla_id
+from ...core.identity import TransactionId
 from ...domain.prorrata_register import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions import (
     BusinessClassification,
@@ -117,7 +118,7 @@ class RentaGastoLedgerAggregationIssue(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     reason: RentaGastoLedgerAggregationIssueReason
     detail: _IssueDetail
 
@@ -138,7 +139,7 @@ class RentaGastoObservation(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    transaction_id: str = Field(min_length=1, max_length=128)
+    transaction_id: TransactionId
     target_casilla_id: CasillaId
     deductible_amount: Decimal = Field(ge=Decimal("0"))
     filing_date: date

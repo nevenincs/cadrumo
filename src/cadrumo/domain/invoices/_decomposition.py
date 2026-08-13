@@ -56,6 +56,7 @@ from typing import TYPE_CHECKING, Final, Self
 from pydantic import BaseModel, model_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.identity import InvoiceId
 from ..iva import (
     IvaCategory,
     IvaComponentPresence,
@@ -224,7 +225,7 @@ class InvoiceDecomposition(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    invoice_id: str
+    invoice_id: InvoiceId
     category: IvaCategory | None
     components: InvoiceComponents | None
     defects: tuple[InvoiceDecompositionDefect, ...]

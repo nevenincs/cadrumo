@@ -72,8 +72,10 @@ from ._calc_sheets_apply_values import (
     _build_guide_value_data,
     _build_row_set_header_data,
     _build_value_data,
+    changed_cell_addresses,
     payload_written_addresses,
     stale_addresses,
+    written_cell_values,
 )
 from ._calc_sheets_apply_values import (
     _coerce_cell_value as _coerce_cell_value,
@@ -142,6 +144,38 @@ class CalcSheetsApplyResult(BaseModel):
     protected_ranges_written: int = Field(ge=0)
     row_set_headers_written: int = Field(ge=0, default=0)
     tab_count: int = Field(ge=1)
+
+
+class CalcSheetsExportPreview(BaseModel):
+    """What :func:`apply_export_plan` would clear and (re)write, computed with no write call.
+
+    Returned by :func:`preview_export_plan`, which reads Drive and Sheets state
+    only: it never creates a folder or a spreadsheet, never backfills an
+    ownership marker on a fresh lookup, and never issues a ``batchClear`` or
+    ``batchUpdate`` write. The three facts a dry-run promises per the decision
+    record: the per-tab ranges the apply would clear, how many value cells
+    would actually change against the current read-back, and how many formula
+    cells the apply would (unconditionally) rewrite — the live apply always
+    rewrites every formula cell it carries rather than diffing formula text
+    against a computed result, so this preview reports the same count rather
+    than inventing a comparison the real write does not make either.
+
+    ``folder_id``, ``spreadsheet_id`` and ``spreadsheet_url`` are ``None``
+    only when no matching target exists yet: the first export for a given
+    modelo, period and year has nothing on Drive to look up, so every value
+    cell previews as new content and there is nothing to clear.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    spreadsheet_exists: bool
+    folder_id: str | None = None
+    spreadsheet_id: str | None = None
+    spreadsheet_url: str | None = None
+    ranges_to_clear: tuple[str, ...] = ()
+    value_cells_changed: int = Field(ge=0)
+    value_cells_unchanged: int = Field(ge=0)
+    formula_cells_to_write: int = Field(ge=0)
 
 
 def _google_service(credentials: object, service_name: str, version: str) -> Any:
@@ -1128,9 +1162,25 @@ def _occupied_addresses(
     than a convenient one: the resize step only ever grows a tab, so no
     surviving value can sit outside the grid as it stood before this run.
     """
+    return frozenset(_current_cell_values(sheets=sheets, spreadsheet_id=spreadsheet_id, grid_by_tab=grid_by_tab))
+
+
+def _current_cell_values(
+    *,
+    sheets: Any,
+    spreadsheet_id: str,
+    grid_by_tab: Mapping[str, tuple[int, int]],
+) -> dict[str, Any]:
+    """Read every managed-tab cell currently holding a value, keyed by qualified address.
+
+    Shares the read-range derivation and response shape with
+    :func:`_occupied_addresses`, which is now a thin ``frozenset`` view of
+    these same keys. The export preview needs the raw values themselves —
+    presence alone cannot answer whether a write would change anything.
+    """
     ranges = _occupied_address_ranges(grid_by_tab)
     if not ranges:
-        return frozenset()
+        return {}
     response = execute_request(
         sheets.spreadsheets()
         .values()
@@ -1141,7 +1191,7 @@ def _occupied_addresses(
         ),
         action="sheets.spreadsheets.values.batchGet",
     )
-    return _occupied_addresses_from_response(ranges, response)
+    return _current_cell_values_from_response(ranges, response)
 
 
 def _occupied_address_ranges(
@@ -1163,24 +1213,64 @@ def _occupied_addresses_from_response(
     response: Mapping[str, Any],
 ) -> frozenset[str]:
     """Combine aligned response blocks, truncating missing and extra ranges safely."""
-    occupied: set[str] = set()
+    return frozenset(_current_cell_values_from_response(ranges, response))
+
+
+def _current_cell_values_from_response(
+    ranges: tuple[_OccupiedAddressRange, ...],
+    response: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Combine aligned response blocks into one address-to-value mapping.
+
+    Companion to :func:`_occupied_addresses_from_response`, which is now a
+    thin ``frozenset`` view of these same keys. An export preview needs the
+    VALUES, not merely which addresses are occupied, to answer whether a
+    write would actually change anything.
+    """
+    values: dict[str, Any] = {}
     for address_range, value_range in zip(ranges, response.get("valueRanges", []) or [], strict=False):
-        occupied.update(_occupied_addresses_in_range(address_range.tab, value_range))
-    return frozenset(occupied)
+        values.update(_current_cell_values_in_range(address_range.tab, value_range))
+    return values
 
 
 def _occupied_addresses_in_range(tab: TabName, value_range: Mapping[str, Any]) -> frozenset[str]:
     """Return non-empty cells from one A1-anchored managed-tab response block."""
-    occupied: set[str] = set()
+    return frozenset(_current_cell_values_in_range(tab, value_range))
+
+
+def _current_cell_values_in_range(tab: TabName, value_range: Mapping[str, Any]) -> dict[str, Any]:
+    """Return one A1-anchored managed-tab response block's non-blank cells, keyed by address.
+
+    Shares its read-range derivation with :func:`_occupied_addresses_in_range`,
+    which is now a thin ``frozenset`` projection of this function's keys: the
+    two walk the same response shape and must never drift on what counts as
+    occupied.
+    """
+    values: dict[str, Any] = {}
     for row_offset, row_values in enumerate(value_range.get("values", []) or []):
         for column_offset, cell in enumerate(row_values):
             if cell == "" or cell is None:
                 continue
-            occupied.add(SheetCellAddress.at(tab, row_offset + 1, column_offset + 1).qualified())
-    return frozenset(occupied)
+            values[SheetCellAddress.at(tab, row_offset + 1, column_offset + 1).qualified()] = cell
+    return values
 
 
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-GSHEETS: untyped google-api sheets Resource (dynamic discovery build).
+def _plan_value_payload(plan: SheetExportPlan) -> list[dict[str, Any]]:
+    """Assemble every non-formula value entry the plan would write.
+
+    Shared by :func:`_write_plan_values` (the real write) and
+    :func:`preview_export_plan` (the read-only preview), so the two can never
+    disagree about what counts as a plan's literal value content.
+    """
+    return (
+        _build_value_data(plan.value_cells)
+        + _build_guide_value_data(plan)
+        + _build_row_set_header_data(plan.row_sets)
+        + _build_evidence_value_data(plan)
+    )
+
+
 def _write_plan_values(
     *,
     sheets: Any,
@@ -1195,14 +1285,7 @@ def _write_plan_values(
     """
     # Write values and formulas as USER_ENTERED so Sheets parses
     # formula strings starting with "=".
-    value_data = (
-        _build_value_data(plan.value_cells)
-        + _build_guide_value_data(plan)
-        + _build_row_set_header_data(plan.row_sets)
-        + _build_evidence_value_data(plan)
-    )
-    formula_data = _build_formula_data(plan.formula_cells)
-    data = value_data + formula_data
+    data = _plan_value_payload(plan) + _build_formula_data(plan.formula_cells)
     execute_request(
         sheets.spreadsheets()
         .values()
@@ -1385,7 +1468,131 @@ def apply_export_plan(
     )
 
 
+def _new_target_export_preview(plan: SheetExportPlan) -> CalcSheetsExportPreview:
+    """Preview a plan against a target with nothing on Drive to look up yet.
+
+    Every value cell previews as new content and there is nothing to clear,
+    because a real apply against this target would create the folder chain
+    and the spreadsheet rather than diff against an existing one.
+    """
+    return CalcSheetsExportPreview(
+        spreadsheet_exists=False,
+        ranges_to_clear=(),
+        value_cells_changed=len(written_cell_values(_plan_value_payload(plan))),
+        value_cells_unchanged=0,
+        formula_cells_to_write=len(plan.formula_cells),
+    )
+
+
+def preview_export_plan(
+    plan: SheetExportPlan,
+    *,
+    credentials: object,
+    root_folder_id: str,
+) -> CalcSheetsExportPreview:
+    """Preview what :func:`apply_export_plan` would clear and (re)write, writing nothing.
+
+    Resolves the same ``cadrumo-vault/calc-sheets/{modelo}-{period}-{year}/``
+    target :func:`apply_export_plan` resolves, through the SAME read-only
+    lookup (:func:`_find_folder` / :func:`_find_spreadsheet`) — never the
+    create path — so a preview cannot disagree with a real apply about which
+    spreadsheet it is describing. No folder or spreadsheet is created, and
+    neither ``values.batchClear`` nor ``values.batchUpdate`` nor
+    ``spreadsheets.batchUpdate`` is ever called.
+
+    A target that does not yet exist previews via
+    :func:`_new_target_export_preview`: every cell is new content and there is
+    nothing to clear, because creating the target to answer the question would
+    be exactly the write a preview exists to avoid.
+
+    Args:
+        plan: The pure :class:`~application.storage.calc_sheets.SheetExportPlan`
+            a real apply would materialise.
+        credentials: Same shape :func:`apply_export_plan` accepts.
+        root_folder_id: The operator's Drive root folder id.
+
+    Returns:
+        A :class:`CalcSheetsExportPreview` describing what a real apply would
+        touch.
+
+    Raises:
+        :exc:`~adapters.outbound.storage.OutboundStorageValidationError`:
+            When ``root_folder_id`` is blank, or an app-owned Drive entry
+            carries no usable id.
+        :exc:`~adapters.outbound.storage.OutboundStorageError`: When Drive or
+            Sheets rejects a read request, or the adapter finds a same-named
+            Drive entry that is not app-owned — the same refusal a real apply
+            would raise at the same lookup.
+    """
+    if not root_folder_id.strip():
+        raise OutboundStorageValidationError(
+            "root_folder_id must not be blank",
+            context={"root_folder_id": root_folder_id},
+        )
+
+    drive = _drive_service(credentials)
+    sheets = _sheets_service(credentials)
+
+    vault_folder = _find_folder(drive, parent_id=root_folder_id, name=_vault_folder_name())
+    if vault_folder is None:
+        return _new_target_export_preview(plan)
+    vault_folder_id = require_drive_entry_id(vault_folder, name=_vault_folder_name(), parent_id=root_folder_id)
+
+    calc_folder = _find_folder(drive, parent_id=vault_folder_id, name=_CALC_SHEETS_FOLDER_NAME)
+    if calc_folder is None:
+        return _new_target_export_preview(plan)
+    calc_folder_id = require_drive_entry_id(calc_folder, name=_CALC_SHEETS_FOLDER_NAME, parent_id=vault_folder_id)
+
+    period_folder_name = _subfolder_name(plan)
+    period_folder = _find_folder(drive, parent_id=calc_folder_id, name=period_folder_name)
+    if period_folder is None:
+        return _new_target_export_preview(plan)
+    period_folder_id = require_drive_entry_id(period_folder, name=period_folder_name, parent_id=calc_folder_id)
+
+    title = _spreadsheet_title(plan)
+    existing = _find_spreadsheet(drive, parent_id=period_folder_id, name=title)
+    if existing is None:
+        return _new_target_export_preview(plan)
+    spreadsheet_id = require_drive_entry_id(existing, name=title, parent_id=period_folder_id)
+
+    spreadsheet = execute_request(
+        sheets.spreadsheets().get(
+            spreadsheetId=spreadsheet_id,
+            fields="spreadsheetId,spreadsheetUrl,sheets.properties",
+        ),
+        action="sheets.spreadsheets.get.preview",
+    )
+    spreadsheet_url = str(spreadsheet.get("spreadsheetUrl", ""))
+    current_values = _current_cell_values(
+        sheets=sheets,
+        spreadsheet_id=spreadsheet_id,
+        grid_by_tab=_grid_by_tab(spreadsheet),
+    )
+    occupied = frozenset(current_values)
+
+    value_payload = _plan_value_payload(plan)
+    formula_payload = _build_formula_data(plan.formula_cells)
+    written = payload_written_addresses(value_payload + formula_payload)
+    ranges_to_clear = stale_addresses(occupied=occupied, written=written)
+
+    target_values = written_cell_values(value_payload)
+    changed = changed_cell_addresses(target=target_values, current=current_values)
+
+    return CalcSheetsExportPreview(
+        spreadsheet_exists=True,
+        folder_id=period_folder_id,
+        spreadsheet_id=spreadsheet_id,
+        spreadsheet_url=spreadsheet_url or None,
+        ranges_to_clear=ranges_to_clear,
+        value_cells_changed=len(changed),
+        value_cells_unchanged=len(target_values) - len(changed),
+        formula_cells_to_write=len(plan.formula_cells),
+    )
+
+
 __all__ = [
     "CalcSheetsApplyResult",
+    "CalcSheetsExportPreview",
     "apply_export_plan",
+    "preview_export_plan",
 ]

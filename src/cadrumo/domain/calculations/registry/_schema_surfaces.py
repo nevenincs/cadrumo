@@ -25,6 +25,7 @@ from ....core import (
     filing_projection_ref_casilla_id,
 )
 from ....core.aggregation import RelationAggregation
+from ....core.identity import AeatBoxNumber
 from .._export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from ._errors import RegistryValidationError
 from ._export_semantics import (
@@ -318,7 +319,7 @@ class CasillaDefinition(RegistryModel):
         ),
     )
     constraints: CasillaConstraints | None = None
-    form_number: str | None = Field(default=None, min_length=1, max_length=16)
+    form_number: AeatBoxNumber | None = Field(default=None)
     continuidad_id: ContinuidadId | None = Field(
         default=None,
         description=(

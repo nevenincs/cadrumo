@@ -30,3 +30,48 @@ predicate_id = "modelo-100-2022-retenciones-trabajo-declaradas-cuando-ingresos-i
 expression = 'implies_nonzero(["0012", "0596"])'
 finding_kind = "ADVISORY"
 legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-80"]
+
+# Suffered-retencion completeness advisory for capital mobiliario ahorro
+# (no-silent-under-declaration, in the OVER-declaration direction this
+# apparatus otherwise does not watch). casilla 0597 is the retencion the
+# taxpayer SUFFERED on rendimientos del capital mobiliario sujetos a la base
+# del ahorro, which the payer declares on Modelo 123 (or annually on Modelo
+# 193) and the taxpayer credits against the cuota. It is a BOUND casilla, so
+# when no observation resolves it the engine threads an absent slot as a
+# zero and emits nothing: an uncredited retencion is tax the taxpayer
+# already paid and pays again, arriving as a clean number.
+#
+# The antecedent is 0036 (total ingresos integros del capital mobiliario
+# ahorro), the GROSS sum of the per-source components (dividendos,
+# intereses de cuentas, intereses bonificados, letras del Tesoro, otros
+# activos financieros, seguros de capitalizacion, rentas por imposicion de
+# capitales, deuda subordinada/preferentes, PALP), because retencion is
+# computed on gross income, mirroring the trabajo predicate's own choice of
+# 0012 over the post-deducciones 0025. The candidate net figures -- 0038
+# (rendimiento neto) and 0040 (rendimiento neto reducido) -- were rejected
+# for the exact same reason 0025 was rejected in the trabajo case: both are
+# post-gastos-deducibles and post-reduccion, and can be zero for a filer who
+# did suffer withholding, which would suppress the advisory in exactly the
+# cases it exists for. That objection is milder here (deductible gastos on
+# capital mobiliario are narrow) than for trabajo, but a milder objection is
+# still the objection, and choosing by analogy to the trabajo case rather
+# than by this revision's own casillas is the reasoning this campaign
+# forbids: 0036 was independently verified to exist as the GROSS total on
+# this revision's own casilla set through semantic_role
+# (irpf_rendimiento_capital_mobiliario_ahorro_total_ingresos_integros and
+# irpf_retencion_capital_mobiliario), not assumed from the trabajo shape.
+#
+# ADVISORY, not BLOCKING, for the same reason the trabajo predicate is:
+# withholding on capital mobiliario ahorro is scaled to the payer's own
+# rate and can be lawfully zero for some products, so a category-keyed rule
+# would false-fire. implies_nonzero holds trivially when the antecedent
+# <= 0, so a filer with no capital mobiliario ahorro income never fires.
+#
+# The remedy is an income-certificate value, NOT a filing to capture: the
+# taxpayer never filed Modelo 123 (the payer files it) and it cannot arrive
+# from AEAT on this taxpayer's behalf.
+[[revisions."2022".verification_predicates]]
+predicate_id = "modelo-100-2022-retenciones-capital-mobiliario-declaradas-cuando-ingresos-integros-positivos"
+expression = 'implies_nonzero(["0036", "0597"])'
+finding_kind = "ADVISORY"
+legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-101", "rd-439-2007:art-90"]

@@ -548,13 +548,28 @@ def test_settings_refuse_the_former_product_google_drive_vault_folder() -> None:
 
 
 def test_live_iva_declaration_timeout_must_leave_outer_surface_headroom() -> None:
-    """One declaration timeout must fire before the whole filed-history surface timeout."""
+    """One declaration timeout must fire before the whole filed-history surface timeout.
 
-    with pytest.raises(ValueError, match="cadrumo_live_iva_declaration_capture_timeout_ms"):
+    The refusal is catalogue-rendered, so the two timeouts it reconciles are
+    typed facts on the raised error rather than words in a sentence. Pydantic
+    keeps the raising exception under the violation's ``ctx``, which is the only
+    channel those facts survive on through a ``model_validator`` -- matching on
+    ``str(exc)`` would now only re-assert the message key and would pass just as
+    well if the validator compared the wrong pair of fields.
+    """
+    with pytest.raises(ValidationError) as refusal:
         Settings(
             cadrumo_live_iva_declaration_capture_timeout_ms=180_000,
             cadrumo_live_iva_surface_timeout_ms=180_000,
         )
+
+    (violation,) = refusal.value.errors()
+    raised = violation["ctx"]["error"]
+    assert isinstance(raised, CoreValidationError)
+    context = raised.context or {}
+    assert context["capture_timeout_ms"] == 180_000
+    assert context["surface_timeout_ms"] == 180_000
+    assert context["capture_below_surface"] is False
 
 
 def test_clave_movil_operator_wait_is_capped_at_two_minutes() -> None:

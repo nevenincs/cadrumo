@@ -20,12 +20,13 @@ from __future__ import annotations
 
 import inspect
 import sys
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
 from ...resources import resources
-from .. import Topic, TopicCatalogue, TopicNotFoundError
+from .. import Topic, TopicCatalogue, TopicNotFoundError, load_topic_catalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -72,10 +73,57 @@ def test_catalogue_topic_lookup_returns_typed_record() -> None:
 
 
 def test_catalogue_rejects_unknown_slug_with_typed_error() -> None:
-    """Unknown slugs raise :class:`TopicNotFoundError`."""
+    """An unknown slug refuses through the registered key and the slug fact.
+
+    The refusal carries no authored sentence: the operator-facing text is
+    resolved from the registered locale key and the rejected slug travels as a
+    machine fact on the error context, so the message is translated in every
+    locale rather than pinned to English at the raise site.
+
+    Pinning the key and the facts alone stays green even if English prose is
+    passed alongside the key, because message resolution prefers the key. The
+    prose does not stay hidden: ``str(exc)`` prefers the positional message, so
+    it still reaches tracebacks, logs, and every boundary rendering the
+    exception directly. Asserting the absence is what makes re-introducing a
+    sentence at this raise site fail.
+    """
+    from ...errors import get_registered_error_code, resolve_error_message
+
     catalogue = resources().topics.singleton
-    with pytest.raises(TopicNotFoundError, match=r"topic|not|found"):
+    with pytest.raises(TopicNotFoundError) as raised:
         catalogue.topic("not-a-real-topic")
+
+    error = raised.value
+    assert error.translated_message == "errors.refused.refused_topic_not_found"
+    assert error.context == {"slug": "not-a-real-topic"}
+    assert get_registered_error_code(error).code == "REFUSED_TOPIC_NOT_FOUND"
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+    resolved = resolve_error_message(error)
+    assert resolved and resolved != error.translated_message
+
+
+def test_empty_catalogue_directory_refuses_with_its_own_locale_key(tmp_path: Path) -> None:
+    """An empty registry directory refuses distinctly from a missing slug.
+
+    A bundled catalogue carrying no TOML is a different failure from a slug the
+    operator mistyped, so it must not borrow the not-found sentence. The loader
+    runs against a real empty directory rather than a patched fingerprint.
+
+    As with the missing-slug refusal, the key and facts alone would stay green
+    against re-introduced English prose; ``str(exc)`` degrading to the key is
+    what proves this raise site authors no sentence.
+    """
+    from ...errors import resolve_error_message
+
+    with pytest.raises(TopicNotFoundError) as raised:
+        load_topic_catalogue(tmp_path)
+
+    error = raised.value
+    assert error.translated_message == "core.topics.errors.catalogue_empty"
+    assert error.context == {"catalogue_root": str(tmp_path.resolve())}
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+    resolved = resolve_error_message(error)
+    assert resolved and resolved != error.translated_message
 
 
 def test_every_topic_renders_title_and_body_in_default_locale() -> None:

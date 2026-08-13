@@ -8,9 +8,10 @@ readiness -> create -> calculate -> verify -> export services in sequence.
 Coverage:
 - a calculable modelo (115, fed one real retención observation) reaches granted
   verification before honestly refusing its unavailable export layout;
-- a modelo whose source-backed calculation binding is absent (130 without an
-  observed prior-year filing) halts at ``calculate`` without trusting an ad-hoc
-  numeric override.
+- a modelo whose ``previous_filing`` source is absent (130 without an observed
+  prior-year Modelo 100 filing) calculates using the caller-supplied override
+  but halts at ``verify``, where the cross-period clean-state gate catches the
+  same absent source and refuses verificado-completo.
 
 The chain is build + export only: no live AEAT submission path is exercised or
 reachable (``sensitive-financial-data-secure-storage-only``).
@@ -436,12 +437,18 @@ def test_quickfile_help_exposes_explicit_result_elections() -> None:
     assert "--disposition" not in result.output
 
 
-def test_quickfile_refuses_unobserved_previous_filing_binding(tmp_path: Path) -> None:
-    """A source-backed binding cannot be replaced by caller-supplied prose or value.
+def test_quickfile_refuses_at_verify_when_a_previous_filing_source_is_absent(tmp_path: Path) -> None:
+    """An absent previous-filing source is a verify-stage clean-state gap, not a calculate crash.
 
-    Modelo 130 1T 2025 requires an observed Modelo 100 filing for the prior-year
-    income binding. Supplying a decimal CLI binding must not fabricate that
-    evidence: quickfile stops at calculate and never writes an export file.
+    Modelo 130 1T 2025 declares a ``previous_filing`` carry reading Modelo 100
+    2024's prior-year income. With no Modelo 100 2024 observation in the local
+    store, the registry resolver treats the binding as genuinely unsatisfied
+    (there is nothing malformed about a taxpayer whose prior filing AEAT has
+    simply never confirmed) rather than raising: calculate proceeds using the
+    caller-supplied ``--binding`` override. The SAME gap is then caught where
+    it belongs — the cross-period clean-state verification gate — which
+    refuses to grant verificado-completo while the Modelo 100 2024 source is
+    unclean, so quickfile still never writes an export file.
     """
 
     _create_profile(activity_start_date="2024-01-01")
@@ -462,18 +469,20 @@ def test_quickfile_refuses_unobserved_previous_filing_binding(tmp_path: Path) ->
     assert "Traceback" not in result.output
     payload = _payload(result.output)
     assert payload["completed"] is False
-    assert payload["stopped_at_stage"] == "calculate", result.output
-    assert payload["granted_verificado_completo"] is None
+    assert payload["stopped_at_stage"] == "verify", result.output
+    assert payload["granted_verificado_completo"] is False
     assert payload["export"] is None
 
     statuses = _stage_status(payload)
     assert statuses["create"] == "ok"
-    assert statuses["calculate"] == "refused"
-    assert statuses["verify"] == "skipped"
+    assert statuses["calculate"] == "ok"
+    assert statuses["verify"] == "refused"
     assert statuses["export"] == "skipped"
 
     notice_text = json.dumps(_notices(result.output), sort_keys=True)
-    assert "expected one observed filing '100'/2024/'0A', found 0" in notice_text
+    assert "cross_period_dependency_unclean" in notice_text
+    assert "Source modelo 100 2024 0A is not clean" in notice_text
+    assert "irpf.previous_year_economic_activity_net_income" in notice_text
     assert not out.exists()
 
 

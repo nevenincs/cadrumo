@@ -289,7 +289,7 @@ def test_a_verdict_carrying_both_components_and_defects_is_refused() -> None:
     """The two outcome classes must stay mutually exclusive."""
     with pytest.raises(ValidationError, match="never both and never neither"):
         InvoiceDecomposition(
-            invoice_id="abc",
+            invoice_id="a6f9a5d4eb5cf4f4f255b0d6d326ec2c81f9ec2cd7cf4272feaf8c0baaa458bd",
             category=IvaCategory.DOMESTIC_GENERAL,
             components=InvoiceComponents(
                 taxable_base=Decimal("100"),
@@ -307,7 +307,12 @@ def test_a_verdict_carrying_both_components_and_defects_is_refused() -> None:
 def test_a_verdict_carrying_neither_components_nor_defects_is_refused() -> None:
     """An empty verdict would read as grounded-with-nothing."""
     with pytest.raises(ValidationError, match="never both and never neither"):
-        InvoiceDecomposition(invoice_id="abc", category=None, components=None, defects=())
+        InvoiceDecomposition(
+            invoice_id="a6f9a5d4eb5cf4f4f255b0d6d326ec2c81f9ec2cd7cf4272feaf8c0baaa458bd",
+            category=None,
+            components=None,
+            defects=(),
+        )
 
 
 def test_components_that_do_not_add_up_are_refused() -> None:

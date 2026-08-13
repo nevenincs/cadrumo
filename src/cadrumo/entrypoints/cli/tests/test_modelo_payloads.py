@@ -27,6 +27,7 @@ from ....domain.calculations.registry import (
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
+    CalculationSourceRef,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     derive_calculation_revision_id,
@@ -38,6 +39,7 @@ from .._modelo_payloads import (
     DeltaRowPayload,
     FindingPayload,
     ObservationPayload,
+    SourceProvenancePayload,
     WorkCalculateResult,
     WorkObservationsResult,
     WorkRevisionResult,
@@ -460,6 +462,83 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
     restored_by_casilla = {row.casilla_id: row for row in restored.observations}
     assert restored_by_casilla[_PAYLOAD_CASILLA].absent_by_design is True
     assert restored_by_casilla[_INPUT_EJERCICIO_CASILLA].absent_by_design is False
+
+
+def test_calculation_revision_projection_carries_dependency_treatment_without_disturbing_the_value() -> None:
+    """A ``factual_evidence`` carry reaches the operator-facing payload with its value intact.
+
+    The registry's declared carry classification (``direct_annual_settlement`` /
+    ``factual_evidence``) must reach the CLI JSON boundary alongside its
+    provenance, and its presence must never withhold or alter the casilla value
+    it accompanies. Both declared classes are exercised on the SAME casilla
+    value so the projection cannot silently special-case either one.
+    """
+    casilla_values = {_PAYLOAD_CASILLA: Decimal("500.00")}
+    revision = CalculationRevision(
+        calculation_revision_id=derive_calculation_revision_id(
+            work_unit_id=_WORK_UNIT_ID,
+            input_values_by_casilla_id={},
+            binding_overrides={},
+            casilla_values=casilla_values,
+            filing_instance_evidence=None,
+        ),
+        work_unit_id=_WORK_UNIT_ID,
+        state=CalculationRevisionState.BORRADOR,
+        casilla_values=casilla_values,
+        observations=(
+            CasillaObservation(
+                casilla_id=_PAYLOAD_CASILLA,
+                value=Decimal("500.00"),
+                legal_refs=("ley-58-2003:art-120",),
+                source_refs=("libro-1",),
+            ),
+        ),
+        source_provenance=(
+            CalculationSourceRef(
+                source_kind="previous_filing",
+                source_ref="193:2024:0A:withholding-total",
+                dependency_treatment="factual_evidence",
+            ),
+            CalculationSourceRef(
+                source_kind="relation_prefill",
+                source_ref="modelo-130-rel-100-previous-year:100:2024:0A",
+                dependency_treatment="direct_annual_settlement",
+            ),
+        ),
+        created_at=_REVISION_TIMESTAMP,
+        updated_at=_REVISION_TIMESTAMP,
+        filing_instance_evidence=None,
+    )
+
+    payload = calculation_revision_payload(revision)
+    by_source_ref = {row.source_ref: row for row in payload.source_provenance}
+
+    assert by_source_ref["193:2024:0A:withholding-total"].dependency_treatment == "factual_evidence"
+    assert (
+        by_source_ref["modelo-130-rel-100-previous-year:100:2024:0A"].dependency_treatment == "direct_annual_settlement"
+    )
+    # Carrying the treatment must not disturb the casilla value it accompanies.
+    assert payload.casilla_values[_PAYLOAD_CASILLA] == "500.00"
+
+    restored = CalculationRevisionPayload.model_validate_json(payload.model_dump_json())
+    restored_by_source_ref = {row.source_ref: row for row in restored.source_provenance}
+    assert restored_by_source_ref["193:2024:0A:withholding-total"].dependency_treatment == "factual_evidence"
+    assert (
+        restored_by_source_ref["modelo-130-rel-100-previous-year:100:2024:0A"].dependency_treatment
+        == "direct_annual_settlement"
+    )
+    assert restored.casilla_values[_PAYLOAD_CASILLA] == "500.00"
+
+
+def test_source_provenance_payload_dependency_treatment_defaults_to_undeclared() -> None:
+    """A provenance row whose revision declared no treatment must not acquire one by default."""
+    row = SourceProvenancePayload(
+        source_kind="ledger_iva_aggregation",
+        source_ref="transaction:tx-1",
+    )
+
+    assert row.dependency_treatment == ""
+    assert row.dependency_treatment not in {"direct_annual_settlement", "factual_evidence"}
 
 
 # ---------------------------------------------------------------------------

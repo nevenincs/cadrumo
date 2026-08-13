@@ -16,6 +16,7 @@ from ._validate_cross_revision import (
     strict_cross_revision_casilla_continuity_failures as _validate_strict_cross_revision_casilla_continuity,
 )
 from ._validate_label_artifacts import validate_no_label_artifacts
+from ._validate_previous_filing_year_coverage import validate_previous_filing_source_year_coverage
 from ._validate_relation_sources import (
     validate_previous_filing_binding_closure,
     validate_relation_closure,
@@ -51,6 +52,7 @@ def validate_registry_scope(modelos: Iterable[ModeloDefinition]) -> tuple[str, .
         failures.extend(_validate_dependency_classification_source_modelos(modelo_tuple, modelos_by_id))
         failures.extend(validate_relation_closure(modelo_tuple, modelos_by_id))
         failures.extend(validate_previous_filing_binding_closure(modelo_tuple, modelos_by_id))
+        failures.extend(validate_previous_filing_source_year_coverage(modelo_tuple, modelos_by_id))
         failures.extend(validate_slot_source_hygiene(modelo_tuple, modelos_by_id))
 
     failures.extend(_validate_binding_selector_shapes(modelo_tuple))

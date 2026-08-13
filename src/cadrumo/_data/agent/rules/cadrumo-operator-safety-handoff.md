@@ -23,7 +23,7 @@ a CSV cotejo, or a live capture.
 
 The envelope carries a typed `notices` channel. A `warning`-severity notice flips the
 envelope `status` to `warning` and means the operator should act before continuing.
-Surface every `warning` notice to the taxpayer with its `suggestion`. Do not bury a
+Surface every `warning` notice to the taxpayer with its resolved `action`. Do not bury a
 warning and proceed as if the command fully succeeded.
 
 ## Treat a zero-tax result on positive activity as suspect

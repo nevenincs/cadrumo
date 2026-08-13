@@ -38,6 +38,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....core import BindingSourceKind, CasillaId, Period
+from ....core.identity import AeatBoxNumber
 from ._binding_selector_utils import BooleanBindingEncodedValue
 from ._ids import BindingId, FormulaId, LegalRefId, ParameterId, RelationId, RevisionId, SourceRefId
 from ._schema_input_kind import InputKind
@@ -144,7 +145,7 @@ class ModeloCasillaRow(CasillaGroundingReport):
     """
 
     formula: str | None
-    form_number: str | None
+    form_number: AeatBoxNumber | None
 
 
 class ModeloCasillasReport(BaseModel):
