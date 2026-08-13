@@ -142,6 +142,39 @@ def test_source_diagnostic_keeps_advisory_category_separate_from_binding_source(
     assert diagnostic.binding_source is None
 
 
+def test_source_diagnostic_asserted_legal_refs_is_distinct_from_casilla_derived_refs() -> None:
+    """The advisory-asserted path coexists with, and is independent of, the casilla-derived one.
+
+    The two default independently and neither field's presence implies or
+    excludes the other -- an advisory may carry only casilla-derived refs, only
+    asserted refs, both, or neither.
+    """
+    casilla_derived_only = CalculationSourceDiagnostic(
+        reason="aggregation_activity_undeclared",
+        source_kind="undeclared_activity_income",
+        message="casilla-derived grounding only",
+        legal_refs=("ley-35-2006:art-58",),
+    )
+    asserted_only = CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind="eligibility_rule_advisory",
+        message="advisory-asserted grounding only",
+        asserted_legal_refs=("ley-35-2006:art-81-3",),
+    )
+    both = CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind="eligibility_rule_advisory",
+        message="both grounding paths at once",
+        legal_refs=("ley-35-2006:art-58",),
+        asserted_legal_refs=("ley-35-2006:art-81-3",),
+    )
+
+    assert casilla_derived_only.asserted_legal_refs == ()
+    assert asserted_only.legal_refs == ()
+    assert both.legal_refs == ("ley-35-2006:art-58",)
+    assert both.asserted_legal_refs == ("ley-35-2006:art-81-3",)
+
+
 def test_source_diagnostic_rejects_mismatched_binding_source_projection() -> None:
     with pytest.raises(ValidationError) as exc_info:
         CalculationSourceDiagnostic(
