@@ -11,6 +11,7 @@ from pydantic import BeforeValidator
 
 from ....core import CasillaId
 from ....core.decimal import coerce_fixed_width_decimal
+from ....core.errors import CadrumoError
 from ....core.money import round_to_cents
 from ._errors import RegistryValidationError
 from ._export_value_policy import (
@@ -134,18 +135,33 @@ class _ExportRecord(Protocol):
     def fields(self) -> tuple[_ExportField, ...]: ...
 
 
-class FixedWidthRecordRenderError(ValueError):
-    """A registry-owned fixed-record rendering refusal with exact context."""
+class FixedWidthRecordRenderError(CadrumoError):
+    """A registry-owned fixed-record rendering refusal with exact context.
+
+    The condition travels as the ``reason`` discriminant plus the coordinates
+    that produced it; the operator-facing sentence is resolved from the
+    registered key, so no raise site authors English prose.
+    """
 
     def __init__(
         self,
-        message: str,
         *,
         field_id: str | None,
         reason: str,
         export_record_id: str,
+        **facts: object,
     ) -> None:
-        super().__init__(message)
+        context: dict[str, object] = {
+            "reason": reason,
+            "export_record_id": export_record_id,
+            **facts,
+        }
+        if field_id is not None:
+            context["export_field_id"] = field_id
+        super().__init__(
+            translated_message="errors.fail.fixed_width_record_render",
+            context=context,
+        )
         self.field_id = field_id
         self.reason = reason
         self.export_record_id = export_record_id
@@ -210,10 +226,10 @@ def render_fixed_width_export_record_body(
     fields = tuple(sorted(record.fields, key=lambda field: (-1 if field.offset is None else field.offset, field.id)))
     if not fields:
         raise FixedWidthRecordRenderError(
-            f"export record {record.id!r} declares no renderable fields",
             field_id=None,
             reason="empty_record",
             export_record_id=record.id,
+            renderable_field_count=0,
         )
     coordinates = tuple(_require_record_coordinates(field, record_id=record.id) for field in fields)
     total_length = max(offset + length - 1 for offset, length in coordinates)
@@ -223,36 +239,38 @@ def render_fixed_width_export_record_body(
         kind = str(getattr(field.kind, "value", field.kind))
         if kind not in {"literal", "filler", "casilla"}:
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} cannot be mapped to the fixed-width renderer",
                 field_id=field.id,
                 reason="field_kind",
                 export_record_id=record.id,
+                export_field_kind=kind,
             )
         try:
             raw_value = field_values.get(field.casilla_id) if field.casilla_id is not None else None
             rendered = render_fixed_width_export_field(field, raw_value).encode(record.encoding)
         except (LookupError, UnicodeError, RegistryValidationError) as exc:
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} has an invalid fixed-width value",
                 field_id=field.id,
                 reason="fixed_width_value",
                 export_record_id=record.id,
+                producer_error_type=type(exc).__name__,
             ) from exc
         if len(rendered) != length:
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} encoded to {len(rendered)} bytes instead of {length}",
                 field_id=field.id,
                 reason="encoded_width",
                 export_record_id=record.id,
+                encoded_byte_count=len(rendered),
+                declared_byte_count=length,
             )
         start = offset - 1
         end = start + length
         if any(occupied[start:end]):
             raise FixedWidthRecordRenderError(
-                f"export field {field.id!r} overlaps another field",
                 field_id=field.id,
                 reason="overlap",
                 export_record_id=record.id,
+                declared_offset=offset,
+                declared_byte_count=length,
             )
         buffer[start:end] = rendered
         occupied[start:end] = b"\x01" * length
@@ -271,10 +289,11 @@ def render_fixed_width_export_record_payload(
 def _require_record_coordinates(field: _ExportField, *, record_id: str) -> tuple[int, int]:
     if field.offset is None or field.length is None:
         raise FixedWidthRecordRenderError(
-            f"export field {field.id!r} lacks fixed-width coordinates",
             field_id=field.id,
             reason="missing_coordinates",
             export_record_id=record_id,
+            offset_declared=field.offset is not None,
+            length_declared=field.length is not None,
         )
     return field.offset, field.length
 

@@ -398,6 +398,16 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry._fixed_width_codec.FixedWidthRecordRenderError",
+        ErrorCode(
+            code="FAIL_FIXED_WIDTH_RECORD_RENDER",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fixed_width_record_render",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos._errors.ModeloExportError",
         ErrorCode(
             code="FAIL_MODELO_EXPORT",

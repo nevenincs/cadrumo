@@ -491,14 +491,32 @@ def test_record_renders_when_an_optional_numeric_casilla_is_absent() -> None:
 
 
 def test_record_refuses_when_a_required_numeric_casilla_is_absent() -> None:
-    """The same absent slot on a required field still refuses the record."""
+    """The same absent slot on a required field still refuses the record.
+
+    The refusal carries its registered identity and machine facts, never an
+    authored sentence. Asserting the key and the context alone would stay green
+    against re-introduced English, because message resolution prefers the key
+    while ``str(exc)`` prefers a positional argument and would still carry the
+    prose into tracebacks and logs; pinning ``str(exc)`` to the key is what
+    makes a re-introduced sentence at any of these raise sites fail.
+    """
+    from ....core.errors import get_registered_error_code, resolve_error_message
+
     with pytest.raises(FixedWidthRecordRenderError) as excinfo:
         render_fixed_width_export_record_body(
             _absence_record(required=True),
             field_values={"01": "2010"},
         )
 
-    assert excinfo.value.field_id == "absent-year"
+    error = excinfo.value
+    assert error.field_id == "absent-year"
+    assert error.reason == "fixed_width_value"
+    assert error.context["export_field_id"] == "absent-year"
+    assert error.translated_message == "errors.fail.fixed_width_record_render"
+    assert get_registered_error_code(error).code == "FAIL_FIXED_WIDTH_RECORD_RENDER"
+    assert str(error) == error.translated_message, f"the raise site carries an authored sentence: {str(error)!r}"
+    resolved = resolve_error_message(error)
+    assert resolved and resolved != error.translated_message
 
 
 def test_allowed_values_enforcement_has_one_canonical_codec_owner() -> None:

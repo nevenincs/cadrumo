@@ -23,7 +23,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from typing import Literal, Protocol
+from typing import ClassVar, Literal, Protocol
 
 from pydantic import BaseModel, field_validator, model_validator
 
@@ -219,6 +219,16 @@ class _PreviousFilingObservationAbsentError(Exception):
     ``None`` (unsatisfied — the caller's existing "nothing to add" shape)
     rather than letting the raise propagate.
     """
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "A private control-flow signal, never an operator-facing failure: it is "
+        "raised and caught inside this module and resolves the binding to "
+        "unsatisfied. Binding it to the error registry would give an outcome no "
+        "operator can observe a code and a locale key, and deriving it from "
+        "CadrumoError would make a broad domain-error except swallow it — the "
+        "exact confusion with the sibling structural defects this class exists "
+        "to keep separate."
+    )
 
 
 def _resolve_anchor_values(
