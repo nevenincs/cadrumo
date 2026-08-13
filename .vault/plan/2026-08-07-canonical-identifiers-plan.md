@@ -4,7 +4,7 @@ tags:
   - '#canonical-identifiers'
 date: '2026-08-07'
 modified: '2026-08-13'
-body_hash: 'sha256:05cedb73628d9f558f0ed5dd798839606ca670165219f321f10e50da033570e4'
+body_hash: 'sha256:0b489fdd2fa68e47a7dbf568265f2e041dea1d5f3349868e7f56a2bea701cc0a'
 tier: L3
 related:
   - '[[2026-08-07-canonical-identifiers-adr]]'
@@ -338,8 +338,8 @@ the full staged taxonomy rather than a partial one.
 Delivers the property-keyed ratchet test and makes the plan's own known
 gaps explicit rather than implied-complete.
 
-- [ ] `W09.P14.S58` - author the identifier-enrollment ratchet test asserting every production pydantic field whose name matches the namespace vocabulary carries a `core.identity` namespace alias rather than bare `str`, with `Declaracion.estado`, `Deuda.situacion`, and the three free-text sub-populations from `W07.P11.S48` as named, documented exclusions; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
-- [ ] `W09.P14.S59` - prove the gate's bite: add a throwaway bare-`str` field named to match the namespace vocabulary on a scratch model outside `src`, confirm the gate reds, then remove it and confirm the gate is green again; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
+- [x] `W09.P14.S58` - author the identifier-enrollment ratchet test asserting every production pydantic field whose name matches the namespace vocabulary carries a `core.identity` namespace alias rather than bare `str`, with `Declaracion.estado`, `Deuda.situacion`, and the three free-text sub-populations from `W07.P11.S48` as named, documented exclusions; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
+- [x] `W09.P14.S59` - prove the gate's bite: add a throwaway bare-`str` field named to match the namespace vocabulary on a scratch model outside `src`, confirm the gate reds, then remove it and confirm the gate is green again; `src/cadrumo/tests/test_identifier_namespace_enrollment_gate.py`.
 - [ ] `W09.P14.S60` - record NRC, fixed-width fichero-BOE tax-id width (owned by the separate Modelo 200 misattribution ADR), registry TOML id-shaped values (no measured denominator), and any second-pass finding from `W07.P11.S49` not triaged into an enrolled namespace as explicit deferred follow-ups in this plan's Verification section, each with a named next reference rather than a silent close; `.vault/plan/2026-08-07-canonical-identifiers-plan.md`.
 
 ## Parallelization
