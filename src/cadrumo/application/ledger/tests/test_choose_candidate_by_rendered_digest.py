@@ -122,10 +122,14 @@ def test_the_refusal_names_the_digests_rather_than_the_values() -> None:
     with pytest.raises(ConfirmationBlockedError) as raised:
         _resolve_with("X1234567L")
 
-    message = str(raised.value)
-    assert redact_for_cli_output(_FIRST) in message
-    assert _FIRST not in message, "the refusal printed a competing identity in the clear"
-    assert _SECOND not in message
+    # The digests ride on the refusal's facts rather than in an authored
+    # sentence, so the confidentiality property is asserted over everything the
+    # refusal carries: the facts AND the exception's own text.
+    context = raised.value.context or {}
+    carried = f"{context}{raised.value}"
+    assert redact_for_cli_output(_FIRST) in carried
+    assert _FIRST not in carried, "the refusal carried a competing identity in the clear"
+    assert _SECOND not in carried
 
 
 def test_the_candidate_note_is_what_lets_the_operator_decide() -> None:

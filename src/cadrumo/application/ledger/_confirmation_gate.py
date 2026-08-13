@@ -346,9 +346,8 @@ def resolved_blockers(
         if resolution.blocker_id not in by_id:
             known = ", ".join(sorted(by_id)) or "none"
             raise ConfirmationBlockedError(
-                f"resolution names {resolution.blocker_id!r}, which is not a finding this document raises; "
-                f"findings on this document: {known}",
-                context={"blocker_id": resolution.blocker_id},
+                translated_message="errors.refused.refused_ledger_confirmation_blocked",
+                context={"blocker_id": resolution.blocker_id, "known_blocker_ids": known},
                 precondition_verdict=ledger_no_recovery_verdict(
                     LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
                     facts={"resolution_addresses_known_blocker": False},
@@ -356,8 +355,8 @@ def resolved_blockers(
             )
         if resolution.blocker_id in answered:
             raise ConfirmationBlockedError(
-                f"finding {resolution.blocker_id!r} carries two resolutions; one finding takes one answer",
-                context={"blocker_id": resolution.blocker_id},
+                translated_message="errors.refused.refused_ledger_confirmation_blocked",
+                context={"blocker_id": resolution.blocker_id, "resolution_count": 2},
                 precondition_verdict=ledger_no_recovery_verdict(
                     LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
                     facts={"one_resolution_per_blocker": False},
@@ -376,10 +375,8 @@ def resolved_blockers(
             # the identity this blocker exists to protect into a refusal message.
             offered = ", ".join(blocker.candidate_digests) or "none"
             raise ConfirmationBlockedError(
-                f"finding {blocker_id!r} was never offered that reading; "
-                f"candidates read from the document: {offered}. Naming a reading the document does not "
-                f"state is an assertion, not a choice",
-                context={"blocker_id": blocker_id},
+                translated_message="errors.refused.refused_ledger_confirmation_blocked",
+                context={"blocker_id": blocker_id, "offered_candidate_digests": offered},
                 precondition_verdict=ledger_no_recovery_verdict(
                     LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
                     facts={"chosen_candidate_offered_by_document": False},
@@ -390,8 +387,11 @@ def resolved_blockers(
     if unresolved:
         named = "; ".join(f"{blocker.blocker_id} ({blocker.reason.value}): {blocker.detail}" for blocker in unresolved)
         raise ConfirmationBlockedError(
-            f"this document cannot be confirmed until every finding is answered individually. Unresolved: {named}",
-            context={"unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved)},
+            translated_message="errors.refused.refused_ledger_confirmation_blocked",
+            context={
+                "unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved),
+                "unresolved_blockers": named,
+            },
             precondition_verdict=ledger_no_recovery_verdict(
                 LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
                 facts={"all_blockers_resolved": False},
