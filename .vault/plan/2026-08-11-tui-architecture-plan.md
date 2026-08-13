@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:0aeef45209d1a8040043ae376476dc41d33facbe8fa060ebf43d4283b18debe5'
+body_hash: 'sha256:469659d3b095201af2a51835312dcca4bf6af1b23f28773b6419022cac8b19df'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -63,7 +63,6 @@ Define registered executors, canonical action joins, resource ownership, and inv
 
 - [x] `W02.P03.S13` - Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership; `src/cadrumo/application/operations/_executor.py`.
 - [x] `W02.P03.S14` - Implement operation definition registration and immutable lookup by canonical action reference; `src/cadrumo/application/operations/_registry.py`.
-- [ ] `W02.P03.S16` - Prove duplicate registration, undeclared effects, invalid phase emission, and unowned resources are refused; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
 
 ### Phase `W02.P04` - Journal, leases, and persistence
 
@@ -79,7 +78,8 @@ Persist safe lifecycle state and ordered events atomically while keeping confide
 
 Implement authoritative submission, observation, response, cancellation, deadlines, settlement, and startup reconciliation.
 
-- [ ] `W02.P05.S22` - Implement submit, start, inspect, observe, await, respond, reject, request-cancel, detach, settle, and reconcile operations; `src/cadrumo/application/operations/_supervisor.py`.
+- [ ] `W02.P05.S22` - Implement submit, start, inspect, observe, await, respond, reject, request-cancel, detach, settle, and reconcile operations with definition-bound executor context that refuses undeclared phase, effect, and resource-family registration before mutation; `src/cadrumo/application/operations/_supervisor.py and src/cadrumo/application/operations/_executor.py and src/cadrumo/application/operations/__init__.py and src/cadrumo/application/operations/tests`.
+- [ ] `W02.P05.S16` - Prove through the production supervisor executor context that duplicate registry identities and definition-undeclared effects, phases, and resource-family ownership are refused before event or journal mutation; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
 - [ ] `W02.P05.S23` - Implement cursor replay and bounded live observation without making subscriber connectivity operation authority; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S24` - Implement aggregate deadline, cooperative cancellation acknowledgement, irreversible-section protection, and cleanup deadlines; `src/cadrumo/application/operations/_supervisor.py`.
 - [ ] `W02.P05.S25` - Normalize expected refusals and unexpected failures into safe terminal diagnostics while retaining correlation evidence; `src/cadrumo/application/operations/_supervisor.py`.
