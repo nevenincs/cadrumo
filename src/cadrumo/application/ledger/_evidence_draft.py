@@ -104,9 +104,14 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, NoReturn, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
-from ...adapters.inbound.einvoice import EInvoiceXmlParseError, ParsedEInvoice, parse_einvoice_document
+from ...adapters.inbound.einvoice import (
+    EInvoiceXmlParseError,
+    FacturaeInvoiceClass,
+    ParsedEInvoice,
+    parse_einvoice_document,
+)
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import AttachmentStore, secure_object_repository_for_bucket
 from ...application.invoices import build_catalogue_invoice, create_catalogue_invoice, resolve_iva_rate_slot
@@ -725,6 +730,7 @@ class InvoiceDraft(BaseModel):
     provenance: tuple[FieldProvenance, ...] = ()
     discrepancies: tuple[DraftDiscrepancyFinding, ...] = ()
     raw_text_length: int = 0
+    _facturae_invoice_class: FacturaeInvoiceClass | None = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def _provenance_names_real_fields(self) -> Self:
@@ -1473,6 +1479,7 @@ def _extract_invoice_fields_from_structured_record(evidence: EvidenceInput) -> I
         raw_text_length=len(evidence.data),
         provenance=_structured_provenance(parsed=parsed, evidence=evidence, derived=country_codes),
     )
+    draft._facturae_invoice_class = parsed.facturae_invoice_class
 
     # Exactness is not correctness, and conflating the two is what left this path
     # unchecked. Reaching no model makes prompt injection categorically
@@ -2436,7 +2443,7 @@ def confirm_invoice_draft_from_evidence(
     retention_rate: Decimal | None = None,
     retention_amount: Decimal | None = None,
     recargo_amount: Decimal | None = None,
-    invoice_class: InvoiceClass = InvoiceClass.ORDINARIA,
+    invoice_class: InvoiceClass | None = None,
     supply_nature: SupplyNature | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
@@ -2748,15 +2755,24 @@ def confirm_invoice_draft_from_evidence(
     # refuses one without a series -- correctly, and it could not refuse
     # before, because nothing ever told it the invoice was a rectificativa.
     resolved_series = _operator_value_or_reading(series, draft.invoice_series)
-    # Derived from the corrected reference rather than carried as a second
-    # field: the Invoice model already ties the two together in BOTH
-    # directions, so a class and a reference that could disagree would be two
-    # spellings of one fact with no authority between them.
-    resolved_invoice_class = (
-        InvoiceClass.RECTIFICATIVA
-        if invoice_class is InvoiceClass.ORDINARIA and resolved_rectifies is not None
-        else invoice_class
-    )
+    declared_class = draft._facturae_invoice_class
+    if declared_class in {FacturaeInvoiceClass.ORIGINAL, FacturaeInvoiceClass.COPY}:
+        resolved_invoice_class = InvoiceClass.ORDINARIA
+    elif declared_class in {
+        FacturaeInvoiceClass.ORIGINAL_CORRECTIVE,
+        FacturaeInvoiceClass.COPY_CORRECTIVE,
+    }:
+        resolved_invoice_class = InvoiceClass.RECTIFICATIVA
+    elif invoice_class is not None:
+        # Recapitulativa has no domain member. Preserve the operator's statement
+        # instead of flattening the document's distinct class onto ordinaria.
+        resolved_invoice_class = invoice_class
+    else:
+        # A document declaring no Facturae class retains the established
+        # corrective-reference inference.
+        resolved_invoice_class = (
+            InvoiceClass.RECTIFICATIVA if resolved_rectifies is not None else InvoiceClass.ORDINARIA
+        )
 
     repository = invoice_repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
     # Built with the SAME argument set `create_catalogue_invoice` is handed below,
