@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:7d3b1dc9504759b6f3d28216fc5698ed718873cc1d527ba1c47afe1a41717c37'
+body_hash: 'sha256:4e2dfe70e0a1f5dadacf3fb3608b2896dc05751e2544ed4cf10bdc893d0d38e8'
 related:
   - "[[2026-08-05-ci-lane-deconflation-plan]]"
   - "[[2026-08-05-ci-lane-deconflation-adr]]"
@@ -165,6 +165,43 @@ rather than zero, identical in count and split to the enrolment-day figure. Both
 rows are functioning exactly as intended. Flipping either on anything short of its
 stated condition is the specific failure the plan exists to prevent, and the plan
 is explicit that a campaign may not narrow its own completion criterion.
+
+BOTH ROWS RE-MEASURED THE SAME DAY, AND THE DEV-TOOLING BACKLOG HAS TURNED. The
+dev-tooling lane now stands at 76 failures and 6 errors against the 83 and 48 the
+row records, so failures fell by seven and errors by forty-two, total red dropping
+from 131 to 82 while passes rose from 1694 to 1832. The direction is finally
+favourable rather than drifting. The forty-two closed errors are fully attributed:
+they were never a missing translation but six Modelo 145 casillas added without any
+locale key at all, by a commit that deliberately excluded the catalogues as under
+active edit, and a scaffold commit twenty-one minutes later took the Spanish
+catalogue from fifty to fifty-six real labels. All four catalogues now carry
+fifty-six keys and that population is gone. The residue is 76 failures over
+twenty-six modules and at least eight distinct owners, plus six errors that are a
+single environmental cause, the concurrent-registry-write fingerprint race. The
+release condition is zero, so the row stays parked, but its figure must be restated
+as 76 and 6.
+
+The per-push row's second half is now MEASURED rather than merely unconfirmed. The
+CLI action-rendering refactor is the cli-action-envelope-hardening campaign, and it
+stands at 76 of 120 steps with 44 open and the whole of its sixth wave untouched, so
+"in flight" is now a number rather than an impression. Its own measurement
+re-confirms at six failed of forty-eight, the identical six tests in the identical
+two-and-four split, and the diagnostic output names the refactor's own modules in
+roughly forty-five stale-disposition lines. Two of the six fail for an unrelated
+reason worth separating: a shared profile-creation fixture now refuses because the
+setup flow has grown five further required answers, which is the profile setup-flow
+campaign's moving surface and not this lane's.
+
+A SESSION-KILLING DEFECT WAS FOUND WHILE MEASURING, and it belongs to dev/audit
+rather than to this plan. The security scan invokes a subprocess with a timeout and
+handles the expiry, but the standard library's own expiry path kills the child and
+then drains its pipes without a bound. On this platform the kill reaches only the
+launcher shim while the real grandchild keeps the inherited pipe open, so the drain
+never returns. The test that hangs is the very one asserting that the timeout path
+is bounded. It passes in isolation in forty seconds and wedges only under load,
+which is why a whole-lane sequential measurement is unreliable on a contended host
+and had to be taken in two segments. This is a genuine defect, not a flake, and it
+should be routed to dev/audit's owner.
 
 ## Recommendations
 
