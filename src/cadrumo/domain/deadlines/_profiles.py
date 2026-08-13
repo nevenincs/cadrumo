@@ -330,6 +330,57 @@ _MODELO_IVA_PROFILE_PATHS = frozenset(
     },
 )
 
+#: Booleans a claimed IVA block must state either way.
+#:
+#: Undeclared is not the same answer as "no" for these four: each selects a
+#: filing obligation or a deduction entitlement, so defaulting an unanswered
+#: one to ``False`` would file a taxpayer out of a regime they never spoke
+#: about.
+_MODELO_IVA_REQUIRED_BOOL_PATHS = (
+    "iva.redeme_enrolled",
+    "iva.cash_accounting_regime_enrolled",
+    "iva.voluntary_sii_enrolled",
+    "iva.hydrocarbon_deposit_advance_payment_deduction_entitled",
+)
+
+#: Every path :func:`_resolve_modelo_iva_profile` refuses to build without.
+#:
+#: Declared beside the resolver that enforces it so the readiness surfaces
+#: and the resolver read ONE answer. They did not: the resolver hard-required
+#: six facts while profile completeness knew of none of them, so a profile
+#: declaring any IVA fact was reported ready and then refused two commands
+#: later by a resolver naming a path no surface had asked for.
+MODELO_IVA_BLOCK_REQUIRED_PATHS: tuple[str, ...] = (
+    "iva.m303_regime_composition",
+    "tax_residence.jurisdiction_scope",
+    *_MODELO_IVA_REQUIRED_BOOL_PATHS,
+)
+
+
+def profile_claims_modelo_iva_block(values: Mapping[str, object]) -> bool:
+    """Report whether ``values`` declares any fact owned by the Modelo IVA block.
+
+    Presence is value-bearing, not truth-bearing: answering "no" to an IVA
+    enrolment still claims the block, because declining a regime is a
+    declaration about IVA. Only an absent or blank path leaves it unclaimed.
+    """
+    return any(_declared(values.get(path)) for path in _MODELO_IVA_PROFILE_PATHS)
+
+
+def modelo_iva_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Return the profile paths a claimed Modelo IVA block obliges ``values`` to carry.
+
+    Empty when no IVA fact is declared at all, so a taxpayer with no IVA
+    obligation is never asked for one.
+    """
+    if not profile_claims_modelo_iva_block(values):
+        return ()
+    return MODELO_IVA_BLOCK_REQUIRED_PATHS
+
+
+def _declared(value: object) -> bool:
+    return value is not None and bool(str(value).strip())
+
 
 def _required_iva_bool(value: object, *, path: str) -> bool:
     if not isinstance(value, bool):
@@ -339,7 +390,7 @@ def _required_iva_bool(value: object, *, path: str) -> bool:
 
 def _resolve_modelo_iva_profile(canonical: Mapping[str, str], typed: SetupAnswers) -> ModeloIVAProfile | None:
     """Build an IVA block only when a block-owned fact is explicitly present."""
-    if not any(canonical.get(path, "").strip() for path in _MODELO_IVA_PROFILE_PATHS):
+    if not profile_claims_modelo_iva_block(canonical):
         return None
     if not typed.iva_m303_regime_composition:
         raise ProfileError(

@@ -118,7 +118,12 @@ from ._models import (
     resolve_multiple_pagadores_reduced_limit,
 )
 from ._plazo import resolve_filing_closes_on, resolve_filing_window
-from ._profiles import taxpayer_profile_from_mapping
+from ._profiles import (
+    MODELO_IVA_BLOCK_REQUIRED_PATHS,
+    modelo_iva_profile_required_paths,
+    profile_claims_modelo_iva_block,
+    taxpayer_profile_from_mapping,
+)
 from ._recargo import (
     build_recovery_for_overdue,
     completed_months_late,
@@ -129,6 +134,7 @@ from ._recargo import (
 
 __all__ = [
     "MODELOS_WITHOUT_SHIFT",
+    "MODELO_IVA_BLOCK_REQUIRED_PATHS",
     "CalendarCCAA",
     "ChargeAccount",
     "CrossPeriodGroupMemberRoster",
@@ -174,8 +180,10 @@ __all__ = [
     "is_ue_eee_country_code",
     "load_holiday_calendar",
     "load_recargo_bands",
+    "modelo_iva_profile_required_paths",
     "next_business_day",
     "next_deadline",
+    "profile_claims_modelo_iva_block",
     "resolve_filing_closes_on",
     "resolve_filing_window",
     "resolve_multiple_pagadores_reduced_limit",
