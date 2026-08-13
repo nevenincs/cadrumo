@@ -6,9 +6,11 @@ from datetime import date
 
 import pytest
 
+from .....core import IvaDeductionFactKind
 from .....core.resources import bundled_path
 from ....iva import IvaLedgerObservationRole
 from .. import ModeloDefinition, RegistryCatalogues, RegistryValidator, build_snapshot
+from ._ledger_iva_aggregation_support import _deduction_provenance
 from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -115,6 +117,11 @@ def test_modelo_309_autorepercutido_binding_resolves_against_substrate() -> None
             flow_direction=IvaFlowDirection.INVERSION_SUJETO_PASIVO,
             base_amount=Decimal("25000"),
             iva_amount=Decimal("5250"),
+            deduction_fact_kind=IvaDeductionFactKind.INTRA_EU_CURRENT,
+            deduction_provenance=_deduction_provenance(
+                IvaDeductionFactKind.INTRA_EU_CURRENT,
+                source_locator="self-assessment:vehicle-acquisition",
+            ),
             observation_role=IvaLedgerObservationRole.SETTLEMENT,
         ),
         IvaLedgerObservation(

@@ -36,6 +36,7 @@ from ....iva import (
     IvaRateKind,
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,
+    required_deduction_evidence_authority,
 )
 from .. import (
     BindingId,
@@ -52,6 +53,19 @@ from .._binding_selector_utils import selector_as_dict
 from .._relations import resolve_relation_values_from_observations
 
 _M303_APP_FILING_CAPTURED_AT = datetime(2027, 1, 20, 9, 0, 0, tzinfo=UTC)
+
+
+def _deduction_provenance(
+    kind: IvaDeductionFactKind,
+    *,
+    source_locator: str,
+) -> IvaDeductionClassificationProvenance:
+    """Build fixture provenance from the production kind-to-authority contract."""
+    return IvaDeductionClassificationProvenance(
+        authority=required_deduction_evidence_authority(kind),
+        source_locator=source_locator,
+        evidence_digest="a" * 64,
+    )
 
 
 def _casilla_id(value: object) -> CasillaId:
@@ -184,15 +198,19 @@ def _observation(
             "every production path supplies one on the domestic tiers, so this models "
             "a row that cannot occur. State the rate the line carried.",
         )
-    if (deduction_fact_kind is None) is not (deduction_authority is None):
-        raise AssertionError("deduction fact kind and evidence authority must be stated together")
+    if deduction_fact_kind is None and deduction_authority is not None:
+        raise AssertionError("deduction evidence authority cannot be stated without its fact kind")
+    if deduction_fact_kind is not None and deduction_authority not in {
+        None,
+        required_deduction_evidence_authority(deduction_fact_kind),
+    }:
+        raise AssertionError("fixture deduction authority disagrees with the production kind-to-authority contract")
     deduction_provenance = (
-        IvaDeductionClassificationProvenance(
-            authority=deduction_authority,
+        _deduction_provenance(
+            deduction_fact_kind,
             source_locator=f"test-ledger:{ledger_id}",
-            evidence_digest="a" * 64,
         )
-        if deduction_authority is not None
+        if deduction_fact_kind is not None
         else None
     )
     return IvaLedgerObservation(
