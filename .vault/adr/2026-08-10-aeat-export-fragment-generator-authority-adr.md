@@ -10,17 +10,21 @@ related:
   - '[[2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s54-sector-source-taxonomy-research]]'
   - '[[2026-08-11-aeat-export-fragment-generator-authority-s61-dp30300-envelope-authority-research]]'
+  - '[[2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit]]'
+  - '[[2026-08-08-m200-export-envelope-tag-adr]]'
 supersedes:
   - '2026-08-08-aeat-design-relayout-boundary-export-fragment-generator-adr'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:1513ba4b3e7eb2531ead09665f9c59eda9f327483e6a73dad59695cd15b5415f'
+body_hash: 'sha256:f3bbebe6f1fb6d180040e9f3f43f9caf21b29fbd065d3c428157f172e1a97b9c'
 ---
 # `aeat-export-fragment-generator-authority` adr: `official-binary coordinates, reviewed render profiles, and semantic maps generate export fragments` | (**status:** `accepted`)
 
 ## Problem Statement
 
 The accepted official-binary and semantic-map split leaves some wire facts unauthorised when the exact workbook field anchor carries no usable content, and it does not classify variable composition wrappers. The generator needs one exhaustive reviewed authority for those absent wire facts and an explicit boundary between fixed-width records and variable envelopes before real-target generation can resume.
+
+Modelo 390 adds a distinct unresolved composition boundary. Its source-scoped page zero is a complete thirteen-anchor `<T...<AUX>...</AUX>` header, but it is neither a source-total-bearing fixed record nor either variable-envelope form already decided below. Its four in-window designs also lack explicit epoch identities and have no reviewed semantic maps or render profiles. Tree generation therefore cannot start by treating page zero as an ordinary record, dropping it, or borrowing the removed manual tree.
 
 ## Considerations
 
@@ -29,6 +33,8 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - The real-target completeness and refusal requirements are recorded by `2026-08-10-aeat-export-fragment-generator-authority-s08-independent-review-audit`.
 - Export fragments are filing-correctness inputs, so partial coverage, implicit defaults, conflicting authorities, and guessed output are unacceptable.
 - Revision selection and applicability remain authored registry decisions governed by the parent relayout ADR; this decision does not infer revision boundaries.
+- The Modelo 390 missing-authoring prerequisite is recorded by `2026-08-13-aeat-design-relayout-boundary-blocked-waves-carry-forward-audit`.
+- The existing typed auxiliary-header roles and product/software identity split are grounded by `2026-08-08-m200-export-envelope-tag-adr`; Modelo 390 reuses those roles without treating a removed tree as an oracle.
 
 ## Considered options
 
@@ -37,6 +43,9 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - **Infer formats from AEAT type and width or from a neighbouring tree. Rejected.** Defaults and legacy-tree oracles turn incomplete evidence into silent filing behavior.
 - **Use an exhaustive source-SHA-pinned per-design render profile. Chosen.** It provides one reviewed home for wire facts absent at exact workbook field anchors while leaving official coordinates and registry meaning in their existing authorities.
 - **Treat variable wrappers as fixed records with inferred totals. Rejected.** It truncates composition semantics and falsely converts a variable envelope into a fixed-width record.
+- **Treat Modelo 390 page zero as a fixed record by assigning its terminal extent as a declared total. Rejected.** The source does not declare that total; synthesising one would contradict the fixed-record refusal boundary.
+- **Omit Modelo 390 page zero and emit only numbered pages. Rejected.** It removes the source-declared filing and product header and cannot produce the official composition.
+- **Model Modelo 390 page zero as a typed fixed auxiliary envelope header. Chosen.** Render its thirteen exact source anchors as one source-hash-bound 328-byte header, prove contiguous anchored geometry and the terminal `</AUX>` literal, then append the ordered numbered fixed records. The 328-byte header extent is an emitted-byte invariant over exact anchors, not a parser `declared_total` and not permission to infer totals for fixed records.
 
 ## Constraints
 
@@ -50,6 +59,12 @@ The accepted official-binary and semantic-map split leaves some wire facts unaut
 - Missing anchors, uncovered fields, duplicate or overlapping rules, conflicts with official content, inapplicable design identity, or source-hash drift refuse the whole design before output.
 - `DP200000` is a typed variable envelope and composition wrapper outside fixed-width record generation. It is never truncated to its fixed prefix, assigned an inferred fixed total, or emitted as a fixed record; its envelope and composition behavior must be modeled separately and proven before any generation for that design.
 - `DP30300` is likewise a typed variable envelope, not a fixed record and not part of the fixed-record semantic-map entry set. Its thirteen prefix anchors, Variable body, relative eighteen-byte closer, and derived total form one source-hash-bound composition contract shared across the five explicit Modelo 303 epochs.
+- The four in-window Modelo 390 sources carry explicit, exact epoch identities `2022`, `2023`, `2024`, and `2025`, respectively. Each selected Modelo 390 revision admits exactly one matching source identity and hash; an absent epoch, cross-epoch source, or multi-source selection refuses before parsing.
+- Modelo 390 page zero is a typed fixed auxiliary envelope header outside the fixed-record semantic-map entry set. Its thirteen exact anchors occupy positions 1 through 328 contiguously and terminate in the source literal `</AUX>`. Generation emits those anchors once, proves exactly 328 bytes, and then appends numbered fixed records in source order. It never writes `328` into the parser's absent `declared_total`, generalises terminal extent into a fixed-record rule, or accepts a gap, overlap, missing anchor, altered literal, or additional anchor.
+- The Modelo 390 page-zero roles are exact: modelo, discriminant, annual period, fixed markers, auxiliary tags, and reserved spans come from source literals or source-declared blank policy; filing year comes from the draft; program version and software-developer tax identifier come from the canonical product/software identity authority. Presenter, taxpayer, or generic legacy header paths may not substitute for the software-developer identity.
+- Each Modelo 390 epoch owns one reviewed semantic map and one exhaustive source-hash-bound render profile. Every numbered-page parser anchor classifies exactly once as a literal, reserve, canonical `CasillaId`, canonical typed producer, draft field, or revision-admitted typed projection. Printed box number, description text, offset, neighbouring fields, and the removed manual tree are diagnostics only, never semantic-home authorities.
+- A Modelo 390 semantic map may reuse a canonical owner already present in the loaded revision authority, including the revision-independent continuity identity, only after exact source-anchor adjudication. A missing owner is a prerequisite to add a typed canonical owner and value-arrival path before map authoring; the map may not create an open string key, generic value bag, modelo-specific producer duplicate, or compatibility reader.
+- Semantic-home review is per epoch. Unchanged source anchors may reuse an earlier adjudication only when source identity, anchor identity, source content, and canonical owner are unchanged; every added, removed, or meaning-changed anchor is reviewed independently even when its byte offset is stable.
 - The four-byte AEAT program identifier and nine-byte software-developer tax identifier are one typed product/software identity authority. They are not filing producers, presenter or taxpayer identities, generic headers, guessed literals, or defaults. Generation refuses until explicit product authority supplies both values.
 - The envelope definition declares exact prefix-anchor semantics, ordered body record identities, closer reuse of modelo, discriminant, year, period, and record-type semantics, and total-length derivation. Provenance carries the envelope schema and digest, source hash, prefix derivations, ordered member digests, product-authority evidence, closer derivation, and total.
 - Neighbouring fragment trees are neither inputs nor correctness oracles. Legacy trees are explicitly unverified bootstrap evidence and may not supply profile rules or defaults.
@@ -70,6 +85,8 @@ Normalize official `Total:` integers without synthesizing absent values. Represe
 
 For Modelo 303, render the typed DP30300 envelope as exact prefix fields, followed by the ordered rendered body records, followed by the derived relative closer. Derive and prove the Variable total from emitted bytes. Refuse malformed, incomplete, reordered, duplicate, source-drifted, or product-authority-incomplete envelopes before any target mutation; remove the blanket renderer refusal only when those structural and byte-level proofs pass.
 
+For Modelo 390, first bind the four catalogue sources to their exact epoch identities and selected revisions. Extend the parser-owned intermediate representation with the typed fixed auxiliary envelope-header classification rather than assigning page zero a total. Render and prove page zero independently from the fixed-record renderer, then append every numbered fixed record in official order. Author and review the 2022, 2023, 2024, and 2025 semantic maps and render profiles as four independent source-scoped artefacts before generating any Modelo 390 revision tree.
+
 Join fixed-width source fields to the reviewed semantic map, then resolve only absent wire facts through the exhaustive render profile for the exact design and source hash. Validate source applicability, complete semantic bijection, exact-anchor profile coverage, rule consistency, explicit `Num` and signed-`N` behavior, and agreement with every present official content value before rendering.
 
 Generate the entire target revision's `export/` tree plus an adjacent non-loader provenance manifest. The manifest records source, semantic-map, and render-profile digests; parser, profile, and generator schema versions; target revision; normalized loader-semantic digest; and file digests.
@@ -82,7 +99,7 @@ The gate suite covers parser completeness, official-total recovery, fixed-record
 
 ## Rationale
 
-The chosen profile is the narrowest extension that preserves the decisive split in `2026-08-10-aeat-export-fragment-generator-authority-source-authority-research`: the official design owns coordinates and present wire facts, the semantic map owns registry meaning, and a reviewed source-bound profile owns only wire facts the exact anchors omit. The authority gaps and variable-envelope classification in `2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research` rule out parser invention, type-and-width defaults, semantic-map expansion, and fixed-record truncation.
+The chosen profile is the narrowest extension that preserves the decisive split in `2026-08-10-aeat-export-fragment-generator-authority-source-authority-research`: the official design owns coordinates and present wire facts, the semantic map owns registry meaning, and a reviewed source-bound profile owns only wire facts the exact anchors omit. The authority gaps and variable-envelope classification in `2026-08-10-aeat-export-fragment-generator-authority-s08-authority-gap-research` rule out parser invention, type-and-width defaults, semantic-map expansion, and fixed-record truncation. Modelo 390's fixed auxiliary header preserves the same boundary: exact source anchors authorize its bytes, while its typed composition keeps the absent fixed-record total honest and prevents either omission or terminal-extent inference from becoming a general rule.
 
 ## Consequences
 
@@ -91,6 +108,8 @@ The chosen profile is the narrowest extension that preserves the decisive split 
 - Render-profile changes become independently reviewable wire-authority changes and their digest becomes part of provenance and drift detection.
 - Semantic maps remain reviewable meaning-only artifacts and are the sole reviewed source-epoch authority mapping parser coordinates to typed owners; projection declarations remain coordinate-free revision admission evidence.
 - Designs containing a variable envelope cannot generate fixed-width output until the separate envelope contract and composition proof pass.
+- Modelo 390 generation remains blocked until its epoch identities, fixed auxiliary header, four semantic maps, four render profiles, canonical-owner prerequisites, and emitted composition proof have landed. The existing generation row is not map-authoring authority.
+- The fixed auxiliary envelope-header rule is deliberately narrow to the source-proved thirteen-anchor Modelo 390 shape. Another total-less page or modelo receives no inference or reuse without a separate adjudication.
 - Source, parser, or profile corrections can produce large generated diffs, but exhaustive validation and deterministic checks make that drift explicit.
 - Tests fail if generation reads legacy layout membership, applies a default to an uncovered anchor, conflates `Num` with signed `N`, leaves a smaller field ungrounded, accepts profile conflict or hash drift, truncates a variable envelope, or permits deleted compatibility surfaces to reappear.
 - Renta calculation and question bindings retain their semantic modality axis independently of export layout support; deleting export producer redeclarations cannot delete or default personal-income-tax inputs.
