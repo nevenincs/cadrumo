@@ -56,10 +56,18 @@ offset = 9
 length = 9
 kind = "header"
 producer_key = "presenter.tax_id"
+# A NIF is a fixed-width alphanumeric identifier that always exactly
+# fills its 9-byte slot, not a zero-filled numeric quantity -- LEFT_ZERO
+# never actually pads a present value here, but its parse-side _unpad
+# strips leading "0" characters from a low-numbered individual DNI
+# (e.g. "00012345Z" -> "12345Z"), corrupting a real identifier. padding
+# none + justification none renders identically for every full-width
+# value (proven by direct render comparison) and its parse side only
+# strips trailing spaces, never real digits.
 data_type = "text"
 required = true
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
@@ -70,10 +78,13 @@ offset = 18
 length = 9
 kind = "casilla"
 casilla_id = "perc.nif"
+# Same shape as decl-nif above: a NIF always exactly fills its 9-byte
+# slot, so left_zero never pads a present value but its parse side
+# strips real leading digits from a low-numbered DNI.
 data_type = "text"
 required = true
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
@@ -84,10 +95,13 @@ offset = 27
 length = 9
 kind = "casilla"
 casilla_id = "perc.nif-representante-legal"
+# Same shape as decl-nif above: a NIF always exactly fills its 9-byte
+# slot, so left_zero never pads a present value but its parse side
+# strips real leading digits from a low-numbered DNI.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
@@ -112,10 +126,15 @@ offset = 76
 length = 2
 kind = "casilla"
 casilla_id = "perc.provincia"
+# The diseño's own wording ("se consignarán los dos dígitos numéricos")
+# says this is always exactly two digits from a closed 01-52 table, not
+# a zero-fillable numeric quantity -- left_zero never pads a present
+# value here, but its parse side strips a genuine leading "0" from
+# provinces 01-09 (e.g. "01" Álava parses back as "1").
 data_type = "text"
 required = true
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
@@ -430,10 +449,15 @@ offset = 316
 length = 5
 kind = "casilla"
 casilla_id = "perc.inmueble-codigo-municipio"
+# INE municipality codes are a fixed 5-digit identifier whose first two
+# digits are the province number, so any municipality in provinces
+# 01-09 has a genuine leading "0" -- left_zero never pads a present
+# value here (the code always exactly fills the slot) but its parse
+# side strips that leading digit.
 data_type = "text"
 required = false
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
@@ -444,10 +468,13 @@ offset = 321
 length = 2
 kind = "casilla"
 casilla_id = "perc.inmueble-provincia"
+# Same shape as perc.provincia above: always exactly two digits from a
+# closed table, left_zero never pads a present value but strips a
+# genuine leading "0" from provinces 01-09 on parse.
 data_type = "text"
 required = true
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
@@ -458,10 +485,14 @@ offset = 323
 length = 5
 kind = "casilla"
 casilla_id = "perc.inmueble-codigo-postal"
+# Spanish postal codes are a fixed 5-digit identifier province-prefixed
+# (01001-52006), so any code in provinces 01-09 has a genuine leading
+# "0" -- left_zero never pads a present value here but strips that
+# leading digit on parse.
 data_type = "text"
 required = true
-padding = "left_zero"
-justification = "right"
+padding = "none"
+justification = "none"
 signed = false
 legal_refs = ["orden-hap-1732-2014:art-2", "rd-439-2007:art-108", "ley-35-2006:art-101", "ley-58-2003:art-93"]
 source_refs = ["aeat-dr-180-2014"]
