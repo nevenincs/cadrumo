@@ -5,7 +5,7 @@ tags:
 date: '2026-08-13'
 modified: '2026-08-13'
 body_schema: 'body-v1'
-body_hash: 'sha256:446e45c4fff5f52f17cd4465da8f83ef846387eb166fb8fb17fbdbc99733e6d5'
+body_hash: 'sha256:cceccb0748d96ad52da7eeff61be535470d1800281744b62e5cb7c887f3b8afd'
 related: []
 ---
 
@@ -45,6 +45,37 @@ merely by finishing, without ever seeing the failure attributed to them.
 The site was deliberately left alone. Editing the file would have entangled unrelated
 work in progress, and writing an allowlist entry for a reach that exists only in a working
 copy would record speculative state as a durable decision.
+
+### gate-is-red-with-three-signatures | critical | all three failures are one site, and none is a stale entry
+
+The gate is RED at working-tree state. A sequential full-module run reports three failed
+and thirty-two passed: the count ratchet, the named-set equality check, and the
+live-occurrence reconciliation. An independent run by another reader reported the same
+three, so the signature is reproducible even though the underlying scan is not.
+
+**All three share a single root cause, and it is the one uncommitted site.** The count
+ratchet fails at ninety-six live against ninety-five recorded. The set check fails with
+exactly one unnamed reach. The live-occurrence check asserts in BOTH directions from one
+per-triple count comparison, and it is failing on its SECOND assertion, the one covering
+occurrences that outnumber their records. Its first assertion, the one covering entries
+that no longer answer a live reach, passes. There are ZERO stale entries. The allowlist
+needs nothing removed.
+
+That distinction matters because the check's name reads as though it can only mean stale
+documentation, which invites a reconciliation pass that would find nothing to reconcile and
+risks deleting live entries to satisfy a misread. The evidence is the assertion the
+traceback names, not the test's title.
+
+**A reporting failure of this campaign's own, recorded rather than smoothed over.** The
+earlier report of this ratchet described a single undocumented site and left the gate
+looking like one failing dimension. It was derived from a direct enumeration of the scan
+rather than from running the gate module, and that enumeration compared documented and live
+sites as SETS. Set comparison is blind to multiplicity, which is precisely the blindness
+the live-occurrence check exists to close and says so in its own docstring. A second
+partial reading then checked only the first of that check's two assertions. Both errors
+pushed the same way: they understated how many gate surfaces were red. The full module
+should have been run before reporting, and the count is now taken from the gate rather than
+from a reimplementation of it.
 
 ### reaches-past-already-public-symbols | high | five of thirteen needed no promotion at all
 
