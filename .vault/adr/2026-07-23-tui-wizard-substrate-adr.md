@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#tui-wizard-substrate'
 date: '2026-07-23'
-modified: '2026-07-23'
-body_hash: 'sha256:566e3945ba5337550fe1ffdd5752e953e8b33f17001fe0e73bdbf3f30b017b3f'
+modified: '2026-08-13'
+body_hash: 'sha256:bf7413a586e14bfe5fe09d0397e42922f33ab5e7042d04f7fcff13fdcaca6ae9'
 related:
-  - "[[2026-07-23-tui-wizard-substrate-research]]"
+  - '[[2026-07-23-tui-wizard-substrate-research]]'
+  - '[[2026-08-11-tui-architecture-adr]]'
 ---
 
 # `tui-wizard-substrate` adr: `paged TUI wizard substrate` | (**status:** `accepted`)
@@ -77,8 +78,9 @@ explicitly and once.
    pseudo-command-language inside answers; the ceiling is architectural.
 3. **Renderer-agnostic flow engine + thin frontends** (chosen) — a pure
    state machine in the application layer owns all flow semantics; the
-   full-screen TUI, the plain line-mode fallback, and the non-interactive
-   driver are thin projections dispatching typed intents.
+   dedicated full-screen TUI, independent CLI line mode, and non-interactive
+   driver are sibling projections dispatching typed intents over the same
+   application flow authority; no projection selects or imports another.
 
 For the rendering layer of the full-screen frontend: **Textual**
 (application framework, headless test driver; new dependency),
@@ -96,17 +98,20 @@ for the rendering candidates"); ruling in D5.
   is deliberately insulated from the rendering layer: no engine or
   contract type may import from the rendering library, so a rendering
   pivot stays an adapter swap. Textual's Windows-terminal behaviour under
-  degraded hosts (conhost, git-bash) was not exhaustively surveyed; the
-  line-mode fallback and translated refusal are the safety net.
+  degraded hosts (conhost, git-bash) was not exhaustively surveyed. The
+  dedicated TUI owns its startup refusal; CLI line mode and its translated
+  refusal remain an independent sibling entrypoint path, not a TUI fallback.
 - A `create` flow's cold start precedes a usable profile; under the D4
   incremental-facts model the profile is registered early through the
   lifecycle authority in an explicitly setup-incomplete state, so the
   readiness gates — not storage location — are what keep it non-usable
   until review-submit completes it.
 - The substrate must keep the translated non-TTY/no-console refusal and the
-  IO-injection headless-drive contract working; a host that cannot run the
-  full-screen frontend degrades to the line-mode frontend, and a host that
-  can run neither receives the existing translated refusal.
+  IO-injection headless-drive contract working. Per
+  `2026-08-11-tui-architecture-adr`, line mode remains a frontend-neutral
+  application projection available to the CLI, while the full-screen renderer
+  starts only through the dedicated TUI entrypoint; neither entrypoint imports
+  the other.
 - Grounding combines full-file reads of the entire wizard package with the
   profile-integration discovery audit. The single-flow-authority claim is
   keyword-confirmed; a `vaultspec-rag` semantic sweep per coding site (per
@@ -264,7 +269,7 @@ therefore the *incremental-facts* model, not a separate draft store:
   submit-only-from-review semantics are identical in both modes.
 
 **D5 — Rendering: full-screen frontend on Textual (ruled); line-mode
-fallback retained.** The full-screen frontend is an adapter over the
+projection retained.** The full-screen frontend is a projection over the
 engine, built on Textual (`textual@8.2.8` line at decision time). The
 dependency verdict (research, "Dependency verdict for the rendering
 candidates") shows Textual adds cleanly — MIT, no version conflict with
@@ -279,12 +284,16 @@ its testing story would be pipe-driven rather than a first-class headless
 driver, against the real-behavior test discipline. Textual is therefore
 ruled, not provisional. The engine/contract insulation stands regardless:
 no engine or contract type imports the rendering library, so a future
-rendering pivot remains an adapter swap. A
-plain line-mode frontend (sequential paging without full-screen control)
-remains for hosts that cannot run the full-screen application, and the
-existing translated unsupported-console refusal remains for hosts that can
-run neither. The non-interactive flag path drives the engine directly with
-no frontend, so `--quiet`/flags, TUI, and line mode share identical
+rendering pivot remains a projection swap.
+
+Composition is governed solely by `2026-08-11-tui-architecture-adr`: Textual
+rendering lives below `cadrumo.entrypoints.tui.flows` and is composed by the
+dedicated TUI launcher. CLI modules may consume the public flow engine,
+scripted driver, capability contract, and plain line-mode frontend, but do not
+import, select, construct, or launch the Textual projection. The installed TUI
+and `python -m cadrumo.entrypoints.tui` are the full-screen launch boundaries.
+This amendment changes only composition: the non-interactive flag path still
+drives the engine directly, and flags, TUI, and line mode retain identical
 branching and validation by construction.
 
 **Substrate public contract** (what `profile-setup-flow` and future flows
@@ -377,9 +386,9 @@ bridging, the superseded one-shot walk (`no-legacy-compatibility`).
   reconciliation walkthroughs) compose on the same substrate; headless
   testing of complete navigation scenarios (back/jump/reset/resume)
   becomes ordinary unit testing of engine transitions.
-- **Costs.** A full-screen TUI frontend is a significant new adapter;
+- **Costs.** A full-screen TUI frontend is a significant sibling entrypoint;
   Textual is a new direct dependency with its own release
-  cadence; the line-mode fallback must be maintained alongside it; the
+  cadence; the line-mode projection must be maintained alongside it; the
   existing prompter/runner surface and its tests are retired and rebuilt
   on the engine — a real migration for the CLI wiring and the modelo work
   wizard consumer.
@@ -392,8 +401,9 @@ bridging, the superseded one-shot walk (`no-legacy-compatibility`).
   never-promote-partial-state rule, and discard-through-lifecycle each
   need explicit tests, and resume-across-definition-change with them.
   Textual's behaviour on degraded Windows hosts was not exhaustively
-  surveyed, so the line-mode degradation path must be exercised early; the
-  insulation boundary (no engine/contract import of the rendering library)
+  surveyed, so dedicated-TUI startup refusal and independent CLI line-mode
+  behavior must each be exercised early; the insulation boundary (no
+  engine/contract import of the rendering library)
   keeps any future rendering pivot cheap and must be gate-enforced in
   review.
 - **Follow-ups.**
