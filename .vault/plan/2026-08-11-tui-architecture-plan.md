@@ -4,7 +4,7 @@ tags:
   - '#tui-architecture'
 date: '2026-08-11'
 modified: '2026-08-13'
-body_hash: 'sha256:9df094feee118926aefa6bdc314bc6338738d7ad3e4a50129967b2952ef14113'
+body_hash: 'sha256:0aeef45209d1a8040043ae376476dc41d33facbe8fa060ebf43d4283b18debe5'
 tier: L3
 related:
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -63,7 +63,6 @@ Define registered executors, canonical action joins, resource ownership, and inv
 
 - [x] `W02.P03.S13` - Define executor context, cancellation scope, deadline access, event emission, secure operand lookup, and cleanup ownership; `src/cadrumo/application/operations/_executor.py`.
 - [x] `W02.P03.S14` - Implement operation definition registration and immutable lookup by canonical action reference; `src/cadrumo/application/operations/_registry.py`.
-- [ ] `W02.P03.S15` - Join action-catalogue identities, operation definitions, recovery actions, and exposed surface projections at a fixed point; `src/cadrumo/application/operations/tests/test_operation_catalogue.py`.
 - [ ] `W02.P03.S16` - Prove duplicate registration, undeclared effects, invalid phase emission, and unowned resources are refused; `src/cadrumo/application/operations/tests/test_executor_contract.py`.
 
 ### Phase `W02.P04` - Journal, leases, and persistence
@@ -122,7 +121,7 @@ Move every current manager and credential action behind registered application e
 - [ ] `W03.P08.S42` - Expose authentication operation definitions through the authentication application facade; `src/cadrumo/application/auth/__init__.py`.
 - [ ] `W03.P08.S43` - Expose profile mutation and lifecycle operation definitions through the user-profile application facade; `src/cadrumo/application/user_profile/__init__.py`.
 - [ ] `W03.P08.S44` - Expose Google export operation definitions through the export application facade; `src/cadrumo/application/export/__init__.py`.
-- [ ] `W03.P08.S45` - Run every registered executor through the shared success, refusal, failure, interaction, cancellation-capability, deadline-capability, effect, and cleanup matrix; `src/cadrumo/application/operations/tests/test_registered_executor_conformance.py`.
+- [ ] `W03.P08.S45` - Run every production-registered executor through the shared success, refusal, failure, interaction, cancellation-capability, deadline-capability, effect, and cleanup matrix and prove the exported definition population is complete; `src/cadrumo/application/operations/tests/test_registered_executor_conformance.py`.
 
 ## Wave `W04` - Canonical TUI entrypoint and components
 
@@ -187,7 +186,7 @@ Join the independently green backend and frontend lanes, migrate every reverse c
 
 Compose the independently green lanes in the TUI launcher and app, then expose the dedicated installed entrypoint.
 
-- [ ] `W06.P13.S72` - Compose concrete operation adapters, registries, journals, resources, and the supervisor in the sole TUI composition root; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [ ] `W06.P13.S72` - Compose every exported operation definition into one immutable production registry with concrete operation adapters, journals, resources, and the supervisor in the sole TUI composition root; `src/cadrumo/entrypoints/tui/launcher.py`.
 - [ ] `W06.P13.S73` - Join profile, secret, flow, and operation areas through navigation only after both implementation lanes are green; `src/cadrumo/entrypoints/tui/app.py`.
 - [ ] `W06.P13.S74` - Delegate module execution directly to the TUI launcher without importing the CLI; `src/cadrumo/entrypoints/tui/__main__.py`.
 - [ ] `W06.P13.S75` - Add the dedicated installed TUI console entry point targeting the launcher directly; `pyproject.toml`.
@@ -241,6 +240,7 @@ Prove live feedback, visible diagnostics, review actions, responsive layouts, in
 - [ ] `W07.P17.S99` - Prove modal detach, close refusal, apply, reject, and cancel behavior never assumes process ownership; `src/cadrumo/entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py`.
 - [ ] `W07.P17.S100` - Verify profile, secret, flow, and operation surfaces at narrow, normal, and wide terminal sizes; `src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py`.
 - [ ] `W07.P17.S101` - Run the packaged TUI through its installed console and module entrypoints without importing CLI internals; `src/cadrumo/entrypoints/tui/tests/test_installed_entrypoint.py`.
+- [ ] `W07.P17.S15` - Complete the derived live-tree fixed-point census joining every registered operation definition, recovery action, TUI, CLI and MCP exposure, executor factory, direct mutation or outbound site, and declared exclusion; `src/cadrumo/application/operations/tests/test_operation_catalogue.py`.
 - [ ] `W07.P17.S102` - Re-run operation catalogue, recovery-action, migration-manifest, import-linter, AST, and Textual-location fixed-point gates; `src/cadrumo/tests`.
 - [ ] `W07.P17.S103` - Run the feature validation suite and formal architecture review against the accepted ADR and exact migration inventory; `.vault/plan/2026-08-11-tui-architecture-plan.md`.
 
