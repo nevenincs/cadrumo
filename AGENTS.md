@@ -19,7 +19,6 @@ You MUST respect these rules at all times:
 @.codex/rules/aeat-registry-bindings.md
 @.codex/rules/aeat-vaultspec-centralisation.md
 @.codex/rules/aeat-worktree-safety.md
-@.codex/rules/casilla-schema-buildout.md
 @.codex/rules/firmware-reference-parity.builtin.md
 @.codex/rules/generated-reference-is-cli-owned.builtin.md
 @.codex/rules/modelo-export-mirrors-official-structure.md
